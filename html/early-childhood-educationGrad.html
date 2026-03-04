@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Jordan Taylor | Early Childhood Education</title>
+  <meta name="description" content="Resume & portfolio website for an Early Childhood Education major." />
+
+  <style>
+    :root{
+      --ink:#1f2328;
+      --muted:#5b6672;
+      --paper:#f7f9fb;
+      --card: rgba(255,255,255,0.88);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.12);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
+      --radius: 22px;
+
+      --accent:#4E70F1;      /* soft confident blue */
+      --accent2:#F28B86;     /* warm coral */
+      --accent3:#8FD4C1;     /* gentle mint */
+
+      --max: 1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1000px 520px at 12% 8%, rgba(78,112,241,.14) 0%, transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, rgba(242,139,134,.14) 0%, transparent 58%),
+        radial-gradient(900px 520px at 55% 25%, rgba(143,212,193,.12) 0%, transparent 58%),
+        var(--paper);
+      overflow-x:hidden;
+    }
+
+    a{ color:inherit; }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 22px 74px; }
+
+    /* Header */
+    header{
+      color:#fff;
+      background:
+        radial-gradient(900px 420px at 20% 30%, rgba(242,139,134,.22), transparent 60%),
+        radial-gradient(900px 420px at 80% 20%, rgba(143,212,193,.22), transparent 60%),
+        linear-gradient(120deg, rgba(78,112,241,.92), rgba(78,112,241,.70));
+      position:relative;
+      overflow:hidden;
+    }
+    header::after{
+      content:"";
+      position:absolute; inset:-40px -80px -80px -80px;
+      background:
+        radial-gradient(circle at 15% 30%, rgba(255,255,255,.18) 0 22%, transparent 23%),
+        radial-gradient(circle at 45% 20%, rgba(255,255,255,.12) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 40%, rgba(255,255,255,.12) 0 20%, transparent 21%),
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,.10) 0 14%, transparent 15%);
+      filter: blur(1px);
+      opacity:.85;
+      pointer-events:none;
+    }
+
+    .topbar{
+      position:relative;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      z-index:1;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .mark{
+      width:36px;height:36px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
+      border:1px solid rgba(255,255,255,.24);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+    }
+    .brandText{ display:flex; flex-direction:column; line-height:1.1; }
+    .brandText strong{ font-size:16px; letter-spacing:.02em; }
+    .brandText span{ font-size:12.5px; opacity:.92; }
+
+    nav{
+      display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-end;
+      z-index:1;
+    }
+    nav a{
+      text-decoration:none;
+      font-weight:750;
+      font-size:13.5px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+      transition: transform .15s ease, background .15s ease;
+    }
+    nav a:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+
+    /* Hero */
+    .hero{
+      position:relative;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:64px 22px 74px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:26px;
+      align-items:end;
+      z-index:1;
+    }
+    @media (max-width: 920px){
+      .hero{ grid-template-columns:1fr; padding:52px 22px 62px; }
+      .brand{ min-width:auto; }
+    }
+
+    .hero h1{
+      margin:0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height:1.12;
+      letter-spacing:-0.02em;
+      font-weight:850;
+    }
+    .hero p{
+      margin:14px 0 0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.96;
+      max-width: 64ch;
+    }
+
+    .heroCard{
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .pillRow{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .pill{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:12.5px;
+      font-weight:850;
+      letter-spacing:.02em;
+    }
+    .heroCard ul{
+      margin:10px 0 0;
+      padding-left:18px;
+      line-height:1.55;
+      font-size: 14.5px;
+      opacity:.96;
+    }
+    .ctaRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.14);
+      color:#fff;
+      text-decoration:none;
+      font-weight:850;
+      font-size:13.5px;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+    .btn.primary{
+      background: rgba(242,139,134,.22);
+      border-color: rgba(242,139,134,.28);
+    }
+
+    /* Sections */
+    .section{ padding:66px 0 0; }
+    .section h2{
+      margin:0 0 12px;
+      font-size: 28px;
+      letter-spacing:-0.02em;
+      color: var(--accent);
+    }
+    .subhead{ margin:0 0 22px; color:var(--muted); max-width: 85ch; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns:1fr; } }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadowSoft);
+      padding:20px;
+      backdrop-filter: blur(8px);
+    }
+    .card h3{ margin:0 0 8px; font-size:18px; }
+    .meta{ color:var(--muted); font-size:13.5px; margin-bottom:10px; }
+    .bullets{ margin:12px 0 0; padding-left:18px; }
+    .bullets li{ margin:6px 0; }
+
+    .tagRow{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .tag{
+      font-size:12.5px;
+      font-weight:850;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(78,112,241,.12);
+      border:1px solid rgba(78,112,241,.18);
+      color:#2640a6;
+    }
+
+    .timeline{ display:grid; gap:14px; }
+    .item{
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.74);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+      backdrop-filter: blur(8px);
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:baseline;
+      margin-bottom:6px;
+    }
+    .itemTop strong{ font-size:16px; }
+    .itemTop span{ color:var(--muted); font-size:13.5px; }
+
+    /* Headshot contact section */
+    .contactWrap{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){ .contactWrap{ grid-template-columns:1fr; } }
+    .headshot{
+      width:100%;
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background:#ddd;
+    }
+    .contactCard{
+      padding:22px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.82);
+      box-shadow: var(--shadowSoft);
+      backdrop-filter: blur(8px);
+    }
+    .contactCard h3{ margin:0 0 8px; }
+    .contactRow{ display:grid; gap:10px; margin-top:14px; }
+    .contactRow a{ color: var(--accent); font-weight:850; text-decoration:none; }
+
+    footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      color:#6f7b73;
+      font-size:13.5px;
+      text-align:center;
+    }
+
+    html{ scroll-behavior:smooth; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="brandText">
+          <strong>Jordan Taylor</strong>
+          <span>Early Childhood Education • Graduation: May 2026</span>
+        </div>
+      </div>
+
+      <nav aria-label="Site navigation">
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#experience">Experience</a>
+        <a href="#portfolio">Portfolio</a>
+        <a href="#philosophy">Philosophy</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>Early Childhood Education Portfolio</h1>
+        <p>
+          I’m an Early Childhood Education major passionate about playful, evidence-based learning and supportive
+          classroom communities. I’m seeking student-teaching placements and entry-level roles in preschool, early
+          elementary, and child development settings.
+        </p>
+      </div>
+
+      <aside class="heroCard" aria-label="Quick highlights">
+        <div class="pillRow">
+          <span class="pill">Child Development</span>
+          <span class="pill">Classroom Support</span>
+          <span class="pill">Family Partnership</span>
+        </div>
+        <ul>
+          <li>Lesson planning with clear objectives and age-appropriate activities</li>
+          <li>Positive behavior supports and inclusive routines</li>
+          <li>Warm communication with caregivers and team members</li>
+        </ul>
+        <div class="ctaRow">
+          <a class="btn primary" href="#portfolio">See Portfolio</a>
+          <a class="btn" href="#contact">Reach Out</a>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <h2>About</h2>
+      <p class="subhead">
+        I believe young children learn best through safe relationships, hands-on exploration, and consistent routines.
+        I’m especially interested in literacy-rich environments, social-emotional learning, and inclusive classroom design.
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Strengths</h3>
+          <ul class="bullets">
+            <li>Warm, structured classroom presence</li>
+            <li>Clear communication with children and caregivers</li>
+            <li>Observation-driven planning and reflection</li>
+            <li>Inclusive practices and differentiated support</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">SEL</span>
+            <span class="tag">Early Literacy</span>
+            <span class="tag">Inclusion</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>What I’m Seeking</h3>
+          <p class="meta">Student teaching • Preschool assistant • Early elementary aide • Child development roles</p>
+          <ul class="bullets">
+            <li>Supportive teams that value play-based learning</li>
+            <li>Classrooms focused on growth, safety, and belonging</li>
+            <li>Opportunities to collaborate and keep improving</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="section">
+      <h2>Education</h2>
+      <p class="subhead">Replace placeholders with your real school, dates, and coursework.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>B.S. / B.A. in Early Childhood Education</strong>
+            <span>Expected May 2026</span>
+          </div>
+          <div class="meta">University Name (edit) • City, State • GPA: 3.X (optional)</div>
+          <ul class="bullets">
+            <li>Coursework: Child Development, Early Literacy, Classroom Management, Assessment (edit)</li>
+            <li>Practicum: Guided observation and lesson facilitation (edit)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="section">
+      <h2>Experience</h2>
+      <p class="subhead">Include student teaching, practicums, childcare roles, tutoring, volunteering, etc.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>Practicum Student, Preschool Classroom (Example)</strong>
+            <span>Sep 2024 – Present</span>
+          </div>
+          <div class="meta">School / Center Name • City, State</div>
+          <ul class="bullets">
+            <li>Supported centers and transitions; reinforced routines that keep kids engaged and safe.</li>
+            <li>Assisted with small-group activities focused on early literacy and fine motor skills.</li>
+            <li>Used observation notes to adjust instruction and provide individual support.</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>Childcare Assistant (Example)</strong>
+            <span>May 2024 – Aug 2024</span>
+          </div>
+          <div class="meta">Program Name • City, State</div>
+          <ul class="bullets">
+            <li>Led structured play and supported positive behavior with calm, consistent cues.</li>
+            <li>Communicated with caregivers during pick-up, sharing quick highlights and needs.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PORTFOLIO -->
+    <section id="portfolio" class="section">
+      <h2>Portfolio</h2>
+      <p class="subhead">Add artifacts you can show: lesson plans, classroom visuals, reflections, and assessments.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Lesson Plan: Early Literacy & Storytime</h3>
+          <div class="meta">Objective • Materials • Step-by-step plan • Differentiation</div>
+          <ul class="bullets">
+            <li>Built vocabulary and comprehension using a read-aloud + picture walk</li>
+            <li>Included extension options for different readiness levels</li>
+            <li>Reflected on engagement and adjusted timing and prompts</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Reading</span>
+            <span class="tag">Vocabulary</span>
+            <span class="tag">Differentiation</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Classroom Routine: Calm Corner & SEL Tools</h3>
+          <div class="meta">Visual supports • Emotion labeling • Co-regulation</div>
+          <ul class="bullets">
+            <li>Created simple visuals for feelings, breathing, and asking for help</li>
+            <li>Practiced routines during calm moments to build independence</li>
+            <li>Used positive language and consistent follow-through</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">SEL</span>
+            <span class="tag">Routines</span>
+            <span class="tag">Behavior Supports</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TEACHING PHILOSOPHY -->
+    <section id="philosophy" class="section">
+      <h2>Teaching Philosophy</h2>
+      <p class="subhead">
+        A short statement you can tailor for applications and interviews.
+      </p>
+
+      <div class="card">
+        <h3>My Approach</h3>
+        <p style="margin:0; color:#2a3138; line-height:1.7;">
+          I believe early learning thrives when children feel safe, seen, and supported. I create predictable routines
+          and a warm classroom culture so children can explore with confidence. I use play-based instruction to build
+          language, early math thinking, and social-emotional skills, and I watch closely—adjusting activities based on
+          each child’s needs and interests. I partner with families through respectful communication, and I collaborate
+          with colleagues to continually improve outcomes for every child.
+        </p>
+      </div>
+    </section>
+
+    <!-- CONTACT (headshot included) -->
+    <section id="contact" class="section">
+      <h2>Contact</h2>
+      <p class="subhead">Add your real details. This section is designed for quick scanning.</p>
+
+      <div class="contactWrap">
+        <!-- Headshot: replace headshot.jpg with your photo (same folder) -->
+        <img class="headshot" src="headshot.jpg" alt="Headshot of Jordan Taylor" />
+
+        <div class="contactCard">
+          <h3>Jordan Taylor</h3>
+          <div class="meta">Early Childhood Education • Graduation: May 2026 • Open to student teaching & entry-level roles</div>
+
+          <div class="contactRow">
+            <div><strong>Email:</strong> <a href="mailto:jordan.taylor@email.com">jordan.taylor@email.com</a></div>
+            <div><strong>Phone:</strong> <a href="tel:+18015551234">(801) 555-1234</a></div>
+            <div><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer">linkedin.com/in/jordantaylor</a></div>
+            <div><strong>Location:</strong> City, State (edit)</div>
+          </div>
+
+          <div class="tagRow" style="margin-top:16px">
+            <span class="tag">Play-Based Learning</span>
+            <span class="tag">Early Literacy</span>
+            <span class="tag">SEL</span>
+            <span class="tag">Inclusion</span>
+            <span class="tag">Family Partnership</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="y"></span> Jordan Taylor • Early Childhood Education Portfolio
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

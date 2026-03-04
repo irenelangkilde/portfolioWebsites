@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Name | Biology Resume & Portfolio</title>
+  <meta name="description" content="Resume and portfolio website for a college student majoring in Biology." />
+
+  <style>
+    :root{
+      --ink:#132018;
+      --muted:#4e5d53;
+
+      --paper:#f7fbf7;
+      --card: rgba(255,255,255,0.82);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.14);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
+      --radius: 22px;
+
+      --accent:#2e7d5b;     /* forest green */
+      --accent2:#88c26e;    /* leaf */
+      --accent3:#f2d27c;    /* warm sunlight */
+      --btnText:#ffffff;
+
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--ink);
+      background:
+        radial-gradient(1100px 520px at 12% 8%, rgba(136,194,110,.18) 0%, transparent 60%),
+        radial-gradient(900px 520px at 80% 0%, rgba(242,210,124,.18) 0%, transparent 58%),
+        var(--paper);
+      overflow-x:hidden;
+    }
+
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 22px 74px;}
+
+    /* ===== HEADER with biology image ===== */
+    header{
+      color:#fff;
+      background:
+        linear-gradient(0deg, rgba(10,20,14,.65), rgba(10,20,14,.42)),
+        url("assets/images/biologyGrad_B.png") center/cover no-repeat;
+    }
+
+    .topbar{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 250px;
+    }
+    .mark{
+      width:36px;height:36px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(136,194,110,.92), rgba(242,210,124,.80));
+      border:1px solid rgba(255,255,255,.20);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+    }
+    .brandText{display:flex; flex-direction:column; line-height:1.1}
+    .brandText strong{font-size:16px; letter-spacing:.02em}
+    .brandText span{font-size:12.5px; opacity:.92}
+
+    .navLinks{
+      display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    .navLinks a{
+      text-decoration:none;
+      font-weight:700;
+      font-size:13.5px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .navLinks a:hover{transform: translateY(-1px); background: rgba(255,255,255,.18);}
+
+    .hero{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:68px 22px 74px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:26px;
+      align-items:end;
+    }
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr; padding:52px 22px 62px;}
+      .brand{min-width:auto}
+    }
+
+    .hero h1{
+      margin:0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height:1.12;
+      letter-spacing:-0.02em;
+      font-weight:850;
+    }
+    .hero p{
+      margin:14px 0 0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.96;
+      max-width: 62ch;
+    }
+
+    .heroCard{
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .heroCard .pillRow{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px}
+    .pill{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(136,194,110,.18);
+      border:1px solid rgba(136,194,110,.22);
+      font-size:12.5px;
+      font-weight:800;
+      letter-spacing:.02em;
+    }
+    .heroCard ul{
+      margin:10px 0 0;
+      padding-left:18px;
+      line-height:1.55;
+      font-size: 14.5px;
+      opacity:.96;
+    }
+    .ctaRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.14);
+      color:#fff;
+      text-decoration:none;
+      font-weight:850;
+      font-size:13.5px;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.20);}
+    .btn.primary{
+      background: rgba(242,210,124,.18);
+      border-color: rgba(242,210,124,.26);
+    }
+
+    /* ===== Main content ===== */
+    .section{padding:66px 0 0}
+    .section h2{
+      margin:0 0 12px;
+      font-size: 28px;
+      letter-spacing:-0.02em;
+      color: var(--accent);
+    }
+    .subhead{margin:0 0 22px; color:var(--muted); max-width: 85ch}
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){
+      .grid2{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadowSoft);
+      padding:20px;
+      backdrop-filter: blur(8px);
+    }
+    .card h3{margin:0 0 8px; font-size:18px}
+    .meta{color:var(--muted); font-size:13.5px; margin-bottom:10px}
+    .bullets{margin:12px 0 0; padding-left:18px}
+    .bullets li{margin:6px 0}
+
+    .tagRow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .tag{
+      font-size:12.5px;
+      font-weight:800;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(46,125,91,.12);
+      border:1px solid rgba(46,125,91,.18);
+      color:#1f4b37;
+    }
+
+    .timeline{display:grid; gap:14px}
+    .item{
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+      backdrop-filter: blur(8px);
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:baseline;
+      margin-bottom:6px;
+    }
+    .itemTop strong{font-size:16px}
+    .itemTop span{color:var(--muted); font-size:13.5px}
+
+    /* Contact section with headshot (last section before footer) */
+    .contactWrap{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .contactWrap{grid-template-columns:1fr}
+    }
+    .headshot{
+      width:100%;
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background:#ddd;
+    }
+    .contactCard{
+      padding:22px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.78);
+      box-shadow: var(--shadowSoft);
+      backdrop-filter: blur(8px);
+    }
+    .contactCard h3{margin:0 0 8px}
+    .contactRow{display:grid; gap:10px; margin-top:14px}
+    .contactRow a{color:var(--accent); font-weight:850; text-decoration:none}
+
+    footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      color:#6f7b73;
+      font-size:13.5px;
+      text-align:center;
+    }
+
+    html{scroll-behavior:smooth}
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand" aria-label="Brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="brandText">
+          <strong>Student Name</strong>
+          <span>Biology Major • Graduation: May 2026</span>
+        </div>
+      </div>
+
+      <nav class="navLinks" aria-label="Site navigation">
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#skills">Skills</a>
+        <a href="#experience">Experience</a>
+        <a href="#projects">Projects</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>Biology Resume & Portfolio</h1>
+        <p>
+          I’m a Biology major focused on field observation, lab fundamentals, and evidence-based writing.
+          I’m seeking internships and entry-level roles in research, conservation, healthcare-adjacent labs,
+          environmental science, and science communication.
+        </p>
+      </div>
+
+      <aside class="heroCard" aria-label="Quick highlights">
+        <div class="pillRow">
+          <span class="pill">Field & Lab</span>
+          <span class="pill">Research</span>
+          <span class="pill">Clear Writing</span>
+        </div>
+        <ul>
+          <li>Careful data collection, documentation, and reproducible work habits</li>
+          <li>Comfort with scientific literature, summaries, and evidence-based conclusions</li>
+          <li>Team-friendly communication and reliable follow-through</li>
+        </ul>
+        <div class="ctaRow">
+          <a class="btn primary" href="#projects">View Projects</a>
+          <a class="btn" href="#contact">Contact</a>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <h2>About</h2>
+      <p class="subhead">
+        I’m a senior Biology major interested in the intersection of life science and real-world impact.
+        I enjoy structured lab work, careful observation in the field, and communicating results clearly.
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Focus Areas</h3>
+          <ul class="bullets">
+            <li>Ecology & conservation biology (field methods, sampling, observation)</li>
+            <li>Cell and molecular fundamentals (lab workflows, careful documentation)</li>
+            <li>Scientific writing (summaries, reports, and clear interpretation)</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Ecology</span>
+            <span class="tag">Lab Methods</span>
+            <span class="tag">Scientific Writing</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Roles I’m Targeting</h3>
+          <p>
+            Internship or entry-level roles where careful work, documentation, and learning fast matters.
+          </p>
+          <ul class="bullets">
+            <li>Research assistant • Lab assistant • QA/QC support</li>
+            <li>Environmental field tech • Conservation internships</li>
+            <li>Science communication / outreach</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="section">
+      <h2>Education</h2>
+      <p class="subhead">Replace with your school details and graduation date.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>B.S. Biology</strong>
+            <span>Expected May 2026</span>
+          </div>
+          <div class="meta">University Name (edit) • City, State • GPA: 3.X (optional)</div>
+          <ul class="bullets">
+            <li>Coursework: General Biology, Ecology, Genetics, Cell Biology, Microbiology (edit)</li>
+            <li>Labs: microscopy, sterile technique basics, documentation, data reporting (edit)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section">
+      <h2>Skills</h2>
+      <p class="subhead">A quick snapshot of the skills hiring managers look for in biology roles.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Lab & Research</h3>
+          <ul class="bullets">
+            <li>Microscopy and careful observation</li>
+            <li>Data collection, recording, and quality checks</li>
+            <li>Literature review and synthesis</li>
+            <li>Basic experimental design awareness (controls, replicates)</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Field & Communication</h3>
+          <ul class="bullets">
+            <li>Field notes and sampling discipline</li>
+            <li>Scientific writing and concise reporting</li>
+            <li>Presentations and stakeholder-friendly summaries</li>
+            <li>Tools: spreadsheets, slides, collaborative docs (edit)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="section">
+      <h2>Experience</h2>
+      <p class="subhead">Include lab assistant roles, research labs, volunteering, internships, tutoring, etc.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>Undergraduate Research Assistant (Example)</strong>
+            <span>Sep 2024 – Present</span>
+          </div>
+          <div class="meta">Lab / Department • City, State</div>
+          <ul class="bullets">
+            <li>Supported data collection and maintained consistent documentation practices.</li>
+            <li>Summarized papers and created short briefs for weekly lab discussions.</li>
+            <li>Helped prepare materials and kept shared resources organized and usable.</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>Environmental Volunteer / Field Work (Example)</strong>
+            <span>May 2024 – Aug 2024</span>
+          </div>
+          <div class="meta">Organization Name • City, State</div>
+          <ul class="bullets">
+            <li>Assisted with surveys and documentation; followed sampling protocols.</li>
+            <li>Compiled observations into a simple report for project leads.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section">
+      <h2>Projects</h2>
+      <p class="subhead">Write each project in an employer-friendly way: methods, results, and what you learned.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Project 1 — Species Survey & Field Notes</h3>
+          <div class="meta">Field methods • Observation • Reporting</div>
+          <p>
+            Conducted structured observations and produced a concise summary of findings with clear
+            documentation and limitations.
+          </p>
+          <ul class="bullets">
+            <li>Used consistent observation windows and logging format.</li>
+            <li>Summarized patterns and suggested next-step questions.</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Ecology</span>
+            <span class="tag">Documentation</span>
+            <span class="tag">Synthesis</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Project 2 — Microscopy Lab Portfolio</h3>
+          <div class="meta">Microscopy • Lab skills • Interpretation</div>
+          <p>
+            Collected micrographs and wrote short interpretations emphasizing methods, observations, and
+            evidence-based conclusions.
+          </p>
+          <ul class="bullets">
+            <li>Captured images and recorded conditions for repeatability.</li>
+            <li>Presented results with clear labeling and concise discussion.</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Lab</span>
+            <span class="tag">Clarity</span>
+            <span class="tag">Reporting</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT (last section before footer) -->
+    <section id="contact" class="section">
+      <h2>Contact</h2>
+      <p class="subhead">A recruiter-friendly close: photo + direct links.</p>
+
+      <div class="contactWrap">
+        <img class="headshot" src="headshot.jpg" alt="Headshot of Student Name" />
+
+        <div class="contactCard">
+          <h3>Student Name</h3>
+          <div class="meta">Biology Major • Graduation: May 2026 • Open to internships & entry-level roles</div>
+
+          <div class="contactRow">
+            <div><strong>Email:</strong> <a href="mailto:student.email@example.com">student.email@example.com</a></div>
+            <div><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer">linkedin.com/in/studentname</a></div>
+            <div><strong>Location:</strong> City, State (edit)</div>
+            <div><strong>Resume PDF:</strong> <a href="#" target="_blank" rel="noreferrer">Download</a></div>
+          </div>
+
+          <div class="tagRow" style="margin-top:16px">
+            <span class="tag">Research</span>
+            <span class="tag">Lab</span>
+            <span class="tag">Field</span>
+            <span class="tag">Conservation</span>
+            <span class="tag">Science Writing</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="y"></span> Student Name • Biology Portfolio
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

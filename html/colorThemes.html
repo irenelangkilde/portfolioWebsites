@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20 Website Color Themes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+            color: #333;
+            font-size: 2.5rem;
+        }
+
+        .theme-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .theme-card {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .theme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .color-boxes {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .color-box {
+            flex: 1;
+            height: 80px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            position: relative;
+        }
+
+        .color-box:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .color-codes {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .color-code {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .color-dot {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            width: 100%;
+            padding: 8px;
+            background: #333;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: #555;
+        }
+
+        .copy-btn:active {
+            background: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 20 Website Color Themes</h1>
+        <div class="theme-grid" id="themeGrid"></div>
+    </div>
+
+    <script>
+        const themes = [
+            {
+                name: "Ocean Breeze",
+                colors: ["#0077BE", "#00A8E8", "#E0F4FF", "#003B5C", "#FFFFFF"]
+            },
+            {
+                name: "Sunset Vibes",
+                colors: ["#FF6B6B", "#FFA07A", "#FFE66D", "#4ECDC4", "#1A535C"]
+            },
+            {
+                name: "Forest Green",
+                colors: ["#2D6A4F", "#52B788", "#B7E4C7", "#1B4332", "#FFFFFF"]
+            },
+            {
+                name: "Royal Purple",
+                colors: ["#5A189A", "#9D4EDD", "#E0AAFF", "#240046", "#FFFFFF"]
+            },
+            {
+                name: "Minimalist Dark",
+                colors: ["#1E1E1E", "#2D2D2D", "#404040", "#FFFFFF", "#00D9FF"]
+            },
+            {
+                name: "Peachy Keen",
+                colors: ["#FF9B71", "#FFCB9A", "#FFF4E0", "#D4A574", "#333333"]
+            },
+            {
+                name: "Navy & Gold",
+                colors: ["#0F2027", "#203A43", "#D4AF37", "#FFE082", "#FFFFFF"]
+            },
+            {
+                name: "Mint Fresh",
+                colors: ["#06FFA5", "#98FFD6", "#E0FFF5", "#037F5F", "#1A1A1A"]
+            },
+            {
+                name: "Crimson Elegance",
+                colors: ["#9B2226", "#AE2012", "#CA6702", "#F4A261", "#264653"]
+            },
+            {
+                name: "Lavender Dreams",
+                colors: ["#B298DC", "#D4C2FC", "#F8F3FF", "#6B4C9A", "#333333"]
+            },
+            {
+                name: "Coral Reef",
+                colors: ["#FF6F61", "#FFA69E", "#FFE5E2", "#E76F51", "#264653"]
+            },
+            {
+                name: "Slate & Teal",
+                colors: ["#2C3E50", "#34495E", "#1ABC9C", "#16A085", "#ECF0F1"]
+            },
+            {
+                name: "Warm Autumn",
+                colors: ["#8B4513", "#D2691E", "#F4A460", "#FAF0E6", "#2F1B0C"]
+            },
+            {
+                name: "Electric Blue",
+                colors: ["#00B4D8", "#0096C7", "#023E8A", "#CAF0F8", "#03045E"]
+            },
+            {
+                name: "Monochrome",
+                colors: ["#000000", "#333333", "#666666", "#999999", "#FFFFFF"]
+            },
+            {
+                name: "Rose Garden",
+                colors: ["#D90368", "#F72585", "#FF8DC7", "#FFCCE1", "#2B0B3F"]
+            },
+            {
+                name: "Desert Sand",
+                colors: ["#EDC9AF", "#E3B5A4", "#CDA788", "#564946", "#F5F5DC"]
+            },
+            {
+                name: "Neon Nights",
+                colors: ["#FF006E", "#FB5607", "#FFBE0B", "#8338EC", "#1A1A1D"]
+            },
+            {
+                name: "Arctic Ice",
+                colors: ["#C9E4E7", "#A7C4CB", "#FFFFFF", "#6B9DAA", "#003D54"]
+            },
+            {
+                name: "Cherry Blossom",
+                colors: ["#FFB7C5", "#FF9EAA", "#FFF0F5", "#E85D75", "#7C2D41"]
+            }
+        ];
+
+        const themeGrid = document.getElementById('themeGrid');
+
+        themes.forEach((theme, index) => {
+            const themeCard = document.createElement('div');
+            themeCard.className = 'theme-card';
+            
+            const themeName = document.createElement('div');
+            themeName.className = 'theme-name';
+            themeName.textContent = `${index + 1}. ${theme.name}`;
+            
+            const colorBoxes = document.createElement('div');
+            colorBoxes.className = 'color-boxes';
+            
+            theme.colors.forEach(color => {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.backgroundColor = color;
+                box.title = color;
+                box.addEventListener('click', () => {
+                    navigator.clipboard.writeText(color);
+                    box.style.transform = 'scale(1.2)';
+                    setTimeout(() => {
+                        box.style.transform = '';
+                    }, 200);
+                });
+                colorBoxes.appendChild(box);
+            });
+            
+            const colorCodes = document.createElement('div');
+            colorCodes.className = 'color-codes';
+            
+            const labels = ['Primary', 'Secondary', 'Accent', 'Dark', 'Light'];
+            theme.colors.forEach((color, i) => {
+                const codeDiv = document.createElement('div');
+                codeDiv.className = 'color-code';
+                
+                const dot = document.createElement('div');
+                dot.className = 'color-dot';
+                dot.style.backgroundColor = color;
+                
+                const text = document.createElement('span');
+                text.textContent = `${labels[i]}: ${color}`;
+                
+                codeDiv.appendChild(dot);
+                codeDiv.appendChild(text);
+                colorCodes.appendChild(codeDiv);
+            });
+            
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.textContent = 'Copy All Colors';
+            copyBtn.addEventListener('click', () => {
+                const allColors = theme.colors.join(', ');
+                navigator.clipboard.writeText(allColors);
+                copyBtn.textContent = 'Copied! ✓';
+                copyBtn.style.background = '#4CAF50';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy All Colors';
+                    copyBtn.style.background = '#333';
+                }, 2000);
+            });
+            
+            themeCard.appendChild(themeName);
+            themeCard.appendChild(colorBoxes);
+            themeCard.appendChild(colorCodes);
+            themeCard.appendChild(copyBtn);
+            themeGrid.appendChild(themeCard);
+        });
+    </script>
+</body>
+</html>

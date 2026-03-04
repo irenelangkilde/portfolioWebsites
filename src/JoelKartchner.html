@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Joel Kartchner | Electrical Engineering Portfolio</title>
+  <meta name="description" content="Joel Kartchner — Electrical Engineering (BYU). RF, mmWave radar, EM simulation, and wireless circuits." />
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --text:#eaf0ff;
+      --muted:#b8c5e6;
+      --border:rgba(234,240,255,.14);
+      --accent:#4E70F1;
+      --accent2:#FBAB9C;
+      --shadow: 0 22px 70px rgba(0,0,0,.45);
+      --radius:18px;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 18% 10%, rgba(78,112,241,.22), transparent 60%),
+        radial-gradient(760px 420px at 86% 16%, rgba(251,171,156,.16), transparent 55%),
+        linear-gradient(180deg, #070c18, var(--bg));
+    }
+
+    a{color:var(--accent2); text-decoration:none}
+    a:hover{text-decoration:underline}
+
+    .wrap{max-width:1080px;margin:0 auto;padding:18px}
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.035));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    /* Sticky nav */
+    .topbar{
+      position:sticky; top:0; z-index:10;
+      border-bottom:1px solid rgba(234,240,255,.12);
+      background: linear-gradient(180deg, rgba(11,18,32,.92), rgba(11,18,32,.78));
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    header{
+      padding:14px 16px;
+      display:flex; gap:12px; align-items:center; justify-content:space-between;
+      flex-wrap:wrap;
+    }
+    .brand{display:flex; gap:12px; align-items:center; min-width:250px}
+    .mark{
+      width:42px;height:42px;border-radius:14px;
+      border:1px solid rgba(234,240,255,.16);
+      background: linear-gradient(135deg, rgba(78,112,241,.55), rgba(251,171,156,.45));
+      display:grid; place-items:center;
+      font-weight:900; color:#081127;
+      user-select:none;
+    }
+    .brand h1{margin:0;font-size:15px;letter-spacing:.2px}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px;line-height:1.35}
+
+    nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .navlink{
+      display:inline-flex; align-items:center;
+      padding:8px 10px; border-radius:999px;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(234,240,255,.06);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .navlink:hover{background: rgba(234,240,255,.10); text-decoration:none; color:var(--text)}
+    .cta{
+      border:1px solid rgba(255,255,255,.18);
+      background: linear-gradient(90deg, rgba(78,112,241,.96), rgba(251,171,156,.86));
+      color:#071022;
+      font-weight:900;
+    }
+    .cta:hover{filter:brightness(1.02)}
+
+    main{padding:16px}
+
+    .hero{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      align-items:stretch;
+    }
+    .panel{
+      border:1px solid rgba(234,240,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
+      border-radius:16px;
+      padding:14px;
+    }
+    .kicker{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(234,240,255,.06);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .headline{
+      margin:10px 0 8px;
+      font-size:30px;
+      line-height:1.08;
+      letter-spacing:-.4px;
+    }
+    .subhead{
+      margin:0;
+      color:var(--muted);
+      line-height:1.6;
+    }
+    .heroActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(234,240,255,.08);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      cursor:pointer;
+      transition: transform .03s ease, background .15s ease, border-color .15s ease;
+    }
+    .btn:hover{background: rgba(234,240,255,.11);border-color: rgba(234,240,255,.18); text-decoration:none}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{
+      background: linear-gradient(90deg, rgba(78,112,241,.96), rgba(251,171,156,.86));
+      color:#071022;
+      font-weight:900;
+      border-color: rgba(255,255,255,.18);
+    }
+
+    /* Headshot */
+    .headshotWrap{
+      display:grid;
+      grid-template-columns: 84px 1fr;
+      gap:12px;
+      align-items:center;
+    }
+    .headshot{
+      width:84px;height:84px;border-radius:22px;
+      border:1px solid rgba(234,240,255,.16);
+      background: rgba(10,14,35,.25);
+      overflow:hidden;
+      display:grid;place-items:center;
+      position:relative;
+    }
+    .headshot img{width:100%; height:100%; object-fit:cover; display:block}
+
+    .facts{display:grid;gap:10px;margin-top:12px}
+    .fact{
+      padding:12px;
+      border-radius:16px;
+      border:1px solid rgba(234,240,255,.12);
+      background: rgba(10,14,35,.22);
+    }
+    .fact .label{font-size:12px;color:var(--muted)}
+    .fact .value{margin-top:6px;font-weight:900}
+
+    .grid{display:grid;grid-template-columns: 1fr 1fr;gap:14px;margin-top:14px}
+    .sectionTitle{margin:0 0 8px;font-size:14px;letter-spacing:.2px}
+    .muted{color:var(--muted)}
+    .divider{height:1px;background: rgba(234,240,255,.12);margin:14px 0}
+
+    .timeline{display:grid;gap:10px}
+    .item{
+      border:1px solid rgba(234,240,255,.12);
+      background: rgba(10,14,35,.22);
+      border-radius:16px;
+      padding:12px;
+    }
+    .itemTop{display:flex;gap:10px;align-items:baseline;justify-content:space-between;flex-wrap:wrap}
+    .role{font-weight:1000}
+    .meta{font-size:12px;color:var(--muted)}
+    ul{margin:10px 0 0 18px;color:var(--muted);line-height:1.55}
+    .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      font-size:12px;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid rgba(234,240,255,.12);
+      background: rgba(234,240,255,.06);
+      color:var(--muted);
+    }
+
+    /* Project images */
+    .projectCard{overflow:hidden}
+    .projectImg{
+      width:100%;
+      height:170px;
+      object-fit:cover;
+      display:block;
+      border-radius:14px;
+      border:1px solid rgba(234,240,255,.12);
+      margin-bottom:10px;
+    }
+    @media (max-width:900px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:1fr}
+      .projectImg{height:190px}
+    }
+
+    footer{
+      padding:14px 16px;
+      border-top:1px solid rgba(234,240,255,.12);
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      color:var(--muted);
+      font-size:12px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+
+      <div class="topbar">
+        <header>
+          <div class="brand">
+            <div class="mark">JK</div>
+            <div>
+              <h1>Joel Kartchner</h1>
+              <p>Electrical Engineering • RF / EM Simulation • mmWave Radar</p>
+            </div>
+          </div>
+
+          <nav aria-label="Site navigation">
+            <a class="navlink" href="#about">About</a>
+            <a class="navlink" href="#education">Education</a>
+            <a class="navlink" href="#skills">Skills</a>
+            <a class="navlink" href="#experience">Experience</a>
+            <a class="navlink" href="#publications">Publications</a>
+            <a class="navlink" href="#projects">Projects</a>
+            <a class="navlink" href="#leadership">Leadership</a>
+            <a class="navlink cta" href="#contact">Contact</a>
+          </nav>
+        </header>
+      </div>
+
+      <main>
+        <!-- HERO -->
+        <section class="hero" id="top">
+          <div class="panel">
+            <div class="kicker">Single-page portfolio</div>
+            <h2 class="headline">RF + EM simulation, lab testing, and radar systems — built for real hardware.</h2>
+            <p class="subhead">
+              BYU Electrical Engineering graduate (BS EE, Magna Cum Laude, GPA 3.98) currently pursuing an MSEE
+              (anticipated Apr 2027, GPA 3.85). Experience across HFSS/ADS/SystemVue simulation, RF lab test,
+              and research on RF thin-film flex cables and filters.
+            </p>
+
+            <div class="heroActions">
+                <a class="btn primary" href="#contact">Contact</a>
+                <a class="btn" href="#projects">View projects</a>
+                <a class="btn" href="#experience">View experience</a>
+                <a class="btn" href="Joel_Kartchner_Resume.pdf" target="_blank">View Resume</a>
+                <a class="btn" href="Joel_Kartchner_Resume.pdf" download>Download Resume</a>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="tags" aria-label="Quick tags">
+              <span class="tag">HFSS</span>
+              <span class="tag">ADS / SystemVue</span>
+              <span class="tag">Python</span>
+              <span class="tag">RF Test (NA / SA / SG)</span>
+              <span class="tag">mmWave (80 GHz)</span>
+            </div>
+          </div>
+
+          <aside class="panel" aria-label="Headshot and quick facts">
+            <div class="headshotWrap">
+              <div class="headshot" title="Silhouette headshot">
+                <img src="headshot_silhouette.png" alt="Silhouette headshot of Joel Kartchner" />
+              </div>
+
+              <div>
+                <div style="font-weight:1000;font-size:16px;line-height:1.2">Joel Kartchner</div>
+                <div class="muted" style="margin-top:6px;line-height:1.45">
+                  Provo, UT • Raytheon (Tucson) internship experience • BYU ECE
+                </div>
+              </div>
+            </div>
+
+            <div class="facts">
+              <div class="fact">
+                <div class="label">Email</div>
+                <div class="value"><a href="mailto:joel.kartchner@gmail.com">joel.kartchner@gmail.com</a></div>
+              </div>
+              <div class="fact">
+                <div class="label">Phone</div>
+                <div class="value"><a href="tel:+15093929318">(509) 392-9318</a></div>
+              </div>
+              <div class="fact">
+                <div class="label">LinkedIn</div>
+                <div class="value">
+                  <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank" rel="noreferrer">linkedin.com/in/joel-kartchner</a>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <div class="grid">
+          <!-- ABOUT -->
+          <section class="panel" id="about">
+            <h3 class="sectionTitle">About</h3>
+            <p class="muted" style="margin:0;line-height:1.7">
+              I’m an electrical engineer focused on RF systems, EM simulation, and building/testing real hardware.
+              I’ve worked in research and industry settings—simulating and designing RF structures and filters,
+              supporting wireless/EM coursework as a TA, and troubleshooting RF circuit cards in the lab.
+            </p>
+          </section>
+
+          <!-- EDUCATION -->
+          <section class="panel" id="education">
+            <h3 class="sectionTitle">Education</h3>
+            <div class="timeline">
+              <div class="item">
+                <div class="itemTop">
+                  <div class="role">M.S. Electrical Engineering</div>
+                  <div class="meta">Brigham Young University • Anticipated Apr 2027 • GPA 3.85</div>
+                </div>
+                <div class="muted" style="margin-top:8px">
+                  Advisor: Karl Warnick • Selected coursework: Radar & Communication Systems, Math of Signals & Systems,
+                  Numerical Methods, Applied EM & Optics, Autonomous Aircraft Control.
+                </div>
+              </div>
+
+              <div class="item">
+                <div class="itemTop">
+                  <div class="role">B.S. Electrical Engineering (Magna Cum Laude)</div>
+                  <div class="meta">Brigham Young University • Apr 2025 • GPA 3.98</div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- SKILLS -->
+        <section class="panel" id="skills" style="margin-top:14px">
+          <h3 class="sectionTitle">Skills</h3>
+          <div class="grid" style="margin-top:10px">
+            <div class="item">
+              <div class="role">Languages</div>
+              <div class="tags" style="margin-top:10px">
+                <span class="tag">Python</span><span class="tag">C</span><span class="tag">C++</span>
+                <span class="tag">MATLAB</span><span class="tag">Java</span><span class="tag">SystemVerilog</span>
+                <span class="tag">Portuguese</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="role">Tools / Lab</div>
+              <div class="tags" style="margin-top:10px">
+                <span class="tag">HFSS</span><span class="tag">ADS</span><span class="tag">SystemVue</span>
+                <span class="tag">KiCad PCB</span><span class="tag">LTSpice</span><span class="tag">Vivado</span>
+                <span class="tag">Network Analyzer</span><span class="tag">Spectrum Analyzer</span>
+                <span class="tag">Signal Generator</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- EXPERIENCE -->
+        <section class="panel" id="experience" style="margin-top:14px">
+          <h3 class="sectionTitle">Experience</h3>
+          <div class="timeline">
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Masters Research Assistant</div>
+                <div class="meta">BYU College of Electrical & Computer Engineering • Sept 2025 – Present</div>
+              </div>
+              <ul>
+                <li>Simulated RF thin-film flex cables using HFSS in a research setting.</li>
+                <li>Designed and simulated coupled-line and stepped-impedance filters using Python and HFSS.</li>
+              </ul>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Teaching Assistant</div>
+                <div class="meta">BYU College of Electrical & Computer Engineering • Sept 2025 – Present</div>
+              </div>
+              <ul>
+                <li>TA for Wireless Communication Circuits and EM Fields & Waves.</li>
+                <li>Tutored topics including stub/lumped-element matching, noise, gain, and stability circles.</li>
+              </ul>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Raytheon RF Products — Summer Intern</div>
+                <div class="meta">Raytheon • Tucson, AZ • May 2024 – Aug 2024 & May 2025 – Aug 2025</div>
+              </div>
+              <ul>
+                <li>Tested and troubleshot RF circuit cards; wrote Python test code; assisted with EME/EMI testing.</li>
+                <li>Simulated RF exciters/receivers across frequency and temperature using SystemVue and ADS.</li>
+                <li>Tested circuits using network/spectrum analyzers and signal generators.</li>
+                <li>Correlated simulations to hardware measurements to validate component changes.</li>
+              </ul>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Research Assistant — Laser Ablation Lab</div>
+                <div class="meta">BYU ECE • May 2023 – May 2024; Sept 2024 – Apr 2025</div>
+              </div>
+              <ul>
+                <li>Developed a laser ablation tool to create RF metal-mesh filters and microscopic flexible cables.</li>
+              </ul>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Teaching Assistant</div>
+                <div class="meta">BYU ECE • Sept 2023 – Dec 2023</div>
+              </div>
+              <ul>
+                <li>Tutored circuit analysis concepts and supported students building circuits in the lab.</li>
+              </ul>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Research Assistant</div>
+                <div class="meta">BYU ECE • Sept 2022 – May 2023</div>
+              </div>
+              <ul>
+                <li>Used Python to model and simulate photonic components and extract S-parameters.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- PUBLICATIONS -->
+        <section class="panel" id="publications" style="margin-top:14px">
+          <h3 class="sectionTitle">Selected Publication</h3>
+          <div class="item">
+            <div class="itemTop">
+              <div class="role">Fabrication of High Density Flex Cables Using Direct Write Laser Ablation</div>
+              <div class="meta">IETC 2024 • Logan, UT</div>
+            </div>
+            <div class="muted" style="margin-top:10px;line-height:1.6">
+              J. Kartchner, B. Ferguson, D. Jensen, J. Payne, G. Nielson, S. Schultz.
+              <a href="https://doi.org/10.1109/IETC61393.2024.10564256" target="_blank" rel="noreferrer">DOI: 10.1109/IETC61393.2024.10564256</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROJECTS -->
+        <section class="panel" id="projects" style="margin-top:14px">
+          <h3 class="sectionTitle">Selected Projects</h3>
+
+          <div class="grid" style="margin-top:10px">
+            <div class="item projectCard">
+              <img class="projectImg" src="project_radar.png" alt="Abstract radar visualization" />
+              <div class="itemTop">
+                <div class="role">mmWave Radar (Senior Capstone)</div>
+                <div class="meta">2024–2025</div>
+              </div>
+              <p class="muted" style="margin:10px 0 0;line-height:1.6">
+                Developed and built an 80 GHz radar system to detect small high-velocity projectiles in a laboratory setting.
+              </p>
+              <div class="tags">
+                <span class="tag">80 GHz</span><span class="tag">RF Hardware</span><span class="tag">Radar</span>
+              </div>
+            </div>
+
+            <div class="item projectCard">
+              <img class="projectImg" src="project_lasertag.png" alt="Abstract laser tag electronics visualization" />
+              <div class="itemTop">
+                <div class="role">Laser Tag System + “Grenade”</div>
+                <div class="meta">2023–2024</div>
+              </div>
+              <p class="muted" style="margin:10px 0 0;line-height:1.6">
+                Junior team design project: built a laser tag game system and laser tag “grenade”; designed transmit/receive circuits,
+                power systems, and wrote game code and drivers.
+              </p>
+              <div class="tags">
+                <span class="tag">TX/RX Circuits</span><span class="tag">Embedded</span><span class="tag">Power</span>
+              </div>
+            </div>
+
+            <div class="item projectCard">
+              <img class="projectImg" src="project_teslacoil.png" alt="Abstract high voltage Tesla coil visualization" />
+              <div class="itemTop">
+                <div class="role">500,000V Tesla Coil</div>
+                <div class="meta">2022</div>
+              </div>
+              <p class="muted" style="margin:10px 0 0;line-height:1.6">
+                Designed and built a 500,000-volt Tesla coil and safely demonstrated it to groups.
+              </p>
+              <div class="tags">
+                <span class="tag">High Voltage</span><span class="tag">Safety</span><span class="tag">Design/Build</span>
+              </div>
+            </div>
+
+            <div class="item projectCard">
+              <img class="projectImg" src="project_laserablation.png" alt="Abstract laser ablation and RF mesh visualization" />
+              <div class="itemTop">
+                <div class="role">RF Metal Mesh Filters + Flex Cables (Laser Ablation)</div>
+                <div class="meta">Research</div>
+              </div>
+              <p class="muted" style="margin:10px 0 0;line-height:1.6">
+                Built tooling and processes for producing RF structures via direct-write laser ablation.
+              </p>
+              <div class="tags">
+                <span class="tag">RF Filters</span><span class="tag">Fabrication</span><span class="tag">Research</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- LEADERSHIP / SERVICE -->
+        <section class="panel" id="leadership" style="margin-top:14px">
+          <h3 class="sectionTitle">Leadership & Service</h3>
+          <div class="timeline">
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Missionary Service</div>
+                <div class="meta">2-year voluntary mission • The Church of Jesus Christ of Latter-day Saints</div>
+              </div>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Secretary, IEEE (BYU Chapter)</div>
+                <div class="meta">2023–2024</div>
+              </div>
+              <div class="muted" style="margin-top:8px">Helped organize and run events for the chapter.</div>
+            </div>
+
+            <div class="item">
+              <div class="itemTop">
+                <div class="role">Eagle Scout</div>
+                <div class="meta">Boy Scouts of America • 2016</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- CONTACT -->
+        <section class="panel" id="contact" style="margin-top:14px">
+          <h3 class="sectionTitle">Contact</h3>
+          <p class="muted" style="margin:0;line-height:1.7">
+            For opportunities in RF systems, EM simulation, or radar/wireless engineering, feel free to reach out.
+          </p>
+          <div class="divider"></div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn primary" href="mailto:joel.kartchner@gmail.com">Email</a>
+            <a class="btn" href="tel:+15093929318">Call</a>
+            <a class="btn" href="https://www.linkedin.com/in/joel-kartchner" target="_blank" rel="noreferrer">LinkedIn</a>
+            <a class="btn" href="#top">Back to top</a>
+          </div>
+        </section>
+      </main>
+
+      <footer>
+        <div>© <span id="year"></span> Joel Kartchner</div>
+        <div class="muted">Single-page portfolio • Resume-based</div>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

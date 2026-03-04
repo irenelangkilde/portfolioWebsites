@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lucy Ross - Statistics Major Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            overflow-x: hidden;
+        }
+
+        /* Colorful gradient background */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(52, 152, 219, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(155, 89, 182, 0.5) 0%, transparent 45%),
+                radial-gradient(circle at 40% 70%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(230, 126, 34, 0.7) 0%, transparent 55%),
+                radial-gradient(circle at 10% 80%, rgba(231, 76, 60, 0.6) 0%, transparent 45%),
+                radial-gradient(circle at 90% 85%, rgba(192, 57, 43, 0.5) 0%, transparent 50%),
+                linear-gradient(135deg, #f39c12 0%, #e74c3c 25%, #9b59b6 50%, #3498db 75%, #27ae60 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grainy texture overlay */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        /* Major badge */
+        .major-badge {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            background: #f4e8d8;
+            padding: 12px 24px;
+            border-radius: 50px;
+            transform: rotate(5deg);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .major-badge span {
+            color: #c0392b;
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Main typography */
+        .main-text {
+            text-align: center;
+            color: #ffffff;
+            z-index: 1;
+            padding: 0 20px;
+        }
+
+        .main-text h1 {
+            font-size: clamp(80px, 15vw, 220px);
+            font-weight: 400;
+            line-height: 0.9;
+            letter-spacing: 0.02em;
+            margin-bottom: 0;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            font-family: 'Cinzel', serif;
+        }
+
+        .main-text .first-line {
+            display: block;
+        }
+
+        .main-text .second-line {
+            display: block;
+            margin-top: -10px;
+        }
+
+        /* Subtitle */
+        .subtitle {
+            margin-top: 40px;
+            color: #ffffff;
+            font-size: clamp(22px, 2.5vw, 32px);
+            font-weight: 300;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #ffffff;
+            transform: scale(1.2);
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* About section */
+        .about-section {
+            padding: 100px 40px;
+            background: #f9f9f9;
+        }
+
+        .section-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-section h2 {
+            font-size: clamp(40px, 6vw, 70px);
+            margin-bottom: 30px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-top: 50px;
+        }
+
+        .about-text p {
+            font-size: clamp(16px, 2vw, 18px);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: #555;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .stats-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .stat-item {
+            margin-bottom: 25px;
+        }
+
+        .stat-item h3 {
+            font-size: 18px;
+            color: #2c3e50;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .stat-item p {
+            color: #7f8c8d;
+            font-size: 15px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Education & Experience */
+        .experience-section {
+            padding: 100px 40px;
+            background: #fff;
+        }
+
+        .exp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .exp-card {
+            background: #f9f9f9;
+            padding: 35px;
+            border-radius: 15px;
+            border-left: 5px solid #3498db;
+        }
+
+        .exp-card h3 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .exp-card .meta {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .exp-card p {
+            color: #555;
+            line-height: 1.7;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Skills section */
+        .skills-section {
+            padding: 100px 40px;
+            background: #ecf0f1;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .skill-category {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .skill-category h3 {
+            font-size: 20px;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 8px 0;
+            color: #555;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+        }
+
+        .skill-list li:before {
+            content: "▪";
+            color: #3498db;
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        /* Projects section */
+        .projects-section {
+            padding: 100px 40px;
+            background: white;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .project-card {
+            background: #f9f9f9;
+            padding: 35px;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .project-card h3 {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .project-card .tag {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .project-card p {
+            color: #555;
+            line-height: 1.7;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Contact section */
+        .contact-section {
+            padding: 100px 40px;
+            background: 
+                radial-gradient(circle at 30% 40%, rgba(46, 204, 113, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(155, 89, 182, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
+                linear-gradient(135deg, #1abc9c 0%, #3498db 25%, #9b59b6 50%, #e74c3c 100%);
+            text-align: center;
+            color: white;
+        }
+
+        .contact-section h2 {
+            font-size: clamp(40px, 6vw, 70px);
+            margin-bottom: 30px;
+        }
+
+        .contact-section p {
+            font-size: clamp(18px, 2vw, 22px);
+            margin-bottom: 40px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .contact-btn {
+            background: white;
+            color: #2c3e50;
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .about-grid,
+            .exp-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .major-badge {
+                top: 20px;
+                right: 20px;
+                padding: 8px 16px;
+            }
+
+            .major-badge span {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="major-badge">
+            <span>Statistics Major</span>
+        </div>
+
+        <div class="main-text">
+            <h1>
+                <span class="first-line">LUCY</span>
+                <span class="second-line">ROSS</span>
+            </h1>
+            <div class="subtitle">
+                Graduate in Statistics 2026
+            </div>
+        </div>
+
+        <div class="nav-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="section-content">
+            <h2>About Me</h2>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>
+                        I'm Lucy Ross, a passionate Statistics major with a deep interest in data analysis, 
+                        machine learning, and predictive modeling. My academic journey has equipped me with 
+                        strong analytical skills and the ability to extract meaningful insights from complex datasets.
+                    </p>
+                    <p>
+                        Through coursework and hands-on projects, I've developed proficiency in statistical 
+                        programming, data visualization, and statistical inference. I'm particularly drawn to 
+                        applications of statistics in business intelligence, healthcare analytics, and social science research.
+                    </p>
+                    <p>
+                        I'm seeking opportunities in data analytics, statistical consulting, or research positions 
+                        where I can apply my quantitative skills to solve real-world problems and contribute to 
+                        data-driven decision making.
+                    </p>
+                </div>
+                <div class="stats-box">
+                    <div class="stat-item">
+                        <h3>Expected Graduation</h3>
+                        <p>May 2026 • GPA: 3.8/4.0</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Major</h3>
+                        <p>Bachelor of Science in Statistics</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Location</h3>
+                        <p>Available for relocation</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Interests</h3>
+                        <p>Data Science, Machine Learning, Biostatistics</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section class="experience-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50; margin-bottom: 20px;">Education & Experience</h2>
+            
+            <div class="exp-grid">
+                <div class="exp-card">
+                    <h3>Statistical Research Assistant</h3>
+                    <p class="meta">University Statistics Lab • 2024 - Present</p>
+                    <p>
+                        Assisted professors with data collection, statistical analysis, and research documentation. 
+                        Conducted regression analysis and hypothesis testing for multiple research projects. 
+                        Prepared data visualizations and reports for academic publications.
+                    </p>
+                </div>
+
+                <div class="exp-card">
+                    <h3>Data Analytics Intern</h3>
+                    <p class="meta">Tech Solutions Inc. • Summer 2024</p>
+                    <p>
+                        Analyzed customer data to identify trends and patterns. Created interactive dashboards 
+                        using Python and Tableau. Collaborated with marketing team to optimize campaign strategies 
+                        based on statistical insights.
+                    </p>
+                </div>
+
+                <div class="exp-card">
+                    <h3>Statistics Tutor</h3>
+                    <p class="meta">University Tutoring Center • 2023 - Present</p>
+                    <p>
+                        Provided one-on-one tutoring for undergraduate statistics courses. Helped students 
+                        understand probability theory, statistical inference, and data analysis techniques. 
+                        Developed study materials and practice problems.
+                    </p>
+                </div>
+
+                <div class="exp-card">
+                    <h3>Relevant Coursework</h3>
+                    <p class="meta">Academic Excellence</p>
+                    <p>
+                        Regression Analysis, Experimental Design, Time Series Analysis, Bayesian Statistics, 
+                        Multivariate Analysis, Statistical Machine Learning, Probability Theory, 
+                        Mathematical Statistics, Data Mining
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="skills-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50;">Technical Skills</h2>
+            
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Statistical Software</h3>
+                    <ul class="skill-list">
+                        <li>R & RStudio</li>
+                        <li>Python (NumPy, Pandas, SciPy)</li>
+                        <li>SAS</li>
+                        <li>SPSS</li>
+                        <li>STATA</li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Data Visualization</h3>
+                    <ul class="skill-list">
+                        <li>Tableau</li>
+                        <li>Power BI</li>
+                        <li>ggplot2 (R)</li>
+                        <li>Matplotlib & Seaborn</li>
+                        <li>Excel (Advanced)</li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Machine Learning</h3>
+                    <ul class="skill-list">
+                        <li>Scikit-learn</li>
+                        <li>TensorFlow (Basics)</li>
+                        <li>Regression Models</li>
+                        <li>Classification Algorithms</li>
+                        <li>Clustering Techniques</li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3>Other Tools</h3>
+                    <ul class="skill-list">
+                        <li>SQL & Database Management</li>
+                        <li>Git & GitHub</li>
+                        <li>Jupyter Notebooks</li>
+                        <li>LaTeX</li>
+                        <li>Microsoft Office Suite</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50;">Featured Projects</h2>
+            
+            <div class="projects-grid">
+                <div class="project-card">
+                    <span class="tag">Machine Learning</span>
+                    <h3>Predictive Housing Price Model</h3>
+                    <p>
+                        Developed a multiple regression model to predict housing prices using R. 
+                        Implemented feature engineering, variable selection, and model validation techniques. 
+                        Achieved 85% accuracy with cross-validation testing.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <span class="tag">Data Visualization</span>
+                    <h3>COVID-19 Dashboard</h3>
+                    <p>
+                        Created an interactive Tableau dashboard analyzing COVID-19 trends across different regions. 
+                        Visualized infection rates, vaccination progress, and demographic impacts. 
+                        Presented findings to university statistics department.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <span class="tag">Statistical Analysis</span>
+                    <h3>A/B Testing for E-commerce</h3>
+                    <p>
+                        Conducted hypothesis testing to evaluate website design changes for an e-commerce platform. 
+                        Used t-tests and chi-square tests to analyze conversion rates. 
+                        Provided data-driven recommendations that increased conversions by 12%.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <span class="tag">Time Series</span>
+                    <h3>Stock Market Forecasting</h3>
+                    <p>
+                        Applied ARIMA models to forecast stock prices using Python. 
+                        Analyzed historical data, identified trends and seasonality patterns. 
+                        Evaluated model performance using various metrics and backtesting.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <span class="tag">Research</span>
+                    <h3>Survey Analysis Project</h3>
+                    <p>
+                        Designed and analyzed a university-wide student satisfaction survey. 
+                        Applied sampling techniques, conducted hypothesis tests, and created comprehensive reports. 
+                        Presented results to university administration for policy improvements.
+                    </p>
+                </div>
+
+                <div class="project-card">
+                    <span class="tag">Bayesian Statistics</span>
+                    <h3>Healthcare Outcome Analysis</h3>
+                    <p>
+                        Used Bayesian methods to analyze patient treatment outcomes. 
+                        Implemented MCMC sampling techniques in R. 
+                        Collaborated with healthcare professionals to interpret results and inform treatment protocols.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <h2>Let's Connect</h2>
+        <p>Interested in collaborating or discussing opportunities? I'd love to hear from you!</p>
+        <div class="contact-links">
+            <a href="mailto:lucy.ross@email.com" class="contact-btn">Email Me</a>
+            <a href="https://linkedin.com/in/lucyross" class="contact-btn">LinkedIn</a>
+            <a href="#" class="contact-btn">Download Resume</a>
+        </div>
+    </section>
+
+    <script>
+        // Dot navigation
+        const dots = document.querySelectorAll('.dot');
+        const sections = document.querySelectorAll('section');
+        
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                dots.forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                sections[index].scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Update active dot on scroll
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 200) {
+                    current = index;
+                }
+            });
+            
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === current) {
+                    dot.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
