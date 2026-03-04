@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Website Intake Form</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            gap: 10px;
+        }
+
+        .progress-step {
+            flex: 1;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            position: relative;
+        }
+
+        .progress-step.active {
+            background: #667eea;
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        h2 {
+            color: #333;
+            margin-bottom: 25px;
+            font-size: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .optional-label {
+            color: #999;
+            font-weight: normal;
+            font-size: 12px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: space-between;
+        }
+
+        .button-group.single {
+            justify-content: flex-end;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            flex: 1;
+            max-width: 150px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .resource-entry {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+        }
+
+        .resource-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .resource-input-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        .resource-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .remove-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            max-width: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .generating-message {
+            background: #e3f2fd;
+            color: #0d47a1;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .generating-message.show {
+            display: block;
+        }
+
+        .error-message {
+            background: #fdecea;
+            color: #b71c1c;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            display: none;
+            text-align: center;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .tip {
+            background: #e3f2fd;
+            padding: 10px;
+            border-left: 3px solid #2196f3;
+            font-size: 12px;
+            color: #555;
+            margin: 10px 0;
+        }
+
+        .tip a {
+            color: #2196f3;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .tip a:hover {
+            text-decoration: underline;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            left: 0;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 800px;
+            width: 95%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 12px;
+        }
+
+        .modal-header h3 {
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .modal-body {
+            font-size: 13px;
+            color: #333;
+            white-space: pre-wrap;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 12px;
+        }
+
+        .reset-btn-container {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .reset-link {
+            cursor: pointer;
+            color: #2196f3;
+            text-decoration: underline;
+        }
+
+        .section-type-dropdown {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 8px;
+            background: #fff;
+            font-size: 12px;
+            display: none;
+        }
+
+        .section-type-item {
+            padding: 6px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+
+        .section-type-item:hover {
+            background: #f0f0f0;
+        }
+
+        .section-type-item.recommended::before {
+            content: "★ ";
+            color: #ffc107;
+            font-weight: bold;
+        }
+
+        .toggle-dropdown-btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .add-resource-btn {
+            padding: 8px 16px;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress-bar">
+            <div class="progress-step active" id="step1"></div>
+            <div class="progress-step" id="step2"></div>
+            <div class="progress-step" id="step3"></div>
+        </div>
+
+        <!-- Page 1: Basic Information -->
+        <form id="form1" class="form-section active">
+            <h2>Basic Information</h2>
+
+            <div class="form-group">
+                <label for="name">Name <span style="color: #e74c3c;">*</span></label>
+                <input type="text" id="name" name="name" required>
+                <div class="error" id="nameError">Name is required</div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email <span style="color: #e74c3c;">*</span></label>
+                <input type="email" id="email" name="email" placeholder="your@email.com" required>
+                <div class="error" id="emailError">Valid email is required</div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone</label>
+                <input type="tel" id="phone" name="phone" placeholder="(555) 555-5555">
+            </div>
+
+            <div class="form-group">
+                <label for="major">Major</label>
+                <input type="text" id="major" name="major" placeholder="e.g., Computer Science, Design">
+            </div>
+
+            <div class="form-group">
+                <label for="specialization">Specialization</label>
+                <input type="text" id="specialization" name="specialization" placeholder="e.g., Web Development, UX Design">
+            </div>
+
+            <div class="form-group">
+                <label for="linkedin">LinkedIn URL <span class="optional-label">(For employer reference)</span></label>
+                <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile">
+            </div>
+
+            <div class="button-group single">
+                <button type="button" class="btn-primary" onclick="nextForm(1)">Next</button>
+            </div>
+        </form>
+
+        <!-- Page 2: Portfolio Resources -->
+        <form id="form2" class="form-section">
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="previousForm(2)">Back</button>
+                <button type="button" class="btn-primary" onclick="nextForm(2)">Next</button>
+            </div>
+
+            <h2>Portfolio Resources</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 13px;">Upload or paste pre-existing templates, example websites, and/or components to be used as models for content and/or style.</p>
+
+            <!-- Files -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Files (PDF, DOC, DOCX)</h3>
+            <div class="tip">
+                Learn how to <a onclick="openLinkedInHelp();return false;">download a PDF of your LinkedIn profile</a>.
+            </div>
+            <div id="fileResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addFileResource()">+ Add File</button>
+
+            <!-- URLs -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Website Addresses (URLs)</h3>
+            <div id="urlResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addUrlResource()">+ Add URL</button>
+
+            <!-- Images -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Images</h3>
+            <div id="imageResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addImageResource()">+ Add Image</button>
+
+            <!-- Videos -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Videos</h3>
+            <div id="videoResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addVideoResource()">+ Add Video</button>
+
+            <!-- HTML -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">HTML</h3>
+            <div id="htmlResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addHtmlResource()">+ Add HTML</button>
+
+            <!-- Markdown -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Markdown</h3>
+            <div id="markdownResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addMarkdownResource()">+ Add Markdown</button>
+
+            <!-- Text -->
+            <h3 style="color: #333; font-size: 16px; margin-top: 20px; margin-bottom: 10px;">Text</h3>
+            <div class="tip">
+                Click "Portfolio Section Types" to see a dropdown list of potential sections.
+            </div>
+            <button type="button" class="toggle-dropdown-btn" onclick="toggleSectionDropdown()">Portfolio Section Types</button>
+            <div id="sectionTypeDropdown" class="section-type-dropdown"></div>
+            <div id="textResources"></div>
+            <button type="button" class="btn-secondary add-resource-btn" onclick="addTextResource()">+ Add Text</button>
+
+            <!-- Copyright Checkbox -->
+            <div class="checkbox-group" style="margin-top: 25px;">
+                <input type="checkbox" id="copyrightCheck" name="copyrightCheck">
+                <label for="copyrightCheck">I have the copyright or written permission to use these resources, or I only want to use it as inspiration; please generate something different enough to avoid copyright infringement.</label>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="previousForm(2)">Back</button>
+                <button type="button" class="btn-primary" onclick="nextForm(2)">Next</button>
+            </div>
+        </form>
+
+        <!-- Page 3: Desired Position -->
+        <form id="form3" class="form-section">
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="previousForm(3)">Back</button>
+                <button type="submit" class="btn-primary" onclick="submitForm(event)">Submit</button>
+            </div>
+
+            <h2>Desired Position</h2>
+
+            <div class="form-group">
+                <label for="desiredPosition">Desired Position <span style="color: #e74c3c;">*</span></label>
+                <input type="text" id="desiredPosition" name="desiredPosition" placeholder="e.g., Senior Software Engineer">
+                <div class="error" id="desiredPositionError">Desired Position is required</div>
+            </div>
+
+            <div class="form-group">
+                <label for="jobAd">Job Position Ad <span style="color: #e74c3c;">*</span></label>
+                <textarea id="jobAd" name="jobAd" placeholder="Paste the job position ad here (describe the role, requirements, etc.)"></textarea>
+                <div class="error" id="jobAdError">Job Position Ad is required</div>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="previousForm(3)">Back</button>
+                <button type="submit" class="btn-primary" onclick="submitForm(event)">Submit</button>
+            </div>
+        </form>
+
+        <div class="generating-message" id="generatingMessage">
+            ⏳ Generating your portfolio website — this may take 20–30 seconds...
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✓ Done! Check your Downloads folder for MyPersonalPortfolioWebsite.html and MyPersonalPortfolioWebsiteSummary.html.
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="reset-btn-container">
+            <span class="reset-link" id="resetLink" onmouseenter="enableReset()" onmouseleave="disableReset()" ondblclick="resetForm()">Double-click to reset form</span>
+        </div>
+    </div>
+
+    <!-- LinkedIn Help Modal -->
+    <div id="linkedinHelpModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>How to print / save your LinkedIn profile</h3>
+            </div>
+            <div class="modal-body" id="linkedinHelpBody"></div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeLinkedInHelp()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentForm = 1;
+        let resetTimeout = null;
+
+        // Portfolio section types with recommendations
+        const portfolioSectionTypes = [
+            { name: 'About Me', recommended: true },
+            { name: 'Experience', recommended: true },
+            { name: 'Projects', recommended: true },
+            { name: 'Skills', recommended: true },
+            { name: 'Education', recommended: true },
+            { name: 'Research', recommended: false },
+            { name: 'Publications', recommended: false },
+            { name: 'Certifications', recommended: false },
+            { name: 'Awards', recommended: false },
+            { name: 'Blog', recommended: false },
+            { name: 'Volunteering', recommended: false },
+            { name: 'Speaking Engagements', recommended: false },
+            { name: 'Open Source Contributions', recommended: false },
+            { name: 'Testimonials', recommended: false }
+        ];
+
+        function showForm(formNumber) {
+            document.querySelectorAll('.form-section').forEach(form => {
+                form.classList.remove('active');
+            });
+            document.getElementById(`form${formNumber}`).classList.add('active');
+
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                if (index < formNumber) {
+                    step.classList.add('active');
+                } else {
+                    step.classList.remove('active');
+                }
+            });
+
+            currentForm = formNumber;
+            window.scrollTo(0, 0);
+        }
+
+        function validateForm(formNumber) {
+            let isValid = true;
+
+            if (formNumber === 1) {
+                const name = document.getElementById('name');
+                if (!name.value.trim()) {
+                    document.getElementById('nameError').classList.add('show');
+                    isValid = false;
+                } else {
+                    document.getElementById('nameError').classList.remove('show');
+                }
+
+                const email = document.getElementById('email');
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email.value)) {
+                    document.getElementById('emailError').classList.add('show');
+                    isValid = false;
+                } else {
+                    document.getElementById('emailError').classList.remove('show');
+                }
+            } else if (formNumber === 3) {
+                const desiredPosition = document.getElementById('desiredPosition');
+                if (!desiredPosition.value.trim()) {
+                    document.getElementById('desiredPositionError').classList.add('show');
+                    isValid = false;
+                } else {
+                    document.getElementById('desiredPositionError').classList.remove('show');
+                }
+
+                const jobAd = document.getElementById('jobAd');
+                if (!jobAd.value.trim()) {
+                    document.getElementById('jobAdError').classList.add('show');
+                    isValid = false;
+                } else {
+                    document.getElementById('jobAdError').classList.remove('show');
+                }
+            }
+
+            return isValid;
+        }
+
+        function nextForm(formNumber) {
+            if (validateForm(formNumber)) {
+                showForm(formNumber + 1);
+            }
+        }
+
+        function previousForm(formNumber) {
+            showForm(formNumber - 1);
+        }
+
+        async function submitForm(event) {
+            event.preventDefault();
+
+            if (!validateForm(3)) return;
+
+            const formData = {
+                // Page 1
+                name: document.getElementById('name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                major: document.getElementById('major').value,
+                specialization: document.getElementById('specialization').value,
+                linkedin: document.getElementById('linkedin').value,
+                // Page 2
+                fileResources: collectResources('fileResources'),
+                urlResources: collectResources('urlResources'),
+                imageResources: collectResources('imageResources'),
+                videoResources: collectResources('videoResources'),
+                htmlResources: collectResources('htmlResources'),
+                markdownResources: collectResources('markdownResources'),
+                textResources: collectResources('textResources'),
+                copyrightAcknowledged: document.getElementById('copyrightCheck').checked,
+                // Page 3
+                desiredPosition: document.getElementById('desiredPosition').value,
+                jobAd: document.getElementById('jobAd').value
+            };
+
+            console.log('Portfolio Website Form Data:', formData);
+
+            downloadSummary(formData);
+
+            const generatingEl = document.getElementById('generatingMessage');
+            const successEl    = document.getElementById('successMessage');
+            const errorEl      = document.getElementById('errorMessage');
+
+            generatingEl.classList.add('show');
+            successEl.classList.remove('show');
+            errorEl.classList.remove('show');
+
+            try {
+                const res = await fetch('/.netlify/functions/generatePortfolio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await res.json();
+                generatingEl.classList.remove('show');
+
+                if (!res.ok || result.error) {
+                    errorEl.textContent = '✗ Error: ' + (result.error || 'Something went wrong. Please try again.');
+                    errorEl.classList.add('show');
+                    return;
+                }
+
+                // Download generated portfolio
+                const portfolioBlob = new Blob([result.html], { type: 'text/html' });
+                const portfolioA = document.createElement('a');
+                portfolioA.href = URL.createObjectURL(portfolioBlob);
+                portfolioA.download = 'MyPersonalPortfolioWebsite.html';
+                portfolioA.click();
+                URL.revokeObjectURL(portfolioA.href);
+
+                successEl.classList.add('show');
+
+                // Reset after 10 minutes
+                setTimeout(() => resetForm(), 600000);
+
+            } catch (err) {
+                generatingEl.classList.remove('show');
+                errorEl.textContent = '✗ Network error: ' + err.message;
+                errorEl.classList.add('show');
+            }
+        }
+
+        function downloadSummary(d) {
+            function row(label, value) {
+                if (!value) return '';
+                return `<tr><th>${label}</th><td>${String(value).replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>')}</td></tr>`;
+            }
+            function resourceRows(list, label) {
+                if (!list || !list.length) return '';
+                return list.map((r, i) =>
+                    `<tr><th>${label} ${i + 1}</th><td>${String(r.main||'').replace(/</g,'&lt;')}<br><em>${String(r.description||'').replace(/</g,'&lt;')}</em></td></tr>`
+                ).join('');
+            }
+            const now = new Date().toLocaleString();
+            const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Portfolio Summary — ${d.name || 'Unknown'}</title>
+<style>
+  body { font-family: Segoe UI, sans-serif; max-width: 700px; margin: 40px auto; padding: 0 20px; color: #333; }
+  h1 { color: #667eea; margin-bottom: 4px; }
+  .meta { color: #999; font-size: 13px; margin-bottom: 30px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+  th { text-align: left; padding: 10px 14px; background: #f4f4ff; width: 180px; font-weight: 600; color: #555; vertical-align: top; }
+  td { padding: 10px 14px; border-bottom: 1px solid #eee; vertical-align: top; }
+  h2 { color: #764ba2; font-size: 16px; margin: 28px 0 8px; border-bottom: 2px solid #eee; padding-bottom: 6px; }
+</style>
+</head>
+<body>
+<h1>Portfolio Website Summary</h1>
+<div class="meta">Generated ${now}</div>
+
+<h2>Basic Information</h2>
+<table>
+  ${row('Name', d.name)}
+  ${row('Email', d.email)}
+  ${row('Phone', d.phone)}
+  ${row('Major', d.major)}
+  ${row('Specialization', d.specialization)}
+  ${row('LinkedIn', d.linkedin)}
+</table>
+
+<h2>Target Role</h2>
+<table>
+  ${row('Desired Position', d.desiredPosition)}
+  ${row('Job Ad', d.jobAd)}
+</table>
+
+<h2>Portfolio Resources</h2>
+<table>
+  ${resourceRows(d.fileResources, 'File')}
+  ${resourceRows(d.urlResources, 'URL')}
+  ${resourceRows(d.htmlResources, 'HTML')}
+  ${resourceRows(d.markdownResources, 'Markdown')}
+  ${resourceRows(d.textResources, 'Text')}
+  ${resourceRows(d.imageResources, 'Image')}
+  ${resourceRows(d.videoResources, 'Video')}
+  ${row('Copyright acknowledged', d.copyrightAcknowledged ? 'Yes' : 'No')}
+</table>
+</body>
+</html>`;
+
+            const blob = new Blob([html], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'MyPersonalPortfolioWebsiteSummary.html';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function collectResources(containerId) {
+            const resources = [];
+            const container = document.getElementById(containerId);
+            container.querySelectorAll('.resource-entry').forEach(entry => {
+                const inputs = entry.querySelectorAll('.resource-input');
+                const resource = {};
+                if (inputs[0]) resource.main = inputs[0].value;
+                if (inputs[1]) resource.description = inputs[1].value;
+                if (Object.keys(resource).length > 0) resources.push(resource);
+            });
+            return resources;
+        }
+
+        function addFileResource() {
+            const container = document.getElementById('fileResources');
+            const entry = document.createElement('div');
+            entry.className = 'resource-entry';
+            entry.style.flexDirection = 'column';
+
+            const row = document.createElement('div');
+            row.style.cssText = 'display:flex; gap:10px; align-items:flex-start;';
+
+            // Left: upload button + file list
+            const leftCol = document.createElement('div');
+            leftCol.style.flex = '1';
+
+            const fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.accept = '.pdf,.doc,.docx,.html,.htm,.md,.txt,.png,.jpg,.jpeg';
+            fileInput.multiple = true;
+            fileInput.style.cssText = 'width:100%; margin-bottom:6px;';
+
+            const fileList = document.createElement('div');
+            fileList.style.cssText = 'font-size:12px; color:#555;';
+
+            // Hidden textarea stores file names + readable content for collectResources
+            const hiddenContent = document.createElement('textarea');
+            hiddenContent.className = 'resource-input';
+            hiddenContent.style.display = 'none';
+
+            fileInput.addEventListener('change', () => {
+                fileList.innerHTML = '';
+                hiddenContent.value = '';
+                const reads = [];
+                Array.from(fileInput.files).forEach(file => {
+                    const item = document.createElement('div');
+                    item.textContent = '\uD83D\uDCCE ' + file.name;
+                    fileList.appendChild(item);
+
+                    const isText = /\.(txt|html?|md|css|js)$/i.test(file.name);
+                    if (isText) {
+                        reads.push(new Promise(resolve => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve('--- ' + file.name + ' ---\n' + e.target.result);
+                            reader.readAsText(file);
+                        }));
+                    } else {
+                        reads.push(Promise.resolve('[Uploaded file: ' + file.name + ']'));
+                    }
+                });
+                Promise.all(reads).then(contents => {
+                    hiddenContent.value = contents.join('\n\n');
+                });
+            });
+
+            leftCol.appendChild(fileInput);
+            leftCol.appendChild(fileList);
+            leftCol.appendChild(hiddenContent);
+
+            // Right: description
+            const descInput = document.createElement('textarea');
+            descInput.className = 'resource-input';
+            descInput.placeholder = 'How do you want to use this?';
+            descInput.style.cssText = 'flex:1; min-height:80px;';
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-secondary remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = e => { e.preventDefault(); entry.remove(); };
+
+            row.appendChild(leftCol);
+            row.appendChild(descInput);
+            row.appendChild(removeBtn);
+            entry.appendChild(row);
+            container.appendChild(entry);
+        }
+
+        function addUrlResource() {
+            addResource('urlResources', 'Website URL', 'How do you want to use this?');
+        }
+
+        function addImageResource() {
+            addResource('imageResources', 'Image URL or File', 'How do you want to use this?');
+        }
+
+        function addVideoResource() {
+            addResource('videoResources', 'Video URL', 'How do you want to use this?');
+        }
+
+        function addHtmlResource() {
+            addResource('htmlResources', 'HTML Code', 'How do you want to use this?');
+        }
+
+        function addMarkdownResource() {
+            addResource('markdownResources', 'Markdown Code', 'How do you want to use this?');
+        }
+
+        function addTextResource() {
+            addResource('textResources', 'Text Content', 'How do you want to use this?');
+        }
+
+        function addResource(containerId, mainLabel, descLabel) {
+            const container = document.getElementById(containerId);
+            const entry = document.createElement('div');
+            entry.className = 'resource-entry';
+
+            const mainInput = document.createElement('textarea');
+            mainInput.className = 'resource-input';
+            mainInput.placeholder = mainLabel;
+            mainInput.style.minHeight = '80px';
+
+            const descInput = document.createElement('textarea');
+            descInput.className = 'resource-input';
+            descInput.placeholder = descLabel;
+            descInput.style.minHeight = '60px';
+
+            const mainLabel_el = document.createElement('div');
+            mainLabel_el.className = 'resource-input-label';
+            mainLabel_el.textContent = mainLabel;
+
+            const descLabel_el = document.createElement('div');
+            mainLabel_el.className = 'resource-input-label';
+            descLabel_el.textContent = descLabel;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn-secondary remove-btn';
+            removeBtn.textContent = 'Remove';
+            removeBtn.onclick = (e) => {
+                e.preventDefault();
+                entry.remove();
+            };
+
+            entry.appendChild(mainLabel_el);
+            entry.appendChild(mainInput);
+            entry.appendChild(descLabel_el);
+            entry.appendChild(descInput);
+            entry.appendChild(removeBtn);
+
+            container.appendChild(entry);
+        }
+
+        function toggleSectionDropdown() {
+            const dropdown = document.getElementById('sectionTypeDropdown');
+            if (dropdown.style.display === 'none' || !dropdown.style.display) {
+                dropdown.style.display = 'block';
+                populateSectionDropdown();
+            } else {
+                dropdown.style.display = 'none';
+            }
+        }
+
+        function populateSectionDropdown() {
+            const dropdown = document.getElementById('sectionTypeDropdown');
+            dropdown.innerHTML = '';
+            portfolioSectionTypes.forEach(section => {
+                const item = document.createElement('div');
+                item.className = 'section-type-item' + (section.recommended ? ' recommended' : '');
+                item.textContent = section.name;
+                item.onclick = () => {
+                    const textContainer = document.getElementById('textResources');
+                    addResource('textResources', section.name, 'How do you want to use this?');
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(item);
+            });
+        }
+
+        function openLinkedInHelp() {
+            document.getElementById('linkedinHelpModal').style.display = 'flex';
+            // Inject the content from HumanInstructionsForPrintingLinkedInProfile.md
+            const linkedinContent = `Desktop (LinkedIn website)
+
+* Open profile: Sign in and go to your profile (click your photo → View profile).
+* More menu: Click the More button (near your headline/photo).
+* Save as PDF: Choose Save to PDF (or Save profile → Download PDF) — the browser will download a PDF of your public profile.
+* If no Save option: Use the browser print dialog and save as PDF: press Cmd+P (macOS) or Ctrl+P (Windows) → set Destination to Save as PDF → Save.
+
+Mobile (LinkedIn app — iOS / Android)
+
+* Open profile: Sign in, tap your profile photo → View Profile.
+* More / ⋯ menu: Tap the three-dot menu (top-right).
+* Save / Share: Tap Share profile via or Save to PDF (if shown). If the app doesn't offer PDF, choose Share profile via → email to yourself or open in browser, then use the device print-to-PDF feature.
+
+Alternate: export profile data (structured)
+
+* Settings → Data privacy: On desktop go to Me → Settings & Privacy → Data privacy → Get a copy of your data to request downloads (not a PDF resume but profile data/CSV).
+
+Troubleshooting & tips
+
+* Logged-in access required: You must be signed in and viewing your own profile.
+* Layout differences: LinkedIn UI changes; look under More, Share, or the three-dot menu.
+* Include/reduce sections: Use print options (Layout, Scale, Background graphics) to control what appears in the PDF.
+* Privacy: Review content before sharing the PDF.`;
+
+            document.getElementById('linkedinHelpBody').textContent = linkedinContent;
+        }
+
+        function closeLinkedInHelp() {
+            document.getElementById('linkedinHelpModal').style.display = 'none';
+        }
+
+        function enableReset() {
+            resetTimeout = setTimeout(() => {
+                document.getElementById('resetLink').style.opacity = '0.5';
+            }, 500);
+        }
+
+        function disableReset() {
+            if (resetTimeout) clearTimeout(resetTimeout);
+            document.getElementById('resetLink').style.opacity = '1';
+        }
+
+        function resetForm() {
+            document.querySelectorAll('input, textarea, select').forEach(field => {
+                if (field.type !== 'file') {
+                    field.value = '';
+                }
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
+            // Clear resource entries
+            ['fileResources', 'urlResources', 'imageResources', 'videoResources', 'htmlResources', 'markdownResources', 'textResources'].forEach(id => {
+                document.getElementById(id).innerHTML = '';
+            });
+
+            document.getElementById('successMessage').classList.remove('show');
+            document.getElementById('generatingMessage').classList.remove('show');
+            document.getElementById('errorMessage').classList.remove('show');
+            document.getElementById('sectionTypeDropdown').style.display = 'none';
+            showForm(1);
+        }
+
+        // Phone formatting
+        document.addEventListener('input', function (e) {
+            if (e.target && e.target.id === 'phone') {
+                const el = e.target;
+                const digits = el.value.replace(/\D/g, '').slice(0, 10);
+                let formatted = digits;
+                if (digits.length > 6) {
+                    formatted = `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`;
+                } else if (digits.length > 3) {
+                    formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                } else if (digits.length > 0) {
+                    formatted = digits;
+                }
+                el.value = formatted;
+            }
+        });
+
+        // Initialize
+        showForm(1);
+    </script>
+</body>
+</html>

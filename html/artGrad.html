@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maya Rodriguez - Art Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d4567a;
+            --secondary: #f7a072;
+            --accent: #ffd166;
+            --dark: #2d3142;
+            --light: #fef6f0;
+            --purple: #9b5de5;
+            --teal: #00bbf9;
+            --gradient: linear-gradient(135deg, #d4567a 0%, #f7a072 50%, #ffd166 100%);
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #ffffff;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 20px;
+        }
+
+        nav .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--gradient);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-photo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 6px solid white;
+            object-fit: cover;
+            margin: 0 auto 25px;
+            display: block;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero .graduation {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 35px;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 90px 0;
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--light);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.15rem;
+            line-height: 1.9;
+        }
+
+        .about-content p {
+            margin-bottom: 20px;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 35px;
+            margin-top: 40px;
+        }
+
+        .skill-category {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .skill-category:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+
+        .skill-category h3 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 600;
+        }
+
+        /* Gallery Section */
+        .gallery {
+            background: white;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+        }
+
+        .artwork-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: all 0.4s;
+        }
+
+        .artwork-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .artwork-image {
+            width: 100%;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artwork-image.painting {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .artwork-image.digital {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .artwork-image.sculpture {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .artwork-image.photography {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .artwork-image.illustration {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .artwork-image.mixed {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .artwork-content {
+            padding: 30px;
+        }
+
+        .artwork-content h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .artwork-category {
+            display: inline-block;
+            background: var(--light);
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .artwork-content p {
+            color: #666;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .artwork-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        /* Resume Section */
+        .resume {
+            background: var(--light);
+        }
+
+        .resume-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .resume-section {
+            margin-bottom: 50px;
+        }
+
+        .resume-section h3 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .resume-item {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--primary);
+        }
+
+        .resume-item h4 {
+            color: var(--dark);
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .resume-item .meta {
+            color: #999;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .resume-item ul {
+            margin-left: 20px;
+            color: var(--dark);
+        }
+
+        .resume-item ul li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .download-resume {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: white;
+        }
+
+        .contact-content {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .contact-item {
+            background: var(--light);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .contact-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .contact-item a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 10px 25px rgba(212, 86, 122, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            section h2 {
+                font-size: 2.2rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Maya Rodriguez</div>
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#gallery">Gallery</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#resume">Resume</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ee9ca7;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffdde1;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='80' fill='white' font-weight='bold'%3EMR%3C/text%3E%3C/svg%3E" alt="Maya Rodriguez" class="profile-photo">
+            <h1>Maya Rodriguez</h1>
+            <p class="subtitle">Visual Artist & Creative Designer</p>
+            <p class="graduation">🎨 BFA in Studio Art | Graduating Spring 2026</p>
+            <div class="cta-buttons">
+                <a href="#gallery" class="btn btn-primary">View Portfolio</a>
+                <a href="#contact" class="btn btn-secondary">Let's Connect</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About Me</h2>
+            <p class="section-subtitle">Creating meaningful art that connects people and tells stories</p>
+            <div class="about-content">
+                <p>I'm a multidisciplinary visual artist specializing in painting, digital illustration, and mixed media. My work explores themes of identity, cultural heritage, and the intersection of traditional and contemporary art forms.</p>
+                <p>With a strong foundation in both classical techniques and modern digital tools, I bring creativity, technical skill, and fresh perspectives to every project. I'm passionate about creating art that resonates emotionally and visually.</p>
+                <p>I'm seeking opportunities in galleries, creative agencies, art education, and freelance commissions where I can contribute my artistic vision and continue growing as a professional artist.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="gallery">
+        <div class="container">
+            <h2>Portfolio Gallery</h2>
+            <p class="section-subtitle">A selection of my recent work across various mediums</p>
+            <div class="gallery-grid">
+                <div class="artwork-card">
+                    <div class="artwork-image painting">🎨</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Oil Painting</span>
+                        <h3>"Urban Reflections"</h3>
+                        <p>A series of cityscapes exploring the interplay of light, architecture, and human presence in modern urban environments. Created using traditional oil painting techniques on canvas.</p>
+                        <div class="artwork-details">
+                            <span>36" × 48"</span>
+                            <span>2024</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image digital">🖌️</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Digital Illustration</span>
+                        <h3>"Dreamscape Series"</h3>
+                        <p>A collection of surreal digital illustrations combining hand-drawn elements with digital painting. Explores subconscious imagery and abstract narratives using Procreate and Photoshop.</p>
+                        <div class="artwork-details">
+                            <span>Digital</span>
+                            <span>2025</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image sculpture">🗿</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Sculpture</span>
+                        <h3>"Interconnected"</h3>
+                        <p>An abstract sculptural piece made from recycled materials exploring themes of community and connection. Combines metal, wood, and found objects in a thought-provoking installation.</p>
+                        <div class="artwork-details">
+                            <span>Mixed Media</span>
+                            <span>2024</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image photography">📷</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Photography</span>
+                        <h3>"Cultural Mosaic"</h3>
+                        <p>Documentary photography series capturing the diverse cultural landscape of local communities. Shot on 35mm film and digitally processed to enhance emotional depth and storytelling.</p>
+                        <div class="artwork-details">
+                            <span>Photography</span>
+                            <span>2024</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image illustration">✏️</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Illustration</span>
+                        <h3>"Children's Book Project"</h3>
+                        <p>Complete illustration set for a children's picture book featuring vibrant characters and whimsical environments. Created using watercolor, ink, and digital enhancement techniques.</p>
+                        <div class="artwork-details">
+                            <span>24 Illustrations</span>
+                            <span>2025</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image mixed">🎭</div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">Mixed Media</span>
+                        <h3>"Layers of Memory"</h3>
+                        <p>An experimental piece combining collage, acrylic painting, and digital elements. Explores personal and collective memory through layered imagery and texture.</p>
+                        <div class="artwork-details">
+                            <span>30" × 40"</span>
+                            <span>2024</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="container">
+            <h2>Skills & Expertise</h2>
+            <p class="section-subtitle">Technical proficiency across traditional and digital mediums</p>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🎨</span>Traditional Media</h3>
+                    <ul class="skill-list">
+                        <li><span>Oil Painting</span><span class="skill-level">Expert</span></li>
+                        <li><span>Acrylic Painting</span><span class="skill-level">Expert</span></li>
+                        <li><span>Watercolor</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Drawing (Charcoal, Graphite)</span><span class="skill-level">Expert</span></li>
+                        <li><span>Printmaking</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Sculpture</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">💻</span>Digital Tools</h3>
+                    <ul class="skill-list">
+                        <li><span>Adobe Photoshop</span><span class="skill-level">Expert</span></li>
+                        <li><span>Adobe Illustrator</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Procreate</span><span class="skill-level">Expert</span></li>
+                        <li><span>Adobe InDesign</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Figma</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>Lightroom</span><span class="skill-level">Advanced</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">📸</span>Visual Arts</h3>
+                    <ul class="skill-list">
+                        <li><span>Photography (Film & Digital)</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Illustration</span><span class="skill-level">Expert</span></li>
+                        <li><span>Concept Art</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Character Design</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Typography</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Color Theory</span><span class="skill-level">Expert</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">✨</span>Specializations</h3>
+                    <ul class="skill-list">
+                        <li><span>Portrait Art</span><span class="skill-level">Expert</span></li>
+                        <li><span>Mural Design</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Book Illustration</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Mixed Media Collage</span><span class="skill-level">Expert</span></li>
+                        <li><span>Art Direction</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>Gallery Curation</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resume Section -->
+    <section id="resume" class="resume">
+        <div class="container">
+            <h2>Resume</h2>
+            <p class="section-subtitle">Experience, education, and achievements</p>
+            <div class="resume-content">
+                <div class="resume-section">
+                    <h3>Education</h3>
+                    <div class="resume-item">
+                        <h4>Bachelor of Fine Arts in Studio Art</h4>
+                        <div class="meta">
+                            <span>📍 Art University</span>
+                            <span>📅 Expected Graduation: May 2026</span>
+                            <span>🎯 GPA: 3.9/4.0</span>
+                        </div>
+                        <ul>
+                            <li>Concentration in Painting with secondary focus in Digital Media</li>
+                            <li>Dean's List all semesters | Presidential Scholarship recipient</li>
+                            <li>Senior Thesis: "Contemporary Perspectives on Cultural Identity in Visual Art"</li>
+                            <li>Relevant Coursework: Advanced Painting, Digital Illustration, Art History, Color Theory, Sculpture, Photography, Portfolio Development</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Experience</h3>
+                    <div class="resume-item">
+                        <h4>Freelance Artist & Illustrator</h4>
+                        <div class="meta">
+                            <span>📍 Self-Employed</span>
+                            <span>📅 2023 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Created commissioned artwork for 30+ clients including portraits, illustrations, and custom murals</li>
+                            <li>Designed illustrations for two published children's books and multiple editorial projects</li>
+                            <li>Managed all aspects of client relations, project timelines, and invoicing</li>
+                            <li>Built strong social media presence with 15K+ followers showcasing portfolio work</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Gallery Assistant</h4>
+                        <div class="meta">
+                            <span>📍 Contemporary Art Gallery</span>
+                            <span>📅 Summer 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Assisted in curating and installing exhibitions featuring emerging and established artists</li>
+                            <li>Managed gallery social media accounts and created promotional materials for events</li>
+                            <li>Provided tours and engaged with visitors, enhancing their understanding of exhibited artworks</li>
+                            <li>Coordinated opening receptions and artist talks for monthly exhibitions</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Art Studio Instructor</h4>
+                        <div class="meta">
+                            <span>📍 Community Arts Center</span>
+                            <span>📅 Jan 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Teach weekly painting and drawing classes to students aged 8-16</li>
+                            <li>Develop curriculum focusing on fundamental techniques and creative expression</li>
+                            <li>Organize student art showcases and coordinate supplies for 20+ students</li>
+                            <li>Foster inclusive and encouraging environment for artistic growth</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Graphic Design Intern</h4>
+                        <div class="meta">
+                            <span>📍 Creative Agency</span>
+                            <span>📅 Summer 2023</span>
+                        </div>
+                        <ul>
+                            <li>Created digital illustrations and graphics for client marketing campaigns</li>
+                            <li>Collaborated with design team on branding projects for local businesses</li>
+                            <li>Produced social media content and assisted with photo editing</li>
+                            <li>Learned professional workflow processes and client communication skills</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Exhibitions & Recognition</h3>
+                    <div class="resume-item">
+                        <h4>Selected Exhibitions & Awards</h4>
+                        <ul>
+                            <li><strong>Senior Art Exhibition</strong> - Featured Artist, University Gallery (Spring 2025)</li>
+                            <li><strong>Regional Student Art Competition</strong> - First Place, Painting Category (2024)</li>
+                            <li><strong>"Emerging Voices"</strong> - Group Exhibition, Downtown Arts District (Fall 2024)</li>
+                            <li><strong>University Art Scholarship</strong> - Merit-based award for artistic excellence (2023-2026)</li>
+                            <li><strong>Annual Student Show</strong> - Best in Show Award (2023)</li>
+                            <li><strong>Public Mural Commission</strong> - City Arts Council (Summer 2024)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Professional Development</h3>
+                    <div class="resume-item">
+                        <h4>Workshops & Certifications</h4>
+                        <ul>
+                            <li>Advanced Digital Illustration Workshop with renowned illustrator (2024)</li>
+                            <li>Professional Practices for Artists - Business and Marketing (2024)</li>
+                            <li>Adobe Creative Suite Certified Professional (2023)</li>
+                            <li>Art Gallery Management and Curation Seminar (2025)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="download-resume">
+                    <a href="#" class="btn btn-primary">📄 Download Full Resume & CV</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Let's Create Together</h2>
+            <p class="section-subtitle">Available for commissions, collaborations, and full-time opportunities</p>
+            <div class="contact-content">
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>📧 Email</h3>
+                        <a href="mailto:maya.rodriguez@email.com">maya.rodriguez@email.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📱 Phone</h3>
+                        <a href="tel:+15559876543">(555) 987-6543</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📍 Location</h3>
+                        <p>Los Angeles, CA<br>Available for Remote Work</p>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://instagram.com/mayarodriguez_art" target="_blank" title="Instagram">📷</a>
+                    <a href="https://behance.net/mayarodriguez" target="_blank" title="Behance">🎨</a>
+                    <a href="https://linkedin.com/in/mayarodriguez" target="_blank" title="LinkedIn">in</a>
+                    <a href="https://pinterest.com/mayarodriguez" target="_blank" title="Pinterest">📌</a>
+                    <a href="mailto:maya.rodriguez@email.com" title="Email">✉️</a>
+                </div>
+
+                <p style="margin-top: 40px; color: #999; font-size: 0.95rem;">Open to commissions | Gallery representation | Creative collaborations | Full-time positions</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Maya Rodriguez | Visual Artist Portfolio</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">All artwork and images are property of Maya Rodriguez</p>
+        </div>
+    </footer>
+</body>
+</html>

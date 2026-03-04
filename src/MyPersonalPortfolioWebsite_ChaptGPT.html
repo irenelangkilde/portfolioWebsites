@@ -1,0 +1,1614 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MyPersonalPortfolioWebsiteIntakeForm</title>
+  <meta name="description" content="College graduate intake form for generating a portfolio website prompt quickly and efficiently." />
+
+  <!--
+    PersonalPortfolioWebsiteIntakeForm
+    Version: 2.0.0
+    Updated: 2026-02-27
+    Device: mobile
+  -->
+
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#121a2c;
+      --panel2:#0f1726;
+      --text:#eaf0ff;
+      --muted:#b8c3e6;
+      --border:rgba(255,255,255,.12);
+      --primary:#4E70F1;
+      --secondary:#FBAB9C;
+      --accent:#8DE0FF;
+      --ok:#57d38c;
+      --danger:#ff5c5c;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius: 14px;
+      --radius2: 10px;
+      --gap: 12px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%, rgba(78,112,241,.22), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, rgba(251,171,156,.18), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, rgba(141,224,255,.14), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.45;
+    }
+
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    /* Mobile-first, max-width 480px for the form content */
+    .wrap{
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px 12px 40px;
+    }
+
+    header{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-bottom:12px;
+    }
+    .title{
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:.2px;
+    }
+    .subtitle{
+      color:var(--muted);
+      font-size: 12.5px;
+    }
+
+    .panel{
+      background: linear-gradient(180deg, rgba(255,255,255,.04), transparent 40%),
+                  rgba(18,26,44,.72);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .topbar{
+      padding: 12px 12px 10px;
+      border-bottom:1px solid var(--border);
+      background: rgba(15,23,38,.7);
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .step-label{
+      font-weight:850;
+      font-size: 12px;
+      color:var(--muted);
+      letter-spacing:.45px;
+      text-transform:uppercase;
+    }
+
+    .progress{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .progress-track{
+      width:100%;
+      height:10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      border:1px solid var(--border);
+      overflow:hidden;
+    }
+    .progress-fill{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, rgba(78,112,241,.95), rgba(141,224,255,.95));
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+    .progress-steps{
+      display:flex;
+      justify-content:space-between;
+      gap:6px;
+      font-size:11px;
+      color:var(--muted);
+      user-select:none;
+    }
+    .progress-steps span{
+      display:flex; align-items:center; gap:6px;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.07);
+    }
+    .dot.active{ background: var(--accent); border-color: rgba(141,224,255,.55); }
+    .dot.done{ background: var(--ok); border-color: rgba(87,211,140,.55); }
+
+    form{ margin:0; }
+    .step{ display:none; padding: 12px; }
+    .step.active{ display:block; }
+
+    .field{ display:flex; flex-direction:column; gap:7px; }
+    label{ font-weight:720; font-size: 12.5px; color: rgba(234,240,255,.95); }
+    .hint{ font-size: 12px; color: var(--muted); }
+
+    input[type="text"], input[type="email"], input[type="url"], textarea, select{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: var(--radius2);
+      border:1px solid var(--border);
+      background: rgba(11,18,32,.55);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{ min-height: 110px; resize: vertical; }
+
+    input::placeholder, textarea::placeholder{ color: rgba(184,195,230,.55); }
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(141,224,255,.55);
+      box-shadow: 0 0 0 3px rgba(141,224,255,.14);
+    }
+
+    /* "Adjacent boxes" stack vertically on mobile */
+    .stack{ display:grid; gap: var(--gap); grid-template-columns: 1fr; }
+
+    .filebox{
+      padding: 12px;
+      border-radius: var(--radius2);
+      border:1px dashed rgba(255,255,255,.18);
+      background: rgba(11,18,32,.35);
+    }
+    .filebox input[type="file"]{ width:100%; }
+    .filelist{
+      margin:10px 0 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+    .filelist li{ margin: 3px 0; }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-top: 14px;
+    }
+    .actions.top{ margin: 0 0 10px; }
+
+    .btn{
+      appearance:none;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      cursor:pointer;
+      color: var(--text);
+      background: rgba(255,255,255,.06);
+      font-weight: 780;
+      letter-spacing:.2px;
+      transition: transform .03s ease, background .15s ease, border-color .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.09); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.primary{
+      background: linear-gradient(90deg, rgba(78,112,241,.9), rgba(141,224,255,.55));
+      border-color: rgba(141,224,255,.35);
+    }
+    .btn.ghost{ background: transparent; }
+    .btn.small{
+      padding: 8px 10px;
+      border-radius: 10px;
+      font-weight: 740;
+      font-size: 12.5px;
+    }
+
+    .reset-note{
+      font-size: 12px;
+      color: rgba(251,171,156,.95);
+      font-weight: 740;
+      min-height: 16px;
+    }
+
+    .error{
+      background: rgba(255,92,92,.10);
+      border:1px solid rgba(255,92,92,.30);
+      color: rgba(255,230,230,.95);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-top: 12px;
+      display:none;
+    }
+    .error.show{ display:block; }
+
+    .ok{
+      background: rgba(87,211,140,.10);
+      border:1px solid rgba(87,211,140,.30);
+      padding: 12px;
+      border-radius: 12px;
+      margin-top: 14px;
+      display:none;
+    }
+    .ok.show{ display:block; }
+
+    .pill{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: rgba(234,240,255,.9);
+      border:1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      border-radius: 999px;
+      padding: 6px 10px;
+      display:inline-block;
+    }
+
+    .divider{
+      height:1px;
+      background: var(--border);
+      margin: 14px 0;
+    }
+
+    /* Themes (20) — mobile grid */
+    .themes{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr 1fr;
+    }
+    .theme-card{
+      border:1px solid var(--border);
+      background: rgba(11,18,32,.35);
+      border-radius: 14px;
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .03s ease, border-color .15s ease, background .15s ease;
+      user-select:none;
+    }
+    .theme-card:hover{ background: rgba(255,255,255,.06); }
+    .theme-card:active{ transform: translateY(1px); }
+    .theme-card.selected{
+      border-color: rgba(141,224,255,.65);
+      box-shadow: 0 0 0 3px rgba(141,224,255,.14);
+    }
+    .theme-swatch{ height: 44px; display:flex; }
+    .sw{ flex:1; }
+    .theme-meta{
+      padding: 8px 8px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .theme-num{
+      font-weight: 880;
+      font-size: 12px;
+    }
+    .theme-codes{
+      font-family: var(--mono);
+      font-size: 10.8px;
+      color: var(--muted);
+      line-height: 1.25;
+      word-break: break-word;
+    }
+
+    .checkbox{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(11,18,32,.35);
+      border:1px solid var(--border);
+    }
+    .checkbox input{ margin-top: 2px; transform: scale(1.05); }
+
+    /* Output prompt + advice */
+    .output{ margin-top: 14px; display:none; }
+    .output.show{ display:block; }
+    .output h3{ margin: 0 0 8px; font-size: 14px; }
+    pre{
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 14px;
+      padding: 12px;
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: rgba(234,240,255,.92);
+      max-height: 320px;
+      overflow:auto;
+    }
+
+    /* Modal */
+    .modal-backdrop{
+      position: fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 14px;
+      background: rgba(0,0,0,.60);
+      z-index: 999;
+    }
+    .modal-backdrop.show{ display:flex; }
+    .modal{
+      width: min(480px, 100%);
+      max-height: 86vh;
+      overflow:auto;
+      background: rgba(18,26,44,.97);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+    }
+    .modal-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      padding: 12px 12px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(15,23,38,.78);
+      position: sticky;
+      top:0;
+    }
+    .modal-title{ font-weight: 880; font-size: 13.5px; }
+    .modal-body{ padding: 12px; }
+    .modal-body h3{ margin: 0 0 8px; font-size: 13px; }
+    .modal-body p, .modal-body li{ color: rgba(234,240,255,.90); font-size: 12.8px; }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 11.5px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    /* Accessibility helper */
+    .sr-only{
+      position:absolute;
+      width:1px;height:1px;
+      padding:0;margin:-1px;
+      overflow:hidden;clip:rect(0,0,0,0);
+      border:0;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">Portfolio Website Intake (Mobile)</div>
+      <div class="subtitle">
+        On submit, you’ll get a copy/paste AI prompt, custom advice, and a downloadable summary HTML file.
+      </div>
+    </header>
+
+    <section class="panel" aria-label="Portfolio intake form">
+      <div class="topbar">
+        <div>
+          <div class="step-label" id="stepLabel">Step 1 of 4</div>
+          <div class="hint" id="stepNote">Basic information</div>
+        </div>
+
+        <div class="progress" aria-label="Progress">
+          <div class="progress-track" aria-hidden="true">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <div class="progress-steps" aria-hidden="true">
+            <span><span class="dot" id="dot1"></span>1</span>
+            <span><span class="dot" id="dot2"></span>2</span>
+            <span><span class="dot" id="dot3"></span>3</span>
+            <span><span class="dot" id="dot4"></span>4</span>
+          </div>
+        </div>
+      </div>
+
+      <form id="intakeForm" novalidate>
+        <!-- STEP 1 -->
+        <div class="step active" data-step="1">
+          <div class="field">
+            <label for="name">Name <span aria-hidden="true" style="color:var(--secondary)">*</span></label>
+            <input id="name" name="name" type="text" placeholder="First Last" required />
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="email">Email <span aria-hidden="true" style="color:var(--secondary)">*</span></label>
+            <input id="email" name="email" type="email" placeholder="name@example.com" required />
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="text" inputmode="tel" placeholder="(801) 555-1234" />
+            <div class="hint" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <span>Auto-formats as you type.</span>
+              <span class="pill" id="phonePretty" aria-live="polite">—</span>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="major">Major</label>
+            <input id="major" name="major" type="text" placeholder="e.g., Psychology" />
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="specialization">Specialization</label>
+            <input id="specialization" name="specialization" type="text" placeholder="e.g., UX Research, Data Analytics" />
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="linkedin">LinkedIn URL <span class="hint">(for employer reference)</span></label>
+            <input id="linkedin" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/username" />
+          </div>
+
+          <div class="actions">
+            <div style="display:flex; flex-direction:column; gap:4px;">
+              <button type="button" class="btn" id="reset1">Reset</button>
+              <div class="reset-note" id="resetNote1" aria-live="polite"></div>
+            </div>
+            <button type="button" class="btn primary" id="next1">Next</button>
+          </div>
+
+          <div class="error" id="error1" role="alert"></div>
+        </div>
+
+        <!-- STEP 2 -->
+        <div class="step" data-step="2">
+          <div class="actions top">
+            <button type="button" class="btn ghost" id="back2Top">Back</button>
+            <button type="button" class="btn primary" id="next2Top">Next</button>
+          </div>
+
+          <div class="field">
+            <label>Optional Portfolio Resources</label>
+            <div class="hint">Upload or paste materials you want used as inspiration and/or factual reference.</div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Uploads -->
+          <div class="stack">
+            <div class="field">
+              <label for="uploads">Upload files</label>
+              <div class="filebox">
+                <input id="uploads" name="uploads" type="file" multiple
+                       accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.gif,.webp,.mp4,.mov,.html,.htm,.md,.txt" />
+                <ul class="filelist" id="fileList" aria-live="polite"></ul>
+              </div>
+              <div class="hint">Accepted: PDF, DOC/DOCX, images, videos, HTML, Markdown, text.</div>
+            </div>
+
+            <div class="field">
+              <label for="uploadsHow">How should these uploads be used?</label>
+              <textarea id="uploadsHow" name="uploadsHow" placeholder="e.g., Extract facts from my resume, but rewrite bullets. Use template for style inspiration only."></textarea>
+              <div class="hint">
+                Tip: Learn how to <a href="#" id="openLinkedInPdfTip">download a PDF of your LinkedIn profile</a>.
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- URLs -->
+          <div class="field">
+            <label>Website addresses (public URLs only)</label>
+            <div class="hint">Examples: YouTube intro, GitHub portfolio, Behance, personal blog.</div>
+            <div id="urlList" class="stack" style="margin-top:10px;"></div>
+            <div style="margin-top:10px;">
+              <button type="button" class="btn small" id="addUrl">+ Add URL</button>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- Text entries -->
+          <div class="field">
+            <label>Text</label>
+            <div class="hint">Paste content (raw, Markdown, or HTML). Choose a section type for each entry.</div>
+            <div id="textEntryList" class="stack" style="margin-top:10px;"></div>
+            <div style="margin-top:10px;">
+              <button type="button" class="btn small" id="addTextEntry">+ Add text entry</button>
+            </div>
+            <div class="hint" id="aiSuggestNote" style="margin-top:8px;" aria-live="polite"></div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="checkbox">
+            <input id="copyrightOk" name="copyrightOk" type="checkbox" required />
+            <div>
+              <label for="copyrightOk" style="margin:0;display:block;">
+                I have the copyright or written permission to use these resources, or I only want to use it as inspiration—please generate something different enough to avoid copyright infringement.
+                <span aria-hidden="true" style="color:var(--secondary)">*</span>
+              </label>
+              <div class="hint">Required to proceed.</div>
+            </div>
+          </div>
+
+          <div class="actions" style="margin-top:14px;">
+            <button type="button" class="btn ghost" id="back2">Back</button>
+            <button type="button" class="btn primary" id="next2">Next</button>
+          </div>
+
+          <div class="error" id="error2" role="alert"></div>
+        </div>
+
+        <!-- STEP 3 -->
+        <div class="step" data-step="3">
+          <div class="actions top">
+            <button type="button" class="btn ghost" id="back3Top">Back</button>
+            <button type="button" class="btn primary" id="next3Top">Next</button>
+          </div>
+
+          <div class="field">
+            <label>Color scheme</label>
+            <div class="hint">Choose a theme (1–20) or enter hex codes below.</div>
+          </div>
+
+          <div class="themes" id="themes" style="margin-top:10px;"></div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="themeNumber">Theme number (optional)</label>
+            <input id="themeNumber" name="themeNumber" type="text" inputmode="numeric" placeholder="e.g., 1" />
+            <div class="hint">Selecting a theme fills in the hex fields (editable).</div>
+          </div>
+
+          <div class="field" style="margin-top:10px;">
+            <label>Selected theme</label>
+            <span class="pill" id="selectedThemeLabel">None</span>
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="primaryHex">1. Primary</label>
+            <input id="primaryHex" name="primaryHex" type="text" placeholder="#4E70F1" />
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label for="secondaryHex">2. Secondary</label>
+            <input id="secondaryHex" name="secondaryHex" type="text" placeholder="#FBAB9C" />
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label for="accentHex">3. Accent</label>
+            <input id="accentHex" name="accentHex" type="text" placeholder="#8DE0FF" />
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label for="darkHex">4. Dark</label>
+            <input id="darkHex" name="darkHex" type="text" placeholder="#0b1220" />
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label for="lightHex">5. Light</label>
+            <input id="lightHex" name="lightHex" type="text" placeholder="#eaf0ff" />
+          </div>
+
+          <div class="actions" style="margin-top:14px;">
+            <button type="button" class="btn ghost" id="back3">Back</button>
+            <button type="button" class="btn primary" id="next3">Next</button>
+          </div>
+
+          <div class="error" id="error3" role="alert"></div>
+        </div>
+
+        <!-- STEP 4 -->
+        <div class="step" data-step="4">
+          <div class="actions top">
+            <button type="button" class="btn ghost" id="back4Top">Back</button>
+            <button type="submit" class="btn primary" id="submitTop">Submit</button>
+          </div>
+
+          <div class="field">
+            <label for="desiredJob">Desired Job Position</label>
+            <input id="desiredJob" name="desiredJob" type="text" placeholder="e.g., Data Analyst, UX Researcher" />
+          </div>
+
+          <div class="field" style="margin-top:12px;">
+            <label for="jobAd">Job Position Ad</label>
+            <textarea id="jobAd" name="jobAd" placeholder="Paste the job description (optional but highly useful)."></textarea>
+          </div>
+
+          <div class="actions" style="margin-top:14px;">
+            <button type="button" class="btn ghost" id="back4">Back</button>
+            <button type="submit" class="btn primary" id="submitBtn">Submit</button>
+          </div>
+
+          <div class="error" id="error4" role="alert"></div>
+
+          <div class="ok" id="successBox" role="status">
+            <div style="font-weight:900;margin-bottom:6px;">Success ✅</div>
+            <div class="hint" style="color: rgba(234,240,255,.88);">
+              Your form data was logged to the console. Your AI prompt, advice, and summary file are ready below.
+            </div>
+          </div>
+
+          <div class="output" id="outputBox">
+            <h3>Generated AI Prompt (copy/paste)</h3>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin: 0 0 10px;">
+              <button type="button" class="btn small" id="copyPrompt">Copy prompt</button>
+              <button type="button" class="btn small" id="downloadSummary">Download Summary HTML</button>
+            </div>
+            <pre id="promptPre"></pre>
+
+            <div class="divider"></div>
+
+            <h3>Custom advice</h3>
+            <pre id="advicePre"></pre>
+
+            <div class="divider"></div>
+
+            <h3>Summary HTML (preview)</h3>
+            <pre id="summaryPre"></pre>
+          </div>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Modal: LinkedIn PDF instructions -->
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">How to download a PDF of your LinkedIn profile</div>
+        <button type="button" class="btn small" id="closeModal" aria-label="Close">Close</button>
+      </div>
+      <div class="modal-body">
+        <h3>Desktop (recommended)</h3>
+        <ol>
+          <li>Open your profile on LinkedIn (tap/click your photo → <strong>View Profile</strong>).</li>
+          <li>Find the <strong>More</strong> button near your profile header.</li>
+          <li>Select <strong>Save to PDF</strong> (or <strong>Print</strong>, then “Save as PDF” in the print dialog, depending on your UI).</li>
+          <li>Save the PDF, then upload it in Step 2.</li>
+        </ol>
+
+        <h3>If you don’t see “Save to PDF”</h3>
+        <ul>
+          <li>Switch to a desktop browser if possible.</li>
+          <li>Try another browser, or sign out/back in.</li>
+          <li>Fallback: use print-to-PDF (<span class="kbd">Ctrl/Cmd</span> + <span class="kbd">P</span>) → <strong>Save as PDF</strong>.</li>
+        </ul>
+
+        <h3>What to upload</h3>
+        <ul>
+          <li>Upload the PDF you saved.</li>
+          <li>Tell the AI to extract facts and rewrite wording to be original.</li>
+        </ul>
+
+        <p class="hint" style="margin-top:12px;">
+          Note: LinkedIn’s menus can change; print-to-PDF usually works.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**********************
+     * Step controller
+     **********************/
+    const steps = [
+      { n: 1, note: "Basic information" },
+      { n: 2, note: "Optional resources" },
+      { n: 3, note: "Color scheme" },
+      { n: 4, note: "Desired job & submission" }
+    ];
+    let currentStep = 1;
+
+    const stepLabel = document.getElementById("stepLabel");
+    const stepNote  = document.getElementById("stepNote");
+    const progressFill = document.getElementById("progressFill");
+    const dots = [null,
+      document.getElementById("dot1"),
+      document.getElementById("dot2"),
+      document.getElementById("dot3"),
+      document.getElementById("dot4")
+    ];
+
+    function showStep(n){
+      currentStep = n;
+      document.querySelectorAll(".step").forEach(el => {
+        el.classList.toggle("active", Number(el.dataset.step) === n);
+      });
+
+      stepLabel.textContent = `Step ${n} of 4`;
+      stepNote.textContent = steps[n-1].note;
+
+      const pct = ((n-1) / (steps.length-1)) * 100;
+      progressFill.style.width = `${pct}%`;
+
+      for(let i=1;i<=4;i++){
+        dots[i].classList.remove("active","done");
+        if(i < n) dots[i].classList.add("done");
+        else if(i === n) dots[i].classList.add("active");
+      }
+
+      if(n === 2) updateSuggestedSectionTypes();
+    }
+
+    /**********************
+     * Double-click reset (Step 1 only, per spec)
+     **********************/
+    const resetState = new Map(); // step -> {armedUntil:number}
+    function armReset(step, noteEl){
+      const now = Date.now();
+      const armedUntil = now + 1500;
+      resetState.set(step, { armedUntil });
+      noteEl.textContent = "Tap Reset again to confirm.";
+      window.setTimeout(() => {
+        const st = resetState.get(step);
+        if(st && st.armedUntil === armedUntil){
+          resetState.delete(step);
+          noteEl.textContent = "";
+        }
+      }, 1550);
+    }
+
+    function doResetStep1(){
+      const stepEl = document.querySelector('.step[data-step="1"]');
+      if(!stepEl) return;
+      stepEl.querySelectorAll("input").forEach(el => el.value = "");
+      document.getElementById("phonePretty").textContent = "—";
+      clearError(1);
+    }
+
+    document.getElementById("reset1").addEventListener("click", () => {
+      const noteEl = document.getElementById("resetNote1");
+      const st = resetState.get(1);
+      const now = Date.now();
+      if(st && now <= st.armedUntil){
+        resetState.delete(1);
+        noteEl.textContent = "";
+        doResetStep1();
+      }else{
+        armReset(1, noteEl);
+      }
+    });
+
+    /**********************
+     * Navigation
+     **********************/
+    document.getElementById("next1").addEventListener("click", () => {
+      const err = validateStep1();
+      if(err) return showError(1, err);
+      clearError(1);
+      showStep(2);
+    });
+
+    document.getElementById("back2Top").addEventListener("click", () => showStep(1));
+    document.getElementById("back2").addEventListener("click", () => showStep(1));
+    document.getElementById("next2Top").addEventListener("click", () => document.getElementById("next2").click());
+
+    document.getElementById("next2").addEventListener("click", () => {
+      const err = validateStep2();
+      if(err) return showError(2, err);
+      clearError(2);
+      showStep(3);
+    });
+
+    document.getElementById("back3Top").addEventListener("click", () => showStep(2));
+    document.getElementById("back3").addEventListener("click", () => showStep(2));
+    document.getElementById("next3Top").addEventListener("click", () => document.getElementById("next3").click());
+
+    document.getElementById("next3").addEventListener("click", () => {
+      const err = validateStep3();
+      if(err) return showError(3, err);
+      clearError(3);
+      showStep(4);
+    });
+
+    document.getElementById("back4Top").addEventListener("click", () => showStep(3));
+    document.getElementById("back4").addEventListener("click", () => showStep(3));
+
+    /**********************
+     * Validation
+     **********************/
+    function showError(step, msg){
+      const el = document.getElementById(`error${step}`);
+      el.textContent = msg;
+      el.classList.add("show");
+    }
+    function clearError(step){
+      const el = document.getElementById(`error${step}`);
+      el.textContent = "";
+      el.classList.remove("show");
+    }
+
+    function validateEmail(v){
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v||"").trim());
+    }
+
+    function validateStep1(){
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      if(!name) return "Please enter your name (required).";
+      if(!email) return "Please enter your email (required).";
+      if(!validateEmail(email)) return "Please enter a valid email address.";
+      return null;
+    }
+
+    function validateStep2(){
+      const ok = document.getElementById("copyrightOk").checked;
+      if(!ok) return "Please check the copyright/permission box to continue.";
+      return null;
+    }
+
+    function validateStep3(){
+      const hexes = ["primaryHex","secondaryHex","accentHex","darkHex","lightHex"]
+        .map(id => document.getElementById(id).value.trim())
+        .filter(Boolean);
+      const bad = hexes.find(h => !/^#?[0-9a-fA-F]{6}$/.test(h));
+      if(bad) return `Color "${bad}" should be a 6-digit hex value (e.g., #4E70F1).`;
+      return null;
+    }
+
+    /**********************
+     * Phone pretty-formatting
+     **********************/
+    const phoneInput = document.getElementById("phone");
+    const phonePretty = document.getElementById("phonePretty");
+    function formatUSPhone(raw){
+      const digits = (raw || "").replace(/\D/g, "").slice(0, 10);
+      if(!digits) return "";
+      const a = digits.slice(0,3);
+      const b = digits.slice(3,6);
+      const c = digits.slice(6,10);
+      if(digits.length <= 3) return `(${a}`;
+      if(digits.length <= 6) return `(${a}) ${b}`;
+      return `(${a}) ${b}-${c}`;
+    }
+    phoneInput.addEventListener("input", () => {
+      const pretty = formatUSPhone(phoneInput.value);
+      phoneInput.value = pretty;
+      phonePretty.textContent = pretty || "—";
+    });
+
+    /**********************
+     * Step 2: Uploads list
+     **********************/
+    let uploadedFiles = [];
+    const uploadsInput = document.getElementById("uploads");
+    const fileList = document.getElementById("fileList");
+
+    uploadsInput.addEventListener("change", () => {
+      uploadedFiles = Array.from(uploadsInput.files || []).map(f => ({
+        name: f.name,
+        type: f.type || "unknown",
+        size: f.size
+      }));
+      renderFileList();
+    });
+
+    function renderFileList(){
+      fileList.innerHTML = "";
+      if(!uploadedFiles.length) return;
+      uploadedFiles.forEach(f => {
+        const li = document.createElement("li");
+        li.textContent = f.name;
+        fileList.appendChild(li);
+      });
+    }
+
+    /**********************
+     * Step 2: Dynamic URL rows (2 boxes)
+     **********************/
+    let urlRows = [];
+    const urlList = document.getElementById("urlList");
+
+    document.getElementById("addUrl").addEventListener("click", () => {
+      urlRows.push({ url:"", how:"" });
+      renderUrlRows();
+    });
+
+    function renderUrlRows(){
+      urlList.innerHTML = "";
+      if(urlRows.length === 0){
+        const p = document.createElement("div");
+        p.className = "hint";
+        p.textContent = "No URLs added yet.";
+        urlList.appendChild(p);
+        return;
+      }
+
+      urlRows.forEach((row, idx) => {
+        const box = document.createElement("div");
+        box.className = "stack";
+        box.style.border = "1px solid rgba(255,255,255,.10)";
+        box.style.borderRadius = "14px";
+        box.style.padding = "10px";
+        box.style.background = "rgba(0,0,0,.14)";
+
+        const f1 = document.createElement("div");
+        f1.className = "field";
+        const l1 = document.createElement("label");
+        l1.textContent = `URL #${idx+1}`;
+        const i1 = document.createElement("input");
+        i1.type = "url";
+        i1.placeholder = "https://example.com";
+        i1.value = row.url;
+        i1.addEventListener("input", () => urlRows[idx].url = i1.value);
+        f1.append(l1, i1);
+
+        const f2 = document.createElement("div");
+        f2.className = "field";
+        const l2 = document.createElement("label");
+        l2.textContent = "How should this URL be used?";
+        const t2 = document.createElement("textarea");
+        t2.placeholder = "e.g., Use as inspiration; extract project details; reference as proof of work.";
+        t2.value = row.how;
+        t2.addEventListener("input", () => urlRows[idx].how = t2.value);
+        f2.append(l2, t2);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn small";
+        remove.style.borderColor = "rgba(255,92,92,.35)";
+        remove.style.background = "rgba(255,92,92,.10)";
+        remove.textContent = "Remove URL";
+        remove.addEventListener("click", () => {
+          urlRows.splice(idx, 1);
+          renderUrlRows();
+        });
+
+        box.append(f1, f2, remove);
+        urlList.appendChild(box);
+      });
+    }
+
+    /**********************
+     * Step 2: Text entries (4 boxes)
+     **********************/
+    const BASE_SECTION_TYPES = [
+      { label: "About / Bio ★", value:"About / Bio" },
+      { label: "Projects / Case Studies ★", value:"Projects / Case Studies" },
+      { label: "Experience ★", value:"Experience" },
+      { label: "Skills ★", value:"Skills" },
+      { label: "Education ★", value:"Education" },
+      { label: "Resume (Full) ★", value:"Resume (Full)" },
+      { label: "Contact ★", value:"Contact" },
+      { label: "Achievements / Awards", value:"Achievements / Awards" },
+      { label: "Certifications", value:"Certifications" },
+      { label: "Leadership / Service", value:"Leadership / Service" },
+      { label: "Research / Publications", value:"Research / Publications" },
+      { label: "Volunteer Work", value:"Volunteer Work" },
+      { label: "Testimonials / References", value:"Testimonials / References" },
+      { label: "Portfolio Gallery", value:"Portfolio Gallery" },
+      { label: "Writing Samples", value:"Writing Samples" },
+      { label: "Teaching / Presentations", value:"Teaching / Presentations" },
+      { label: "Media / Press", value:"Media / Press" },
+      { label: "Other", value:"Other" },
+      { label: "None", value:"None" }
+    ];
+
+    let suggestedExtraTypes = [];
+    let textEntries = [];
+    const textEntryList = document.getElementById("textEntryList");
+
+    document.getElementById("addTextEntry").addEventListener("click", () => {
+      textEntries.push({ fileType:"raw", sectionType:"About / Bio", content:"", how:"" });
+      renderTextEntries();
+    });
+
+    function buildSectionTypeOptions(){
+      const options = [...BASE_SECTION_TYPES];
+      const insertAt = Math.max(0, options.findIndex(o => o.value === "Other"));
+      const extras = suggestedExtraTypes.map(s => ({ label: s + " (suggested)", value: s }));
+      if(extras.length){
+        options.splice(insertAt, 0, ...extras);
+      }
+      return options;
+    }
+
+    function renderTextEntries(){
+      textEntryList.innerHTML = "";
+      if(textEntries.length === 0){
+        const p = document.createElement("div");
+        p.className = "hint";
+        p.textContent = "No text entries added yet.";
+        textEntryList.appendChild(p);
+        return;
+      }
+
+      const options = buildSectionTypeOptions();
+
+      textEntries.forEach((entry, idx) => {
+        const box = document.createElement("div");
+        box.className = "stack";
+        box.style.border = "1px solid rgba(255,255,255,.10)";
+        box.style.borderRadius = "14px";
+        box.style.padding = "10px";
+        box.style.background = "rgba(0,0,0,.14)";
+
+        const f1 = document.createElement("div");
+        f1.className = "field";
+        const l1 = document.createElement("label");
+        l1.textContent = "File type";
+        const s1 = document.createElement("select");
+        ["HTML","Markdown","raw"].forEach(v => {
+          const o = document.createElement("option");
+          o.value = v.toLowerCase();
+          o.textContent = v;
+          if(entry.fileType === v.toLowerCase()) o.selected = true;
+          s1.appendChild(o);
+        });
+        s1.addEventListener("change", () => textEntries[idx].fileType = s1.value);
+        f1.append(l1, s1);
+
+        const f2 = document.createElement("div");
+        f2.className = "field";
+        const l2 = document.createElement("label");
+        l2.textContent = "Section type";
+        const s2 = document.createElement("select");
+        options.forEach(opt => {
+          const o = document.createElement("option");
+          o.value = opt.value;
+          o.textContent = opt.label;
+          if(entry.sectionType === opt.value) o.selected = true;
+          s2.appendChild(o);
+        });
+        s2.addEventListener("change", () => textEntries[idx].sectionType = s2.value);
+        f2.append(l2, s2);
+
+        const f3 = document.createElement("div");
+        f3.className = "field";
+        const l3 = document.createElement("label");
+        l3.textContent = "Content";
+        const t3 = document.createElement("textarea");
+        t3.placeholder = "Paste content here…";
+        t3.value = entry.content;
+        t3.addEventListener("input", () => textEntries[idx].content = t3.value);
+        f3.append(l3, t3);
+
+        const f4 = document.createElement("div");
+        f4.className = "field";
+        const l4 = document.createElement("label");
+        l4.textContent = "How should this be used?";
+        const t4 = document.createElement("textarea");
+        t4.placeholder = "e.g., facts only; style inspiration; rewrite completely.";
+        t4.value = entry.how;
+        t4.addEventListener("input", () => textEntries[idx].how = t4.value);
+        f4.append(l4, t4);
+
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "btn small";
+        remove.style.borderColor = "rgba(255,92,92,.35)";
+        remove.style.background = "rgba(255,92,92,.10)";
+        remove.textContent = "Remove entry";
+        remove.addEventListener("click", () => {
+          textEntries.splice(idx, 1);
+          renderTextEntries();
+        });
+
+        box.append(f1, f2, f3, f4, remove);
+        textEntryList.appendChild(box);
+      });
+    }
+
+    function updateSuggestedSectionTypes(){
+      const major = (document.getElementById("major").value || "").toLowerCase();
+      const spec  = (document.getElementById("specialization").value || "").toLowerCase();
+      const desired = (document.getElementById("desiredJob").value || "").toLowerCase();
+      const bag = `${major} ${spec} ${desired}`.trim();
+
+      const extras = new Set();
+      if(/data|analytics|analyst|science|ml|machine learning|stat|statistics/.test(bag)) extras.add("Data / Analytics Highlights");
+      if(/ux|user experience|product|research|design|hci/.test(bag)) extras.add("UX Case Studies");
+      if(/software|developer|engineer|program|full stack|frontend|backend/.test(bag)) extras.add("Technical Projects");
+      if(/psych|counsel|therapy|behavior|mental health/.test(bag)) extras.add("Relevant Coursework & Applied Experience");
+      if(/marketing|brand|content|social/.test(bag)) extras.add("Campaigns / Portfolio Pieces");
+      if(/finance|account|accounting|audit/.test(bag)) extras.add("Quantified Results / Impact");
+      if(/teaching|education|teacher/.test(bag)) extras.add("Teaching Philosophy & Materials");
+
+      suggestedExtraTypes = Array.from(extras);
+      const note = document.getElementById("aiSuggestNote");
+      note.textContent = suggestedExtraTypes.length
+        ? `Suggested section types (based on what you entered): ${suggestedExtraTypes.join(", ")}.`
+        : "";
+      renderTextEntries();
+    }
+
+    /**********************
+     * Step 3: Theme selector (20)
+     **********************/
+    const THEME_LIST = [
+      { n:1,  primary:"#4E70F1", secondary:"#FBAB9C", accent:"#8DE0FF", dark:"#0b1220", light:"#eaf0ff" },
+      { n:2,  primary:"#7C5CFF", secondary:"#FFB86B", accent:"#6EE7FF", dark:"#0B1020", light:"#F1F4FF" },
+      { n:3,  primary:"#00A3FF", secondary:"#FF5C8A", accent:"#9BFFB2", dark:"#07101E", light:"#ECF7FF" },
+      { n:4,  primary:"#22C55E", secondary:"#60A5FA", accent:"#FBBF24", dark:"#071A14", light:"#F0FFF8" },
+      { n:5,  primary:"#F97316", secondary:"#38BDF8", accent:"#A78BFA", dark:"#1A0C06", light:"#FFF4EA" },
+      { n:6,  primary:"#EF4444", secondary:"#F59E0B", accent:"#34D399", dark:"#1A0B0B", light:"#FFF1F1" },
+      { n:7,  primary:"#0EA5E9", secondary:"#22C55E", accent:"#F43F5E", dark:"#05141E", light:"#EAF7FF" },
+      { n:8,  primary:"#111827", secondary:"#A855F7", accent:"#22D3EE", dark:"#05070D", light:"#F3F4F6" },
+      { n:9,  primary:"#14B8A6", secondary:"#F472B6", accent:"#60A5FA", dark:"#051815", light:"#ECFFFB" },
+      { n:10, primary:"#6366F1", secondary:"#F472B6", accent:"#FACC15", dark:"#0B1020", light:"#F2F3FF" },
+      { n:11, primary:"#84CC16", secondary:"#06B6D4", accent:"#FB7185", dark:"#0B1604", light:"#F7FFE9" },
+      { n:12, primary:"#E11D48", secondary:"#3B82F6", accent:"#A3E635", dark:"#17070C", light:"#FFEFF3" },
+      { n:13, primary:"#8B5CF6", secondary:"#06B6D4", accent:"#F97316", dark:"#0E0820", light:"#F5F0FF" },
+      { n:14, primary:"#10B981", secondary:"#F59E0B", accent:"#6366F1", dark:"#06170F", light:"#ECFFF7" },
+      { n:15, primary:"#F59E0B", secondary:"#EC4899", accent:"#0EA5E9", dark:"#1A1206", light:"#FFF8E8" },
+      { n:16, primary:"#06B6D4", secondary:"#A78BFA", accent:"#F43F5E", dark:"#04161B", light:"#E9FDFF" },
+      { n:17, primary:"#3B82F6", secondary:"#22C55E", accent:"#F59E0B", dark:"#081225", light:"#EDF4FF" },
+      { n:18, primary:"#D946EF", secondary:"#22D3EE", accent:"#FDE047", dark:"#16051B", light:"#FFF0FF" },
+      { n:19, primary:"#F43F5E", secondary:"#84CC16", accent:"#60A5FA", dark:"#1A050A", light:"#FFF0F4" },
+      { n:20, primary:"#1F2937", secondary:"#F97316", accent:"#34D399", dark:"#06080D", light:"#F5F7FA" }
+    ];
+
+    let selectedThemeIndex = null;
+    const themesEl = document.getElementById("themes");
+    const themeNumberInput = document.getElementById("themeNumber");
+    const selectedThemeLabel = document.getElementById("selectedThemeLabel");
+
+    function renderThemes(){
+      themesEl.innerHTML = "";
+      THEME_LIST.forEach((t, idx) => {
+        const card = document.createElement("div");
+        card.className = "theme-card" + (selectedThemeIndex === idx ? " selected" : "");
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `Theme ${t.n}`);
+
+        const swatch = document.createElement("div");
+        swatch.className = "theme-swatch";
+        const sw1 = document.createElement("div"); sw1.className="sw"; sw1.style.background = t.primary;
+        const sw2 = document.createElement("div"); sw2.className="sw"; sw2.style.background = t.secondary;
+        const sw3 = document.createElement("div"); sw3.className="sw"; sw3.style.background = t.accent;
+        const sw4 = document.createElement("div"); sw4.className="sw"; sw4.style.background = t.dark;
+        const sw5 = document.createElement("div"); sw5.className="sw"; sw5.style.background = t.light;
+        swatch.append(sw1, sw2, sw3, sw4, sw5);
+
+        const meta = document.createElement("div");
+        meta.className = "theme-meta";
+
+        const num = document.createElement("div");
+        num.className = "theme-num";
+        num.textContent = `Theme ${t.n}`;
+
+        const codes = document.createElement("div");
+        codes.className = "theme-codes";
+        codes.innerHTML = `
+          <div>P ${t.primary}</div>
+          <div>S ${t.secondary}</div>
+          <div>A ${t.accent}</div>
+          <div>D ${t.dark}</div>
+          <div>L ${t.light}</div>
+        `;
+
+        meta.append(num, codes);
+        card.append(swatch, meta);
+
+        const choose = () => selectTheme(idx, true);
+        card.addEventListener("click", choose);
+        card.addEventListener("keydown", (e) => {
+          if(e.key === "Enter" || e.key === " "){
+            e.preventDefault();
+            choose();
+          }
+        });
+
+        themesEl.appendChild(card);
+      });
+    }
+
+    function normalizeHex(v){
+      const s = (v || "").trim();
+      if(!s) return "";
+      return s.startsWith("#") ? s : ("#" + s);
+    }
+
+    function selectTheme(idx, syncNumberField){
+      selectedThemeIndex = idx;
+      const t = THEME_LIST[idx];
+      selectedThemeLabel.textContent = `Theme ${t.n} selected`;
+
+      document.getElementById("primaryHex").value = t.primary;
+      document.getElementById("secondaryHex").value = t.secondary;
+      document.getElementById("accentHex").value = t.accent;
+      document.getElementById("darkHex").value = t.dark;
+      document.getElementById("lightHex").value = t.light;
+
+      if(syncNumberField) themeNumberInput.value = String(t.n);
+
+      renderThemes();
+    }
+
+    themeNumberInput.addEventListener("input", () => {
+      const v = themeNumberInput.value.trim();
+      if(!v){
+        selectedThemeIndex = null;
+        selectedThemeLabel.textContent = "None";
+        renderThemes();
+        return;
+      }
+      const n = Number(v);
+      const idx = THEME_LIST.findIndex(t => t.n === n);
+      if(idx >= 0) selectTheme(idx, false);
+    });
+
+    ["primaryHex","secondaryHex","accentHex","darkHex","lightHex"].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener("blur", () => {
+        if(el.value.trim()) el.value = normalizeHex(el.value);
+      });
+    });
+
+    renderThemes();
+
+    /**********************
+     * Modal
+     **********************/
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const openTip = document.getElementById("openLinkedInPdfTip");
+    const closeModal = document.getElementById("closeModal");
+
+    function openModal(){
+      modalBackdrop.classList.add("show");
+      closeModal.focus();
+    }
+    function hideModal(){
+      modalBackdrop.classList.remove("show");
+    }
+
+    openTip.addEventListener("click", (e) => { e.preventDefault(); openModal(); });
+    closeModal.addEventListener("click", hideModal);
+    modalBackdrop.addEventListener("click", (e) => { if(e.target === modalBackdrop) hideModal(); });
+    window.addEventListener("keydown", (e) => {
+      if(e.key === "Escape" && modalBackdrop.classList.contains("show")) hideModal();
+    });
+
+    /**********************
+     * Submission: collect, console.log, prompt+advice+summary, download
+     **********************/
+    const form = document.getElementById("intakeForm");
+    const successBox = document.getElementById("successBox");
+    const outputBox = document.getElementById("outputBox");
+    const promptPre = document.getElementById("promptPre");
+    const advicePre = document.getElementById("advicePre");
+    const summaryPre = document.getElementById("summaryPre");
+
+    function safeTrim(v){ return String(v ?? "").trim(); }
+
+    function collectData(){
+      return {
+        basic: {
+          name: safeTrim(document.getElementById("name").value),
+          email: safeTrim(document.getElementById("email").value),
+          phone: safeTrim(document.getElementById("phone").value),
+          major: safeTrim(document.getElementById("major").value),
+          specialization: safeTrim(document.getElementById("specialization").value),
+          linkedin: safeTrim(document.getElementById("linkedin").value)
+        },
+        resources: {
+          uploads: uploadedFiles.slice(),
+          uploadsHow: safeTrim(document.getElementById("uploadsHow").value),
+          urls: urlRows.map(r => ({ url: safeTrim(r.url), how: safeTrim(r.how) })).filter(r => r.url || r.how),
+          textEntries: textEntries.map(t => ({
+            fileType: safeTrim(t.fileType),
+            sectionType: safeTrim(t.sectionType),
+            content: safeTrim(t.content),
+            how: safeTrim(t.how)
+          })).filter(t => t.content || t.how),
+          copyrightOk: !!document.getElementById("copyrightOk").checked
+        },
+        colors: {
+          themeNumber: safeTrim(document.getElementById("themeNumber").value),
+          primary: normalizeHex(document.getElementById("primaryHex").value),
+          secondary: normalizeHex(document.getElementById("secondaryHex").value),
+          accent: normalizeHex(document.getElementById("accentHex").value),
+          dark: normalizeHex(document.getElementById("darkHex").value),
+          light: normalizeHex(document.getElementById("lightHex").value)
+        },
+        job: {
+          desiredPosition: safeTrim(document.getElementById("desiredJob").value),
+          jobAd: safeTrim(document.getElementById("jobAd").value)
+        },
+        meta: {
+          version: "2.0.0",
+          updated: "2026-02-27",
+          file: "MyPersonalPortfolioWebsiteIntakeForm.html"
+        }
+      };
+    }
+
+    function buildPrompt(data){
+      const L = [];
+      L.push("You are a portfolio-website generator.");
+      L.push("");
+      L.push("Goal: Build an impactful portfolio website as quickly, cheaply, and easily as possible, using the user's pre-existing materials where available, while staying true to their real profile. Generate original content when needed and avoid copyright infringement.");
+      L.push("");
+
+      L.push("BASIC INFO");
+      L.push(`Name: ${data.basic.name || "(not provided)"}`);
+      L.push(`Email: ${data.basic.email || "(not provided)"}`);
+      L.push(`Phone: ${data.basic.phone || "(not provided)"}`);
+      L.push(`Major: ${data.basic.major || "(not provided)"}`);
+      L.push(`Specialization: ${data.basic.specialization || "(not provided)"}`);
+      L.push(`LinkedIn: ${data.basic.linkedin || "(not provided)"}`);
+      L.push("");
+
+      L.push("TARGET JOB");
+      L.push(`Desired job position: ${data.job.desiredPosition || "(not provided)"}`);
+      L.push("Job posting (if provided):");
+      L.push(data.job.jobAd ? data.job.jobAd : "(none provided)");
+      L.push("");
+
+      L.push("STYLE / COLOR SCHEME");
+      L.push(`Theme number: ${data.colors.themeNumber || "(none selected)"}`);
+      L.push(`Primary: ${data.colors.primary || "(blank)"}; Secondary: ${data.colors.secondary || "(blank)"}; Accent: ${data.colors.accent || "(blank)"}; Dark: ${data.colors.dark || "(blank)"}; Light: ${data.colors.light || "(blank)"}`);
+      L.push("");
+
+      L.push("OPTIONAL RESOURCES");
+      L.push("Uploaded files (names only; file contents not included in this prompt):");
+      if(data.resources.uploads.length){
+        data.resources.uploads.forEach(f => L.push(`- ${f.name}`));
+      }else{
+        L.push("(none)");
+      }
+      L.push("How to use uploaded files:");
+      L.push(data.resources.uploadsHow ? data.resources.uploadsHow : "(no instructions provided)");
+      L.push("");
+
+      L.push("Public URLs:");
+      if(data.resources.urls.length){
+        data.resources.urls.forEach(u => L.push(`- ${u.url || "(blank url)"}${u.how ? " — " + u.how : ""}`));
+      }else{
+        L.push("(none)");
+      }
+      L.push("");
+
+      L.push("Pasted Text Entries:");
+      if(data.resources.textEntries.length){
+        data.resources.textEntries.forEach((t, i) => {
+          L.push(`Entry ${i+1}:`);
+          L.push(`- Type: ${t.fileType || "(blank)"}`);
+          L.push(`- Section: ${t.sectionType || "(blank)"}`);
+          L.push(`- Use: ${t.how || "(no instructions)"}`);
+          L.push(`- Content:\n${t.content || "(blank)"}`);
+          L.push("");
+        });
+      }else{
+        L.push("(none)");
+        L.push("");
+      }
+
+      L.push("COPYRIGHT / PERMISSION");
+      L.push(data.resources.copyrightOk
+        ? "User confirmed: They have copyright/permission, or want inspiration only with sufficiently different original output to avoid infringement."
+        : "User did NOT confirm copyright/permission (treat all third-party content as inspiration only; rewrite fully).");
+      L.push("");
+
+      L.push("OUTPUT REQUIREMENTS");
+      L.push("- Produce a complete, responsive portfolio webpage (HTML/CSS/JS) optimized for job-hunting.");
+      L.push("- Prioritize clarity and credibility: strong headline, specific skills, proof of work, and clean navigation.");
+      L.push("- Use resources only as factual inputs or inspiration; rewrite wording to be original.");
+      L.push("- If critical info is missing, generate placeholders but label them clearly as placeholders.");
+      L.push("- Include a short checklist of what the user should replace with real details.");
+      L.push("");
+
+      return L.join("\n");
+    }
+
+    function buildAdvice(data){
+      const tips = [];
+      tips.push("Show, don’t just tell: add proof (projects, metrics, links, screenshots, outcomes).");
+      tips.push("Lead with a 1-line headline that states your target role + specialty + value.");
+      tips.push("Quantify impact wherever possible (%, $, time saved, volume, accuracy, ratings).");
+      tips.push("Write for skimmers: short sections, strong headings, bullets, plenty of whitespace.");
+      tips.push("Tailor to the job ad: mirror keywords (truthfully) and map your evidence to their requirements.");
+      tips.push("Make contact frictionless: email + LinkedIn visible, plus a clear call-to-action.");
+
+      const bag = `${data.basic.major} ${data.basic.specialization} ${data.job.desiredPosition}`.toLowerCase();
+      if(/student|grad|intern|junior|entry/.test(bag)){
+        tips.push("Early-career tip: treat class projects as case studies (problem → approach → result).");
+      }
+      if(/data|analytics|science/.test(bag)){
+        tips.push("Data roles: include 1–2 mini case studies with dataset, method, and measurable result.");
+      }
+      if(/ux|research|design/.test(bag)){
+        tips.push("UX roles: show your process (research → synthesis → design → validation) with 1 clear artifact per step.");
+      }
+      if(/software|engineer|developer/.test(bag)){
+        tips.push("Software roles: add GitHub, list 2–3 tech stacks, and include short build notes per project.");
+      }
+
+      return tips.map((t,i) => `${i+1}. ${t}`).join("\n");
+    }
+
+    function escapeHtml(s){
+      return String(s)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function buildSummaryHtml(data){
+      const dt = new Date().toISOString();
+
+      const uploads = data.resources.uploads.length
+        ? `<ul>${data.resources.uploads.map(f => `<li>${escapeHtml(f.name)}</li>`).join("")}</ul>`
+        : `<p><em>(none)</em></p>`;
+
+      const urls = data.resources.urls.length
+        ? `<ul>${data.resources.urls.map(u => `<li><a href="${escapeHtml(u.url)}">${escapeHtml(u.url)}</a>${u.how ? ` — ${escapeHtml(u.how)}` : ""}</li>`).join("")}</ul>`
+        : `<p><em>(none)</em></p>`;
+
+      const texts = data.resources.textEntries.length
+        ? data.resources.textEntries.map((t, i) => `
+          <section class="card">
+            <h3>Text Entry ${i+1}</h3>
+            <p><strong>File type:</strong> ${escapeHtml(t.fileType || "")}</p>
+            <p><strong>Section type:</strong> ${escapeHtml(t.sectionType || "")}</p>
+            <p><strong>How to use:</strong> ${escapeHtml(t.how || "")}</p>
+            <pre>${escapeHtml(t.content || "")}</pre>
+          </section>
+        `).join("")
+        : `<p><em>(none)</em></p>`;
+
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MyPersonalPortfolioWebsiteSummary</title>
+  <style>
+    :root{ --bg:#0b1220; --panel:#121a2c; --text:#eaf0ff; --muted:#b8c3e6; --border:rgba(255,255,255,.12); }
+    *{ box-sizing:border-box; }
+    body{ margin:0; font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; background: var(--bg); color: var(--text); line-height:1.45; }
+    a{ color:#8DE0FF; }
+    .wrap{ max-width: 520px; margin: 0 auto; padding: 16px 12px 40px; }
+    h1{ margin: 0 0 6px; font-size: 18px; }
+    .meta{ color: var(--muted); font-size: 12px; margin-bottom: 12px; }
+    .card{ background: rgba(18,26,44,.75); border:1px solid var(--border); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+    h2{ margin: 0 0 10px; font-size: 14.5px; }
+    h3{ margin: 0 0 8px; font-size: 13px; }
+    .kv{ margin: 0 0 6px; }
+    .k{ color: var(--muted); font-size: 12px; display:block; }
+    .v{ font-weight: 700; }
+    pre{ white-space: pre-wrap; word-break: break-word; background: rgba(0,0,0,.28); border:1px solid var(--border); border-radius: 12px; padding: 10px; color: rgba(234,240,255,.92); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Portfolio Website Intake Summary</h1>
+    <div class="meta">Generated: ${escapeHtml(dt)} • Version: ${escapeHtml(data.meta.version)} • Updated: ${escapeHtml(data.meta.updated)}</div>
+
+    <section class="card">
+      <h2>Basic Information</h2>
+      <p class="kv"><span class="k">Name</span><span class="v">${escapeHtml(data.basic.name)}</span></p>
+      <p class="kv"><span class="k">Email</span><span class="v">${escapeHtml(data.basic.email)}</span></p>
+      <p class="kv"><span class="k">Phone</span><span class="v">${escapeHtml(data.basic.phone || "(not provided)")}</span></p>
+      <p class="kv"><span class="k">Major</span><span class="v">${escapeHtml(data.basic.major || "(not provided)")}</span></p>
+      <p class="kv"><span class="k">Specialization</span><span class="v">${escapeHtml(data.basic.specialization || "(not provided)")}</span></p>
+      <p class="kv"><span class="k">LinkedIn</span><span class="v">${data.basic.linkedin ? `<a href="${escapeHtml(data.basic.linkedin)}">${escapeHtml(data.basic.linkedin)}</a>` : "(not provided)"}</span></p>
+    </section>
+
+    <section class="card">
+      <h2>Optional Resources</h2>
+      <h3>Uploads</h3>
+      ${uploads}
+      <h3>How to use uploads</h3>
+      <pre>${escapeHtml(data.resources.uploadsHow || "")}</pre>
+      <h3>Public URLs</h3>
+      ${urls}
+      <h3>Text Entries</h3>
+      ${texts}
+      <p><strong>Copyright/permission confirmed:</strong> ${data.resources.copyrightOk ? "Yes" : "No"}</p>
+    </section>
+
+    <section class="card">
+      <h2>Color Scheme</h2>
+      <p class="kv"><span class="k">Theme number</span><span class="v">${escapeHtml(data.colors.themeNumber || "(none)")}</span></p>
+      <p class="kv"><span class="k">Primary</span><span class="v">${escapeHtml(data.colors.primary || "(blank)")}</span></p>
+      <p class="kv"><span class="k">Secondary</span><span class="v">${escapeHtml(data.colors.secondary || "(blank)")}</span></p>
+      <p class="kv"><span class="k">Accent</span><span class="v">${escapeHtml(data.colors.accent || "(blank)")}</span></p>
+      <p class="kv"><span class="k">Dark</span><span class="v">${escapeHtml(data.colors.dark || "(blank)")}</span></p>
+      <p class="kv"><span class="k">Light</span><span class="v">${escapeHtml(data.colors.light || "(blank)")}</span></p>
+    </section>
+
+    <section class="card">
+      <h2>Target Job</h2>
+      <p class="kv"><span class="k">Desired position</span><span class="v">${escapeHtml(data.job.desiredPosition || "(not provided)")}</span></p>
+      <h3>Job posting</h3>
+      <pre>${escapeHtml(data.job.jobAd || "(none provided)")}</pre>
+    </section>
+  </div>
+</body>
+</html>`;
+    }
+
+    function downloadFile(filename, text){
+      const blob = new Blob([text], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const err1 = validateStep1();
+      if(err1){ showStep(1); return showError(1, err1); }
+      clearError(1);
+
+      const err2 = validateStep2();
+      if(err2){ showStep(2); return showError(2, err2); }
+      clearError(2);
+
+      const err3 = validateStep3();
+      if(err3){ showStep(3); return showError(3, err3); }
+      clearError(3);
+
+      clearError(4);
+
+      const data = collectData();
+
+      // log all form data to console
+      console.log("Portfolio Intake Form Submission:", data);
+
+      const prompt = buildPrompt(data);
+      const advice = buildAdvice(data);
+      const summaryHtml = buildSummaryHtml(data);
+
+      promptPre.textContent = prompt;
+      advicePre.textContent = advice;
+      summaryPre.textContent = summaryHtml;
+
+      successBox.classList.add("show");
+      outputBox.classList.add("show");
+
+      document.getElementById("downloadSummary").onclick = () => {
+        downloadFile("MyPersonalPortfolioWebsiteSummary.html", summaryHtml);
+      };
+
+      document.getElementById("copyPrompt").onclick = async () => {
+        try{
+          await navigator.clipboard.writeText(prompt);
+          document.getElementById("copyPrompt").textContent = "Copied!";
+          setTimeout(() => document.getElementById("copyPrompt").textContent = "Copy prompt", 900);
+        }catch{
+          const ta = document.createElement("textarea");
+          ta.value = prompt;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          document.getElementById("copyPrompt").textContent = "Copied!";
+          setTimeout(() => document.getElementById("copyPrompt").textContent = "Copy prompt", 900);
+        }
+      };
+    });
+
+    /**********************
+     * Initialize with 1 URL row + 1 text entry for convenience
+     **********************/
+    urlRows.push({ url:"", how:"" });
+    renderUrlRows();
+
+    textEntries.push({ fileType:"raw", sectionType:"About / Bio", content:"", how:"" });
+    renderTextEntries();
+
+    // Default theme #1 into fields
+    selectTheme(0, true);
+
+    // Start step 1
+    showStep(1);
+  </script>
+</body>
+</html>
