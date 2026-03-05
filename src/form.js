@@ -575,21 +575,8 @@
     document.getElementById("next2_top")?.addEventListener("click", page2Next);
     document.getElementById("next2_bottom")?.addEventListener("click", page2Next);
 
-    // Color preview swatches
-    const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
-    function updateColorPreview() {
-      colorInputIds.forEach(id => {
-        const val = document.getElementById(id)?.value.trim();
-        const swatch = document.getElementById("swatch-" + id);
-        if (swatch) swatch.style.backgroundColor = val || "transparent";
-      });
-    }
-    colorInputIds.forEach(id => {
-      document.getElementById(id)?.addEventListener("input", updateColorPreview);
-    });
-    updateColorPreview();
-
     // Track which color input last had focus
+    const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
     let focusedColorId = "primary";
     colorInputIds.forEach(id => {
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
@@ -600,7 +587,7 @@
       const msg = e.data;
       if (!msg || msg.type !== "colorPick") return;
       const el = document.getElementById(focusedColorId);
-      if (el) { el.value = msg.color; updateColorPreview(); }
+      if (el) el.value = msg.color;
     });
 
     document.getElementById("continueTo3").addEventListener("click", () => setStep(3));
@@ -645,7 +632,6 @@
     addTextEntry();
 
     applyDefaults();
-    updateColorPreview();
     renderStepUI();
     setStep(0);
     window.addEventListener("message", (event) => {
@@ -659,7 +645,6 @@
       document.getElementById("accent").value    = theme.accent || "";
       document.getElementById("dark").value      = theme.dark || "";
       document.getElementById("light").value     = theme.light || "";
-      updateColorPreview();
 
     });
     window.addEventListener("message", (event) => {
@@ -675,5 +660,4 @@
         set("accent",    t.accent);
         set("dark",      t.dark);
         set("light",     t.light);
-        updateColorPreview();
-    });
+      });
