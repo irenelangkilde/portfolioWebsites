@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Color Themes</title>
+  <style>
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      background:#0b1220;
+      color:#eaf0ff;
+    }
+    .wrap{ padding: 10px; }
+    .top{
+      display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+      margin-bottom: 10px;
+    }
+    h1{ font-size: 13px; margin:0; letter-spacing:.2px; }
+    .hint{ font-size: 11px; margin:0; color: rgba(234,240,255,.72); }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    @media (min-width: 720px){
+      .grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+
+    .card{
+      border:1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      border-radius: 12px;
+      padding: 10px;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .05s ease, border-color .15s ease, box-shadow .15s ease;
+      position: relative;
+      overflow:hidden;
+    }
+    .card:hover{
+      border-color: rgba(255,255,255,.22);
+      box-shadow: 0 10px 25px rgba(0,0,0,.25);
+      transform: translateY(-1px);
+    }
+    .card:active{ transform: translateY(0px) scale(.99); }
+
+    .title{
+      display:flex; align-items:center; justify-content:space-between; gap:8px;
+      margin-bottom: 8px;
+    }
+    .name{
+      font-weight: 900;
+      font-size: 11.5px;
+      letter-spacing:.2px;
+      color: rgba(234,240,255,.95);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .badge{
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.18);
+      color: rgba(234,240,255,.85);
+      background: rgba(0,0,0,.20);
+      display:none;
+    }
+
+    .swatches{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .swatch{
+      height: 16px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .mini-preview{
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: linear-gradient(90deg,
+        var(--p) 0%,
+        var(--p) 20%,
+        var(--s) 20%,
+        var(--s) 40%,
+        var(--a) 40%,
+        var(--a) 60%,
+        var(--d) 60%,
+        var(--d) 80%,
+        var(--l) 80%,
+        var(--l) 100%
+      );
+    }
+
+    .card.selected{
+      border-color: rgba(141,224,255,.55);
+      box-shadow: 0 0 0 3px rgba(141,224,255,.18), 0 10px 25px rgba(0,0,0,.30);
+    }
+    .card.selected .badge{ display:inline-block; }
+
+    /* Optional: show keyboard focus nicely */
+    .card:focus{
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(78,112,241,.35), 0 10px 25px rgba(0,0,0,.30);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h1>Choose a Color Theme</h1>
+      <p class="hint">Click a card to fill the form’s hex fields.</p>
+    </div>
+
+    <!-- REQUIRED: JS renders into this -->
+    <div class="grid" id="themeGrid" aria-label="Theme options"></div>
+  </div>
+
+  <script>
+    const THEME_DATA = [
+      { name:"Ocean Breeze",      colors:["#0077BE","#00A8E8","#E0F4FF","#003B5C","#FFFFFF"] },
+      { name:"Sunset Vibes",      colors:["#FF6B6B","#FFA07A","#FFE66D","#4ECDC4","#1A535C"] },
+      { name:"Forest Green",      colors:["#2D6A4F","#52B788","#B7E4C7","#1B4332","#FFFFFF"] },
+      { name:"Royal Purple",      colors:["#5A189A","#9D4EDD","#E0AAFF","#240046","#FFFFFF"] },
+      { name:"Minimalist Dark",   colors:["#1E1E1E","#2D2D2D","#404040","#FFFFFF","#00D9FF"] },
+      { name:"Peachy Keen",       colors:["#FF9B71","#FFCB9A","#FFF4E0","#D4A574","#333333"] },
+      { name:"Navy & Gold",       colors:["#0F2027","#203A43","#D4AF37","#FFE082","#FFFFFF"] },
+      { name:"Mint Fresh",        colors:["#06FFA5","#98FFD6","#E0FFF5","#037F5F","#1A1A1A"] },
+      { name:"Crimson Elegance",  colors:["#9B2226","#AE2012","#CA6702","#F4A261","#264653"] },
+      { name:"Lavender Dreams",   colors:["#B298DC","#D4C2FC","#F8F3FF","#6B4C9A","#333333"] },
+      { name:"Coral Reef",        colors:["#FF6F61","#FFA69E","#FFE5E2","#E76F51","#264653"] },
+      { name:"Slate & Teal",      colors:["#2C3E50","#34495E","#1ABC9C","#16A085","#ECF0F1"] },
+      { name:"Warm Autumn",       colors:["#8B4513","#D2691E","#F4A460","#FAF0E6","#2F1B0C"] },
+      { name:"Electric Blue",     colors:["#00B4D8","#0096C7","#023E8A","#CAF0F8","#03045E"] },
+      { name:"Monochrome",        colors:["#000000","#333333","#666666","#999999","#FFFFFF"] },
+      { name:"Rose Garden",       colors:["#D90368","#F72585","#FF8DC7","#FFCCE1","#2B0B3F"] },
+      { name:"Desert Sand",       colors:["#EDC9AF","#E3B5A4","#CDA788","#564946","#F5F5DC"] },
+      { name:"Neon Nights",       colors:["#FF006E","#FB5607","#FFBE0B","#8338EC","#1A1A1D"] },
+      { name:"Arctic Ice",        colors:["#C9E4E7","#A7C4CB","#FFFFFF","#6B9DAA","#003D54"] },
+      { name:"Cherry Blossom",    colors:["#FFB7C5","#FF9EAA","#FFF0F5","#E85D75","#7C2D41"] }
+    ];
+
+    const grid = document.getElementById("themeGrid");
+    let selectedIndex = null;
+
+    function postToParent(number, colors){
+      const theme = {
+        primary:   colors[0],
+        secondary: colors[1],
+        accent:    colors[2],
+        dark:      colors[3],
+        light:     colors[4]
+      };
+      window.parent.postMessage({
+        type: "colorThemeSelected",
+        number,
+        theme
+      }, "*");
+    }
+
+    function render(){
+      grid.innerHTML = "";
+      THEME_DATA.forEach((t, i) => {
+        const number = i + 1;
+        const [p,s,a,d,l] = t.colors;
+
+        const card = document.createElement("div");
+        card.className = "card" + (selectedIndex === i ? " selected" : "");
+        card.tabIndex = 0; // keyboard focus
+        card.style.setProperty("--p", p);
+        card.style.setProperty("--s", s);
+        card.style.setProperty("--a", a);
+        card.style.setProperty("--d", d);
+        card.style.setProperty("--l", l);
+
+        card.innerHTML = `
+          <div class="title">
+            <div class="name">${number}. ${t.name}</div>
+            <div class="badge">Selected</div>
+          </div>
+          <div class="swatches">
+            <div class="swatch" style="background:${p}"></div>
+            <div class="swatch" style="background:${s}"></div>
+            <div class="swatch" style="background:${a}"></div>
+            <div class="swatch" style="background:${d}"></div>
+            <div class="swatch" style="background:${l}"></div>
+          </div>
+          <div class="mini-preview" aria-hidden="true"></div>
+        `;
+
+        const choose = () => {
+          selectedIndex = i;
+          render();
+          postToParent(number, t.colors);
+        };
+
+        card.addEventListener("click", choose);
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            choose();
+          }
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
