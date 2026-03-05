@@ -8,7 +8,6 @@ import OpenAI from "openai";
  * Env var required:
  *   OPENAI_API_KEY=...
  */
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // ---- 1) Define a strict JSON schema for the preview draft ----
 const SITE_JSON_SCHEMA = {
@@ -381,6 +380,17 @@ export async function handler(event) {
     if (event.httpMethod !== "POST") {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return {
+        statusCode: 500,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ error: "OPENAI_API_KEY is not set. Add it to your .env file or Netlify environment variables." })
+      };
+    }
+
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
     const { page1, page2 } = JSON.parse(event.body || "{}");
 
     // Basic guardrails
