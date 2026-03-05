@@ -3,8 +3,6 @@ import JSZip from "jszip";
 import { SITE_JSON_SCHEMA } from "../shared/siteSchema.mjs";
 import { renderHTML } from "../shared/siteRender.mjs";
 
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 function buildZipPrompt(page1, page2) {
   // You can reuse the same prompt as preview; often identical is fine.
   const theme = page2?.theme || {};
@@ -34,6 +32,16 @@ function buildZipPrompt(page1, page2) {
 export async function handler(event) {
   try {
     if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
+
+    if (!process.env.OPENAI_API_KEY) {
+      return {
+        statusCode: 500,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ error: "OPENAI_API_KEY is not set. Add it to your .env file or Netlify environment variables." })
+      };
+    }
+
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const { page1, page2 } = JSON.parse(event.body || "{}");
     if (!page1?.name || !page1?.email) {
