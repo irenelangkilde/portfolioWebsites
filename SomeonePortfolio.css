@@ -1,0 +1,680 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Some One | Psychology Portfolio</title>
+  <meta name="description" content="Single-page psychology graduate portfolio for Some One: profile, skills, projects, education, certifications, and contact." />
+
+  <style>
+    :root{
+      --primary:#4E70F1;
+      --secondary:#FBAB9C;
+      --accent:#8DE0FF;
+      --dark:#0b1220;
+      --light:#eaf0ff;
+
+      --card: rgba(255,255,255,.06);
+      --border: rgba(234,240,255,.14);
+      --muted: rgba(234,240,255,.74);
+
+      --shadow: 0 18px 70px rgba(0,0,0,.45);
+      --radius: 18px;
+
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono","Courier New", monospace;
+
+      scroll-behavior:smooth;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--light);
+      background:
+        radial-gradient(1000px 560px at 14% 10%, rgba(78,112,241,.26), transparent 62%),
+        radial-gradient(900px 520px at 88% 14%, rgba(251,171,156,.18), transparent 58%),
+        radial-gradient(820px 520px at 76% 80%, rgba(141,224,255,.12), transparent 55%),
+        linear-gradient(180deg, #070c18, var(--dark));
+    }
+
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+
+    /* Top nav */
+    .topbar{
+      position:sticky; top:0; z-index:50;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      background: rgba(7,12,24,.55);
+      border-bottom: 1px solid rgba(234,240,255,.10);
+    }
+    .topbar .inner{
+      max-width:1100px; margin:0 auto; padding:10px 18px;
+      display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px; min-width:230px;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:999px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      box-shadow: 0 0 0 6px rgba(78,112,241,.14);
+    }
+    .brandTitle{display:flex;flex-direction:column;line-height:1.1}
+    .brandTitle strong{font-size:13px;letter-spacing:.04em}
+    .brandTitle span{font-size:12px;color:var(--muted)}
+    nav{
+      display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;
+    }
+    nav a{
+      font-size:12px;
+      color: rgba(234,240,255,.86);
+      padding:8px 10px;
+      border:1px solid rgba(234,240,255,.12);
+      border-radius:999px;
+      background: rgba(234,240,255,.06);
+    }
+    nav a:hover{background: rgba(234,240,255,.10)}
+
+    /* Layout */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:16px;
+      margin-top:16px;
+    }
+    @media (max-width: 960px){
+      .grid{grid-template-columns:1fr}
+    }
+
+    .card{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .pad{padding:16px}
+
+    /* Hero */
+    .hero{
+      position:relative;
+      overflow:hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-1px;
+      background:
+        radial-gradient(700px 340px at 18% 20%, rgba(78,112,241,.25), transparent 60%),
+        radial-gradient(560px 320px at 84% 18%, rgba(251,171,156,.18), transparent 55%),
+        radial-gradient(620px 360px at 70% 86%, rgba(141,224,255,.10), transparent 55%);
+      pointer-events:none;
+      opacity:.95;
+    }
+    .heroInner{
+      position:relative;
+      display:grid;
+      grid-template-columns: 150px 1fr;
+      gap:14px;
+      align-items:center;
+      padding:18px;
+    }
+    @media (max-width:560px){
+      .heroInner{grid-template-columns:1fr; text-align:center}
+    }
+    .headshot{
+      width:150px;height:150px;border-radius:22px;
+      border:1px solid rgba(234,240,255,.16);
+      background: rgba(234,240,255,.07);
+      display:grid;place-items:center;
+      box-shadow: 0 18px 50px rgba(0,0,0,.35);
+      overflow:hidden;
+    }
+    .silhouette{
+      width:100%; height:100%;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(234,240,255,.22), transparent 48%),
+        linear-gradient(180deg, rgba(234,240,255,.10), rgba(234,240,255,.02));
+      display:grid;place-items:center;
+      position:relative;
+    }
+    /* simple inline silhouette */
+    .silhouette svg{opacity:.95}
+    .hero h1{
+      margin:0;
+      font-size:26px;
+      letter-spacing:.01em;
+    }
+    .roleLine{
+      margin:6px 0 0;
+      color: rgba(234,240,255,.85);
+      font-size:13px;
+    }
+    .tagline{
+      margin:10px 0 0;
+      color: var(--muted);
+      font-size:13px;
+      line-height:1.6;
+      max-width: 64ch;
+    }
+    .ctaRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:12px;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      font-size:12px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(234,240,255,.08);
+      color: rgba(234,240,255,.92);
+    }
+    .btn.primary{
+      background: linear-gradient(90deg, rgba(78,112,241,.95), rgba(251,171,156,.80));
+      color:#071022;
+      font-weight:900;
+      border-color: rgba(255,255,255,.18);
+    }
+
+    /* Section styling */
+    section{scroll-margin-top:84px}
+    .sectionTitle{
+      margin:0 0 10px;
+      font-size:14px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color: rgba(234,240,255,.85);
+      display:flex; align-items:center; gap:10px;
+    }
+    .sectionTitle:after{
+      content:"";
+      height:1px;
+      flex:1;
+      background: linear-gradient(90deg, rgba(234,240,255,.18), transparent);
+    }
+    .twoCol{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:960px){ .twoCol{grid-template-columns:1fr} }
+
+    .pill{
+      display:inline-flex; align-items:center;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid rgba(234,240,255,.14);
+      background: rgba(234,240,255,.06);
+      color: rgba(234,240,255,.86);
+      font-size:12px;
+    }
+    ul.clean{
+      margin:0; padding:0 0 0 18px;
+      color: rgba(234,240,255,.84);
+      line-height:1.75;
+      font-size:13px;
+    }
+    .muted{color:var(--muted)}
+    .mini{font-size:12px;color:var(--muted);line-height:1.6}
+    .kpi{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+    }
+    @media (max-width:560px){ .kpi{grid-template-columns:1fr} }
+    .kpi .box{
+      border:1px solid rgba(234,240,255,.12);
+      background: rgba(234,240,255,.05);
+      border-radius:16px;
+      padding:12px;
+    }
+    .kpi .box strong{display:block;font-size:13px}
+    .kpi .box span{display:block;margin-top:4px;font-size:12px;color:var(--muted);line-height:1.5}
+
+    /* Project cards with stock-photo placeholders */
+    .projects{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:960px){ .projects{grid-template-columns:1fr} }
+    .proj{
+      border:1px solid rgba(234,240,255,.12);
+      border-radius:16px;
+      overflow:hidden;
+      background: rgba(8,12,24,.35);
+    }
+    .proj .img{
+      height:150px;
+      background:
+        radial-gradient(600px 180px at 10% 20%, rgba(78,112,241,.35), transparent 60%),
+        radial-gradient(520px 200px at 90% 30%, rgba(251,171,156,.20), transparent 62%),
+        linear-gradient(180deg, rgba(234,240,255,.06), rgba(234,240,255,.02));
+      border-bottom:1px solid rgba(234,240,255,.10);
+      position:relative;
+    }
+    .proj .img:after{
+      content:"Stock photo placeholder";
+      position:absolute; left:12px; bottom:10px;
+      font-size:11px;
+      color: rgba(234,240,255,.70);
+      background: rgba(7,12,24,.55);
+      padding:6px 8px;
+      border:1px solid rgba(234,240,255,.12);
+      border-radius:999px;
+      backdrop-filter: blur(10px);
+    }
+    .proj .body{padding:12px}
+    .proj h3{margin:0;font-size:14px}
+    .proj p{margin:8px 0 0;color:var(--muted);font-size:12.5px;line-height:1.6}
+    .proj ul{margin:8px 0 0 18px;color: rgba(234,240,255,.84);font-size:12.5px;line-height:1.7}
+    .proj .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+    .tag{
+      font-size:11px;
+      padding:6px 8px;border-radius:999px;
+      border:1px solid rgba(234,240,255,.12);
+      background: rgba(234,240,255,.06);
+      color: rgba(234,240,255,.82);
+    }
+
+    /* Footer */
+    footer{
+      margin:18px 0 8px;
+      text-align:center;
+      color: rgba(234,240,255,.60);
+      font-size:12px;
+    }
+    .contactGrid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width:960px){ .contactGrid{grid-template-columns:1fr} }
+
+    .note{
+      border:1px dashed rgba(234,240,255,.18);
+      background: rgba(234,240,255,.04);
+      border-radius:16px;
+      padding:12px;
+      color: var(--muted);
+      font-size:12px;
+      line-height:1.6;
+    }
+    .mono{font-family:var(--mono)}
+  </style>
+</head>
+
+<body>
+  <!-- Sticky navigation -->
+  <div class="topbar">
+    <div class="inner">
+      <div class="brand">
+        <div class="dot"></div>
+        <div class="brandTitle">
+          <strong>Some One</strong>
+          <span>Psychology Graduate • Portfolio</span>
+        </div>
+      </div>
+
+      <nav aria-label="Section navigation">
+        <!-- Layout + section names/types modeled after your reference site, but content is original -->
+        <a href="#about">About</a>
+        <a href="#skills">Skills</a>
+        <a href="#projects">Projects</a>
+        <a href="#education">Education</a>
+        <a href="#certifications">Certifications</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- HERO -->
+    <div class="card hero" id="top">
+      <div class="heroInner">
+        <div class="headshot" aria-label="Headshot silhouette">
+          <div class="silhouette">
+            <!-- simple silhouette icon -->
+            <svg width="92" height="92" viewBox="0 0 64 64" fill="none" aria-hidden="true">
+              <path d="M32 34c8.2 0 14.8-6.6 14.8-14.8S40.2 4.4 32 4.4 17.2 11 17.2 19.2 23.8 34 32 34Z"
+                    fill="rgba(234,240,255,.82)"/>
+              <path d="M10.5 59.6c2.7-12 12.1-20 21.5-20s18.8 8 21.5 20"
+                    stroke="rgba(234,240,255,.82)" stroke-width="6" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <h1>Some One</h1>
+          <div class="roleLine">Recent Psychology Graduate • Research-minded • People-first communicator</div>
+
+          <!-- Rewritten "About Me" (source: your HTML text entry) -->
+          <p class="tagline">
+            I’m a recent psychology graduate with a strong foundation in research methods, clinical assessment basics, and evidence-informed practice.
+            I care deeply about mental health advocacy and I’m motivated by work that improves outcomes through empathy, clarity, and measurable progress.
+          </p>
+
+          <div class="ctaRow">
+            <a class="btn primary" href="#contact">Contact</a>
+            <a class="btn" href="mailto:irene.langkilde71@gmail.com">Email</a>
+            <a class="btn" href="tel:+18014774185">Call</a>
+          </div>
+
+          <div class="hint muted" style="margin-top:10px">
+            Theme: <span class="mono">#4E70F1</span> / <span class="mono">#FBAB9C</span> / <span class="mono">#8DE0FF</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- LEFT COLUMN -->
+      <div>
+
+        <!-- ABOUT -->
+        <section id="about" class="card">
+          <div class="pad">
+            <h2 class="sectionTitle">About</h2>
+
+            <div class="twoCol">
+              <div>
+                <div class="pill">What I bring</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>Clear, compassionate communication—written and verbal</li>
+                  <li>Research literacy: reading studies, summarizing findings, applying insights</li>
+                  <li>Structured thinking: turning complex situations into actionable next steps</li>
+                  <li>Professionalism: privacy-aware, reliable, detail-oriented</li>
+                </ul>
+              </div>
+
+              <div>
+                <div class="pill">What I’m looking for</div>
+                <p class="mini" style="margin-top:10px">
+                  I’m open to entry-level roles where I can support people and programs through strong documentation, coordination,
+                  research support, and client-facing communication—especially in mental health, education, community services, or HR-adjacent settings.
+                </p>
+
+                <div class="note" style="margin-top:10px">
+                  <strong style="color:rgba(234,240,255,.9)">Tip:</strong>
+                  Add your target job title later and I’ll reorder sections and tailor keywords (ATS-friendly phrasing) to that role.
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SKILLS -->
+        <section id="skills" class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Skills</h2>
+
+            <div class="kpi">
+              <div class="box">
+                <strong>Research & Analysis</strong>
+                <span>Study summaries, survey basics, data interpretation, evidence-based reasoning</span>
+              </div>
+              <div class="box">
+                <strong>Client Support</strong>
+                <span>Active listening, empathy, de-escalation basics, clear follow-up, documentation</span>
+              </div>
+              <div class="box">
+                <strong>Professional Writing</strong>
+                <span>Case notes style writing, reports, emails, polished resumes/cover letters</span>
+              </div>
+            </div>
+
+            <div class="twoCol" style="margin-top:12px">
+              <div>
+                <div class="pill">Tools</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>Google Workspace / Microsoft Office (docs, sheets, slides)</li>
+                  <li>Scheduling & coordination tools (calendars, forms)</li>
+                  <li>Basic data handling (spreadsheets, simple charts)</li>
+                </ul>
+              </div>
+              <div>
+                <div class="pill">Strengths</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>Detail-oriented and dependable</li>
+                  <li>Quick learner and adaptable</li>
+                  <li>Comfortable collaborating with teams</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PROJECTS -->
+        <section id="projects" class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Projects</h2>
+            <p class="mini" style="margin:0 0 10px">
+              Below are project-style examples you can quickly customize. Replace the placeholders with your real experiences
+              (class projects, volunteer work, internships, research, or leadership roles).
+            </p>
+
+            <div class="projects">
+              <article class="proj">
+                <div class="img" role="img" aria-label="Stock photo placeholder for mental health advocacy project"></div>
+                <div class="body">
+                  <h3>Mental Health Awareness Micro-Campaign</h3>
+                  <p>
+                    Designed a small, evidence-informed campaign concept aimed at improving awareness and help-seeking behavior.
+                  </p>
+                  <ul>
+                    <li>Outlined core messages based on common barriers to care</li>
+                    <li>Created a simple content calendar and measurement plan</li>
+                    <li>Drafted accessible language for diverse audiences</li>
+                  </ul>
+                  <div class="tags">
+                    <span class="tag">Communication</span>
+                    <span class="tag">Evidence-informed</span>
+                    <span class="tag">Planning</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="proj">
+                <div class="img" role="img" aria-label="Stock photo placeholder for research synthesis project"></div>
+                <div class="body">
+                  <h3>Research Synthesis & Summary Brief</h3>
+                  <p>
+                    Produced a concise summary of peer-reviewed findings on a psychology topic (e.g., stress, sleep, anxiety, motivation).
+                  </p>
+                  <ul>
+                    <li>Extracted key insights, limitations, and practical implications</li>
+                    <li>Translated academic language into stakeholder-friendly writing</li>
+                    <li>Organized sources and a clear “next steps” section</li>
+                  </ul>
+                  <div class="tags">
+                    <span class="tag">Research</span>
+                    <span class="tag">Writing</span>
+                    <span class="tag">Critical Thinking</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="proj">
+                <div class="img" role="img" aria-label="Stock photo placeholder for client support workflow project"></div>
+                <div class="body">
+                  <h3>Client Support Workflow (Documentation + Follow-Up)</h3>
+                  <p>
+                    Built a simple workflow template to improve consistency in follow-up communication and record-keeping.
+                  </p>
+                  <ul>
+                    <li>Created reusable templates for notes, handoffs, and next actions</li>
+                    <li>Defined fields that reduce errors and missing information</li>
+                    <li>Emphasized privacy-aware language and secure handling</li>
+                  </ul>
+                  <div class="tags">
+                    <span class="tag">Process</span>
+                    <span class="tag">Documentation</span>
+                    <span class="tag">Coordination</span>
+                  </div>
+                </div>
+              </article>
+
+              <article class="proj">
+                <div class="img" role="img" aria-label="Stock photo placeholder for volunteering impact project"></div>
+                <div class="body">
+                  <h3>Volunteering Impact Snapshot</h3>
+                  <p>
+                    Documented volunteer contributions using outcomes-focused language suitable for employers.
+                  </p>
+                  <ul>
+                    <li>Converted responsibilities into measurable results where possible</li>
+                    <li>Highlighted empathy, reliability, and communication strengths</li>
+                    <li>Created a short “story” that ties work to mission and impact</li>
+                  </ul>
+                  <div class="tags">
+                    <span class="tag">Volunteering</span>
+                    <span class="tag">Impact</span>
+                    <span class="tag">Storytelling</span>
+                  </div>
+                </div>
+              </article>
+            </div>
+
+            <div class="note" style="margin-top:12px">
+              Want these to match a specific role (e.g., “Behavioral Health Tech”, “Research Assistant”, “HR Coordinator”)? Paste the job ad and I’ll rewrite the projects and skills to align.
+            </div>
+          </div>
+        </section>
+
+        <!-- EDUCATION -->
+        <section id="education" class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Education</h2>
+
+            <div class="twoCol">
+              <div>
+                <div class="pill">Degree</div>
+                <p class="mini" style="margin-top:10px">
+                  <strong style="color:rgba(234,240,255,.92)">B.A./B.S. in Psychology</strong><br/>
+                  <span class="muted">Add your university, graduation date, GPA (optional), and honors.</span>
+                </p>
+              </div>
+
+              <div>
+                <div class="pill">Relevant coursework (optional)</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>Research Methods</li>
+                  <li>Statistics / Data Literacy</li>
+                  <li>Abnormal Psychology</li>
+                  <li>Developmental Psychology</li>
+                </ul>
+              </div>
+            </div>
+
+            <div class="note" style="margin-top:12px">
+              If your resume PDF includes your school details, you can copy/paste them into this section to make it complete.
+            </div>
+          </div>
+        </section>
+
+        <!-- CERTIFICATIONS -->
+        <section id="certifications" class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Certifications</h2>
+
+            <div class="twoCol">
+              <div>
+                <div class="pill">Current</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>Certified in CPR</li>
+                </ul>
+              </div>
+              <div>
+                <div class="pill">Suggested additions (optional)</div>
+                <ul class="clean" style="margin-top:10px">
+                  <li>First Aid (if applicable)</li>
+                  <li>HIPAA / privacy training (if applicable)</li>
+                  <li>Mental Health First Aid (if applicable)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- RIGHT COLUMN -->
+      <aside>
+
+        <!-- QUICK FACTS -->
+        <div class="card">
+          <div class="pad">
+            <h2 class="sectionTitle">Quick Facts</h2>
+            <div class="mini">
+              <div><strong style="color:rgba(234,240,255,.92)">Major:</strong> Psychology</div>
+              <div style="margin-top:6px"><strong style="color:rgba(234,240,255,.92)">Email:</strong> <a href="mailto:irene.langkilde71@gmail.com">irene.langkilde71@gmail.com</a></div>
+              <div style="margin-top:6px"><strong style="color:rgba(234,240,255,.92)">Phone:</strong> <a href="tel:+18014774185">(801) 477-4185</a></div>
+            </div>
+
+            <div class="note" style="margin-top:12px">
+              <strong style="color:rgba(234,240,255,.9)">Resume PDF:</strong><br/>
+              Add your resume link here once uploaded/hosted:
+              <div class="mono" style="margin-top:6px;opacity:.9">&lt;a href="Sample_Psychology_Graduate_Resume.pdf" target="_blank"&gt;Download Resume (PDF)&lt;/a&gt;</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- HIGHLIGHTS -->
+        <div class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Highlights</h2>
+            <ul class="clean">
+              <li>Evidence-informed mindset</li>
+              <li>Strong writing and organization</li>
+              <li>People-first communication</li>
+              <li>Calm under pressure</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- CONTACT -->
+        <section id="contact" class="card" style="margin-top:16px">
+          <div class="pad">
+            <h2 class="sectionTitle">Contact</h2>
+
+            <div class="contactGrid">
+              <div class="note">
+                <strong style="color:rgba(234,240,255,.9)">Email</strong><br/>
+                <a href="mailto:irene.langkilde71@gmail.com">irene.langkilde71@gmail.com</a>
+                <div class="mini" style="margin-top:8px">Fastest way to reach me.</div>
+              </div>
+
+              <div class="note">
+                <strong style="color:rgba(234,240,255,.9)">Phone</strong><br/>
+                <a href="tel:+18014774185">(801) 477-4185</a>
+                <div class="mini" style="margin-top:8px">Call or text.</div>
+              </div>
+            </div>
+
+            <div class="note" style="margin-top:12px">
+              <strong style="color:rgba(234,240,255,.9)">LinkedIn</strong><br/>
+              <span class="mini">Add your LinkedIn URL to the top of the page once available.</span>
+            </div>
+          </div>
+        </section>
+
+      </aside>
+    </div>
+
+    <footer>
+      © <span id="year"></span> Some One • Built as a single-page portfolio
+    </footer>
+  </div>
+
+  <script>
+    // Minimal JS: footer year
+    document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

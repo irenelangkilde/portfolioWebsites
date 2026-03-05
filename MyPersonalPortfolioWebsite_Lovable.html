@@ -1,0 +1,1774 @@
+<!--
+PersonalPortfolioWebsiteIntakeForm.txt — a complete, standalone HTML file ready to embed in your website.
+Version: 2.0.0
+Updated: 2026-02-27
+
+NOTE: This is a client-side, standalone form. Browsers can’t silently write files to disk.
+Instead, on Submit it generates:
+- MyPersonalPortfolioWebsiteSummary.html (download)
+- MyPersonalPortfolioWebsite.html (starter output download)
+and prints all collected data to the console.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Personal Portfolio Website Intake Form</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#eaf0ff;
+      --muted:#b9c6ff;
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --secondary:#FBAB9C;
+      --danger:#ff6b6b;
+      --ok:#35d07f;
+      --border: rgba(234,240,255,0.16);
+      --shadow: 0 10px 35px rgba(0,0,0,0.35);
+      --radius: 16px;
+      --radius2: 12px;
+      --max: 920px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(78,112,241,0.25), transparent 60%),
+        radial-gradient(900px 600px at 90% 20%, rgba(141,224,255,0.18), transparent 55%),
+        radial-gradient(900px 700px at 60% 100%, rgba(251,171,156,0.16), transparent 55%),
+        var(--bg);
+      min-height:100vh;
+      padding:24px;
+    }
+
+    .wrap{
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+
+    header{
+      display:flex;
+      gap:14px;
+      align-items:flex-start;
+      justify-content:space-between;
+      margin-bottom:18px;
+    }
+
+    .title{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    h1{
+      font-size:22px;
+      margin:0;
+      letter-spacing:0.2px;
+    }
+    .subtitle{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.35;
+      max-width: 70ch;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.04);
+      border-radius:999px;
+      box-shadow: var(--shadow);
+      font-size:13px;
+      color:var(--muted);
+      user-select:none;
+      white-space:nowrap;
+    }
+    .dot{
+      width:10px;height:10px;border-radius:50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(141,224,255,0.10);
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .topbar{
+      padding:14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(17,26,51,0.55);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .steps{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .step-pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+      color:var(--muted);
+      font-size:12.5px;
+    }
+    .step-pill strong{
+      font-size:12.5px;
+      color: var(--text);
+    }
+    .step-pill.active{
+      border-color: rgba(141,224,255,0.40);
+      box-shadow: 0 0 0 4px rgba(141,224,255,0.10);
+      color: var(--text);
+    }
+    .step-pill.done{
+      border-color: rgba(53,208,127,0.40);
+      background: rgba(53,208,127,0.08);
+      color: var(--text);
+    }
+
+    .progress{
+      flex: 1 1 260px;
+      min-width: 240px;
+      height: 12px;
+      border-radius:999px;
+      background: rgba(234,240,255,0.08);
+      border: 1px solid rgba(234,240,255,0.10);
+      overflow:hidden;
+      position:relative;
+    }
+    .progress > span{
+      display:block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, rgba(78,112,241,0.95), rgba(141,224,255,0.90));
+      border-radius:999px;
+      transition: width 240ms ease;
+    }
+    .progress-label{
+      font-size:12px;
+      color: var(--muted);
+      margin-left:auto;
+      white-space:nowrap;
+    }
+
+    .content{
+      padding: 18px 16px 16px;
+    }
+
+    .page{
+      display:none;
+      animation: fade 150ms ease;
+    }
+    .page.active{display:block;}
+    @keyframes fade{
+      from{opacity:0; transform:translateY(4px)}
+      to{opacity:1; transform:translateY(0)}
+    }
+
+    .page h2{
+      margin: 0 0 8px 0;
+      font-size:18px;
+    }
+    .hint{
+      color: var(--muted);
+      font-size: 13.5px;
+      line-height:1.45;
+      margin: 0 0 14px 0;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 760px){
+      .grid{grid-template-columns:1fr;}
+    }
+
+    .field{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+
+    label{
+      font-size: 13px;
+      color: var(--muted);
+    }
+    label .req{
+      color: var(--secondary);
+      font-weight: 700;
+      margin-left:6px;
+    }
+
+    input[type="text"], input[type="email"], input[type="tel"], input[type="url"], textarea, select{
+      width:100%;
+      padding: 11px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(234,240,255,0.16);
+      background: rgba(15,23,48,0.65);
+      color: var(--text);
+      outline:none;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+      font-size: 14px;
+    }
+    textarea{min-height: 110px; resize: vertical; line-height: 1.45;}
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(141,224,255,0.55);
+      box-shadow: 0 0 0 4px rgba(141,224,255,0.10);
+    }
+
+    .row{
+      display:grid;
+      gap:12px;
+      align-items:start;
+    }
+    .row-2{ grid-template-columns: 1fr 1.4fr; }
+    .row-2-wide{ grid-template-columns: 1.1fr 1fr; }
+    .row-4{ grid-template-columns: 130px 260px 1fr 1fr; }
+    @media (max-width: 980px){
+      .row-4{ grid-template-columns: 1fr; }
+      .row-2, .row-2-wide{ grid-template-columns: 1fr; }
+    }
+
+    .box{
+      padding: 12px;
+      border: 1px solid rgba(234,240,255,0.14);
+      border-radius: var(--radius2);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .tips{
+      padding: 12px;
+      border-radius: var(--radius2);
+      border:1px solid rgba(141,224,255,0.18);
+      background: rgba(141,224,255,0.06);
+      margin: 12px 0 16px;
+    }
+    .tips h3{
+      margin:0 0 8px 0;
+      font-size: 14px;
+    }
+    .tips ol{
+      margin:0;
+      padding-left: 18px;
+      color: var(--text);
+      font-size: 13.5px;
+      line-height: 1.5;
+    }
+
+    .actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(17,26,51,0.45);
+      flex-wrap:wrap;
+    }
+
+    .actions.top{
+      border-top:none;
+      border-bottom: 1px solid var(--border);
+      justify-content: space-between;
+      background: rgba(17,26,51,0.35);
+      padding: 10px 16px;
+      margin: 14px 0 14px;
+      border-radius: 14px;
+    }
+
+    .btn{
+      appearance:none;
+      border:1px solid rgba(234,240,255,0.18);
+      background: rgba(255,255,255,0.05);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
+      cursor:pointer;
+      font-weight: 650;
+      font-size: 13.5px;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      transition: transform 80ms ease, border-color 160ms ease, background 160ms ease;
+      user-select:none;
+    }
+    .btn:hover{
+      border-color: rgba(141,224,255,0.35);
+      background: rgba(255,255,255,0.07);
+    }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(78,112,241,0.35);
+      background: rgba(78,112,241,0.18);
+    }
+    .btn.primary:hover{
+      border-color: rgba(78,112,241,0.55);
+      background: rgba(78,112,241,0.24);
+    }
+    .btn.danger{
+      border-color: rgba(255,107,107,0.35);
+      background: rgba(255,107,107,0.12);
+    }
+    .btn.link{
+      border-color: transparent;
+      background: transparent;
+      color: var(--muted);
+      padding: 8px 10px;
+      font-weight: 600;
+    }
+    .btn.link:hover{
+      border-color: rgba(234,240,255,0.16);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+    }
+
+    .mini{
+      font-size: 12.5px;
+      color: var(--muted);
+      line-height:1.45;
+    }
+
+    .error{
+      margin-top: 8px;
+      color: var(--danger);
+      font-size: 13px;
+      display:none;
+    }
+    .error.show{display:block;}
+    .ok{
+      color: var(--ok);
+      font-size: 13px;
+    }
+
+    .filelist{
+      margin: 10px 0 0;
+      padding-left: 18px;
+      color: var(--text);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .inline{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .checkbox{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      padding: 12px;
+      border-radius: 12px;
+      border:1px solid rgba(234,240,255,0.14);
+      background: rgba(255,255,255,0.03);
+      margin-top: 12px;
+    }
+    .checkbox input{ margin-top: 3px; }
+
+    .themes{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 12px;
+      margin: 10px 0 14px;
+    }
+    @media (max-width: 860px){
+      .themes{grid-template-columns:1fr;}
+    }
+    .theme{
+      border: 1px solid rgba(234,240,255,0.14);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      padding: 12px;
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+    }
+    .theme input{ margin-top: 4px; }
+    .swatches{
+      display:flex;
+      gap:6px;
+      flex-wrap:wrap;
+    }
+    .swatch{
+      width: 16px;
+      height: 16px;
+      border-radius: 6px;
+      border:1px solid rgba(234,240,255,0.18);
+      background: #999;
+    }
+    .theme-meta{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .theme-meta .name{
+      font-size: 13.5px;
+      font-weight: 750;
+    }
+    .theme-meta .codes{
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-word;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      padding: 2px 8px;
+      border-radius:999px;
+      border:1px solid rgba(141,224,255,0.28);
+      background: rgba(141,224,255,0.08);
+      color: var(--text);
+      font-size: 11.5px;
+      font-weight: 700;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .hr{
+      height:1px;
+      background: rgba(234,240,255,0.12);
+      margin: 14px 0;
+    }
+
+    .result{
+      margin-top: 14px;
+      border: 1px solid rgba(53,208,127,0.22);
+      background: rgba(53,208,127,0.06);
+      border-radius: 14px;
+      padding: 12px;
+      display:none;
+    }
+    .result.show{display:block;}
+    .result h3{
+      margin:0 0 8px 0;
+      font-size: 15px;
+    }
+    .prompt{
+      font-family: var(--mono);
+      font-size: 12.8px;
+      white-space: pre-wrap;
+      background: rgba(15,23,48,0.55);
+      border: 1px solid rgba(234,240,255,0.14);
+      padding: 10px;
+      border-radius: 12px;
+      line-height: 1.45;
+      margin: 10px 0;
+    }
+
+    dialog{
+      border: 1px solid rgba(234,240,255,0.18);
+      border-radius: 16px;
+      background: rgba(17,26,51,0.92);
+      color: var(--text);
+      box-shadow: var(--shadow);
+      width: min(860px, calc(100vw - 32px));
+    }
+    dialog::backdrop{
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(3px);
+    }
+    .modal-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(234,240,255,0.14);
+    }
+    .modal-body{
+      padding: 14px;
+    }
+    .modal-body h4{ margin: 12px 0 8px; }
+    .modal-body ul, .modal-body ol{
+      margin: 0;
+      padding-left: 18px;
+      color: var(--text);
+      line-height:1.55;
+    }
+
+    /* Page 1: single column + max-width 480 */
+    .page.page1 .narrow{
+      max-width: 480px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <h1>Personal Portfolio Website Intake</h1>
+        <p class="subtitle">
+          Gather what you already have, then generate a fast first draft website prompt. Keep it real, keep it skimmable, iterate later.
+        </p>
+      </div>
+      <div class="chip" title="Client-side only. Your data stays in your browser unless you copy it out.">
+        <span class="dot"></span>
+        <span>Standalone • Client-side</span>
+      </div>
+    </header>
+
+    <div class="panel">
+      <div class="topbar">
+        <div class="steps" id="stepPills"></div>
+        <div class="progress" aria-label="Progress">
+          <span id="progressBar"></span>
+        </div>
+        <div class="progress-label" id="progressLabel">Step 1 of 4</div>
+      </div>
+
+      <div class="content">
+        <form id="intakeForm" novalidate>
+
+          <!-- PAGE 1 -->
+          <section class="page page1 active" data-step="1">
+            <div class="narrow">
+              <h2>1) Basic Information</h2>
+              <p class="hint">Required fields are minimal. The rest can be filled later.</p>
+
+              <div class="grid" style="grid-template-columns:1fr;">
+                <div class="field">
+                  <label for="name">Name <span class="req">(required)</span></label>
+                  <input id="name" name="name" type="text" autocomplete="name" required />
+                  <div class="error" id="errName">Please enter your name.</div>
+                </div>
+
+                <div class="field">
+                  <label for="email">Email <span class="req">(required)</span></label>
+                  <input id="email" name="email" type="email" autocomplete="email" required />
+                  <div class="error" id="errEmail">Please enter a valid email.</div>
+                </div>
+
+                <div class="field">
+                  <label for="phone">Phone</label>
+                  <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" />
+                  <div class="mini">Auto-formats as you type.</div>
+                </div>
+
+                <div class="field">
+                  <label for="major">Major</label>
+                  <input id="major" name="major" type="text" placeholder="e.g., Psychology" />
+                </div>
+
+                <div class="field">
+                  <label for="specialization">Specialization</label>
+                  <input id="specialization" name="specialization" type="text" placeholder="e.g., UX Research, Data Analytics, Pre-med" />
+                </div>
+
+                <div class="field">
+                  <label for="linkedin">LinkedIn URL</label>
+                  <input id="linkedin" name="linkedin" type="url" placeholder="https://www.linkedin.com/in/your-handle" />
+                  <div class="mini">For employer reference.</div>
+                </div>
+              </div>
+
+              <div class="actions" style="padding-left:0; padding-right:0; border-top:none; background:transparent; justify-content:space-between; margin-top: 14px;">
+                <button type="button" class="btn danger" id="resetBtn" title="Must be double-clicked to reset">Reset (double-click)</button>
+                <button type="button" class="btn primary" data-next>Next</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- PAGE 2 -->
+          <section class="page" data-step="2">
+            <div class="actions top">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="button" class="btn primary" data-next>Next →</button>
+            </div>
+
+            <h2>2) Optional Portfolio Resources</h2>
+            <p class="hint">
+              Upload or paste pre-existing resumes, templates, examples, and/or components. Don’t aim for perfection—get a draft fast, refine later.
+            </p>
+
+            <div class="tips">
+              <h3>Tips</h3>
+              <ol>
+                <li>Don't aim for perfection and completeness on the first iteration. Get a draft as quickly as possible and then refine it.</li>
+                <li>Show, don’t just tell: add proof (projects, metrics, links, screenshots, outcomes).</li>
+                <li>Lead with a 1-line headline that states your target role + specialty + value.</li>
+                <li>Quantify impact wherever possible (%, $, time saved, volume, accuracy, ratings).</li>
+                <li>Write for skimmers: short sections, strong headings, bullets, plenty of whitespace.</li>
+                <li>Tailor to the job ad: mirror keywords (truthfully) and map your evidence to their requirements.</li>
+                <li>Make contact frictionless: email + LinkedIn visible, plus a clear call-to-action.</li>
+              </ol>
+            </div>
+
+            <div class="box">
+              <h3 style="margin:0 0 10px 0; font-size:15px;">Upload Files</h3>
+              <p class="mini" style="margin-top:0;">
+                Accepted: PDF, DOC/DOCX, images, videos, HTML, Markdown, text.
+                Tip: Learn how to <button type="button" class="btn link" id="openLinkedInHelp">download a PDF of your LinkedIn profile</button>.
+              </p>
+
+              <div class="row row-2">
+                <div class="field">
+                  <label for="uploads">Upload File(s)</label>
+                  <input id="uploads" type="file" multiple
+                    accept=".pdf,.doc,.docx,.txt,.md,.markdown,.html,.htm,.png,.jpg,.jpeg,.webp,.gif,.mp4,.mov,.m4v,.webm"/>
+                  <ul class="filelist" id="uploadList"></ul>
+                </div>
+                <div class="field">
+                  <label for="uploadsHowTo">How should these uploads be used?</label>
+                  <textarea id="uploadsHowTo" placeholder="Example: Use my resume for facts, but rewrite to be more skimmable. Use the template as layout inspiration only."></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="box">
+              <h3 style="margin:0 0 10px 0; font-size:15px;">Website Addresses (Public URLs)</h3>
+              <p class="mini" style="margin-top:0;">Examples: YouTube intro, GitHub portfolio, project demos (public only).</p>
+
+              <div id="urlEntries"></div>
+
+              <div class="inline" style="margin-top:10px;">
+                <button type="button" class="btn" id="addUrl">+ Add URL</button>
+                <span class="mini">Each URL has an adjacent “how to use it” box.</span>
+              </div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="box">
+              <h3 style="margin:0 0 10px 0; font-size:15px;">Text Entries</h3>
+              <p class="mini" style="margin-top:0;">
+                Paste content you want to reuse or adapt. Choose file type + intended section. Marked with <span class="pill">★ Recommended</span>.
+              </p>
+
+              <div id="textEntries"></div>
+
+              <div class="inline" style="margin-top:10px;">
+                <button type="button" class="btn" id="addText">+ Add Text</button>
+                <span class="mini">Each text entry includes Content + “how to use it”.</span>
+              </div>
+
+              <div class="checkbox">
+                <input id="copyrightOk" type="checkbox" required />
+                <label for="copyrightOk" style="margin:0;">
+                  <strong>Required:</strong> I have the copyright or written permission to use these resources, <em>or</em> I only want to use it as inspiration—please generate something different enough to avoid copyright infringement.
+                </label>
+              </div>
+              <div class="error" id="errCopyright">Please confirm copyright/permission (required).</div>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="button" class="btn primary" data-next>Next →</button>
+            </div>
+          </section>
+
+          <!-- PAGE 3 -->
+          <section class="page" data-step="3">
+            <div class="actions top">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="button" class="btn primary" data-next>Next →</button>
+            </div>
+
+            <h2>3) Color Scheme</h2>
+            <p class="hint">
+              Choose a theme number, or enter hex codes below. (Embedded themes are included inline here for a standalone file.)
+            </p>
+
+            <div class="box">
+              <h3 style="margin:0 0 10px 0; font-size:15px;">Choose 1 of 20 themes</h3>
+              <div class="themes" id="themes"></div>
+            </div>
+
+            <div class="hr"></div>
+
+            <div class="box">
+              <h3 style="margin:0 0 10px 0; font-size:15px;">Or enter hex codes</h3>
+              <div class="grid">
+                <div class="field">
+                  <label for="cPrimary">1. Primary</label>
+                  <input id="cPrimary" type="text" placeholder="#4E70F1"/>
+                </div>
+                <div class="field">
+                  <label for="cSecondary">2. Secondary</label>
+                  <input id="cSecondary" type="text" placeholder="#FBAB9C"/>
+                </div>
+                <div class="field">
+                  <label for="cAccent">3. Accent</label>
+                  <input id="cAccent" type="text" placeholder="#8DE0FF"/>
+                </div>
+                <div class="field">
+                  <label for="cDark">4. Dark</label>
+                  <input id="cDark" type="text" placeholder="#0b1220"/>
+                </div>
+                <div class="field">
+                  <label for="cLight">5. Light</label>
+                  <input id="cLight" type="text" placeholder="#eaf0ff"/>
+                </div>
+                <div class="field">
+                  <label for="themeNumber">Theme number (optional)</label>
+                  <input id="themeNumber" type="text" placeholder="e.g., 1"/>
+                  <div class="mini">If you pick a theme above, this auto-fills.</div>
+                </div>
+              </div>
+              <div class="mini" style="margin-top:10px;">
+                Tip: If you enter hex codes, use the format <span style="font-family:var(--mono)">#RRGGBB</span>.
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="button" class="btn primary" data-next>Next →</button>
+            </div>
+          </section>
+
+          <!-- PAGE 4 -->
+          <section class="page" data-step="4">
+            <div class="actions top">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="submit" class="btn primary">Submit ✓</button>
+            </div>
+
+            <h2>4) Target Job</h2>
+            <p class="hint">
+              If you have a job ad, paste it. Otherwise, write the role you want and we’ll infer the rest.
+            </p>
+
+            <div class="box">
+              <div class="grid" style="grid-template-columns:1fr;">
+                <div class="field">
+                  <label for="targetRole">Desired Job Position</label>
+                  <input id="targetRole" type="text" placeholder="e.g., Data Analyst Intern, UX Research Assistant, Software Engineer I"/>
+                </div>
+
+                <div class="field">
+                  <label for="jobAd">Job Position Ad</label>
+                  <textarea id="jobAd" placeholder="Paste the job posting here (optional but highly helpful)."></textarea>
+                </div>
+              </div>
+
+              <div class="result" id="resultBox">
+                <h3 class="ok">Success — Prompt generated</h3>
+                <div class="mini">
+                  1) Copy the prompt below into your preferred AI tool. 2) Use the downloadable summary file for record-keeping.
+                </div>
+                <div class="prompt" id="aiPrompt"></div>
+
+                <div class="inline">
+                  <button type="button" class="btn" id="copyPrompt">Copy prompt</button>
+                  <button type="button" class="btn" id="downloadSummary">Download Summary HTML</button>
+                  <button type="button" class="btn" id="downloadWebsite">Download Starter Website HTML</button>
+                </div>
+
+                <div class="hr"></div>
+
+                <h3 style="margin:0 0 8px 0; font-size:15px;">Custom advice (generated)</h3>
+                <div class="mini" id="customAdvice"></div>
+              </div>
+
+              <div class="error" id="errSubmit"></div>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="btn" data-back>← Back</button>
+              <button type="submit" class="btn primary">Submit ✓</button>
+            </div>
+          </section>
+
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- LinkedIn PDF instructions modal -->
+  <dialog id="linkedinModal" aria-label="How to download a PDF of your LinkedIn profile">
+    <div class="modal-head">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <strong>How to download a PDF of your LinkedIn profile</strong>
+        <span class="mini">A clean “resume-style” export you can upload here.</span>
+      </div>
+      <button class="btn" id="closeLinkedInHelp" type="button">Close</button>
+    </div>
+    <div class="modal-body">
+      <h4>On Desktop (recommended)</h4>
+      <ol>
+        <li>Open your LinkedIn profile page (logged in).</li>
+        <li>Click the <strong>More</strong> button near your profile header (often next to “Open to” / “Add profile section”).</li>
+        <li>Select <strong>Save to PDF</strong>.</li>
+        <li>Upload that PDF in the “Upload Files” section of this form.</li>
+      </ol>
+
+      <h4>If you don’t see “Save to PDF”</h4>
+      <ul>
+        <li>Try a different browser, or disable aggressive pop-up blockers.</li>
+        <li>Ensure you’re viewing <em>your</em> profile page (not “public profile settings”).</li>
+        <li>LinkedIn changes UI labels occasionally—look for “Download” / “Export” profile actions.</li>
+      </ul>
+
+      <h4>Pro tip</h4>
+      <ul>
+        <li>Also copy/paste your <strong>About</strong>, <strong>Experience</strong>, and <strong>Projects</strong> sections into the “Text Entries” area—this makes it easier to reuse content selectively.</li>
+      </ul>
+    </div>
+  </dialog>
+
+  <script>
+    // ---------------------------
+    // Config
+    // ---------------------------
+    const STEPS = [
+      { n: 1, title: "Basic Info" },
+      { n: 2, title: "Resources" },
+      { n: 3, title: "Colors" },
+      { n: 4, title: "Target Job" },
+    ];
+
+    // Portfolio Section Types (embedded)
+    // Starred ones are "most highly recommended"
+    const SECTION_TYPES = [
+      { label: "Hero / Headline ★", value: "hero_headline", recommended: true },
+      { label: "About / Summary ★", value: "about_summary", recommended: true },
+      { label: "Skills ★", value: "skills", recommended: true },
+      { label: "Projects / Case Studies ★", value: "projects_case_studies", recommended: true },
+      { label: "Experience ★", value: "experience", recommended: true },
+      { label: "Education ★", value: "education", recommended: true },
+      { label: "Achievements / Awards", value: "achievements_awards" },
+      { label: "Certifications", value: "certifications" },
+      { label: "Leadership / Service", value: "leadership_service" },
+      { label: "Research / Publications", value: "research_publications" },
+      { label: "Portfolio Gallery (visual)", value: "portfolio_gallery" },
+      { label: "Testimonials / References", value: "testimonials_references" },
+      { label: "Volunteering", value: "volunteering" },
+      { label: "Tools / Tech Stack", value: "tools_tech_stack" },
+      { label: "Metrics / Impact", value: "metrics_impact" },
+      { label: "Links (GitHub, demos)", value: "links" },
+      { label: "Contact ★", value: "contact", recommended: true },
+      { label: "FAQ", value: "faq" },
+      { label: "Other", value: "other" },
+      { label: "None", value: "none" },
+    ];
+
+    // 20 embedded color themes (acts as "color-themes.html" for standalone use)
+    const THEMES = [
+      { n: 1,  name: "Electric Blue (Default)", primary:"#4E70F1", secondary:"#FBAB9C", accent:"#8DE0FF", dark:"#0b1220", light:"#eaf0ff" },
+      { n: 2,  name: "Emerald Night",           primary:"#27c28a", secondary:"#9be7c4", accent:"#a6ffea", dark:"#071a16", light:"#eafff8" },
+      { n: 3,  name: "Royal Purple",            primary:"#7c5cff", secondary:"#ffb3c7", accent:"#9be7ff", dark:"#0b0720", light:"#f0edff" },
+      { n: 4,  name: "Sunset Pop",              primary:"#ff6a3d", secondary:"#ffd166", accent:"#4cc9f0", dark:"#1b0f1a", light:"#fff3ed" },
+      { n: 5,  name: "Teal + Sand",             primary:"#18a3a6", secondary:"#f2c38b", accent:"#7de2d1", dark:"#061a1b", light:"#eefaf8" },
+      { n: 6,  name: "Monochrome Pro",          primary:"#d7dbff", secondary:"#aab2ff", accent:"#ffffff", dark:"#0a0f1d", light:"#f6f7ff" },
+      { n: 7,  name: "Mint Graphite",           primary:"#2dd4bf", secondary:"#cbd5e1", accent:"#86efac", dark:"#0a1220", light:"#f1fffb" },
+      { n: 8,  name: "Crimson Steel",           primary:"#ef4444", secondary:"#94a3b8", accent:"#f97316", dark:"#0b1220", light:"#fff1f2" },
+      { n: 9,  name: "Ocean Depths",            primary:"#0ea5e9", secondary:"#22c55e", accent:"#a78bfa", dark:"#04101a", light:"#eaf8ff" },
+      { n:10,  name: "Gold on Ink",             primary:"#f59e0b", secondary:"#fde68a", accent:"#60a5fa", dark:"#070b16", light:"#fff7e6" },
+      { n:11,  name: "Lavender Mist",           primary:"#a78bfa", secondary:"#fbcfe8", accent:"#93c5fd", dark:"#0f1020", light:"#f7f2ff" },
+      { n:12,  name: "Forest + Peach",          primary:"#16a34a", secondary:"#fdba74", accent:"#86efac", dark:"#07150c", light:"#f0fff5" },
+      { n:13,  name: "Cobalt + Lime",           primary:"#2563eb", secondary:"#bef264", accent:"#22c55e", dark:"#070d1a", light:"#f3ffe6" },
+      { n:14,  name: "Rose Quartz",             primary:"#fb7185", secondary:"#fda4af", accent:"#60a5fa", dark:"#16070b", light:"#fff1f5" },
+      { n:15,  name: "Cyber Neon",              primary:"#22d3ee", secondary:"#f472b6", accent:"#a3e635", dark:"#050717", light:"#ecfeff" },
+      { n:16,  name: "Warm Minimal",            primary:"#111827", secondary:"#f59e0b", accent:"#10b981", dark:"#0b1220", light:"#fffaf0" },
+      { n:17,  name: "Arctic Blue",             primary:"#38bdf8", secondary:"#bae6fd", accent:"#818cf8", dark:"#07131b", light:"#eefaff" },
+      { n:18,  name: "Plum + Copper",           primary:"#6d28d9", secondary:"#fb923c", accent:"#fda4af", dark:"#0f0820", light:"#fff3ea" },
+      { n:19,  name: "Slate + Sky",             primary:"#64748b", secondary:"#38bdf8", accent:"#e2e8f0", dark:"#0b1220", light:"#f8fafc" },
+      { n:20,  name: "Indigo + Coral",          primary:"#4f46e5", secondary:"#fb7185", accent:"#22c55e", dark:"#0a0b1a", light:"#f2f3ff" },
+    ];
+
+    // ---------------------------
+    // State + helpers
+    // ---------------------------
+    let currentStep = 1;
+    let resetArmedAt = 0;
+
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+
+    function clamp(n, a, b){ return Math.max(a, Math.min(b, n)); }
+
+    function setStep(step){
+      currentStep = clamp(step, 1, STEPS.length);
+      $$('.page').forEach(p => p.classList.toggle('active', Number(p.dataset.step) === currentStep));
+      updateProgressUI();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function updateProgressUI(){
+      // Pills
+      const pills = $('#stepPills');
+      pills.innerHTML = '';
+      STEPS.forEach(s => {
+        const pill = document.createElement('div');
+        pill.className = 'step-pill' + (s.n === currentStep ? ' active' : (s.n < currentStep ? ' done' : ''));
+        pill.innerHTML = `<strong>${s.n}</strong><span>${s.title}</span>`;
+        pill.title = `Go to step ${s.n}`;
+        pill.style.cursor = 'pointer';
+        pill.addEventListener('click', () => {
+          // Allow backwards freely; forward only if current step validates.
+          if (s.n <= currentStep) setStep(s.n);
+          else {
+            const ok = validateStep(currentStep);
+            if (ok) setStep(s.n);
+          }
+        });
+        pills.appendChild(pill);
+      });
+
+      // Progress bar
+      const pct = ((currentStep - 1) / (STEPS.length - 1)) * 100;
+      $('#progressBar').style.width = pct + '%';
+      $('#progressLabel').textContent = `Step ${currentStep} of ${STEPS.length}`;
+    }
+
+    function normalizeHex(v){
+      if (!v) return "";
+      v = v.trim();
+      if (!v) return "";
+      if (!v.startsWith('#')) v = '#' + v;
+      return v;
+    }
+
+    function looksLikeHex(v){
+      v = normalizeHex(v);
+      return /^#[0-9a-fA-F]{6}$/.test(v);
+    }
+
+    // Pretty phone formatter: (###) ###-####
+    function formatPhone(raw){
+      const digits = (raw || "").replace(/\D/g,'').slice(0,10);
+      const a = digits.slice(0,3);
+      const b = digits.slice(3,6);
+      const c = digits.slice(6,10);
+      if (digits.length <= 3) return a ? `(${a}` : '';
+      if (digits.length <= 6) return `(${a}) ${b}`;
+      return `(${a}) ${b}-${c}`;
+    }
+
+    // ---------------------------
+    // Dynamic sections: URLs + Text entries
+    // ---------------------------
+    let urlCount = 0;
+    function addUrlEntry(valueUrl="", valueHow=""){
+      urlCount++;
+      const wrap = document.createElement('div');
+      wrap.className = 'box';
+      wrap.style.marginTop = '10px';
+      wrap.dataset.urlEntry = String(urlCount);
+
+      wrap.innerHTML = `
+        <div class="inline" style="justify-content:space-between; width:100%;">
+          <strong style="font-size:13.5px;">URL #${urlCount}</strong>
+          <button type="button" class="btn link" data-remove-url>Remove</button>
+        </div>
+        <div class="row row-2" style="margin-top:10px;">
+          <div class="field">
+            <label>Website address (public URL)</label>
+            <input type="url" class="urlValue" placeholder="https://..." value="${escapeHtml(valueUrl)}"/>
+          </div>
+          <div class="field">
+            <label>How should this URL be used?</label>
+            <textarea class="urlHow" placeholder="Example: Use this GitHub repo to extract project bullets and tech stack.">${escapeHtml(valueHow)}</textarea>
+          </div>
+        </div>
+      `;
+
+      wrap.querySelector('[data-remove-url]').addEventListener('click', () => wrap.remove());
+      $('#urlEntries').appendChild(wrap);
+    }
+
+    let textCount = 0;
+    function addTextEntry(fileType="raw", sectionType="projects_case_studies", content="", how=""){
+      textCount++;
+      const wrap = document.createElement('div');
+      wrap.className = 'box';
+      wrap.style.marginTop = '10px';
+      wrap.dataset.textEntry = String(textCount);
+
+      const sectionOptions = SECTION_TYPES.map(st => {
+        const star = st.recommended ? ' ★' : '';
+        const selected = st.value === sectionType ? 'selected' : '';
+        return `<option value="${st.value}" ${selected}>${st.label}${star}</option>`;
+      }).join('');
+
+      wrap.innerHTML = `
+        <div class="inline" style="justify-content:space-between; width:100%;">
+          <strong style="font-size:13.5px;">Text Entry #${textCount}</strong>
+          <button type="button" class="btn link" data-remove-text>Remove</button>
+        </div>
+
+        <div class="row row-4" style="margin-top:10px;">
+          <div class="field">
+            <label>File type</label>
+            <select class="textFileType">
+              <option value="html" ${fileType==="html"?"selected":""}>HTML</option>
+              <option value="markdown" ${fileType==="markdown"?"selected":""}>Markdown</option>
+              <option value="raw" ${fileType==="raw"?"selected":""}>Raw</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Section type</label>
+            <select class="textSectionType">
+              ${sectionOptions}
+            </select>
+            <div class="mini">Pick the closest match. If unsure, use “Other”.</div>
+          </div>
+
+          <div class="field">
+            <label>Content</label>
+            <textarea class="textContent" placeholder="Paste content here...">${escapeHtml(content)}</textarea>
+          </div>
+
+          <div class="field">
+            <label>How should this content be used?</label>
+            <textarea class="textHow" placeholder="Example: Extract facts, rewrite for a skimmable portfolio section.">${escapeHtml(how)}</textarea>
+          </div>
+        </div>
+      `;
+
+      wrap.querySelector('[data-remove-text]').addEventListener('click', () => wrap.remove());
+      // Optional: AI-ish suggestion of additional types (lightweight heuristic)
+      wrap.querySelector('.textContent').addEventListener('blur', () => maybeSuggestSectionTypes());
+      $('#textEntries').appendChild(wrap);
+    }
+
+    function maybeSuggestSectionTypes(){
+      // Lightweight heuristic — not real AI. Suggest in console only to avoid noisy UI.
+      const all = $$('.textContent').map(t => (t.value||"").toLowerCase()).join("\n");
+      const suggestions = new Set();
+      if (/research|paper|publication|conference|journal/.test(all)) suggestions.add("Research / Publications");
+      if (/award|honor|scholarship|dean's list/.test(all)) suggestions.add("Achievements / Awards");
+      if (/certif|certificate|coursera|udemy|google certificate/.test(all)) suggestions.add("Certifications");
+      if (/volunteer|nonprofit|service/.test(all)) suggestions.add("Volunteering");
+      if (/lead|president|captain|chair|mentor/.test(all)) suggestions.add("Leadership / Service");
+      if (suggestions.size){
+        console.info("[Section type suggestions]", Array.from(suggestions).join(", "));
+      }
+    }
+
+    // Escape for safe insertion into HTML templates
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    // ---------------------------
+    // Validation
+    // ---------------------------
+    function validateStep(step){
+      let ok = true;
+
+      // Clear step errors
+      $('#errName').classList.remove('show');
+      $('#errEmail').classList.remove('show');
+      $('#errCopyright').classList.remove('show');
+      $('#errSubmit').classList.remove('show');
+      $('#errSubmit').textContent = '';
+
+      if (step === 1){
+        const name = $('#name').value.trim();
+        const email = $('#email').value.trim();
+        if (!name){ $('#errName').classList.add('show'); ok=false; }
+        if (!email || !/^\S+@\S+\.\S+$/.test(email)){ $('#errEmail').classList.add('show'); ok=false; }
+      }
+
+      if (step === 2){
+        const c = $('#copyrightOk').checked;
+        if (!c){ $('#errCopyright').classList.add('show'); ok=false; }
+      }
+
+      // Step 3 is lenient by design.
+      // Step 4 has no required fields.
+
+      return ok;
+    }
+
+    // ---------------------------
+    // Data collection
+    // ---------------------------
+    function collectData(){
+      // Page 1
+      const data = {
+        basic: {
+          name: $('#name').value.trim(),
+          email: $('#email').value.trim(),
+          phone: $('#phone').value.trim(),
+          major: $('#major').value.trim(),
+          specialization: $('#specialization').value.trim(),
+          linkedin: $('#linkedin').value.trim(),
+        },
+        resources: {
+          uploadsHowTo: $('#uploadsHowTo').value.trim(),
+          uploads: Array.from($('#uploads').files || []).map(f => ({
+            name: f.name,
+            type: f.type || null,
+            sizeBytes: f.size ?? null
+            // NOTE: Files are not read into memory here.
+          })),
+          urls: $$('#urlEntries [data-url-entry]').map(box => ({
+            url: box.querySelector('.urlValue').value.trim(),
+            howToUse: box.querySelector('.urlHow').value.trim(),
+          })).filter(x => x.url || x.howToUse),
+          texts: $$('#textEntries [data-text-entry]').map(box => ({
+            fileType: box.querySelector('.textFileType').value,
+            sectionType: box.querySelector('.textSectionType').value,
+            content: box.querySelector('.textContent').value,
+            howToUse: box.querySelector('.textHow').value,
+          })).filter(x => (x.content && x.content.trim()) || (x.howToUse && x.howToUse.trim())),
+          copyrightConfirmed: $('#copyrightOk').checked
+        },
+        colors: {
+          themeNumber: ($('#themeNumber').value || '').trim(),
+          primary: normalizeHex($('#cPrimary').value),
+          secondary: normalizeHex($('#cSecondary').value),
+          accent: normalizeHex($('#cAccent').value),
+          dark: normalizeHex($('#cDark').value),
+          light: normalizeHex($('#cLight').value),
+        },
+        targetJob: {
+          desiredPosition: $('#targetRole').value.trim(),
+          jobAd: $('#jobAd').value
+        }
+      };
+
+      return data;
+    }
+
+    function inferChosenTheme(data){
+      const tn = String(data.colors.themeNumber || '').trim();
+      if (tn && /^\d+$/.test(tn)){
+        const n = Number(tn);
+        return THEMES.find(t => t.n === n) || null;
+      }
+      // If hex codes match a theme exactly, pick it.
+      const p = data.colors.primary, s = data.colors.secondary, a = data.colors.accent, d = data.colors.dark, l = data.colors.light;
+      if ([p,s,a,d,l].every(looksLikeHex)){
+        const match = THEMES.find(t =>
+          t.primary.toLowerCase()===p.toLowerCase() &&
+          t.secondary.toLowerCase()===s.toLowerCase() &&
+          t.accent.toLowerCase()===a.toLowerCase() &&
+          t.dark.toLowerCase()===d.toLowerCase() &&
+          t.light.toLowerCase()===l.toLowerCase()
+        );
+        if (match) return match;
+      }
+      return null;
+    }
+
+    function makeAIPrompt(data){
+      const theme = inferChosenTheme(data);
+      const colors = theme ? theme : data.colors;
+
+      // "AI-ish" recommended sections based on what was provided (simple heuristic)
+      const hasProjects = (data.resources.texts || []).some(t => t.sectionType === 'projects_case_studies') || /github|demo|project/i.test((data.resources.urls||[]).map(u=>u.url).join(" "));
+      const hasResearch = (data.resources.texts || []).some(t => t.sectionType === 'research_publications') || /publication|research|paper/i.test((data.resources.texts||[]).map(t=>t.content).join(" "));
+      const sections = [
+        "Hero (target role + specialty + value)",
+        "About / Summary",
+        "Skills (tools + methods)",
+        hasProjects ? "Projects / Case Studies (3–5, quantified)" : "Projects (2–3 starter projects, with suggested ideas if missing)",
+        "Experience (if any; otherwise internships, class projects, leadership, volunteering)",
+        "Education",
+        hasResearch ? "Research / Publications (if relevant)" : null,
+        "Contact (email + LinkedIn + CTA)"
+      ].filter(Boolean);
+
+      const uploads = data.resources.uploads.map(u => `- ${u.name}`).join("\n") || "(none)";
+      const urls = (data.resources.urls || [])
+        .map(u => `- ${u.url}${u.howToUse ? ` (use: ${u.howToUse})` : ""}`)
+        .join("\n") || "(none)";
+
+      const textSnips = (data.resources.texts || []).slice(0,6).map((t, i) => {
+        const contentPreview = (t.content || "").trim().slice(0, 380).replace(/\s+/g," ");
+        return `Entry ${i+1}:
+- type: ${t.fileType}
+- section: ${t.sectionType}
+- how_to_use: ${t.howToUse || "(not specified)"}
+- content_preview: ${contentPreview || "(empty)"}`
+      }).join("\n\n") || "(none)";
+
+      const jobAd = (data.targetJob.jobAd || "").trim();
+      const jobAdBlock = jobAd ? jobAd : "(none provided)";
+
+      const prompt =
+`You are a portfolio-website generator.
+
+Goal: Build an impactful portfolio website as quickly, cheaply, and easily as possible, using the user's pre-existing materials where available, while staying true to the user's real profile. Generate original content when needed and avoid copyright infringement.
+
+BASIC INFO
+Name: ${data.basic.name || "(unknown)"}
+Email: ${data.basic.email || "(unknown)"}
+Phone: ${data.basic.phone || "(not provided)"}
+Major: ${data.basic.major || "(not provided)"}
+Specialization: ${data.basic.specialization || "(not provided)"}
+LinkedIn: ${data.basic.linkedin || "(not provided)"}
+
+TARGET JOB
+Desired job position: ${data.targetJob.desiredPosition || "(not provided)"}
+Job posting (if provided):
+${jobAdBlock}
+
+STYLE / COLOR SCHEME
+Theme number: ${theme ? theme.n : (data.colors.themeNumber || "(custom/unspecified)")}
+Primary: ${colors.primary || "(not provided)"}; Secondary: ${colors.secondary || "(not provided)"}; Accent: ${colors.accent || "(not provided)"}; Dark: ${colors.dark || "(not provided)"}; Light: ${colors.light || "(not provided)"}
+
+OPTIONAL RESOURCES
+Uploaded files (names only; file contents not included in this prompt):
+${uploads}
+
+How to use uploaded files:
+${data.resources.uploadsHowTo || "(not specified)"}
+
+Public URLs:
+${urls}
+
+Pasted text snippets (previews):
+${textSnips}
+
+CONTENT REQUIREMENTS
+- Create a 1-page portfolio site (HTML + CSS) with clean sections and strong skimmability.
+- Use this section structure (adapt if job ad indicates a better layout):
+  ${sections.map(s => `- ${s}`).join("\n  ")}
+- Include quantified impact wherever possible; if numbers are missing, propose placeholders and ask the user what to fill in.
+- Tailor headings and keywords to the job posting (truthfully).
+- Make contact frictionless: email + LinkedIn visible, plus a clear call-to-action button.
+- Avoid copyrighted reuse: if the user provided examples, use them only as inspiration and rewrite substantially.
+
+OUTPUT
+1) The complete HTML file (with embedded CSS) for the portfolio website.
+2) A short checklist of the top 10 edits the user should do next to improve accuracy and impact.`;
+
+      return prompt;
+    }
+
+    function makeCustomAdvice(data){
+      const role = data.targetJob.desiredPosition || "your target role";
+      const major = data.basic.major || "your major";
+      const hasJobAd = !!(data.targetJob.jobAd || "").trim();
+
+      const advice = [];
+      advice.push(`For ${role}: write a 1-line headline like “${role} • ${major} • [specific value]” (use a real specialty or measurable outcome).`);
+      advice.push(`Pick 3 proof items to lead with: a project, a measurable result, and one credibility signal (award/cert/leadership).`);
+      advice.push(hasJobAd
+        ? `Mirror the job ad’s keywords in your Skills and Projects sections—only where you can provide evidence.`
+        : `If you don’t have a job ad, choose 8–12 keywords for ${role} (tools, methods, deliverables) and weave them into Skills + project bullets.`);
+      advice.push(`For each project, use this bullet pattern: Action → Tool/Method → Result (metric). If you’re missing metrics, estimate ranges or use placeholders and replace later.`);
+      advice.push(`Keep whitespace generous: short paragraphs, bullets, and bolded labels. Assume the reader is skimming in 20–40 seconds.`);
+      advice.push(`Add one strong call-to-action: “Email me for interviews” or “View my projects” and make it visible above the fold.`);
+      return advice.map(x => `• ${x}`).join("<br/>");
+    }
+
+    function makeSummaryHTML(data, aiPrompt){
+      const theme = inferChosenTheme(data);
+      const now = new Date();
+      const dateStr = now.toISOString();
+
+      const esc = (s) => escapeHtml(s);
+
+      const urls = (data.resources.urls || []).map(u =>
+        `<li><a href="${esc(u.url)}" target="_blank" rel="noopener">${esc(u.url)}</a>${u.howToUse ? `<div class="muted">Use: ${esc(u.howToUse)}</div>` : ""}</li>`
+      ).join("") || "<li class='muted'>(none)</li>";
+
+      const texts = (data.resources.texts || []).map(t => `
+        <div class="card">
+          <div><strong>Type:</strong> ${esc(t.fileType)} &nbsp; <strong>Section:</strong> ${esc(t.sectionType)}</div>
+          <div class="muted"><strong>How to use:</strong> ${esc(t.howToUse || "(not specified)")}</div>
+          <pre>${esc((t.content || "").trim())}</pre>
+        </div>
+      `).join("") || "<div class='muted'>(none)</div>";
+
+      const uploads = (data.resources.uploads || []).map(f => `<li>${esc(f.name)} <span class="muted">(${esc(f.type || "unknown")}, ${esc(f.sizeBytes || 0)} bytes)</span></li>`).join("") || "<li class='muted'>(none)</li>";
+
+      const color = theme || data.colors;
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MyPersonalPortfolioWebsiteSummary</title>
+<style>
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:24px; color:#0b1220; background:#f6f8ff;}
+  .wrap{max-width:980px; margin:0 auto;}
+  h1{margin:0 0 6px 0;}
+  .muted{color:#51607a}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  @media (max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:#fff; border:1px solid #dbe2ff; border-radius:14px; padding:14px; margin:12px 0;}
+  pre{white-space:pre-wrap; background:#0b1220; color:#eaf0ff; padding:12px; border-radius:12px; overflow:auto;}
+  code{white-space:pre-wrap;}
+  a{color:#2b50ff}
+  .sw{display:inline-block; width:14px; height:14px; border-radius:5px; border:1px solid #cfd7ff; vertical-align:-2px; margin-right:6px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>My Personal Portfolio Website — Intake Summary</h1>
+  <div class="muted">Generated: ${esc(dateStr)}</div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Basic Information</h2>
+    <div class="grid">
+      <div><strong>Name:</strong> ${esc(data.basic.name || "")}</div>
+      <div><strong>Email:</strong> ${esc(data.basic.email || "")}</div>
+      <div><strong>Phone:</strong> ${esc(data.basic.phone || "")}</div>
+      <div><strong>LinkedIn:</strong> ${data.basic.linkedin ? `<a href="${esc(data.basic.linkedin)}" target="_blank" rel="noopener">${esc(data.basic.linkedin)}</a>` : `<span class="muted">(not provided)</span>`}</div>
+      <div><strong>Major:</strong> ${esc(data.basic.major || "")}</div>
+      <div><strong>Specialization:</strong> ${esc(data.basic.specialization || "")}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Resources</h2>
+    <div><strong>Uploads (names only):</strong><ul>${uploads}</ul></div>
+    <div><strong>How to use uploads:</strong> <div class="muted">${esc(data.resources.uploadsHowTo || "(not specified)")}</div></div>
+    <div style="margin-top:10px;"><strong>Public URLs:</strong><ul>${urls}</ul></div>
+    <div style="margin-top:10px;"><strong>Text Entries:</strong>${texts}</div>
+    <div style="margin-top:10px;"><strong>Copyright confirmed:</strong> ${data.resources.copyrightConfirmed ? "Yes" : "No"}</div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Color Scheme</h2>
+    <div><strong>Theme:</strong> ${theme ? `${theme.n} — ${esc(theme.name)}` : `<span class="muted">(custom/unspecified)</span>`}</div>
+    <div style="margin-top:10px;">
+      <div><span class="sw" style="background:${esc(color.primary||"#000")}"></span><strong>Primary:</strong> ${esc(color.primary||"")}</div>
+      <div><span class="sw" style="background:${esc(color.secondary||"#000")}"></span><strong>Secondary:</strong> ${esc(color.secondary||"")}</div>
+      <div><span class="sw" style="background:${esc(color.accent||"#000")}"></span><strong>Accent:</strong> ${esc(color.accent||"")}</div>
+      <div><span class="sw" style="background:${esc(color.dark||"#000")}"></span><strong>Dark:</strong> ${esc(color.dark||"")}</div>
+      <div><span class="sw" style="background:${esc(color.light||"#000")}"></span><strong>Light:</strong> ${esc(color.light||"")}</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">Target Job</h2>
+    <div><strong>Desired position:</strong> ${esc(data.targetJob.desiredPosition || "(not provided)")}</div>
+    <div style="margin-top:10px;"><strong>Job ad:</strong></div>
+    <pre>${esc((data.targetJob.jobAd || "").trim() || "(none provided)")}</pre>
+  </div>
+
+  <div class="card">
+    <h2 style="margin:0 0 10px 0;">AI Prompt</h2>
+    <pre>${esc(aiPrompt)}</pre>
+  </div>
+
+</div>
+</body>
+</html>`;
+    }
+
+    function makeStarterWebsiteHTML(data){
+      const theme = inferChosenTheme(data);
+      const colors = theme ? theme : data.colors;
+
+      const primary = looksLikeHex(colors.primary) ? colors.primary : "#4E70F1";
+      const secondary = looksLikeHex(colors.secondary) ? colors.secondary : "#FBAB9C";
+      const accent = looksLikeHex(colors.accent) ? colors.accent : "#8DE0FF";
+      const dark = looksLikeHex(colors.dark) ? colors.dark : "#0b1220";
+      const light = looksLikeHex(colors.light) ? colors.light : "#eaf0ff";
+
+      const name = data.basic.name || "Your Name";
+      const role = data.targetJob.desiredPosition || "Target Role";
+      const major = data.basic.major || "Major";
+      const email = data.basic.email || "you@email.com";
+      const linkedin = data.basic.linkedin || "";
+      const phone = data.basic.phone || "";
+
+      return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${escapeHtml(name)} — Portfolio</title>
+<style>
+:root{
+  --primary:${primary};
+  --secondary:${secondary};
+  --accent:${accent};
+  --dark:${dark};
+  --light:${light};
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+  background:
+    radial-gradient(900px 600px at 20% 10%, color-mix(in srgb, var(--primary) 25%, transparent), transparent 60%),
+    radial-gradient(800px 600px at 90% 20%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 55%),
+    radial-gradient(900px 700px at 60% 100%, color-mix(in srgb, var(--secondary) 16%, transparent), transparent 55%),
+    var(--dark);
+  color: var(--light);
+}
+a{color:var(--accent); text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:980px; margin:0 auto; padding:28px 18px 50px}
+.card{
+  border:1px solid rgba(234,240,255,0.16);
+  border-radius:16px;
+  background: rgba(255,255,255,0.04);
+  padding:16px;
+  margin:14px 0;
+}
+.hero{
+  padding:22px;
+  border-radius:18px;
+  border:1px solid rgba(234,240,255,0.16);
+  background: rgba(255,255,255,0.05);
+}
+.kicker{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:6px 10px; border-radius:999px;
+  border:1px solid rgba(234,240,255,0.16);
+  background: rgba(255,255,255,0.04);
+  color: rgba(234,240,255,0.85);
+  font-size: 12.5px;
+}
+h1{margin:10px 0 6px 0; font-size:34px; letter-spacing:-0.5px}
+.sub{margin:0; color: rgba(234,240,255,0.80); line-height:1.45; max-width:70ch}
+.grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px}
+@media (max-width:860px){.grid{grid-template-columns:1fr}}
+h2{margin:0 0 8px 0; font-size:18px}
+ul{margin:8px 0 0 18px; line-height:1.6}
+.btn{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 12px; border-radius:12px;
+  border:1px solid rgba(234,240,255,0.18);
+  background: rgba(255,255,255,0.06);
+  color: var(--light);
+  font-weight: 650;
+}
+.btn.primary{
+  border-color: color-mix(in srgb, var(--primary) 50%, rgba(234,240,255,0.18));
+  background: color-mix(in srgb, var(--primary) 22%, rgba(255,255,255,0.05));
+}
+.muted{color: rgba(234,240,255,0.72)}
+.tag{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:999px;
+  border:1px solid rgba(234,240,255,0.16);
+  background: rgba(255,255,255,0.04);
+  margin: 6px 6px 0 0;
+  font-size: 12px;
+}
+.footer{margin-top: 18px; color: rgba(234,240,255,0.65); font-size: 13px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <div class="kicker">${escapeHtml(role)} • ${escapeHtml(major)} • Value you deliver</div>
+      <h1>${escapeHtml(name)}</h1>
+      <p class="sub">
+        Write a 2–3 sentence summary focused on outcomes: what you do, how you do it, and what results you can deliver.
+        Keep it concrete and skimmable.
+      </p>
+      <div style="margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;">
+        <a class="btn primary" href="mailto:${escapeHtml(email)}">Email me</a>
+        ${linkedin ? `<a class="btn" href="${escapeHtml(linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ``}
+        ${phone ? `<span class="btn" style="cursor:default;">${escapeHtml(phone)}</span>` : ``}
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Projects / Case Studies</h2>
+      <p class="muted" style="margin:0 0 8px 0;">Add 3–5 projects. Each should include: problem → approach → tools → result (metric).</p>
+      <div class="grid">
+        <div class="card" style="margin:0;">
+          <strong>Project Title</strong>
+          <div class="muted">1–2 lines describing the project and the outcome.</div>
+          <div>
+            <span class="tag">Tool</span><span class="tag">Method</span><span class="tag">Metric</span>
+          </div>
+          <ul>
+            <li>Action you took → tool/method → measurable result.</li>
+            <li>Evidence link: GitHub/demo/screenshot.</li>
+          </ul>
+        </div>
+        <div class="card" style="margin:0;">
+          <strong>Project Title</strong>
+          <div class="muted">1–2 lines describing the project and the outcome.</div>
+          <div>
+            <span class="tag">Tool</span><span class="tag">Method</span><span class="tag">Metric</span>
+          </div>
+          <ul>
+            <li>Action you took → tool/method → measurable result.</li>
+            <li>Evidence link: GitHub/demo/screenshot.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Skills</h2>
+      <div class="muted">List skills that match the job posting. Keep it honest; tie skills to evidence in projects.</div>
+      <div style="margin-top:8px;">
+        <span class="tag">Skill / Tool</span><span class="tag">Skill / Tool</span><span class="tag">Skill / Tool</span>
+        <span class="tag">Skill / Tool</span><span class="tag">Skill / Tool</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Experience</h2>
+      <div class="muted">If you’re early-career, include internships, class projects, leadership, volunteering, or part-time roles.</div>
+      <ul>
+        <li><strong>Role — Org</strong> (Dates): impact-focused bullet.</li>
+        <li><strong>Role — Org</strong> (Dates): impact-focused bullet.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Education</h2>
+      <ul>
+        <li><strong>${escapeHtml(major)}</strong> — University Name (Grad Year)</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Contact</h2>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <a class="btn primary" href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a>
+        ${linkedin ? `<a class="btn" href="${escapeHtml(linkedin)}" target="_blank" rel="noopener">LinkedIn</a>` : ``}
+        ${phone ? `<span class="btn" style="cursor:default;">${escapeHtml(phone)}</span>` : ``}
+      </div>
+      <div class="footer">CTA idea: “Email me for interviews” or “Ask for my work samples.”</div>
+    </section>
+
+    <div class="footer">Starter template generated from your intake. Replace placeholders with real evidence and metrics.</div>
+  </div>
+</body>
+</html>`;
+    }
+
+    function downloadText(filename, text, mime="text/html"){
+      const blob = new Blob([text], { type: mime + ";charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2500);
+    }
+
+    // ---------------------------
+    // Init UI
+    // ---------------------------
+    function renderThemes(){
+      const holder = $('#themes');
+      holder.innerHTML = '';
+      THEMES.forEach(t => {
+        const div = document.createElement('label');
+        div.className = 'theme';
+        div.innerHTML = `
+          <input type="radio" name="themePick" value="${t.n}" aria-label="Theme ${t.n}" />
+          <div class="theme-meta">
+            <div class="name">Theme ${t.n}: ${escapeHtml(t.name)}</div>
+            <div class="swatches" aria-hidden="true">
+              <span class="swatch" style="background:${t.primary}"></span>
+              <span class="swatch" style="background:${t.secondary}"></span>
+              <span class="swatch" style="background:${t.accent}"></span>
+              <span class="swatch" style="background:${t.dark}"></span>
+              <span class="swatch" style="background:${t.light}"></span>
+            </div>
+            <div class="codes">${t.primary} • ${t.secondary} • ${t.accent} • ${t.dark} • ${t.light}</div>
+          </div>
+        `;
+        const radio = div.querySelector('input');
+        radio.addEventListener('change', () => {
+          $('#themeNumber').value = String(t.n);
+          $('#cPrimary').value = t.primary;
+          $('#cSecondary').value = t.secondary;
+          $('#cAccent').value = t.accent;
+          $('#cDark').value = t.dark;
+          $('#cLight').value = t.light;
+        });
+        holder.appendChild(div);
+      });
+    }
+
+    function init(){
+      updateProgressUI();
+      renderThemes();
+
+      // Seed one URL and one Text entry for convenience
+      addUrlEntry();
+      addTextEntry("raw","projects_case_studies");
+
+      // Phone formatting
+      $('#phone').addEventListener('input', (e) => {
+        const cursorStart = e.target.selectionStart;
+        const before = e.target.value;
+        const formatted = formatPhone(before);
+        e.target.value = formatted;
+        // best-effort cursor behavior
+        try { e.target.setSelectionRange(formatted.length, formatted.length); } catch {}
+      });
+
+      // Upload list
+      $('#uploads').addEventListener('change', () => {
+        const list = $('#uploadList');
+        list.innerHTML = '';
+        const files = Array.from($('#uploads').files || []);
+        files.forEach(f => {
+          const li = document.createElement('li');
+          li.textContent = f.name;
+          list.appendChild(li);
+        });
+      });
+
+      // Reset requires double-click
+      const resetBtn = $('#resetBtn');
+      resetBtn.addEventListener('click', () => {
+        const now = Date.now();
+        const armed = (now - resetArmedAt) < 1200;
+        if (armed){
+          $('#intakeForm').reset();
+          // Clear dynamic lists
+          $('#uploadList').innerHTML = '';
+          $('#urlEntries').innerHTML = '';
+          $('#textEntries').innerHTML = '';
+          urlCount = 0; textCount = 0;
+          addUrlEntry();
+          addTextEntry("raw","projects_case_studies");
+          // Clear result
+          $('#resultBox').classList.remove('show');
+          $('#aiPrompt').textContent = '';
+          $('#customAdvice').innerHTML = '';
+          // Step back to 1
+          setStep(1);
+          resetArmedAt = 0;
+          resetBtn.textContent = 'Reset (double-click)';
+        } else {
+          resetArmedAt = now;
+          resetBtn.textContent = 'Click again to confirm reset';
+          setTimeout(() => {
+            if ((Date.now() - resetArmedAt) >= 1200){
+              resetArmedAt = 0;
+              resetBtn.textContent = 'Reset (double-click)';
+            }
+          }, 1250);
+        }
+      });
+
+      // Nav buttons
+      $$('[data-next]').forEach(btn => btn.addEventListener('click', () => {
+        const ok = validateStep(currentStep);
+        if (!ok) return;
+        setStep(currentStep + 1);
+      }));
+      $$('[data-back]').forEach(btn => btn.addEventListener('click', () => setStep(currentStep - 1)));
+
+      // Add URL/Text
+      $('#addUrl').addEventListener('click', () => addUrlEntry());
+      $('#addText').addEventListener('click', () => addTextEntry("raw","projects_case_studies"));
+
+      // LinkedIn modal
+      const modal = $('#linkedinModal');
+      $('#openLinkedInHelp').addEventListener('click', () => modal.showModal());
+      $('#closeLinkedInHelp').addEventListener('click', () => modal.close());
+      modal.addEventListener('click', (e) => {
+        const rect = modal.getBoundingClientRect();
+        const inDialog = rect.top <= e.clientY && e.clientY <= rect.top + rect.height &&
+                         rect.left <= e.clientX && e.clientX <= rect.left + rect.width;
+        if (!inDialog) modal.close();
+      });
+
+      // Submit
+      $('#intakeForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // Validate required steps quickly
+        const ok1 = validateStep(1);
+        const ok2 = validateStep(2);
+        if (!ok1){ setStep(1); return; }
+        if (!ok2){ setStep(2); return; }
+
+        const data = collectData();
+        console.log("Portfolio intake submission:", data);
+
+        const prompt = makeAIPrompt(data);
+        $('#aiPrompt').textContent = prompt;
+        $('#customAdvice').innerHTML = makeCustomAdvice(data);
+        $('#resultBox').classList.add('show');
+
+        // Create downloadables
+        const summaryHtml = makeSummaryHTML(data, prompt);
+        const starterWebsite = makeStarterWebsiteHTML(data);
+
+        // Wire buttons
+        $('#copyPrompt').onclick = async () => {
+          try{
+            await navigator.clipboard.writeText(prompt);
+            $('#copyPrompt').textContent = "Copied ✓";
+            setTimeout(() => $('#copyPrompt').textContent = "Copy prompt", 1400);
+          } catch {
+            alert("Copy failed. Select the prompt text and copy manually.");
+          }
+        };
+        $('#downloadSummary').onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml);
+        $('#downloadWebsite').onclick = () => downloadText("MyPersonalPortfolioWebsite.html", starterWebsite);
+
+        // Also attempt auto-download the summary immediately (comment out if undesired)
+        // downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml);
+
+        // Stay on step 4 and scroll to results
+        setStep(4);
+        $('#resultBox').scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+
+      // Theme number manual fill: if user types a number, apply theme
+      $('#themeNumber').addEventListener('blur', () => {
+        const tn = ($('#themeNumber').value || '').trim();
+        if (/^\d+$/.test(tn)){
+          const n = Number(tn);
+          const t = THEMES.find(x => x.n === n);
+          if (t){
+            // set radio
+            const r = document.querySelector(`input[name="themePick"][value="${n}"]`);
+            if (r) r.checked = true;
+            $('#cPrimary').value = t.primary;
+            $('#cSecondary').value = t.secondary;
+            $('#cAccent').value = t.accent;
+            $('#cDark').value = t.dark;
+            $('#cLight').value = t.light;
+          }
+        }
+      });
+    }
+
+    // Boot
+    init();
+  </script>
+</body>
+</html>
