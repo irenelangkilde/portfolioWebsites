@@ -283,27 +283,34 @@
       overflow:auto;
       padding-right: 6px;
     }
-    window.addEventListener("message", (event) => {
-      const msg = event.data;
-      if (!msg || msg.type !== "colorThemeSelected") return;
-
-      const t = msg.theme || {};
-      const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
-
-      if (msg.number != null) set("themeNumber", String(msg.number));
-
-          set("primary",   t.primary);
-          set("secondary", t.secondary);
-          set("accent",    t.accent);
-          set("dark",      t.dark);
-          set("light",     t.light);
-        });
     footer{
       margin-top: 14px;
       color: rgba(234,240,255,.62);
       font-size: 12.5px;
       text-align:center;
     }
+    .dropzone {
+      border: 2px dashed rgba(78,112,241,.5);
+      border-radius: 10px;
+      background: rgba(78,112,241,.07);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      background: rgba(78,112,241,.18);
+      border-color: #4E70F1;
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dropzone-label { pointer-events: none; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .dropzone-label strong { color: #4E70F1; }
+    .resume-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
+    .resume-filelist li::before { content: "📎 "; }
   </style>
 </head>
 <body>
@@ -378,6 +385,18 @@
           <input id="linkedin" type="url" placeholder="https://www.linkedin.com/in/yourname" />
           <p class="hint" style="margin:8px 0 0;">For employer reference.</p>
         </div>
+
+        <div>
+          <label>Resume <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
+          <div class="dropzone" id="resumeDropzone">
+            <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
+            <div class="dropzone-label">
+              <strong>Choose file</strong> or drag it here<br>
+              <span style="font-size:12px;">PDF or DOCX</span>
+            </div>
+          </div>
+          <ul class="resume-filelist" id="resumeFileList"></ul>
+        </div>
       </div>
 
       <div class="btnRow">
@@ -398,42 +417,48 @@
       </div>
 
       <div class="hr"></div>
+<div class="themeLayout">
+  <div class="themeLeft">
+    <div class="field">
+      <label for="themeNumber">Theme Number</label>
+      <input id="themeNumber" type="text" placeholder="(optional)" />
+    </div>
 
-      <div class="grid">
-        <div class="row2">
-          <div>
-            <label for="themeNumber">Theme number (optional)</label>
-            <input id="themeNumber" type="text" inputmode="numeric" placeholder="1–20" />
-            <p class="hint" style="margin:8px 0 0;">If you pick a theme number, it can override your manual hex values (optional).</p>
-          </div>
-          <div>
-            <label>Theme gallery</label>
-            <!-- “Embed color-themes-simple.html” (best-effort). This stays standalone: we try to load color-themes-simple.html if present. -->
-            <div class="fileBox">
-              <div class="hint">If <code>color-themes-simple.html</code> is in the same folder, it will render here:</div>
-              <div class="fileBox">
-                <div class="hint">
-                  Theme options (from <code>color-themes-simple.html</code>):
-                </div>
+    <!-- Palette control box: clicking this toggles whole-palette mode -->
+    <div id="paletteBox" class="paletteBox" role="group" aria-label="Palette picker mode">
+      <div class="paletteTop">
+        <div class="paletteTitle">Pick mode</div>
+        <div id="paletteModeBadge" class="paletteBadge">Single color</div>
+      </div>
 
-                <iframe
-                  src="color-themes-simple.html"
-                  style="
-                    margin-top:10px;
-                    width:100%;
-                    height:260px;
-                    border:1px solid rgba(255,255,255,.12);
-                    border-radius:12px;
-                    background:rgba(0,0,0,.18);
-                  "
-                  loading="lazy">
-                </iframe>
+      <div class="activeButtons">
+        <button type="button" class="chip is-active" data-color-index="0">#1 Primary</button>
+        <button type="button" class="chip" data-color-index="1">#2 Secondary</button>
+        <button type="button" class="chip" data-color-index="2">#3 Accent</button>
+        <button type="button" class="chip" data-color-index="3">#4 Dark</button>
+        <button type="button" class="chip" data-color-index="4">#5 Light</button>
+      </div>
 
-              </div>
-            </div>
-          </div>
-        </div>
+      <div class="paletteHint">
+        Click a button = single-color target. Click this whole box to toggle “apply whole palette”.
+      </div>
+    </div>
 
+    <div class="field"><label for="primary">1. Primary</label><input id="primary" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="secondary">2. Secondary</label><input id="secondary" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="accent">3. Accent</label><input id="accent" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="dark">4. Dark</label><input id="dark" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="light">5. Light</label><input id="light" type="text" placeholder="#RRGGBB" /></div>
+  </div>
+
+  <div class="themeRight">
+    <div class="hint">Theme Gallery</div>
+    <iframe
+      src="color-themes.html"
+      style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"
+      loading="lazy"></iframe>
+  </div>
+</div>
         <div class="grid2">
           <div>
             <label for="primary">1. Primary</label>
