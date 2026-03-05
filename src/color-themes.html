@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +31,7 @@
 
         .theme-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(125px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 8px;
         }
 
@@ -46,22 +48,42 @@
             box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
         }
 
+        .card-body {
+            display: flex;
+            gap: 6px;
+        }
+
+        .card-left {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+        }
+
+        .card-right {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex-shrink: 0;
+        }
+
         .theme-name {
-            font-size: 7px;
+            font-size: 11px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
             color: #333;
         }
 
         .color-boxes {
             display: flex;
+            flex-direction: column;
             gap: 2px;
-            margin-bottom: 5px;
         }
 
         .color-box {
-            flex: 1;
-            height: 25px;
+            width: 40px;
+            height: 20px;
             border-radius: 3px;
             cursor: pointer;
             transition: transform 0.2s ease;
@@ -76,13 +98,13 @@
         .color-codes {
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px;
         }
 
         .color-code {
             display: flex;
             align-items: center;
-            font-size: 5px;
+            font-size: 9px;
             color: #666;
         }
 
@@ -91,11 +113,12 @@
             height: 6px;
             border-radius: 50%;
             margin-right: 3px;
+            flex-shrink: 0;
             border: 1px solid #ddd;
         }
 
         .copy-btn {
-            margin-top: 4px;
+            margin-top: 6px;
             width: 100%;
             padding: 3px;
             background: #333;
@@ -103,7 +126,7 @@
             border: none;
             border-radius: 3px;
             cursor: pointer;
-            font-size: 6px;
+            font-size: 10px;
             transition: background 0.3s ease;
         }
 
@@ -206,60 +229,73 @@
             }
         ];
 
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                return navigator.clipboard.writeText(text);
+            }
+            // Fallback for file:// and older browsers
+            const el = document.createElement('textarea');
+            el.value = text;
+            el.style.position = 'fixed';
+            el.style.opacity = '0';
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            return Promise.resolve();
+        }
+
         const themeGrid = document.getElementById('themeGrid');
 
         themes.forEach((theme, index) => {
             const themeCard = document.createElement('div');
             themeCard.className = 'theme-card';
             
+            // Left column: theme name + hex codes + copy button
+            const cardLeft = document.createElement('div');
+            cardLeft.className = 'card-left';
+
             const themeName = document.createElement('div');
             themeName.className = 'theme-name';
             themeName.textContent = `${index + 1}. ${theme.name}`;
-            
-            const colorBoxes = document.createElement('div');
-            colorBoxes.className = 'color-boxes';
-            
-            theme.colors.forEach(color => {
-                const box = document.createElement('div');
-                box.className = 'color-box';
-                box.style.backgroundColor = color;
-                box.title = color;
-                box.addEventListener('click', () => {
-                    navigator.clipboard.writeText(color);
-                    box.style.transform = 'scale(1.2)';
-                    setTimeout(() => {
-                        box.style.transform = '';
-                    }, 200);
-                });
-                colorBoxes.appendChild(box);
-            });
-            
+
             const colorCodes = document.createElement('div');
             colorCodes.className = 'color-codes';
-            
+
             const labels = ['Primary', 'Secondary', 'Accent', 'Dark', 'Light'];
             theme.colors.forEach((color, i) => {
                 const codeDiv = document.createElement('div');
                 codeDiv.className = 'color-code';
-                
+
                 const dot = document.createElement('div');
                 dot.className = 'color-dot';
                 dot.style.backgroundColor = color;
-                
+
                 const text = document.createElement('span');
                 text.textContent = `${labels[i]}: ${color}`;
-                
+
                 codeDiv.appendChild(dot);
                 codeDiv.appendChild(text);
                 colorCodes.appendChild(codeDiv);
             });
-            
+
             const copyBtn = document.createElement('button');
             copyBtn.className = 'copy-btn';
             copyBtn.textContent = 'Copy All Colors';
             copyBtn.addEventListener('click', () => {
                 const allColors = theme.colors.join(', ');
-                navigator.clipboard.writeText(allColors);
+                copyToClipboard(allColors);
+                window.parent.postMessage({
+                    type: 'colorThemeSelected',
+                    number: index + 1,
+                    theme: {
+                        primary:   theme.colors[0],
+                        secondary: theme.colors[1],
+                        accent:    theme.colors[2],
+                        dark:      theme.colors[3],
+                        light:     theme.colors[4]
+                    }
+                }, '*');
                 copyBtn.textContent = 'Copied! ✓';
                 copyBtn.style.background = '#4CAF50';
                 setTimeout(() => {
@@ -267,11 +303,46 @@
                     copyBtn.style.background = '#333';
                 }, 2000);
             });
-            
-            themeCard.appendChild(themeName);
-            themeCard.appendChild(colorBoxes);
-            themeCard.appendChild(colorCodes);
-            themeCard.appendChild(copyBtn);
+
+            cardLeft.appendChild(themeName);
+            cardLeft.appendChild(colorCodes);
+            cardLeft.appendChild(copyBtn);
+
+            // Right column: color swatches
+            const cardRight = document.createElement('div');
+            cardRight.className = 'card-right';
+
+            const colorBoxes = document.createElement('div');
+            colorBoxes.className = 'color-boxes';
+
+            theme.colors.forEach(color => {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.backgroundColor = color;
+                box.title = color;
+                box.addEventListener('click', () => {
+                    copyToClipboard(color);
+                    window.parent.postMessage({ type: 'colorPick', color }, '*');
+                    box.title = 'Copied!';
+                    box.style.outline = '2px solid #4CAF50';
+                    setTimeout(() => {
+                        box.title = color;
+                        box.style.outline = '';
+                    }, 1000);
+                });
+                colorBoxes.appendChild(box);
+            });
+
+            cardRight.appendChild(colorBoxes);
+
+            const cardBody = document.createElement('div');
+            cardBody.className = 'card-body';
+            cardBody.appendChild(cardLeft);
+            cardBody.appendChild(cardRight);
+
+            themeCard.appendChild(cardBody);
             themeGrid.appendChild(themeCard);
         });
     </script>
+</body>
+</html>
