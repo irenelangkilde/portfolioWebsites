@@ -260,7 +260,7 @@
 
     function getPage2(){
       return {
-        themeNumber: document.getElementById("themeNumber").value.trim(),
+        themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         theme: {
           primary: document.getElementById("primary").value.trim(),
           secondary: document.getElementById("secondary").value.trim(),

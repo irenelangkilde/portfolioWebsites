@@ -404,7 +404,7 @@ export async function handler(event) {
 
     // Responses API: structured outputs use text.format (per migration guidance)
     const resp = await client.responses.create({
-      model: "gpt-5-mini", // your scalable default
+      model: "gpt-4o-mini",
       input: [
         { role: "system", content: "You are a portfolio website generator. Return JSON only." },
         { role: "user", content: prompt }
