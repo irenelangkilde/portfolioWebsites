@@ -51,7 +51,7 @@ export async function handler(event) {
     const prompt = buildZipPrompt(page1, { ...page2, theme });
 
     const resp = await client.responses.create({
-      model: "gpt-5-mini",
+      model: "gpt-4o-mini",
       input: [
         { role: "system", content: "You are a portfolio website generator. Return JSON only." },
         { role: "user", content: prompt }
