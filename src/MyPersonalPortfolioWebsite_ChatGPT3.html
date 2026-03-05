@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Personal Portfolio Website Intake Form</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(0,0,0,.25);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow: 0 10px 26px rgba(0,0,0,.35);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, color-mix(in oklab, var(--danger) 18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width: 980px; margin:0 auto; padding: 18px 14px 56px; }
+    header{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      display:flex;
+      flex-direction:column;
+      gap: 10px;
+    }
+    header h1{ margin:0; font-size: 22px; font-weight: 900; letter-spacing: .2px; }
+    header .sub{ color:var(--muted); font-size: 13.5px; margin:0; }
+
+    .progressCard{
+      margin-top: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .stepsRow{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .stepPills{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: rgba(234,240,255,.8);
+      font-weight: 800;
+      font-size: 12px;
+      user-select:none;
+    }
+    .pill.active{
+      background: color-mix(in oklab, var(--primary) 35%, rgba(0,0,0,.18));
+      border-color: color-mix(in oklab, var(--primary) 60%, rgba(255,255,255,.10));
+      color: rgba(234,240,255,.95);
+    }
+    .bar{
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 60%, transparent), color-mix(in oklab, var(--accent) 55%, transparent));
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+
+    .card{
+      margin-top: 14px;
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .grid{ display:grid; gap: 12px; }
+    .grid2{ display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 860px){ .grid2{ grid-template-columns: 1fr 1fr; } }
+
+    .themeLayout{ display:flex; gap: 16px; align-items: flex-start; }
+    .themeLeft{ flex: 0 0 260px; display:flex; flex-direction:column; gap: 10px; }
+    .themeRight{ flex: 1; min-width: 0; }
+
+    .sectionTitle{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 6px;
+    }
+    .sectionTitle h2{ margin:0; font-size: 16px; letter-spacing:.2px; }
+    .hint{ color: var(--muted); font-size: 13px; margin: 0; }
+    .hr{ height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
+
+    label{ display:block; font-weight: 900; font-size: 13px; margin-bottom: 6px; }
+    input[type="text"], input[type="email"], input[type="url"], textarea, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.25);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{ min-height: 92px; resize: vertical; }
+    input::placeholder, textarea::placeholder{ color: rgba(234,240,255,.55); }
+    input:focus, textarea:focus, select:focus{
+      border-color: color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.14));
+      box-shadow: 0 0 0 3px rgba(141,224,255,.14);
+    }
+
+    .row{ display:grid; gap: 10px; }
+    .row2{ display:grid; gap: 10px; grid-template-columns: 1fr; }
+    @media (min-width: 860px){ .row2{ grid-template-columns: 1fr 1fr; } }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:flex-end;
+      margin-top: 14px;
+    }
+    .btn{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn.primary{
+      background: color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color: color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.ghost{ background: rgba(0,0,0,.15); }
+    .btn.danger{
+      background: color-mix(in oklab, var(--danger) 28%, rgba(255,255,255,.08));
+      border-color: color-mix(in oklab, var(--danger) 55%, rgba(255,255,255,.14));
+    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .mini{ font-size: 12px; padding: 7px 10px; border-radius: 10px; }
+
+    .note{
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: rgba(234,240,255,.85);
+      font-size: 13px;
+    }
+
+    .error{ color: color-mix(in oklab, var(--danger) 80%, white); font-weight: 900; }
+    .ok{ color: color-mix(in oklab, var(--ok) 80%, white); font-weight: 900; }
+
+    details{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    summary{ cursor:pointer; font-weight: 900; }
+    pre{
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: rgba(234,240,255,.92);
+      overflow:auto;
+      max-height: 280px;
+    }
+
+    .max480{ max-width: 480px; margin: 0 auto; }
+    .hidden{ display:none !important; }
+
+    .tipList{ margin: 8px 0 0; padding-left: 18px; color: rgba(234,240,255,.86); }
+    .tipList li{ margin: 6px 0; }
+
+    .fileBox{
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .fileList{ margin: 8px 0 0; padding-left: 18px; color: rgba(234,240,255,.85); }
+    .fileList li{ margin: 4px 0; }
+
+    .inlineRow4{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .inlineRow4{
+        grid-template-columns: 140px 220px 1fr 1fr;
+        align-items:start;
+      }
+    }
+
+    .inlineRow2{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .inlineRow2{
+        grid-template-columns: 1fr 1fr;
+        align-items:start;
+      }
+    }
+
+    .modalBackdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 14px;
+      z-index: 50;
+    }
+    .modal{
+      width: min(780px, 100%);
+      background: rgba(11,18,32,.92);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding: 14px;
+    }
+    .modalTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .modalTop strong{ font-size: 14px; }
+    .modalClose{ cursor:pointer; }
+    .modalContent{
+      color: rgba(234,240,255,.88);
+      font-size: 13.5px;
+      line-height:1.55;
+      max-height: 70vh;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    footer{
+      margin-top: 14px;
+      color: rgba(234,240,255,.62);
+      font-size: 12.5px;
+      text-align:center;
+    }
+    .dropzone {
+      border: 2px dashed rgba(78,112,241,.5);
+      border-radius: 10px;
+      background: rgba(78,112,241,.07);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      background: rgba(78,112,241,.18);
+      border-color: #4E70F1;
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dropzone-label { pointer-events: none; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .dropzone-label strong { color: #4E70F1; }
+    .resume-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
+    .resume-filelist li::before { content: "📎 "; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Personal Portfolio Website Intake</h1>
+      <p class="sub">Fill this out once. Get a draft site fast. Refine later.</p>
+    </header>
+
+    <div class="progressCard">
+      <div class="stepsRow">
+        <div class="stepPills" id="stepPills"></div>
+        <div class="hint" id="stepLabel"></div>
+      </div>
+      <div class="bar"><div id="progressBar"></div></div>
+    </div>
+
+    <!-- PAGE 0: Overview -->
+    <section class="card" id="page0">
+      <div class="sectionTitle">
+        <h2>Page 0 — Overview</h2>
+        <p class="hint">You’ll generate an early preview on Page 2, then optionally refine on Pages 3–4.</p>
+      </div>
+      <div class="note">
+        <ol class="tipList">
+          <li><strong>Page 1:</strong> Basic information (name, contact, major).</li>
+          <li><strong>Page 2:</strong> Choose colors and generate a <strong>preview</strong> (JSON + HTML) you can download.</li>
+          <li><strong>Page 3:</strong> Optional resources (resume, links, text snippets) to improve accuracy.</li>
+          <li><strong>Page 4:</strong> Target job + job ad; submit to generate a more tailored result.</li>
+        </ol>
+      </div>
+      <div class="btnRow">
+        <button class="btn primary" type="button" id="toPage1">Start</button>
+      </div>
+    </section>
+
+    <!-- PAGE 1: Basic Information -->
+    <section class="card hidden" id="page1">
+      <div class="sectionTitle">
+        <h2>Page 1 — Basic Information</h2>
+        <p class="hint">Single column on mobile; max-width 480px.</p>
+      </div>
+
+      <div class="max480 grid">
+        <div>
+          <label for="name">Name <span class="error">*</span></label>
+          <input id="name" type="text" placeholder="First Last" required />
+        </div>
+
+        <div>
+          <label for="email">Email <span class="error">*</span></label>
+          <input id="email" type="email" placeholder="you@email.com" required />
+        </div>
+
+        <div>
+          <label for="phone">Phone</label>
+          <input id="phone" type="text" inputmode="tel" placeholder="(801) 555-1234" />
+        </div>
+
+        <div>
+          <label for="major">Major</label>
+          <input id="major" type="text" placeholder="e.g., Psychology" />
+        </div>
+
+        <div>
+          <label for="specialization">Specialization</label>
+          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" />
+        </div>
+
+        <div>
+          <label for="linkedin">LinkedIn URL</label>
+          <input id="linkedin" type="url" placeholder="https://www.linkedin.com/in/yourname" />
+          <p class="hint" style="margin:8px 0 0;">For employer reference.</p>
+        </div>
+
+        <div>
+          <label>Resume <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
+          <div class="dropzone" id="resumeDropzone">
+            <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
+            <div class="dropzone-label">
+              <strong>Choose file</strong> or drag it here<br>
+              <span style="font-size:12px;">PDF or DOCX</span>
+            </div>
+          </div>
+          <ul class="resume-filelist" id="resumeFileList"></ul>
+        </div>
+      </div>
+
+      <div class="btnRow">
+        <button class="btn danger" type="button" id="reset1">Reset (double-click)</button>
+        <button class="btn primary" type="button" id="next1">Next</button>
+      </div>
+    </section>
+
+    <!-- PAGE 2: Color scheme + preview generation -->
+    <section class="card hidden" id="page2">
+      <div class="sectionTitle">
+        <h2>Page 2 — Color Scheme</h2>
+        <p class="hint">Pick a theme or enter hex codes.</p>
+      </div>
+
+      <div class="note">
+        <strong>Preview flow:</strong> When you click <strong>Next</strong>, we’ll generate a draft preview (JSON + HTML) using Pages 1–2, then you can download both before moving on.
+      </div>
+
+      <div class="hr"></div>
+<div class="themeLayout">
+  <div class="themeLeft">
+    <div class="field">
+      <label for="themeNumber">Theme Number</label>
+      <input id="themeNumber" type="text" placeholder="(optional)" />
+    </div>
+
+    <!-- Palette control box: clicking this toggles whole-palette mode -->
+    <div id="paletteBox" class="paletteBox" role="group" aria-label="Palette picker mode">
+      <div class="paletteTop">
+        <div class="paletteTitle">Pick mode</div>
+        <div id="paletteModeBadge" class="paletteBadge">Single color</div>
+      </div>
+
+      <div class="activeButtons">
+        <button type="button" class="chip is-active" data-color-index="0">#1 Primary</button>
+        <button type="button" class="chip" data-color-index="1">#2 Secondary</button>
+        <button type="button" class="chip" data-color-index="2">#3 Accent</button>
+        <button type="button" class="chip" data-color-index="3">#4 Dark</button>
+        <button type="button" class="chip" data-color-index="4">#5 Light</button>
+      </div>
+
+      <div class="paletteHint">
+        Click a button = single-color target. Click this whole box to toggle “apply whole palette”.
+      </div>
+    </div>
+
+    <div class="field"><label for="primary">1. Primary</label><input id="primary" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="secondary">2. Secondary</label><input id="secondary" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="accent">3. Accent</label><input id="accent" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="dark">4. Dark</label><input id="dark" type="text" placeholder="#RRGGBB" /></div>
+    <div class="field"><label for="light">5. Light</label><input id="light" type="text" placeholder="#RRGGBB" /></div>
+  </div>
+
+  <div class="themeRight">
+    <div class="hint">Theme Gallery</div>
+    <iframe
+      src="color-themes.html"
+      style="margin-top:10px;width:100%;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"
+      loading="lazy"
+      onload="this.style.height = this.contentDocument.body.scrollHeight + 'px'"></iframe>
+  </div>
+</div>
+        <!--div class="grid2">
+          <div>
+            <label for="primary">1. Primary</label>
+            <input id="primary" type="text" placeholder="#4E70F1" />
+          </div>
+          <div>
+            <label for="secondary">2. Secondary</label>
+            <input id="secondary" type="text" placeholder="#FBAB9C" />
+          </div>
+          <div>
+            <label for="accent">3. Accent</label>
+            <input id="accent" type="text" placeholder="#8DE0FF" />
+          </div>
+          <div>
+            <label for="dark">4. Dark</label>
+            <input id="dark" type="text" placeholder="#0b1220" />
+          </div>
+          <div>
+            <label for="light">5. Light</label>
+            <input id="light" type="text" placeholder="#eaf0ff" />
+          </div>
+        </div-->
+
+        <!-- Top buttons (Back/Next) -->
+        <!--div class="btnRow">
+          <button class="btn ghost" type="button" id="back2_top">Back</button>
+          <button class="btn primary" type="button" id="next2_top">Next</button>
+        </div-->
+
+        <!-- Preview box -->
+        <div id="page2PreviewBox" class="hidden">
+          <div class="note">
+            <div id="page2Status" class="hint"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <details>
+            <summary>JSON preview (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button type="button" class="btn mini" id="dlJson2">Download JSON</button>
+              <button type="button" class="btn mini ghost" id="cpJson2">Copy JSON</button>
+            </div>
+            <pre id="jsonPreview2"></pre>
+          </details>
+
+          <details style="margin-top:10px;">
+            <summary>HTML preview (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button type="button" class="btn mini" id="dlHtml2">Download HTML</button>
+              <button type="button" class="btn mini ghost" id="cpHtml2">Copy HTML</button>
+            </div>
+            <pre id="htmlPreview2"></pre>
+          </details>
+
+          <div class="btnRow" style="justify-content:flex-start; margin-top:12px;">
+            <button class="btn primary" type="button" id="continueTo3">Continue to Page 3</button>
+          </div>
+        </div>
+
+        <!-- Bottom buttons (Back/Next) -->
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back2_bottom">Back</button>
+          <button class="btn primary" type="button" id="next2_bottom">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: Optional resources -->
+    <section class="card hidden" id="page3">
+      <div class="sectionTitle">
+        <h2>Page 3 — Optional Portfolio Resources</h2>
+        <p class="hint">Upload or paste materials. Keep it quick; refine later.</p>
+      </div>
+
+      <div class="note">
+        <strong>Tips:</strong>
+        <ol class="tipList">
+          <li>Don’t aim for perfection on the first iteration. Draft fast, refine later.</li>
+          <li>Show, don’t just tell: add proof (projects, metrics, links, screenshots, outcomes).</li>
+          <li>Lead with a 1-line headline: target role + specialty + value.</li>
+          <li>Quantify impact wherever possible (%, $, time saved, volume, accuracy, ratings).</li>
+          <li>Write for skimmers: short sections, strong headings, bullets, whitespace.</li>
+          <li>Tailor to the job ad: mirror keywords (truthfully) and map evidence to requirements.</li>
+          <li>Make contact frictionless: email + LinkedIn visible, clear call-to-action.</li>
+        </ol>
+      </div>
+
+      <div class="hr"></div>
+
+      <div class="grid">
+        <div class="inlineRow2">
+          <div class="fileBox">
+            <label for="uploadFiles">Upload files (PDF, DOC/DOCX, images, videos, HTML, Markdown, text)</label>
+            <input id="uploadFiles" type="file" multiple />
+            <ul class="fileList" id="uploadedFileList"></ul>
+          </div>
+          <div>
+            <label for="uploadUse">How should we use these files?</label>
+            <textarea id="uploadUse" placeholder="e.g., Use content but not layout; treat as inspiration; extract experience/project bullets."></textarea>
+            <p class="hint" style="margin:8px 0 0;">
+              Tip: Learn how to <a href="#" id="openLinkedInPdfHelp">download a PDF of your LinkedIn profile</a>.
+            </p>
+          </div>
+        </div>
+
+        <div class="inlineRow2">
+          <div>
+            <label for="publicUrl">Website address (public URL only)</label>
+            <input id="publicUrl" type="url" placeholder="https://github.com/yourname/portfolio" />
+          </div>
+          <div>
+            <label for="publicUrlUse">How should we use this URL?</label>
+            <textarea id="publicUrlUse" placeholder="e.g., Use as project reference; extract tech stack; link from Projects section."></textarea>
+          </div>
+        </div>
+
+        <div>
+          <div class="sectionTitle">
+            <h2 style="font-size:14.5px;">Text entries</h2>
+            <p class="hint">Add any snippets (HTML/Markdown/raw) you want considered.</p>
+          </div>
+
+          <div id="textEntries"></div>
+
+          <div class="btnRow" style="justify-content:flex-start;">
+            <button class="btn mini" type="button" id="addTextEntry">+ Add text entry</button>
+          </div>
+        </div>
+
+        <div class="note">
+          <label style="margin:0 0 8px;">
+            <input id="copyrightOk" type="checkbox" />
+            <span style="margin-left:8px;">
+              I have the copyright or written permission to use these resources, or I only want to use it as inspiration—please generate something different enough to avoid copyright infringement.
+            </span>
+          </label>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back3">Back</button>
+          <button class="btn primary" type="button" id="next3">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 4: Job target -->
+    <section class="card hidden" id="page4">
+      <div class="sectionTitle">
+        <h2>Page 4 — Target Job</h2>
+        <p class="hint">Optional but strongly improves relevance.</p>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="desiredRole">Desired Job Position</label>
+          <input id="desiredRole" type="text" placeholder="e.g., Entry-level Data Analyst" />
+        </div>
+        <div>
+          <label for="jobAd">Job Position Ad</label>
+          <textarea id="jobAd" placeholder="Paste the job posting here (optional)."></textarea>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back4_top">Back</button>
+          <button class="btn primary" type="button" id="submit_top">Submit</button>
+        </div>
+
+        <div id="finalBox" class="hidden">
+          <div class="note">
+            <div id="finalStatus" class="hint"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <details>
+            <summary>Autogenerated prompt (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button class="btn mini" type="button" id="dlPrompt">Download prompt (.txt)</button>
+              <button class="btn mini ghost" type="button" id="cpPrompt">Copy prompt</button>
+            </div>
+            <pre id="promptPreview"></pre>
+          </details>
+
+          <details style="margin-top:10px;">
+            <summary>Model response (JSON/HTML/advice) (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button class="btn mini" type="button" id="dlFinalJson">Download JSON</button>
+              <button class="btn mini" type="button" id="dlFinalHtml">Download HTML</button>
+              <button class="btn mini ghost" type="button" id="cpFinal">Copy response</button>
+            </div>
+            <pre id="finalPreview"></pre>
+          </details>
+
+          <div style="margin-top:10px;" class="note">
+            <strong>Also created:</strong> a downloadable summary HTML of your entire form submission.
+            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
+              <button class="btn mini" type="button" id="dlSummaryHtml">Download MyPersonalPortfolioWebsiteSummary.html</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back4_bottom">Back</button>
+          <button class="btn primary" type="button" id="submit_bottom">Submit</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 3.0.0 • Updated 2026-02-27</footer>
+  </div>
+
+  <!-- LinkedIn PDF help modal -->
+  <div class="modalBackdrop" id="modalBackdrop">
+    <div class="modal" role="dialog" aria-modal="true" aria-label="LinkedIn PDF instructions">
+      <div class="modalTop">
+        <strong>How to download a PDF of your LinkedIn profile</strong>
+        <button class="btn mini ghost modalClose" id="closeModal" type="button">Close</button>
+      </div>
+      <div class="modalContent" id="modalContent">
+        <ol class="tipList">
+          <li>Open your LinkedIn profile in a browser.</li>
+          <li>Click the <strong>More</strong> button (often near “Open to” / “Add profile section”).</li>
+          <li>Select <strong>Save to PDF</strong>.</li>
+          <li>Upload the PDF here on Page 3.</li>
+        </ol>
+        <p class="hint">Note: LinkedIn UI varies slightly by device/account type.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="form.js" defer>  </script>
+</body>
+</html>
