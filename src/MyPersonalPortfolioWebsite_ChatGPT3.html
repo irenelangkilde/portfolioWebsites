@@ -118,6 +118,9 @@
     .themeLeft{ flex: 0 0 260px; display:flex; flex-direction:column; gap: 10px; }
     .themeRight{ flex: 1; min-width: 0; }
 
+    .colorPreview{ display:flex; border-radius: 8px; overflow:hidden; height: 36px; margin-top: 4px; }
+    .colorPreview .swatch{ flex:1; display:flex; align-items:center; justify-content:center; font-size:8px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.6); transition: background-color 0.3s ease; }
+
     .sectionTitle{
       display:flex;
       align-items:flex-start;
@@ -428,31 +431,19 @@
       <input id="themeNumber" type="text" placeholder="(optional)" />
     </div>
 
-    <!-- Palette control box: clicking this toggles whole-palette mode -->
-    <div id="paletteBox" class="paletteBox" role="group" aria-label="Palette picker mode">
-      <div class="paletteTop">
-        <div class="paletteTitle">Pick mode</div>
-        <div id="paletteModeBadge" class="paletteBadge">Single color</div>
-      </div>
-
-      <div class="activeButtons">
-        <button type="button" class="chip is-active" data-color-index="0">#1 Primary</button>
-        <button type="button" class="chip" data-color-index="1">#2 Secondary</button>
-        <button type="button" class="chip" data-color-index="2">#3 Accent</button>
-        <button type="button" class="chip" data-color-index="3">#4 Dark</button>
-        <button type="button" class="chip" data-color-index="4">#5 Light</button>
-      </div>
-
-      <div class="paletteHint">
-        Click a button = single-color target. Click this whole box to toggle “apply whole palette”.
-      </div>
-    </div>
-
-    <div class="field"><label for="primary">1. Primary</label><input id="primary" type="text" placeholder="#RRGGBB" /></div>
+<div class="field"><label for="primary">1. Primary</label><input id="primary" type="text" placeholder="#RRGGBB" /></div>
     <div class="field"><label for="secondary">2. Secondary</label><input id="secondary" type="text" placeholder="#RRGGBB" /></div>
     <div class="field"><label for="accent">3. Accent</label><input id="accent" type="text" placeholder="#RRGGBB" /></div>
     <div class="field"><label for="dark">4. Dark</label><input id="dark" type="text" placeholder="#RRGGBB" /></div>
     <div class="field"><label for="light">5. Light</label><input id="light" type="text" placeholder="#RRGGBB" /></div>
+
+    <div class="colorPreview" id="colorPreview">
+      <div class="swatch" id="swatch-primary">1</div>
+      <div class="swatch" id="swatch-secondary">2</div>
+      <div class="swatch" id="swatch-accent">3</div>
+      <div class="swatch" id="swatch-dark">4</div>
+      <div class="swatch" id="swatch-light">5</div>
+    </div>
   </div>
 
   <div class="themeRight">

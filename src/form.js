@@ -575,27 +575,32 @@
     document.getElementById("next2_top")?.addEventListener("click", page2Next);
     document.getElementById("next2_bottom")?.addEventListener("click", page2Next);
 
-    // Palette pick mode — chip clicks
+    // Color preview swatches
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
-    const chips = document.querySelectorAll(".chip");
-    chips.forEach(chip => {
-      chip.addEventListener("click", e => {
-        e.stopPropagation();
-        chips.forEach(c => c.classList.remove("is-active"));
-        chip.classList.add("is-active");
+    function updateColorPreview() {
+      colorInputIds.forEach(id => {
+        const val = document.getElementById(id)?.value.trim();
+        const swatch = document.getElementById("swatch-" + id);
+        if (swatch) swatch.style.backgroundColor = val || "transparent";
       });
+    }
+    colorInputIds.forEach(id => {
+      document.getElementById(id)?.addEventListener("input", updateColorPreview);
+    });
+    updateColorPreview();
+
+    // Track which color input last had focus
+    let focusedColorId = "primary";
+    colorInputIds.forEach(id => {
+      document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
     });
 
-    // Single color pick from iframe
+    // Single color pick from iframe — fills whichever field is active
     window.addEventListener("message", e => {
       const msg = e.data;
-      console.log("Message received:", msg);
       if (!msg || msg.type !== "colorPick") return;
-      const activeChip = document.querySelector(".chip.is-active");
-      if (!activeChip) return;
-      const idx = parseInt(activeChip.dataset.colorIndex, 10);
-      const el = document.getElementById(colorInputIds[idx]);
-      if (el) el.value = msg.color;
+      const el = document.getElementById(focusedColorId);
+      if (el) { el.value = msg.color; updateColorPreview(); }
     });
 
     document.getElementById("continueTo3").addEventListener("click", () => setStep(3));
@@ -640,6 +645,7 @@
     addTextEntry();
 
     applyDefaults();
+    updateColorPreview();
     renderStepUI();
     setStep(0);
     window.addEventListener("message", (event) => {
@@ -653,12 +659,10 @@
       document.getElementById("accent").value    = theme.accent || "";
       document.getElementById("dark").value      = theme.dark || "";
       document.getElementById("light").value     = theme.light || "";
+      updateColorPreview();
 
     });
     window.addEventListener("message", (event) => {
-        // Optional safety: if you're always same-origin, you can enforce:
-        // if (event.origin !== window.location.origin) return;
-
         const msg = event.data;
         if (!msg || msg.type !== "colorThemeSelected") return;
 
@@ -671,6 +675,5 @@
         set("accent",    t.accent);
         set("dark",      t.dark);
         set("light",     t.light);
-
-        console.log("Theme received:", msg);
+        updateColorPreview();
     });
