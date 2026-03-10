@@ -422,7 +422,7 @@ export async function handler(event) {
       text: {
         format: {
           type: "json_schema",
-          json_schema: SITE_JSON_SCHEMA
+          ...SITE_JSON_SCHEMA
         }
       }
     });

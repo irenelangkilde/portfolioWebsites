@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Data Science Portfolio Store | 10% Off This Week</title>
+  <meta name="description" content="Portfolio websites for data science graduates. Launch a polished, job-ready site fast. Get 10% off for one week only." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:rgba(255,255,255,.06);
+      --panel-2:rgba(255,255,255,.09);
+      --stroke:rgba(255,255,255,.12);
+      --text:rgba(255,255,255,.94);
+      --muted:rgba(255,255,255,.74);
+      --brand:#4E70F1;
+      --accent:#F28B86;
+      --accent-2:#8DE0FF;
+      --ok:#9BE37A;
+      --shadow:0 18px 60px rgba(0,0,0,.42);
+      --radius-xl:28px;
+      --radius-lg:20px;
+      --radius-md:14px;
+      --max:1140px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(1000px 650px at 10% 8%, rgba(78,112,241,.28), transparent 55%),
+        radial-gradient(850px 600px at 92% 18%, rgba(242,139,134,.18), transparent 55%),
+        radial-gradient(700px 500px at 50% 100%, rgba(141,224,255,.10), transparent 55%),
+        linear-gradient(180deg, #0b1020, #090d18 55%, #070b14 100%);
+      line-height:1.6;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+    .section{padding:64px 0}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 12px;
+      border:1px solid var(--stroke);
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+    }
+    .eyebrow .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:linear-gradient(135deg,var(--brand),var(--accent));
+      box-shadow:0 0 0 6px rgba(78,112,241,.10);
+    }
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter:blur(12px);
+      background:rgba(11,16,32,.65);
+      border-bottom:1px solid var(--stroke);
+    }
+
+    .nav{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:14px 0;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width:220px;
+    }
+
+    .brand-mark{
+      width:38px;height:38px;border-radius:14px;
+      border:1px solid rgba(255,255,255,.16);
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.56), transparent 55%),
+        linear-gradient(135deg, var(--brand), var(--accent));
+      box-shadow:0 16px 40px rgba(78,112,241,.20);
+    }
+
+    .brand-text{
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-weight:700;
+      letter-spacing:.01em;
+    }
+    .brand-sub{
+      display:block;
+      color:var(--muted);
+      font-family:Inter,sans-serif;
+      font-size:12px;
+      margin-top:2px;
+      font-weight:500;
+    }
+
+    nav ul{
+      display:flex;
+      gap:20px;
+      list-style:none;
+      margin:0;
+      padding:0;
+      color:var(--muted);
+      font-size:14px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    nav a:hover{color:var(--text)}
+
+    .nav-actions{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:11px 16px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      font-weight:700;
+      font-size:14px;
+      cursor:pointer;
+      transition:transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px); opacity:.98}
+    .btn.primary{
+      border:none;
+      background:linear-gradient(135deg,var(--brand),rgba(78,112,241,.66));
+      box-shadow:0 18px 48px rgba(78,112,241,.22);
+    }
+    .btn.accent{
+      border:none;
+      background:linear-gradient(135deg,var(--accent),#f6a29d);
+      color:#20151a;
+      box-shadow:0 18px 48px rgba(242,139,134,.18);
+    }
+
+    .hero{
+      padding:34px 0 24px;
+    }
+
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.08fr .92fr;
+      gap:28px;
+      align-items:center;
+    }
+
+    h1{
+      margin:16px 0 12px;
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-size:58px;
+      line-height:1.02;
+      letter-spacing:-.03em;
+    }
+
+    .subhead{
+      margin:0 0 18px;
+      color:var(--muted);
+      font-size:17px;
+      max-width:64ch;
+    }
+
+    .offer-banner{
+      display:flex;
+      gap:12px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin:16px 0 22px;
+      padding:14px 16px;
+      border-radius:18px;
+      background:linear-gradient(135deg, rgba(242,139,134,.16), rgba(78,112,241,.14));
+      border:1px solid rgba(255,255,255,.12);
+      box-shadow:var(--shadow);
+    }
+    .offer-badge{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight:800;
+      font-size:13px;
+      color:#fff;
+    }
+    .offer-text{
+      color:rgba(255,255,255,.92);
+      font-size:14px;
+      font-weight:600;
+    }
+
+    .hero-pills{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .pill{
+      padding:9px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:rgba(255,255,255,.86);
+      font-size:13px;
+    }
+
+    .hero-card{
+      position:relative;
+      overflow:hidden;
+      border-radius:34px;
+      border:1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(700px 500px at 20% 20%, rgba(78,112,241,.22), transparent 55%),
+        radial-gradient(600px 440px at 78% 62%, rgba(242,139,134,.18), transparent 55%),
+        rgba(255,255,255,.05);
+      box-shadow:var(--shadow);
+      padding:22px;
+      min-height:520px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .mini-site{
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background:#0d1527;
+      box-shadow:0 14px 34px rgba(0,0,0,.24);
+    }
+    .mini-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+    }
+    .mini-dots{display:flex; gap:6px;}
+    .mini-dots span{
+      width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.30);
+    }
+    .mini-top .mini-label{
+      font-size:12px;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .mini-body{
+      padding:18px;
+      display:grid;
+      gap:16px;
+      background:
+        linear-gradient(180deg, rgba(78,112,241,.08), transparent 35%),
+        #0b1220;
+    }
+    .mini-hero{
+      border-radius:20px;
+      padding:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+    }
+    .mini-hero h3{
+      margin:0 0 8px;
+      font-size:24px;
+      line-height:1.15;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .mini-hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .mini-row{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .mini-block{
+      min-height:92px;
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      padding:14px;
+    }
+    .mini-block strong{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .mini-block .mini-bar{
+      height:10px;
+      margin:8px 0;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--brand),var(--accent-2));
+      opacity:.88;
+    }
+
+    .hero-side-copy{
+      margin-top:18px;
+      display:grid;
+      gap:12px;
+    }
+    .hero-side-item{
+      padding:14px 16px;
+      border-radius:18px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(255,255,255,.12);
+      color:var(--muted);
+      font-size:14px;
+    }
+    .hero-side-item strong{color:var(--text)}
+
+    .section h2{
+      margin:0 0 10px;
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-size:30px;
+      letter-spacing:-.02em;
+    }
+    .hint{
+      margin:0;
+      color:var(--muted);
+      max-width:72ch;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+
+    .card{
+      grid-column:span 4;
+      border-radius:var(--radius-xl);
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      padding:20px;
+      box-shadow:0 12px 38px rgba(0,0,0,.22);
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:17px;
+      letter-spacing:-.01em;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .card p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .meta{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      font-size:12px;
+    }
+    .tag{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      color:rgba(255,255,255,.84);
+    }
+    .span-6{grid-column:span 6}
+    .span-12{grid-column:span 12}
+
+    .price-card{
+      position:relative;
+      overflow:hidden;
+    }
+    .price-card.featured{
+      background:
+        radial-gradient(800px 500px at 10% 10%, rgba(78,112,241,.18), transparent 50%),
+        radial-gradient(700px 400px at 90% 20%, rgba(242,139,134,.14), transparent 50%),
+        rgba(255,255,255,.07);
+      border-color:rgba(141,224,255,.18);
+      box-shadow:0 18px 50px rgba(78,112,241,.18);
+    }
+    .price{
+      margin:12px 0 4px;
+      font-size:36px;
+      line-height:1;
+      font-weight:800;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .price small{
+      font-size:14px;
+      color:var(--muted);
+      font-weight:600;
+    }
+    .strike{
+      color:rgba(255,255,255,.52);
+      text-decoration:line-through;
+      margin-right:8px;
+      font-size:18px;
+      font-weight:700;
+    }
+    .feature-list{
+      margin:14px 0 0;
+      padding-left:18px;
+      color:rgba(255,255,255,.86);
+      font-size:14px;
+    }
+    .feature-list li{ margin:6px 0; }
+
+    .how-grid{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-top:18px;
+    }
+    .step{
+      border-radius:var(--radius-xl);
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      padding:20px;
+    }
+    .step-num{
+      width:38px;height:38px;border-radius:999px;
+      display:flex;align-items:center;justify-content:center;
+      font-weight:800;
+      background:linear-gradient(135deg,var(--brand),var(--accent));
+      margin-bottom:12px;
+    }
+
+    .faq{
+      display:grid;
+      gap:12px;
+      margin-top:18px;
+    }
+    .faq details{
+      border-radius:18px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      padding:14px 16px;
+    }
+    .faq summary{
+      cursor:pointer;
+      font-weight:800;
+      list-style:none;
+    }
+    .faq summary::-webkit-details-marker{display:none}
+    .faq p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .cta-banner{
+      border-radius:32px;
+      border:1px solid rgba(255,255,255,.14);
+      background:
+        radial-gradient(850px 450px at 12% 18%, rgba(78,112,241,.24), transparent 55%),
+        radial-gradient(700px 400px at 88% 30%, rgba(242,139,134,.16), transparent 55%),
+        rgba(255,255,255,.06);
+      padding:28px;
+      box-shadow:var(--shadow);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    footer{
+      border-top:1px solid rgba(255,255,255,.10);
+      padding:26px 0 40px;
+      color:var(--muted);
+      font-size:12px;
+    }
+    .foot{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    @media (max-width: 1020px){
+      .hero-grid{grid-template-columns:1fr}
+      h1{font-size:46px}
+      .card, .span-6{grid-column:span 12}
+      .how-grid{grid-template-columns:1fr}
+      .mini-row{grid-template-columns:1fr}
+    }
+    @media (max-width: 640px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size:38px}
+      .hero-card{min-height:auto}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container nav">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <div class="brand-text">Grad Portfolio Launch</div>
+          <span class="brand-sub">Portfolio websites for data science grads</span>
+        </div>
+      </div>
+
+      <nav aria-label="Primary">
+        <ul>
+          <li><a href="#why">Why it works</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="#buy">Buy now</a></li>
+        </ul>
+      </nav>
+
+      <div class="nav-actions">
+        <a class="btn" href="#pricing">See Plans</a>
+        <a class="btn primary" href="#buy">Get 10% Off</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow"><span class="dot" aria-hidden="true"></span> One week only</span>
+            <h1>Launch a data science portfolio site that looks job-ready from day one.</h1>
+            <p class="subhead">
+              Built for data science graduates who want a polished, modern website fast — with sections for projects, skills, resume, GitHub, dashboards, and recruiter-friendly proof of impact.
+            </p>
+
+            <div class="offer-banner">
+              <div class="offer-badge">10% OFF</div>
+              <div class="offer-text">
+                One-week launch special. Use code <strong>DATA10</strong> at checkout.
+              </div>
+            </div>
+
+            <div class="nav-actions" style="margin-top:0;">
+              <a class="btn primary" href="#buy">Shop Data Science Templates</a>
+              <a class="btn" href="#preview">See a Preview</a>
+            </div>
+
+            <div class="hero-pills">
+              <span class="pill">Projects • GitHub • Resume</span>
+              <span class="pill">Built for recruiters and hiring managers</span>
+              <span class="pill">Fast setup • low stress • high polish</span>
+            </div>
+          </div>
+          <aside class="hero-card" id="preview" aria-label="Example portfolio preview">
+
+            <a href="https://irene.langkildegithub.io/data-scienceGrad_B.html" target="_blank" style="display:block;">
+              <img
+                src="../assets/images/data-scienceGrad.png"
+                alt="Example Data Science Portfolio Website"
+                style="
+                  border-radius:22px;
+                  border:1px solid rgba(255,255,255,.18);
+                  box-shadow:0 18px 40px rgba(0,0,0,.35);
+                  transition:transform .2s ease;
+                "
+                onmouseover="this.style.transform='scale(1.02)'"
+                onmouseout="this.style.transform='scale(1)'"
+              >
+            </a>
+
+            <div class="hero-side-copy">
+              <div class="hero-side-item">
+                <strong>Click the image to preview a live portfolio site.</strong>
+              </div>
+              <div class="hero-side-item">
+                Shows projects, resume, GitHub links, and recruiter-friendly highlights.
+              </div>
+              <div class="hero-side-item">
+                Designed for soon-to-graduate data science students.
+              </div>
+            </div>
+
+          </aside>
+            <div class="hero-side-copy">
+              <div class="hero-side-item"><strong>For data science grads:</strong> showcase models, analyses, dashboards, and storytelling in one clean site.</div>
+              <div class="hero-side-item"><strong>Fast to launch:</strong> use your resume, GitHub, and project notes to get a draft online quickly.</div>
+              <div class="hero-side-item"><strong>Recruiter-friendly:</strong> emphasize outcomes, tools, and evidence — not just coursework.</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="why">
+      <div class="container">
+        <h2>Why data science grads use portfolio sites</h2>
+        <p class="hint">
+          A strong portfolio website makes it easier to show projects, technical range, communication skill, and measurable outcomes — all in a format that goes beyond a PDF resume.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <h3>Show real proof</h3>
+            <p>Put projects, notebooks, dashboards, experiment writeups, and GitHub links where recruiters can actually see them.</p>
+            <div class="meta">
+              <span class="tag">Projects</span>
+              <span class="tag">GitHub</span>
+              <span class="tag">Case studies</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Stand out fast</h3>
+            <p>Most grads submit the same resume. A clean website immediately signals initiative, polish, and communication skill.</p>
+            <div class="meta">
+              <span class="tag">Personal brand</span>
+              <span class="tag">Differentiation</span>
+              <span class="tag">First impression</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Designed for hiring</h3>
+            <p>Every section is structured to support what employers want to scan: skills, projects, outcomes, links, and contact.</p>
+            <div class="meta">
+              <span class="tag">Recruiter-friendly</span>
+              <span class="tag">Skimmable</span>
+              <span class="tag">Practical</span>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>What’s included</h2>
+        <p class="hint">Everything needed to launch a polished one-page or multi-section grad portfolio website fast.</p>
+
+        <div class="grid">
+          <div class="card span-6">
+            <h3>Data science-specific sections</h3>
+            <p>Layouts designed for featured projects, modeling work, dashboards, experiment summaries, technical skills, and resume links.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Modern, polished design</h3>
+            <p>Clean visuals inspired by current portfolio trends, with strong hierarchy, contrast, and clear calls to action.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Quick-start structure</h3>
+            <p>Plug in your project bullets, screenshots, GitHub links, and resume. Launch a solid draft without overthinking every section.</p>
+          </div>
+          <div class="card span-6">
+            <h3>Flexible for different roles</h3>
+            <p>Useful for junior data scientist, analyst, ML intern, BI, and analytics-focused applications.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="container">
+        <h2>Launch week pricing</h2>
+        <p class="hint">10% off for one week only. Pick the option that matches how much support you want.</p>
+
+        <div class="grid">
+          <article class="card price-card">
+            <h3>Starter Template</h3>
+            <p>Best for grads who want a fast DIY launch.</p>
+            <div class="price"><span class="strike">$49</span>$44 <small>one time</small></div>
+            <ul class="feature-list">
+              <li>Data science portfolio template</li>
+              <li>Projects, skills, resume, contact sections</li>
+              <li>Simple customization instructions</li>
+              <li>10% off with code <strong>DATA10</strong></li>
+            </ul>
+            <div class="nav-actions" style="margin-top:16px;">
+              <a class="btn primary" href="#buy">Choose Starter</a>
+            </div>
+          </article>
+
+          <article class="card price-card featured">
+            <h3>Template + Prompt Pack</h3>
+            <p>Best for grads who want help generating stronger content.</p>
+            <div class="price"><span class="strike">$79</span>$71 <small>one time</small></div>
+            <ul class="feature-list">
+              <li>Everything in Starter</li>
+              <li>AI prompt pack for data science projects</li>
+              <li>Headline, summary, and skills prompts</li>
+              <li>Role-targeting prompts for analyst / DS roles</li>
+            </ul>
+            <div class="nav-actions" style="margin-top:16px;">
+              <a class="btn accent" href="#buy">Most Popular</a>
+            </div>
+          </article>
+
+          <article class="card price-card">
+            <h3>Premium Launch</h3>
+            <p>Best for grads who want a more guided setup.</p>
+            <div class="price"><span class="strike">$129</span>$116 <small>one time</small></div>
+            <ul class="feature-list">
+              <li>Everything in Prompt Pack</li>
+              <li>Extra refinement prompts</li>
+              <li>Premium layout option</li>
+              <li>Launch-week discount included</li>
+            </ul>
+            <div class="nav-actions" style="margin-top:16px;">
+              <a class="btn primary" href="#buy">Choose Premium</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>How it works</h2>
+        <p class="hint">Simple enough for a busy graduating student.</p>
+
+        <div class="how-grid">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h3>Pick your template</h3>
+            <p>Choose the data science portfolio layout that fits your style and target role.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h3>Add your projects</h3>
+            <p>Plug in your project bullets, GitHub links, dashboard screenshots, and resume details.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h3>Launch with confidence</h3>
+            <p>Publish a polished site that makes your work easier to review and remember.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <div class="container">
+        <h2>FAQ</h2>
+        <div class="faq">
+          <details>
+            <summary>Do I need to be a web developer?</summary>
+            <p>No. These templates are meant to reduce friction and help you launch faster, even if you’re not a front-end specialist.</p>
+          </details>
+          <details>
+            <summary>Can I use this for analyst roles too?</summary>
+            <p>Yes. The structure works well for data analyst, business intelligence, junior data scientist, and related roles.</p>
+          </details>
+          <details>
+            <summary>How long does the 10% discount last?</summary>
+            <p>For one week only. Use code <strong>DATA10</strong> before the launch-week offer ends.</p>
+          </details>
+          <details>
+            <summary>Can I customize the colors and text?</summary>
+            <p>Yes. Swap your colors, rewrite the copy, add your GitHub and LinkedIn, and tailor the project sections to your work.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="buy">
+      <div class="container">
+        <div class="cta-banner">
+          <div>
+            <span class="eyebrow"><span class="dot" aria-hidden="true"></span> 10% off this week only</span>
+            <h2 style="margin-top:14px;">Ready to launch your data science portfolio?</h2>
+            <p class="hint" style="margin-top:8px;">
+              Make your projects easier to review, your skills easier to scan, and your applications more memorable.
+            </p>
+          </div>
+
+          <div class="nav-actions">
+            <a class="btn accent" href="#">Buy Now with Code DATA10</a>
+            <a class="btn" href="#">See Example Template</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot">
+      <span>© 2026 Grad Portfolio Launch • Portfolio websites for data science grads</span>
+      <span style="display:flex; gap:14px; flex-wrap:wrap;">
+        <a href="#why">Why it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#faq">FAQ</a>
+      </span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Riley Nguyen — Data Science Graduate Portfolio</title>
+  <meta name="description" content="A clean, editorial portfolio for a soon-to-graduate data science major: projects, writing, skills, resume, and contact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #fbfaf8;
+      --paper: #ffffff;
+      --ink: #15141a;
+      --muted: #5f5b66;
+      --soft: #ece9e2;
+      --soft2:#f3f1ec;
+      --border: rgba(21,20,26,.10);
+      --shadow: 0 18px 55px rgba(10,10,20,.10);
+
+      /* pulled to harmonize with the hero art */
+      --violet: #6b55ff;
+      --pink: #ff7bbd;
+      --blue: #4E70F1;
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1000px 600px at 12% 0%, rgba(107,85,255,.10), transparent 55%),
+        radial-gradient(900px 560px at 88% 12%, rgba(255,123,189,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg), #f7f6f3);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a{color:inherit}
+    img{max-width:100%; display:block}
+
+    /* Header (different style: editorial ribbon + monogram) */
+    header{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      background: rgba(251,250,248,.78);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .id{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .monogram{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: #fff;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.60), transparent 55%),
+        linear-gradient(135deg, var(--violet), var(--pink));
+      box-shadow: 0 16px 36px rgba(107,85,255,.16);
+    }
+    .id strong{display:block; font-family: "Playfair Display", Georgia, serif; letter-spacing:-.01em}
+    .id span{display:block; color: var(--muted); font-size: 12px; margin-top: 2px}
+
+    nav ul{
+      list-style:none; margin:0; padding:0;
+      display:flex; gap: 18px; align-items:center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav a{text-decoration:none; padding: 8px 10px; border-radius: 999px}
+    nav a:hover{background: rgba(107,85,255,.08); color: var(--ink)}
+    .actions{display:flex; gap:10px; align-items:center}
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px rgba(10,10,20,.10)}
+    .btn.primary{
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--violet));
+    }
+
+    /* Main layout: hero as a framed “poster” + editorial columns */
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    main{flex:1}
+    .container{max-width: var(--max); margin:0 auto; padding: 0 20px}
+
+    .hero{
+      padding: 28px 0 14px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .poster{
+      border-radius: 28px;
+      overflow:hidden;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 84px;
+    }
+    .poster img{width:100%; height:auto}
+    .poster .cap{
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--paper), rgba(251,250,248,.9));
+    }
+    .cap strong{display:block; font-size: 14px}
+    .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
+
+    .hero-copy{
+      background: rgba(255,255,255,.70);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(107,85,255,.08);
+      color: #2e2a36;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(107,85,255,.14);
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--violet), var(--pink));
+    }
+    h1{
+      margin: 12px 0 10px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .lead{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 70ch;
+    }
+    .bullets{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style:none;
+      color: #2e2a36;
+      font-size: 14px;
+    }
+    .bullets li{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--border);
+    }
+    .tick{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(107,85,255,.18), rgba(255,123,189,.18));
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid rgba(107,85,255,.14);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+    .cta{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items:center;
+    }
+
+    /* Sections */
+    .section{padding: 42px 0}
+    .section h2{
+      margin: 0 0 8px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -.01em;
+    }
+    .hint{margin:0; color: var(--muted); max-width: 75ch}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card{
+      grid-column: span 6;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(107,85,255,.10), transparent 45%),
+        radial-gradient(circle at 70% 70%, rgba(255,123,189,.10), transparent 45%);
+      opacity:.9;
+      pointer-events:none;
+      transform: rotate(8deg);
+    }
+    .card > *{position: relative}
+    .card h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+    .card p{margin:0; color: var(--muted); font-size: 14px}
+    .meta{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: #2e2a36;
+      font-size: 12px;
+    }
+    .tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(107,85,255,.08);
+      border: 1px solid rgba(107,85,255,.14);
+    }
+    .span-12{grid-column: span 12}
+
+    /* Writing / blog cards */
+    .post{
+      grid-column: span 4;
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
+    .post h3{margin: 8px 0 8px; font-size: 16px}
+    .post p{margin:0; color: var(--muted); font-size: 14px}
+
+    /* Skills */
+    .skills{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .skill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: #2e2a36;
+    }
+
+    /* Contact */
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .contact-card{
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(78,112,241,.10), rgba(255,123,189,.08)), rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .contact-card h3{margin:0 0 8px}
+    .contact-card p{margin:0 0 12px; color: var(--muted); font-size: 14px}
+    .contact-card a{ text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+    form{
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+      display:grid;
+      gap: 12px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display:block;
+      margin-bottom: 6px;
+    }
+    input, textarea{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea{min-height: 110px; resize: vertical}
+    input:focus, textarea:focus{border-color: rgba(107,85,255,.35)}
+
+    footer{
+      border-top: 1px solid var(--border);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot{
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .foot a{color: var(--muted); text-decoration:none}
+    .foot a:hover{color: var(--ink)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns: 1fr}
+      .poster{position: relative; top: 0}
+      h1{font-size: 44px}
+      .card{grid-column: span 12}
+      .post{grid-column: span 12}
+      .contact{grid-template-columns: 1fr}
+      .bullets{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size: 38px}
+      .id{min-width: auto}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="topbar">
+        <div class="id">
+          <div class="monogram" aria-hidden="true">RN</div>
+          <div>
+            <strong>Riley Nguyen</strong>
+            <span>Data Science • Graduating 2026</span>
+          </div>
+        </div>
+
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#writing">Writing</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="actions">
+          <a class="btn" href="#projects">View Work</a>
+          <a class="btn primary" href="#contact">Interview</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <aside class="poster" aria-label="Hero image poster">
+              <img src="assets/images/data-science-hero.png" alt="Data Science portfolio hero graphic" />
+              <div class="cap">
+                <strong>Projects • Analysis • Insights</strong>
+                <span>Portfolio poster (use as a homepage hero or cover image)</span>
+              </div>
+            </aside>
+
+            <div class="hero-copy">
+              <span class="kicker"><span class="dot" aria-hidden="true"></span> Data Science Portfolio</span>
+              <h1>Data you can explain. Models you can defend.</h1>
+              <p class="lead">
+                I’m a soon-to-graduate data science student focused on practical analytics and machine learning—
+                with an emphasis on reproducibility, clear evaluation, and stakeholder-ready storytelling.
+              </p>
+
+              <div class="cta">
+                <a class="btn primary" href="#projects">See Projects</a>
+                <a class="btn" href="#" onclick="alert('Replace this with a link to your resume PDF.'); return false;">Resume (PDF)</a>
+                <a class="btn" href="#" onclick="alert('Replace this with your GitHub URL.'); return false;">GitHub</a>
+              </div>
+
+              <ul class="bullets" aria-label="Highlights">
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>Measurement first:</strong> clear metrics, baselines, and error analysis.</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>Readable outputs:</strong> charts and narratives for non-technical audiences.</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>Reproducible work:</strong> notebooks, versioning, and documented assumptions.</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>Pragmatic ML:</strong> interpretability and deployment-minded pipelines.</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="section" id="projects">
+        <div class="container">
+          <h2>Projects</h2>
+          <p class="hint">Replace each card with real outcomes, links, and artifacts (notebooks, dashboards, demos).</p>
+
+          <div class="grid">
+            <article class="card">
+              <h3>Churn Prediction + Action Drivers</h3>
+              <p>Built a classification pipeline and translated top features into retention experiments and messaging.</p>
+              <div class="meta">
+                <span class="tag">Python</span><span class="tag">scikit-learn</span><span class="tag">SHAP</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>Forecasting: Demand & Capacity Planning</h3>
+              <p>Backtested time-series forecasts and communicated uncertainty with confidence intervals.</p>
+              <div class="meta">
+                <span class="tag">Time Series</span><span class="tag">Backtesting</span><span class="tag">Error Analysis</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>NLP: Review Insights Dashboard</h3>
+              <p>Extracted themes and sentiment to highlight product issues and wins; packaged results in a dashboard.</p>
+              <div class="meta">
+                <span class="tag">NLP</span><span class="tag">Embeddings</span><span class="tag">Topic Modeling</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>Experiment Design Playbook</h3>
+              <p>Created a lightweight framework for hypotheses, guardrails, power considerations, and interpretation.</p>
+              <div class="meta">
+                <span class="tag">Statistics</span><span class="tag">A/B Testing</span><span class="tag">Causal Thinking</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- WRITING -->
+      <section class="section" id="writing">
+        <div class="container">
+          <h2>Writing</h2>
+          <p class="hint">Short posts that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
+
+          <div class="grid">
+            <article class="post">
+              <div class="date">Case Note</div>
+              <h3>How I evaluate models beyond “accuracy”</h3>
+              <p>Picking metrics that reflect business cost, calibration, and the user experience of mistakes.</p>
+            </article>
+            <article class="post">
+              <div class="date">Explainer</div>
+              <h3>What makes a dashboard actually useful</h3>
+              <p>Definitions, ownership, refresh cadence, and the “so what” layer that drives action.</p>
+            </article>
+            <article class="post">
+              <div class="date">Toolkit</div>
+              <h3>My reproducible project checklist</h3>
+              <p>Data validation, versioning, clear assumptions, and artifact structure for clean handoffs.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>Skills</h2>
+          <p class="hint">Keep this aligned with the roles you want. Be specific and credible.</p>
+
+          <div class="grid">
+            <div class="card span-12">
+              <h3>Core</h3>
+              <div class="skills" aria-label="Skill chips">
+                <span class="skill">Python (Pandas, NumPy)</span>
+                <span class="skill">SQL (CTEs, window functions)</span>
+                <span class="skill">Machine Learning (classification, regression)</span>
+                <span class="skill">NLP (embeddings, sentiment)</span>
+                <span class="skill">Time Series (forecasting)</span>
+                <span class="skill">Statistics & experimentation</span>
+                <span class="skill">Visualization (Tableau/Power BI)</span>
+                <span class="skill">Storytelling & stakeholder communication</span>
+                <span class="skill">Git & reproducible notebooks</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>Contact</h2>
+          <p class="hint">Add your real email, LinkedIn, and location. This form is a demo until connected to a service.</p>
+
+          <div class="contact">
+            <div class="contact-card">
+              <h3>Let’s connect</h3>
+              <p>
+                I’m interviewing for internships and entry-level roles in analytics and data science.
+                If you’re hiring or want to talk about a project, I’d like to connect.
+              </p>
+              <p style="margin:0;">
+                <strong>Email:</strong> <a href="mailto:riley.nguyen@email.com">riley.nguyen@email.com</a><br/>
+                <strong>LinkedIn:</strong> <a href="#">linkedin.com/in/riley-nguyen</a><br/>
+                <strong>Location:</strong> Your City, State • Open to relocation
+              </p>
+            </div>
+
+            <form action="#" method="post">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Your name" />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Tell me about the role, team, and timeline."></textarea>
+              </div>
+              <button class="btn primary" type="submit">Send Message</button>
+              <p style="margin:0; color: var(--muted); font-size: 12px;">
+                Tip: Connect this form to Formspree/Netlify Forms, or replace with a mailto link.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="foot">
+          <span>© 2026 Riley Nguyen • Data Science Portfolio</span>
+          <span style="display:flex; gap:14px;">
+            <a href="#projects">Projects</a>
+            <a href="#writing">Writing</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

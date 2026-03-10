@@ -64,7 +64,7 @@ export async function handler(event) {
         { role: "system", content: "You are a portfolio website generator. Return JSON only." },
         { role: "user", content: prompt }
       ],
-      text: { format: { type: "json_schema", json_schema: SITE_JSON_SCHEMA } }
+      text: { format: { type: "json_schema", ...SITE_JSON_SCHEMA } }
     });
 
     const site_json = JSON.parse(resp.output_text);

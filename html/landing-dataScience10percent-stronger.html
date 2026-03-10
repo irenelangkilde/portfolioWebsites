@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Irene's Webworks Portfolio Websites | Data Science Grad Portfolios</title>
+  <meta name="description" content="Portfolio websites for data science graduates. Launch fast, show your projects clearly, and get 10% off this week with code DATASCI10." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b1220;
+      --bg-soft:#111a2e;
+      --panel:rgba(255,255,255,0.06);
+      --panel-2:rgba(255,255,255,0.09);
+      --border:rgba(255,255,255,0.12);
+      --text:#f4f7ff;
+      --muted:rgba(244,247,255,0.74);
+      --primary:#4E70F1;
+      --secondary:#F28B86;
+      --accent:#8DE0FF;
+      --ok:#9BE37A;
+      --shadow:0 18px 50px rgba(0,0,0,0.35);
+      --radius-xl:28px;
+      --radius-lg:20px;
+      --radius-md:14px;
+      --max:1120px;
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 540px at 10% 0%, rgba(78,112,241,.28), transparent 60%),
+        radial-gradient(850px 520px at 90% 10%, rgba(242,139,134,.18), transparent 60%),
+        radial-gradient(700px 500px at 50% 100%, rgba(141,224,255,.10), transparent 60%),
+        linear-gradient(180deg, #0b1220 0%, #0a1120 45%, #09101b 100%);
+      line-height:1.6;
+    }
+
+    a{text-decoration:none;color:inherit}
+    .container{max-width:var(--max);margin:0 auto;padding:0 20px}
+    .section{padding:72px 0}
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .eyebrow .dot{
+      width:10px;height:10px;border-radius:999px;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:14px 20px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:15px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+      color:var(--text);
+      cursor:pointer;
+      transition:transform .15s ease, opacity .15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn.primary{
+      border:none;
+      background:linear-gradient(135deg,var(--primary),#6d8bff);
+      box-shadow:0 18px 44px rgba(78,112,241,.28);
+    }
+    .btn.secondary{
+      border:none;
+      background:linear-gradient(135deg,var(--secondary),#ffb0a8);
+      color:#1c1420;
+      box-shadow:0 18px 44px rgba(242,139,134,.22);
+    }
+
+    .hero{
+      padding:40px 0 28px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:28px;
+      align-items:center;
+    }
+    .brand{
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-weight:700;
+      font-size:18px;
+      margin-bottom:18px;
+    }
+    h1{
+      margin:18px 0 14px;
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-size:58px;
+      line-height:1.02;
+      letter-spacing:-.03em;
+      max-width:12ch;
+    }
+    .hero p.lead{
+      margin:0 0 18px;
+      font-size:18px;
+      color:var(--muted);
+      max-width:58ch;
+    }
+
+    .offer-box{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+      margin:18px 0 22px;
+      padding:14px 16px;
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:linear-gradient(135deg, rgba(78,112,241,.16), rgba(242,139,134,.16));
+      box-shadow:var(--shadow);
+    }
+    .offer-tag{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.14);
+      font-size:13px;
+      font-weight:900;
+    }
+    .offer-copy{
+      font-size:14px;
+      font-weight:700;
+      color:rgba(255,255,255,.94);
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      margin-top:8px;
+    }
+
+    .trust-row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:18px;
+    }
+    .trust-pill{
+      padding:9px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid var(--border);
+      color:rgba(255,255,255,.86);
+      font-size:13px;
+    }
+
+    .hero-card{
+      border-radius:32px;
+      border:1px solid var(--border);
+      background:
+        radial-gradient(700px 500px at 18% 18%, rgba(78,112,241,.18), transparent 55%),
+        radial-gradient(600px 420px at 82% 68%, rgba(242,139,134,.16), transparent 55%),
+        rgba(255,255,255,.05);
+      box-shadow:var(--shadow);
+      padding:22px;
+    }
+
+    .preview{
+      border-radius:24px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.14);
+      background:#0d1527;
+    }
+    .preview-top{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:12px 14px;
+      background:rgba(255,255,255,.05);
+      border-bottom:1px solid rgba(255,255,255,.10);
+    }
+    .preview-dots{
+      display:flex;
+      gap:6px;
+    }
+    .preview-dots span{
+      width:9px;height:9px;border-radius:999px;background:rgba(255,255,255,.32);
+    }
+    .preview-label{
+      color:var(--muted);
+      font-size:12px;
+      font-weight:700;
+    }
+    .preview-body{
+      padding:18px;
+      display:grid;
+      gap:14px;
+      background:
+        linear-gradient(180deg, rgba(78,112,241,.08), transparent 35%),
+        #0b1220;
+    }
+    .preview-hero{
+      border-radius:20px;
+      padding:18px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.05);
+    }
+    .preview-hero h3{
+      margin:0 0 8px;
+      font-size:24px;
+      line-height:1.15;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .preview-hero p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+    .preview-grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:12px;
+    }
+    .preview-block{
+      min-height:94px;
+      border-radius:18px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      padding:14px;
+    }
+    .preview-block strong{
+      display:block;
+      margin-bottom:8px;
+      font-size:13px;
+    }
+    .bar{
+      height:10px;
+      border-radius:999px;
+      background:linear-gradient(90deg,var(--primary),var(--accent));
+      margin:8px 0;
+      opacity:.9;
+    }
+
+    .proof{
+      display:grid;
+      gap:14px;
+      margin-top:18px;
+    }
+    .proof-item{
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      padding:14px 16px;
+      color:var(--muted);
+      font-size:14px;
+    }
+    .proof-item strong{color:var(--text)}
+
+    h2{
+      margin:0 0 12px;
+      font-family:"Space Grotesk",Inter,sans-serif;
+      font-size:32px;
+      letter-spacing:-.02em;
+    }
+    .section p.intro{
+      margin:0;
+      max-width:70ch;
+      color:var(--muted);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(12,minmax(0,1fr));
+      gap:16px;
+      margin-top:22px;
+    }
+    .card{
+      grid-column:span 4;
+      border-radius:var(--radius-xl);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      padding:22px;
+      box-shadow:0 12px 36px rgba(0,0,0,.22);
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:18px;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .card p{
+      margin:0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .how{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-top:22px;
+    }
+    .step{
+      border-radius:var(--radius-xl);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      padding:22px;
+    }
+    .step-num{
+      width:40px;height:40px;
+      border-radius:999px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(135deg,var(--primary),var(--secondary));
+      color:#fff;
+      font-weight:900;
+      margin-bottom:12px;
+    }
+
+    .pricing{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:16px;
+      margin-top:22px;
+    }
+    .price-card{
+      border-radius:var(--radius-xl);
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      padding:24px;
+      box-shadow:0 12px 36px rgba(0,0,0,.22);
+    }
+    .price-card.featured{
+      background:
+        radial-gradient(800px 460px at 10% 10%, rgba(78,112,241,.18), transparent 55%),
+        radial-gradient(700px 400px at 88% 15%, rgba(242,139,134,.14), transparent 55%),
+        rgba(255,255,255,.07);
+      border-color:rgba(141,224,255,.22);
+      box-shadow:0 18px 50px rgba(78,112,241,.18);
+    }
+    .price-card .topline{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .badge{
+      padding:6px 10px;
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      border:1px solid var(--border);
+      color:rgba(255,255,255,.86);
+      font-size:12px;
+      font-weight:800;
+    }
+    .price{
+      margin:12px 0 6px;
+      font-size:40px;
+      line-height:1;
+      font-weight:900;
+      font-family:"Space Grotesk",Inter,sans-serif;
+    }
+    .price .old{
+      text-decoration:line-through;
+      color:rgba(255,255,255,.5);
+      font-size:18px;
+      margin-right:8px;
+      font-weight:700;
+    }
+    .price-note{
+      color:var(--muted);
+      font-size:13px;
+      margin-bottom:10px;
+    }
+    .features{
+      margin:14px 0 0;
+      padding-left:18px;
+      color:rgba(255,255,255,.88);
+      font-size:14px;
+    }
+    .features li{margin:6px 0}
+
+    .faq{
+      display:grid;
+      gap:12px;
+      margin-top:22px;
+    }
+    .faq details{
+      border-radius:18px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.05);
+      padding:14px 16px;
+    }
+    .faq summary{
+      cursor:pointer;
+      font-weight:800;
+    }
+    .faq p{
+      margin:10px 0 0;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .final-cta{
+      border-radius:32px;
+      border:1px solid var(--border);
+      background:
+        radial-gradient(850px 450px at 12% 18%, rgba(78,112,241,.24), transparent 55%),
+        radial-gradient(700px 400px at 88% 28%, rgba(242,139,134,.18), transparent 55%),
+        rgba(255,255,255,.06);
+      box-shadow:var(--shadow);
+      padding:30px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    footer{
+      border-top:1px solid rgba(255,255,255,.10);
+      padding:26px 0 40px;
+      color:var(--muted);
+      font-size:12px;
+    }
+
+    @media (max-width:1020px){
+      .hero-grid{grid-template-columns:1fr}
+      h1{font-size:46px}
+      .card{grid-column:span 12}
+      .how, .pricing{grid-template-columns:1fr}
+      .preview-grid{grid-template-columns:1fr}
+    }
+    @media (max-width:640px){
+      h1{font-size:38px}
+    }
+  </style>
+</head>
+<body>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="brand">Irene’s Webworks Portfolio Websites</div>
+
+        <div class="hero-grid">
+          <div>
+            <span class="eyebrow"><span class="dot"></span> One week only</span>
+
+            <h1>Help data science employers see your work, not just your resume.</h1>
+
+            <p class="lead">
+              Portfolio websites for data science graduates who want to showcase projects, models, dashboards, GitHub work, and technical skills in a clean, recruiter-friendly format.
+            </p>
+
+            <div class="offer-box">
+              <div class="offer-tag">10% OFF</div>
+              <div class="offer-copy">
+                Launch-week special. Use code <strong>DATASCI10</strong> at checkout on <strong>irenes-ventures.shop</strong>.
+              </div>
+            </div>
+
+            <div class="hero-actions">
+              <a class="btn primary" href="https://irenes-ventures.shop">Shop Templates</a>
+              <a class="btn" href="#pricing">See Pricing</a>
+            </div>
+
+            <div class="trust-row">
+              <span class="trust-pill">Built for data science grads</span>
+              <span class="trust-pill">Projects • GitHub • dashboards</span>
+              <span class="trust-pill">10% off for one week</span>
+            </div>
+          </div>
+
+          <div class="hero-card">
+            <div class="preview">
+              <div class="preview-top">
+                <div class="preview-dots"><span></span><span></span><span></span></div>
+                <div class="preview-label">Sample Portfolio Preview</div>
+              </div>
+              <div class="preview-body">
+                <div class="preview-hero">
+                  <h3>Data you can explain. Results you can prove.</h3>
+                  <p>Modern portfolio layout for projects, models, dashboards, technical stack, and recruiter-friendly highlights.</p>
+                </div>
+                <div class="preview-grid">
+                  <div class="preview-block">
+                    <strong>Projects</strong>
+                    <div class="bar"></div>
+                    <div class="bar" style="width:70%"></div>
+                    <div class="bar" style="width:54%"></div>
+                  </div>
+                  <div class="preview-block">
+                    <strong>Skills</strong>
+                    <div class="bar" style="width:82%"></div>
+                    <div class="bar" style="width:63%"></div>
+                    <div class="bar" style="width:48%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="proof">
+              <div class="proof-item"><strong>Clearer first impression:</strong> help hiring managers quickly understand what you’ve built and what tools you use.</div>
+              <div class="proof-item"><strong>Better than resume-only:</strong> show visual proof, links, and project outcomes in one place.</div>
+              <div class="proof-item"><strong>Fast launch:</strong> ideal for grads who want a polished site without spending weeks building from scratch.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>Why this converts better than a generic store page</h2>
+        <p class="intro">
+          This landing page is focused on one audience, one outcome, and one offer: helping data science graduates get a stronger online presence fast.
+        </p>
+
+        <div class="grid">
+          <article class="card">
+            <h3>Specific audience</h3>
+            <p>Data science graduates see immediately that the offer is meant for them, which increases relevance and click-through from ads and LinkedIn posts.</p>
+          </article>
+          <article class="card">
+            <h3>Specific value</h3>
+            <p>The copy focuses on projects, GitHub, dashboards, and evidence of technical skill — exactly what this audience needs to show.</p>
+          </article>
+          <article class="card">
+            <h3>Specific urgency</h3>
+            <p>The one-week 10% discount gives people a reason to act now instead of “saving it for later.”</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>What data science grads get</h2>
+        <p class="intro">A portfolio website store designed to help graduates look polished, credible, and easier to evaluate.</p>
+
+        <div class="how">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h3>Choose a template</h3>
+            <p>Pick a layout built to showcase projects, technical skills, visualizations, and results.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h3>Add your content</h3>
+            <p>Plug in your GitHub, project bullets, resume details, screenshots, and technical stack.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h3>Launch fast</h3>
+            <p>Go live with a site that helps employers understand your value more quickly than a resume alone.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="pricing">
+      <div class="container">
+        <h2>One-week launch pricing</h2>
+        <p class="intro">Use coupon code <strong>DATASCI10</strong> at <strong>irenes-ventures.shop</strong>.</p>
+
+        <div class="pricing">
+          <article class="price-card">
+            <div class="topline">
+              <h3>Starter Template</h3>
+              <span class="badge">DIY</span>
+            </div>
+            <div class="price"><span class="old">$49</span>$44</div>
+            <div class="price-note">One-time purchase</div>
+            <ul class="features">
+              <li>Data science portfolio template</li>
+              <li>Projects, skills, resume, contact sections</li>
+              <li>Fast customization</li>
+              <li>10% off with DATASCI10</li>
+            </ul>
+            <div style="margin-top:18px;">
+              <a class="btn primary" href="https://irenes-ventures.shop">Buy Starter</a>
+            </div>
+          </article>
+
+          <article class="price-card featured">
+            <div class="topline">
+              <h3>Template + Prompt Pack</h3>
+              <span class="badge">Most Popular</span>
+            </div>
+            <div class="price"><span class="old">$79</span>$71</div>
+            <div class="price-note">One-time purchase</div>
+            <ul class="features">
+              <li>Everything in Starter</li>
+              <li>AI prompts for project descriptions</li>
+              <li>Headline and summary prompts</li>
+              <li>Target-role positioning prompts</li>
+            </ul>
+            <div style="margin-top:18px;">
+              <a class="btn secondary" href="https://irenes-ventures.shop">Buy Prompt Pack</a>
+            </div>
+          </article>
+
+          <article class="price-card">
+            <div class="topline">
+              <h3>Premium Launch</h3>
+              <span class="badge">Guided</span>
+            </div>
+            <div class="price"><span class="old">$129</span>$116</div>
+            <div class="price-note">One-time purchase</div>
+            <ul class="features">
+              <li>Everything above</li>
+              <li>Extra refinement prompts</li>
+              <li>Premium layout option</li>
+              <li>Launch-week discount included</li>
+            </ul>
+            <div style="margin-top:18px;">
+              <a class="btn primary" href="https://irenes-ventures.shop">Buy Premium</a>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <h2>FAQ</h2>
+        <div class="faq">
+          <details>
+            <summary>Do I need to know web development?</summary>
+            <p>No. These templates are meant to help graduates launch quickly without building everything from scratch.</p>
+          </details>
+          <details>
+            <summary>Can I use this for analyst roles too?</summary>
+            <p>Yes. The structure works well for data analyst, BI, junior data scientist, and adjacent analytics roles.</p>
+          </details>
+          <details>
+            <summary>How long does the discount last?</summary>
+            <p>The DATASCI10 coupon is intended as a one-week launch offer.</p>
+          </details>
+          <details>
+            <summary>Can I customize the colors and content?</summary>
+            <p>Yes. You can update the visuals, rewrite the copy, and tailor project sections to your own work.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="final-cta">
+          <div>
+            <span class="eyebrow"><span class="dot"></span> 10% off for one week</span>
+            <h2 style="margin-top:14px;">Ready to launch your data science portfolio website?</h2>
+            <p class="intro" style="margin-top:8px; max-width:52ch;">
+              Make it easier for employers to review your projects, understand your skills, and remember your application.
+            </p>
+          </div>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <a class="btn secondary" href="https://irenes-ventures.shop">Shop at irenes-ventures.shop</a>
+            <a class="btn" href="https://irenes-ventures.shop">Use code DATASCI10</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      © 2026 Irene’s Webworks Portfolio Websites • irenes-ventures.shop
+    </div>
+  </footer>
+
+</body>
+</html>

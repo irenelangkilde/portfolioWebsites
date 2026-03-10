@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jordan Mitchell - Civil Engineering Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d97706;
+            --secondary: #059669;
+            --accent: #2563eb;
+            --dark: #1f2937;
+            --light: #f3f4f6;
+            --gray: #6b7280;
+            --orange: #ea580c;
+            --gradient: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #ffffff;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Roboto Slab', serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        nav .logo {
+            font-family: 'Roboto Slab', serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav .logo::before {
+            content: '🏗️';
+            font-size: 1.8rem;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--gradient);
+            color: white;
+            padding: 90px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.3;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-photo {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 5px solid white;
+            object-fit: cover;
+            margin: 0 auto 25px;
+            display: block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+        }
+
+        .hero h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .hero .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero .graduation {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 80px 0;
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            position: relative;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--gray);
+            font-size: 1.1rem;
+            margin-bottom: 50px;
+        }
+
+        section h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--gradient);
+            border-radius: 2px;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--light);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.8;
+        }
+
+        .about-content p {
+            margin-bottom: 20px;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .skill-category {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border-top: 4px solid var(--primary);
+        }
+
+        .skill-category:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .skill-category h3 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skill-icon {
+            font-size: 1.5rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            font-size: 0.85rem;
+            color: var(--gray);
+            font-weight: 600;
+        }
+
+        /* Projects Section */
+        .projects {
+            background: white;
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .project-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+
+        .project-image {
+            width: 100%;
+            height: 220px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            color: white;
+            background: var(--gradient);
+            position: relative;
+        }
+
+        .project-image.structural {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .project-image.transportation {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .project-image.water {
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        }
+
+        .project-image.geotechnical {
+            background: linear-gradient(135deg, #92400e 0%, #78350f 100%);
+        }
+
+        .project-image.environmental {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        }
+
+        .project-content {
+            padding: 25px;
+        }
+
+        .project-content h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+        }
+
+        .project-type {
+            display: inline-block;
+            background: var(--light);
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .project-content p {
+            color: var(--gray);
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tech-tag {
+            background: var(--light);
+            color: var(--dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        /* Resume Section */
+        .resume {
+            background: var(--light);
+        }
+
+        .resume-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .resume-section {
+            margin-bottom: 40px;
+        }
+
+        .resume-section h3 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+        }
+
+        .resume-item {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--primary);
+        }
+
+        .resume-item h4 {
+            color: var(--dark);
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+        }
+
+        .resume-item .meta {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .resume-item ul {
+            margin-left: 20px;
+            color: var(--dark);
+        }
+
+        .resume-item ul li {
+            margin-bottom: 8px;
+        }
+
+        .download-resume {
+            text-align: center;
+            margin-top: 40px;
+        }
+
+        /* Certifications */
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .cert-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            border-left: 4px solid var(--secondary);
+        }
+
+        .cert-item h5 {
+            color: var(--secondary);
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: white;
+        }
+
+        .contact-content {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .contact-item {
+            background: var(--light);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+        }
+
+        .contact-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+
+        .contact-item a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        .social-links a {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 30px 0;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+
+            section h2 {
+                font-size: 2rem;
+            }
+
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Jordan Mitchell</div>
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#resume">Resume</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f59e0b;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23dc2626;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='180' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='white' font-weight='bold'%3EJM%3C/text%3E%3C/svg%3E" alt="Jordan Mitchell" class="profile-photo">
+            <h1>Jordan Mitchell</h1>
+            <p class="subtitle">Civil Engineering Student</p>
+            <p class="graduation">🎓 BS in Civil Engineering | Graduating Spring 2026 | EIT Eligible</p>
+            <div class="cta-buttons">
+                <a href="#projects" class="btn btn-primary">View Projects</a>
+                <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About Me</h2>
+            <p class="section-subtitle">Building the infrastructure of tomorrow</p>
+            <div class="about-content">
+                <p>I'm a dedicated Civil Engineering student with a passion for designing sustainable infrastructure that improves communities. My experience spans structural design, transportation planning, water resources, and project management.</p>
+                <p>Through coursework, internships, and hands-on projects, I've developed strong technical skills in structural analysis, CAD design, and project coordination. I'm particularly interested in sustainable design practices and innovative construction methods that reduce environmental impact.</p>
+                <p>I'm seeking full-time civil engineering positions starting Summer 2026 where I can contribute to meaningful infrastructure projects and work alongside experienced professionals to develop practical, efficient, and sustainable solutions.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="container">
+            <h2>Technical Skills</h2>
+            <p class="section-subtitle">Comprehensive engineering competencies and software proficiency</p>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🖥️</span>Design Software</h3>
+                    <ul class="skill-list">
+                        <li><span>AutoCAD Civil 3D</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Revit</span><span class="skill-level">Proficient</span></li>
+                        <li><span>SAP2000</span><span class="skill-level">Proficient</span></li>
+                        <li><span>ETABS</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>MicroStation</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>SketchUp</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">📊</span>Analysis & Modeling</h3>
+                    <ul class="skill-list">
+                        <li><span>STAAD.Pro</span><span class="skill-level">Proficient</span></li>
+                        <li><span>MATLAB</span><span class="skill-level">Proficient</span></li>
+                        <li><span>HEC-RAS</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>PLAXIS</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>Bluebeam Revu</span><span class="skill-level">Advanced</span></li>
+                        <li><span>MS Project</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🏗️</span>Core Competencies</h3>
+                    <ul class="skill-list">
+                        <li><span>Structural Analysis</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Foundation Design</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Concrete & Steel Design</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Highway Design</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Hydrology & Hydraulics</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>Geotechnical Engineering</span><span class="skill-level">Intermediate</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🛠️</span>Professional Skills</h3>
+                    <ul class="skill-list">
+                        <li><span>Project Management</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Technical Writing</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Cost Estimation</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Site Surveying</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Construction Management</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>Quality Control</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2>Featured Projects</h2>
+            <p class="section-subtitle">Design and analysis work across multiple civil engineering disciplines</p>
+            <div class="projects-grid">
+                <div class="project-card">
+                    <div class="project-image structural">🌉</div>
+                    <div class="project-content">
+                        <span class="project-type">Structural Engineering</span>
+                        <h3>Pedestrian Bridge Design</h3>
+                        <p>Designed a 120-foot steel truss pedestrian bridge for a university campus. Performed structural analysis using SAP2000, detailed connection designs, and prepared complete construction drawings in AutoCAD.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">SAP2000</span>
+                            <span class="tech-tag">AutoCAD</span>
+                            <span class="tech-tag">Steel Design</span>
+                            <span class="tech-tag">Load Analysis</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image transportation">🛣️</div>
+                    <div class="project-content">
+                        <span class="project-type">Transportation</span>
+                        <h3>Highway Intersection Redesign</h3>
+                        <p>Analyzed traffic flow and proposed intersection improvements to reduce congestion and enhance safety. Created geometric designs using Civil 3D and conducted capacity analysis following HCM guidelines.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Civil 3D</span>
+                            <span class="tech-tag">Traffic Analysis</span>
+                            <span class="tech-tag">HCM</span>
+                            <span class="tech-tag">Safety Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image">🏢</div>
+                    <div class="project-content">
+                        <span class="project-type">Structural Engineering</span>
+                        <h3>Multi-Story Building Analysis</h3>
+                        <p>Conducted structural analysis of a 5-story reinforced concrete office building. Designed beams, columns, and foundation system. Prepared detailed structural drawings and calculations per ACI 318 code.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">ETABS</span>
+                            <span class="tech-tag">Revit</span>
+                            <span class="tech-tag">Concrete Design</span>
+                            <span class="tech-tag">ACI 318</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image water">💧</div>
+                    <div class="project-content">
+                        <span class="project-type">Water Resources</span>
+                        <h3>Stormwater Management System</h3>
+                        <p>Designed a stormwater management system for a 50-acre residential development. Performed hydrologic calculations, sized detention basins, and created grading plans using Civil 3D.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">HEC-RAS</span>
+                            <span class="tech-tag">Civil 3D</span>
+                            <span class="tech-tag">Hydrology</span>
+                            <span class="tech-tag">BMP Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image geotechnical">⛏️</div>
+                    <div class="project-content">
+                        <span class="project-type">Geotechnical</span>
+                        <h3>Retaining Wall Design</h3>
+                        <p>Designed a 15-foot cantilever retaining wall for a hillside development. Performed soil pressure calculations, stability analysis, and reinforcement design. Created detailed construction documents.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Geotechnical Analysis</span>
+                            <span class="tech-tag">AutoCAD</span>
+                            <span class="tech-tag">Soil Mechanics</span>
+                            <span class="tech-tag">Concrete Design</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="project-card">
+                    <div class="project-image environmental">🌱</div>
+                    <div class="project-content">
+                        <span class="project-type">Environmental</span>
+                        <h3>Sustainable Campus Design</h3>
+                        <p>Senior capstone project focusing on sustainable infrastructure for a university quad. Integrated green stormwater infrastructure, permeable pavements, and energy-efficient lighting design.</p>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Sustainability</span>
+                            <span class="tech-tag">Civil 3D</span>
+                            <span class="tech-tag">Green Infrastructure</span>
+                            <span class="tech-tag">LEED</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resume Section -->
+    <section id="resume" class="resume">
+        <div class="container">
+            <h2>Resume</h2>
+            <p class="section-subtitle">Professional experience and academic achievements</p>
+            <div class="resume-content">
+                <div class="resume-section">
+                    <h3>Education</h3>
+                    <div class="resume-item">
+                        <h4>Bachelor of Science in Civil Engineering</h4>
+                        <div class="meta">
+                            <span>📍 State University</span>
+                            <span>📅 Expected Graduation: May 2026</span>
+                            <span>🎯 GPA: 3.8/4.0</span>
+                        </div>
+                        <ul>
+                            <li>ABET-accredited program | Dean's List all semesters</li>
+                            <li>Concentration: Structural Engineering</li>
+                            <li>Senior Design Project: Sustainable Campus Infrastructure Redesign</li>
+                            <li>Relevant Coursework: Structural Analysis, Steel Design, Concrete Design, Foundation Engineering, Transportation Engineering, Hydraulics, Geotechnical Engineering, Construction Management</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Experience</h3>
+                    <div class="resume-item">
+                        <h4>Civil Engineering Intern</h4>
+                        <div class="meta">
+                            <span>📍 Engineering Consultants Inc.</span>
+                            <span>📅 Summer 2025</span>
+                        </div>
+                        <ul>
+                            <li>Assisted senior engineers in structural design of commercial and residential projects</li>
+                            <li>Prepared construction drawings and specifications using AutoCAD and Revit</li>
+                            <li>Conducted site visits to monitor construction progress and verify compliance with plans</li>
+                            <li>Performed structural calculations for beams, columns, and foundations</li>
+                            <li>Coordinated with architects and contractors to resolve design issues</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Transportation Engineering Intern</h4>
+                        <div class="meta">
+                            <span>📍 Department of Transportation</span>
+                            <span>📅 Summer 2024</span>
+                        </div>
+                        <ul>
+                            <li>Supported highway design projects including roadway geometry and drainage design</li>
+                            <li>Conducted traffic studies and analyzed data to improve intersection safety</li>
+                            <li>Used Civil 3D to develop grading plans and cross-sections for highway projects</li>
+                            <li>Reviewed construction plans and prepared quantity estimates for bid packages</li>
+                            <li>Participated in field inspections and documented site conditions</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Engineering Lab Assistant</h4>
+                        <div class="meta">
+                            <span>📍 University Civil Engineering Department</span>
+                            <span>📅 Sep 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Assist students in materials testing lab with concrete, soil, and steel tests</li>
+                            <li>Maintain lab equipment and prepare specimens for testing</li>
+                            <li>Grade lab reports and provide guidance on proper testing procedures</li>
+                            <li>Help students understand material properties and engineering principles</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Certifications & Training</h3>
+                    <div class="cert-grid">
+                        <div class="cert-item">
+                            <h5>FE Exam (EIT)</h5>
+                            <p>Scheduled for April 2026</p>
+                        </div>
+                        <div class="cert-item">
+                            <h5>OSHA 10-Hour</h5>
+                            <p>Construction Safety - 2024</p>
+                        </div>
+                        <div class="cert-item">
+                            <h5>AutoCAD Certified</h5>
+                            <p>Autodesk - 2024</p>
+                        </div>
+                        <div class="cert-item">
+                            <h5>First Aid & CPR</h5>
+                            <p>American Red Cross - 2024</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Leadership & Activities</h3>
+                    <div class="resume-item">
+                        <h4>American Society of Civil Engineers (ASCE) - Vice President</h4>
+                        <div class="meta">
+                            <span>📅 Sep 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Organize professional development workshops and industry networking events</li>
+                            <li>Coordinate student chapter activities with 80+ members</li>
+                            <li>Lead team in ASCE Steel Bridge Competition (Regional 2nd Place - 2024)</li>
+                            <li>Mentor freshman engineering students through peer mentorship program</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Concrete Canoe Team - Design Lead</h4>
+                        <div class="meta">
+                            <span>📅 Jan 2024 - May 2024</span>
+                        </div>
+                        <ul>
+                            <li>Led team of 12 students in designing and building concrete canoe for regional competition</li>
+                            <li>Performed mix design testing and structural analysis</li>
+                            <li>Managed project timeline and coordinated with team members</li>
+                            <li>Placed 3rd in Regional Competition</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="download-resume">
+                    <a href="#" class="btn btn-primary">📄 Download Full Resume (PDF)</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Get In Touch</h2>
+            <p class="section-subtitle">Available for full-time positions starting Summer 2026</p>
+            <div class="contact-content">
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>📧 Email</h3>
+                        <a href="mailto:jordan.mitchell@email.com">jordan.mitchell@email.com</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📱 Phone</h3>
+                        <a href="tel:+15554567890">(555) 456-7890</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📍 Location</h3>
+                        <p>Denver, CO<br>Open to Relocation</p>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://linkedin.com/in/jordanmitchell" target="_blank" title="LinkedIn">in</a>
+                    <a href="https://github.com/jordanmitchell" target="_blank" title="GitHub">💻</a>
+                    <a href="mailto:jordan.mitchell@email.com" title="Email">✉️</a>
+                </div>
+
+                <p style="margin-top: 30px; color: var(--gray);">Interested in structural design, transportation, and sustainable infrastructure projects</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Jordan Mitchell | Civil Engineering Portfolio</p>
+            <p style="margin-top: 5px; font-size: 0.9rem;">Building infrastructure for a better tomorrow</p>
+        </div>
+    </footer>
+</body>
+</html>
