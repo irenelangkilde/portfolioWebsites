@@ -37,12 +37,11 @@ function renderCards(items, fields) {
   }).join("");
 }
 
-function renderSkills(skillsObj) {
-  const entries = Object.entries(skillsObj || {});
-  return entries.map(([cat, skills]) => `
+function renderSkills(skillsArr) {
+  return (skillsArr || []).map(({ category, items }) => `
     <div class="skill-col">
-      <h3>${escapeHTML(cat)}</h3>
-      ${renderList(skills)}
+      <h3>${escapeHTML(category)}</h3>
+      ${renderList(items)}
     </div>
   `).join("");
 }

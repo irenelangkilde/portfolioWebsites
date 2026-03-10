@@ -86,13 +86,18 @@ export const SITE_JSON_SCHEMA = {
             maxItems: 3
           },
           skills: {
-            type: "object",
-            additionalProperties: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 2,
-              maxItems: 10
-            }
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                items: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 10 }
+              },
+              required: ["category", "items"]
+            },
+            minItems: 1,
+            maxItems: 6
           },
           certifications: { type: "array", items: { type: "string" }, minItems: 0, maxItems: 8 },
           cta: {

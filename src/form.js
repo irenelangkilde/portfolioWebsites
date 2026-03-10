@@ -315,6 +315,7 @@
       const err = validatePage1Lenient();
       if (err) throw new Error(err);
 
+      const page0 = 
       const page1 = getPage1();
       const page2 = getPage2();
 

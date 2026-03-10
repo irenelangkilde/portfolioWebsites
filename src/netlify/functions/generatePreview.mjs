@@ -98,13 +98,18 @@ const SITE_JSON_SCHEMA = {
             maxItems: 3
           },
           skills: {
-            type: "object",
-            additionalProperties: {
-              type: "array",
-              items: { type: "string" },
-              minItems: 2,
-              maxItems: 10
-            }
+            type: "array",
+            items: {
+              type: "object",
+              additionalProperties: false,
+              properties: {
+                category: { type: "string" },
+                items: { type: "array", items: { type: "string" }, minItems: 2, maxItems: 10 }
+              },
+              required: ["category", "items"]
+            },
+            minItems: 1,
+            maxItems: 6
           },
           certifications: { type: "array", items: { type: "string" }, minItems: 0, maxItems: 8 },
           cta: {
@@ -165,12 +170,11 @@ function renderCards(items, fields) {
   }).join("");
 }
 
-function renderSkills(skillsObj) {
-  const entries = Object.entries(skillsObj || {});
-  return entries.map(([cat, skills]) => `
+function renderSkills(skillsArr) {
+  return (skillsArr || []).map(({ category, items }) => `
     <div class="skill-col">
-      <h3>${escapeHTML(cat)}</h3>
-      ${renderList(skills)}
+      <h3>${escapeHTML(category)}</h3>
+      ${renderList(items)}
     </div>
   `).join("");
 }
