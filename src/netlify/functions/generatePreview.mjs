@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -10,11 +10,9 @@ import { resolve } from "path";
  * Output: { site_html: "<!doctype html>..." }
  *
  * Env var required:
- *   OPENAI_API_KEY=...
+ *   ANTHROPIC_API_KEY=...
  */
 
-// Read the prompt template at request time from the project root (process.cwd()).
-// This avoids bundling issues — the file is read from disk, not from the bundle.
 function loadPromptTemplate() {
   const cwd = process.cwd();
   const p1 = resolve(cwd, "src/FirstOutputPrompt.txt");
@@ -37,7 +35,6 @@ async function fetchSampleHtml(url) {
     });
     if (!res.ok) return "";
     const html = await res.text();
-    // Trim to ~12 KB to keep prompt size manageable and avoid timeouts
     return html.slice(0, 12000);
   } catch {
     return "";
@@ -50,15 +47,15 @@ export async function handler(event) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY) {
       return {
         statusCode: 500,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ error: "OPENAI_API_KEY is not set. Add it to your .env file or Netlify environment variables." })
+        body: JSON.stringify({ error: "ANTHROPIC_API_KEY is not set. Add it to your .env file." })
       };
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
     const { page1 = {}, page2 = {}, resumeText = "" } = JSON.parse(event.body || "{}");
 
@@ -81,14 +78,13 @@ export async function handler(event) {
     };
 
     const contactInfo = {
-      name:        page1.name        || "",
-      email:       page1.email       || "",
-      phone:       page1.phone       || "",
-      linkedin:    page1.linkedin    || "",
-      github:      page1.github      || ""
+      name:     page1.name     || "",
+      email:    page1.email    || "",
+      phone:    page1.phone    || "",
+      linkedin: page1.linkedin || "",
+      github:   page1.github   || ""
     };
 
-    // Fetch sample website HTML if a model_template URL was provided
     const sampleHtml = await fetchSampleHtml(page1.model_template);
 
     const prompt = fillTemplate(PROMPT_TEMPLATE, {
@@ -102,19 +98,16 @@ export async function handler(event) {
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)"
     });
 
-    const resp = await client.responses.create({
-      model: "gpt-4o-mini",
-      max_output_tokens: 6000,
-      input: [
-        {
-          role: "system",
-          content: "You are an expert portfolio-website generator. Return only a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML."
-        },
+    const msg = await client.messages.create({
+      model: "claude-haiku-4-5-20251001",
+      max_tokens: 6000,
+      system: "You are an expert portfolio-website generator. Return only a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML.",
+      messages: [
         { role: "user", content: prompt }
       ]
     });
 
-    const site_html = resp.output_text;
+    const site_html = msg.content[0].text;
 
     return {
       statusCode: 200,
