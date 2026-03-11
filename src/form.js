@@ -74,8 +74,33 @@
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 600);
     }
-    function copyToClipboard(text){
-      navigator.clipboard?.writeText?.(text).catch(() => {});
+    function copyToClipboard(text, btn){
+      const label = btn?.textContent;
+      const done = () => {
+        if (!btn) return;
+        btn.textContent = "Copied!";
+        btn.style.background = "#4CAF50";
+        btn.style.color = "#fff";
+        setTimeout(() => {
+          btn.textContent = label;
+          btn.style.background = "";
+          btn.style.color = "";
+        }, 1800);
+      };
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallback(text, done));
+      } else {
+        fallback(text, done);
+      }
+    }
+    function fallback(text, done){
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.style.cssText = "position:fixed;opacity:0;pointer-events:none";
+      document.body.appendChild(el);
+      el.select();
+      try { document.execCommand("copy"); done(); } catch {}
+      document.body.removeChild(el);
     }
 
     // ----------------------------
@@ -315,7 +340,6 @@
       const err = validatePage1Lenient();
       if (err) throw new Error(err);
 
-      const page0 = 
       const page1 = getPage1();
       const page2 = getPage2();
 
@@ -355,17 +379,17 @@
       if (!previewDraft) return;
       downloadText("portfolio_preview.json", JSON.stringify(previewDraft.site_json, null, 2), "application/json");
     });
-    document.getElementById("cpJson2").addEventListener("click", () => {
+    document.getElementById("cpJson2").addEventListener("click", function() {
       if (!previewDraft) return;
-      copyToClipboard(JSON.stringify(previewDraft.site_json, null, 2));
+      copyToClipboard(JSON.stringify(previewDraft.site_json, null, 2), this);
     });
     document.getElementById("dlHtml2").addEventListener("click", () => {
       if (!previewDraft) return;
       downloadText("portfolio_preview.html", previewDraft.site_html, "text/html");
     });
-    document.getElementById("cpHtml2").addEventListener("click", () => {
+    document.getElementById("cpHtml2").addEventListener("click", function() {
       if (!previewDraft) return;
-      copyToClipboard(previewDraft.site_html);
+      copyToClipboard(previewDraft.site_html, this);
     });
 
     // ----------------------------
