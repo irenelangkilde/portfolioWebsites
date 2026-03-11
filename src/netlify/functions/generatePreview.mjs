@@ -16,12 +16,12 @@ import { resolve } from "path";
 // Read the prompt template at request time from the project root (process.cwd()).
 // This avoids bundling issues — the file is read from disk, not from the bundle.
 function loadPromptTemplate() {
-  try {
-    return readFileSync(resolve(process.cwd(), "src/FirstOutputPrompt.txt"), "utf-8");
-  } catch {
-    // Fallback: try path relative to this file's original source location
-    return readFileSync(resolve(process.cwd(), "FirstOutputPrompt.txt"), "utf-8");
-  }
+  const cwd = process.cwd();
+  const p1 = resolve(cwd, "src/FirstOutputPrompt.txt");
+  try { return readFileSync(p1, "utf-8"); } catch {}
+  const p2 = resolve(cwd, "FirstOutputPrompt.txt");
+  try { return readFileSync(p2, "utf-8"); } catch {}
+  throw new Error(`Cannot find FirstOutputPrompt.txt. Tried: "${p1}" and "${p2}" (cwd: "${cwd}")`);
 }
 
 function fillTemplate(template, vars) {

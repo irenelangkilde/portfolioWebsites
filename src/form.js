@@ -383,9 +383,11 @@
         body: JSON.stringify({ page1, page2 })
       });
 
-      const data = await res.json().catch(() => ({}));
+      const rawText = await res.text();
+      let data = {};
+      try { data = JSON.parse(rawText); } catch {}
       if (!res.ok) {
-        throw new Error(data?.error || "Preview generation failed. (Is your Netlify function deployed?)");
+        throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
       }
 
       previewDraft = data;
