@@ -100,12 +100,27 @@ export async function handler(event) {
 
     const msg = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 6000,
-      system: "You are an expert portfolio-website generator. Return only a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML.",
+      max_tokens: 7500,
+      system: [
+        "You are an expert portfolio-website generator.",
+        "Return ONLY a complete standalone HTML file with embedded CSS.",
+        "No markdown fences, no commentary before or after the HTML.",
+        "IMPORTANT: Keep total output under 7000 tokens.",
+        "Be concise: 2-3 bullet points per section, compact single-line CSS rules, no excessive whitespace.",
+        "The site must be complete — do not cut off mid-tag or mid-section."
+      ].join(" "),
       messages: [
         { role: "user", content: prompt }
       ]
     });
+
+    if (msg.stop_reason === "max_tokens") {
+      return {
+        statusCode: 500,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ error: "Generated HTML was truncated (max_tokens limit hit). Try a simpler color scheme or shorter specialization." })
+      };
+    }
 
     const site_html = msg.content[0].text;
 

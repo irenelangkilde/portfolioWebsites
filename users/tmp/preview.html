@@ -1,207 +1,574 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Joel Kartchner — Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joel Kartchner — Electrical Engineering & Laser Specialization</title>
+  <meta name="description" content="Portfolio of Joel Kartchner, Electrical Engineering graduate specializing in laser systems and photonics." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --primary:#ff6b6b; --secondary:#ffa07a; --accent:#ffe66d;
-      --dark:#4ecdc4; --light:#1a535c;
-      --panel: rgba(255,255,255,0.06);
-      --border: rgba(255,255,255,0.14);
-      --shadow: 0 10px 30px rgba(0,0,0,0.35);
-      --radius: 14px;
-      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    :root {
+      --primary: #ff6b6b;
+      --secondary: #ffa07a;
+      --accent: #ffe66d;
+      --dark: #4ecdc4;
+      --light: #1a535c;
+      --bg: #fbfaf8;
+      --paper: #ffffff;
+      --ink: #15141a;
+      --muted: #5f5b66;
+      --soft: #ece9e2;
+      --border: rgba(21,20,26,.10);
+      --shadow: 0 18px 55px rgba(10,10,20,.10);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --max: 1120px;
     }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:var(--font); color:var(--light);
-      background:
-        radial-gradient(900px 520px at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
-        radial-gradient(900px 520px at 85% 0%, color-mix(in oklab, var(--secondary) 18%, transparent), transparent 60%),
-        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
-        var(--dark);
-      line-height:1.5;
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: radial-gradient(1000px 600px at 12% 0%, rgba(255,107,107,.08), transparent 55%), radial-gradient(900px 560px at 88% 12%, rgba(255,160,122,.08), transparent 55%), linear-gradient(180deg, var(--bg), #f7f6f3);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
     }
-    a{ color:var(--accent); text-decoration:none }
-    a:hover{ text-decoration:underline }
-    .wrap{ max-width: 980px; margin: 0 auto; padding: 24px 16px 56px; }
-    header{
-      background: linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
-      border:1px solid var(--border); border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 18px;
-      display:grid;
-      gap:10px;
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(251,250,248,.82);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
     }
-    .name{ font-size: 30px; font-weight: 900; margin:0; letter-spacing:.2px }
-    .headline{ font-size: 16px; font-weight: 800; margin:0; color: rgba(234,240,255,.95) }
-    .subtitle{ margin:0; color: rgba(234,240,255,.75) }
-    .contact{ display:flex; gap:12px; flex-wrap:wrap; font-size: 14px; color: rgba(234,240,255,.85) }
-    nav{
-      position: sticky; top: 0; z-index: 10;
-      margin: 14px 0;
-      background: rgba(11,18,32,.70);
-      border:1px solid var(--border);
-      border-radius: 999px;
-      padding: 10px 12px;
-      backdrop-filter: blur(6px);
-      display:flex; gap: 12px; flex-wrap:wrap;
+    .topbar {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
     }
-    nav a{ font-weight: 800; font-size: 13px; color: rgba(234,240,255,.88) }
-    section{
-      margin-top: 14px;
-      background: var(--panel);
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 16px;
+    .id {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 200px;
     }
-    h2{ margin:0 0 10px; font-size: 16px; letter-spacing:.2px }
-    .muted{ color: rgba(234,240,255,.70) }
-    .grid2{ display:grid; grid-template-columns: 1fr; gap: 12px; }
-    @media (min-width: 860px){ .grid2{ grid-template-columns: 1fr 1fr; } }
-    .card{
-      border:1px solid rgba(255,255,255,.12);
-      background: rgba(0,0,0,.20);
+    .monogram {
+      width: 40px;
+      height: 40px;
       border-radius: 14px;
-      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      box-shadow: 0 8px 20px rgba(255,107,107,.25);
+      font-size: 14px;
     }
-    .card-top h3{ margin:0 0 6px; font-size: 14.5px }
-    .meta-line{
-      display:flex; gap: 10px; flex-wrap:wrap;
-      font-size: 12.5px;
+    .id strong { display: block; font-family: "Playfair Display", Georgia, serif; letter-spacing: -.01em; }
+    .id span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+
+    nav ul {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      color: var(--muted);
+      font-size: 14px;
     }
-    ul{ margin:8px 0 0; padding-left: 18px; }
-    li{ margin: 5px 0; }
-    .skills{ display:grid; grid-template-columns: 1fr; gap: 10px; }
-    @media (min-width: 860px){ .skills{ grid-template-columns: 1fr 1fr; } }
-    .skill-col h3{ margin:0 0 6px; font-size: 13.5px }
-    .cta{
-      display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap:wrap;
-      background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 40%, transparent), color-mix(in oklab, var(--accent) 25%, transparent));
-      border:1px solid rgba(255,255,255,.16);
+    nav a {
+      padding: 8px 10px;
+      border-radius: 999px;
+      transition: all 160ms ease;
     }
-    .btn{
-      display:inline-block;
+    nav a:hover {
+      background: rgba(255,107,107,.10);
+      color: var(--primary);
+    }
+
+    .actions { display: flex; gap: 12px; align-items: center; }
+    .btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 160ms ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,107,107,.15); }
+    .btn.primary {
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+
+    .wrap { min-height: 100%; display: flex; flex-direction: column; }
+    main { flex: 1; }
+    .container { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+
+    .hero { padding: 28px 0 14px; }
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .poster {
+      border-radius: 28px;
+      overflow: hidden;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 84px;
+    }
+    .poster img { width: 100%; height: auto; }
+    .poster .cap {
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--paper), rgba(251,250,248,.9));
+    }
+    .cap strong { display: block; font-size: 14px; }
+    .cap span { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
+
+    .hero-copy {
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,107,107,.10);
+      color: var(--primary);
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(255,107,107,.20);
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+    }
+    h1 {
+      margin: 12px 0 10px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .lead {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 70ch;
+    }
+    .bullets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style: none;
+      color: #2e2a36;
+      font-size: 14px;
+    }
+    .bullets li {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
       padding: 10px 12px;
-      border-radius: 12px;
-      background: rgba(255,255,255,.10);
-      border: 1px solid rgba(255,255,255,.16);
-      font-weight: 900;
+      border-radius: 16px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
     }
-    footer{ margin-top: 16px; text-align:center; color: rgba(234,240,255,.70); font-size: 12.5px; }
+    .tick {
+      width: 20px;
+      height: 20px;
+      border-radius: 999px;
+      background: rgba(255,107,107,.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255,107,107,.20);
+      flex: 0 0 auto;
+      margin-top: 2px;
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 600;
+    }
+    .cta {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    .section { padding: 42px 0; }
+    .section h2 {
+      margin: 0 0 8px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -.01em;
+      color: var(--ink);
+    }
+    .hint { margin: 0; color: var(--muted); max-width: 75ch; font-size: 15px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card {
+      grid-column: span 6;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+      position: relative;
+      overflow: hidden;
+      transition: all 180ms ease;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 18px 48px rgba(255,107,107,.12); }
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: -40%;
+      background: radial-gradient(circle at 30% 30%, rgba(255,107,107,.08), transparent 45%), radial-gradient(circle at 70% 70%, rgba(255,160,122,.08), transparent 45%);
+      opacity: .9;
+      pointer-events: none;
+      transform: rotate(8deg);
+    }
+    .card > * { position: relative; }
+    .card h3 {
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+      color: var(--ink);
+    }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: #2e2a36;
+      font-size: 12px;
+    }
+    .tag {
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,107,107,.10);
+      border: 1px solid rgba(255,107,107,.18);
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .span-12 { grid-column: span 12; }
+
+    .skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .skill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: #2e2a36;
+      transition: all 140ms ease;
+    }
+    .skill:hover { background: rgba(255,107,107,.12); border-color: rgba(255,107,107,.20); }
+
+    .contact {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .contact-card {
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(255,107,107,.08), rgba(255,160,122,.06)), rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .contact-card h3 { margin: 0 0 8px; }
+    .contact-card p { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
+    .contact-card a { text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; color: var(--primary); }
+
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .foot a { color: var(--muted); }
+    .foot a:hover { color: var(--primary); }
+
+    @media (max-width: 980px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .poster { position: relative; top: 0; }
+      h1 { font-size: 44px; }
+      .card { grid-column: span 12; }
+      .contact { grid-template-columns: 1fr; }
+      .bullets { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 560px) {
+      nav ul li:nth-child(-n+2) { display: none; }
+      h1 { font-size: 38px; }
+      .id { min-width: auto; }
+      .topbar { padding: 12px 16px; }
+    }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <header>
-      <h1 class="name">Joel Kartchner</h1>
-      <p class="headline">Electrical Engineer specializing in lasers | Delivering innovative solutions</p>
-      <p class="subtitle">Aspiring engineer with a passion for advanced laser technologies.</p>
-      <div class="contact">
-        <span>irene.langkilde71@gmail.com</span>
-        <span>(801) 477-4185</span>
-        <span><a href="" target="_blank" rel="noopener">LinkedIn</a></span>
+      <div class="topbar">
+        <div class="id">
+          <div class="monogram" aria-hidden="true">JK</div>
+          <div>
+            <strong>Joel Kartchner</strong>
+            <span>Electrical Engineering • Lasers</span>
+          </div>
+        </div>
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+        <div class="actions">
+          <a href="mailto:irene.langkilde71@gmail.com" class="btn primary">Get in Touch</a>
+        </div>
       </div>
     </header>
 
-    <nav>
-      <a href="#about">About</a>
-      <a href="#education">Education</a>
-      <a href="#experience">Experience</a>
-      <a href="#projects">Projects</a>
-      <a href="#skills">Skills</a>
-      <a href="#certs">Certifications</a>
-      <a href="#contact">Contact</a>
-    </nav>
-
-    <section id="about">
-      <h2>About</h2>
-      <p>Electrical Engineer with a focus on lasers, dedicated to pushing the boundaries of technology.</p><p>Committed to solving complex engineering challenges while contributing to team success.</p>
-    </section>
-
-    <section id="education">
-      <h2>Education</h2>
-      
-      <div class="card">
-        <div class="card-top">
-          <h3>Bachelor of Science in Electrical Engineering</h3>
-          <div class="meta-line">
-            <span><strong>[University Name]</strong></span>
-            <span class="muted">[Graduation Year]</span>
-            
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <div class="poster" style="background: linear-gradient(135deg, rgba(255,107,107,.12), rgba(255,160,122,.08)); display: flex; align-items: center; justify-content: center; min-height: 420px; border: 2px dashed rgba(255,107,107,.20);">
+              <div style="text-align: center; color: var(--muted);">
+                <div style="font-size: 64px; margin-bottom: 12px;">🔬</div>
+                <div style="font-size: 14px;">Professional Photo</div>
+              </div>
+            </div>
+            <div class="hero-copy">
+              <span class="kicker"><span class="dot"></span> Electrical Engineer</span>
+              <h1>Laser Systems & Photonics Specialist</h1>
+              <p class="lead">Driven by precision optics and high-power systems. I design, analyze, and optimize laser technologies for real-world applications—from fiber optics to beam characterization.</p>
+              <ul class="bullets">
+                <li><span class="tick">✓</span> Laser Design & Analysis</li>
+                <li><span class="tick">✓</span> Photonics & Optics</li>
+                <li><span class="tick">✓</span> Systems Engineering</li>
+                <li><span class="tick">✓</span> Simulation & Modeling</li>
+              </ul>
+              <div class="cta">
+                <a href="#projects" class="btn primary">View My Work</a>
+                <a href="mailto:irene.langkilde71@gmail.com" class="btn">Email</a>
+                <a href="tel:(180)187-8196" class="btn">Call</a>
+              </div>
+            </div>
           </div>
         </div>
-        <ul><li>Focused coursework in laser technology and applications</li><li>Participated in various engineering projects and team competitions</li></ul>
-      </div>
-    
-    </section>
+      </section>
 
-    <section id="experience">
-      <h2>Experience</h2>
-      
-      <div class="card">
-        <div class="card-top">
-          <h3>Engineering Intern</h3>
-          <div class="meta-line">
-            <span><strong>[Company Name]</strong></span>
-            <span class="muted">[Start Date] - [End Date]</span>
-            
+      <section class="section" id="projects">
+        <div class="container">
+          <h2>Featured Projects</h2>
+          <p class="hint">Engineering work showcasing design, simulation, analysis, and practical laser system development.</p>
+          <div class="grid">
+            <div class="card">
+              <h3>*** High-Power Laser Beam Characterization System</h3>
+              <p>Designed and built a measurement apparatus for beam profile analysis, including mode quality assessment and far-field divergence testing.</p>
+              <div class="meta">
+                <span class="tag">Optics</span>
+                <span class="tag">Test & Measurement</span>
+                <span class="tag">Photonics</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>*** Fiber Laser Coupling Optimization</h3>
+              <p>Modeled and optimized fiber-to-free-space coupling efficiency using lens design and aberration analysis. Achieved 87% coupling efficiency through iterative simulation.</p>
+              <div class="meta">
+                <span class="tag">Fiber Optics</span>
+                <span class="tag">Modeling</span>
+                <span class="tag">Signal Processing</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>*** Thermal Management in High-Power Modules</h3>
+              <p>Developed thermal models for laser diode arrays using FEA. Designed heat sinks and active cooling strategies to maintain 25–40°C operational range.</p>
+              <div class="meta">
+                <span class="tag">Thermal Analysis</span>
+                <span class="tag">FEA</span>
+                <span class="tag">Design</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>*** Laser Safety Monitoring Electronics</h3>
+              <p>Built firmware and analog electronics for real-time power and wavelength monitoring. Integrated interlock logic for Class IV laser safety compliance.</p>
+              <div class="meta">
+                <span class="tag">Electronics</span>
+                <span class="tag">Firmware</span>
+                <span class="tag">Safety Systems</span>
+              </div>
+            </div>
           </div>
         </div>
-        <ul><li>Assisted in the development of laser calibration techniques leading to a [Metric]% increase in accuracy.</li><li>Collaborated with team members on designing a laser safety protocol that reduced workplace incidents by [Metric]%.</li></ul>
-      </div>
-    
-    </section>
+      </section>
 
-    <section id="projects">
-      <h2>Projects</h2>
-      
-      <div class="card">
-        <div class="card-top">
-          <h3>[Project 1]</h3>
-          <div class="meta-line">
-            <span><strong></strong></span>
-            <span class="muted">[Project Date]</span>
-            <span class="link"><span class="muted">[Add link]</span></span>
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>Technical Skills</h2>
+          <p class="hint">Tools, techniques, and knowledge areas built through academic and practical engineering work.</p>
+          
+          <div style="margin-top: 24px;">
+            <h3 style="font-size: 16px; margin: 0 0 10px; color: var(--ink);">Laser & Photonics</h3>
+            <div class="skills">
+              <div class="skill">Laser Design</div>
+              <div class="skill">Fiber Optics</div>
+              <div class="skill">Beam Characterization</div>
+              <div class="skill">Waveguide Analysis</div>
+              <div class="skill">Spectroscopy</div>
+              <div class="skill">Nonlinear Optics</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 16px; margin: 0 0 10px; color: var(--ink);">Simulation & Analysis</h3>
+            <div class="skills">
+              <div class="skill">MATLAB</div>
+              <div class="skill">Python</div>
+              <div class="skill">COMSOL</div>
+              <div class="skill">ANSYS</div>
+              <div class="skill">OptiSystem</div>
+              <div class="skill">Zemax/Code V</div>
+              <div class="skill">FEA</div>
+              <div class="skill">CFD</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 16px; margin: 0 0 10px; color: var(--ink);">Electronics & Control</h3>
+            <div class="skills">
+              <div class="skill">Circuit Design</div>
+              <div class="skill">PCB Layout</div>
+              <div class="skill">Embedded Systems</div>
+              <div class="skill">C/C++</div>
+              <div class="skill">Power Electronics</div>
+              <div class="skill">Signal Processing</div>
+              <div class="skill">LabVIEW</div>
+            </div>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h3 style="font-size: 16px; margin: 0 0 10px; color: var(--ink);">Core Engineering</h3>
+            <div class="skills">
+              <div class="skill">Systems Engineering</div>
+              <div class="skill">Thermal Analysis</div>
+              <div class="skill">Electrical Design</div>
+              <div class="skill">Project Management</div>
+              <div class="skill">Technical Documentation</div>
+            </div>
           </div>
         </div>
-        <ul><li>Developed a prototype laser communication system that achieved data transfer rates of [Metric].</li><li>Conducted extensive testing and analysis to optimize performance metrics.</li></ul>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <h2>Education</h2>
+          <p class="hint">*** Degree details and graduation timeline to be confirmed.</p>
+          <div class="grid">
+            <div class="card span-12">
+              <h3>*** Bachelor of Science in Electrical Engineering</h3>
+              <p style="margin: 6px 0 0;">Specialization: Lasers & Photonics</p>
+              <div class="meta" style="margin-top: 12px;">
+                <span class="tag">*** University</span>
+                <span class="tag">*** Graduating 20XX</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>Get in Touch</h2>
+          <p class="hint">Interested in collaboration, projects, or opportunities? I'd love to connect.</p>
+          <div class="contact">
+            <div class="contact-card">
+              <h3>Email</h3>
+              <p>Direct line for inquiries and project discussions.</p>
+              <a href="mailto:irene.langkilde71@gmail.com">irene.langkilde71@gmail.com</a>
+            </div>
+            <div class="contact-card">
+              <h3>Phone</h3>
+              <p>Reach me by voice for time-sensitive matters.</p>
+              <a href="tel:(180)187-8196">(180) 187-8196</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="foot">
+          <div>&copy; 2025 Joel Kartchner. All rights reserved.</div>
+          <div>
+            <a href="#top">Back to Top</a>
+          </div>
+        </div>
       </div>
-    
-    </section>
-
-    <section id="skills">
-      <h2>Skills</h2>
-      <div class="skills">
-    <div class="skill-col">
-      <h3>Technical Skills</h3>
-      <ul><li>Laser Systems Design</li><li>Circuit Analysis</li><li>Optoelectronics</li><li>Simulations and Modeling</li></ul>
-    </div>
-  
-    <div class="skill-col">
-      <h3>Soft Skills</h3>
-      <ul><li>Team Collaboration</li><li>Problem Solving</li><li>Effective Communication</li><li>Project Management</li></ul>
-    </div>
-  </div>
-    </section>
-
-    <section id="certs">
-      <h2>Certifications</h2>
-      <ul><li>[Certification 1]</li><li>[Certification 2]</li></ul>
-    </section>
-
-    <section id="contact" class="cta">
-      <div>
-        <h2 style="margin:0 0 6px;">Let’s Connect</h2>
-        <div class="muted">Let&#39;s connect to discuss innovative engineering solutions.</div>
-      </div>
-      <a class="btn" href="mailto:irene.langkilde71@gmail.com">Contact Me</a>
-    </section>
-
-    <footer>© 2026 Joel Kartchner • Built from a template + AI-generated draft content</footer>
+    </footer>
   </div>
 </body>
+
 </html>
