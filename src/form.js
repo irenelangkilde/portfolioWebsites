@@ -123,6 +123,27 @@
     });
 
     // ----------------------------
+    // Page 1: headshot preview
+    // ----------------------------
+    const headshotInput   = document.getElementById("headshot");
+    const headshotPreview = document.getElementById("headshotPreview");
+    const headshotImg     = document.getElementById("headshotImg");
+    headshotInput.addEventListener("change", () => {
+      const file = headshotInput.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          headshotImg.src = e.target.result;
+          headshotPreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        headshotPreview.style.display = "none";
+        headshotImg.src = "";
+      }
+    });
+
+    // ----------------------------
     // Page 1: resume drag-and-drop
     // ----------------------------
     const resumeDropzone = document.getElementById("resumeDropzone");
@@ -368,21 +389,23 @@
       }
 
       previewDraft = data;
-      localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
+      if (previewDraft.site_json) {
+        localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
+      }
       localStorage.setItem("portfolio_preview_html", previewDraft.site_html);
 
-      status.innerHTML = `<span class="ok">Preview ready.</span> Download JSON/HTML or continue to Page 3.`;
-      jsonPre.textContent = JSON.stringify(previewDraft.site_json, null, 2);
+      status.innerHTML = `<span class="ok">Preview ready.</span> Download HTML or continue to Page 3.`;
+      jsonPre.textContent = previewDraft.site_json ? JSON.stringify(previewDraft.site_json, null, 2) : "(not available)";
       htmlPre.textContent = previewDraft.site_html;
     }
 
     // download/copy preview
     document.getElementById("dlJson2").addEventListener("click", () => {
-      if (!previewDraft) return;
+      if (!previewDraft?.site_json) return;
       downloadText("portfolio_preview.json", JSON.stringify(previewDraft.site_json, null, 2), "application/json");
     });
     document.getElementById("cpJson2").addEventListener("click", function() {
-      if (!previewDraft) return;
+      if (!previewDraft?.site_json) return;
       copyToClipboard(JSON.stringify(previewDraft.site_json, null, 2), this);
     });
     document.getElementById("dlHtml2").addEventListener("click", () => {
@@ -570,6 +593,9 @@
     // Page 1
     makeDoubleClickReset(document.getElementById("reset1"), () => {
       ["name","email","phone","major","specialization","linkedin","github","modelTemplate"].forEach(id => document.getElementById(id).value = "");
+      headshotInput.value = "";
+      headshotPreview.style.display = "none";
+      headshotImg.src = "";
     });
 
     document.getElementById("next1").addEventListener("click", () => {
