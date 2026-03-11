@@ -37,8 +37,8 @@ async function fetchSampleHtml(url) {
     });
     if (!res.ok) return "";
     const html = await res.text();
-    // Trim to ~80 KB to stay within token budget
-    return html.slice(0, 80000);
+    // Trim to ~12 KB to keep prompt size manageable and avoid timeouts
+    return html.slice(0, 12000);
   } catch {
     return "";
   }
@@ -104,6 +104,7 @@ export async function handler(event) {
 
     const resp = await client.responses.create({
       model: "gpt-4o-mini",
+      max_output_tokens: 6000,
       input: [
         {
           role: "system",
