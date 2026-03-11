@@ -279,7 +279,9 @@
         phone: document.getElementById("phone").value.trim(),
         major: document.getElementById("major").value.trim(),
         specialization: document.getElementById("specialization").value.trim(),
-        linkedin: document.getElementById("linkedin").value.trim()
+        linkedin: document.getElementById("linkedin").value.trim(),
+        github: document.getElementById("github").value.trim(),
+        model_template: document.getElementById("modelTemplate").value.trim()
       };
     }
 
@@ -567,7 +569,7 @@
 
     // Page 1
     makeDoubleClickReset(document.getElementById("reset1"), () => {
-      ["name","email","phone","major","specialization","linkedin"].forEach(id => document.getElementById(id).value = "");
+      ["name","email","phone","major","specialization","linkedin","github","modelTemplate"].forEach(id => document.getElementById(id).value = "");
     });
 
     document.getElementById("next1").addEventListener("click", () => {
