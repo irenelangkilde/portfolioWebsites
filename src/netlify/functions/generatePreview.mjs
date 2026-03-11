@@ -1,7 +1,6 @@
 import OpenAI from "openai";
 import { readFileSync } from "fs";
-import { fileURLToPath } from "url";
-import { resolve, dirname } from "path";
+import { resolve } from "path";
 
 /**
  * Netlify Function: generatePreview
@@ -14,8 +13,16 @@ import { resolve, dirname } from "path";
  *   OPENAI_API_KEY=...
  */
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const PROMPT_TEMPLATE = readFileSync(resolve(__dirname, "../../FirstOutputPrompt.txt"), "utf-8");
+// Read the prompt template at request time from the project root (process.cwd()).
+// This avoids bundling issues — the file is read from disk, not from the bundle.
+function loadPromptTemplate() {
+  try {
+    return readFileSync(resolve(process.cwd(), "src/FirstOutputPrompt.txt"), "utf-8");
+  } catch {
+    // Fallback: try path relative to this file's original source location
+    return readFileSync(resolve(process.cwd(), "FirstOutputPrompt.txt"), "utf-8");
+  }
+}
 
 function fillTemplate(template, vars) {
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => vars[key] ?? "");
@@ -54,6 +61,8 @@ export async function handler(event) {
     const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const { page1 = {}, page2 = {}, resumeText = "" } = JSON.parse(event.body || "{}");
+
+    const PROMPT_TEMPLATE = loadPromptTemplate();
 
     if (!page1.name || !page1.email) {
       return {
