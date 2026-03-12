@@ -15,7 +15,8 @@ import { resolve } from "path";
 
 function loadPromptTemplate() {
   const cwd = process.cwd();
-  const p1 = resolve(cwd, "src/FirstOutputPrompt.txt");
+  //const p0 = resolve(cwd, "src/FirstOutputPrompt.txt");
+  const p1 = resolve(cwd, "src/Prompt for Portfolio Website Generation-Claude.txt");
   try { return readFileSync(p1, "utf-8"); } catch {}
   const p2 = resolve(cwd, "FirstOutputPrompt.txt");
   try { return readFileSync(p2, "utf-8"); } catch {}

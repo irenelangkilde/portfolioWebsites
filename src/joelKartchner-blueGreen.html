@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joel Kartchner | Electrical Engineering Graduate Portfolio</title>
+  <meta name="description" content="Portfolio of Joel Kartchner, Electrical Engineering graduate specializing in Lasers. View projects, experience, and skills." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #ffffff;
+      --paper: #e0f4ff;
+      --ink: #003b5c;
+      --muted: #0077be;
+      --soft: #52b788;
+      --border: rgba(0,59,92,0.10);
+      --shadow: 0 18px 55px rgba(0,59,92,0.10);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: linear-gradient(180deg, var(--bg), var(--paper));
+      color: var(--ink);
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a{color:inherit}
+    img{max-width:100%; display:block}
+
+    header{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      background: rgba(255,255,255,.78);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .id{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .monogram{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: #fff;
+      background: linear-gradient(135deg, var(--muted), var(--soft));
+      box-shadow: 0 16px 36px rgba(0,59,92,0.16);
+    }
+    .id strong{display:block; font-family: "Playfair Display", Georgia, serif; letter-spacing:-.01em}
+    .id span{display:block; color: var(--muted); font-size: 12px; margin-top: 2px}
+
+    nav ul{
+      list-style:none; margin:0; padding:0;
+      display:flex; gap: 18px; align-items:center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav a{text-decoration:none; padding: 8px 10px; border-radius: 999px}
+    nav a:hover{background: rgba(0,59,92,.08); color: var(--ink)}
+    .actions{display:flex; gap:10px; align-items:center}
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px rgba(0,0,0,.10)}
+    .btn.primary{
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, var(--muted), var(--soft));
+    }
+
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    main{flex:1}
+    .container{max-width: var(--max); margin:0 auto; padding: 0 20px}
+
+    .hero{
+      padding: 28px 0 14px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .poster{
+      border-radius: 28px;
+      overflow:hidden;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 84px;
+    }
+    .poster img{width:100%; height:auto}
+    .poster .cap{
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--paper), rgba(255,255,255,.9));
+    }
+    .cap strong{display:block; font-size: 14px}
+    .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
+
+    .hero-copy{
+      background: rgba(255,255,255,.70);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.06);
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(0,59,92,.08);
+      color: #2e2a36;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(0,59,92,.14);
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--muted), var(--soft));
+    }
+    h1{
+      margin: 12px 0 10px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .lead{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 70ch;
+    }
+    .bullets{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style:none;
+      color: #2e2a36;
+      font-size: 14px;
+    }
+    .bullets li{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--border);
+    }
+    .tick{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(0,59,92,.18), rgba(82,183,136,.18));
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid rgba(0,59,92,.14);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+    .cta{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items:center;
+    }
+
+    .section{padding: 42px 0}
+    .section h2{
+      margin: 0 0 8px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -.01em;
+    }
+    .hint{margin:0; color: var(--muted); max-width: 75ch}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card{
+      grid-column: span 6;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.06);
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: radial-gradient(circle at 30% 30%, rgba(0,59,92,.10), transparent 45%), radial-gradient(circle at 70% 70%, rgba(82,183,136,.10), transparent 45%);
+      opacity:.9;
+      pointer-events:none;
+      transform: rotate(8deg);
+    }
+    .card > *{position: relative}
+    .card h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+    .card p{margin:0; color: var(--muted); font-size: 14px}
+    .meta{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: #2e2a36;
+      font-size: 12px;
+    }
+    .tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(0,59,92,.08);
+      border: 1px solid rgba(0,59,92,.14);
+    }
+    .span-12{grid-column: span 12}
+
+    .post{
+      grid-column: span 4;
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.06);
+    }
+    .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
+    .post h3{margin: 8px 0 8px; font-size: 16px}
+    .post p{margin:0; color: var(--muted); font-size: 14px}
+
+    .skills{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .skill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: #2e2a36;
+    }
+
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .contact-card{
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .contact-card h3{margin:0 0 8px}
+    .contact-card p{margin:0 0 12px; color: var(--muted); font-size: 14px}
+    .contact-card a{ text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+    form{
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.06);
+      display:grid;
+      gap: 12px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display:block;
+      margin-bottom: 6px;
+    }
+    input, textarea{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea{min-height: 110px; resize: vertical}
+    input:focus, textarea:focus{border-color: rgba(0,59,92,.35)}
+
+    footer{
+      border-top: 1px solid var(--border);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot{
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .foot a{color: var(--muted); text-decoration:none}
+    .foot a:hover{color: var(--ink)}
+
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns: 1fr}
+      .poster{position: relative; top: 0}
+      h1{font-size: 44px}
+      .card{grid-column: span 12}
+      .post{grid-column: span 12}
+      .contact{grid-template-columns: 1fr}
+      .bullets{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size: 38px}
+      .id{min-width: auto}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="topbar">
+        <div class="id">
+          <div class="monogram" aria-hidden="true">JK</div>
+          <div>
+            <strong>Joel Kartchner</strong>
+            <span>Electrical Engineering • Specialization in Lasers</span>
+          </div>
+        </div>
+
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="actions">
+          <a class="btn primary" href="#resume">View Resume (PDF)</a>
+        </div>
+      </div>
+    </header>
+    
+    <main>
+      <div class="container">
+        <section class="hero">
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <h1>Welcome to My Portfolio</h1>
+              <p class="lead">I'm Joel Kartchner, an Electrical Engineering graduate specializing in the fascinating world of Lasers. Explore my projects and skills below!</p>
+              <ul class="bullets">
+                <li><span class="tick"></span> Passionate about innovative engineering solutions</li>
+                <li><span class="tick"></span> Always eager to learn and embrace new challenges</li>
+              </ul>
+            </div>
+            
+            <div class="poster">
+              <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Crect fill='%23ddd' width='400' height='400'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' fill='%23999'%3EHeadshot%3C/text%3E%3C/svg%3E" alt="Joel Kartchner - Electrical Engineering Graduate">
+              <div class="cap">
+                <strong>Joel Kartchner</strong>
+                <span>Electrical Engineering • Lasers</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="projects" class="section">
+          <h2>Projects</h2>
+          <div class="grid">
+            <div class="card">
+              <h3>Laser Engraving System</h3>
+              <p>This project involved designing and building a laser engraving system that increased production speed by 30%. My role included hardware selection, software integration, and performance testing.</p>
+              <div class="meta">
+                <span class="tag">Laser Technology</span>
+                <span class="tag">Arduino</span>
+                <span class="tag">C++</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Optical Sensor Design</h3>
+              <p>Developed an optical sensor for measuring distance, reducing errors in measurements to less than 1%. Worked on the design and implementation of the sensor's electronic circuit.</p>
+              <div class="meta">
+                <span class="tag">Sensors</span>
+                <span class="tag">PCB Design</span>
+                <span class="tag">Python</span>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Smart Light Control System</h3>
+              <p>This project aimed to create a smart lighting solution controlled via mobile app. It allowed users to control light intensity and color temperature remotely.</p>
+              <div class="meta">
+                <span class="tag">IoT</span>
+                <span class="tag">Mobile Development</span>
+                <span class="tag">Java</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="skills" class="section">
+          <h2>Skills</h2>
+          <p>I have a wide range of skills that I've honed through my education and real-world projects. Here are some of the key areas of expertise:</p>
+          <div class="skills">
+            <div class="skill">Laser Technology</div>
+            <div class="skill">Circuit Design</div>
+            <div class="skill">Programming (C++, Python, Java)</div>
+            <div class="skill">Project Management</div>
+            <div class="skill">Problem Solving</div>
+          </div>
+        </section>
+
+        <section id="contact" class="section">
+          <h2>Contact Me</h2>
+          <form>
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Your Email</label>
+            <input type="email" id="email" name="email" required>
+
+            <label for="message">Your Message</label>
+            <textarea id="message" name="message" required></textarea>
+
+            <button type="submit" class="btn primary">Send Message</button>
+          </form>
+          <div class="contact">
+            <div class="contact-card">
+              <h3>Email</h3>
+              <p><a href="mailto:joel.kartchner@gmail.com">joel.kartchner@gmail.com</a></p>
+            </div>
+            <div class="contact-card">
+              <h3>Connect with Me</h3>
+              <p><a href="#">LinkedIn</a> | <a href="#">GitHub</a></p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="foot">
+        <p>&copy; 2023 Joel Kartchner. All rights reserved.</p>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

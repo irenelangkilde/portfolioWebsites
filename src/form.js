@@ -365,40 +365,62 @@
 
       const page1 = getPage1();
       const page2 = getPage2();
+      const jobId = crypto.randomUUID();
 
-      // don't block unnecessarily: only disable during the fetch
       const box = document.getElementById("page2PreviewBox");
       const status = document.getElementById("page2Status");
       const jsonPre = document.getElementById("jsonPreview2");
       const htmlPre = document.getElementById("htmlPreview2");
       box.classList.remove("hidden");
-      status.textContent = "Generating preview…";
+      status.textContent = "Submitting request…";
       jsonPre.textContent = "";
       htmlPre.textContent = "";
 
-      // Call your Netlify function (expected: /.netlify/functions/generatePreview)
-      const res = await fetch("/.netlify/functions/generatePreview", {
+      // Submit to background function (returns 202 immediately in production)
+      const res = await fetch("/.netlify/functions/generatePreview-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2 })
+        body: JSON.stringify({ page1, page2, jobId })
       });
 
-      const rawText = await res.text();
-      let data = {};
-      try { data = JSON.parse(rawText); } catch {}
-      if (!res.ok) {
+      if (!res.ok && res.status !== 202) {
+        const rawText = await res.text();
+        let data = {};
+        try { data = JSON.parse(rawText); } catch {}
         throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
       }
 
-      previewDraft = data;
-      if (previewDraft.site_json) {
-        localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
-      }
-      localStorage.setItem("portfolio_preview_html", previewDraft.site_html);
+      // Poll for result (up to 3 minutes)
+      const startTime = Date.now();
+      const maxWaitMs = 180000;
+      const pollIntervalMs = 3000;
 
-      status.innerHTML = `<span class="ok">Preview ready.</span> Download HTML or continue to Page 3.`;
-      jsonPre.textContent = previewDraft.site_json ? JSON.stringify(previewDraft.site_json, null, 2) : "(not available)";
-      htmlPre.textContent = previewDraft.site_html;
+      while (Date.now() - startTime < maxWaitMs) {
+        await new Promise(r => setTimeout(r, pollIntervalMs));
+        const elapsed = Math.round((Date.now() - startTime) / 1000);
+        status.textContent = `Generating your portfolio… ${elapsed}s`;
+
+        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+        const data = await pollRes.json().catch(() => ({}));
+
+        if (data.status === "done") {
+          previewDraft = data;
+          if (previewDraft.site_json) {
+            localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
+          }
+          localStorage.setItem("portfolio_preview_html", previewDraft.site_html);
+          status.innerHTML = `<span class="ok">Preview ready.</span> Download HTML or continue to Page 3.`;
+          jsonPre.textContent = previewDraft.site_json ? JSON.stringify(previewDraft.site_json, null, 2) : "(not available)";
+          htmlPre.textContent = previewDraft.site_html;
+          return;
+        }
+        if (data.status === "error") {
+          throw new Error(data.error || "Generation failed.");
+        }
+        // still pending — keep polling
+      }
+
+      throw new Error("Generation timed out after 3 minutes.");
     }
 
     // download/copy preview
