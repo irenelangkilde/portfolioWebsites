@@ -1,7 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getStore } from "@netlify/blobs";
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import { PROMPT_TEMPLATE } from "../shared/promptTemplate.mjs";
 
 /**
  * Netlify Background Function: generatePreview-background
@@ -9,15 +8,6 @@ import { resolve } from "path";
  * Result is stored in a Netlify Blob keyed by jobId.
  * Poll /.netlify/functions/getPreviewResult?jobId=<id> for the result.
  */
-
-function loadPromptTemplate() {
-  const cwd = process.cwd();
-  const p1 = resolve(cwd, "src/Prompt for Portfolio Website Generation-Claude.txt");
-  try { return readFileSync(p1, "utf-8"); } catch {}
-  const p2 = resolve(cwd, "src/FirstOutputPrompt.txt");
-  try { return readFileSync(p2, "utf-8"); } catch {}
-  throw new Error(`Cannot find prompt template (cwd: "${cwd}")`);
-}
 
 function fillTemplate(template, vars) {
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => vars[key] ?? "");
@@ -83,7 +73,6 @@ export async function handler(event) {
     };
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);
-    const PROMPT_TEMPLATE = loadPromptTemplate();
 
     const prompt = fillTemplate(PROMPT_TEMPLATE, {
       CONTACT_INFO_JSON:   JSON.stringify(contactInfo, null, 2),
@@ -117,11 +106,10 @@ export async function handler(event) {
     }
   } catch (err) {
     if (jobId) {
-      const store2 = getStore("preview-results");
-      await store2.set(jobId, JSON.stringify({
+      await store.set(jobId, JSON.stringify({
         status: "error",
         error: err?.message || "Unknown error"
-      }), { ttl: 3600 }).catch(() => {});
+      }), { ttl: 3600 });
     }
   }
 
