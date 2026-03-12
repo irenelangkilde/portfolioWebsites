@@ -49,10 +49,14 @@ export async function handler(event) {
       return { statusCode: 400, body: JSON.stringify({ error: "Missing jobId" }) };
     }
 
+    // Write pending status immediately so the poller knows the function started
+    await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
+
     const { page1 = {}, page2 = {}, resumeText = "" } = body;
 
     if (!page1.name || !page1.email) {
-      return { statusCode: 400, body: JSON.stringify({ error: "Missing required fields: name and email." }) };
+      await store.set(jobId, JSON.stringify({ status: "error", error: "Missing required fields: name and email." }), { ttl: 3600 });
+      return { statusCode: 202 };
     }
 
     if (!process.env.ANTHROPIC_API_KEY) {

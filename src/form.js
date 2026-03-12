@@ -390,15 +390,15 @@
         throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
       }
 
-      // Poll for result (up to 3 minutes)
+      // Poll for result (up to 5 minutes)
       const startTime = Date.now();
-      const maxWaitMs = 180000;
-      const pollIntervalMs = 3000;
+      const maxWaitMs = 300000;
+      const pollIntervalMs = 4000;
 
       while (Date.now() - startTime < maxWaitMs) {
         await new Promise(r => setTimeout(r, pollIntervalMs));
-        const elapsed = Math.round((Date.now() - startTime) / 1000);
-        status.textContent = `Generating your portfolio… ${elapsed}s`;
+        const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
+        status.textContent = `Generating your portfolio… ${remaining}s remaining`;
 
         const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
         const data = await pollRes.json().catch(() => ({}));
@@ -420,7 +420,7 @@
         // still pending — keep polling
       }
 
-      throw new Error("Generation timed out after 3 minutes.");
+      throw new Error("Generation timed out after 5 minutes.");
     }
 
     // download/copy preview
