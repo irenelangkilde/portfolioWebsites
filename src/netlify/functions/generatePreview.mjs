@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -47,15 +47,15 @@ export async function handler(event) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.OPENAI_API_KEY) {
       return {
         statusCode: 500,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ error: "ANTHROPIC_API_KEY is not set. Add it to your .env file." })
+        body: JSON.stringify({ error: "OPENAI_API_KEY is not set. Add it to your .env file." })
       };
     }
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
     const { page1 = {}, page2 = {}, resumeText = "" } = JSON.parse(event.body || "{}");
 
@@ -98,31 +98,26 @@ export async function handler(event) {
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)"
     });
 
-    const msg = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 7500,
-      system: [
-        "You are an expert portfolio-website generator.",
-        "Return ONLY a complete standalone HTML file with embedded CSS.",
-        "No markdown fences, no commentary before or after the HTML.",
-        "IMPORTANT: Keep total output under 7000 tokens.",
-        "Be concise: 2-3 bullet points per section, compact single-line CSS rules, no excessive whitespace.",
-        "The site must be complete — do not cut off mid-tag or mid-section."
-      ].join(" "),
-      messages: [
-        { role: "user", content: prompt }
+    const systemPrompt = "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML. The site must be fully complete — never cut off mid-tag or mid-section.";
+
+    const resp = await client.responses.create({
+      model: "gpt-4o-mini",
+      max_output_tokens: 7500,
+      input: [
+        { role: "system", content: systemPrompt },
+        { role: "user",   content: prompt }
       ]
     });
 
-    if (msg.stop_reason === "max_tokens") {
+    if (resp.status === "incomplete") {
       return {
         statusCode: 500,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ error: "Generated HTML was truncated (max_tokens limit hit). Try a simpler color scheme or shorter specialization." })
+        body: JSON.stringify({ error: "Generated HTML was truncated (token limit hit). Try reducing input length." })
       };
     }
 
-    const site_html = msg.content[0].text;
+    const site_html = resp.output_text;
 
     return {
       statusCode: 200,

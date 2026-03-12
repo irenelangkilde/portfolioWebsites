@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alex Chen | Electrical Engineering Graduate - Laser Systems Specialist</title>
+    <meta name="description" content="Portfolio of Alex Chen, Electrical Engineering graduate specializing in laser systems, photonics, and optical engineering. Explore my projects and experience.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0066cc;
+            --secondary: #00ccff;
+            --accent: #ff6b35;
+            --dark: #1a1d29;
+            --darkgray: #2a2f42;
+            --lightgray: #f5f7fa;
+            --text: #2c3e50;
+            --textlight: #64748b;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: white;
+        }
+        
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(26, 29, 41, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--secondary);
+            text-decoration: none;
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+        
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--secondary);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--dark) 0%, var(--darkgray) 100%);
+            display: flex;
+            align-items: center;
+            padding: 6rem 2rem 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 204, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(0, 102, 204, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .hero-content h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: white;
+            margin-bottom: 1rem;
+            line-height: 1.1;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: var(--secondary);
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+        
+        .hero-description {
+            font-size: 1.1rem;
+            color: #cbd5e1;
+            margin-bottom: 2rem;
+            line-height: 1.8;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 0.9rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .btn-primary {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+        
+        .btn-primary:hover {
+            background: transparent;
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid white;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: white;
+            color: var(--dark);
+        }
+        
+        /* Silhouette headshot */
+        .hero-image {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .silhouette {
+            width: 400px;
+            height: 400px;
+            position: relative;
+        }
+        
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        section {
+            padding: 6rem 0;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--dark);
+            text-align: center;
+        }
+        
+        .section-subtitle {
+            text-align: center;
+            color: var(--textlight);
+            font-size: 1.1rem;
+            margin-bottom: 3rem;
+        }
+        
+        /* About Section */
+        .about {
+            background: var(--lightgray);
+        }
+        
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            align-items: center;
+        }
+        
+        .about-text p {
+            margin-bottom: 1.5rem;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        
+        .about-image {
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .about-image img {
+            width: 100%;
+            display: block;
+        }
+        
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--textlight);
+            font-size: 0.9rem;
+        }
+        
+        /* Education Section */
+        .education-grid {
+            display: grid;
+            gap: 2rem;
+        }
+        
+        .education-card {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .education-card h3 {
+            font-size: 1.8rem;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .education-meta {
+            display: flex;
+            gap: 2rem;
+            color: var(--textlight);
+            margin-bottom: 1rem;
+        }
+        
+        .education-details {
+            margin-top: 1rem;
+        }
+        
+        .education-details h4 {
+            color: var(--primary);
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .education-details ul {
+            margin-left: 1.5rem;
+            color: var(--text);
+        }
+        
+        .education-details li {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Projects Section */
+        .projects {
+            background: var(--lightgray);
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+        
+        .project-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+        }
+        
+        .project-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .project-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .project-content {
+            padding: 2rem;
+        }
+        
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .project-category {
+            color: var(--primary);
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .project-description {
+            color: var(--textlight);
+            margin-bottom: 1rem;
+            line-height: 1.7;
+        }
+        
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tech-tag {
+            background: var(--lightgray);
+            color: var(--text);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .project-links {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .project-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .project-link:hover {
+            color: var(--secondary);
+        }
+        
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+        
+        .skill-category {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .skill-category h3 {
+            font-size: 1.3rem;
+            color: var(--dark);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+        
+        .skill-icon {
+            font-size: 1.8rem;
+        }
+        
+        .skill-item {
+            margin-bottom: 1.2rem;
+        }
+        
+        .skill-name {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .skill-level {
+            font-size: 0.85rem;
+            color: var(--textlight);
+        }
+        
+        .skill-bar {
+            height: 8px;
+            background: var(--lightgray);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+            transition: width 1s ease;
+        }
+        
+        /* Experience Section */
+        .experience {
+            background: var(--lightgray);
+        }
+        
+        .experience-timeline {
+            position: relative;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .experience-item {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            position: relative;
+            padding-left: 3rem;
+        }
+        
+        .experience-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: linear-gradient(180deg, var(--primary), var(--secondary));
+            border-radius: 2px;
+        }
+        
+        .experience-header {
+            margin-bottom: 1rem;
+        }
+        
+        .experience-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.3rem;
+        }
+        
+        .experience-company {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .experience-date {
+            color: var(--textlight);
+            font-size: 0.95rem;
+        }
+        
+        .experience-description {
+            color: var(--text);
+            line-height: 1.8;
+            margin-bottom: 1rem;
+        }
+        
+        .experience-achievements {
+            margin-left: 1.5rem;
+        }
+        
+        .experience-achievements li {
+            margin-bottom: 0.7rem;
+            color: var(--text);
+        }
+        
+        /* Contact Section */
+        .contact {
+            background: var(--dark);
+            color: white;
+        }
+        
+        .contact .section-title {
+            color: white;
+        }
+        
+        .contact .section-subtitle {
+            color: #cbd5e1;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            margin-top: 3rem;
+        }
+        
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--darkgray);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--secondary);
+        }
+        
+        .contact-details h4 {
+            color: white;
+            margin-bottom: 0.3rem;
+        }
+        
+        .contact-details a {
+            color: #cbd5e1;
+            text-decoration: none;
+        }
+        
+        .contact-details a:hover {
+            color: var(--secondary);
+        }
+        
+        .contact-form {
+            background: var(--darkgray);
+            padding: 2rem;
+            border-radius: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #cbd5e1;
+            font-weight: 600;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            color: white;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+        
+        /* Footer */
+        footer {
+            background: #0f1117;
+            color: #cbd5e1;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .social-link {
+            width: 40px;
+            height: 40px;
+            background: var(--darkgray);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .social-link:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+        
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+            
+            .hero-content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .about-content,
+            .contact-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="nav-container">
+            <a href="#" class="nav-logo">AC</a>
+            <ul class="nav-links">
+                <li><a href="#about">About</a></li>
+                <li><a href="#education">Education</a></li>
+                <li><a href="#projects">Projects</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#experience">Experience</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Alex Chen</h1>
+                <p class="hero-subtitle">Electrical Engineer | Laser Systems Specialist</p>
+                <p class="hero-description">
+                    Passionate about photonics, optical engineering, and laser technology. 
+                    Combining theoretical knowledge with hands-on experience to advance 
+                    cutting-edge laser systems and applications.
+                </p>
+                <div class="hero-buttons">
+                    <a href="#projects" class="btn btn-primary">View Projects</a>
+                    <a href="#contact" class="btn btn-secondary">Get in Touch</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="silhouette">
+                    <!-- Professional silhouette headshot -->
+                    <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="silhouetteGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#00ccff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0066cc;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <!-- Background circle -->
+                        <circle cx="200" cy="200" r="200" fill="url(#silhouetteGrad)" opacity="0.1"/>
+                        <!-- Head silhouette -->
+                        <ellipse cx="200" cy="150" rx="80" ry="95" fill="url(#silhouetteGrad)"/>
+                        <!-- Shoulders/torso -->
+                        <path d="M 120 230 Q 120 200 140 185 L 160 240 L 240 240 L 260 185 Q 280 200 280 230 Q 280 280 240 300 L 160 300 Q 120 280 120 230 Z" fill="url(#silhouetteGrad)"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about" id="about">
+        <div class="container">
+            <h2 class="section-title">About Me</h2>
+            <p class="section-subtitle">Electrical Engineering graduate with a passion for laser technology</p>
+            
+            <div class="about-content">
+                <div class="about-text">
+                    <p>
+                        As a recent Electrical Engineering graduate specializing in laser systems and photonics, 
+                        I'm fascinated by the intersection of electromagnetic theory, optical physics, and practical 
+                        engineering applications. My academic journey has equipped me with deep knowledge in laser 
+                        design, fiber optics, and quantum electronics.
+                    </p>
+                    <p>
+                        Throughout my studies, I've worked on diverse projects ranging from developing compact 
+                        laser diode drivers to designing optical communication systems. My senior capstone project 
+                        focused on optimizing a high-power laser cooling system, which was recognized for its 
+                        innovative approach to thermal management.
+                    </p>
+                    <p>
+                        I'm particularly interested in applications of laser technology in telecommunications, 
+                        medical devices, and manufacturing. I bring strong analytical skills, proficiency in 
+                        MATLAB and Python for optical simulations, and hands-on experience with laboratory equipment 
+                        including oscilloscopes, spectrum analyzers, and optical power meters.
+                    </p>
+                </div>
+                <div class="about-image">
+                    <!-- Stock photo: engineer working with laser equipment -->
+                    <img src="https://images.unsplash.com/photo-1581093458791-9d42e4e7b1f4?w=600&h=400&fit=crop" 
+                         alt="Laser laboratory equipment with optical components">
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-number">3.85</div>
+                    <div class="stat-label">GPA</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">8</div>
+                    <div class="stat-label">Major Projects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">500+</div>
+                    <div class="stat-label">Lab Hours</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">3</div>
+                    <div class="stat-label">Internships</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Education Section -->
+    <section class="education" id="education">
+        <div class="container">
+            <h2 class="section-title">Education</h2>
+            <p class="section-subtitle">Academic foundation in electrical engineering and laser systems</p>
+            
+            <div class="education-grid">
+                <div class="education-card">
+                    <h3>Bachelor of Science in Electrical Engineering</h3>
+                    <div class="education-meta">
+                        <span>🎓 University of California, Berkeley</span>
+                        <span>📅 Graduated May 2026</span>
+                        <span>⭐ GPA: 3.85/4.0</span>
+                    </div>
+                    
+                    <div class="education-details">
+                        <h4>Specialization: Laser Systems & Photonics</h4>
+                        <p>Focus on optical engineering, quantum electronics, and electromagnetic wave propagation with emphasis on laser technology applications.</p>
+                        
+                        <h4>Relevant Coursework:</h4>
+                        <ul>
+                            <li><strong>Advanced Laser Physics</strong> - Laser cavity design, gain media, mode theory, Q-switching and mode-locking</li>
+                            <li><strong>Photonics & Optical Engineering</strong> - Waveguide theory, fiber optics, optical communications</li>
+                            <li><strong>Quantum Electronics</strong> - Quantum mechanical principles of laser operation, semiconductor lasers</li>
+                            <li><strong>Electromagnetic Wave Theory</strong> - Maxwell's equations, wave propagation, optical resonators</li>
+                            <li><strong>Semiconductor Devices</strong> - PN junctions, LEDs, laser diodes, photodetectors</li>
+                            <li><strong>Optical System Design</strong> - Lens design, aberrations, ray tracing, optical CAD</li>
+                            <li><strong>Signal Processing</strong> - Digital signal processing for optical communication systems</li>
+                            <li><strong>Control Systems</strong> - Feedback control for laser stabilization and beam steering</li>
+                        </ul>
+                        
+                        <h4>Senior Capstone Project:</h4>
+                        <p><strong>"High-Efficiency Thermal Management System for High-Power Solid-State Lasers"</strong></p>
+                        <p>Designed and implemented a novel cooling system reducing thermal lensing effects in a 100W Nd:YAG laser by 35%. 
+                        Project involved CFD simulation, custom heat sink fabrication, and experimental validation with thermal imaging.</p>
+                        
+                        <h4>Honors & Awards:</h4>
+                        <ul>
+                            <li>Dean's List (6 semesters)</li>
+                            <li>IEEE Student Paper Competition - 2nd Place (2025)</li>
+                            <li>Outstanding Senior Project Award - Electrical Engineering Department</li>
+                            <li>Tau Beta Pi Engineering Honor Society Member</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects" id="projects">
+        <div class="container">
+            <h2 class="section-title">Projects</h2>
+            <p class="section-subtitle">Hands-on laser and optical engineering applications</p>
+            
+            <div class="projects-grid">
+                <!-- Project 1 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&h=250&fit=crop" 
+                             alt="High-power laser system with cooling apparatus">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">High-Power Laser Cooling System</h3>
+                        <p class="project-category">Thermal Management | Optical Engineering</p>
+                        <p class="project-description">
+                            Developed an advanced thermal management system for a 100W solid-state laser, 
+                            reducing thermal lensing by 35% through innovative heat sink design and active cooling. 
+                            Utilized CFD simulation and experimental validation with IR thermal imaging.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">SolidWorks</span>
+                            <span class="tech-tag">ANSYS CFD</span>
+                            <span class="tech-tag">Nd:YAG Laser</span>
+                            <span class="tech-tag">MATLAB</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">View Details →</a>
+                            <a href="#" class="project-link">Technical Report →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 2 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=400&h=250&fit=crop" 
+                             alt="Fiber optic communication system with light beams">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Fiber Optic Communication Link</h3>
+                        <p class="project-category">Telecommunications | Photonics</p>
+                        <p class="project-description">
+                            Designed and implemented a 10 Gbps fiber optic transmission system including laser driver 
+                            circuits, photodetector amplification, and signal conditioning. Achieved BER of 10^-12 
+                            over 2km single-mode fiber link.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">1550nm DFB Laser</span>
+                            <span class="tech-tag">APD Receiver</span>
+                            <span class="tech-tag">OptiSystem</span>
+                            <span class="tech-tag">PCB Design</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub →</a>
+                            <a href="#" class="project-link">Documentation →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 3 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1516524473457-f63d5e541242?w=400&h=250&fit=crop" 
+                             alt="Precision laser measurement setup with optical components">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Precision Laser Rangefinder</h3>
+                        <p class="project-category">Instrumentation | Time-of-Flight Measurement</p>
+                        <p class="project-description">
+                            Built a time-of-flight laser rangefinder achieving ±2mm accuracy at distances up to 50m. 
+                            Implemented pulse timing circuitry, signal processing algorithms, and calibration procedures 
+                            for environmental compensation.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">905nm Pulsed Laser</span>
+                            <span class="tech-tag">FPGA</span>
+                            <span class="tech-tag">Verilog</span>
+                            <span class="tech-tag">Python</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">Demo Video →</a>
+                            <a href="#" class="project-link">Code →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 4 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1530595467537-0b5996c41f2d?w=400&h=250&fit=crop" 
+                             alt="Laser spectroscopy equipment in research laboratory">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Laser Spectroscopy System</h3>
+                        <p class="project-category">Optical Analysis | Research Instrumentation</p>
+                        <p class="project-description">
+                            Developed a tunable diode laser spectroscopy system for gas concentration analysis. 
+                            Implemented wavelength modulation spectroscopy technique achieving ppb-level detection 
+                            sensitivity. Used in environmental monitoring research.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">TDLAS</span>
+                            <span class="tech-tag">Lock-in Amplifier</span>
+                            <span class="tech-tag">LabVIEW</span>
+                            <span class="tech-tag">DSP</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">Research Paper →</a>
+                            <a href="#" class="project-link">Data Analysis →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 5 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=250&fit=crop" 
+                             alt="Laser beam alignment and optical testing setup">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Automated Beam Alignment System</h3>
+                        <p class="project-category">Control Systems | Automation</p>
+                        <p class="project-description">
+                            Created an automated laser beam alignment system using motorized mounts and position-sensitive 
+                            detectors. Reduced alignment time from 30 minutes to under 2 minutes with feedback control 
+                            achieving 0.5 μrad pointing stability.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">PID Control</span>
+                            <span class="tech-tag">Arduino</span>
+                            <span class="tech-tag">Stepper Motors</span>
+                            <span class="tech-tag">C++</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">GitHub →</a>
+                            <a href="#" class="project-link">CAD Files →</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Project 6 -->
+                <div class="project-card">
+                    <div class="project-image">
+                        <img src="https://images.unsplash.com/photo-1576319155264-99536e0be1ee?w=400&h=250&fit=crop" 
+                             alt="LED and laser driver circuit on testing bench">
+                    </div>
+                    <div class="project-content">
+                        <h3 class="project-title">Precision Laser Diode Driver</h3>
+                        <p class="project-category">Power Electronics | Circuit Design</p>
+                        <p class="project-description">
+                            Designed a high-stability current source for driving laser diodes with &lt;0.01% current 
+                            ripple and fast modulation capability. Includes thermal shutdown, ESD protection, and 
+                            programmable current limits for various laser types.
+                        </p>
+                        <div class="project-tech">
+                            <span class="tech-tag">Analog Design</span>
+                            <span class="tech-tag">LTSpice</span>
+                            <span class="tech-tag">Altium Designer</span>
+                            <span class="tech-tag">SMD Soldering</span>
+                        </div>
+                        <div class="project-links">
+                            <a href="#" class="project-link">Schematic →</a>
+                            <a href="#" class="project-link">Test Results →</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="skills" id="skills">
+        <div class="container">
+            <h2 class="section-title">Technical Skills</h2>
+            <p class="section-subtitle">Comprehensive expertise in laser systems and optical engineering</p>
+            
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🔬</span> Laser Technology</h3>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Laser Physics & Theory</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Optical System Design</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Fiber Optics</span>
+                            <span class="skill-level">Proficient</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Laser Safety & Standards</span>
+                            <span class="skill-level">Expert</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 95%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🛠️</span> Laboratory Equipment</h3>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Optical Power Meters</span>
+                            <span class="skill-level">Expert</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Spectrum Analyzers</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Oscilloscopes (>1 GHz)</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Beam Profilers</span>
+                            <span class="skill-level">Proficient</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">💻</span> Software & Simulation</h3>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>MATLAB (Optics Toolbox)</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Python (NumPy, SciPy)</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Zemax OpticStudio</span>
+                            <span class="skill-level">Proficient</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>COMSOL Multiphysics</span>
+                            <span class="skill-level">Intermediate</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 70%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">⚡</span> Circuit Design & CAD</h3>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Analog Circuit Design</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 85%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>LTSpice / SPICE Simulation</span>
+                            <span class="skill-level">Advanced</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 90%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>Altium Designer / Eagle</span>
+                            <span class="skill-level">Proficient</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 80%"></div>
+                        </div>
+                    </div>
+                    <div class="skill-item">
+                        <div class="skill-name">
+                            <span>SolidWorks (Optomechanics)</span>
+                            <span class="skill-level">Proficient</span>
+                        </div>
+                        <div class="skill-bar">
+                            <div class="skill-progress" style="width: 75%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section class="experience" id="experience">
+        <div class="container">
+            <h2 class="section-title">Experience</h2>
+            <p class="section-subtitle">Professional development in laser and optical systems</p>
+            
+            <div class="experience-timeline">
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <h3 class="experience-title">Laser Systems Engineering Intern</h3>
+                        <div class="experience-company">Coherent Laser Group</div>
+                        <div class="experience-date">June 2025 - August 2025</div>
+                    </div>
+                    <p class="experience-description">
+                        Worked on next-generation industrial laser systems for materials processing applications. 
+                        Contributed to optical design, thermal analysis, and performance testing of high-power 
+                        fiber lasers used in automotive and aerospace manufacturing.
+                    </p>
+                    <ul class="experience-achievements">
+                        <li>Optimized beam delivery optics for a 6kW fiber laser, improving focus spot quality by 18% and reducing thermal drift</li>
+                        <li>Developed Python scripts for automated laser characterization, reducing testing time from 4 hours to 45 minutes per unit</li>
+                        <li>Collaborated with mechanical engineering team on heat sink design for compact laser modules, achieving 25% size reduction</li>
+                        <li>Conducted failure analysis on optical components using microscopy and spectroscopy techniques</li>
+                        <li>Created technical documentation for calibration procedures and maintenance protocols</li>
+                    </ul>
+                </div>
+
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <h3 class="experience-title">Photonics Research Assistant</h3>
+                        <div class="experience-company">UC Berkeley Laser Spectroscopy Lab</div>
+                        <div class="experience-date">September 2024 - May 2025</div>
+                    </div>
+                    <p class="experience-description">
+                        Assisted graduate students and faculty in developing tunable diode laser spectroscopy systems 
+                        for atmospheric gas sensing. Gained experience with cutting-edge research instrumentation and 
+                        data analysis techniques in experimental physics.
+                    </p>
+                    <ul class="experience-achievements">
+                        <li>Built and characterized a frequency-stabilized laser system using Pound-Drever-Hall locking technique</li>
+                        <li>Performed wavelength modulation spectroscopy experiments achieving sub-ppb detection limits for methane</li>
+                        <li>Designed custom electronics for photodetector signal conditioning and lock-in amplification</li>
+                        <li>Analyzed spectroscopic data using MATLAB and contributed to two research publications</li>
+                        <li>Maintained laboratory laser safety protocols and trained new undergraduate researchers</li>
+                    </ul>
+                </div>
+
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <h3 class="experience-title">Optics Engineering Intern</h3>
+                        <div class="experience-company">TRUMPF Laser Technology</div>
+                        <div class="experience-date">June 2024 - August 2024</div>
+                    </div>
+                    <p class="experience-description">
+                        Supported the optical engineering team in developing laser-based medical devices for surgical 
+                        applications. Worked on beam shaping, delivery systems, and safety interlocks for clinical laser systems.
+                    </p>
+                    <ul class="experience-achievements">
+                        <li>Designed beam homogenizer using microlens arrays, improving illumination uniformity to >95% for surgical laser</li>
+                        <li>Conducted optical simulations in Zemax OpticStudio to optimize fiber coupling efficiency (achieved 87% coupling)</li>
+                        <li>Performed optical alignment and testing of prototype laser handpieces under cleanroom conditions</li>
+                        <li>Created test fixtures and wrote LabVIEW programs for automated quality control testing</li>
+                        <li>Participated in design reviews and contributed to FDA documentation for medical device approval</li>
+                    </ul>
+                </div>
+
+                <div class="experience-item">
+                    <div class="experience-header">
+                        <h3 class="experience-title">Electrical Engineering Lab Assistant</h3>
+                        <div class="experience-company">UC Berkeley EECS Department</div>
+                        <div class="experience-date">January 2024 - May 2024</div>
+                    </div>
+                    <p class="experience-description">
+                        Teaching assistant for undergraduate electronics laboratory course. Guided students through 
+                        experiments involving op-amps, filters, oscillators, and basic laser diode circuits.
+                    </p>
+                    <ul class="experience-achievements">
+                        <li>Mentored 40+ students per semester in circuit design, PCB layout, and laboratory techniques</li>
+                        <li>Developed new lab experiment on laser diode characterization and driver circuit design</li>
+                        <li>Troubleshot student projects and provided one-on-one guidance on oscilloscope and multimeter usage</li>
+                        <li>Graded lab reports and provided detailed technical feedback on experimental methodology</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact" id="contact">
+        <div class="container">
+            <h2 class="section-title">Get In Touch</h2>
+            <p class="section-subtitle">Let's discuss laser technology and engineering opportunities</p>
+            
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon">📧</div>
+                        <div class="contact-details">
+                            <h4>Email</h4>
+                            <a href="mailto:alex.chen@email.com">alex.chen@email.com</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📱</div>
+                        <div class="contact-details">
+                            <h4>Phone</h4>
+                            <a href="tel:+15105551234">(510) 555-1234</a>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">📍</div>
+                        <div class="contact-details">
+                            <h4>Location</h4>
+                            <span>San Francisco Bay Area, CA</span>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon">💼</div>
+                        <div class="contact-details">
+                            <h4>LinkedIn</h4>
+                            <a href="https://linkedin.com/in/alexchen" target="_blank">linkedin.com/in/alexchen</a>
+                        </div>
+                    </div>
+                </div>
+                
+                <form class="contact-form">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="social-links">
+                <a href="#" class="social-link" aria-label="LinkedIn">💼</a>
+                <a href="#" class="social-link" aria-label="GitHub">💻</a>
+                <a href="#" class="social-link" aria-label="Email">📧</a>
+                <a href="#" class="social-link" aria-label="ResearchGate">📚</a>
+            </div>
+            <p>&copy; 2026 Alex Chen. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
