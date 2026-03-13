@@ -647,17 +647,18 @@
     // ----------------------------
     // Page button wiring
     // ----------------------------
-    document.getElementById("toPage1").addEventListener("click", () => setStep(1));
+    document.getElementById("toPage1")?.addEventListener("click", () => setStep(1));
 
     // Page 1
-    makeDoubleClickReset(document.getElementById("reset1"), () => {
-      ["name","email","phone","major","specialization","linkedin","github","modelTemplate"].forEach(id => document.getElementById(id).value = "");
-      headshotInput.value = "";
-      headshotPreview.style.display = "none";
-      headshotImg.src = "";
+    const reset1 = document.getElementById("reset1");
+    if (reset1) makeDoubleClickReset(reset1, () => {
+      ["name","email","phone","major","specialization","linkedin","github","modelTemplate"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      if (headshotInput) headshotInput.value = "";
+      if (headshotPreview) headshotPreview.style.display = "none";
+      if (headshotImg) headshotImg.src = "";
     });
 
-    document.getElementById("next1").addEventListener("click", () => {
+    document.getElementById("next1")?.addEventListener("click", () => {
       const err = validatePage1Lenient();
       if (err) { alert(err); return; }
       setStep(2);
@@ -702,18 +703,18 @@
       if (el) el.value = msg.color;
     });
 
-    document.getElementById("continueTo3").addEventListener("click", () => setStep(3));
-    document.getElementById("btnOpenEditor").addEventListener("click", () => {
+    document.getElementById("continueTo3")?.addEventListener("click", () => setStep(3));
+    document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
       window.open("editor.html", "_blank");
     });
 
     // Page 3
-    document.getElementById("back3").addEventListener("click", () => setStep(2));
-    document.getElementById("next3").addEventListener("click", () => setStep(4));
+    document.getElementById("back3")?.addEventListener("click", () => setStep(2));
+    document.getElementById("next3")?.addEventListener("click", () => setStep(4));
 
     // Page 4
     ["back4_top","back4_bottom"].forEach(id => {
-      document.getElementById(id).addEventListener("click", () => setStep(3));
+      document.getElementById(id)?.addEventListener("click", () => setStep(3));
     });
     async function doSubmit(){
       const btnA = document.getElementById("submit_top");
@@ -728,8 +729,8 @@
         btnA.disabled = false; btnB.disabled = false;
       }
     }
-    document.getElementById("submit_top").addEventListener("click", doSubmit);
-    document.getElementById("submit_bottom").addEventListener("click", doSubmit);
+    document.getElementById("submit_top")?.addEventListener("click", doSubmit);
+    document.getElementById("submit_bottom")?.addEventListener("click", doSubmit);
 
     // ----------------------------
     // Boot
