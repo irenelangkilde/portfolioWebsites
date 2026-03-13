@@ -214,7 +214,7 @@ Before finalizing, ensure:
  Code is clean, indented, and commented
  Mobile responsiveness is maintained
  No broken links or missing assets
-Imprint a watermark over the html
+Imprint an "Irene's Webworks" watermark at the bottom of the html page
 
 Output Format
 Provide the complete HTML file only (ready to save and deploy). No summary, no suggestions after the HTML — just the file.

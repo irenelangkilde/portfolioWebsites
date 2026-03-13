@@ -6,8 +6,7 @@
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Basic" },
       { id: "page2", label: "2 Colors + Preview" },
-      { id: "page3", label: "3 Resources" },
-      { id: "page4", label: "4 Target Job" }
+      { id: "page4", label: "3 Target Job" }
     ];
     let currentStep = 0;
 
@@ -176,119 +175,7 @@
     // ----------------------------
   
 
-    // ----------------------------
-    // Page 3: dynamic text entries
-    // ----------------------------
-    const SECTION_TYPES = [
-      { label: "Hero / Headline ★", value: "Hero/Headline", recommended: true },
-      { label: "About ★", value: "About", recommended: true },
-      { label: "Projects ★", value: "Projects", recommended: true },
-      { label: "Experience ★", value: "Experience", recommended: true },
-      { label: "Education ★", value: "Education", recommended: true },
-      { label: "Skills ★", value: "Skills", recommended: true },
-      { label: "Contact / CTA ★", value: "Contact/CTA", recommended: true },
-      { label: "Certifications", value: "Certifications" },
-      { label: "Awards", value: "Awards" },
-      { label: "Publications", value: "Publications" },
-      { label: "Volunteering", value: "Volunteering" },
-      { label: "Leadership", value: "Leadership" },
-      { label: "Testimonials", value: "Testimonials" },
-      { label: "Other", value: "Other" },
-      { label: "None", value: "None" }
-    ];
 
-    let textEntryCount = 0;
-    const textEntriesHost = document.getElementById("textEntries");
-
-    function addTextEntry(prefill = {}){
-      textEntryCount++;
-      const id = `textEntry_${textEntryCount}`;
-      const wrap = document.createElement("div");
-      wrap.className = "fileBox";
-      wrap.style.marginTop = "10px";
-
-      wrap.innerHTML = `
-        <div class="sectionTitle" style="margin-bottom:6px;">
-          <h2 style="font-size:13.5px; margin:0;">Text entry ${textEntryCount}</h2>
-          <button class="btn mini ghost" type="button" data-remove="${id}">Remove</button>
-        </div>
-        <div class="inlineRow4">
-          <div>
-            <label>Type</label>
-            <select data-type>
-              <option value="HTML">HTML</option>
-              <option value="Markdown">Markdown</option>
-              <option value="Raw">Raw</option>
-            </select>
-          </div>
-          <div>
-            <label>Section type</label>
-            <select data-section></select>
-          </div>
-          <div>
-            <label>Content</label>
-            <textarea data-content placeholder="Paste your content here…"></textarea>
-          </div>
-          <div>
-            <label>How should we use it?</label>
-            <textarea data-use placeholder="e.g., summarize, rewrite, use as inspiration, extract metrics…"></textarea>
-          </div>
-        </div>
-      `;
-      // populate dropdown
-      const sectionSel = wrap.querySelector("[data-section]");
-      SECTION_TYPES.forEach(st => {
-        const opt = document.createElement("option");
-        opt.value = st.value;
-        opt.textContent = st.label;
-        sectionSel.appendChild(opt);
-      });
-
-      // apply prefill
-      const typeSel = wrap.querySelector("[data-type]");
-      const contentTa = wrap.querySelector("[data-content]");
-      const useTa = wrap.querySelector("[data-use]");
-      if (prefill.type) typeSel.value = prefill.type;
-      if (prefill.section) sectionSel.value = prefill.section;
-      if (prefill.content) contentTa.value = prefill.content;
-      if (prefill.use) useTa.value = prefill.use;
-
-      wrap.dataset.entryId = id;
-      textEntriesHost.appendChild(wrap);
-
-      wrap.querySelector(`[data-remove="${id}"]`).addEventListener("click", () => wrap.remove());
-    }
-
-    document.getElementById("addTextEntry").addEventListener("click", () => addTextEntry());
-
-    // ----------------------------
-    // Page 3: file uploads list
-    // ----------------------------
-    const uploadFiles = document.getElementById("uploadFiles");
-    const uploadedFileList = document.getElementById("uploadedFileList");
-    uploadFiles.addEventListener("change", () => {
-      uploadedFileList.innerHTML = "";
-      [...(uploadFiles.files || [])].forEach(f => {
-        const li = document.createElement("li");
-        li.textContent = `${f.name} (${Math.round(f.size/1024)} KB)`;
-        uploadedFileList.appendChild(li);
-      });
-    });
-
-    // ----------------------------
-    // Modal: LinkedIn PDF help
-    // ----------------------------
-    const modalBackdrop = document.getElementById("modalBackdrop");
-    document.getElementById("openLinkedInPdfHelp").addEventListener("click", (e) => {
-      e.preventDefault();
-      modalBackdrop.style.display = "flex";
-    });
-    document.getElementById("closeModal").addEventListener("click", () => {
-      modalBackdrop.style.display = "none";
-    });
-    modalBackdrop.addEventListener("click", (e) => {
-      if (e.target === modalBackdrop) modalBackdrop.style.display = "none";
-    });
 
     // ----------------------------
     // Collectors
@@ -314,28 +201,7 @@
       };
     }
 
-    function getPage3(){
-      const entries = [];
-      [...textEntriesHost.querySelectorAll(".fileBox[data-entry-id]")].forEach(box => {
-        entries.push({
-          type: box.querySelector("[data-type]").value,
-          section: box.querySelector("[data-section]").value,
-          content: box.querySelector("[data-content]").value,
-          use: box.querySelector("[data-use]").value
-        });
-      });
-
-      return {
-        uploaded_files: [...(uploadFiles.files || [])].map(f => ({ name: f.name, size: f.size, type: f.type })),
-        upload_use: document.getElementById("uploadUse").value,
-        public_url: document.getElementById("publicUrl").value.trim(),
-        public_url_use: document.getElementById("publicUrlUse").value,
-        text_entries: entries,
-        copyright_ok: document.getElementById("copyrightOk").checked
-      };
-    }
-
-    function getPage4(){
+function getPage4(){
       return {
         desired_role: document.getElementById("desiredRole").value.trim(),
         job_ad: document.getElementById("jobAd").value
@@ -388,11 +254,7 @@
 
       const headshotName = headshotInput.files?.[0]?.name || "";
 
-      const jsonPre = document.getElementById("jsonPreview2");
-      const htmlPre = document.getElementById("htmlPreview2");
       status.textContent = "Submitting request…";
-      jsonPre.textContent = "";
-      htmlPre.textContent = "";
 
       // Submit to background function (returns 202 immediately in production)
       const res = await fetch("/.netlify/functions/generatePreview-background", {
@@ -438,9 +300,7 @@
             localStorage.removeItem("portfolio_headshot_name");
             localStorage.removeItem("portfolio_headshot_dataurl");
           }
-          status.innerHTML = `<span class="ok">Preview ready.</span> Download HTML or continue to Page 3.`;
-          jsonPre.textContent = previewDraft.site_json ? JSON.stringify(previewDraft.site_json, null, 2) : "(not available)";
-          htmlPre.textContent = previewDraft.site_html;
+          status.innerHTML = `<span class="ok">Preview ready.</span> Click Next to continue.`;
           return;
         }
         if (data.status === "error") {
@@ -452,32 +312,6 @@
       throw new Error("Generation timed out after 12 minutes.");
     }
 
-    // download/copy preview
-    document.getElementById("dlJson2").addEventListener("click", () => {
-      if (!previewDraft?.site_json) return;
-      downloadText("portfolio_preview.json", JSON.stringify(previewDraft.site_json, null, 2), "application/json");
-    });
-    document.getElementById("cpJson2").addEventListener("click", function() {
-      if (!previewDraft?.site_json) return;
-      copyToClipboard(JSON.stringify(previewDraft.site_json, null, 2), this);
-    });
-    document.getElementById("dlHtml2").addEventListener("click", async () => {
-      if (!previewDraft) return;
-      let html = previewDraft.site_html;
-      const headshotFile = headshotInput.files?.[0];
-      if (headshotFile) {
-        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(headshotFile); });
-        html = html.replace(
-          new RegExp(`src=['"]${CSS.escape(headshotFile.name)}['"]`, "g"),
-          `src="${dataUrl}"`
-        );
-      }
-      downloadText("portfolio_preview.html", html, "text/html");
-    });
-    document.getElementById("cpHtml2").addEventListener("click", function() {
-      if (!previewDraft) return;
-      copyToClipboard(previewDraft.site_html, this);
-    });
 
     // ----------------------------
     // Submission (Page 4)
@@ -543,21 +377,9 @@
       const p1Err = validatePage1Lenient();
       if (p1Err) throw new Error(p1Err);
 
-      // If they used Page 3 uploads but didn't check copyright, enforce it (required checkbox)
-      const p3 = getPage3();
-      const hasAnyOptionalResource =
-        (p3.uploaded_files?.length || 0) > 0 ||
-        !!p3.public_url ||
-        (p3.text_entries?.length || 0) > 0;
-
-      if (hasAnyOptionalResource && !p3.copyright_ok){
-        throw new Error("Please check the copyright/permission checkbox on Page 3 before submitting.");
-      }
-
       const all = {
         page1: getPage1(),
         page2: getPage2(),
-        page3: p3,
         page4: getPage4()
       };
 
@@ -708,21 +530,17 @@
     });
 
     document.getElementById("continueTo3")?.addEventListener("click", () => setStep(3));
-    document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
-      window.open("src/editor.html", "_blank");
-    });
     document.getElementById("back2_from_preview")?.addEventListener("click", () => {
       document.getElementById("page2PreviewBox")?.classList.add("hidden");
       document.getElementById("page2NavRow")?.classList.remove("hidden");
     });
 
-    // Page 3
-    document.getElementById("back3")?.addEventListener("click", () => setStep(2));
-    document.getElementById("next3")?.addEventListener("click", () => setStep(4));
-
-    // Page 4
+    // Page 3 (was page 4)
     ["back4_top","back4_bottom"].forEach(id => {
-      document.getElementById(id)?.addEventListener("click", () => setStep(3));
+      document.getElementById(id)?.addEventListener("click", () => setStep(2));
+    });
+    document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
+      window.open("src/editor.html", "_blank");
     });
     async function doSubmit(){
       const btnA = document.getElementById("submit_top");
@@ -751,9 +569,6 @@
       document.getElementById("dark").value = "#0b1220";
       document.getElementById("light").value = "#eaf0ff";
     }
-
-    // add one blank text entry by default
-    addTextEntry();
 
     applyDefaults();
     renderStepUI();

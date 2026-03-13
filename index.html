@@ -344,9 +344,8 @@
       <div class="note">
         <ol class="tipList">
           <li><strong>Page 1:</strong> Basic information (name, contact, major).</li>
-          <li><strong>Page 2:</strong> Choose colors and generate a <strong>preview</strong> (JSON + HTML) you can download.</li>
-          <li><strong>Page 3:</strong> Optional resources (resume, links, text snippets) to improve accuracy.</li>
-          <li><strong>Page 4:</strong> Target job + job ad; submit to generate a more tailored result.</li>
+          <li><strong>Page 2:</strong> Choose colors and generate a <strong>rough draft preview</strong>.</li>
+          <li><strong>Page 3:</strong> Target job + job ad; submit for a tailored result; edit in Visual Editor.</li>
         </ol>
       </div>
       <div class="btnRow">
@@ -471,30 +470,9 @@
             <div id="page2Status" class="hint"></div>
           </div>
 
-          <div class="hr"></div>
-
-          <details>
-            <summary>JSON preview (click to expand)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button type="button" class="btn mini" id="dlJson2">Download JSON</button>
-              <button type="button" class="btn mini ghost" id="cpJson2">Copy JSON</button>
-            </div>
-            <pre id="jsonPreview2"></pre>
-          </details>
-
-          <details style="margin-top:10px;">
-            <summary>HTML preview (click to expand)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button type="button" class="btn mini" id="dlHtml2">Download HTML</button>
-              <button type="button" class="btn mini ghost" id="cpHtml2" style="display:none">Copy HTML</button>
-            </div>
-            <pre id="htmlPreview2"></pre>
-          </details>
-
           <div class="btnRow" style="margin-top:12px;">
             <button class="btn ghost" type="button" id="back2_from_preview">← Back</button>
-            <button class="btn primary" type="button" id="btnOpenEditor" style="margin-left:auto;">Edit in Visual Editor</button>
-            <button class="btn ghost" type="button" id="continueTo3">Next →</button>
+            <button class="btn ghost" type="button" id="continueTo3" style="margin-left:auto;">Next →</button>
           </div>
         </div>
 
@@ -509,88 +487,11 @@
       </div>
     </section>
 
-    <!-- PAGE 3: Optional resources -->
-    <section class="card hidden" id="page3">
-      <div class="sectionTitle">
-        <h2>Page 3 — Optional Portfolio Resources</h2>
-        <p class="hint">Upload or paste materials. Keep it quick; refine later.</p>
-      </div>
-
-      <div class="note">
-        <strong>Tips:</strong>
-        <ol class="tipList">
-          <li>Don’t aim for perfection on the first iteration. Draft fast, refine later.</li>
-          <li>Show, don’t just tell: add proof (projects, metrics, links, screenshots, outcomes).</li>
-          <li>Lead with a 1-line headline: target role + specialty + value.</li>
-          <li>Quantify impact wherever possible (%, $, time saved, volume, accuracy, ratings).</li>
-          <li>Write for skimmers: short sections, strong headings, bullets, whitespace.</li>
-          <li>Tailor to the job ad: mirror keywords (truthfully) and map evidence to requirements.</li>
-          <li>Make contact frictionless: email + LinkedIn visible, clear call-to-action.</li>
-        </ol>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="grid">
-        <div class="inlineRow2">
-          <div class="fileBox">
-            <label for="uploadFiles">Upload files (PDF, DOC/DOCX, images, videos, HTML, Markdown, text)</label>
-            <input id="uploadFiles" type="file" multiple />
-            <ul class="fileList" id="uploadedFileList"></ul>
-          </div>
-          <div>
-            <label for="uploadUse">How should we use these files?</label>
-            <textarea id="uploadUse" placeholder="e.g., Use content but not layout; treat as inspiration; extract experience/project bullets."></textarea>
-            <p class="hint" style="margin:8px 0 0;">
-              Tip: Learn how to <a href="#" id="openLinkedInPdfHelp">download a PDF of your LinkedIn profile</a>.
-            </p>
-          </div>
-        </div>
-
-        <div class="inlineRow2">
-          <div>
-            <label for="publicUrl">Website address (public URL only)</label>
-            <input id="publicUrl" type="url" placeholder="https://github.com/yourname/portfolio" />
-          </div>
-          <div>
-            <label for="publicUrlUse">How should we use this URL?</label>
-            <textarea id="publicUrlUse" placeholder="e.g., Use as project reference; extract tech stack; link from Projects section."></textarea>
-          </div>
-        </div>
-
-        <div>
-          <div class="sectionTitle">
-            <h2 style="font-size:14.5px;">Text entries</h2>
-            <p class="hint">Add any snippets (HTML/Markdown/raw) you want considered.</p>
-          </div>
-
-          <div id="textEntries"></div>
-
-          <div class="btnRow" style="justify-content:flex-start;">
-            <button class="btn mini" type="button" id="addTextEntry">+ Add text entry</button>
-          </div>
-        </div>
-
-        <div class="note">
-          <label style="margin:0 0 8px;">
-            <input id="copyrightOk" type="checkbox" />
-            <span style="margin-left:8px;">
-              I have the copyright or written permission to use these resources, or I only want to use it as inspiration—please generate something different enough to avoid copyright infringement.
-            </span>
-          </label>
-        </div>
-
-        <div class="btnRow">
-          <button class="btn ghost" type="button" id="back3">Back</button>
-          <button class="btn primary" type="button" id="next3">Next</button>
-        </div>
-      </div>
-    </section>
 
     <!-- PAGE 4: Job target -->
     <section class="card hidden" id="page4">
       <div class="sectionTitle">
-        <h2>Page 4 — Target Job</h2>
+        <h2>Page 3 — Target Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
       </div>
 
@@ -641,6 +542,10 @@
               <button class="btn mini" type="button" id="dlSummaryHtml">Download MyPersonalPortfolioWebsiteSummary.html</button>
             </div>
           </div>
+
+          <div class="btnRow" style="margin-top:12px;">
+            <button class="btn primary" type="button" id="btnOpenEditor">Edit in Visual Editor</button>
+          </div>
         </div>
 
         <div class="btnRow">
@@ -653,24 +558,6 @@
     <!--footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 3.0.0 • Updated 2026-02-27</footer-->
   </div>
 
-  <!-- LinkedIn PDF help modal -->
-  <div class="modalBackdrop" id="modalBackdrop">
-    <div class="modal" role="dialog" aria-modal="true" aria-label="LinkedIn PDF instructions">
-      <div class="modalTop">
-        <strong>How to download a PDF of your LinkedIn profile</strong>
-        <button class="btn mini ghost modalClose" id="closeModal" type="button">Close</button>
-      </div>
-      <div class="modalContent" id="modalContent">
-        <ol class="tipList">
-          <li>Open your LinkedIn profile in a browser.</li>
-          <li>Click the <strong>More</strong> button (often near “Open to” / “Add profile section”).</li>
-          <li>Select <strong>Save to PDF</strong>.</li>
-          <li>Upload the PDF here on Page 3.</li>
-        </ol>
-        <p class="hint">Note: LinkedIn UI varies slightly by device/account type.</p>
-      </div>
-    </div>
-  </div>
 
 <script src="src/form.js" defer>  </script>
 </body>

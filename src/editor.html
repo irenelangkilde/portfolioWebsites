@@ -111,7 +111,10 @@
         }
       });
 
-      document.getElementById("btnBack").onclick = () => history.back();
+      document.getElementById("btnBack").onclick = () => {
+        if (window.opener) { window.opener.focus(); }
+        window.close();
+      };
 
       document.getElementById("btnDownload").onclick = () => {
         // Reconstruct full HTML, preserving original <head> (fonts, meta, title)
