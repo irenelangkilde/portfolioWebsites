@@ -447,9 +447,18 @@
       if (!previewDraft?.site_json) return;
       copyToClipboard(JSON.stringify(previewDraft.site_json, null, 2), this);
     });
-    document.getElementById("dlHtml2").addEventListener("click", () => {
+    document.getElementById("dlHtml2").addEventListener("click", async () => {
       if (!previewDraft) return;
-      downloadText("portfolio_preview.html", previewDraft.site_html, "text/html");
+      let html = previewDraft.site_html;
+      const headshotFile = headshotInput.files?.[0];
+      if (headshotFile) {
+        const dataUrl = await new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(headshotFile); });
+        html = html.replace(
+          new RegExp(`src=['"]${CSS.escape(headshotFile.name)}['"]`, "g"),
+          `src="${dataUrl}"`
+        );
+      }
+      downloadText("portfolio_preview.html", html, "text/html");
     });
     document.getElementById("cpHtml2").addEventListener("click", function() {
       if (!previewDraft) return;

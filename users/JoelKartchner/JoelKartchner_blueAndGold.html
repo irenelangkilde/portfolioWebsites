@@ -1,0 +1,1358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joel Kartchner | Electrical Engineering Portfolio</title>
+    <meta name="description" content="Portfolio of Joel Kartchner, Electrical Engineering graduate specializing in RF Systems, Laser Technologies, and mmWave Radar. View projects, experience, and skills.">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== RESET & BASE ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary:   #0f2027;
+            --secondary: #203a43;
+            --accent:    #d4af37;
+            --dark:      #ffe082;
+            --light:     #ffffff;
+            --text-dark: #1a1a1a;
+            --text-mid:  #444;
+            --text-light:#f5f5f5;
+            --card-bg:   #f4f6f8;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.7;
+            color: var(--text-dark);
+            background: #eef1f3;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* ===== WATERMARK ===== */
+        body::after {
+            content: "JOEL KARTCHNER PORTFOLIO";
+            position: fixed;
+            bottom: 40px;
+            right: -60px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: rgba(212, 175, 55, 0.12);
+            transform: rotate(-90deg);
+            transform-origin: bottom right;
+            pointer-events: none;
+            z-index: 9999;
+            white-space: nowrap;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            background: linear-gradient(160deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--light);
+            padding: 0 0 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(ellipse at center, rgba(212,175,55,0.08) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .headshot-gradient {
+            width: 100%;
+            padding: 50px 0 30px;
+            background: radial-gradient(circle, var(--primary) 0%, var(--secondary) 100%);
+            text-align: center;
+        }
+
+        .headshot-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid var(--accent);
+            object-fit: cover;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* Monogram fallback */
+        .monogram {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid var(--accent);
+            background: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: var(--accent);
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.8rem;
+            margin-bottom: 8px;
+            color: var(--light);
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: var(--dark);
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .header-tagline {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.75);
+            max-width: 600px;
+            margin: 0 auto 10px;
+        }
+
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 25px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .contact-info a {
+            color: var(--dark);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .contact-info a:hover { color: var(--accent); }
+
+        .header-ctas {
+            margin-top: 28px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--primary);
+            padding: 12px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212,175,55,0.45);
+        }
+
+        .btn-secondary {
+            display: inline-block;
+            background: transparent;
+            color: var(--light);
+            padding: 12px 32px;
+            border-radius: 50px;
+            border: 2px solid var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: var(--accent);
+            color: var(--primary);
+        }
+
+        /* ===== NAV ===== */
+        nav {
+            background: var(--light);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.12);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 14px 0;
+        }
+
+        nav li { margin: 0 15px; }
+
+        nav a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.92rem;
+            letter-spacing: 0.5px;
+            transition: color 0.3s;
+            padding-bottom: 3px;
+            border-bottom: 2px solid transparent;
+        }
+
+        nav a:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* ===== SECTIONS (alternating) ===== */
+        .section-light {
+            background: var(--light);
+            padding: 60px 0;
+        }
+
+        .section-dark {
+            background: var(--primary);
+            padding: 60px 0;
+            color: var(--text-light);
+        }
+
+        .section-mid {
+            background: var(--secondary);
+            padding: 60px 0;
+            color: var(--text-light);
+        }
+
+        .section-accent-bg {
+            background: #fdf8ec;
+            padding: 60px 0;
+        }
+
+        /* Card wrapper (replaces the old <section> with margin/border-radius) */
+        .card-section {
+            background: var(--light);
+            margin: 40px auto;
+            padding: 50px;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.09);
+        }
+
+        /* ===== HEADINGS ===== */
+        h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            padding-bottom: 14px;
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .section-light h2  { color: var(--secondary); }
+        .section-dark h2   { color: var(--dark); border-bottom-color: var(--accent); }
+        .section-mid h2    { color: var(--dark); border-bottom-color: var(--accent); }
+        .section-accent-bg h2 { color: var(--secondary); }
+        .card-section h2   { color: var(--secondary); }
+
+        h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 22px;
+            margin-bottom: 8px;
+        }
+
+        .section-light h3    { color: var(--primary); }
+        .section-dark h3     { color: var(--accent); }
+        .section-mid h3      { color: var(--dark); }
+        .section-accent-bg h3{ color: var(--primary); }
+        .card-section h3     { color: var(--secondary); }
+
+        /* ===== ABOUT ===== */
+        .about-content p {
+            font-size: 1.05rem;
+            line-height: 1.9;
+            margin-bottom: 18px;
+            color: var(--text-mid);
+        }
+
+        .highlight-stats {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .stat-box {
+            flex: 1;
+            min-width: 160px;
+            background: var(--primary);
+            color: var(--light);
+            border-radius: 10px;
+            padding: 22px 18px;
+            text-align: center;
+        }
+
+        .stat-box .stat-number {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            color: var(--accent);
+            display: block;
+        }
+
+        .stat-box .stat-label {
+            font-size: 0.88rem;
+            color: var(--dark);
+            margin-top: 5px;
+        }
+
+        /* ===== EDUCATION ===== */
+        .edu-item {
+            margin-bottom: 35px;
+            padding-left: 22px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .edu-item h3 { margin-top: 0; color: var(--light); }
+        .edu-item .institution { color: var(--dark); font-size: 1rem; font-weight: 600; }
+        .edu-item .date { color: rgba(255,255,255,0.6); font-style: italic; font-size: 0.92rem; }
+        .edu-item p { color: rgba(255,255,255,0.85); margin-top: 8px; }
+
+        .course-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .course-tag {
+            background: rgba(212,175,55,0.18);
+            color: var(--dark);
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            border: 1px solid rgba(212,175,55,0.35);
+        }
+
+        /* ===== EXPERIENCE ===== */
+        .exp-item {
+            margin-bottom: 40px;
+            padding-left: 22px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .exp-item h3 { margin-top: 0; }
+        .exp-item .company { font-weight: 700; color: var(--secondary); }
+        .exp-item .date { color: #888; font-style: italic; font-size: 0.92rem; }
+        .exp-item .narrative { margin: 12px 0; line-height: 1.8; color: var(--text-mid); }
+        .exp-item ul { margin: 10px 0 0 18px; }
+        .exp-item li { margin-bottom: 7px; color: var(--text-mid); }
+
+        .tech-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 7px;
+            margin-top: 12px;
+        }
+
+        .tech-pill {
+            background: var(--primary);
+            color: var(--dark);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* ===== SKILLS ===== */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 22px;
+            margin-top: 10px;
+        }
+
+        .skill-card {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 10px;
+            padding: 22px;
+        }
+
+        .skill-card h3 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .skill-card ul { list-style: none; margin-top: 12px; }
+
+        .skill-card li {
+            padding: 7px 0;
+            padding-left: 22px;
+            position: relative;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.93rem;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .skill-card li:last-child { border-bottom: none; }
+
+        .skill-card li::before {
+            content: "◆";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-size: 0.6rem;
+            top: 10px;
+        }
+
+        .proficiency {
+            float: right;
+            font-size: 0.75rem;
+            color: var(--dark);
+            font-style: italic;
+        }
+
+        /* ===== PROJECTS ===== */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 28px;
+            margin-top: 10px;
+        }
+
+        .project-card {
+            background: var(--light);
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.16);
+        }
+
+        .project-img-placeholder {
+            width: 100%;
+            height: 175px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 10px;
+            color: var(--accent);
+            font-size: 2.8rem;
+        }
+
+        .project-img-placeholder span {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+            font-style: italic;
+            text-align: center;
+            padding: 0 15px;
+        }
+
+        .project-body {
+            padding: 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .project-body h3 { margin-top: 0; color: var(--primary); font-size: 1.15rem; }
+
+        .project-tagline {
+            color: var(--accent);
+            font-size: 0.88rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .project-body p {
+            font-size: 0.93rem;
+            color: var(--text-mid);
+            line-height: 1.75;
+            flex: 1;
+        }
+
+        .project-features {
+            margin: 14px 0;
+            padding-left: 18px;
+        }
+
+        .project-features li {
+            font-size: 0.88rem;
+            color: var(--text-mid);
+            margin-bottom: 5px;
+        }
+
+        .project-footer {
+            padding: 14px 24px;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .project-link {
+            font-size: 0.83rem;
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        .project-link:hover { color: var(--accent); }
+
+        /* ===== PUBLICATIONS ===== */
+        .pub-item {
+            background: rgba(255,255,255,0.07);
+            border: 1px solid rgba(212,175,55,0.25);
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .pub-item p {
+            font-size: 0.97rem;
+            color: rgba(255,255,255,0.85);
+            line-height: 1.8;
+        }
+
+        .pub-item a {
+            color: var(--accent);
+            font-size: 0.88rem;
+            text-decoration: none;
+            word-break: break-all;
+        }
+
+        .pub-item a:hover { text-decoration: underline; }
+
+        .pub-badge {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--primary);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+        }
+
+        /* ===== OTHER / ACHIEVEMENTS ===== */
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-top: 10px;
+        }
+
+        .achievement-box {
+            background: var(--primary);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+        }
+
+        .achievement-box i {
+            font-size: 2rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+
+        .achievement-box h4 {
+            font-size: 1rem;
+            color: var(--light);
+            margin-bottom: 7px;
+        }
+
+        .achievement-box p {
+            font-size: 0.87rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        /* ===== PROCESS SECTION ===== */
+        .process-steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .process-step {
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 22px;
+            text-align: center;
+            border-top: 4px solid var(--accent);
+        }
+
+        .process-step .step-num {
+            width: 38px;
+            height: 38px;
+            background: var(--accent);
+            color: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1rem;
+            margin: 0 auto 14px;
+        }
+
+        .process-step h4 {
+            color: var(--secondary);
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+
+        .process-step p { font-size: 0.88rem; color: var(--text-mid); }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--primary);
+            color: var(--light);
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 0;
+        }
+
+        footer .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 18px;
+        }
+
+        footer a {
+            color: var(--dark);
+            text-decoration: none;
+            font-size: 0.93rem;
+            transition: color 0.3s;
+        }
+
+        footer a:hover { color: var(--accent); }
+
+        footer p { color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-top: 12px; }
+
+        /* ===== BACK TO TOP ===== */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--accent);
+            color: var(--primary);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            text-decoration: none;
+            box-shadow: 0 4px 14px rgba(212,175,55,0.5);
+            z-index: 300;
+            transition: transform 0.3s;
+        }
+
+        #back-to-top:hover { transform: translateY(-3px); }
+
+        /* ===== DIVIDER ===== */
+        .section-divider {
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.6rem; }
+            .card-section { padding: 30px 18px; }
+            nav ul { flex-direction: column; align-items: center; }
+            nav li { margin: 5px 0; }
+            .contact-info { flex-direction: column; gap: 10px; }
+            .projects-grid { grid-template-columns: 1fr; }
+            .highlight-stats { flex-direction: column; }
+            .section-light, .section-dark, .section-mid, .section-accent-bg {
+                padding: 40px 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header>
+    <div class="container">
+        <div class="headshot-gradient">
+            <img src="stockphoto_youngman.png" alt="Joel Kartchner" class="headshot-img">
+        </div>
+        <h1>Joel Kartchner</h1>
+        <p class="subtitle">Electrical Engineer &nbsp;|&nbsp; RF Systems &amp; Laser Technologies</p>
+        <p class="header-tagline">Masters Student at BYU · RF Filter Design · mmWave Radar · Laser Ablation · Raytheon Alumnus</p>
+        <div class="contact-info">
+            <a href="mailto:joel.kartchner@gmail.com"><i class="fas fa-envelope"></i> joel.kartchner@gmail.com</a>
+            <a href="tel:5093929318"><i class="fas fa-phone"></i> (509) 392-9318</a>
+            <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        </div>
+        <div class="header-ctas">
+            <a href="#projects" class="btn-primary">View Projects</a>
+            <a href="#contact" class="btn-secondary">Contact Me</a>
+        </div>
+    </div>
+</header>
+
+<!-- ===== NAVIGATION ===== -->
+<nav aria-label="Primary navigation">
+    <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#education">Education</a></li>
+        <li><a href="#experience">Experience</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#publications">Publications</a></li>
+        <li><a href="#process">Approach</a></li>
+        <li><a href="#achievements">Achievements</a></li>
+        <li><a href="#contact">Contact</a></li>
+    </ul>
+</nav>
+
+<div class="section-divider"></div>
+
+<!-- ===== ABOUT ===== -->
+<section class="section-light" id="about">
+    <div class="container">
+        <h2>About Me</h2>
+        <div class="about-content">
+            <p>I'm an Electrical Engineering graduate student at Brigham Young University, where I earned my BS <em>Magna Cum Laude</em> (GPA 3.98) and am now pursuing a Master's degree (current GPA 3.85) under the guidance of Professor Karl Warnick. My work sits at the exciting intersection of RF engineering, photonics, and laser-based fabrication — fields where precision at the micro and millimeter scale can directly shape the future of defense electronics, wireless communications, and sensing systems.</p>
+
+            <p>My research focuses on RF thin-film flex cables and microwave filter design, combining high-frequency electromagnetic simulation with hands-on hardware validation. Two summers at <strong>Raytheon</strong> in Tucson sharpened my industry instincts: I learned to bridge the gap between simulation and physical hardware, correlating SystemVue and ADS models against measurements from network analyzers and spectrum analyzers on real RF circuit cards destined for defense systems. Back at BYU, I led laser ablation research to fabricate microscopic metal-mesh RF filters and flexible cables — work that resulted in a peer-reviewed IEEE publication.</p>
+
+            <p>Beyond the lab, I'm passionate about mentoring. As a Teaching Assistant for Wireless Communication Circuits and EM Fields and Waves, I guide students through some of the most challenging topics in RF engineering. I hold the rank of Eagle Scout, served a two-year voluntary mission (where I became fluent in Portuguese), and have been actively involved in BYU's IEEE chapter. I thrive in environments that demand both deep theoretical understanding and practical engineering judgment.</p>
+        </div>
+
+        <div class="highlight-stats">
+            <div class="stat-box">
+                <span class="stat-number">3.98</span>
+                <span class="stat-label">BS GPA — Magna Cum Laude</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">2×</span>
+                <span class="stat-label">Raytheon RF Internships</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">80 GHz</span>
+                <span class="stat-label">mmWave Radar Built</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">500 kV</span>
+                <span class="stat-label">Tesla Coil Designed &amp; Built</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">1</span>
+                <span class="stat-label">IEEE Conference Publication</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== EDUCATION ===== -->
+<section class="section-dark" id="education">
+    <div class="container">
+        <h2>Education</h2>
+
+        <div class="edu-item">
+            <h3>Master of Electrical Engineering</h3>
+            <p class="institution">Brigham Young University &mdash; Provo, UT</p>
+            <p class="date">Anticipated Graduation: April 2027 &nbsp;|&nbsp; GPA: 3.85</p>
+            <p>Conducting graduate research under <strong>Professor Karl Warnick</strong>, a leading expert in antenna theory and computational electromagnetics. Research centers on RF thin-film flex cable simulation and microwave filter design, including Coupled Line and Stepped Impedance topologies — explored via full-wave EM simulation in HFSS and scripted design flows in Python.</p>
+            <div class="course-tags">
+                <span class="course-tag">Radar &amp; Comm Systems</span>
+                <span class="course-tag">Math of Signals &amp; Systems</span>
+                <span class="course-tag">Numerical Methods</span>
+                <span class="course-tag">Applied EM &amp; Optics</span>
+                <span class="course-tag">Autonomous Aircraft Control</span>
+            </div>
+        </div>
+
+        <div class="edu-item">
+            <h3>BS Electrical Engineering — Magna Cum Laude</h3>
+            <p class="institution">Brigham Young University &mdash; Provo, UT</p>
+            <p class="date">Graduated: April 2025 &nbsp;|&nbsp; GPA: 3.98</p>
+            <p>Graduated near the top of the college with a concentration in electromagnetics and RF systems. Completed a rigorous curriculum covering circuit theory, digital systems, signal processing, and applied electromagnetics. Recognized for academic excellence with <em>Magna Cum Laude</em> distinction — awarded to the top tier of graduating students. Senior Capstone project involved designing and building a functional 80 GHz millimeter-wave radar system.</p>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== EXPERIENCE ===== -->
+<section class="section-light" id="experience">
+    <div class="container">
+        <h2>Work Experience</h2>
+
+        <!-- Masters Research Assistant -->
+        <div class="exp-item">
+            <h3>Masters Research Assistant</h3>
+            <p class="company">BYU College of Electrical &amp; Computer Engineering</p>
+            <p class="date">September 2025 – Present</p>
+            <p class="narrative">As a funded graduate research assistant in BYU's electromagnetics group, I investigate the high-frequency behavior of RF thin-film flexible cables — components critical to compact phased-array and aerospace systems where rigid PCBs cannot be used. My work demands tight integration of theory, simulation, and eventual hardware correlation.</p>
+            <ul>
+                <li>Simulate RF thin-film flex cable geometries in <strong>HFSS</strong>, characterizing S-parameter behavior across frequency and modeling loss mechanisms in flexible substrates.</li>
+                <li>Design Coupled Line bandpass filters and Stepped Impedance low-pass filters by deriving analytic prototypes in Python, then importing geometries into HFSS for full-wave validation.</li>
+                <li>Develop automated Python scripts to sweep design parameters and generate performance contours, reducing manual simulation time significantly.</li>
+            </ul>
+            <div class="tech-pills">
+                <span class="tech-pill">HFSS</span>
+                <span class="tech-pill">Python</span>
+                <span class="tech-pill">Coupled Line Filters</span>
+                <span class="tech-pill">Stepped Impedance Filters</span>
+                <span class="tech-pill">S-Parameters</span>
+            </div>
+        </div>
+
+        <!-- Teaching Assistant (Current) -->
+        <div class="exp-item">
+            <h3>Teaching Assistant — Wireless Communication Circuits &amp; EM Fields and Waves</h3>
+            <p class="company">BYU College of Electrical &amp; Computer Engineering</p>
+            <p class="date">September 2025 – Present</p>
+            <p class="narrative">Supporting two upper-division courses simultaneously, I bridge the gap between abstract electromagnetic theory and practical RF circuit design for students navigating some of the most mathematically demanding material in the EE curriculum.</p>
+            <ul>
+                <li>Hold regular office hours and conduct recitation sessions on Stub Matching, Lumped Element Matching, noise figure analysis, and gain and stability circle construction on the Smith Chart.</li>
+                <li>Grade problem sets and provide written feedback aligned with learning objectives, helping students improve problem-solving methodology.</li>
+            </ul>
+            <div class="tech-pills">
+                <span class="tech-pill">RF Circuit Design</span>
+                <span class="tech-pill">Impedance Matching</span>
+                <span class="tech-pill">Smith Chart</span>
+                <span class="tech-pill">Noise &amp; Gain Analysis</span>
+            </div>
+        </div>
+
+        <!-- Raytheon -->
+        <div class="exp-item">
+            <h3>RF Products Summer Intern</h3>
+            <p class="company">Raytheon — Tucson, AZ</p>
+            <p class="date">May 2024 – August 2024 &nbsp;&amp;&nbsp; May 2025 – August 2025</p>
+            <p class="narrative">Raytheon invited me back for a second consecutive summer — a testament to the value delivered in 2024. Working within a professional RF hardware team building defense-grade exciter and receiver systems, I gained direct exposure to the full cycle of RF electronics development: from simulation through hardware test and system validation. These two summers turned coursework into instinct.</p>
+            <ul>
+                <li>Tested and troubleshot complex RF circuit cards at the board level, identifying root causes of performance anomalies across frequency and temperature.</li>
+                <li>Authored Python test automation scripts to accelerate data collection and reduce human error during production-level test campaigns.</li>
+                <li>Assisted with EME/EMI qualification testing, supporting the team in ensuring hardware met stringent electromagnetic compatibility standards.</li>
+                <li>Built and ran RF system simulations in <strong>SystemVue</strong> and <strong>ADS</strong>, modeling exciters and receivers over wide temperature ranges to predict component-level sensitivities.</li>
+                <li>Correlated simulation predictions against physical hardware measurements from network analyzers and spectrum analyzers, validating component change proposals with data-driven evidence.</li>
+            </ul>
+            <div class="tech-pills">
+                <span class="tech-pill">SystemVue</span>
+                <span class="tech-pill">ADS</span>
+                <span class="tech-pill">Python</span>
+                <span class="tech-pill">Network Analyzer</span>
+                <span class="tech-pill">Spectrum Analyzer</span>
+                <span class="tech-pill">Signal Generator</span>
+                <span class="tech-pill">EME/EMI Testing</span>
+            </div>
+        </div>
+
+        <!-- Laser Ablation Research -->
+        <div class="exp-item">
+            <h3>Research Assistant — Laser Ablation Lab</h3>
+            <p class="company">BYU College of Electrical &amp; Computer Engineering</p>
+            <p class="date">May 2023 – May 2024 &nbsp;&amp;&nbsp; September 2024 – April 2025</p>
+            <p class="narrative">The Laser Ablation Lab at BYU sits at the frontier of precision microfabrication. My role was to develop an automated laser ablation tool capable of patterning metallic thin films at microscopic resolution — creating RF metal mesh bandpass filters and ultra-fine flexible interconnects that traditional PCB processes cannot produce. This work directly contributed to a peer-reviewed IEEE conference publication.</p>
+            <ul>
+                <li>Designed and programmed a computer-controlled laser ablation system, integrating motion control, laser power management, and real-time pattern generation.</li>
+                <li>Fabricated RF metal mesh filters — periodic metallic grid structures that function as frequency-selective surfaces in the microwave and millimeter-wave bands.</li>
+                <li>Produced microscopic flexible cables for high-density RF interconnect applications, pushing the resolution limits of direct-write laser processing.</li>
+                <li>Co-authored and presented findings at the <strong>2024 IEEE IETC Conference</strong> in Logan, UT.</li>
+            </ul>
+            <div class="tech-pills">
+                <span class="tech-pill">Laser Ablation</span>
+                <span class="tech-pill">Microfabrication</span>
+                <span class="tech-pill">RF Metal Mesh Filters</span>
+                <span class="tech-pill">Flex Cables</span>
+                <span class="tech-pill">Motion Control</span>
+            </div>
+        </div>
+
+        <!-- Teaching Assistant (Earlier) -->
+        <div class="exp-item">
+            <h3>Teaching Assistant — Circuit Analysis</h3>
+            <p class="company">BYU College of Electrical &amp; Computer Engineering</p>
+            <p class="date">September 2023 – December 2023</p>
+            <p class="narrative">Supported introductory circuit analysis coursework, helping students build the foundational skills that underpin all higher-level electrical engineering study.</p>
+            <ul>
+                <li>Tutored students individually and in small groups on KVL, KCL, Thevenin/Norton equivalents, and AC steady-state analysis.</li>
+                <li>Supervised open lab sessions, guiding students in constructing and measuring circuits on breadboards and oscilloscopes.</li>
+            </ul>
+        </div>
+
+        <!-- Photonics Research -->
+        <div class="exp-item">
+            <h3>Research Assistant — Photonic S-Parameter Modeling</h3>
+            <p class="company">BYU College of Electrical &amp; Computer Engineering</p>
+            <p class="date">September 2022 – May 2023</p>
+            <p class="narrative">My first research position, which seeded a lasting interest in the interface between photonics and RF engineering. I worked on computational modeling of photonic components, applying the scattering matrix formalism familiar from microwave engineering to optical waveguide structures.</p>
+            <ul>
+                <li>Used Python to construct and solve electromagnetic models for photonic components, extracting S-parameter matrices to characterize insertion loss, reflection, and crosstalk.</li>
+                <li>Developed reusable simulation scripts that reduced setup time for subsequent modeling tasks.</li>
+            </ul>
+            <div class="tech-pills">
+                <span class="tech-pill">Python</span>
+                <span class="tech-pill">Photonics</span>
+                <span class="tech-pill">S-Parameters</span>
+                <span class="tech-pill">EM Modeling</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== SKILLS ===== -->
+<section class="section-mid" id="skills">
+    <div class="container">
+        <h2>Skills &amp; Tools</h2>
+        <div class="skills-grid">
+
+            <div class="skill-card">
+                <h3><i class="fas fa-code"></i> Programming Languages</h3>
+                <ul>
+                    <li>Python <span class="proficiency">Advanced</span></li>
+                    <li>MATLAB <span class="proficiency">Advanced</span></li>
+                    <li>C / C++ <span class="proficiency">Intermediate</span></li>
+                    <li>Java <span class="proficiency">Intermediate</span></li>
+                    <li>SystemVerilog <span class="proficiency">Intermediate</span></li>
+                    <li>Portuguese <span class="proficiency">Fluent</span></li>
+                </ul>
+            </div>
+
+            <div class="skill-card">
+                <h3><i class="fas fa-broadcast-tower"></i> RF &amp; EM Simulation</h3>
+                <ul>
+                    <li>HFSS <span class="proficiency">Advanced</span></li>
+                    <li>ADS <span class="proficiency">Advanced</span></li>
+                    <li>SystemVue <span class="proficiency">Advanced</span></li>
+                    <li>LTSpice <span class="proficiency">Intermediate</span></li>
+                    <li>Vivado <span class="proficiency">Intermediate</span></li>
+                </ul>
+            </div>
+
+            <div class="skill-card">
+                <h3><i class="fas fa-flask"></i> Lab &amp; Hardware</h3>
+                <ul>
+                    <li>Network Analyzer <span class="proficiency">Advanced</span></li>
+                    <li>Spectrum Analyzer <span class="proficiency">Advanced</span></li>
+                    <li>Signal Generator <span class="proficiency">Advanced</span></li>
+                    <li>Oscilloscope <span class="proficiency">Advanced</span></li>
+                    <li>EME/EMI Test Equipment <span class="proficiency">Intermediate</span></li>
+                </ul>
+            </div>
+
+            <div class="skill-card">
+                <h3><i class="fas fa-microchip"></i> PCB &amp; Design Tools</h3>
+                <ul>
+                    <li>KiCad PCB <span class="proficiency">Intermediate</span></li>
+                    <li>Laser Ablation Systems <span class="proficiency">Advanced</span></li>
+                    <li>RF Filter Synthesis <span class="proficiency">Advanced</span></li>
+                    <li>Impedance Matching <span class="proficiency">Advanced</span></li>
+                </ul>
+            </div>
+
+            <div class="skill-card">
+                <h3><i class="fas fa-atom"></i> Core Knowledge Areas</h3>
+                <ul>
+                    <li>Microwave Filter Design</li>
+                    <li>Phased Array Antennas ***1</li>
+                    <li>Radar System Architecture</li>
+                    <li>Photonic Modeling</li>
+                    <li>EMI/EMC Engineering</li>
+                    <li>Signal &amp; Systems Theory</li>
+                </ul>
+            </div>
+
+            <div class="skill-card">
+                <h3><i class="fas fa-users"></i> Soft Skills</h3>
+                <ul>
+                    <li>Technical Writing &amp; Publishing</li>
+                    <li>Teaching &amp; Mentoring</li>
+                    <li>Cross-functional Collaboration</li>
+                    <li>Attention to Detail</li>
+                    <li>Self-Directed Research</li>
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== PROJECTS ===== -->
+<section class="section-accent-bg" id="projects">
+    <div class="container">
+        <h2>Selected Projects</h2>
+        <p style="color:var(--text-mid); margin-bottom:30px;">A curated selection of hardware, firmware, and research projects spanning high-voltage power electronics, RF systems, laser microfabrication, and millimeter-wave radar.</p>
+
+        <div class="projects-grid">
+
+            <!-- Project 1: mmWave Radar -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-satellite-dish"></i>
+                    <!-- 80 GHz mmWave radar hardware photo ***2 -->
+                    <span>80 GHz mmWave Radar Hardware</span>
+                </div>
+                <div class="project-body">
+                    <h3>80 GHz mmWave Radar System</h3>
+                    <p class="project-tagline">Senior Capstone Project · 2024–2025</p>
+                    <p>Detecting high-velocity projectiles in a laboratory setting demands extreme precision — targets move faster than conventional camera-based systems can track, and the radar front-end must resolve micro-range variations at millimeter wavelengths. This capstone project required the team to design, build, and validate a functional radar system from scratch.</p>
+                    <ul class="project-features">
+                        <li>Designed 80 GHz FMCW transceiver front-end for projectile detection</li>
+                        <li>Developed signal processing pipeline for range-Doppler target extraction</li>
+                        <li>Characterized system noise figure and dynamic range in a controlled lab environment</li>
+                        <li>Validated against known-velocity targets with measurable accuracy ***3</li>
+                        <li>Documented full system architecture, antenna design, and test methodology</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">mmWave</span>
+                        <span class="tech-pill">FMCW Radar</span>
+                        <span class="tech-pill">HFSS</span>
+                        <span class="tech-pill">MATLAB</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 2: Laser Ablation -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-laser-pointer" style="font-size:2.8rem;"></i>
+                    <!-- Microscope image of laser-ablated metal mesh filter ***4 -->
+                    <span>Laser-Ablated RF Metal Mesh Filter</span>
+                </div>
+                <div class="project-body">
+                    <h3>Direct Write Laser Ablation Tool</h3>
+                    <p class="project-tagline">Research Project · 2023–2025 · IEEE Published</p>
+                    <p>Traditional photolithography requires cleanroom infrastructure and multi-step chemical processing. Laser ablation offers a digital, direct-write alternative — you pattern a metallic thin film by selectively removing material with a focused laser beam. The challenge: achieving sub-100-micron feature resolution with repeatable dimensional accuracy while developing the software and motion-control stack that drives the system.</p>
+                    <ul class="project-features">
+                        <li>Built automated laser ablation platform with programmable motion and power control</li>
+                        <li>Fabricated RF metal-mesh bandpass filters (frequency-selective surfaces)</li>
+                        <li>Produced high-density microscopic flex cables for RF interconnect applications</li>
+                        <li>Results presented and published at 2024 IEEE IETC Conference</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">Laser Systems</span>
+                        <span class="tech-pill">Microfabrication</span>
+                        <span class="tech-pill">Python</span>
+                        <span class="tech-pill">RF Filters</span>
+                    </div>
+                    <a href="https://doi.org/10.1109/IETC61393.2024.10564256" target="_blank" class="project-link"><i class="fas fa-external-link-alt"></i> IEEE Paper</a>
+                </div>
+            </div>
+
+            <!-- Project 3: Tesla Coil -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-bolt"></i>
+                    <!-- Tesla coil demonstration photo with visible corona discharge ***5 -->
+                    <span>500,000 Volt Tesla Coil Demonstration</span>
+                </div>
+                <div class="project-body">
+                    <h3>500,000 Volt Tesla Coil</h3>
+                    <p class="project-tagline">Independent High-Voltage Engineering Project · 2022</p>
+                    <p>A half-million volt Tesla coil is not a kit — it demands rigorous understanding of resonant circuits, high-voltage safety, power electronics, and electromagnetic interference. This project, completed early in Joel's undergraduate career, demonstrated the applied instinct that would later define his RF work: build it, measure it, and make it safe enough to demonstrate publicly.</p>
+                    <ul class="project-features">
+                        <li>Designed resonant primary and secondary LC tank circuits for 500 kV output</li>
+                        <li>Engineered the spark gap and power supply for controlled energy delivery</li>
+                        <li>Implemented safety interlocks and shielding for public demonstrations</li>
+                        <li>Demonstrated system safely to multiple public audiences</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">High Voltage</span>
+                        <span class="tech-pill">Resonant Circuits</span>
+                        <span class="tech-pill">Power Electronics</span>
+                        <span class="tech-pill">EMI</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 4: Laser Tag -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-gamepad"></i>
+                    <!-- Laser tag hardware system photo ***6 -->
+                    <span>Laser Tag System Hardware</span>
+                </div>
+                <div class="project-body">
+                    <h3>Laser Tag Game System &amp; Grenade</h3>
+                    <p class="project-tagline">Junior Team Design Project · 2023–2024</p>
+                    <p>A full-featured competitive laser tag system — not an off-the-shelf toy, but a ground-up engineering project. The team designed IR transmit and receive circuits, a custom power system, and all game logic firmware. The "Grenade" accessory was a highlight: an omnidirectional burst transmitter that eliminated multiple opponents in a timed blast pattern, requiring careful beam-pattern engineering.</p>
+                    <ul class="project-features">
+                        <li>Designed IR transmit circuits with beam-shaping optics for range and accuracy</li>
+                        <li>Built phototransistor-based receive circuits with hit-detection logic</li>
+                        <li>Engineered omnidirectional "Grenade" transmitter for area-effect gameplay</li>
+                        <li>Wrote embedded game code and hardware drivers for the complete system</li>
+                        <li>Designed rechargeable power system with battery protection</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">IR Circuits</span>
+                        <span class="tech-pill">KiCad PCB</span>
+                        <span class="tech-pill">Embedded C</span>
+                        <span class="tech-pill">Power Systems</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 5: RF Filter Design (Research) -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-wave-square"></i>
+                    <!-- S-parameter plot of coupled-line filter simulation ***7 -->
+                    <span>Simulated Filter S-Parameter Response</span>
+                </div>
+                <div class="project-body">
+                    <h3>Microwave Filter Design (Coupled Line &amp; Stepped Impedance)</h3>
+                    <p class="project-tagline">Masters Research · 2025–Present</p>
+                    <p>Microwave filters are among the most critical passive components in any RF front-end — they define what signals pass and what gets rejected. This ongoing research project builds an automated design-to-simulation pipeline for two canonical filter families, enabling rapid exploration of design space before committing geometry to fabrication.</p>
+                    <ul class="project-features">
+                        <li>Derived Chebyshev prototype networks and transformed to distributed topologies in Python</li>
+                        <li>Automated HFSS geometry creation and mesh configuration via scripting</li>
+                        <li>Compared Coupled Line and Stepped Impedance topologies for given specs</li>
+                        <li>Explored substrate material trade-offs for flex cable implementations</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">HFSS</span>
+                        <span class="tech-pill">Python</span>
+                        <span class="tech-pill">Filter Synthesis</span>
+                        <span class="tech-pill">Flex RF</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project 6: Photonic Modeling -->
+            <div class="project-card">
+                <div class="project-img-placeholder">
+                    <i class="fas fa-atom"></i>
+                    <!-- Photonic waveguide mode diagram ***8 -->
+                    <span>Photonic Component S-Parameter Model</span>
+                </div>
+                <div class="project-body">
+                    <h3>Photonic Component S-Parameter Modeling</h3>
+                    <p class="project-tagline">Undergraduate Research · 2022–2023</p>
+                    <p>Photonic integrated circuits behave analogously to microwave networks — power flows between ports, scatters at discontinuities, and can be characterized by a scattering matrix. Applying the S-parameter framework to photonic components unlocks powerful circuit-level analysis for optical systems. This project built a Python-based toolchain for extracting and visualizing these parameters.</p>
+                    <ul class="project-features">
+                        <li>Modeled photonic waveguide junctions using electromagnetic simulation</li>
+                        <li>Extracted full S-parameter matrices for characterizing insertion loss and crosstalk</li>
+                        <li>Created Python visualization tools for frequency-domain analysis of photonic data</li>
+                    </ul>
+                </div>
+                <div class="project-footer">
+                    <div class="tech-pills" style="margin:0;">
+                        <span class="tech-pill">Python</span>
+                        <span class="tech-pill">Photonics</span>
+                        <span class="tech-pill">S-Parameters</span>
+                        <span class="tech-pill">EM Modeling</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== PUBLICATIONS ===== -->
+<section class="section-dark" id="publications">
+    <div class="container">
+        <h2>Selected Publications</h2>
+
+        <div class="pub-item">
+            <span class="pub-badge">IEEE Conference Paper · 2024</span>
+            <p>
+                <strong>J. Kartchner</strong>, B. Ferguson, D. Jensen, J. Payne, G. Nielson and S. Schultz,<br>
+                <em>"Fabrication of High Density Flex Cables Using Direct Write Laser Ablation,"</em><br>
+                2024 Intermountain Engineering, Technology and Computing (IETC), Logan, UT, USA, 2024, pp. 135–140.
+            </p>
+            <br>
+            <a href="https://doi.org/10.1109/IETC61393.2024.10564256" target="_blank">
+                <i class="fas fa-external-link-alt"></i> https://doi.org/10.1109/IETC61393.2024.10564256
+            </a>
+            <br><br>
+            <p style="font-size:0.9rem;">This paper presents the development of a direct-write laser ablation process for producing high-density flexible cables with sub-100-micron conductor pitch. The work demonstrates that ablation-based patterning can achieve interconnect densities relevant to RF and mixed-signal applications without cleanroom infrastructure, making the technique accessible for rapid prototyping and small-batch production of flex circuits.</p>
+        </div>
+
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== ENGINEERING APPROACH ===== -->
+<section class="section-light" id="process">
+    <div class="container">
+        <h2>My Engineering Approach</h2>
+        <p style="color:var(--text-mid); margin-bottom:30px;">Whether designing a microwave filter, debugging an RF circuit card, or building a laser ablation tool, I follow a consistent methodology that connects theory to hardware outcomes.</p>
+
+        <div class="process-steps">
+            <div class="process-step">
+                <div class="step-num">1</div>
+                <h4>Define the Problem</h4>
+                <p>Start with specifications: frequency range, insertion loss, rejection, power handling, form factor. Ambiguous requirements are clarified before any simulation begins.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">2</div>
+                <h4>Analytic First Pass</h4>
+                <p>Derive a closed-form estimate or prototype network — filter tables, transmission line theory, or equivalent circuit models — to establish a design starting point.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">3</div>
+                <h4>Simulate &amp; Refine</h4>
+                <p>Move into HFSS, ADS, or SystemVue for full-wave or circuit-level simulation. Sweep parameters systematically. Use Python to automate repetitive parameter studies.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">4</div>
+                <h4>Build &amp; Measure</h4>
+                <p>Fabricate the hardware — PCB, ablated structure, or assembled circuit card — then measure on the network or spectrum analyzer with calibrated setups.</p>
+            </div>
+            <div class="process-step">
+                <div class="step-num">5</div>
+                <h4>Correlate &amp; Iterate</h4>
+                <p>Compare simulation to measurement. Understand discrepancies — are they modeling assumptions, material tolerances, or fixture effects? Iterate until the two converge.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== ACHIEVEMENTS ===== -->
+<section class="section-mid" id="achievements">
+    <div class="container">
+        <h2>Achievements &amp; Activities</h2>
+        <div class="achievements-grid">
+
+            <div class="achievement-box">
+                <i class="fas fa-graduation-cap"></i>
+                <h4>Magna Cum Laude</h4>
+                <p>BS Electrical Engineering, BYU, April 2025 — GPA 3.98, placing in the top academic tier of the graduating class.</p>
+            </div>
+
+            <div class="achievement-box">
+                <i class="fas fa-file-alt"></i>
+                <h4>IEEE Publication</h4>
+                <p>First-authored peer-reviewed paper at the 2024 IEEE Intermountain Engineering, Technology and Computing Conference.</p>
+            </div>
+
+            <div class="achievement-box">
+                <i class="fas fa-industry"></i>
+                <h4>Raytheon — 2× Internship</h4>
+                <p>Invited back for a second summer at Raytheon based on performance. Contributed to defense RF system development and EMI qualification testing.</p>
+            </div>
+
+            <div class="achievement-box">
+                <i class="fas fa-globe-americas"></i>
+                <h4>Voluntary Mission &amp; Portuguese</h4>
+                <p>Completed a 2-year voluntary service mission for The Church of Jesus Christ of Latter-day Saints, achieving fluency in Portuguese.</p>
+            </div>
+
+            <div class="achievement-box">
+                <i class="fas fa-broadcast-tower"></i>
+                <h4>IEEE Chapter Secretary</h4>
+                <p>Served as Secretary of BYU's IEEE chapter (2023–2024), organizing technical events and professional development activities for engineering students.</p>
+            </div>
+
+            <div class="achievement-box">
+                <i class="fas fa-campground"></i>
+                <h4>Eagle Scout</h4>
+                <p>Achieved the rank of Eagle Scout from the Boy Scouts of America in 2016 — the highest rank, demonstrating leadership, service, and character.</p>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== CONTACT ===== -->
+<section class="section-accent-bg" id="contact">
+    <div class="container" style="text-align:center; max-width:680px;">
+        <h2 style="color:var(--secondary); border-bottom-color:var(--accent);">Let's Connect</h2>
+        <p style="color:var(--text-mid); font-size:1.05rem; margin-bottom:28px;">I'm always open to discussing research collaborations, RF engineering opportunities, or interesting problems in electromagnetics, radar, and laser systems. Reach out via email or LinkedIn.</p>
+
+        <div style="display:flex; justify-content:center; gap:18px; flex-wrap:wrap; margin-bottom:30px;">
+            <a href="mailto:joel.kartchner@gmail.com" class="btn-primary"><i class="fas fa-envelope"></i>&nbsp; Send an Email</a>
+            <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank" class="btn-secondary" style="border-color:var(--secondary); color:var(--secondary);"><i class="fab fa-linkedin"></i>&nbsp; LinkedIn Profile</a>
+        </div>
+
+        <p style="color:#999; font-size:0.88rem;">Based in Provo, UT &nbsp;|&nbsp; Open to remote and Tucson, AZ opportunities</p>
+    </div>
+</section>
+
+<div class="section-divider"></div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+    <div class="container">
+        <div class="footer-links">
+            <a href="mailto:joel.kartchner@gmail.com"><i class="fas fa-envelope"></i> joel.kartchner@gmail.com</a>
+            <a href="tel:5093929318"><i class="fas fa-phone"></i> (509) 392-9318</a>
+            <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank"><i class="fab fa-linkedin"></i> LinkedIn</a>
+        </div>
+        <p>&copy; 2025 Joel Kartchner &nbsp;|&nbsp; Electrical Engineering &middot; RF Systems &middot; Laser Technologies</p>
+        <p style="margin-top:8px; font-size:0.78rem; color:rgba(255,255,255,0.35);">Brigham Young University &nbsp;&middot;&nbsp; Provo, UT &nbsp;&middot;&nbsp; Advisor: Prof. Karl Warnick</p>
+    </div>
+</footer>
+
+<!-- Back to Top -->
+<a href="#" id="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></a>
+
+</body>
+</html>
