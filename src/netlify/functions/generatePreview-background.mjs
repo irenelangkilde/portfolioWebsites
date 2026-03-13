@@ -302,8 +302,8 @@ export async function handler(event) {
 
     const stream = client.messages.stream({
       model: "claude-sonnet-4-6",
-      max_tokens: 16000,
-      system: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML. The site must be fully complete — never cut off mid-tag or mid-section.",
+      max_tokens: 24000,
+      system: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML. The site must be fully complete — never cut off mid-tag or mid-section. Do NOT embed base64 image data or long SVG data URIs — use short placeholder comments like <!-- headshot photo --> instead.",
       messages: [{ role: "user", content: userContent }]
     });
 
