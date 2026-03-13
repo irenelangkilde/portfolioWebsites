@@ -214,7 +214,7 @@ Before finalizing, ensure:
  Code is clean, indented, and commented
  Mobile responsiveness is maintained
  No broken links or missing assets
-Imprint an "Irene's Webworks © {{YEAR}}" watermark at the bottom of the html page
+Include a footer copyright line using the person's name from the resume and the current year: © {{YEAR}} [Person's Full Name]. Do not add any other watermark.
 
 Output Format
 Provide the complete HTML file only (ready to save and deploy). No summary, no suggestions after the HTML — just the file.
