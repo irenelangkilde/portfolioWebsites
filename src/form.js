@@ -359,9 +359,21 @@
     // ----------------------------
     let previewDraft = null; // { site_json, site_html }
 
+    async function readFileAsBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
     async function generatePreview(){
       const err = validatePage1Lenient();
       if (err) throw new Error(err);
+
+      const resumeFile = resumeUpload.files[0];
+      if (!resumeFile) throw new Error("Please upload your resume PDF before generating.");
 
       const page1 = getPage1();
       const page2 = getPage2();
@@ -369,9 +381,18 @@
 
       const box = document.getElementById("page2PreviewBox");
       const status = document.getElementById("page2Status");
+      box.classList.remove("hidden");
+      status.textContent = "Reading resume PDF…";
+
+      let resumePdfBase64 = "";
+      try {
+        resumePdfBase64 = await readFileAsBase64(resumeFile);
+      } catch (e) {
+        throw new Error("Could not read resume PDF: " + e.message);
+      }
+
       const jsonPre = document.getElementById("jsonPreview2");
       const htmlPre = document.getElementById("htmlPreview2");
-      box.classList.remove("hidden");
       status.textContent = "Submitting request…";
       jsonPre.textContent = "";
       htmlPre.textContent = "";
@@ -380,7 +401,7 @@
       const res = await fetch("/.netlify/functions/generatePreview-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, jobId })
+        body: JSON.stringify({ page1, page2, jobId, resumePdfBase64 })
       });
 
       if (!res.ok && res.status !== 202) {

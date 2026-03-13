@@ -247,7 +247,7 @@ export async function handler(event) {
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
 
-    const { page1 = {}, page2 = {}, resumeText = "" } = body;
+    const { page1 = {}, page2 = {}, resumePdfBase64 = "" } = body;
 
     if (!page1.name || !page1.email) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "Missing required fields: name and email." }), { ttl: 3600 });
@@ -286,17 +286,28 @@ export async function handler(event) {
       MAJOR:               page1.major          || "",
       SPECIALIZATION:      page1.specialization || "",
       COLOR_SCHEME_JSON:   JSON.stringify(theme, null, 2),
-      RESUME_TEXT:         resumeText           || "(Resume not provided)",
+      RESUME_TEXT:         resumePdfBase64 ? "(see attached PDF)" : "(Resume not provided)",
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
       HEADSHOT_PHOTO:      page1.headshot        || "(No headshot provided)"
     });
 
-    const msg = await client.messages.create({
+    const userContent = [];
+    if (resumePdfBase64) {
+      userContent.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: resumePdfBase64 }
+      });
+    }
+    userContent.push({ type: "text", text: prompt });
+
+    const stream = client.messages.stream({
       model: "claude-sonnet-4-6",
-      max_tokens: 64000,
+      max_tokens: 16000,
       system: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML. The site must be fully complete — never cut off mid-tag or mid-section.",
-      messages: [{ role: "user", content: prompt }]
+      messages: [{ role: "user", content: userContent }]
     });
+
+    const msg = await stream.finalMessage();
 
     if (msg.stop_reason === "max_tokens") {
       await store.set(jobId, JSON.stringify({
