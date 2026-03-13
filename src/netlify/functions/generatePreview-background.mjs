@@ -164,7 +164,7 @@ Provide the complete HTML file only (ready to save and deploy). No summary, no s
 
 INPUT DATA
 
-Headshot photo: {{HEADSHOT_PHOTO}}
+Headshot photo: {{HEADSHOT_PHOTO}} (attached as image above the resume, if provided)
 
 Major: {{MAJOR}}
 Specialization: {{SPECIALIZATION}}
@@ -238,7 +238,7 @@ export async function handler(event) {
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
 
-    const { page1 = {}, page2 = {}, resumePdfBase64 = "" } = body;
+    const { page1 = {}, page2 = {}, resumePdfBase64 = "", headshotName = "" } = body;
 
     if (!resumePdfBase64) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
@@ -267,7 +267,7 @@ export async function handler(event) {
       SPECIALIZATION:      page1.specialization || "",
       COLOR_SCHEME_JSON:   JSON.stringify(theme, null, 2),
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
-      HEADSHOT_PHOTO:      page1.headshot        || "(No headshot provided)"
+      HEADSHOT_PHOTO:      headshotName ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder` : "not provided — render a CSS monogram using the person's initials"
     });
 
     const userContent = [];

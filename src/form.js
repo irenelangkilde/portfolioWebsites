@@ -383,6 +383,8 @@
         throw new Error("Could not read resume PDF: " + e.message);
       }
 
+      const headshotName = headshotInput.files?.[0]?.name || "";
+
       const jsonPre = document.getElementById("jsonPreview2");
       const htmlPre = document.getElementById("htmlPreview2");
       status.textContent = "Submitting request…";
@@ -393,7 +395,7 @@
       const res = await fetch("/.netlify/functions/generatePreview-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, jobId, resumePdfBase64 })
+        body: JSON.stringify({ page1, page2, jobId, resumePdfBase64, headshotName })
       });
 
       if (!res.ok && res.status !== 202) {
