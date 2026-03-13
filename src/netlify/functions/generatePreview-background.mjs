@@ -27,7 +27,10 @@ Try to use all the colors.
 Primary color: Main headings, primary buttons, key branding elements
 Secondary color: Subheadings, links, secondary buttons
 Accent color: Highlights, hover states, call-to-action elements
+Dark
+Light
 
+Alternate between light and dark sections
 
 Ensure sufficient contrast for accessibility (text must be readable)
 
@@ -156,7 +159,7 @@ Before finalizing, ensure:
  Code is clean, indented, and commented
  Mobile responsiveness is maintained
  No broken links or missing assets
-
+Imprint a watermark over the html
 
 Output Format
 Provide the complete HTML file only (ready to save and deploy). No summary, no suggestions after the HTML — just the file.
@@ -164,7 +167,7 @@ Provide the complete HTML file only (ready to save and deploy). No summary, no s
 
 INPUT DATA
 
-Headshot photo: {{HEADSHOT_PHOTO}} (attached as image above the resume, if provided)
+Headshot photo: {{HEADSHOT_PHOTO}} (placed in header, hero or footer as most suiting, if provided; add a monogram instead)
 
 Major: {{MAJOR}}
 Specialization: {{SPECIALIZATION}}
