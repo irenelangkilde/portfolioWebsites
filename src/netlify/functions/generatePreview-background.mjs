@@ -2,6 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getStore } from "@netlify/blobs";
 
 const PROMPT_TEMPLATE = `Portfolio Website Generation Prompt
+You are an expert portfolio website generator and career positioning strategist.
 I need you to create a full-fledged, production-ready portfolio website. You will receive:
 
 Major and specialization (e.g., "Data Science" with specialization in "Machine Learning")
@@ -9,13 +10,34 @@ Resume PDF content (name, contact info, education, experience, skills, projects)
 Sample website HTML (use this as your style and layout template if provided; if not then improvise and follow best practices)
 Color scheme (hex codes for primary, secondary, accent colors)
 
+INTERNAL PLANNING STEP (DO NOT OUTPUT)
+
+Before generating the website, internally determine:
+
+1. the candidate’s primary professional identity
+2. the most important projects or experiences
+3. the strongest technical skills
+4. the logical section order for the website
+5. how the sample HTML layout should be adapted
+6. how to apply the provided color palette consistently
+
+Do not output this planning step.
+Use the strengths of a website:
+
+• clearer visual hierarchy
+• stronger narrative flow
+• scannable sections
+• featured projects
+• links to external work
+• calls to action
+• readable layout
 
 Instructions
 1. Structure & Layout
 
-Use the sample website HTML as your template for style, navigation structure, and overall layout
+Use the sample website HTML as your template for style, navigation structure, and overall layout.  In particular, copy exactly the formatting of the hero section, just changing the color, if needed.
 Maintain the responsive design patterns from the sample.
-Preserve any unique design elements (hero sections, grid layouts, card designs)
+Preserve any unique design elements (banners, gradients, grid layouts, card designs)
 If no headshot photo is provided, render a monogram instead.
 
 2. Color Scheme Integration
@@ -42,16 +64,42 @@ Education Section:
 Resume: "B.S. Computer Science, University Name, GPA 3.8"
 Website: Expand with relevant coursework, thesis/capstone details, academic honors with context, any notable professors or research groups
 
+
+
+Provide context and specialization
+Resume: limited explanation.
+Website: interpretive context. 
+
+Instruction
+Explain:
+  -areas of interest
+  -industries of focus
+  -methodological strengths
+  -preferred problem domains.
+
+Example:
+
+Interests
+• Predictive modeling for business analytics
+• Reproducible machine learning pipelines
+• Data storytelling for non-technical stakeholders
+
+
 Experience Section:
 
-Resume: Bullet points of responsibilities
-Website: Transform into narrative paragraphs that tell the story of each role. Include:
+Resume: Bullet points of responsibilities and/or isolated achievements
+Website: Transform into coherent narratives that tell the story of growth in each role. Describe:
+  -how skills developed over time
+  -themes across projects
+  -the candidate’s professional direction.
 
-Context: What was the company/project about?
-Challenge: What problem were you solving?
-Action: What did you specifically do?
-Result: What was the measurable impact?
-Technologies: Detailed tech stack (can be more extensive than resume)
+Instruction
+Include:
+  Context: What was the company/project about?
+  Challenge: What problem were you solving?
+  Action: What did you specifically do?
+  Result: What was the measurable impact?
+  Technologies: Detailed tech stack (can be more extensive than resume)
 
 
 
@@ -69,7 +117,14 @@ Technologies used: Comprehensive list with brief explanations
 Key features: 3-5 main capabilities
 Results/Impact: Metrics, outcomes, learnings
 Links: GitHub repo, live demo, documentation (use placeholder URLs)
+Add “View Code”, “View Dashboard”, or “Read Analysis” links.
 Visuals: Suggest where screenshots, diagrams, or charts should go
+Use visual elements such as:
+  -charts or plots
+  -project thumbnails
+  -icons for technologies
+  -timeline components
+  -badges for tools or methods.
 Supply inline stock or AI-generated photos when possible; mark them with a triple asterisk (***) and an index number that counts the asterisk groups so far.
 
 
@@ -82,7 +137,6 @@ Website: Create visual skill cards with:
 Skill categories as tabs or sections
 Proficiency indicators (e.g., "Advanced", "Intermediate", "Familiar")
 Context for each skill cluster (e.g., "Used extensively in 3 production projects")
-
 
 
 Additional Website-Only Content
@@ -146,12 +200,13 @@ Include proper meta tags:
 <title>[Name] | [Major] Graduate Portfolio</title>
 <meta name="description" content="Portfolio of [Name], [Major] graduate specializing in [Specialization]. View projects, experience, and skills.">
 
-8. Any augmentation or enhancement not supported (directly or indirectly) by the resume should be marked with a triple asterisk (***) and an index number counting the number of asterisk groups in the page so far.
+8. Any augmentation, enhancement or embellishment not supported (directly or indirectly) by the resume should be marked with a triple asterisk (***) and an index number counting the number of asterisk groups in the page so far.
 
 9. Quality Checks
 Before finalizing, ensure:
 
  All colors from the color scheme are used consistently
+ The header and hero section of the new generated site mirror those of the input sample website.
  No Lorem ipsum or placeholder text
  Contact information is accurate and formatted correctly
  All sections from the resume are represented and expanded

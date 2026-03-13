@@ -128,7 +128,7 @@
     const headshotInput   = document.getElementById("headshot");
     const headshotPreview = document.getElementById("headshotPreview");
     const headshotImg     = document.getElementById("headshotImg");
-    headshotInput.addEventListener("change", () => {
+    headshotInput?.addEventListener("change", () => {
       const file = headshotInput.files?.[0];
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -424,6 +424,17 @@
             localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
           }
           localStorage.setItem("portfolio_preview_html", previewDraft.site_html);
+          // Save headshot for the visual editor
+          const headshotFile = headshotInput?.files?.[0];
+          if (headshotFile) {
+            localStorage.setItem("portfolio_headshot_name", headshotFile.name);
+            const r = new FileReader();
+            r.onload = () => localStorage.setItem("portfolio_headshot_dataurl", r.result);
+            r.readAsDataURL(headshotFile);
+          } else {
+            localStorage.removeItem("portfolio_headshot_name");
+            localStorage.removeItem("portfolio_headshot_dataurl");
+          }
           status.innerHTML = `<span class="ok">Preview ready.</span> Download HTML or continue to Page 3.`;
           jsonPre.textContent = previewDraft.site_json ? JSON.stringify(previewDraft.site_json, null, 2) : "(not available)";
           htmlPre.textContent = previewDraft.site_html;
@@ -692,6 +703,9 @@
     });
 
     document.getElementById("continueTo3").addEventListener("click", () => setStep(3));
+    document.getElementById("btnOpenEditor").addEventListener("click", () => {
+      window.open("editor.html", "_blank");
+    });
 
     // Page 3
     document.getElementById("back3").addEventListener("click", () => setStep(2));

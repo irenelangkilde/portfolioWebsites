@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Portfolio — AutoPrompt</title>
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; }
+
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: #16213e;
+      color: white;
+      height: 48px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+    }
+    #toolbar h1 {
+      font-size: 15px;
+      font-weight: 600;
+      flex: 1;
+      opacity: .9;
+    }
+    .tbtn {
+      padding: 6px 14px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .tbtn-ghost  { background: rgba(255,255,255,.12); color: #fff; }
+    .tbtn-ghost:hover { background: rgba(255,255,255,.22); }
+    .tbtn-primary { background: #667eea; color: #fff; }
+    .tbtn-primary:hover { background: #5568d4; }
+
+    #gjs { height: calc(100vh - 48px); }
+
+    #no-preview {
+      display: none;
+      position: fixed; inset: 0;
+      background: #1a1a2e;
+      color: white;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toolbar">
+    <h1>AutoPrompt — Visual Editor</h1>
+    <button class="tbtn tbtn-ghost"    id="btnBack">← Back to Form</button>
+    <button class="tbtn tbtn-primary"  id="btnDownload">Download HTML</button>
+  </div>
+
+  <div id="gjs"></div>
+
+  <div id="no-preview">
+    <p>No preview found. Please generate a preview on Page 2 first.</p>
+    <button class="tbtn tbtn-primary" onclick="history.back()">← Go Back</button>
+  </div>
+
+  <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+  <script>
+    const fullHtml    = localStorage.getItem("portfolio_preview_html");
+    const headshotUrl = localStorage.getItem("portfolio_headshot_dataurl");
+
+    if (!fullHtml) {
+      document.getElementById("no-preview").style.display = "flex";
+      document.getElementById("gjs").style.display = "none";
+      document.getElementById("toolbar").style.display = "none";
+    } else {
+      // Embed headshot data URL if available
+      let html = fullHtml;
+      const headshotName = localStorage.getItem("portfolio_headshot_name");
+      if (headshotUrl && headshotName) {
+        html = html.replace(
+          new RegExp(`src=['"]${CSS.escape(headshotName)}['"]`, "g"),
+          `src="${headshotUrl}"`
+        );
+      }
+
+      // Extract body content and styles from full HTML document
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, "text/html");
+      const bodyHtml = doc.body.innerHTML;
+      const css = Array.from(doc.querySelectorAll("style"))
+        .map(s => s.textContent)
+        .join("\n");
+
+      const editor = grapesjs.init({
+        container: "#gjs",
+        height: "calc(100vh - 48px)",
+        storageManager: false,
+        components: bodyHtml,
+        style: css,
+        deviceManager: {
+          devices: [
+            { name: "Desktop", width: "" },
+            { name: "Tablet",  width: "768px", widthMedia: "992px" },
+            { name: "Mobile",  width: "375px", widthMedia: "480px" }
+          ]
+        }
+      });
+
+      document.getElementById("btnBack").onclick = () => history.back();
+
+      document.getElementById("btnDownload").onclick = () => {
+        // Reconstruct full HTML, preserving original <head> (fonts, meta, title)
+        const exportDoc = parser.parseFromString(fullHtml, "text/html");
+        exportDoc.querySelectorAll("style").forEach(s => s.remove());
+        const styleEl = exportDoc.createElement("style");
+        styleEl.textContent = editor.getCss();
+        exportDoc.head.appendChild(styleEl);
+        exportDoc.body.innerHTML = editor.getHtml();
+
+        const exported = "<!DOCTYPE html>\n" + exportDoc.documentElement.outerHTML;
+        const blob = new Blob([exported], { type: "text/html;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "portfolio.html";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+    }
+  </script>
+</body>
+</html>

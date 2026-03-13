@@ -388,6 +388,14 @@
         </div>
 
         <div>
+          <label for="headshot">Headshot Photo <span class="hint">(optional)</span></label>
+          <input type="file" id="headshot" accept="image/*" />
+          <div id="headshotPreview" style="display:none; margin-top:8px;">
+            <img id="headshotImg" src="" alt="Headshot preview" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;" />
+          </div>
+        </div>
+
+        <div>
           <label for="linkedin">LinkedIn URL</label>
           <input id="linkedin" type="url" placeholder="https://www.linkedin.com/in/yourname" />
           <p class="hint" style="margin:8px 0 0;">For employer reference.</p>
@@ -426,6 +434,13 @@
     <div class="field"><label for="accent">3. Accent</label><input id="accent" type="color" value="#000000" /></div>
     <div class="field"><label for="dark">4. Dark</label><input id="dark" type="color" value="#000000" /></div>
     <div class="field"><label for="light">5. Light</label><input id="light" type="color" value="#000000" /></div>
+    <div class="btnRow" style="margin-top:16px;">
+      <button class="btn ghost" type="button" id="back2_bottom">Back</button>
+      <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+        <p class="hint" style="margin:0;"><strong>Next</strong> generates a preview.</p>
+        <button class="btn primary" type="button" id="next2_bottom">Next</button>
+      </div>
+    </div>
   </div>
 
   <div class="themeRight">
@@ -433,6 +448,7 @@
     <iframe
       src="color-themes.html"
       style="margin-top:10px;width:100%;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"
+      allow="clipboard-write"
       loading="lazy"
       onload="this.style.height = this.contentDocument.body.scrollHeight + 'px'"></iframe>
   </div>
@@ -458,12 +474,6 @@
             <label for="light">5. Light</label>
             <input id="light" type="text" placeholder="#eaf0ff" />
           </div>
-        </div-->
-
-        <!-- Top buttons (Back/Next) -->
-        <!--div class="btnRow">
-          <button class="btn ghost" type="button" id="back2_top">Back</button>
-          <button class="btn primary" type="button" id="next2_top">Next</button>
         </div-->
 
         <!-- Preview box -->
@@ -492,17 +502,9 @@
             <pre id="htmlPreview2"></pre>
           </details>
 
-          <div class="btnRow" style="justify-content:flex-start; margin-top:12px;">
-            <button class="btn primary" type="button" id="continueTo3">Continue to Page 3</button>
-          </div>
-        </div>
-
-        <!-- Bottom buttons (Back/Next) -->
-        <div class="btnRow">
-          <button class="btn ghost" type="button" id="back2_bottom">Back</button>
-          <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-            <p class="hint" style="margin:0;"><strong>Next</strong> generates a JSON + HTML preview you can download before continuing.</p>
-            <button class="btn primary" type="button" id="next2_bottom">Next</button>
+          <div class="btnRow" style="margin-top:12px;">
+            <button class="btn primary" type="button" id="btnOpenEditor">Edit in Visual Editor</button>
+            <button class="btn ghost" type="button" id="continueTo3" style="margin-left:auto;">Next →</button>
           </div>
         </div>
       </div>
