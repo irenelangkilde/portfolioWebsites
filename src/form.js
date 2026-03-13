@@ -709,7 +709,7 @@
 
     document.getElementById("continueTo3")?.addEventListener("click", () => setStep(3));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
-      window.open("editor.html", "_blank");
+      window.open("src/editor.html", "_blank");
     });
     document.getElementById("back2_from_preview")?.addEventListener("click", () => {
       document.getElementById("page2PreviewBox")?.classList.add("hidden");
