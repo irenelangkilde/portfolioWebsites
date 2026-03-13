@@ -303,12 +303,15 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.ANTHROPIC_API_KEY_LOCAL && !process.env.ANTHROPIC_API_KEY) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "ANTHROPIC_API_KEY is not set." }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    // ANTHROPIC_API_KEY_LOCAL lets you bypass Netlify's AI gateway proxy in netlify dev,
+    // which replaces ANTHROPIC_API_KEY with a JWT that fails locally.
+    const apiKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
+    const client = new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" });
 
     const theme = {
       primary:   page2?.theme?.primary   || "#4E70F1",
