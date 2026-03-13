@@ -116,7 +116,7 @@
       if (digits.length <= 6) return `(${a}) ${b}`;
       return `(${a}) ${b}-${c}`;
     }
-    phoneInput.addEventListener("input", () => {
+    phoneInput?.addEventListener("input", () => {
       const start = phoneInput.selectionStart;
       phoneInput.value = formatPhone(phoneInput.value);
       try { phoneInput.setSelectionRange(start, start); } catch {}
