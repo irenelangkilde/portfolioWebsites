@@ -214,7 +214,7 @@ Before finalizing, ensure:
  Code is clean, indented, and commented
  Mobile responsiveness is maintained
  No broken links or missing assets
-Imprint an "Irene's Webworks" watermark at the bottom of the html page
+Imprint an "Irene's Webworks © {{YEAR}}" watermark at the bottom of the html page
 
 Output Format
 Provide the complete HTML file only (ready to save and deploy). No summary, no suggestions after the HTML — just the file.
@@ -328,7 +328,8 @@ export async function handler(event) {
       SPECIALIZATION:      page1.specialization || "",
       COLOR_SCHEME_JSON:   JSON.stringify(theme, null, 2),
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
-      HEADSHOT_PHOTO:      headshotName ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder` : "not provided — render a CSS monogram using the person's initials"
+      HEADSHOT_PHOTO:      headshotName ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder` : "not provided — render a CSS monogram using the person's initials",
+      YEAR:                new Date().getFullYear().toString()
     });
 
     const userContent = [];
