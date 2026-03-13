@@ -4,10 +4,9 @@ import { getStore } from "@netlify/blobs";
 const PROMPT_TEMPLATE = `Portfolio Website Generation Prompt
 I need you to create a full-fledged, production-ready portfolio website. You will receive:
 
-Contact information JSON (name, email, phone, LinkedIn, GitHub, etc.)
 Major and specialization (e.g., "Data Science" with specialization in "Machine Learning")
-Resume PDF content (education, experience, skills, projects)
-Sample website HTML (use this as your layout template)
+Resume PDF content (name, contact info, education, experience, skills, projects)
+Sample website HTML (use this as your style and layout template if provided; if not then improvise and follow best practices)
 Color scheme (hex codes for primary, secondary, accent colors)
 
 
@@ -17,7 +16,7 @@ Instructions
 Use the sample website HTML as your template for style, navigation structure, and overall layout
 Maintain the responsive design patterns from the sample.
 Preserve any unique design elements (hero sections, grid layouts, card designs)
-If no photo is provided, put monogram initials instead.
+If no headshot photo is provided, render a monogram instead.
 
 2. Color Scheme Integration
 
@@ -28,8 +27,7 @@ Try to use all the colors.
 Primary color: Main headings, primary buttons, key branding elements
 Secondary color: Subheadings, links, secondary buttons
 Accent color: Highlights, hover states, call-to-action elements
-Dark color: paragraph text
-Light color: background
+
 
 Ensure sufficient contrast for accessibility (text must be readable)
 
@@ -166,19 +164,12 @@ Provide the complete HTML file only (ready to save and deploy). No summary, no s
 
 INPUT DATA
 
-Contact JSON:
-{{CONTACT_INFO_JSON}}
-
-Name: {{NAME}}
-Email: {{EMAIL}}
-
 Headshot photo: {{HEADSHOT_PHOTO}}
 
 Major: {{MAJOR}}
 Specialization: {{SPECIALIZATION}}
 
-Resume Content:
-{{RESUME_TEXT}}
+Resume: (attached as PDF — extract name, email, phone, LinkedIn, GitHub, and all other content from it)
 
 Sample Website HTML (use as layout/style reference):
 {{SAMPLE_WEBSITE_HTML}}
@@ -249,8 +240,8 @@ export async function handler(event) {
 
     const { page1 = {}, page2 = {}, resumePdfBase64 = "" } = body;
 
-    if (!page1.name || !page1.email) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "Missing required fields: name and email." }), { ttl: 3600 });
+    if (!resumePdfBase64) {
+      await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
@@ -269,24 +260,12 @@ export async function handler(event) {
       light:     page2?.theme?.light     || "#eaf0ff"
     };
 
-    const contactInfo = {
-      name:     page1.name     || "",
-      email:    page1.email    || "",
-      phone:    page1.phone    || "",
-      linkedin: page1.linkedin || "",
-      github:   page1.github   || ""
-    };
-
     const sampleHtml = await fetchSampleHtml(page1.model_template);
 
     const prompt = fillTemplate(PROMPT_TEMPLATE, {
-      CONTACT_INFO_JSON:   JSON.stringify(contactInfo, null, 2),
-      NAME:                page1.name           || "",
-      EMAIL:               page1.email          || "",
       MAJOR:               page1.major          || "",
       SPECIALIZATION:      page1.specialization || "",
       COLOR_SCHEME_JSON:   JSON.stringify(theme, null, 2),
-      RESUME_TEXT:         resumePdfBase64 ? "(see attached PDF)" : "(Resume not provided)",
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
       HEADSHOT_PHOTO:      page1.headshot        || "(No headshot provided)"
     });

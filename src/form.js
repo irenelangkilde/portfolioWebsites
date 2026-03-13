@@ -295,13 +295,8 @@
     // ----------------------------
     function getPage1(){
       return {
-        name: document.getElementById("name").value.trim(),
-        email: document.getElementById("email").value.trim(),
-        phone: document.getElementById("phone").value.trim(),
         major: document.getElementById("major").value.trim(),
         specialization: document.getElementById("specialization").value.trim(),
-        linkedin: document.getElementById("linkedin").value.trim(),
-        github: document.getElementById("github").value.trim(),
         model_template: document.getElementById("modelTemplate").value.trim()
       };
     }
@@ -348,9 +343,6 @@
     }
 
     function validatePage1Lenient(){
-      const p1 = getPage1();
-      if (!p1.name) return "Name is required on Page 1.";
-      if (!p1.email) return "Email is required on Page 1.";
       return null;
     }
 
