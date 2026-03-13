@@ -374,6 +374,7 @@
       const box = document.getElementById("page2PreviewBox");
       const status = document.getElementById("page2Status");
       box.classList.remove("hidden");
+      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
       status.textContent = "Reading resume PDF…";
 
       let resumePdfBase64 = "";
@@ -413,7 +414,7 @@
       while (Date.now() - startTime < maxWaitMs) {
         await new Promise(r => setTimeout(r, pollIntervalMs));
         const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-        status.textContent = `Generating your portfolio… ${remaining}s remaining`;
+        status.textContent = `Generating your rough draft… ${remaining}s remaining`;
 
         const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
         const data = await pollRes.json().catch(() => ({}));
