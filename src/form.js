@@ -373,7 +373,9 @@
 
       const box = document.getElementById("page2PreviewBox");
       const status = document.getElementById("page2Status");
+      const navRow = document.getElementById("page2NavRow");
       box.classList.remove("hidden");
+      navRow?.classList.add("hidden");
       box.scrollIntoView({ behavior: "smooth", block: "nearest" });
       status.textContent = "Reading resume PDF…";
 
@@ -679,7 +681,8 @@
       try{
         await generatePreview();
       } catch(e){
-        document.getElementById("page2PreviewBox").classList.remove("hidden");
+        document.getElementById("page2PreviewBox")?.classList.remove("hidden");
+        document.getElementById("page2NavRow")?.classList.add("hidden");
         document.getElementById("page2Status").innerHTML = `<span class="error">Error:</span> ${e.message || "Preview failed"}`;
       } finally{
         if (btnTop) btnTop.disabled = false;
@@ -707,6 +710,10 @@
     document.getElementById("continueTo3")?.addEventListener("click", () => setStep(3));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
       window.open("editor.html", "_blank");
+    });
+    document.getElementById("back2_from_preview")?.addEventListener("click", () => {
+      document.getElementById("page2PreviewBox")?.classList.add("hidden");
+      document.getElementById("page2NavRow")?.classList.remove("hidden");
     });
 
     // Page 3
