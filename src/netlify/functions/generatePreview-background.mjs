@@ -238,7 +238,11 @@ export async function handler(event) {
   }
 
   try {
-    store = getStore("preview-results");
+    store = getStore({
+      name: "preview-results",
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_AUTH_TOKEN
+    });
 
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });

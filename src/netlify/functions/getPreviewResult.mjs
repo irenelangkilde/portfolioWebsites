@@ -18,7 +18,11 @@ export async function handler(event) {
   }
 
   try {
-    const store = getStore("preview-results");
+    const store = getStore({
+      name: "preview-results",
+      siteID: process.env.NETLIFY_SITE_ID,
+      token: process.env.NETLIFY_AUTH_TOKEN
+    });
     const result = await store.get(jobId);
 
     if (!result) {
