@@ -293,7 +293,7 @@ export async function handler(event) {
 
     const msg = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 32000,
+      max_tokens: 64000,
       system: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS. No markdown fences, no commentary before or after the HTML. The site must be fully complete — never cut off mid-tag or mid-section.",
       messages: [{ role: "user", content: prompt }]
     });

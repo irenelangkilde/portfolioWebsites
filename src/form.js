@@ -390,9 +390,9 @@
         throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
       }
 
-      // Poll for result (up to 5 minutes)
+      // Poll for result (up to 12 minutes)
       const startTime = Date.now();
-      const maxWaitMs = 300000;
+      const maxWaitMs = 720000;
       const pollIntervalMs = 4000;
 
       while (Date.now() - startTime < maxWaitMs) {
@@ -420,7 +420,7 @@
         // still pending — keep polling
       }
 
-      throw new Error("Generation timed out after 5 minutes.");
+      throw new Error("Generation timed out after 12 minutes.");
     }
 
     // download/copy preview
