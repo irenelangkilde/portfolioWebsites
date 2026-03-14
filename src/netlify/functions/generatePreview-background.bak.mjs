@@ -1,10 +1,9 @@
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { getStore } from "@netlify/blobs";
 
-const PROMPT_TEMPLATE = `Generate a portfolio website for the input major specializing 
-in the inputs specialization using the input resume for content and the input web page for style, layout, color scheme, etc.`;
+const PROMPT_TEMPLATE = `Portfolio Website Generation Prompt
 
-const PROMPT_TEMPLATE_LONG = `NON-NEGOTIABLE REQUIREMENTS (read before anything else):
+NON-NEGOTIABLE REQUIREMENTS (read before anything else):
 A. Output a SINGLE complete HTML file. Never stop mid-section. If content is long, be more concise per section rather than omitting sections.
 B. VISUAL FIDELITY — always: Mirror the template's visual design exactly — hero technique, card style, typography, spacing, layout patterns. This applies regardless of how different the majors are.
 C. SECTION STRUCTURE — use expert judgment:
@@ -267,6 +266,7 @@ Certifications: Display with issuing organization and dates
 Languages: If multilingual, showcase prominently
 Volunteer Work: Include if relevant to career narrative
 `;
+
 /**
  * Netlify Background Function: generatePreview-background
  * Netlify returns 202 immediately; this function runs for up to 15 minutes.
@@ -322,12 +322,15 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
+    if (!process.env.ANTHROPIC_API_KEY_LOCAL && !process.env.ANTHROPIC_API_KEY) {
+      await store.set(jobId, JSON.stringify({ status: "error", error: "ANTHROPIC_API_KEY is not set." }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // ANTHROPIC_API_KEY_LOCAL lets you bypass Netlify's AI gateway proxy in netlify dev,
+    // which replaces ANTHROPIC_API_KEY with a JWT that fails locally.
+    const apiKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
+    const client = new Anthropic({ apiKey, baseURL: "https://api.anthropic.com" });
 
     const theme = {
       primary:   page2?.theme?.primary   || "#4E70F1",
@@ -358,36 +361,40 @@ export async function handler(event) {
         : "(not provided — rely on the sample HTML below for style reference)"
     });
 
-    const inputContent = [];
+    const userContent = [];
     if (resumePdfBase64) {
-      inputContent.push({
-        type: "input_file",
-        file_data: `data:application/pdf;base64,${resumePdfBase64}`
+      userContent.push({
+        type: "document",
+        source: { type: "base64", media_type: "application/pdf", data: resumePdfBase64 }
       });
     }
     if (templateScreenshotBase64 && templateScreenshotMime) {
-      inputContent.push({
-        type: "input_image",
-        image_url: `data:${templateScreenshotMime};base64,${templateScreenshotBase64}`,
-        detail: "high"
+      userContent.push({
+        type: "image",
+        source: { type: "base64", media_type: templateScreenshotMime, data: templateScreenshotBase64 }
       });
     }
-    const textPrompt = sampleHtml
-      ? `${prompt}\n\nSample website HTML (use for style/layout reference):\n${sampleHtml}`
-      : prompt;
-    inputContent.push({ type: "input_text", text: textPrompt });
+    userContent.push({ type: "text", text: prompt });
 
-    const response = await client.responses.create({
-      model: "gpt-4o",
-      instructions: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS — no markdown fences, no text before or after the HTML tag. Do NOT embed base64 image data or long SVG data URIs — use short placeholder comments like <!-- headshot photo --> instead.",
-      input: [{ role: "user", content: inputContent }],
-      max_output_tokens: 32000
+    const stream = client.messages.stream({
+      model: "claude-sonnet-4-6",
+      max_tokens: 32000,
+      system: `You are an expert portfolio-website generator and career strategist. Rules:
+1. Return ONLY a complete standalone HTML file with embedded CSS — no markdown fences, no text before or after the HTML tag.
+2. VISUAL STYLE: Always reproduce the template's visual design exactly — hero technique, card style, typography, layout. Never deviate from the template's aesthetics.
+3. SECTION STRUCTURE: Design the optimal section set for the user's specific field and target job using your expertise. When the major closely matches the template's, follow the template's section structure closely. When majors differ, build sections ideal for the user's actual field. When a job description is provided, shift section selection and emphasis to address that role directly.
+4. RESUME LINK: Add a "Download Resume" button (href="resume.pdf") in the nav bar AND the hero section.
+5. HERO FIDELITY: Reproduce the hero background EXACTLY (gradient stops, radial orbs, blobs). Do NOT flatten to white or solid color. Map each gradient stop to a different provided color.
+6. Do NOT embed base64 image data or long SVG data URIs — use short placeholder comments like <!-- headshot photo --> instead.`,
+      messages: [{ role: "user", content: userContent }]
     });
+
+    const msg = await stream.finalMessage();
 
     await store.set(jobId, JSON.stringify({
       status: "done",
-      site_html: response.output_text,
-      truncated: response.incomplete_details?.reason === "max_output_tokens"
+      site_html: msg.content[0].text,
+      truncated: msg.stop_reason === "max_tokens"
     }), { ttl: 3600 });
   } catch (err) {
     const msg = err?.message || "Unknown error";

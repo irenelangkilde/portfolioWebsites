@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 48px; }
 
     #toolbar {
       display: flex;
@@ -18,6 +18,9 @@
       color: white;
       height: 48px;
       border-bottom: 1px solid rgba(255,255,255,.1);
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
     }
     #toolbar h1 {
       font-size: 15px;
@@ -32,13 +35,33 @@
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
+      white-space: nowrap;
     }
-    .tbtn-ghost  { background: rgba(255,255,255,.12); color: #fff; }
-    .tbtn-ghost:hover { background: rgba(255,255,255,.22); }
+    .tbtn-ghost   { background: rgba(255,255,255,.12); color: #fff; }
+    .tbtn-ghost:hover  { background: rgba(255,255,255,.22); }
     .tbtn-primary { background: #667eea; color: #fff; }
     .tbtn-primary:hover { background: #5568d4; }
+    .tbtn-green   { background: #3a9e6e; color: #fff; }
+    .tbtn-green:hover  { background: #2f8259; }
 
+    /* Give GrapesJS the full remaining height */
     #gjs { height: calc(100vh - 48px); }
+
+    /* Hide all GrapesJS chrome — we use our own toolbar */
+    .gjs-pn-panels,
+    .gjs-toolbar,
+    .gjs-toolbar-item,
+    .gjs-devices-c,
+    .gjs-device-label,
+    .gjs-rte-toolbar { display: none !important; }
+
+    /* CSS-based preview mode: hide selection indicators without any overlay */
+    #gjs.preview-mode .gjs-selected,
+    #gjs.preview-mode .gjs-hovered,
+    #gjs.preview-mode [data-gjs-highlightable],
+    #gjs.preview-mode .gjs-comp-selected { outline: none !important; border: none !important; }
+    #gjs.preview-mode .gjs-cv-canvas { pointer-events: none; }
+    #gjs.preview-mode iframe { pointer-events: auto; }
 
     #no-preview {
       display: none;
@@ -57,15 +80,16 @@
 
   <div id="toolbar">
     <h1>Irene's Webworks — Visual Editor</h1>
-    <button class="tbtn tbtn-ghost"    id="btnBack">← Back to Form</button>
-    <button class="tbtn tbtn-primary"  id="btnDownload">Download HTML</button>
+    <button class="tbtn tbtn-ghost"   id="btnBack">← Back to Form</button>
+    <button class="tbtn tbtn-green"   id="btnToggleEdit">✏️ Edit</button>
+    <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
   </div>
 
   <div id="gjs"></div>
 
   <div id="no-preview">
-    <p>No preview found. Please generate a preview on Page 2 first.</p>
-    <button class="tbtn tbtn-primary" onclick="history.back()">← Go Back</button>
+    <p>No portfolio found. Please generate one on Page 3 first.</p>
+    <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
   </div>
 
   <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
@@ -78,7 +102,6 @@
       document.getElementById("gjs").style.display = "none";
       document.getElementById("toolbar").style.display = "none";
     } else {
-      // Embed headshot data URL if available
       let html = fullHtml;
       const headshotName = localStorage.getItem("portfolio_headshot_name");
       if (headshotUrl && headshotName) {
@@ -88,7 +111,6 @@
         );
       }
 
-      // Extract body content and styles from full HTML document
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, "text/html");
       const bodyHtml = doc.body.innerHTML;
@@ -100,18 +122,30 @@
         container: "#gjs",
         height: "calc(100vh - 48px)",
         storageManager: false,
+        panels: { defaults: [] },   // remove all built-in GrapesJS panels
+        deviceManager: false,       // no device switcher UI
         components: bodyHtml,
-        style: css,
-        deviceManager: {
-          devices: [
-            { name: "Desktop", width: "" },
-            { name: "Tablet",  width: "768px", widthMedia: "992px" },
-            { name: "Mobile",  width: "375px", widthMedia: "480px" }
-          ]
-        }
+        style: css
       });
 
-      editor.runCommand("preview");
+      // Start in CSS-based preview mode (avoids GrapesJS overlay that blocks toolbar clicks)
+      const gjsEl = document.getElementById("gjs");
+      gjsEl.classList.add("preview-mode");
+      let isPreviewing = true;
+
+      document.getElementById("btnToggleEdit").onclick = () => {
+        const btn = document.getElementById("btnToggleEdit");
+        if (isPreviewing) {
+          gjsEl.classList.remove("preview-mode");
+          btn.textContent = "👁 Preview";
+          btn.className = "tbtn tbtn-ghost";
+        } else {
+          gjsEl.classList.add("preview-mode");
+          btn.textContent = "✏️ Edit";
+          btn.className = "tbtn tbtn-green";
+        }
+        isPreviewing = !isPreviewing;
+      };
 
       document.getElementById("btnBack").onclick = () => {
         if (window.opener) { window.opener.focus(); }
@@ -119,7 +153,6 @@
       };
 
       document.getElementById("btnDownload").onclick = () => {
-        // Reconstruct full HTML, preserving original <head> (fonts, meta, title)
         const exportDoc = parser.parseFromString(fullHtml, "text/html");
         exportDoc.querySelectorAll("style").forEach(s => s.remove());
         const styleEl = exportDoc.createElement("style");

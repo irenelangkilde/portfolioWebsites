@@ -6,7 +6,7 @@
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Basic" },
       { id: "page2", label: "2 Colors" },
-      { id: "page4", label: "3 Target Job" }
+      { id: "page3", label: "3 Target Job" }
     ];
     let currentStep = 0;
 
@@ -178,6 +178,55 @@
     });
 
     // ----------------------------
+    // Page 2: sample color extraction
+    // ----------------------------
+    let sampleColors = null;
+    let lastExtractedUrl = "";
+
+    function applyColors(colors) {
+      if (!colors) return;
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set("primary",   colors.primary);
+      set("secondary", colors.secondary);
+      set("accent",    colors.accent);
+      set("dark",      colors.dark);
+      set("light",     colors.light);
+    }
+
+    async function fetchSampleColors(templateUrl) {
+      if (!templateUrl || templateUrl === lastExtractedUrl) return;
+      lastExtractedUrl = templateUrl;
+
+      const bar    = document.getElementById("sampleColorsBar");
+      const status = document.getElementById("sampleColorsStatus");
+      if (bar)    bar.style.display = "flex";
+      if (status) status.textContent = "Extracting colors from template…";
+
+      try {
+        const res  = await fetch(`/.netlify/functions/extractTemplateColors?url=${encodeURIComponent(templateUrl)}`);
+        const data = await res.json();
+        if (data.error) {
+          if (status) status.textContent = "Could not extract colors from template.";
+          return;
+        }
+        sampleColors = data;
+        applyColors(sampleColors);
+        if (status) status.textContent = "Colors pre-filled from template.";
+      } catch {
+        if (status) status.textContent = "Color extraction failed.";
+      }
+    }
+
+    document.getElementById("resetToSampleColors")?.addEventListener("click", () => {
+      applyColors(sampleColors);
+    });
+
+    document.getElementById("useSampleColors")?.addEventListener("change", function () {
+      const overlay = document.getElementById("sampleColorsOverlay");
+      if (overlay) overlay.style.display = this.checked ? "block" : "none";
+    });
+
+    // ----------------------------
     // Page 2: theme embed (best-effort)
     // ----------------------------
   
@@ -198,6 +247,7 @@
     function getPage2(){
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
+        use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
         theme: {
           primary: document.getElementById("primary").value.trim(),
           secondary: document.getElementById("secondary").value.trim(),
@@ -208,7 +258,7 @@
       };
     }
 
-function getPage4(){
+function getPage3(){
       return {
         desired_role: document.getElementById("desiredRole").value.trim(),
         job_ad: document.getElementById("jobAd").value
@@ -274,7 +324,7 @@ function getPage4(){
 
       const page1 = getPage1();
       const page2 = getPage2();
-      const page4 = getPage4();
+      const page3 = getPage3();
       const jobId = crypto.randomUUID();
 
       const finalBox = document.getElementById("finalBox");
@@ -307,7 +357,7 @@ function getPage4(){
       const res = await fetch("/.netlify/functions/generatePreview-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page4, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime })
+        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime })
       });
 
       if (!res.ok && res.status !== 202) {
@@ -336,14 +386,18 @@ function getPage4(){
           const dlHtml = document.getElementById("dlFinalHtml");
           const dlSummary = document.getElementById("dlSummaryHtml");
           dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
-          const all = { page1, page2, page4 };
+          const all = { page1, page2, page3 };
           const summaryHtml = buildSummaryHtml(all);
           dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
           if (page1.specialization === "Irene's Webworks") {
             dlHtml.classList.remove("hidden");
             dlSummary.classList.remove("hidden");
           }
-          finalStatus.innerHTML = `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+          finalStatus.innerHTML = data.truncated
+            ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
+            : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+          const editorBtn = document.getElementById("btnOpenEditor");
+          if (editorBtn) { editorBtn.disabled = false; editorBtn.style.opacity = ""; editorBtn.style.cursor = ""; }
           return;
         }
         if (data.status === "error") {
@@ -376,6 +430,8 @@ function getPage4(){
       const err = validatePage1Lenient();
       if (err) { alert(err); return; }
       setStep(2);
+      const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
+      if (templateUrl) fetchSampleColors(templateUrl);
     });
 
     // Page 2 back
@@ -401,8 +457,8 @@ function getPage4(){
       if (el) el.value = msg.color;
     });
 
-    // Page 3 (was page 4)
-    document.getElementById("back4_bottom")?.addEventListener("click", () => setStep(2));
+    // Page 3
+    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
       window.open("src/editor.html", "_blank");
     });

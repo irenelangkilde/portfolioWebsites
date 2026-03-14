@@ -139,6 +139,7 @@
     .hr{ height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
 
     label{ display:block; font-weight: 900; font-size: 13px; margin-bottom: 6px; }
+    label .hint{ font-size: 11px; color: rgba(234,240,255,.45); font-weight: 400; }
     input[type="text"], input[type="email"], input[type="url"], textarea, select{
       width:100%;
       padding: 10px 12px;
@@ -321,7 +322,7 @@
   <div class="wrap">
     <header>
       <h1>Personal Portfolio Website Intake</h1>
-      <p class="sub">Fill this out once. Get a draft site fast. Refine later.</p>
+      <p class="sub">Fill this out once. Get a draft site fast. er.</p>
     </header>
 
     <div class="progressCard">
@@ -400,7 +401,7 @@
       </div>
 
       <div class="btnRow">
-        <button class="btn danger" type="button" id="reset1">Reset (double-click)</button>
+        <button class="btn danger" type="button" id="reset1" style="margin-right:auto;">Reset (double-click)</button>
         <button class="btn primary" type="button" id="next1">Next</button>
       </div>
     </section>
@@ -412,13 +413,23 @@
       </div>
 
       <div class="hr"></div>
-<div class="themeLayout">
+    <!-- Sample colors bar — shown once a template URL is extracted -->
+    <div id="sampleColorsBar" style="display:none; flex-direction:row; align-items:center; flex-wrap:wrap; gap:10px; background:rgba(78,112,241,.08); border:1px solid rgba(78,112,241,.25); border-radius:8px; padding:10px 14px; margin-bottom:12px;">
+      <p id="sampleColorsStatus" class="hint" style="margin:0; flex:1; min-width:120px;"></p>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; margin:0; white-space:nowrap;">
+        <input type="checkbox" id="useSampleColors" style="width:15px; height:15px; accent-color:var(--primary); cursor:pointer;" />
+        Use sample colors <span class="hint" style="font-weight:400;">(ignores palette)</span>
+      </label>
+      <button type="button" id="resetToSampleColors" class="btn ghost" style="font-size:12px; padding:5px 12px; white-space:nowrap;">↺ Reset to sample colors</button>
+    </div>
+<div class="themeLayout" style="position:relative;">
+  <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
   <div class="themeLeft">
-    <div class="field"><label for="primary">1. Primary</label><input id="primary" type="color" value="#000000" /></div>
-    <div class="field"><label for="secondary">2. Secondary</label><input id="secondary" type="color" value="#000000" /></div>
-    <div class="field"><label for="accent">3. Accent</label><input id="accent" type="color" value="#000000" /></div>
-    <div class="field"><label for="dark">4. Dark</label><input id="dark" type="color" value="#000000" /></div>
-    <div class="field"><label for="light">5. Light</label><input id="light" type="color" value="#000000" /></div>
+    <div class="field"><label for="primary">1. Primary</label><p class="hint" style="margin:2px 0 6px;">Headings, buttons, key branding</p><input id="primary" type="color" value="#000000" /></div>
+    <div class="field"><label for="secondary">2. Secondary</label><p class="hint" style="margin:2px 0 6px;">Subheadings, links, secondary buttons</p><input id="secondary" type="color" value="#000000" /></div>
+    <div class="field"><label for="accent">3. Accent</label><p class="hint" style="margin:2px 0 6px;">Highlights, hover states, calls to action</p><input id="accent" type="color" value="#000000" /></div>
+    <div class="field"><label for="dark">4. Dark</label><p class="hint" style="margin:2px 0 6px;">Dark section backgrounds</p><input id="dark" type="color" value="#000000" /></div>
+    <div class="field"><label for="light">5. Light</label><p class="hint" style="margin:2px 0 6px;">Light section backgrounds</p><input id="light" type="color" value="#000000" /></div>
   </div>
 
   <div class="themeRight">
@@ -463,12 +474,11 @@
           <button class="btn ghost" type="button" id="back2_bottom">Back</button>
           <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Next</button>
         </div>
-      </div>
     </section>
 
 
-    <!-- PAGE 4: Job target -->
-    <section class="card hidden" id="page4">
+    <!-- PAGE 3: Job target -->
+    <section class="card hidden" id="page3">
       <div class="sectionTitle">
         <h2>Page 3 — Target Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
@@ -480,25 +490,25 @@
           <input id="desiredRole" type="text" placeholder="e.g., Entry-level Data Analyst" />
         </div>
         <div>
-          <label for="jobAd">Job Position Ad</label>
+          <label for="jobAd">Job Position Description</label>
           <textarea id="jobAd" placeholder="Paste the job posting here (optional)."></textarea>
         </div>
+      </div>
 
-        <div class="btnRow">
-          <button class="btn ghost" type="button" id="back4_bottom">Back</button>
-          <button class="btn primary" type="button" id="submit_bottom">Submit</button>
+      <div class="btnRow">
+        <button class="btn ghost" type="button" id="back3_bottom">Back</button>
+        <button class="btn primary" type="button" id="submit_bottom">Submit</button>
+      </div>
+
+      <div id="finalBox" class="hidden">
+        <div class="note">
+          <div id="finalStatus" class="hint"></div>
         </div>
 
-        <div id="finalBox" class="hidden">
-          <div class="note">
-            <div id="finalStatus" class="hint"></div>
-          </div>
-
-          <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
-            <button class="btn mini hidden" type="button" id="dlFinalHtml">Download portfolio.html</button>
-            <button class="btn mini ghost hidden" type="button" id="dlSummaryHtml">Download summary</button>
-            <button class="btn primary" type="button" id="btnOpenEditor" style="margin-left:auto;">Edit in Visual Editor</button>
-          </div>
+        <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
+          <button class="btn mini hidden" type="button" id="dlFinalHtml">Download portfolio.html</button>
+          <button class="btn mini ghost hidden" type="button" id="dlSummaryHtml">Download summary</button>
+          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Edit in Visual Editor</button>
         </div>
       </div>
     </section>
