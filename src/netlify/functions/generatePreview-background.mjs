@@ -9,6 +9,7 @@ Major and specialization (e.g., "Data Science" with specialization in "Machine L
 Resume PDF content (name, contact info, education, experience, skills, projects)
 Sample website HTML (use this as your style and layout template if provided; if not then improvise and follow best practices)
 Color scheme (hex codes for primary, secondary, accent colors)
+Job target (desired role, job posting)
 
 INTERNAL PLANNING STEP (DO NOT OUTPUT)
 
@@ -20,6 +21,7 @@ Before generating the website, internally determine:
 4. the logical section order for the website
 5. how the sample HTML layout should be adapted
 6. how to apply the provided color palette consistently
+7. what to highlight, emphasize, or prioritize in consideration of the target job
 
 Do not output this planning step.
 Use the strengths of a website:
@@ -35,7 +37,15 @@ Use the strengths of a website:
 Instructions
 1. Structure & Layout
 
-Use the sample website HTML as your template for style, navigation structure, and overall layout.  In particular, copy exactly the formatting of the hero section, just changing the color, if needed.
+Use the sample website HTML as your template for style, navigation structure, and overall layout.
+
+CRITICAL — Hero & background fidelity:
+• Reproduce the hero section's visual technique EXACTLY: if the sample uses a CSS gradient background, radial-gradient orbs, blobs, animated shapes, or layered background elements, copy that CSS technique faithfully and re-skin it with the provided color scheme. Do NOT flatten it to a solid or plain white background.
+• If the sample hero background is a multi-stop gradient (linear or radial), preserve every stop — just swap the hue values to match the provided colors while keeping the same structure (directions, stop positions, blend).
+• If the sample has floating decorative elements (glowing orbs, soft blobs, glassmorphism cards), reproduce them with equivalent CSS using the provided colors.
+• Only deviate from the sample's background technique if no sample is provided.
+
+If it contains a foreground image besides a headshot, generate a new hero image that correlates with the input color scheme and the theme of the major + specialization.
 Maintain the responsive design patterns from the sample.
 Preserve any unique design elements (banners, gradients, grid layouts, card designs)
 If no headshot photo is provided, render a monogram instead.
@@ -57,7 +67,7 @@ Alternate between light and dark sections
 Ensure sufficient contrast for accessibility (text must be readable)
 
 3. Content Transformation (CRITICAL)
-Do NOT just copy resume text to the website. Transform it to leverage website advantages:
+Do NOT just copy resume text to the website. Enhance and embellish it to leverage website advantages and to illustrate to the user their full potential; but avoid misrepresentations.  The goal is to WOW the potential employer and their recruiters by portraying the user at their best. 
 From Resume → To Website
 Education Section:
 
@@ -143,7 +153,7 @@ Additional Website-Only Content
 Add sections that wouldn't fit on a resume:
 About Me Section:
 
-Write a compelling 2-3 paragraph narrative
+Write a compelling 3-6 sentence narrative
 Include professional interests, career goals, what makes them unique
 Make it personable but professional
 Incorporate the major/specialization naturally
@@ -206,7 +216,7 @@ Include proper meta tags:
 Before finalizing, ensure:
 
  All colors from the color scheme are used consistently
- The header and hero section of the new generated site mirror those of the input sample website.
+ The hero section's background technique (gradient, orbs, blobs, shapes) matches the sample — NOT a flat/white background
  No Lorem ipsum or placeholder text
  Contact information is accurate and formatted correctly
  All sections from the resume are represented and expanded
@@ -222,10 +232,15 @@ Provide the complete HTML file only (ready to save and deploy). No summary, no s
 
 INPUT DATA
 
-Headshot photo: {{HEADSHOT_PHOTO}} (placed in header, hero or footer as most suiting, if provided; add a monogram instead)
+Template screenshot: {{TEMPLATE_SCREENSHOT}}
+
+Headshot photo: {{HEADSHOT_PHOTO}} (placed in header, hero or footer as most suiting, if provided; otherwise add a monogram instead)
 
 Major: {{MAJOR}}
 Specialization: {{SPECIALIZATION}}
+
+Target Job:
+{{JOB_INFO}}
 
 Resume: (attached as PDF — extract name, email, phone, LinkedIn, GitHub, and all other content from it)
 
@@ -267,7 +282,7 @@ async function fetchSampleHtml(url) {
       signal: AbortSignal.timeout(8000)
     });
     if (!res.ok) return "";
-    return (await res.text()).slice(0, 12000);
+    return (await res.text()).slice(0, 40000);
   } catch {
     return "";
   }
@@ -296,7 +311,7 @@ export async function handler(event) {
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
 
-    const { page1 = {}, page2 = {}, resumePdfBase64 = "", headshotName = "" } = body;
+    const { page1 = {}, page2 = {}, page4 = {}, resumePdfBase64 = "", headshotName = "", templateScreenshotBase64 = "", templateScreenshotMime = "" } = body;
 
     if (!resumePdfBase64) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
@@ -323,13 +338,21 @@ export async function handler(event) {
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);
 
+    const jobInfo = (page4?.desired_role || page4?.job_ad)
+      ? `Desired role: ${page4.desired_role || "(not specified)"}\n\nJob posting:\n${page4.job_ad || "(not provided)"}`
+      : "(not provided)";
+
     const prompt = fillTemplate(PROMPT_TEMPLATE, {
       MAJOR:               page1.major          || "",
       SPECIALIZATION:      page1.specialization || "",
       COLOR_SCHEME_JSON:   JSON.stringify(theme, null, 2),
       SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
       HEADSHOT_PHOTO:      headshotName ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder` : "not provided — render a CSS monogram using the person's initials",
-      YEAR:                new Date().getFullYear().toString()
+      YEAR:                new Date().getFullYear().toString(),
+      JOB_INFO:            jobInfo,
+      TEMPLATE_SCREENSHOT: templateScreenshotBase64
+        ? "A screenshot of the template website is attached as an image in this message. Use it as the PRIMARY visual style reference — faithfully reproduce its background gradients, decorative elements, and overall atmosphere using the provided color scheme."
+        : "(not provided — rely on the sample HTML below for style reference)"
     });
 
     const userContent = [];
@@ -337,6 +360,12 @@ export async function handler(event) {
       userContent.push({
         type: "document",
         source: { type: "base64", media_type: "application/pdf", data: resumePdfBase64 }
+      });
+    }
+    if (templateScreenshotBase64 && templateScreenshotMime) {
+      userContent.push({
+        type: "image",
+        source: { type: "base64", media_type: templateScreenshotMime, data: templateScreenshotBase64 }
       });
     }
     userContent.push({ type: "text", text: prompt });

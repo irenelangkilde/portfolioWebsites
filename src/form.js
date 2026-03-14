@@ -5,7 +5,7 @@
     const PAGES = [
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Basic" },
-      { id: "page2", label: "2 Colors + Preview" },
+      { id: "page2", label: "2 Colors" },
       { id: "page4", label: "3 Target Job" }
     ];
     let currentStep = 0;
@@ -122,6 +122,27 @@
     });
 
     // ----------------------------
+    // Page 1: template screenshot preview
+    // ----------------------------
+    const templateScreenshotInput   = document.getElementById("templateScreenshot");
+    const templateScreenshotPreview = document.getElementById("templateScreenshotPreview");
+    const templateScreenshotImg     = document.getElementById("templateScreenshotImg");
+    templateScreenshotInput?.addEventListener("change", () => {
+      const file = templateScreenshotInput.files?.[0];
+      if (file && file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          templateScreenshotImg.src = e.target.result;
+          templateScreenshotPreview.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+      } else {
+        templateScreenshotPreview.style.display = "none";
+        templateScreenshotImg.src = "";
+      }
+    });
+
+    // ----------------------------
     // Page 1: headshot preview
     // ----------------------------
     const headshotInput   = document.getElementById("headshot");
@@ -213,10 +234,8 @@ function getPage4(){
     }
 
     // ----------------------------
-    // Preview generation (Page 2 Next)
+    // Helpers
     // ----------------------------
-    let previewDraft = null; // { site_json, site_html }
-
     async function readFileAsBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -226,122 +245,9 @@ function getPage4(){
       });
     }
 
-    async function generatePreview(){
-      const err = validatePage1Lenient();
-      if (err) throw new Error(err);
-
-      const resumeFile = resumeUpload.files[0];
-      if (!resumeFile) throw new Error("Please upload your resume PDF before generating.");
-
-      const page1 = getPage1();
-      const page2 = getPage2();
-      const jobId = crypto.randomUUID();
-
-      const box = document.getElementById("page2PreviewBox");
-      const status = document.getElementById("page2Status");
-      const navRow = document.getElementById("page2NavRow");
-      box.classList.remove("hidden");
-      navRow?.classList.add("hidden");
-      box.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      status.textContent = "Reading resume PDF…";
-
-      let resumePdfBase64 = "";
-      try {
-        resumePdfBase64 = await readFileAsBase64(resumeFile);
-      } catch (e) {
-        throw new Error("Could not read resume PDF: " + e.message);
-      }
-
-      const headshotName = headshotInput.files?.[0]?.name || "";
-
-      status.textContent = "Submitting request…";
-
-      // Submit to background function (returns 202 immediately in production)
-      const res = await fetch("/.netlify/functions/generatePreview-background", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, jobId, resumePdfBase64, headshotName })
-      });
-
-      if (!res.ok && res.status !== 202) {
-        const rawText = await res.text();
-        let data = {};
-        try { data = JSON.parse(rawText); } catch {}
-        throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
-      }
-
-      // Poll for result (up to 12 minutes)
-      const startTime = Date.now();
-      const maxWaitMs = 720000;
-      const pollIntervalMs = 4000;
-
-      while (Date.now() - startTime < maxWaitMs) {
-        await new Promise(r => setTimeout(r, pollIntervalMs));
-        const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-        status.textContent = `Generating your rough draft… ${remaining}s remaining`;
-
-        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
-        const data = await pollRes.json().catch(() => ({}));
-
-        if (data.status === "done") {
-          previewDraft = data;
-          if (previewDraft.site_json) {
-            localStorage.setItem("portfolio_preview_json", JSON.stringify(previewDraft.site_json));
-          }
-          localStorage.setItem("portfolio_preview_html", previewDraft.site_html);
-          // Save headshot for the visual editor
-          const headshotFile = headshotInput?.files?.[0];
-          if (headshotFile) {
-            localStorage.setItem("portfolio_headshot_name", headshotFile.name);
-            const r = new FileReader();
-            r.onload = () => localStorage.setItem("portfolio_headshot_dataurl", r.result);
-            r.readAsDataURL(headshotFile);
-          } else {
-            localStorage.removeItem("portfolio_headshot_name");
-            localStorage.removeItem("portfolio_headshot_dataurl");
-          }
-          status.innerHTML = `<span class="ok">Preview ready.</span> Click Next to continue.`;
-          return;
-        }
-        if (data.status === "error") {
-          throw new Error(data.error || "Generation failed.");
-        }
-        // still pending — keep polling
-      }
-
-      throw new Error("Generation timed out after 12 minutes.");
-    }
-
-
     // ----------------------------
-    // Submission (Page 4)
+    // Submission (Page 3)
     // ----------------------------
-    let finalResponseText = "";
-    let finalSiteJson = null;
-    let finalSiteHtml = null;
-
-    function buildFinalPrompt(all){
-      // Keep it compact and skimmable: this prompt is meant to be sent to your API.
-      // It includes the preview JSON if present, to refine rather than regenerate from scratch.
-      const previewJson = localStorage.getItem("portfolio_preview_json");
-
-      return [
-        "You are a portfolio website generator.",
-        "Goal: Build an impactful one-page portfolio website as quickly, cheaply, and easily as possible using the user’s pre-existing materials where available, while staying true to the user’s real profile. Generate original content when needed and avoid copyright infringement.",
-        "",
-        "OUTPUT REQUIREMENTS:",
-        "1) Return JSON (site_json) and HTML (site_html).",
-        "2) Also return a short 'custom_advice' section (3–6 bullets) personalized to the user.",
-        "3) Be skimmable: ~100 words per section max.",
-        "4) Do NOT fabricate real employers/schools/projects. Use placeholders if missing.",
-        "",
-        "USER DATA:",
-        JSON.stringify(all, null, 2),
-        "",
-        "PREVIEW (if available):",
-        previewJson ? previewJson : "(none)",
-      ].join("\\n");
-    }
 
     function buildSummaryHtml(all){
       const esc = (s) => String(s ?? "")
@@ -377,96 +283,90 @@ function getPage4(){
       const p1Err = validatePage1Lenient();
       if (p1Err) throw new Error(p1Err);
 
-      const all = {
-        page1: getPage1(),
-        page2: getPage2(),
-        page4: getPage4()
-      };
+      const resumeFile = resumeUpload.files[0];
+      if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
 
-      console.log("FORM_SUBMISSION_ALL_DATA", all);
+      const page1 = getPage1();
+      const page2 = getPage2();
+      const page4 = getPage4();
+      const jobId = crypto.randomUUID();
 
       const finalBox = document.getElementById("finalBox");
       const finalStatus = document.getElementById("finalStatus");
-      const promptPre = document.getElementById("promptPreview");
-      const finalPre = document.getElementById("finalPreview");
       finalBox.classList.remove("hidden");
-      finalStatus.textContent = "Building prompt…";
-      finalPre.textContent = "";
-      promptPre.textContent = "";
+      finalBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      finalStatus.textContent = "Reading resume PDF…";
 
-      const prompt = buildFinalPrompt(all);
-      promptPre.textContent = prompt;
+      let resumePdfBase64 = "";
+      try {
+        resumePdfBase64 = await readFileAsBase64(resumeFile);
+      } catch (e) {
+        throw new Error("Could not read resume PDF: " + e.message);
+      }
 
-      // Prepare summary html download
-      const summaryHtml = buildSummaryHtml(all);
-      window.__summaryHtml = summaryHtml;
+      const headshotName = headshotInput.files?.[0]?.name || "";
 
-      finalStatus.textContent = "Submitting to generation endpoint…";
+      let templateScreenshotBase64 = "";
+      let templateScreenshotMime = "";
+      const screenshotFile = templateScreenshotInput?.files?.[0];
+      if (screenshotFile && screenshotFile.type.startsWith("image/")) {
+        try {
+          templateScreenshotBase64 = await readFileAsBase64(screenshotFile);
+          templateScreenshotMime = screenshotFile.type;
+        } catch { /* non-fatal — proceed without screenshot */ }
+      }
 
-      // Try a final endpoint if you have one (recommended):
-      // - /.netlify/functions/generateFinal  (you can implement later)
-      // Fallback: try generateZip (if available), otherwise show prompt only.
-      let responseData = null;
+      finalStatus.textContent = "Submitting request…";
 
-      async function tryPost(url, payload){
-        const r = await fetch(url, {
-          method:"POST",
-          headers:{ "content-type":"application/json" },
-          body: JSON.stringify(payload)
-        });
-        // some endpoints may return non-json; handle carefully
-        const ct = r.headers.get("content-type") || "";
-        let body = null;
-        if (ct.includes("application/json")) body = await r.json().catch(() => null);
-        else body = await r.text().catch(() => null);
-        if (!r.ok) {
-          const msg = (body && body.error) ? body.error : `Request failed: ${r.status}`;
-          throw new Error(msg);
+      const res = await fetch("/.netlify/functions/generatePreview-background", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ page1, page2, page4, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime })
+      });
+
+      if (!res.ok && res.status !== 202) {
+        const rawText = await res.text();
+        let data = {};
+        try { data = JSON.parse(rawText); } catch {}
+        throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
+      }
+
+      // Poll for result (up to 12 minutes)
+      const startTime = Date.now();
+      const maxWaitMs = 720000;
+      const pollIntervalMs = 4000;
+
+      while (Date.now() - startTime < maxWaitMs) {
+        await new Promise(r => setTimeout(r, pollIntervalMs));
+        const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
+        finalStatus.textContent = `Generating your portfolio… ${remaining}s remaining`;
+
+        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+        const data = await pollRes.json().catch(() => ({}));
+
+        if (data.status === "done") {
+          localStorage.setItem("portfolio_preview_html", data.site_html);
+          // Wire download buttons and reveal them for admin users
+          const dlHtml = document.getElementById("dlFinalHtml");
+          const dlSummary = document.getElementById("dlSummaryHtml");
+          dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
+          const all = { page1, page2, page4 };
+          const summaryHtml = buildSummaryHtml(all);
+          dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
+          if (page1.specialization === "Irene's Webworks") {
+            dlHtml.classList.remove("hidden");
+            dlSummary.classList.remove("hidden");
+          }
+          finalStatus.innerHTML = `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+          return;
         }
-        return { ct, body, rawResponse: r };
+        if (data.status === "error") {
+          throw new Error(data.error || "Generation failed.");
+        }
+        // still pending — keep polling
       }
 
-      try{
-        // If you implement it, this should return: { site_json, site_html, custom_advice } (JSON)
-        const attempt = await tryPost("/.netlify/functions/generateFinal", { all, prompt });
-        if (attempt.ct.includes("application/json")) responseData = attempt.body;
-      } catch(e){
-        // Fallback: no-op. We'll show prompt as the primary artifact.
-        responseData = null;
-      }
-
-      if (responseData && responseData.site_json && responseData.site_html){
-        finalSiteJson = responseData.site_json;
-        finalSiteHtml = responseData.site_html;
-        finalResponseText = JSON.stringify(responseData, null, 2);
-        finalStatus.innerHTML = `<span class="ok">Success.</span> Model output is available below.`;
-        finalPre.textContent = finalResponseText;
-      } else {
-        finalStatus.innerHTML = `<span class="ok">Success.</span> Prompt generated. (To auto-run generation, deploy a <code>generateFinal</code> Netlify function.)`;
-        finalPre.textContent =
-          "No final generation endpoint was detected.\\n\\n" +
-          "You can copy/download the prompt above and run it in ChatGPT, OR create /.netlify/functions/generateFinal to return {site_json, site_html, custom_advice}.";
-      }
-
-      // Wire prompt downloads
-      document.getElementById("dlPrompt").onclick = () => downloadText("portfolio_prompt.txt", prompt, "text/plain");
-      document.getElementById("cpPrompt").onclick = () => copyToClipboard(prompt);
-
-      // Wire final downloads (if present)
-      document.getElementById("dlFinalJson").onclick = () => {
-        if (!finalSiteJson) return;
-        downloadText("portfolio_final.json", JSON.stringify(finalSiteJson, null, 2), "application/json");
-      };
-      document.getElementById("dlFinalHtml").onclick = () => {
-        if (!finalSiteHtml) return;
-        downloadText("portfolio_final.html", finalSiteHtml, "text/html");
-      };
-      document.getElementById("cpFinal").onclick = () => copyToClipboard(finalPre.textContent || "");
-
-      // Summary download
-      document.getElementById("dlSummaryHtml").onclick = () => {
-        downloadText("MyPersonalPortfolioWebsiteSummary.html", window.__summaryHtml || summaryHtml, "text/html");
-      };
+      throw new Error("Generation timed out after 12 minutes.");
     }
 
     // ----------------------------
@@ -481,6 +381,9 @@ function getPage4(){
       if (headshotInput) headshotInput.value = "";
       if (headshotPreview) headshotPreview.style.display = "none";
       if (headshotImg) headshotImg.src = "";
+      if (templateScreenshotInput) templateScreenshotInput.value = "";
+      if (templateScreenshotPreview) templateScreenshotPreview.style.display = "none";
+      if (templateScreenshotImg) templateScreenshotImg.src = "";
     });
 
     document.getElementById("next1")?.addEventListener("click", () => {
@@ -495,24 +398,7 @@ function getPage4(){
     });
 
     // Page 2 next (top/bottom) -> generate preview (do not auto-advance)
-    async function page2Next(){
-      const btnTop = document.getElementById("next2_top");
-      const btnBottom = document.getElementById("next2_bottom");
-      if (btnTop) btnTop.disabled = true;
-      if (btnBottom) btnBottom.disabled = true;
-      try{
-        await generatePreview();
-      } catch(e){
-        document.getElementById("page2PreviewBox")?.classList.remove("hidden");
-        document.getElementById("page2NavRow")?.classList.add("hidden");
-        document.getElementById("page2Status").innerHTML = `<span class="error">Error:</span> ${e.message || "Preview failed"}`;
-      } finally{
-        if (btnTop) btnTop.disabled = false;
-        if (btnBottom) btnBottom.disabled = false;
-      }
-    }
-    document.getElementById("next2_top")?.addEventListener("click", page2Next);
-    document.getElementById("next2_bottom")?.addEventListener("click", page2Next);
+    document.getElementById("next2_bottom")?.addEventListener("click", () => setStep(3));
 
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
@@ -529,33 +415,23 @@ function getPage4(){
       if (el) el.value = msg.color;
     });
 
-    document.getElementById("continueTo3")?.addEventListener("click", () => setStep(3));
-    document.getElementById("back2_from_preview")?.addEventListener("click", () => {
-      document.getElementById("page2PreviewBox")?.classList.add("hidden");
-      document.getElementById("page2NavRow")?.classList.remove("hidden");
-    });
-
     // Page 3 (was page 4)
-    ["back4_top","back4_bottom"].forEach(id => {
-      document.getElementById(id)?.addEventListener("click", () => setStep(2));
-    });
+    document.getElementById("back4_bottom")?.addEventListener("click", () => setStep(2));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
       window.open("src/editor.html", "_blank");
     });
     async function doSubmit(){
-      const btnA = document.getElementById("submit_top");
-      const btnB = document.getElementById("submit_bottom");
-      btnA.disabled = true; btnB.disabled = true;
+      const btn = document.getElementById("submit_bottom");
+      btn.disabled = true;
       try{
         await submitAll();
       } catch(e){
         document.getElementById("finalBox").classList.remove("hidden");
         document.getElementById("finalStatus").innerHTML = `<span class="error">Error:</span> ${e.message || "Submit failed"}`;
       } finally{
-        btnA.disabled = false; btnB.disabled = false;
+        btn.disabled = false;
       }
     }
-    document.getElementById("submit_top")?.addEventListener("click", doSubmit);
     document.getElementById("submit_bottom")?.addEventListener("click", doSubmit);
 
     // ----------------------------
