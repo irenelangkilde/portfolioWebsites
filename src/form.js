@@ -164,31 +164,17 @@
     });
 
     // ----------------------------
-    // Page 1: resume drag-and-drop
+    // Page 1: resume file input
     // ----------------------------
-    const resumeDropzone = document.getElementById("resumeDropzone");
     const resumeUpload   = document.getElementById("resumeUpload");
     const resumeFileList = document.getElementById("resumeFileList");
-    function showResumeFiles(files) {
+    resumeUpload.addEventListener("change", () => {
       resumeFileList.innerHTML = "";
-      Array.from(files).forEach(f => {
+      Array.from(resumeUpload.files).forEach(f => {
         const li = document.createElement("li");
         li.textContent = f.name;
         resumeFileList.appendChild(li);
       });
-    }
-    resumeUpload.addEventListener("change", () => showResumeFiles(resumeUpload.files));
-    resumeDropzone.addEventListener("dragover", e => { e.preventDefault(); resumeDropzone.classList.add("dragover"); });
-    resumeDropzone.addEventListener("dragleave", () => resumeDropzone.classList.remove("dragover"));
-    resumeDropzone.addEventListener("drop", e => {
-      e.preventDefault();
-      resumeDropzone.classList.remove("dragover");
-      const allowed = Array.from(e.dataTransfer.files).filter(f => /\.(pdf|doc|docx)$/i.test(f.name));
-      if (!allowed.length) return;
-      const dt = new DataTransfer();
-      allowed.forEach(f => dt.items.add(f));
-      resumeUpload.files = dt.files;
-      showResumeFiles(allowed);
     });
 
     // ----------------------------
