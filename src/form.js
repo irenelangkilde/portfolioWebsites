@@ -193,6 +193,22 @@
       set("light",     colors.light);
     }
 
+    function isOwnLibraryUrl(url) {
+      if (!url) return true;
+      try {
+        const parsed = new URL(url, window.location.href);
+        return parsed.origin === window.location.origin && parsed.pathname.startsWith("/html/");
+      } catch { return false; }
+    }
+
+    function updateTemplateCopyrightVisibility() {
+      const url = document.getElementById("modelTemplate")?.value?.trim();
+      const wrap = document.getElementById("templateCopyrightWrap");
+      if (wrap) wrap.style.display = url && !isOwnLibraryUrl(url) ? "block" : "none";
+    }
+
+    document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
+
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
       lastExtractedUrl = templateUrl;
@@ -322,6 +338,12 @@ function getPage3(){
       const resumeFile = resumeUpload.files[0];
       if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
 
+      const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
+      if (templateUrl && !isOwnLibraryUrl(templateUrl)) {
+        const ack = document.getElementById("templateCopyrightAck");
+        if (!ack?.checked) throw new Error("Please confirm the copyright acknowledgement for the template URL before submitting.");
+      }
+
       const page1 = getPage1();
       const page2 = getPage2();
       const page3 = getPage3();
@@ -375,7 +397,7 @@ function getPage3(){
       while (Date.now() - startTime < maxWaitMs) {
         await new Promise(r => setTimeout(r, pollIntervalMs));
         const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-        finalStatus.textContent = `Generating your portfolio… ${remaining}s remaining`;
+        finalStatus.textContent = `Generating your portfolio website… ${remaining}s remaining`;
 
         const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
         const data = await pollRes.json().catch(() => ({}));

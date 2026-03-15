@@ -1,8 +1,16 @@
-import OpenAI from "openai";
+import OpenAI, { toFile } from "openai";
 import { getStore } from "@netlify/blobs";
 
-const PROMPT_TEMPLATE = `Generate a portfolio website for the input major specializing 
-in the inputs specialization using the input resume for content and the input web page for style, layout, color scheme, etc.`;
+const PROMPT_TEMPLATE = `You are building a personal portfolio website for a job seeker.
+Use all the content of the input resume PDF (e.g., name, contact info, education, experience, projects, skills, etc) as the foundation for the new website.
+Use the provided sample web page only as a structural and visual style reference — adopt its layout patterns, card designs, and background gradient technique, but populate it overwhelmingly with the resume owner's own information.
+Mark with a triple asterisk (***) anything fabricated beyond the resume info.
+You have a mandate to make improvements in overall quality and impactfulness, such as expanding narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
+Do not fabricate achievements, metrics, employers, projects, dates, or credentials.
+Apply the input color scheme to ALL colored elements throughout the new page — body background, decorative card visuals, orbs, bubbles, brand mark, and any other gradient or background elements. Every element should use the new color scheme, rather than the sample's colors. 
+Element content should be adapted to match the themes of corresponding elements of the job seeker's resume, for example: a visual with red laser beams for an Electrical Engineering major with a specialization in lasers.
+{{COLOR_INSTRUCTION}}
+Output the complete, self-contained HTML file only (ready to save and open in a browser); no explanation, no markdown — just the file.`;
 
 const PROMPT_TEMPLATE_LONG = `NON-NEGOTIABLE REQUIREMENTS (read before anything else):
 A. Output a SINGLE complete HTML file. Never stop mid-section. If content is long, be more concise per section rather than omitting sections.
@@ -322,12 +330,15 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!process.env.OPENAI_API_KEY_LOCAL && !process.env.OPENAI_API_KEY) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    // OPENAI_API_KEY_LOCAL bypasses Netlify dev's AI gateway proxy, which replaces
+    // OPENAI_API_KEY with a JWT and redirects the base URL, causing 404s on /v1/responses.
+    const apiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
+    const client = new OpenAI({ apiKey, baseURL: "https://api.openai.com/v1" });
 
     const theme = {
       primary:   page2?.theme?.primary   || "#4E70F1",
@@ -358,13 +369,15 @@ export async function handler(event) {
         : "(not provided — rely on the sample HTML below for style reference)"
     });
 
+    // Upload PDF via Files API so it can be referenced by file_id
+    const pdfBuffer = Buffer.from(resumePdfBase64, "base64");
+    const uploadedFile = await client.files.create({
+      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
+      purpose: "user_data"
+    });
+
     const inputContent = [];
-    if (resumePdfBase64) {
-      inputContent.push({
-        type: "input_file",
-        file_data: `data:application/pdf;base64,${resumePdfBase64}`
-      });
-    }
+    inputContent.push({ type: "input_file", file_id: uploadedFile.id });
     if (templateScreenshotBase64 && templateScreenshotMime) {
       inputContent.push({
         type: "input_image",
@@ -379,14 +392,52 @@ export async function handler(event) {
 
     const response = await client.responses.create({
       model: "gpt-4o",
-      instructions: "You are an expert portfolio-website generator. Return ONLY a complete standalone HTML file with embedded CSS — no markdown fences, no text before or after the HTML tag. Do NOT embed base64 image data or long SVG data URIs — use short placeholder comments like <!-- headshot photo --> instead.",
-      input: [{ role: "user", content: inputContent }],
+input: [{ role: "user", content: inputContent }],
       max_output_tokens: 32000
     });
 
+    // Clean up the uploaded file (non-fatal if it fails)
+    client.files.del(uploadedFile.id).catch(() => {});
+
+    // Strip markdown fences if model wrapped output
+    let rawHtml = response.output_text
+      .replace(/^```[a-zA-Z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
+
+    // Fix invalid CSS: remove any "initial" layers from background-image comma-separated lists.
+    // Simple regex fails here because gradient values contain commas; use a depth-aware splitter.
+    rawHtml = rawHtml.replace(/background-image\s*:([^;]+);/g, (_match, value) => {
+      const parts = [];
+      let depth = 0, curr = "";
+      for (const ch of value) {
+        if (ch === "(") depth++;
+        else if (ch === ")") depth--;
+        if (ch === "," && depth === 0) { parts.push(curr.trim()); curr = ""; }
+        else curr += ch;
+      }
+      if (curr.trim()) parts.push(curr.trim());
+      const cleaned = parts.filter(p => p.toLowerCase() !== "initial");
+      return cleaned.length ? `background-image:${cleaned.join(", ")};` : "";
+    });
+
+    // Remove background sub-properties whose values are entirely comma-separated "initial" keywords —
+    // these are invalid in multi-value lists and can cause browsers to suppress the whole background stack
+    const siteHtml = rawHtml.replace(
+      /background-(?:position-x|position-y|size|repeat|attachment|origin|clip)\s*:\s*(?:initial\s*,?\s*)+;/g, ""
+    );
+
+    // Detect model refusals — a valid HTML file always starts with a tag.
+    // If the output contains no HTML tags, treat it as an error rather than rendering the refusal text.
+    if (!/<[a-z]/i.test(siteHtml)) {
+      await store.set(jobId, JSON.stringify({
+        status: "error",
+        error: "The AI declined to generate the portfolio. Try adjusting your inputs or color scheme and resubmitting."
+      }), { ttl: 3600 });
+      return { statusCode: 202 };
+    }
+
     await store.set(jobId, JSON.stringify({
       status: "done",
-      site_html: response.output_text,
+      site_html: siteHtml,
       truncated: response.incomplete_details?.reason === "max_output_tokens"
     }), { ttl: 3600 });
   } catch (err) {

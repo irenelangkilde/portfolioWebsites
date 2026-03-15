@@ -47,23 +47,21 @@
     /* Give GrapesJS the full remaining height */
     #gjs { height: calc(100vh - 48px); }
 
+    /* Force the GrapesJS canvas iframe to fill the full canvas height so that
+       `100vh` inside the iframe matches the canvas height, not the content height.
+       Without this, `height: 100vh` hero sections shrink to content height and
+       hide top/bottom accent elements. */
+    .gjs-cv-canvas,
+    .gjs-frame-wrapper,
+    .gjs-frame { height: 100% !important; min-height: 100% !important; }
+
     /* Hide all GrapesJS chrome — we use our own toolbar */
     .gjs-pn-panels,
-    .gjs-toolbar,
-    .gjs-toolbar-item,
     .gjs-devices-c,
     .gjs-device-label,
     .gjs-rte-toolbar { display: none !important; }
 
-    /* CSS-based preview mode: hide selection indicators without any overlay */
-    #gjs.preview-mode .gjs-selected,
-    #gjs.preview-mode .gjs-hovered,
-    #gjs.preview-mode [data-gjs-highlightable],
-    #gjs.preview-mode .gjs-comp-selected { outline: none !important; border: none !important; }
-    #gjs.preview-mode .gjs-cv-canvas { pointer-events: none; }
-    #gjs.preview-mode iframe { pointer-events: auto; }
-
-    #no-preview {
+#no-preview {
       display: none;
       position: fixed; inset: 0;
       background: #1a1a2e;
@@ -128,19 +126,40 @@
         style: css
       });
 
-      // Start in CSS-based preview mode (avoids GrapesJS overlay that blocks toolbar clicks)
-      const gjsEl = document.getElementById("gjs");
-      gjsEl.classList.add("preview-mode");
-      let isPreviewing = true;
+      let isPreviewing = false; // GrapesJS starts in edit mode; we switch to preview on load
+
+      editor.on("load", () => {
+        // GrapesJS expands `background: gradients, #color` shorthand into
+        // `background-image: gradients, initial; background-color: #color` — the `initial`
+        // in a comma-separated background-image list is invalid CSS and the browser drops
+        // the entire declaration, leaving a white canvas. Fix: append the original
+        // (unmangled) CSS into the iframe so it takes precedence via source order.
+        try {
+          const iframeDoc = editor.Canvas.getFrameEl()?.contentDocument;
+          if (iframeDoc?.head) {
+            const fix = iframeDoc.createElement("style");
+            fix.textContent = css;
+            iframeDoc.head.appendChild(fix);
+          }
+        } catch (e) { /* cross-origin or not ready — ignore */ }
+
+        // Start in preview mode using GrapesJS's built-in command, which disables
+        // all edit-mode interaction (hover highlights, selection, etc.)
+        editor.runCommand("core:preview");
+        isPreviewing = true;
+        const btn = document.getElementById("btnToggleEdit");
+        btn.textContent = "✏️ Edit";
+        btn.className = "tbtn tbtn-green";
+      });
 
       document.getElementById("btnToggleEdit").onclick = () => {
         const btn = document.getElementById("btnToggleEdit");
         if (isPreviewing) {
-          gjsEl.classList.remove("preview-mode");
+          editor.stopCommand("core:preview");
           btn.textContent = "👁 Preview";
           btn.className = "tbtn tbtn-ghost";
         } else {
-          gjsEl.classList.add("preview-mode");
+          editor.runCommand("core:preview");
           btn.textContent = "✏️ Edit";
           btn.className = "tbtn tbtn-green";
         }
@@ -153,15 +172,11 @@
       };
 
       document.getElementById("btnDownload").onclick = () => {
-        const exportDoc = parser.parseFromString(fullHtml, "text/html");
-        exportDoc.querySelectorAll("style").forEach(s => s.remove());
-        const styleEl = exportDoc.createElement("style");
-        styleEl.textContent = editor.getCss();
-        exportDoc.head.appendChild(styleEl);
-        exportDoc.body.innerHTML = editor.getHtml();
-
-        const exported = "<!DOCTYPE html>\n" + exportDoc.documentElement.outerHTML;
-        const blob = new Blob([exported], { type: "text/html;charset=utf-8" });
+        // Use the original HTML directly — GrapesJS mangles background CSS shorthand
+        // (adds invalid `initial` to background-image lists), so editor.getCss() would
+        // produce a broken file. The original fullHtml has already been post-processed
+        // server-side and is safe to download as-is.
+        const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
         a.download = "portfolio.html";
