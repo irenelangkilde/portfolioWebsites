@@ -3,13 +3,15 @@ import { getStore } from "@netlify/blobs";
 
 const PROMPT_TEMPLATE = `You are building a personal portfolio website for a job seeker.
 Use all the content of the input resume PDF (e.g., name, contact info, education, experience, projects, skills, etc) as the foundation for the new website.
-Use the provided sample web page only as a structural and visual style reference — adopt its layout patterns, card designs, and background gradient technique, but populate it overwhelmingly with the resume owner's own information.
+You have a mandate to make improvements in overall quality and impactfulness, such as embellishing narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
+Do not fabricate achievements, metrics, employers, dates, or credentials.
 Mark with a triple asterisk (***) anything fabricated beyond the resume info.
-You have a mandate to make improvements in overall quality and impactfulness, such as expanding narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
-Do not fabricate achievements, metrics, employers, projects, dates, or credentials.
-Apply the input color scheme to ALL colored elements throughout the new page — body background, decorative card visuals, orbs, bubbles, brand mark, and any other gradient or background elements. Every element should use the new color scheme, rather than the sample's colors. 
-Element content should be adapted to match the themes of corresponding elements of the job seeker's resume, for example: a visual with red laser beams for an Electrical Engineering major with a specialization in lasers.
 {{COLOR_INSTRUCTION}}
+If an example web page and/or image are supplied in the input, use the provided samples only as a structural and visual style reference — adopt its layout patterns, card designs, and background gradient technique, but populate it overwhelmingly with the resume owner's own information.
+If no example web page or image is provided, generate one suitable for the major specialization. 
+Apply the input color scheme to ALL colored elements throughout the new page — body background, decorative card visuals, orbs, bubbles, brand mark, and any other gradient or background elements. Every element should use the new color scheme, rather than the sample's colors. 
+Visual content should be adapted to match the themes of corresponding elements of the job seeker's resume, for example: a visual with red laser beams for an Electrical Engineering major with a specialization in lasers.
+Double-check that the text has enough contrast against the background so that it is easily visible.
 Output the complete, self-contained HTML file only (ready to save and open in a browser); no explanation, no markdown — just the file.`;
 
 const PROMPT_TEMPLATE_LONG = `NON-NEGOTIABLE REQUIREMENTS (read before anything else):
