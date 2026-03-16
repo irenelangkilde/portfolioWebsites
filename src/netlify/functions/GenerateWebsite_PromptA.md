@@ -136,6 +136,7 @@ resume_text:
 {{RESUME_TEXT}}
 
 sample_website_html:
+{{TEMPLATE_USAGE}}
 {{SAMPLE_WEBSITE_HTML}}
 
 color_scheme_json:

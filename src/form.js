@@ -204,7 +204,10 @@
     function updateTemplateCopyrightVisibility() {
       const url = document.getElementById("modelTemplate")?.value?.trim();
       const wrap = document.getElementById("templateCopyrightWrap");
-      if (wrap) wrap.style.display = url && !isOwnLibraryUrl(url) ? "block" : "none";
+      if (!wrap) return;
+      const show = !!(url && !isOwnLibraryUrl(url));
+      wrap.style.display = show ? "block" : "none";
+      if (!show) document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
     }
 
     document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
@@ -256,7 +259,8 @@
       return {
         major: document.getElementById("major").value.trim(),
         specialization: document.getElementById("specialization").value.trim(),
-        model_template: document.getElementById("modelTemplate").value.trim()
+        model_template: document.getElementById("modelTemplate").value.trim(),
+        template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || ""
       };
     }
 
@@ -340,8 +344,8 @@ function getPage3(){
 
       const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
       if (templateUrl && !isOwnLibraryUrl(templateUrl)) {
-        const ack = document.getElementById("templateCopyrightAck");
-        if (!ack?.checked) throw new Error("Please confirm the copyright acknowledgement for the template URL before submitting.");
+        const selected = document.querySelector('input[name="templateCopyrightMode"]:checked');
+        if (!selected) throw new Error("Please indicate how the external template may be used before submitting.");
       }
 
       const page1 = getPage1();
@@ -379,7 +383,7 @@ function getPage3(){
       const res = await fetch("/.netlify/functions/generatePreview-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime })
+        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime, use_three_prompt: document.getElementById("useThreePrompt")?.checked || false })
       });
 
       if (!res.ok && res.status !== 202) {
@@ -397,20 +401,28 @@ function getPage3(){
       while (Date.now() - startTime < maxWaitMs) {
         await new Promise(r => setTimeout(r, pollIntervalMs));
         const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-        finalStatus.textContent = `Generating your portfolio website… ${remaining}s remaining`;
 
         const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
         const data = await pollRes.json().catch(() => ({}));
+
+        // Show per-stage progress message if the three-prompt pipeline provides one
+        const stageMsg = data.stage ? `${data.stage} (${remaining}s remaining)` : `Generating your portfolio website… ${remaining}s remaining`;
+        finalStatus.textContent = stageMsg;
 
         if (data.status === "done") {
           localStorage.setItem("portfolio_preview_html", data.site_html);
           // Wire download buttons and reveal them for admin users
           const dlHtml = document.getElementById("dlFinalHtml");
           const dlSummary = document.getElementById("dlSummaryHtml");
+          const dlJson = document.getElementById("dlResumeJson");
           dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
           const all = { page1, page2, page3 };
           const summaryHtml = buildSummaryHtml(all);
           dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
+          if (data.resume_json) {
+            dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
+            dlJson.classList.remove("hidden");
+          }
           if (page1.specialization === "Irene's Webworks") {
             dlHtml.classList.remove("hidden");
             dlSummary.classList.remove("hidden");
