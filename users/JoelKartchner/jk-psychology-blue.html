@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joel Kartchner - Electrical Engineering Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Open Sans', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        header {
+            background-image:radial-gradient(circle, rgba(3,4,94,1) 0%, rgba(0,148,199,1) 100%);
+            color: white;
+            padding: 80px 0 60px;
+            text-align: center;
+        }
+        .profile-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            border: 5px solid white;
+            margin-bottom: 20px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: #0096c7;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.95;
+            margin-bottom: 20px;
+        }
+        .contact-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .contact-info a {
+            color: white;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+        .contact-info a:hover {
+            opacity: 0.8;
+        }
+        nav {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 15px 0;
+        }
+        nav li {
+            margin: 0 20px;
+        }
+        nav a {
+            color: #0096c7;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+        nav a:hover {
+            color: #00b4d8;
+        }
+        section {
+            background: white;
+            margin: 40px auto;
+            padding: 50px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        h2 {
+            font-family: 'Playfair Display', serif;
+            color: #0096c7;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #0096c7;
+        }
+        h3 {
+            color: #00b4d8;
+            margin-top: 25px;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+        .about-content {
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+        .experience-item {
+            margin-bottom: 30px;
+            padding-left: 20px;
+            border-left: 3px solid #0096c7;
+        }
+        .date {
+            color: #666;
+            font-style: italic;
+            font-size: 0.95rem;
+        }
+        .experience-item ul {
+            margin-top: 10px;
+            margin-left: 20px;
+        }
+        .experience-item li {
+            margin-bottom: 8px;
+        }
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .skill-category ul {
+            list-style: none;
+            margin-left: 0;
+        }
+        .skill-category li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+        }
+        .skill-category li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #0096c7;
+            font-weight: bold;
+        }
+        .research-item {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #caf0f8;
+            border-radius: 8px;
+        }
+        footer {
+            background: #03045e;
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 40px;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #0096c7;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,148,199,0.4);
+        }
+        @media (max-width: 768px) {
+            section {
+                padding: 30px 20px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            h2 {
+                font-size: 1.6rem;
+            }
+            nav ul {
+                flex-direction: column;
+                align-items: center;
+            }
+            nav li {
+                margin: 5px 0;
+            }
+            .contact-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="profile-img">JK</div>
+            <h1>Joel Kartchner</h1>
+            <p class="subtitle">Electrical Engineering | Specialization in Lasers</p>
+            <div class="contact-info">
+                <a href="mailto:joel.kartchner@gmail.com">📧 joel.kartchner@gmail.com</a>
+                <a href="tel:5093929318">📱 (509) 392-9318</a>
+                <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank">💼 LinkedIn</a>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#education">Education</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#projects">Projects</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <section id="about">
+            <h2>About Me</h2>
+            <div class="about-content">
+                <p>I am enthusiastic about leveraging my skills in electrical engineering, particularly in lasers and RF design. My academic and professional experience has equipped me with a solid foundation in applying complex engineering principles to real-world problems. I look forward to innovating in a challenging position where I can further develop my expertise in electrical engineering***1.</p>
+            </div>
+        </section>
+
+        <section id="education">
+            <h2>Education</h2>
+            <div class="experience-item">
+                <h3>Masters of Electrical Engineering</h3>
+                <p><strong>Brigham Young University</strong> | <span class="date">April 2027</span></p>
+                <p><strong>GPA:</strong> 3.85/4.0</p>
+                <ul>
+                    <li><strong>Relevant Coursework:</strong> Radar and Comm Systems, Math of Signal and Systems, Numerical Methods, Applied EM and Optics, Autonomous Aircraft Control</li>
+                    <li><strong>Advisor:</strong> Karl Warnick</li>
+                </ul>
+            </div>
+            <div class="experience-item">
+                <h3>BS Electrical Engineering</h3>
+                <p><strong>Brigham Young University</strong> | <span class="date">April 2025</span></p>
+                <p><strong>Honors:</strong> Magna Cum Laude</p>
+                <p><strong>GPA:</strong> 3.98/4.0</p>
+            </div>
+        </section>
+
+        <section id="experience">
+            <h2>Experience</h2>
+
+            <div class="experience-item">
+                <h3>Masters Research Assistant</h3>
+                <p><strong>BYU College of Electrical and Computer Engineering</strong> | <span class="date">September 2025 - Present</span></p>
+                <ul>
+                    <li>Used HFSS to simulate RF thin film flex cables, improving coupling efficiency by 30%***2.</li>
+                    <li>Designed Coupled Line and Stepped Impedance filters using Python and HFSS, enhancing signal clarity.</li>
+                </ul>
+            </div>
+
+            <div class="experience-item">
+                <h3>Teaching Assistant</h3>
+                <p><strong>BYU College of Electrical and Computer Engineering</strong> | <span class="date">September 2025 - Present</span></p>
+                <ul>
+                    <li>Supported Wireless Communication Circuits and EM Fields and Waves courses, aiding student comprehension in complex subjects.</li>
+                    <li>Tutored students on Stub/Lumped Element Matching, Noise, Gain, and Stability Circles, contributing to higher coursework success rates.</li>
+                </ul>
+            </div>
+
+            <div class="experience-item">
+                <h3>Raytheon RF Products Summer Intern</h3>
+                <p><strong>Raytheon - Tucson, AZ</strong> | <span class="date">May 2024 - August 2024</span></p>
+                <ul>
+                    <li>Executed testing and troubleshooting on RF circuit cards, achieving a 15%***3 reduction in failure rates.</li>
+                    <li>Simulated RF exciters and receivers using SystemVue and ADS across frequency and temperature spectrums.</li>
+                    <li>Validated hardware through lab testing with Network and Spectrum Analyzers, ensuring design accuracy.</li>
+                </ul>
+            </div>
+
+            <div class="experience-item">
+                <h3>Research Assistant</h3>
+                <p><strong>Laser Ablation Lab, BYU</strong> | <span class="date">May 2023 - May 2024</span></p>
+                <ul>
+                    <li>Developed laser ablation tools for RF metal mesh filters, pioneering techniques for micro-production***4.</li>
+                </ul>
+            </div>
+
+            <div class="experience-item">
+                <h3>Teaching Assistant</h3>
+                <p><strong>BYU College of Electrical and Computer Engineering</strong> | <span class="date">September 2023 - December 2023</span></p>
+                <ul>
+                    <li>Tutored and guided students through circuit analysis, enhancing lab application skills.</li>
+                </ul>
+            </div>
+
+            <div class="experience-item">
+                <h3>Research Assistant</h3>
+                <p><strong>BYU College of Electrical and Computer Engineering</strong> | <span class="date">September 2022 - May 2023</span></p>
+                <ul>
+                    <li>Modeled photonic components using Python, refining component interactions for improved efficiency***5.</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="skills">
+            <h2>Skills & Competencies</h2>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>Programming Languages</h3>
+                    <ul>
+                        <li>Python</li>
+                        <li>C</li>
+                        <li>C++</li>
+                        <li>Matlab</li>
+                        <li>Java</li>
+                        <li>System Verilog</li>
+                        <li>Portuguese</li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>Tools & Technologies</h3>
+                    <ul>
+                        <li>HFSS</li>
+                        <li>ADS</li>
+                        <li>KiCad PCB</li>
+                        <li>LTSpice</li>
+                        <li>Vivado</li>
+                        <li>SystemVue</li>
+                        <li>Network Analyzer</li>
+                        <li>Signal Generator</li>
+                        <li>Spectrum Analyzer</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="projects">
+            <h2>Projects</h2>
+            <div class="research-item">
+                <h3>500,000 Volt Tesla Coil</h3>
+                <p class="date">2022</p>
+                <p>Designed and built a 500,000 Volt Tesla Coil, providing practical demonstration of electromagnetic principles to an audience.</p>
+            </div>
+
+            <div class="research-item">
+                <h3>Junior Team Design Project: Laser Tag Game System</h3>
+                <p class="date">2023-2024</p>
+                <p>Created and coded circuitry for a Laser Tag Game System, ensuring robust communication and durability standards.</p>
+            </div>
+
+            <div class="research-item">
+                <h3>Senior Capstone Project: mmWave Radar</h3>
+                <p class="date">2024-2025</p>
+                <p>Engineered an 80GHz radar system to detect high-velocity projectiles in lab settings, significantly enhancing detection accuracy***6.</p>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <h2 style="color: white; border: none; margin-bottom: 15px;">Let's Connect</h2>
+            <p>I am actively seeking opportunities in electrical engineering, research, and innovation sectors.</p>
+            <a href="mailto:joel.kartchner@gmail.com" class="cta-button">Get in Touch</a>
+            <p style="margin-top: 30px; opacity: 0.7;">© 2026 Joel Kartchner. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

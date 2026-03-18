@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Portfolio Owner Name] - Art Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #d4567a;
+            --secondary: #f7a072;
+            --accent: #ffd166;
+            --dark: #2d3142;
+            --light: #fef6f0;
+            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+        }
+
+        body {
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: #ffffff;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 20px;
+        }
+
+        nav .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: color 0.3s;
+            position: relative;
+        }
+
+        nav a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--gradient);
+            transition: width 0.3s;
+        }
+
+        nav a:hover::after {
+            width: 100%;
+        }
+
+        .hero {
+            background: var(--gradient);
+            color: white;
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            bottom: -30%;
+            left: -5%;
+            width: 400px;
+            height: 400px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 50%;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-photo {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 6px solid white;
+            object-fit: cover;
+            margin: 0 auto 25px;
+            display: block;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--light) 100%);
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero .graduation {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 35px;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+
+        .btn-secondary:hover {
+            background: white;
+            color: var(--primary);
+        }
+
+        section {
+            padding: 90px 0;
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 60px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .about {
+            background: var(--light);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.15rem;
+            line-height: 1.9;
+        }
+
+        .about-content p {
+            margin-bottom: 20px;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 35px;
+            margin-top: 40px;
+        }
+
+        .skill-category {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .skill-category:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.12);
+            border-color: var(--primary);
+        }
+
+        .skill-category h3 {
+            color: var(--primary);
+            margin-bottom: 25px;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .skill-icon {
+            font-size: 2rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            font-size: 0.85rem;
+            color: #999;
+            font-weight: 600;
+        }
+
+        .gallery {
+            background: white;
+        }
+
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 35px;
+        }
+
+        .artwork-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            transition: all 0.4s;
+        }
+
+        .artwork-card:hover {
+            transform: translateY(-15px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+        }
+
+        .artwork-image {
+            width: 100%;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .artwork-image.style-1 {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .artwork-image.style-2 {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .artwork-image.style-3 {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .artwork-image.style-4 {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+
+        .artwork-image.style-5 {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .artwork-image.style-6 {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .artwork-content {
+            padding: 30px;
+        }
+
+        .artwork-content h3 {
+            color: var(--dark);
+            margin-bottom: 10px;
+            font-size: 1.5rem;
+        }
+
+        .artwork-category {
+            display: inline-block;
+            background: var(--light);
+            color: var(--primary);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .artwork-content p {
+            color: #666;
+            line-height: 1.7;
+            font-size: 0.95rem;
+        }
+
+        .artwork-details {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            color: #999;
+        }
+
+        .resume {
+            background: var(--light);
+        }
+
+        .resume-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .resume-section {
+            margin-bottom: 50px;
+        }
+
+        .resume-section h3 {
+            color: var(--primary);
+            font-size: 2rem;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .resume-item {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--primary);
+        }
+
+        .resume-item h4 {
+            color: var(--dark);
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        .resume-item .meta {
+            color: #999;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+        }
+
+        .resume-item ul {
+            margin-left: 20px;
+            color: var(--dark);
+        }
+
+        .resume-item ul li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        .download-resume {
+            text-align: center;
+            margin-top: 50px;
+        }
+
+        .contact {
+            background: white;
+        }
+
+        .contact-content {
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .contact-item {
+            background: var(--light);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .contact-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .contact-item a {
+            color: var(--dark);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 10px 25px rgba(212, 86, 122, 0.3);
+        }
+
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        footer p {
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            section h2 {
+                font-size: 2.2rem;
+            }
+
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .skills-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">[Portfolio Owner Name]</div>
+            <ul>
+                <li><a href="#about">[Nav Link 1]</a></li>
+                <li><a href="#gallery">[Nav Link 2]</a></li>
+                <li><a href="#skills">[Nav Link 3]</a></li>
+                <li><a href="#resume">[Nav Link 4]</a></li>
+                <li><a href="#contact">[Nav Link 5]</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <!-- ***1 Profile photo -->
+            <img src="[profile-photo-url]" alt="[Portfolio Owner Name]" class="profile-photo">
+            <h1>[Portfolio Owner Name]</h1>
+            <p class="subtitle">[Title / Creative Discipline]</p>
+            <p class="graduation">[Degree & Program] | [Graduation Timeline]</p>
+            <div class="cta-buttons">
+                <a href="#gallery" class="btn btn-primary">[Primary CTA Label]</a>
+                <a href="#contact" class="btn btn-secondary">[Secondary CTA Label]</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2>[About Section Heading]</h2>
+            <p class="section-subtitle">[About section tagline or brief descriptor]</p>
+            <div class="about-content">
+                <p>[About paragraph 1: Introduction and artistic specializations]</p>
+                <p>[About paragraph 2: Technical background and creative approach]</p>
+                <p>[About paragraph 3: Career goals and opportunity types sought]</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="gallery" class="gallery">
+        <div class="container">
+            <h2>[Gallery Section Heading]</h2>
+            <p class="section-subtitle">[Gallery section tagline]</p>
+            <div class="gallery-grid">
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-1">
+                        <!-- ***2 Artwork image or icon 1 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-2">
+                        <!-- ***3 Artwork image or icon 2 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-3">
+                        <!-- ***4 Artwork image or icon 3 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-4">
+                        <!-- ***5 Artwork image or icon 4 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-5">
+                        <!-- ***6 Artwork image or icon 5 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="artwork-card">
+                    <div class="artwork-image style-6">
+                        <!-- ***7 Artwork image or icon 6 -->
+                    </div>
+                    <div class="artwork-content">
+                        <span class="artwork-category">[Medium / Category]</span>
+                        <h3>[Artwork Title]</h3>
+                        <p>[Artwork description: medium, themes, techniques used]</p>
+                        <div class="artwork-details">
+                            <span>[Dimensions or Format]</span>
+                            <span>[Year]</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="skills">
+        <div class="container">
+            <h2>[Skills Section Heading]</h2>
+            <p class="section-subtitle">[Skills section tagline]</p>
+            <div class="skills-grid">
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon"><!-- ***8 Skill category icon 1 --></span>[Skill Category 1]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon"><!-- ***9 Skill category icon 2 --></span>[Skill Category 2]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon"><!-- ***10 Skill category icon 3 --></span>[Skill Category 3]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon"><!-- ***11 Skill category icon 4 --></span>[Skill Category 4]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
+                    </ul>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="resume" class="resume">
+        <div class="container">
+            <h2>[Resume Section Heading]</h2>
+            <p class="section-subtitle">[Resume section tagline]</p>
+            <div class="resume-content">
+
+                <div class="resume-section">
+                    <h3>[Education Heading]</h3>
+                    <div class="resume-item">
+                        <h4>[Degree Title]</h4>
+                        <div class="meta">
+                            <span><!-- ***12 Location icon -->[Institution Name]</span>
+                            <span><!-- ***13 Date icon -->[Graduation Date]</span>
+                            <span><!-- ***14 GPA icon -->[GPA or Honors]</span>
+                        </div>
+                        <ul>
+                            <li>[Concentration or specialization detail]</li>
+                            <li>[Academic honor or scholarship]</li>
+                            <li>[Thesis or capstone project title and description]</li>
+                            <li>[Relevant coursework list]</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>[Experience Heading]</h3>
+
+                    <div class="resume-item">
+                        <h4>[Job Title 1]</h4>
+                        <div class="meta">
+                            <span><!-- ***15 Location icon -->[Employer / Organization]</span>
+                            <span><!-- ***16 Date icon -->[Date Range]</span>
+                        </div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>[Job Title 2]</h4>
+                        <div class="meta">
+                            <span><!-- ***17 Location icon -->[Employer / Organization]</span>
+                            <span><!-- ***18 Date icon -->[Date Range]</span>
+                        </div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>[Job Title 3]</h4>
+                        <div class="meta">
+                            <span><!-- ***19 Location icon -->[Employer / Organization]</span>
+                            <span><!-- ***20 Date icon -->[Date Range]</span>
+                        </div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>[Job Title 4]</h4>
+                        <div class="meta">
+                            <span><!-- ***21 Location icon -->[Employer / Organization]</span>
+                            <span><!-- ***22 Date icon -->[Date Range]</span>
+                        </div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+
+                </div>
+
+                <div class="resume-section">
+                    <h3>[Exhibitions & Recognition Heading]</h3>
+                    <div class="resume-item">
+                        <h4>[Subsection Title]</h4>
+                        <ul>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                            <li><strong>[Award or Exhibition Name]</strong> - [Description, Venue, Date]</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>[Professional Development Heading]</h3>
+                    <div class="resume-item">
+                        <h4>[Subsection Title]</h4>
+                        <ul>
+                            <li>[Workshop or certification description and year]</li>
+                            <li>[Workshop or certification description and year]</li>
+                            <li>[Workshop or certification description and year]</li>
+                            <li>[Workshop or certification description and year]</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="download-resume">
+                    <a href="#" class="btn btn-primary"><!-- ***23 Download icon -->[Download Resume CTA Label]</a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>[Contact Section Heading]</h2>
+            <p class="section-subtitle">[Contact section tagline]</p>
+            <div class="contact-content">
+                <div class="contact-info">
+
+                    <div class="contact-item">
+                        <h3><!-- ***24 Email icon -->[Email Label]</h3>
+                        <a href="mailto:[email@example.com]">[email@example.com]</a>
+                    </div>
+
+                    <div class="contact-item">
+                        <h3><!-- ***25 Phone icon -->[Phone Label]</h3>
+                        <a href="tel:[phone-number]">[Phone Number]</a>
+                    </div>
+
+                    <div class="contact-item">
+                        <h3><!-- ***26 Location icon -->[Location Label]</h3>
+                        <p>[City, State]<br>[Availability note]</p>
+                    </div>
+
+                </div>
+
+                <div class="social-links">
+                    <a href="[social-url-1]" target="_blank" title="[Platform 1]"><!-- ***27 Social icon 1 --></a>
+                    <a href="[social-url-2]" target="_blank" title="[Platform 2]"><!-- ***28 Social icon 2 --></a>
+                    <a href="[social-url-3]" target="_blank" title="[Platform 3]"><!-- ***29 Social icon 3 --></a>
+                    <a href="[social-url-4]" target="_blank" title="[Platform 4]"><!-- ***30 Social icon 4 --></a>
+                    <a href="mailto:[email@example.com]" title="[Email Label]"><!-- ***31 Email icon --></a>
+                </div>
+
+                <p style="margin-top: 40px; color: #999; font-size: 0.95rem;">[Availability tagline listing opportunity types]</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; [Year] [Portfolio Owner Name] | [Portfolio Type] Portfolio</p>
+            <p style="margin-top: 10px; font-size: 0.9rem;">[Copyright / ownership disclaimer]</p>
+        </div>
+    </footer>
+</body>
+</html>

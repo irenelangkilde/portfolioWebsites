@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Name] – [Professional Title]</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #9D2235;
+            --primary-deep: #7A1B2B;
+            --secondary: #F5D6DC;
+            --light: #FFF0F3;
+            --accent: #F5EDE4;
+            --accent-dark: #E8DDD0;
+            --warm-white: #FFFBF7;
+            --dark: #2A1A1F;
+            --text-muted: #8B7A74;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Manrope', sans-serif;
+            background: var(--accent);
+            color: var(--dark);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 251, 247, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            border-bottom: 1px solid rgba(157, 34, 53, 0.1);
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 40px;
+            list-style: none;
+            align-items: center;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-size: 15px;
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            background: var(--primary);
+            color: white;
+            padding: 12px 28px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-cta:hover {
+            background: var(--primary-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(157, 34, 53, 0.25);
+        }
+
+        .hero {
+            margin-top: 80px;
+            min-height: 85vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--light) 0%, var(--accent) 50%, var(--secondary) 100%);
+        }
+
+        .hero-shapes {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .shape {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .shape-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle at 30% 30%, var(--primary), transparent);
+            top: -200px;
+            right: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle at 70% 70%, var(--secondary), transparent);
+            bottom: -100px;
+            left: 5%;
+            animation-delay: 5s;
+        }
+
+        .shape-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle at 50% 50%, rgba(157, 34, 53, 0.3), transparent);
+            top: 40%;
+            left: 15%;
+            animation-delay: 10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.1); }
+            50% { transform: translate(-20px, 20px) scale(0.9); }
+            75% { transform: translate(40px, 10px) scale(1.05); }
+        }
+
+        .hero-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-text {
+            animation: slideInLeft 0.8s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .hero-label {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            animation: fadeIn 0.8s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 72px;
+            line-height: 1.1;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 24px;
+            animation: fadeIn 0.8s ease-out 0.4s both;
+        }
+
+        .hero-subtitle {
+            font-size: 20px;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+            line-height: 1.7;
+            animation: fadeIn 0.8s ease-out 0.6s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            animation: fadeIn 0.8s ease-out 0.8s both;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            padding: 16px 36px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-deep);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(157, 34, 53, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+            padding: 16px 36px;
+            border-radius: 30px;
+            border: 2px solid var(--primary);
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        .hero-visual {
+            position: relative;
+            height: 500px;
+            animation: slideInRight 0.8s ease-out;
+            perspective: 1000px;
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .card-stack {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hero-card {
+            position: absolute;
+            width: 320px;
+            height: 420px;
+            background: white;
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.5s ease;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-10px) !important;
+        }
+
+        .card-1 {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%) rotate(-8deg);
+            background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+            color: white;
+            z-index: 3;
+            animation: cardFloat1 1s ease-out 1s both;
+        }
+
+        .card-2 {
+            top: 40px;
+            left: 50%;
+            transform: translateX(-50%) rotate(4deg);
+            background: white;
+            border: 2px solid var(--secondary);
+            z-index: 2;
+            animation: cardFloat2 1s ease-out 1.2s both;
+        }
+
+        .card-3 {
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) rotate(-2deg);
+            background: var(--secondary);
+            z-index: 1;
+            animation: cardFloat3 1s ease-out 1.4s both;
+        }
+
+        @keyframes cardFloat1 {
+            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-8deg); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-8deg); }
+        }
+
+        @keyframes cardFloat2 {
+            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(4deg); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(4deg); }
+        }
+
+        @keyframes cardFloat3 {
+            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-2deg); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-2deg); }
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            margin-bottom: 20px;
+        }
+
+        .card-2 .card-icon, .card-3 .card-icon {
+            background: var(--light);
+        }
+
+        .card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .card-2 .card-title, .card-3 .card-title {
+            color: var(--primary);
+        }
+
+        .card-desc {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .card-2 .card-desc, .card-3 .card-desc {
+            color: var(--text-muted);
+        }
+
+        .stats {
+            background: var(--primary);
+            color: white;
+            padding: 60px 40px;
+        }
+
+        .stats-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 60px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .about {
+            padding: 120px 40px;
+            background: var(--warm-white);
+        }
+
+        .about-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 80px;
+            align-items: center;
+        }
+
+        .section-label {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+        }
+
+        h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .about-text {
+            font-size: 17px;
+            line-height: 1.8;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+
+        .expertise-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .expertise-item {
+            background: var(--secondary);
+            padding: 24px;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .expertise-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(157, 34, 53, 0.15);
+        }
+
+        .expertise-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .expertise-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .expertise-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        .experience {
+            padding: 120px 40px;
+            background: var(--accent);
+        }
+
+        .experience-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 40px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--primary), var(--secondary));
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 60px;
+            padding-left: 40px;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: -9px;
+            top: 0;
+            width: 20px;
+            height: 20px;
+            background: var(--primary);
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            box-shadow: 0 0 0 4px var(--secondary);
+        }
+
+        .timeline-date {
+            color: var(--primary);
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .timeline-company {
+            font-size: 16px;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .timeline-desc {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-muted);
+        }
+
+        .skills {
+            padding: 120px 40px;
+            background: var(--light);
+        }
+
+        .skills-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+
+        .skill-card {
+            background: white;
+            padding: 32px 24px;
+            border-radius: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .skill-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(157, 34, 53, 0.15);
+        }
+
+        .skill-name {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--dark);
+            margin-bottom: 12px;
+        }
+
+        .skill-level {
+            height: 8px;
+            background: var(--accent-dark);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .skill-progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--primary-deep));
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+
+        .contact {
+            padding: 120px 40px;
+            background: var(--dark);
+            color: white;
+        }
+
+        .contact-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 80px;
+        }
+
+        .contact h2 {
+            color: white;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .contact-icon {
+            width: 50px;
+            height: 50px;
+            background: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+
+        .contact-details h4 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .contact-details p {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .contact-form {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 24px;
+            backdrop-filter: blur(10px);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            color: white;
+            font-family: inherit;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-btn:hover {
+            background: var(--primary-deep);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(157, 34, 53, 0.4);
+        }
+
+        .certifications {
+            padding: 120px 40px;
+            background: var(--warm-white);
+        }
+
+        .certifications-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .cert-card {
+            background: white;
+            padding: 32px;
+            border-radius: 20px;
+            border: 2px solid var(--secondary);
+            transition: all 0.3s ease;
+        }
+
+        .cert-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(157, 34, 53, 0.15);
+        }
+
+        .cert-badge {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .cert-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .cert-issuer {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .cert-date {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        footer {
+            background: #1a0f12;
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .social-link {
+            width: 45px;
+            height: 45px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-decoration: none;
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .social-link:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            font-size: 14px;
+            opacity: 0.6;
+        }
+
+        @media (max-width: 1200px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+                gap: 60px;
+            }
+
+            .hero-visual {
+                height: 400px;
+            }
+
+            .hero-card {
+                width: 280px;
+                height: 360px;
+            }
+
+            h1 {
+                font-size: 56px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 16px 24px;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            h1 {
+                font-size: 42px;
+            }
+
+            .hero-subtitle {
+                font-size: 18px;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px;
+            }
+
+            .about-container,
+            .contact-container {
+                grid-template-columns: 1fr;
+                gap: 40px;
+            }
+
+            .expertise-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-visual {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="nav-container">
+            <div class="logo">[Initials]</div>
+            <ul class="nav-links">
+                <li><a href="#about">[Nav Link 1]</a></li>
+                <li><a href="#experience">[Nav Link 2]</a></li>
+                <li><a href="#skills">[Nav Link 3]</a></li>
+                <li><a href="#contact"><button class="nav-cta">[CTA Label]</button></a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+        </div>
+
+        <div class="hero-content">
+            <div class="hero-text">
+                <span class="hero-label">[Hero Badge Text]</span>
+                <h1>[Full Name]</h1>
+                <p class="hero-subtitle">[Hero subtitle describing professional background and value proposition in two to three sentences.]</p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})">[Primary CTA]</button>
+                    <button class="btn-secondary" onclick="document.querySelector('#experience').scrollIntoView({behavior: 'smooth'})">[Secondary CTA]</button>
+                </div>
+            </div>
+
+            <div class="hero-visual">
+                <div class="card-stack">
+                    <div class="hero-card card-1">
+                        <div>
+                            <div class="card-icon"><!-- *** 1 --></div>
+                            <h3 class="card-title">[Card Title 1]</h3>
+                        </div>
+                        <p class="card-desc">[Short description of card one specialty]</p>
+                    </div>
+                    <div class="hero-card card-2">
+                        <div>
+                            <div class="card-icon"><!-- *** 2 --></div>
+                            <h3 class="card-title">[Card Title 2]</h3>
+                        </div>
+                        <p class="card-desc">[Short description of card two specialty]</p>
+                    </div>
+                    <div class="hero-card card-3">
+                        <div>
+                            <div class="card-icon"><!-- *** 3 --></div>
+                            <h3 class="card-title">[Card Title 3]</h3>
+                        </div>
+                        <p class="card-desc">[Short description of card three specialty]</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <span class="stat-number">[Stat 1]</span>
+                <span class="stat-label">[Stat Label 1]</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">[Stat 2]</span>
+                <span class="stat-label">[Stat Label 2]</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">[Stat 3]</span>
+                <span class="stat-label">[Stat Label 3]</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">[Stat 4]</span>
+                <span class="stat-label">[Stat Label 4]</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="about" id="about">
+        <div class="about-container">
+            <div>
+                <span class="section-label">[About Section Label]</span>
+                <h2>[About Section Heading]</h2>
+                <p class="about-text">[First paragraph of about bio text describing background and education.]</p>
+                <p class="about-text">[Second paragraph of about bio text describing passion and approach.]</p>
+            </div>
+
+            <div class="expertise-grid">
+                <div class="expertise-item">
+                    <div class="expertise-icon"><!-- *** 4 --></div>
+                    <div class="expertise-title">[Expertise Title 1]</div>
+                    <div class="expertise-desc">[Short description of expertise area one]</div>
+                </div>
+                <div class="expertise-item">
+                    <div class="expertise-icon"><!-- *** 5 --></div>
+                    <div class="expertise-title">[Expertise Title 2]</div>
+                    <div class="expertise-desc">[Short description of expertise area two]</div>
+                </div>
+                <div class="expertise-item">
+                    <div class="expertise-icon"><!-- *** 6 --></div>
+                    <div class="expertise-title">[Expertise Title 3]</div>
+                    <div class="expertise-desc">[Short description of expertise area three]</div>
+                </div>
+                <div class="expertise-item">
+                    <div class="expertise-icon"><!-- *** 7 --></div>
+                    <div class="expertise-title">[Expertise Title 4]</div>
+                    <div class="expertise-desc">[Short description of expertise area four]</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="experience" id="experience">
+        <div class="experience-container">
+            <div class="section-header">
+                <span class="section-label">[Experience Section Label]</span>
+                <h2>[Experience Section Heading]</h2>
+            </div>
+
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">[Date Range 1]</div>
+                    <h3 class="timeline-title">[Job Title 1]</h3>
+                    <div class="timeline-company">[Company Name 1], [Location 1]</div>
+                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role one.]</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">[Date Range 2]</div>
+                    <h3 class="timeline-title">[Job Title 2]</h3>
+                    <div class="timeline-company">[Company Name 2], [Location 2]</div>
+                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role two.]</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">[Date Range 3]</div>
+                    <h3 class="timeline-title">[Job Title 3]</h3>
+                    <div class="timeline-company">[Company Name 3], [Location 3]</div>
+                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role three.]</p>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-dot"></div>
+                    <div class="timeline-date">[Date Range 4]</div>
+                    <h3 class="timeline-title">[Job Title 4]</h3>
+                    <div class="timeline-company">[Company Name 4], [Location 4]</div>
+                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role four.]</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="skills" id="skills">
+        <div class="skills-container">
+            <div class="section-header">
+                <span class="section-label">[Skills Section Label]</span>
+                <h2>[Skills Section Heading]</h2>
+            </div>
+
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 1]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 2]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 3]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 4]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 5]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+                <div class="skill-card">
+                    <div class="skill-name">[Skill Name 6]</div>
+                    <div class="skill-level">
+                        <div class="skill-progress" style="width: [XX%]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="certifications">
+        <div class="certifications-container">
+            <div class="section-header">
+                <span class="section-label">[Certifications Section Label]</span>
+                <h2>[Certifications Section Heading]</h2>
+            </div>
+
+            <div class="cert-grid">
+                <div class="cert-card">
+                    <div class="cert-badge"><!-- *** 8 --></div>
+                    <div class="cert-title">[Certification Title 1]</div>
+                    <div class="cert-issuer">[Issuing Organization 1]</div>
+                    <div class="cert-date">[Date Obtained 1]</div>
+                </div>
+                <div class="cert-card">
+                    <div class="cert-badge"><!-- *** 9 --></div>
+                    <div class="cert-title">[Certification Title 2]</div>
+                    <div class="cert-issuer">[Issuing Organization 2]</div>
+                    <div class="cert-date">[Date Obtained 2]</div>
+                </div>
+                <div class="cert-card">
+                    <div class="cert-badge"><!-- *** 10 --></div>
+                    <div class="cert-title">[Certification Title 3]</div>
+                    <div class="cert-issuer">[Issuing Organization 3]</div>
+                    <div class="cert-date">[Date Obtained 3]</div>
+                </div>
+                <div class="cert-card">
+                    <div class="cert-badge"><!-- *** 11 --></div>
+                    <div class="cert-title">[Certification Title 4]</div>
+                    <div class="cert-issuer">[Issuing Organization 4]</div>
+                    <div class="cert-date">[Date Obtained 4]</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="contact" id="contact">
+        <div class="contact-container">
+            <div>
+                <span class="section-label">[Contact Section Label]</span>
+                <h2>[Contact Section Heading]</h2>
+                <p style="opacity: 0.8; margin-bottom: 40px;">[Contact section introductory paragraph inviting visitors to reach out.]</p>
+
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <div class="contact-icon"><!-- *** 12 --></div>
+                        <div class="contact-details">
+                            <h4>[Contact Type 1]</h4>
+                            <p>[contact-value-1@example.com]</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon"><!-- *** 13 --></div>
+                        <div class="contact-details">
+                            <h4>[Contact Type 2]</h4>
+                            <p>[+X (XXX) XXX-XXXX]</p>
+                        </div>
+                    </div>
+                    <div class="contact-item">
+                        <div class="contact-icon"><!-- *** 14 --></div>
+                        <div class="contact-details">
+                            <h4>[Contact Type 3]</h4>
+                            <p>[City, State]</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="contact-form">
+                <form>
+                    <div class="form-group">
+                        <label>[Form Field Label 1]</label>
+                        <input type="text" placeholder="[Placeholder text 1]" required>
+                    </div>
+                    <div class="form-group">
+                        <label>[Form Field Label 2]</label>
+                        <input type="email" placeholder="[Placeholder text 2]" required>
+                    </div>
+                    <div class="form-group">
+                        <label>[Form Field Label 3]</label>
+                        <textarea placeholder="[Placeholder text 3]" required></textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">[Submit Button Label]</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="social-links">
+                <a href="#" class="social-link"><!-- *** 15 --></a>
+                <a href="#" class="social-link"><!-- *** 16 --></a>
+                <a href="#" class="social-link"><!-- *** 17 --></a>
+                <a href="#" class="social-link"><!-- *** 18 --></a>
+            </div>
+            <p class="copyright">© [Year] [Full Name]. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>

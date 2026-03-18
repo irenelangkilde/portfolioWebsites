@@ -55,6 +55,9 @@
     .gjs-frame-wrapper,
     .gjs-frame { height: 100% !important; min-height: 100% !important; }
 
+    /* Prevent GrapesJS default gray canvas background from showing at edges */
+    .gjs-cv-canvas { background: #1a1a2e !important; }
+
     /* Hide all GrapesJS chrome — we use our own toolbar */
     .gjs-pn-panels,
     .gjs-devices-c,
@@ -84,6 +87,56 @@
   </div>
 
   <div id="gjs"></div>
+
+  <!-- Floating attribute editor — appears when a link or image is selected in edit mode -->
+  <div id="attrBar" style="
+      display: none;
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #16213e;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 10px;
+      gap: 10px;
+      align-items: center;
+      z-index: 99999;
+      box-shadow: 0 6px 28px rgba(0,0,0,.5);
+      font-size: 13px;
+      white-space: nowrap;
+  ">
+    <span id="attrLabel" style="opacity:.75;">🔗 href:</span>
+    <input id="attrInput" type="text" style="
+        width: 320px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.25);
+        border-radius: 5px;
+        color: #fff;
+        padding: 5px 9px;
+        font-size: 13px;
+        outline: none;
+    " placeholder="https://…" />
+    <button id="attrApply" style="
+        background: #667eea;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 6px 14px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 13px;
+    ">Apply</button>
+    <button id="attrClose" style="
+        background: rgba(255,255,255,.12);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        padding: 6px 10px;
+        cursor: pointer;
+        font-size: 13px;
+    ">✕</button>
+  </div>
 
   <div id="no-preview">
     <p>No portfolio found. Please generate one on Page 3 first.</p>
@@ -162,9 +215,56 @@
           editor.runCommand("core:preview");
           btn.textContent = "✏️ Edit";
           btn.className = "tbtn tbtn-green";
+          hideAttrBar(); // hide when switching to preview
         }
         isPreviewing = !isPreviewing;
       };
+
+      // ── Floating attribute editor ──────────────────────────────────────────
+      // Maps tag name → { attr, label } for the attributes we expose.
+      const EDITABLE_ATTRS = {
+        a:   { attr: "href",   label: "🔗 href:" },
+        img: { attr: "src",    label: "🖼 src:"  }
+      };
+
+      const attrBar   = document.getElementById("attrBar");
+      const attrLabel = document.getElementById("attrLabel");
+      const attrInput = document.getElementById("attrInput");
+      let   attrComp  = null;
+
+      function showAttrBar(comp) {
+        const tag  = (comp.get("tagName") || "").toLowerCase();
+        const cfg  = EDITABLE_ATTRS[tag];
+        if (!cfg) { hideAttrBar(); return; }
+        attrComp        = comp;
+        attrLabel.textContent = cfg.label;
+        attrInput.value = comp.getAttributes()[cfg.attr] || "";
+        attrBar.style.display = "flex";
+        attrInput.focus();
+      }
+
+      function hideAttrBar() {
+        attrBar.style.display = "none";
+        attrComp = null;
+      }
+
+      function applyAttr() {
+        if (!attrComp) return;
+        const tag = (attrComp.get("tagName") || "").toLowerCase();
+        const cfg = EDITABLE_ATTRS[tag];
+        if (!cfg) return;
+        attrComp.addAttributes({ [cfg.attr]: attrInput.value.trim() });
+        hideAttrBar();
+      }
+
+      editor.on("component:selected", comp => {
+        if (!isPreviewing) showAttrBar(comp);
+      });
+      editor.on("component:deselected", hideAttrBar);
+
+      document.getElementById("attrApply").onclick = applyAttr;
+      document.getElementById("attrClose").onclick = hideAttrBar;
+      attrInput.addEventListener("keydown", e => { if (e.key === "Enter") applyAttr(); });
 
       document.getElementById("btnBack").onclick = () => {
         if (window.opener) { window.opener.focus(); }

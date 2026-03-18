@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[Name] - [Field] Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #39ff14;
+            --secondary: #ff10f0;
+            --accent: #00d9ff;
+            --accent2: #bc13fe;
+            --accent3: #ff6b35;
+            --dark: #000000;
+            --dark-gray: #1a1a1a;
+            --medium-gray: #2a2a2a;
+            --light: #ffffff;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--dark);
+            color: var(--light);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .neon-text {
+            text-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+        }
+
+        nav {
+            background: var(--dark-gray);
+            border-bottom: 2px solid var(--primary);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        nav .logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2.5rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--light);
+            font-weight: 600;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .hero {
+            background: var(--dark);
+            padding: 80px 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background:
+                linear-gradient(45deg, transparent 48%, var(--primary) 49%, var(--primary) 51%, transparent 52%),
+                linear-gradient(-45deg, transparent 48%, var(--secondary) 49%, var(--secondary) 51%, transparent 52%);
+            background-size: 20px 20px;
+            opacity: 0.03;
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridMove {
+            0% { background-position: 0 0; }
+            100% { background-position: 20px 20px; }
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-text h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            text-shadow: 0 0 20px var(--primary);
+        }
+
+        .hero-text .subtitle {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-shadow: 0 0 15px var(--accent);
+        }
+
+        .hero-text .tagline {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .hero-photo {
+            width: 100%;
+            max-width: 400px;
+            height: 450px;
+            margin: 0 auto;
+            border-radius: 20px;
+            border: 3px solid var(--primary);
+            box-shadow: 0 0 30px var(--primary), inset 0 0 30px rgba(57, 255, 20, 0.1);
+            background: linear-gradient(135deg, var(--dark-gray) 0%, var(--medium-gray) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 6rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-photo::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(57, 255, 20, 0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(180deg); }
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 14px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: inline-block;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--dark);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px var(--primary);
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: var(--primary);
+            box-shadow: 0 0 30px var(--primary);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--secondary);
+            border: 2px solid var(--secondary);
+            box-shadow: 0 0 20px var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--secondary);
+            color: var(--dark);
+        }
+
+        section {
+            padding: 80px 0;
+            position: relative;
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--secondary);
+            text-shadow: 0 0 20px var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #999;
+            font-size: 1.15rem;
+            margin-bottom: 50px;
+        }
+
+        .about {
+            background: var(--dark-gray);
+            position: relative;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .about-text {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: #ccc;
+        }
+
+        .about-text p {
+            margin-bottom: 20px;
+        }
+
+        .about-image {
+            width: 100%;
+            height: 400px;
+            border-radius: 15px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 30px var(--accent);
+            background: var(--medium-gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-image svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .skills {
+            background: var(--dark);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .skill-category {
+            background: var(--dark-gray);
+            padding: 35px;
+            border-radius: 15px;
+            border: 2px solid var(--accent2);
+            box-shadow: 0 0 20px rgba(188, 19, 254, 0.3);
+            transition: all 0.3s;
+        }
+
+        .skill-category:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px var(--accent2);
+        }
+
+        .skill-category h3 {
+            color: var(--accent2);
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px var(--accent2);
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 12px 0;
+            border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #ddd;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .experience {
+            background: var(--dark-gray);
+        }
+
+        .experience-grid {
+            display: grid;
+            gap: 40px;
+        }
+
+        .experience-with-image {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .experience-items {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .experience-item {
+            background: var(--medium-gray);
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid var(--accent3);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+        }
+
+        .experience-item h3 {
+            color: var(--accent3);
+            margin-bottom: 10px;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px var(--accent3);
+        }
+
+        .experience-item .meta {
+            color: #999;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+        }
+
+        .experience-item ul {
+            margin-left: 20px;
+            color: #ccc;
+        }
+
+        .experience-item ul li {
+            margin-bottom: 8px;
+        }
+
+        .experience-image {
+            width: 100%;
+            height: 500px;
+            border-radius: 15px;
+            border: 2px solid var(--accent3);
+            box-shadow: 0 0 30px var(--accent3);
+            background: var(--medium-gray);
+            position: sticky;
+            top: 100px;
+        }
+
+        .experience-image svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .projects {
+            background: var(--dark);
+        }
+
+        .projects-showcase {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 50px;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .projects-image {
+            width: 100%;
+            height: 450px;
+            border-radius: 15px;
+            border: 2px solid var(--secondary);
+            box-shadow: 0 0 30px var(--secondary);
+            background: var(--medium-gray);
+        }
+
+        .projects-image svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .projects-grid {
+            display: grid;
+            gap: 25px;
+        }
+
+        .project-card {
+            background: var(--dark-gray);
+            padding: 30px;
+            border-radius: 15px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 20px rgba(0, 217, 255, 0.2);
+            transition: all 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateX(10px);
+            box-shadow: 0 0 40px var(--accent);
+        }
+
+        .project-card h3 {
+            color: var(--accent);
+            margin-bottom: 12px;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        .project-card p {
+            color: #ccc;
+            line-height: 1.7;
+        }
+
+        .project-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .project-tag {
+            background: var(--medium-gray);
+            color: var(--primary);
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid var(--primary);
+        }
+
+        .contact {
+            background: var(--dark-gray);
+        }
+
+        .contact-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .contact-item {
+            background: var(--medium-gray);
+            padding: 35px;
+            border-radius: 15px;
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 20px rgba(57, 255, 20, 0.2);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            box-shadow: 0 0 40px var(--primary);
+        }
+
+        .contact-item h3 {
+            color: var(--primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        .contact-item a {
+            color: var(--light);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--primary);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .social-links a {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary);
+            color: var(--secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(255, 16, 240, 0.3);
+        }
+
+        .social-links a:hover {
+            background: var(--secondary);
+            color: var(--dark);
+            box-shadow: 0 0 40px var(--secondary);
+        }
+
+        footer {
+            background: var(--dark);
+            border-top: 2px solid var(--primary);
+            color: var(--light);
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        @media (max-width: 968px) {
+            .hero-content,
+            .about-content,
+            .experience-with-image,
+            .projects-showcase {
+                grid-template-columns: 1fr;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .experience-image {
+                position: static;
+                height: 350px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="container">
+            <div class="logo">[Initials]</div>
+            <ul>
+                <li><a href="#about">[Nav Link 1]</a></li>
+                <li><a href="#skills">[Nav Link 2]</a></li>
+                <li><a href="#experience">[Nav Link 3]</a></li>
+                <li><a href="#projects">[Nav Link 4]</a></li>
+                <li><a href="#contact">[Nav Link 5]</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1 class="neon-text">[Full Name]</h1>
+                    <p class="subtitle neon-text">[Title / Field of Study]</p>
+                    <p class="tagline">[Icon] [Degree] | [Credential] | [Graduation Timeline]</p>
+                    <div class="cta-buttons">
+                        <a href="#projects" class="btn btn-primary">[CTA Primary]</a>
+                        <a href="#contact" class="btn btn-secondary">[CTA Secondary]</a>
+                    </div>
+                </div>
+                <div class="hero-photo">
+                    <!-- *** 1 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2 class="neon-text">[About Section Title]</h2>
+            <p class="section-subtitle">[About Section Subtitle]</p>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>[About paragraph 1]</p>
+                    <p>[About paragraph 2]</p>
+                    <p>[About paragraph 3]</p>
+                </div>
+                <div class="about-image">
+                    <!-- *** 2 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="skills" class="skills">
+        <div class="container">
+            <h2 class="neon-text">[Skills Section Title]</h2>
+            <p class="section-subtitle">[Skills Section Subtitle]</p>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3>[Icon] [Skill Category 1 Title]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>[Icon] [Skill Category 2 Title]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>[Icon] [Skill Category 3 Title]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                    </ul>
+                </div>
+                <div class="skill-category">
+                    <h3>[Icon] [Skill Category 4 Title]</h3>
+                    <ul class="skill-list">
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="experience" class="experience">
+        <div class="container">
+            <h2 class="neon-text">[Experience Section Title]</h2>
+            <p class="section-subtitle">[Experience Section Subtitle]</p>
+            <div class="experience-with-image">
+                <div class="experience-items">
+                    <div class="experience-item">
+                        <h3>[Job Title 1]</h3>
+                        <div class="meta">[Icon] [Organization] | [Icon] [Date Range]</div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+                    <div class="experience-item">
+                        <h3>[Job Title 2]</h3>
+                        <div class="meta">[Icon] [Organization] | [Icon] [Date Range]</div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+                    <div class="experience-item">
+                        <h3>[Job Title 3]</h3>
+                        <div class="meta">[Icon] [Organization] | [Icon] [Date Range]</div>
+                        <ul>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                            <li>[Responsibility or achievement]</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="experience-image">
+                    <!-- *** 3 -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="projects" class="projects">
+        <div class="container">
+            <h2 class="neon-text">[Projects Section Title]</h2>
+            <p class="section-subtitle">[Projects Section Subtitle]</p>
+            <div class="projects-showcase">
+                <div class="projects-image">
+                    <!-- *** 4 -->
+                </div>
+                <div class="projects-grid">
+                    <div class="project-card">
+                        <h3>[Project Title 1]</h3>
+                        <p>[Project description]</p>
+                        <div class="project-tags">
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <h3>[Project Title 2]</h3>
+                        <p>[Project description]</p>
+                        <div class="project-tags">
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <h3>[Project Title 3]</h3>
+                        <p>[Project description]</p>
+                        <div class="project-tags">
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                        </div>
+                    </div>
+                    <div class="project-card">
+                        <h3>[Project Title 4]</h3>
+                        <p>[Project description]</p>
+                        <div class="project-tags">
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                            <span class="project-tag">[Tag]</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2 class="neon-text">[Contact Section Title]</h2>
+            <p class="section-subtitle">[Contact Section Subtitle]</p>
+            <div class="contact-content">
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>[Icon] [Contact Type 1]</h3>
+                        <a href="mailto:[email]">[email address]</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>[Icon] [Contact Type 2]</h3>
+                        <a href="tel:[phone]">[phone number]</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>[Icon] [Contact Type 3]</h3>
+                        <p>[Location]<br>[Availability note]</p>
+                    </div>
+                </div>
+                <div class="social-links">
+                    <!-- *** 5 -->
+                    <a href="[social-url-1]" target="_blank" title="[Social Platform 1]">[Icon]</a>
+                    <!-- *** 6 -->
+                    <a href="[social-url-2]" target="_blank" title="[Social Platform 2]">[Icon]</a>
+                    <!-- *** 7 -->
+                    <a href="[social-url-3]" title="[Social Platform 3]">[Icon]</a>
+                </div>
+                <p style="margin-top: 40px; color: #999;">[Keyword 1] • [Keyword 2] • [Keyword 3] • [Keyword 4]</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; [Year] [Full Name] | [Field] Portfolio</p>
+            <p style="margin-top: 10px; font-size: 0.9rem; color: var(--primary);">[Footer Tagline]</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Joel Kartchner | Electrical Engineering Portfolio</title>
+  <meta name="description" content="Electrical Engineering portfolio: projects, skills, and career-ready highlights." />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;500&display=swap');
+    
+    :root {
+      --primary: #00b4d8;
+      --secondary: #0096c7;
+      --accent: #023e8a;
+      --dark: #caf0f8;
+      --light: #03045e;
+
+      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --shadow-soft: 0 12px 30px rgba(0,0,0,.08);
+      --radius: 24px;
+      --radius-sm: 18px;
+      --max: 1120px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; font-family: 'Roboto', sans-serif; color: var(--light); background: radial-gradient(1200px 650px at 15% 10%, #6e76ff 0%, transparent 60%), radial-gradient(1000px 600px at 60% 20%, #ffb703 0%, transparent 65%), radial-gradient(1100px 700px at 90% 10%, #37306b 0%, transparent 60%), radial-gradient(900px 600px at 35% 35%, #9b8b0f 0%, transparent 65%), var(--dark); overflow-x: hidden; }
+    
+    a { color: inherit; text-decoration: none; }
+    a:hover { opacity: .92; }
+
+    .wrap { max-width: var(--max); margin: 0 auto; padding: 28px 22px 70px; }
+
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 8px 6px 18px; position: -webkit-sticky; position: sticky; top: 0; background: var(--dark); z-index: 1000; }
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 500; color: var(--primary); }
+    .brand .mark { width: 28px; height: 28px; border-radius: 10px; background: var(--primary); display: flex; align-items: center; justify-content: center; color: var(--light); font-weight: 700; }
+    .brand .name { font-size: 18px; }
+    .icons { display: flex; align-items: center; gap: 14px; }
+    .icon-btn { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; background: rgba(255,255,255,.65); border: 1px solid rgba(255,255,255,.35); box-shadow: var(--shadow-soft); transition: transform .15s ease, box-shadow .15s ease; }
+    .icon-btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.08); }
+    .icon { width: 18px; height: 18px; opacity: .85; }
+
+    .hero { padding: 44px 10px 28px; text-align: center; }
+    .hero h1 { margin: 0 auto; font-size: clamp(28px, 4.2vw, 44px); line-height: 1.2; font-weight: 500; max-width: 980px; font-family: 'Lora', serif; }
+    .hero .sub { margin: 14px auto 0; max-width: 900px; color: var(--secondary); font-size: clamp(15px, 2vw, 18px); line-height: 1.5; }
+
+    .pillbar { margin: 24px auto 0; width: min(720px, 100%); background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 10px; display: flex; gap: 10px; box-shadow: var(--shadow-soft); backdrop-filter: blur(10px); }
+    .pill { flex: 1; border: 0; cursor: pointer; padding: 14px 16px; border-radius: 999px; background: transparent; color: #6a6a6a; font-size: clamp(15px, 2vw, 20px); font-weight: 500; transition: background .15s ease, color .15s ease, transform .15s ease; }
+    .pill[aria-selected="true"] { background: var(--accent); color: var(--dark); box-shadow: inset 0 0 0 1px rgba(110,118,255,.20); }
+    .pill:hover { transform: translateY(-1px); }
+
+    section { margin-top: 46px; display: none; }
+    section.active { display: block; }
+
+    .grid { display: grid; grid-template-columns: 1.05fr .95fr; gap: 22px; margin-top: 28px; align-items: stretch; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; gap: 18px; } }
+
+    .card { background: rgba(255,255,255,.60); border: 1px solid rgba(255,255,255,.35); border-radius: var(--radius); box-shadow: var(--shadow); backdrop-filter: blur(10px); overflow: hidden; }
+
+    .media { min-height: 320px; background: radial-gradient(180px 180px at 25% 55%, rgba(110,118,255,.35) 0%, transparent 65%), radial-gradient(180px 180px at 55% 45%, rgba(255,213,176,.45) 0%, transparent 65%), radial-gradient(260px 260px at 75% 70%, rgba(139,223,195,.40) 0%, transparent 65%), linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,.10)); position: relative; }
+    .bubble { position: absolute; inset: auto; width: 170px; height: 170px; border-radius: 999px; left: 26%; top: 28%; background: radial-gradient(circle at 30% 30%, #fff 0%, rgba(255,255,255,.2) 25%, transparent 55%), linear-gradient(140deg, rgba(110,118,255,.35), rgba(255,213,176,.25), rgba(139,223,195,.25)); border: 1px solid rgba(255,255,255,.35); box-shadow: 0 24px 60px rgba(0,0,0,.10); filter: saturate(1.05); }
+    .bubble.sm { width: 44px; height: 44px; left: 18%; top: 40%; opacity: .85; }
+
+    .content { padding: 26px 26px 24px; }
+    .kicker { display: flex; flex-wrap: wrap; gap: 10px; color: #2d2d2d; margin-bottom: 12px; font-size: 14px; }
+    .tag { background: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.35); padding: 8px 10px; border-radius: 999px; }
+    h2 { margin: 0; font-size: 34px; font-weight: 500; font-family: 'Lora', serif; }
+    .desc { margin: 10px 0 0; color: var(--secondary); line-height: 1.55; font-size: 17px; }
+    .bullets { margin: 16px 0 0; padding-left: 18px; color: #404040; line-height: 1.6; }
+
+    .cta-row { margin-top: 18px; display:flex; gap:12px; flex-wrap:wrap; }
+    .btn { display:inline-flex; align-items:center; justify-content:center; gap:10px; padding: 12px 14px; border-radius: 14px; border:1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.65); box-shadow: var(--shadow-soft); transition: transform .15s ease, box-shadow .15s ease; font-weight:600; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.08); }
+    .btn.primary { background: linear-gradient(135deg, rgba(110,118,255,.22), rgba(255,213,176,.22), rgba(139,223,195,.22)); border-color: rgba(110,118,255,.20); }
+    .btn small { font-weight: 600; opacity: .75; }
+
+    .stack { display: grid; gap: 16px; }
+    .mini { padding: 18px 18px; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,.35); background: rgba(255,255,255,.55); box-shadow: var(--shadow-soft); }
+    .mini h3 { margin: 0; font-size: 20px; font-weight: 600; }
+    .mini p { margin:8px 0 0; color: var(--secondary); line-height: 1.5; }
+    .mini .meta { margin-top:10px; color:#444; font-size: 14px; display:flex; gap:10px; flex-wrap:wrap; }
+    .mini .meta span { opacity:.85; }
+
+    footer { margin-top: 70px; color: var(--secondary); font-size: 14px; text-align:center; opacity: .9; }
+
+    @media print {
+      .pillbar, .icons { display: none !important; }
+      body { background: #fff; }
+      .card, .mini { box-shadow: none; }
+      section { display: block !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header class="top">
+      <div class="brand" aria-label="Site brand">
+        <div class="mark">JK</div>
+        <div class="name">Joel Kartchner</div>
+      </div>
+
+      <nav class="icons" aria-label="Social links">
+        <a class="icon-btn" href="https://www.linkedin.com/in/joel-kartchner" target="_blank" title="LinkedIn" aria-label="LinkedIn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6.5 9.5V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 5.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M10.5 20v-6.2c0-1.8 1.2-3.3 3-3.3s3 1.5 3 3.3V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.5 11v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </a>
+        <a class="icon-btn" href="https://github.com" target="_blank" title="GitHub" aria-label="GitHub">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M9 19c-3 1-3-1-4-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15 19v-3c0-.8.3-1.3.7-1.6-2.3-.3-4.7-1.1-4.7-5A3.9 3.9 0 0 1 12 6.6a3.6 3.6 0 0 1 .1-2.6s.9-.3 2.9 1.1a10 10 0 0 1 5.2 0C22.2 3.7 23 4 23 4a3.6 3.6 0 0 1 .1 2.6A3.9 3.9 0 0 1 24 9.4c0 3.9-2.4 4.7-4.7 5 .4.3.7 1 .7 2V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" transform="translate(-1 -1)"/></svg>
+        </a>
+        <a class="icon-btn" href="mailto:joel.kartchner@gmail.com" title="Email" aria-label="Email">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+    </header>
+
+    <div class="hero">
+      <h1>Hello! I’m Joel, a Masters student in Electrical Engineering with a specialization in Lasers.</h1>
+      <p class="sub">
+        I bring a strong background in RF simulation and laser ablation technologies, aiming for innovative roles in the tech industry.***
+      </p>
+      <div class="pillbar" role="tablist" aria-label="Primary navigation">
+        <button class="pill" id="tab-projects" role="tab" aria-selected="true" aria-controls="projects">Projects</button>
+        <button class="pill" id="tab-experience" role="tab" aria-selected="false" aria-controls="experience">Experience</button>
+        <button class="pill" id="tab-skills" role="tab" aria-selected="false" aria-controls="skills">Skills</button>
+        <button class="pill" id="tab-about" role="tab" aria-selected="false" aria-controls="about">About</button>
+        <a class="btn" href="resume.pdf" aria-label="Download Resume">Download Resume</a>
+      </div>
+    </div>
+
+    <section id="projects" class="active" role="tabpanel" aria-labelledby="tab-projects">
+      <div class="grid">
+        <div class="card" aria-label="Featured project visual">
+          <div class="media">
+            <div class="bubble" aria-hidden="true"></div>
+            <div class="bubble sm" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="content">
+          <div class="kicker">
+            <span class="tag">Featured</span>
+            <span class="tag">Electromagnetism</span>
+            <span class="tag">Laser Technology</span>
+          </div>
+          <h2>Tesla Coil Project</h2>
+          <p class="desc">
+            Designed and built a 500,000 Volt Tesla Coil, showcasing safe high-voltage practices and hands-on engineering. Presented demonstrations to public audiences to increase interest in electromagnetism.***
+          </p>
+          <ul class="bullets">
+            <li>Calculated turn ratios and fabricated coil system for optimal performance.***</li>
+            <li>Integrated safety features to ensure secure demonstrations for various age groups.***</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="height:18px"></div>
+
+      <div class="grid" style="align-items:start">
+        <div class="stack" aria-label="Additional projects list">
+          <div class="mini">
+            <h3>Laser Tag System</h3>
+            <p>Developed a Laser Tag Game System involving complex circuit design and software integration for real-time game processing.***</p>
+            <div class="meta">
+              <span>Tools: Circuits, Power Systems</span>
+              <span>Skills: Game Development, System Integration</span>
+            </div>
+          </div>
+
+          <div class="mini">
+            <h3>mmWave Radar Project</h3>
+            <p>Engineered an 80GHz radar system to detect high-velocity projectiles. This involved advanced signal processing and radar technology improvements.***</p>
+            <div class="meta">
+              <span>Focus: Radar Systems</span>
+              <span>Skills: Signal Processing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" aria-label="Quick highlights">
+          <div class="mini">
+            <h3>Research Publications</h3>
+            <p>
+              "Fabrication of High Density Flex Cables Using Direct Write Laser Ablation" presented at IEEE Conference.
+            </p>
+            <div class="meta"><span>2024</span><span><a href="https://doi.org/10.1109/IETC61393.2024.10564256">Read more</a></span></div>
+          </div>
+
+          <div class="mini">
+            <h3>Top strengths</h3>
+            <p>
+              Proficient in RF systems, laser-based solutions, and a strong advocate for safe engineering practices.
+            </p>
+          </div>
+
+          <div class="mini">
+            <h3>Availability</h3>
+            <p>
+              Open to roles starting <strong>immediately</strong>. Flexible with location and work arrangements.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="experience" role="tabpanel" aria-labelledby="tab-experience">
+      <div class="grid">
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">Experience</span>
+          </div>
+          <h2>Raytheon Internship</h2>
+          <p class="desc">
+            As a summer intern, I engaged in RF circuit testing and simulation, contributing to advance the efficiency of circuit cards. Collaborated closely with senior engineers and technicians.***
+          </p>
+          <ul class="bullets">
+            <li>Tested RF circuit cards and performed EME/EMI testing with detailed analysis and reporting.***</li>
+            <li>Developed simulation models and wrote test scripts in Python to automate processes.***</li>
+          </ul>
+        </div>
+
+        <div class="stack">
+          <div class="mini">
+            <h3>Teaching & Research</h3>
+            <p>Assisted with research in laser ablation labs and supported students in understanding complex engineering concepts.</p>
+            <div class="meta">
+              <span>Tools: HFSS, ADS</span>
+              <span>Skills: Simulation, Tutoring</span>
+            </div>
+          </div>
+
+          <div class="mini">
+            <h3>Extracurricular Leadership</h3>
+            <p>Acted as Secretary for IEEE Chapter, organizing key events and strategizing future initiatives.</p>
+          </div>
+
+          <div class="mini">
+            <h3>Volunteer Work</h3>
+            <p>Served as a missionary for two years, developing strong organizational and leadership skills.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="skills" role="tabpanel" aria-labelledby="tab-skills">
+      <div class="grid">
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">Technologies</span>
+          </div>
+          <h2>Proficiencies</h2>
+          <p class="desc">
+            Across programming, simulation tools, and analytical instruments, I bring a comprehensive skill set applicable to diverse engineering challenges.***
+          </p>
+          <ul class="bullets">
+            <li><strong>Languages:</strong> Python, C, C++, Matlab, Java</li>
+            <li><strong>Tools:</strong> HFSS, ADS, KiCad, LTSpice</li>
+            <li><strong>Analytical:</strong> Network Analyzer, Spectrum Analyzer</li>
+            <li><strong>Languages:</strong> Fluent in Portuguese</li>
+          </ul>
+        </div>
+
+        <div class="stack">
+          <div class="mini">
+            <h3>Software & Tools</h3>
+            <p>Adept with various design and simulation software, enhancing project accuracy and efficiency.</p>
+            <div class="meta">
+              <span>Software: SystemVerilog, Vivado</span>
+              <span>Role: Engineer</span>
+            </div>
+          </div>
+
+          <div class="mini">
+            <h3>Education Background</h3>
+            <p>BSc and MSc degrees in Electrical Engineering from BYU, achieving Magna Cum Laude honors.***</p>
+            <div class="meta">
+              <span>GPA: 3.98 / 3.85</span>
+              <span>Graduation: 2025 / 2027</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="about" role="tabpanel" aria-labelledby="tab-about">
+      <div class="grid">
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">About</span>
+            <span class="tag">Contact</span>
+          </div>
+          <h2>About Me</h2>
+          <p class="desc">
+            Passionate about making impactful contributions to the field of Electrical Engineering with a focus on Laser Technologies and RF systems. Open to innovative opportunities that utilize my engineering background.***
+          </p>
+          <ul class="bullets">
+            <li><strong>Email:</strong> <a href="mailto:joel.kartchner@gmail.com">joel.kartchner@gmail.com</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/joel-kartchner">linkedin.com/in/joel-kartchner</a></li>
+            <li><strong>Phone:</strong> (509) 392-9318</li>
+          </ul>
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:joel.kartchner@gmail.com">Get in Touch</a>
+            <a class="btn" href="resume.pdf">Download Full Resume</a>
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="mini">
+            <h3>Location</h3>
+            <p>Provo, Utah. Open to relocation or remote opportunities.</p>
+            <div class="meta">
+              <span>Flexibility: Remote/Onsite</span>
+            </div>
+          </div>
+
+          <div class="mini">
+            <h3>Career Goals</h3>
+            <p>Looking to contribute substantial progress and innovation within the engineering landscape.***</p>
+            <div class="meta">
+              <span>Industries: Tech, Engineering</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © 2026 Joel Kartchner. Built for connectivity and professional outreach.
+    </footer>
+  </div>
+
+  <script>
+    const tabs = [
+      { btn: document.getElementById('tab-projects'), panel: document.getElementById('projects') },
+      { btn: document.getElementById('tab-experience'), panel: document.getElementById('experience') },
+      { btn: document.getElementById('tab-skills'), panel: document.getElementById('skills') },
+      { btn: document.getElementById('tab-about'), panel: document.getElementById('about') }
+    ];
+
+    function activate(index) {
+      tabs.forEach((t, i) => {
+        const active = i === index;
+        t.btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.panel.classList.toggle('active', active);
+      });
+    }
+
+    tabs.forEach((t, i) => t.btn.addEventListener('click', () => activate(i)));
+
+    function fromHash() {
+      const h = (location.hash || '#projects').replace('#', '');
+      const idx = Math.max(0, tabs.findIndex(t => t.panel.id === h));
+      activate(idx === -1 ? 0 : idx);
+    }
+
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
