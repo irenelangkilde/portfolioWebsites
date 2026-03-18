@@ -430,6 +430,10 @@
 </head>
 <body>
 <div class="card">
+  <div id="debugButtons" style="display:none;margin-bottom:18px;">
+    <button type="button" class="btn-secondary" id="viewIntermediate">View Intermediate Results</button>
+    <button type="button" class="btn-primary" id="downloadIntermediate">Download Intermediate Results</button>
+  </div>
 
   <!-- Progress Bar -->
   <div class="progress-wrap">
@@ -1063,6 +1067,7 @@ function collectFormData() {
   const email          = document.getElementById('email').value.trim();
   const phone          = document.getElementById('phone').value.trim();
   const major          = document.getElementById('major').value.trim();
+  window.isDebugMode = /DEBUG/i.test(major);
   const specialization = document.getElementById('specialization').value.trim();
   const linkedin       = document.getElementById('linkedin').value.trim();
 
@@ -1297,6 +1302,9 @@ function handleSubmit() {
   const data = collectFormData();
   console.log('Portfolio Intake Form Data:', data);
 
+  // Toggle debug buttons
+  document.getElementById('debugButtons').style.display = window.isDebugMode ? 'block' : 'none';
+
   // Generate and display AI prompt
   const prompt = generateAIPrompt(data);
   document.getElementById('aiPromptBox').textContent = prompt;
@@ -1374,6 +1382,18 @@ function escHtml(s) {
     .replace(/&/g,'&amp;').replace(/</g,'&lt;')
     .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ═══════════════════════════════════════════════════════════
+// DEBUG BUTTON LOGIC
+// ═══════════════════════════════════════════════════════════
+document.getElementById('viewIntermediate').addEventListener('click', function() {
+  const data = collectFormData();
+  alert('Intermediate Results:\n' + JSON.stringify(data, null, 2));
+});
+document.getElementById('downloadIntermediate').addEventListener('click', function() {
+  const data = collectFormData();
+  downloadHtml('IntermediateResults.json', JSON.stringify(data, null, 2));
+});
 
 // ═══════════════════════════════════════════════════════════
 // INIT

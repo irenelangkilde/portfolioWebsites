@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[Your Name] — [Field] Portfolio</title>
+  <meta name="description" content="[Portfolio description]" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --color-primary: #6b55ff;
+      --color-secondary: #4E70F1;
+      --color-accent: #ff7bbd;
+      --color-dark: #15141a;
+      --color-light: #fbfaf8;
+
+      --bg: var(--color-light);
+      --paper: #ffffff;
+      --ink: var(--color-dark);
+      --muted: #5f5b66;
+      --soft: #ece9e2;
+      --soft2: #f3f1ec;
+      --border: rgba(21,20,26,.10);
+      --shadow: 0 18px 55px rgba(10,10,20,.10);
+
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1000px 600px at 12% 0%, rgba(107,85,255,.10), transparent 55%),
+        radial-gradient(900px 560px at 88% 12%, rgba(255,123,189,.10), transparent 55%),
+        linear-gradient(180deg, var(--bg), #f7f6f3);
+      color: var(--ink);
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a{color:inherit}
+    img{max-width:100%; display:block}
+
+    header{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      background: rgba(251,250,248,.78);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .id{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .monogram{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: #fff;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.60), transparent 55%),
+        linear-gradient(135deg, var(--color-primary), var(--color-accent));
+      box-shadow: 0 16px 36px rgba(107,85,255,.16);
+    }
+    .id strong{display:block; font-family: "Playfair Display", Georgia, serif; letter-spacing:-.01em}
+    .id span{display:block; color: var(--muted); font-size: 12px; margin-top: 2px}
+
+    nav ul{
+      list-style:none; margin:0; padding:0;
+      display:flex; gap: 18px; align-items:center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav a{text-decoration:none; padding: 8px 10px; border-radius: 999px}
+    nav a:hover{background: rgba(107,85,255,.08); color: var(--ink)}
+    .actions{display:flex; gap:10px; align-items:center}
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: var(--paper);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px rgba(10,10,20,.10)}
+    .btn.primary{
+      border: none;
+      color: #fff;
+      background: linear-gradient(135deg, var(--color-secondary), var(--color-primary));
+    }
+
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    main{flex:1}
+    .container{max-width: var(--max); margin:0 auto; padding: 0 20px}
+
+    .hero{
+      padding: 28px 0 14px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .poster{
+      border-radius: 28px;
+      overflow:hidden;
+      background: var(--paper);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 84px;
+    }
+    .poster img{width:100%; height:auto}
+    .poster .cap{
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--paper), rgba(251,250,248,.9));
+    }
+    .cap strong{display:block; font-size: 14px}
+    .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
+
+    .hero-copy{
+      background: rgba(255,255,255,.70);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(107,85,255,.08);
+      color: #2e2a36;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border: 1px solid rgba(107,85,255,.14);
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+    }
+    h1{
+      margin: 12px 0 10px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .lead{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 70ch;
+    }
+    .bullets{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style:none;
+      color: #2e2a36;
+      font-size: 14px;
+    }
+    .bullets li{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid var(--border);
+    }
+    .tick{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, rgba(107,85,255,.18), rgba(255,123,189,.18));
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid rgba(107,85,255,.14);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+    .cta{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items:center;
+    }
+
+    .section{padding: 42px 0}
+    .section h2{
+      margin: 0 0 8px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -.01em;
+    }
+    .hint{margin:0; color: var(--muted); max-width: 75ch}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card{
+      grid-column: span 6;
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(107,85,255,.10), transparent 45%),
+        radial-gradient(circle at 70% 70%, rgba(255,123,189,.10), transparent 45%);
+      opacity:.9;
+      pointer-events:none;
+      transform: rotate(8deg);
+    }
+    .card > *{position: relative}
+    .card h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+    .card p{margin:0; color: var(--muted); font-size: 14px}
+    .meta{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: #2e2a36;
+      font-size: 12px;
+    }
+    .tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(107,85,255,.08);
+      border: 1px solid rgba(107,85,255,.14);
+    }
+    .span-12{grid-column: span 12}
+
+    .post{
+      grid-column: span 4;
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+    }
+    .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
+    .post h3{margin: 8px 0 8px; font-size: 16px}
+    .post p{margin:0; color: var(--muted); font-size: 14px}
+
+    .skills{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .skill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.85);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: #2e2a36;
+    }
+
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .contact-card{
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, rgba(78,112,241,.10), rgba(255,123,189,.08)), rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .contact-card h3{margin:0 0 8px}
+    .contact-card p{margin:0 0 12px; color: var(--muted); font-size: 14px}
+    .contact-card a{ text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+    form{
+      border-radius: var(--radius-xl);
+      background: rgba(255,255,255,.75);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px rgba(10,10,20,.06);
+      display:grid;
+      gap: 12px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display:block;
+      margin-bottom: 6px;
+    }
+    input, textarea{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.92);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea{min-height: 110px; resize: vertical}
+    input:focus, textarea:focus{border-color: rgba(107,85,255,.35)}
+
+    footer{
+      border-top: 1px solid var(--border);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot{
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .foot a{color: var(--muted); text-decoration:none}
+    .foot a:hover{color: var(--ink)}
+
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns: 1fr}
+      .poster{position: relative; top: 0}
+      h1{font-size: 44px}
+      .card{grid-column: span 12}
+      .post{grid-column: span 12}
+      .contact{grid-template-columns: 1fr}
+      .bullets{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size: 38px}
+      .id{min-width: auto}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="topbar">
+        <div class="id">
+          <div class="monogram" aria-hidden="true">[XX]</div>
+          <div>
+            <strong>[Your Full Name]</strong>
+            <span>[Field / Discipline] • [Status / Year]</span>
+          </div>
+        </div>
+
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">[Section 1]</a></li>
+            <li><a href="#writing">[Section 2]</a></li>
+            <li><a href="#skills">[Section 3]</a></li>
+            <li><a href="#contact">[Section 4]</a></li>
+          </ul>
+        </nav>
+
+        <div class="actions">
+          <a class="btn" href="#projects">[Primary CTA]</a>
+          <a class="btn primary" href="#contact">[Secondary CTA]</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <aside class="poster" aria-label="Hero image poster">
+              <!-- *** 1 -->
+              <img src="" alt="[Hero image description]" />
+              <div class="cap">
+                <strong>[Image caption headline]</strong>
+                <span>[Image caption subtext]</span>
+              </div>
+            </aside>
+
+            <div class="hero-copy">
+              <span class="kicker"><span class="dot" aria-hidden="true"></span> [Portfolio Category]</span>
+              <h1>[Your compelling headline goes here]</h1>
+              <p class="lead">
+                [A short, engaging bio or value proposition that describes who you are, what you do, and what makes your work distinct.]
+              </p>
+
+              <div class="cta">
+                <a class="btn primary" href="#projects">[CTA Label 1]</a>
+                <a class="btn" href="#">[CTA Label 2]</a>
+                <a class="btn" href="#">[CTA Label 3]</a>
+              </div>
+
+              <ul class="bullets" aria-label="Highlights">
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>[Highlight 1 title]:</strong> [Short supporting description.]</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>[Highlight 2 title]:</strong> [Short supporting description.]</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>[Highlight 3 title]:</strong> [Short supporting description.]</span></li>
+                <li><span class="tick" aria-hidden="true">✓</span><span><strong>[Highlight 4 title]:</strong> [Short supporting description.]</span></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="projects">
+        <div class="container">
+          <h2>[Projects Section Title]</h2>
+          <p class="hint">[Projects section subtitle or descriptive hint.]</p>
+
+          <div class="grid">
+            <article class="card">
+              <h3>[Project Title 1]</h3>
+              <p>[Brief description of the project, its goal, and outcome.]</p>
+              <div class="meta">
+                <span class="tag">[Tag 1]</span><span class="tag">[Tag 2]</span><span class="tag">[Tag 3]</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>[Project Title 2]</h3>
+              <p>[Brief description of the project, its goal, and outcome.]</p>
+              <div class="meta">
+                <span class="tag">[Tag 1]</span><span class="tag">[Tag 2]</span><span class="tag">[Tag 3]</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>[Project Title 3]</h3>
+              <p>[Brief description of the project, its goal, and outcome.]</p>
+              <div class="meta">
+                <span class="tag">[Tag 1]</span><span class="tag">[Tag 2]</span><span class="tag">[Tag 3]</span>
+              </div>
+            </article>
+
+            <article class="card">
+              <h3>[Project Title 4]</h3>
+              <p>[Brief description of the project, its goal, and outcome.]</p>
+              <div class="meta">
+                <span class="tag">[Tag 1]</span><span class="tag">[Tag 2]</span><span class="tag">[Tag 3]</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="writing">
+        <div class="container">
+          <h2>[Writing Section Title]</h2>
+          <p class="hint">[Writing section subtitle or descriptive hint.]</p>
+
+          <div class="grid">
+            <article class="post">
+              <div class="date">[Post Category 1]</div>
+              <h3>[Post Title 1]</h3>
+              <p>[Short summary of the post's topic and key insight.]</p>
+            </article>
+            <article class="post">
+              <div class="date">[Post Category 2]</div>
+              <h3>[Post Title 2]</h3>
+              <p>[Short summary of the post's topic and key insight.]</p>
+            </article>
+            <article class="post">
+              <div class="date">[Post Category 3]</div>
+              <h3>[Post Title 3]</h3>
+              <p>[Short summary of the post's topic and key insight.]</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>[Skills Section Title]</h2>
+          <p class="hint">[Skills section subtitle or descriptive hint.]</p>
+
+          <div class="grid">
+            <div class="card span-12">
+              <h3>[Skills Group Label]</h3>
+              <div class="skills" aria-label="Skill chips">
+                <span class="skill">[Skill 1]</span>
+                <span class="skill">[Skill 2]</span>
+                <span class="skill">[Skill 3]</span>
+                <span class="skill">[Skill 4]</span>
+                <span class="skill">[Skill 5]</span>
+                <span class="skill">[Skill 6]</span>
+                <span class="skill">[Skill 7]</span>
+                <span class="skill">[Skill 8]</span>
+                <span class="skill">[Skill 9]</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>[Contact Section Title]</h2>
+          <p class="hint">[Contact section subtitle or descriptive hint.]</p>
+
+          <div class="contact">
+            <div class="contact-card">
+              <h3>[Contact Card Headline]</h3>
+              <p>[A short paragraph describing your availability, what you're looking for, and who should reach out.]</p>
+              <p style="margin:0;">
+                <strong>[Label 1]:</strong> <a href="mailto:[your@email.com]">[your@email.com]</a><br/>
+                <strong>[Label 2]:</strong> <a href="#">[profile-url]</a><br/>
+                <strong>[Label 3]:</strong> [Your City, State] • [Availability note]
+              </p>
+            </div>
+
+            <form action="#" method="post">
+              <div>
+                <label for="name">[Name Field Label]</label>
+                <input id="name" name="name" type="text" placeholder="[Name placeholder]" />
+              </div>
+              <div>
+                <label for="email">[Email Field Label]</label>
+                <input id="email" name="email" type="email" placeholder="[Email placeholder]" />
+              </div>
+              <div>
+                <label for="message">[Message Field Label]</label>
+                <textarea id="message" name="message" placeholder="[Message placeholder]"></textarea>
+              </div>
+              <button class="btn primary" type="submit">[Submit Button Label]</button>
+              <p style="margin:0; color: var(--muted); font-size: 12px;">[Form helper note or integration tip.]</p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="foot">
+          <span>© [Year] [Your Name] • [Portfolio Tagline]</span>
+          <span style="display:flex; gap:14px;">
+            <a href="#projects">[Section 1]</a>
+            <a href="#writing">[Section 2]</a>
+            <a href="#skills">[Section 3]</a>
+            <a href="#contact">[Section 4]</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

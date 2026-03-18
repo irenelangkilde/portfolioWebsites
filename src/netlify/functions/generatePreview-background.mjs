@@ -127,7 +127,7 @@ CONTENT ENHANCEMENT (within the bounds of the JSON):
 - Write a compelling About Me section from the summary and overall profile
 - Create visual skill cards with proficiency context
 - Detailed project showcases with problem statements, tech stack, and links
-- Mark any content embellished beyond what the JSON strictly states with *** and an incrementing index
+- Mark any content garnished beyond what the JSON strictly states with *** and an incrementing index
 
 COLOR SCHEME:
 {{COLOR_INSTRUCTION}}
@@ -162,7 +162,7 @@ Output the complete HTML file only. No explanation, no markdown — just the fil
 // ─── Original single-prompt templates (preserved as fallback) ────────────────
 const PROMPT_TEMPLATE = `You are building a personal portfolio website for a job seeker.
 Use all the content of the input resume PDF (e.g., name, contact info, education, experience, projects, skills, etc) as the foundation for the new website.
-You have a mandate to make improvements in overall quality and impactfulness, such as embellishing narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
+You have a mandate to make improvements in overall quality and impactfulness, such as garnishing narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
 Do not fabricate achievements, metrics, employers, dates, or credentials.
 Mark with a triple asterisk (***) anything fabricated beyond the resume info.
 {{COLOR_INSTRUCTION}}
@@ -244,7 +244,7 @@ Alternate between light and dark sections
 Ensure sufficient contrast for accessibility (text must be readable)
 
 3. Content Transformation (CRITICAL)
-Do NOT just copy resume text to the website. Enhance and embellish it to leverage website advantages and to illustrate to the user their full potential; but avoid misrepresentations.  The goal is to WOW the potential employer and their recruiters by portraying the user at their best. 
+Do NOT just copy resume text to the website. Enhance and garnish it to leverage website advantages and to illustrate to the user their full potential; but avoid misrepresentations.  The goal is to WOW the potential employer and their recruiters by portraying the user at their best. 
 From Resume → To Website
 Education Section:
 
@@ -388,7 +388,7 @@ Include proper meta tags:
 <title>[Name] | [Major] Graduate Portfolio</title>
 <meta name="description" content="Portfolio of [Name], [Major] graduate specializing in [Specialization]. View projects, experience, and skills.">
 
-8. Any augmentation, enhancement or embellishment not supported (directly or indirectly) by the resume should be marked with a triple asterisk (***) and an index number counting the number of asterisk groups in the page so far.
+8. Any augmentation, enhancement or garnishment not supported (directly or indirectly) by the resume should be marked with a triple asterisk (***) and an index number counting the number of asterisk groups in the page so far.
 
 9. Quality Checks
 Before finalizing, ensure:

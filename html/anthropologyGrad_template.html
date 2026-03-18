@@ -1,0 +1,722 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[STUDENT NAME] | [MAJOR] Portfolio</title>
+  <meta name="description" content="Resume and portfolio website for a college student majoring in [MAJOR]." />
+
+  <style>
+    :root{
+      --primary:#1f1a16;
+      --secondary:#5c514a;
+      --accent:#b8744f;
+      --accent2:#e2beab;
+      --accent3:#fde7cd;
+      --dark:#1f1a16;
+      --light:#fbf7f3;
+
+      --ink:var(--primary);
+      --muted:var(--secondary);
+      --paper:var(--light);
+      --card:#ffffffcc;
+      --glass:#ffffffa8;
+      --stroke:#00000014;
+      --shadow:0 18px 55px rgba(0,0,0,.12);
+      --shadowSoft:0 10px 28px rgba(0,0,0,.10);
+      --radius:22px;
+
+      --btn:var(--dark);
+      --btnText:#fff;
+
+      --max:1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+        margin:0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        color:var(--ink);
+        background:
+            linear-gradient(
+            rgba(251,247,243,0.72),
+            rgba(251,247,243,0.72)
+            ),
+            /* *** 1 */ center / 180% no-repeat fixed;
+        overflow-x:hidden;
+        }
+
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 22px 80px;}
+
+    .masthead{
+      margin:0 auto;
+      background:
+        linear-gradient(0deg, rgba(20,14,10,.62), rgba(20,14,10,.45)),
+        /* *** 2 */ center/cover no-repeat;
+      color:#fff;
+    }
+
+    .topbar{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 240px;
+    }
+    .brandMark{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, rgba(253,231,205,.9), rgba(184,116,79,.7));
+      border:1px solid rgba(255,255,255,.25);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .brandText{display:flex; flex-direction:column; line-height:1.1}
+    .brandText strong{font-size:16px; letter-spacing:.02em}
+    .brandText span{font-size:12.5px; opacity:.9}
+
+    .navLinks{
+      display:flex; gap:18px; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .navLinks a{
+      text-decoration:none;
+      font-weight:600;
+      font-size:13.5px;
+      letter-spacing:.02em;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.10);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(8px);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .navLinks a:hover{transform: translateY(-1px); background: rgba(255,255,255,.16);}
+
+    .hero{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:74px 22px 74px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:26px;
+      align-items:end;
+    }
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr; padding:54px 22px 62px;}
+      .brand{min-width:auto}
+    }
+
+    .hero h1{
+      margin:0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height:1.12;
+      letter-spacing:-0.02em;
+      font-weight:800;
+    }
+    .hero p{
+      margin:14px 0 0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.95;
+      max-width: 60ch;
+    }
+
+    .heroCard{
+      background: rgba(255,255,255,.12);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .heroCard .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .heroActions {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        }
+
+        .heroAction {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+        }
+
+        .heroAction p {
+        margin: 0;
+        font-size: 14.5px;
+        line-height: 1.45;
+        opacity: 0.95;
+        }
+
+    .pill{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(253,231,205,.18);
+      border:1px solid rgba(253,231,205,.22);
+      font-size:12.5px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+    .heroCard ul{
+      margin:10px 0 0;
+      padding-left:18px;
+      line-height:1.55;
+      font-size: 14.5px;
+      opacity:.95;
+    }
+    .ctaRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.14);
+      color:#fff;
+      text-decoration:none;
+      font-weight:800;
+      font-size:13.5px;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.20);}
+    .btn.primary{
+      background: rgba(253,231,205,.22);
+      border-color: rgba(253,231,205,.30);
+    }
+
+    .section{
+      padding:66px 0 0;
+    }
+    .section h2{
+      margin:0 0 14px;
+      font-size: 28px;
+      letter-spacing:-0.02em;
+      color: var(--ink);
+    }
+    .subhead{
+      margin:0 0 22px;
+      color:var(--muted);
+      max-width: 80ch;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){
+      .grid2{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadowSoft);
+      padding:20px 20px;
+      backdrop-filter: blur(10px);
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:-0.01em;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:13.5px;
+      margin-bottom:10px;
+    }
+    .card p{margin:10px 0 0; color:#2c241f}
+    .card,
+    .contactCard,
+    .item,
+    .writing {
+         backdrop-filter: blur(6px);
+        background-color: rgba(255,255,255,0.78);
+    }
+    .bullets{
+      margin:12px 0 0;
+      padding-left:18px;
+      color:#2c241f;
+    }
+    .bullets li{margin:6px 0}
+
+    .tagRow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .tag{
+      font-size:12.5px;
+      font-weight:700;
+      padding:7px 10px;
+      border-radius:999px;
+      background: rgba(184,116,79,.12);
+      border:1px solid rgba(184,116,79,.18);
+      color:#5c3622;
+    }
+
+    .timeline{
+      display:grid;
+      gap:14px;
+    }
+    .item{
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:baseline;
+      margin-bottom:6px;
+    }
+    .itemTop strong{font-size:16px}
+    .itemTop span{color:var(--muted); font-size:13.5px}
+
+    .writingList{
+      display:grid;
+      gap:12px;
+    }
+    .writing{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.72);
+    }
+    .writing a{
+      text-decoration:none;
+      font-weight:800;
+      color: var(--accent);
+    }
+    .writing small{color:var(--muted)}
+
+    .contactWrap{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .contactWrap{grid-template-columns:1fr}
+    }
+    .headshot{
+      width:100%;
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background: #ddd;
+    }
+    .contactCard{
+      padding:22px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: rgba(255,255,255,.78);
+      box-shadow: var(--shadowSoft);
+    }
+    .contactCard h3{margin:0 0 8px}
+    .contactRow{
+      display:grid;
+      gap:10px;
+      margin-top: 14px;
+    }
+    .contactRow a{
+      color: var(--accent);
+      font-weight:800;
+      text-decoration:none;
+    }
+
+    footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      color:var(--secondary);
+      font-size:13.5px;
+      text-align:center;
+    }
+
+    html{scroll-behavior:smooth}
+  </style>
+</head>
+
+<body>
+  <div class="masthead" role="banner" aria-label="Header and hero with background image">
+    <div class="topbar">
+      <div class="brand" aria-label="Brand">
+        <div class="brandMark" aria-hidden="true"></div>
+        <div class="brandText">
+          <strong>[STUDENT NAME]</strong>
+          <span>[MAJOR] • Graduation: [MONTH YEAR]</span>
+        </div>
+      </div>
+
+      <div class="navLinks" aria-label="Site navigation">
+        <a href="#about">[NAV LINK 1]</a>
+        <a href="#education">[NAV LINK 2]</a>
+        <a href="#experience">[NAV LINK 3]</a>
+        <a href="#projects">[NAV LINK 4]</a>
+        <a href="#writing">[NAV LINK 5]</a>
+        <a href="#contact">[NAV LINK 6]</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>[PORTFOLIO HEADLINE]</h1>
+        <p>[HERO DESCRIPTION: A brief statement about your field of study, interests, and the types of opportunities you are seeking.]</p>
+      </div>
+      <aside class="heroCard" aria-label="Quick highlights">
+        <div class="heroActions">
+
+          <div class="heroAction">
+            <a class="btn primary" href="#projects">[CTA LABEL 1]</a>
+            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 1]</p>
+          </div>
+
+          <div class="heroAction">
+            <a class="btn primary" href="#skills">[CTA LABEL 2]</a>
+            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 2]</p>
+          </div>
+
+          <div class="heroAction">
+            <a class="btn primary" href="#writing">[CTA LABEL 3]</a>
+            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 3]</p>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <main class="wrap">
+    <section id="about" class="section">
+      <h2>[ABOUT SECTION HEADING]</h2>
+      <p class="subhead">[ABOUT SUBHEADING: A concise paragraph describing your academic background, interests, and what drives your work.]</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>[FOCUS AREAS CARD HEADING]</h3>
+          <ul class="bullets">
+            <li>[FOCUS AREA 1]</li>
+            <li>[FOCUS AREA 2]</li>
+            <li>[FOCUS AREA 3]</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">[TAG 1]</span>
+            <span class="tag">[TAG 2]</span>
+            <span class="tag">[TAG 3]</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>[GOALS CARD HEADING]</h3>
+          <p>[DESCRIPTION OF ROLES OR ENVIRONMENTS YOU ARE SEEKING]</p>
+          <ul class="bullets">
+            <li>[OPPORTUNITY TYPE 1]</li>
+            <li>[OPPORTUNITY TYPE 2]</li>
+            <li>[OPPORTUNITY TYPE 3]</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="education" class="section">
+      <h2>[EDUCATION SECTION HEADING]</h2>
+      <p class="subhead">[EDUCATION SUBHEADING]</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>[DEGREE NAME]</strong>
+            <span>[GRADUATION DATE]</span>
+          </div>
+          <div class="meta">[INSTITUTION NAME] • [GPA OPTIONAL] • [LOCATION]</div>
+          <ul class="bullets">
+            <li>[RELEVANT COURSEWORK OR ACADEMIC DETAIL 1]</li>
+            <li>[RELEVANT COURSEWORK OR ACADEMIC DETAIL 2]</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>[ADDITIONAL DEGREE OR CERTIFICATE]</strong>
+            <span>[DATE]</span>
+          </div>
+          <div class="meta">[INSTITUTION NAME] • [LOCATION]</div>
+          <ul class="bullets">
+            <li>[DETAIL 1]</li>
+            <li>[DETAIL 2]</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="skills" class="section">
+      <h2>[SKILLS SECTION HEADING]</h2>
+      <p class="subhead">[SKILLS SUBHEADING]</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>[SKILL CATEGORY 1 HEADING]</h3>
+          <ul class="bullets">
+            <li>[SKILL 1]</li>
+            <li>[SKILL 2]</li>
+            <li>[SKILL 3]</li>
+            <li>[SKILL 4]</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>[SKILL CATEGORY 2 HEADING]</h3>
+          <ul class="bullets">
+            <li>[SKILL 1]</li>
+            <li>[SKILL 2]</li>
+            <li>[SKILL 3]</li>
+            <li>[SKILL 4]</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="experience" class="section">
+      <h2>[EXPERIENCE SECTION HEADING]</h2>
+      <p class="subhead">[EXPERIENCE SUBHEADING]</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>[JOB TITLE, ORGANIZATION]</strong>
+            <span>[START DATE – END DATE]</span>
+          </div>
+          <div class="meta">[DEPARTMENT / ORGANIZATION NAME] • [CITY, STATE]</div>
+          <ul class="bullets">
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 3]</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>[JOB TITLE, ORGANIZATION]</strong>
+            <span>[START DATE – END DATE]</span>
+          </div>
+          <div class="meta">[ORGANIZATION NAME] • [CITY, STATE]</div>
+          <ul class="bullets">
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>[JOB TITLE, ORGANIZATION]</strong>
+            <span>[START DATE – END DATE]</span>
+          </div>
+          <div class="meta">[ORGANIZATION NAME] • [CITY, STATE]</div>
+          <ul class="bullets">
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
+            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="projects" class="section">
+      <h2>[PROJECTS SECTION HEADING]</h2>
+      <p class="subhead">[PROJECTS SUBHEADING]</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>[PROJECT TITLE 1]</h3>
+          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
+          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <ul class="bullets">
+            <li>[KEY TASK OR FINDING 1]</li>
+            <li>[KEY TASK OR FINDING 2]</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">[TAG 1]</span>
+            <span class="tag">[TAG 2]</span>
+            <span class="tag">[TAG 3]</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>[PROJECT TITLE 2]</h3>
+          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
+          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <ul class="bullets">
+            <li>[KEY TASK OR FINDING 1]</li>
+            <li>[KEY TASK OR FINDING 2]</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">[TAG 1]</span>
+            <span class="tag">[TAG 2]</span>
+            <span class="tag">[TAG 3]</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>[PROJECT TITLE 3]</h3>
+          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
+          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <ul class="bullets">
+            <li>[KEY TASK OR FINDING 1]</li>
+            <li>[KEY TASK OR FINDING 2]</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">[TAG 1]</span>
+            <span class="tag">[TAG 2]</span>
+            <span class="tag">[TAG 3]</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>[PROJECT TITLE 4]</h3>
+          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
+          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <ul class="bullets">
+            <li>[KEY TASK OR FINDING 1]</li>
+            <li>[KEY TASK OR FINDING 2]</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">[TAG 1]</span>
+            <span class="tag">[TAG 2]</span>
+            <span class="tag">[TAG 3]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="writing" class="section">
+      <h2>[WRITING SECTION HEADING]</h2>
+      <p class="subhead">[WRITING SUBHEADING]</p>
+
+      <div class="writingList">
+        <div class="writing">
+          <div>
+            <strong>[WRITING SAMPLE TITLE 1]</strong><br/>
+            <small>[FORMAT OR DESCRIPTION OF SAMPLE 1]</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+
+        <div class="writing">
+          <div>
+            <strong>[WRITING SAMPLE TITLE 2]</strong><br/>
+            <small>[FORMAT OR DESCRIPTION OF SAMPLE 2]</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+
+        <div class="writing">
+          <div>
+            <strong>[WRITING SAMPLE TITLE 3]</strong><br/>
+            <small>[FORMAT OR DESCRIPTION OF SAMPLE 3]</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+
+        <div class="writing">
+          <div>
+            <strong>[WRITING SAMPLE TITLE 4]</strong><br/>
+            <small>[FORMAT OR DESCRIPTION OF SAMPLE 4]</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="awards" class="section">
+      <h2>[LEADERSHIP & AWARDS SECTION HEADING]</h2>
+      <p class="subhead">[LEADERSHIP & AWARDS SUBHEADING]</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>[LEADERSHIP CARD HEADING]</h3>
+          <ul class="bullets">
+            <li>[LEADERSHIP ROLE OR ACTIVITY 1]</li>
+            <li>[LEADERSHIP ROLE OR ACTIVITY 2]</li>
+            <li>[LEADERSHIP ROLE OR ACTIVITY 3]</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>[AWARDS CARD HEADING]</h3>
+          <ul class="bullets">
+            <li>[AWARD OR HONOR 1]</li>
+            <li>[AWARD OR HONOR 2]</li>
+            <li>[AWARD OR HONOR 3]</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section id="contact" class="section">
+      <h2>[CONTACT SECTION HEADING]</h2>
+      <p class="subhead">[CONTACT SUBHEADING]</p>
+
+      <div class="contactWrap">
+        <!-- *** 3 -->
+        <img class="headshot" src="" alt="Headshot of [STUDENT NAME]" />
+
+        <div class="contactCard">
+          <h3>[STUDENT NAME]</h3>
+          <div class="meta">[MAJOR] • Graduation: [MONTH YEAR] • [AVAILABILITY STATUS]</div>
+
+          <div class="contactRow">
+            <div><strong>[CONTACT LABEL 1]:</strong> <a href="#">[EMAIL ADDRESS]</a></div>
+            <div><strong>[CONTACT LABEL 2]:</strong> <a href="#" target="_blank" rel="noreferrer">[LINKEDIN URL]</a></div>
+            <div><strong>[CONTACT LABEL 3]:</strong> <a href="#" target="_blank" rel="noreferrer">[DOWNLOAD LABEL]</a></div>
+            <div><strong>[CONTACT LABEL 4]:</strong> [LOCATION / AVAILABILITY]</div>
+          </div>
+
+          <div class="tagRow" style="margin-top:16px">
+            <span class="tag">[SKILL TAG 1]</span>
+            <span class="tag">[SKILL TAG 2]</span>
+            <span class="tag">[SKILL TAG 3]</span>
+            <span class="tag">[SKILL TAG 4]</span>
+            <span class="tag">[SKILL TAG 5]</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      &copy; <span id="y"></span> [STUDENT NAME] • [FOOTER TAGLINE]
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
