@@ -336,6 +336,21 @@
       <div class="bar"><div id="progressBar"></div></div>
     </div>
 
+    <!-- Debug banner — visible only when "DEBUG" is in the Major field -->
+    <div id="debugBanner" class="hidden" style="
+        margin-top: 8px;
+        background: rgba(251,171,156,.1);
+        border: 1px solid rgba(251,171,156,.4);
+        border-radius: 10px;
+        padding: 8px 14px;
+        color: rgba(251,171,156,.92);
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    ">🐛 DEBUG MODE — intermediate results and raw outputs will be available after generation</div>
+
     <!-- PAGE 0: Overview -->
     <section class="card" id="page0">
       <div class="sectionTitle">
@@ -363,28 +378,13 @@
 
       <div class="max480 grid">
         <div>
-          <label for="name">Name <span class="error">*</span></label>
-          <input id="name" type="text" placeholder="First Last" required />
+          <label for="major">Major <span class="error">*</span></label>
+          <input id="major" type="text" placeholder="e.g., Psychology" required />
         </div>
 
         <div>
-          <label for="email">Email <span class="error">*</span></label>
-          <input id="email" type="email" placeholder="you@email.com" required />
-        </div>
-
-        <div>
-          <label for="phone">Phone</label>
-          <input id="phone" type="text" inputmode="tel" placeholder="(801) 555-1234" />
-        </div>
-
-        <div>
-          <label for="major">Major</label>
-          <input id="major" type="text" placeholder="e.g., Psychology" />
-        </div>
-
-        <div>
-          <label for="specialization">Specialization</label>
-          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" />
+          <label for="specialization">Specialization <span class="error">*</span></label>
+          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
         </div>
 
         <div>
@@ -396,13 +396,7 @@
         </div>
 
         <div>
-          <label for="linkedin">LinkedIn URL</label>
-          <input id="linkedin" type="url" placeholder="https://www.linkedin.com/in/yourname" />
-          <p class="hint" style="margin:8px 0 0;">For employer reference.</p>
-        </div>
-
-        <div>
-          <label>Resume <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
+          <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
           <div class="dropzone" id="resumeDropzone">
             <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
             <div class="dropzone-label">
@@ -411,6 +405,67 @@
             </div>
           </div>
           <ul class="resume-filelist" id="resumeFileList"></ul>
+        </div>
+
+        <div>
+          <label>Portfolio template/model <span class="error">*</span></label>
+          <div class="grid" style="gap:6px; margin-top:6px;">
+
+            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+              <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <div>
+                <strong style="font-size:13px;">Enter a name or URL</strong>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Link or keyword for a portfolio to use as inspiration.</p>
+              </div>
+            </label>
+            <div id="tplUrlWrap" class="hidden" style="padding:0 4px 4px;">
+              <input id="modelTemplate" type="text" placeholder="e.g., https://example.com/portfolio or 'civil engineering portfolio'" />
+            </div>
+
+            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+              <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <div>
+                <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
+              </div>
+            </label>
+            <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px;">
+              <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
+              <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
+                <img id="templateScreenshotImg" src="" alt="Template preview"
+                     style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
+              </div>
+            </div>
+
+            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+              <input type="radio" name="templateSource" id="tplAI" value="ai-inspired" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <div>
+                <strong style="font-size:13px;">AI-inspired</strong>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Let the AI choose a design suited to your major and role.</p>
+              </div>
+            </label>
+
+            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+              <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <div>
+                <strong style="font-size:13px;">Design options</strong>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Skip the template; describe your preferred design on the next page.</p>
+              </div>
+            </label>
+          </div>
+
+          <!-- Copyright mode — shown for external URL or uploaded file -->
+          <div id="templateCopyrightWrap" style="display:none; margin-top:10px; padding:10px 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px;">
+            <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
+            <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
+              <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <span>I own the copyright or have written permission from the owner</span>
+            </label>
+            <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
+              <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <span>Use it for inspiration only</span>
+            </label>
+          </div>
         </div>
       </div>
 
@@ -620,6 +675,42 @@
           </div>
 
           <div class="hr"></div>
+
+          <!-- Debug section — hidden until DEBUG is in Major AND generation completes -->
+          <div id="debugSection" class="hidden" style="margin-bottom: 12px;">
+            <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
+
+            <details>
+              <summary>Form payload (pages 1–3 data sent to API)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
+                <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+              </div>
+              <pre id="debugPayloadPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>Extracted resume JSON (three-prompt stages 1→2)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini hidden" type="button" id="dlResumeJson">Download resume-extracted.json</button>
+              </div>
+              <pre id="debugResumeJsonPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>API response metadata (last poll)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
+              </div>
+              <pre id="debugApiResponsePre"></pre>
+            </details>
+
+            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
+              <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
+              <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
+            </div>
+            <div class="hr" style="margin-top:12px;"></div>
+          </div>
 
           <details>
             <summary>Autogenerated prompt (click to expand)</summary>

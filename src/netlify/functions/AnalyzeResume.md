@@ -28,6 +28,7 @@ OUTPUT JSON SHAPE
     }
   },
   "factual_profile": {
+    "about": "",
     "education": [],
     "experience": [],
     "projects": [],
@@ -39,12 +40,7 @@ OUTPUT JSON SHAPE
     },
     "publications": [],
     "leadership": [],
-    "about": "",
-    "core": [],
-    "position": [],
-    "services": [],
     "career break": [],
-    "skills": [],
     "featured": [],
     "licenses": [],
     "certifications": [],
@@ -90,9 +86,16 @@ OUTPUT JSON SHAPE
     "project_framing_notes": [],
     "about_angle": ""
   },
-  "compatible_color_scheme": {
-    "five_key_colors": [],
-    "how_used": ""
+  "compatible_color_schemes": [
+    {
+      "primary": "",
+      "secondary": "",
+      "accent": "",
+      "dark": "",
+      "light": "",
+      "how_used": ""
+    }
+  ]
   }
 }
 
@@ -103,6 +106,7 @@ Fill in the candidate identity and contact fields from the input.
 
 2. FACTUAL PROFILE
 Extract the factual content cleanly:
+- broad primary domain: eg. life_science, physical_science, engineering, computing, business,     creative, social_science, education, health, etc.
 - education
 - work/research/teaching experience
 - projects
@@ -177,7 +181,7 @@ Write several strong website-ready options for:
 These should be grounded in the actual input and should sound more compelling than resume text.
 
 5. SUBJECT-INSPIRED COLOR STRATEGY
-Conjure a set of five main colors inspired by the subject matter of the resume to use as a default palette in portfolio website generation later. The primary color is to be used for headings, btoons Describe how the inferred palette is to be used emotionally and visually across the new site.
+Conjure five main colors inspired by the subject matter of the resume to use as a default palette in portfolio website generation later. Describe how the inferred palette is to be used emotionally and visually across the new site.
 
 Example palette assignment rules:
 Primary → Headings, buttons, key branding
@@ -186,26 +190,12 @@ Accent → Highlights, hover states, calls to action
 
 INPUTS
 
-contact_info_json:
-{{CONTACT_INFO_JSON}}
-
 major:
 {{MAJOR}}
 
 specialization:
 {{SPECIALIZATION}}
 
-resume_text:
-{{RESUME_TEXT}}
+resume:
+{{RESUME}}
 
-sample_website_html_or_image:
-{{COPY_OKAY}}
-{{SAMPLE_WEBSITE}}
-
-color_scheme_json:
-{{COLOR_SCHEME_JSON}}
-
-
-I'm going to make some big changes.  First, generate a function called that sends the AnalyzeResume.md prompt 
-
-The debug mode should include a radio button menu for choosing either Claude or ChatGPT as the AI for all the prompts in this app.  The default should be Claude.

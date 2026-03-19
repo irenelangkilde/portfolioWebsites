@@ -32,7 +32,6 @@ You must not:
 - invent facts
 - invent metrics
 - invent employers, projects, or credentials
-- copy the sample site text literally if copyright is not held (otherwise reproduce it exactly)
 - output explanations or markdown
 
 DESIGN INTENT
@@ -42,7 +41,7 @@ It should go beyond the resume by:
 - surfacing the most compelling projects
 - making the information easier to scan
 - using hierarchy, spacing, and visuals strategically
-- creating a more memorable impression than a PDF resume
+- creating a more pleasing and memorable impression than a PDF resume
 
 VISUAL REQUIREMENTS
 - If a color palette is provided, use these theme colors throughout the site; if not choose a palette well-suited to the major and specialization
@@ -95,6 +94,14 @@ OUTPUT REQUIREMENTS
 - No explanation
 - Output only the file
 
-PLANNING BRIEF
+resume_json:
+{{RESUME_JSON}}
 
+PLANNING BRIEF
 {{WEBSITE_PLANNING_BRIEF_JSON}}
+
+
+sample_website_html_or_image:
+{{COPY_OKAY}}
+{{SAMPLE_WEBSITE}}
+

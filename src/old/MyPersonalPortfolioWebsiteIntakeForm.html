@@ -431,6 +431,13 @@
 <body>
 <div class="card">
   <div id="debugButtons" style="display:none;margin-bottom:18px;">
+    <div style="margin-bottom:10px;">
+      <label style="font-size:13px;font-weight:600;margin-right:8px;">AI Model:</label>
+      <input type="radio" name="aiModel" id="aiClaude" value="Claude" checked>
+      <label for="aiClaude" style="margin-right:12px;">Claude</label>
+      <input type="radio" name="aiModel" id="aiChatGPT" value="ChatGPT">
+      <label for="aiChatGPT">ChatGPT</label>
+    </div>
     <button type="button" class="btn-secondary" id="viewIntermediate">View Intermediate Results</button>
     <button type="button" class="btn-primary" id="downloadIntermediate">Download Intermediate Results</button>
   </div>
@@ -478,13 +485,29 @@
     </div>
 
     <div class="fg">
-      <label for="specialization">Specialization <span class="opt">(optional)</span></label>
-      <input type="text" id="specialization" name="specialization" placeholder="e.g., Machine Learning, UX Design">
-    </div>
-
-    <div class="fg">
-      <label for="linkedin">LinkedIn URL <span class="opt">(for employer reference)</span></label>
-      <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile" autocomplete="url">
+      <label>Select one option:</label>
+      <div style="margin-top:6px;">
+        <input type="radio" name="page1Option" id="optLinkedIn" value="LinkedIn">
+        <label for="optLinkedIn">LinkedIn URL</label>
+        <input type="radio" name="page1Option" id="optSpecialization" value="Specialization">
+        <label for="optSpecialization">Specialization</label>
+        <input type="radio" name="page1Option" id="optDesign" value="Design">
+        <label for="optDesign">Choose design options</label>
+        <input type="radio" name="page1Option" id="optAI" value="AI">
+        <label for="optAI">Let AI choose</label>
+      </div>
+      <div id="specializationField" style="display:none;margin-top:8px;">
+        <input type="text" id="specialization" name="specialization" placeholder="e.g., Machine Learning, UX Design">
+      </div>
+      <div id="linkedinField" style="display:none;margin-top:8px;">
+        <input type="url" id="linkedin" name="linkedin" placeholder="https://linkedin.com/in/yourprofile" autocomplete="url">
+      </div>
+      <div id="designField" style="display:none;margin-top:8px;">
+        <span style="font-size:13px;color:#6b7280;">You will be able to choose design options on the next page.</span>
+      </div>
+      <div id="aiField" style="display:none;margin-top:8px;">
+        <span style="font-size:13px;color:#6b7280;">The AI will select the best options for you.</span>
+      </div>
     </div>
 
     <div class="btn-row">
@@ -683,6 +706,22 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════
+// PAGE 1 RADIO LOGIC
+// ═══════════════════════════════════════════════════════════
+function updatePage1Option() {
+  const val = document.querySelector('input[name="page1Option"]:checked')?.value;
+  document.getElementById('specializationField').style.display = val === 'Specialization' ? 'block' : 'none';
+  document.getElementById('linkedinField').style.display = val === 'LinkedIn' ? 'block' : 'none';
+  document.getElementById('designField').style.display = val === 'Design' ? 'block' : 'none';
+  document.getElementById('aiField').style.display = val === 'AI' ? 'block' : 'none';
+}
+document.querySelectorAll('input[name="page1Option"]').forEach(radio => {
+  radio.addEventListener('change', updatePage1Option);
+});
+// Set default selection
+document.getElementById('optLinkedIn').checked = true;
+updatePage1Option();
 // ═══════════════════════════════════════════════════════════
 // DATA
 // ═══════════════════════════════════════════════════════════
@@ -1068,6 +1107,11 @@ function collectFormData() {
   const phone          = document.getElementById('phone').value.trim();
   const major          = document.getElementById('major').value.trim();
   window.isDebugMode = /DEBUG/i.test(major);
+  window.selectedAIModel = 'Claude';
+  if (window.isDebugMode) {
+    const aiRadio = document.querySelector('input[name="aiModel"]:checked');
+    if (aiRadio) window.selectedAIModel = aiRadio.value;
+  }
   const specialization = document.getElementById('specialization').value.trim();
   const linkedin       = document.getElementById('linkedin').value.trim();
 
@@ -1131,7 +1175,7 @@ function collectFormData() {
 // ═══════════════════════════════════════════════════════════
 function generateAIPrompt(d) {
   const lines = [];
-  lines.push('Please create a complete, production-ready personal portfolio website as a single standalone HTML file for the following person. Embed all CSS and JavaScript. Make it mobile-responsive, visually polished, and tailored to the target position.');
+  lines.push(`Please create a complete, production-ready personal portfolio website as a single standalone HTML file for the following person. Embed all CSS and JavaScript. Make it mobile-responsive, visually polished, and tailored to the target position.\n\nAI Model: ${window.selectedAIModel || 'Claude'}`);
   lines.push('');
   lines.push('═══ PERSON ═══');
   lines.push(`Name:           ${d.name}`);
