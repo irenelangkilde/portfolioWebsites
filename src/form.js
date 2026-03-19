@@ -1,5 +1,282 @@
 
     // ----------------------------
+    // Resume analysis cache
+    // ----------------------------
+    let resumeAnalysisCache = null;   // parsed JSON from analyzeResume
+    let resumeAnalysisPending = false; // true while request in flight
+
+    // ----------------------------
+    // Per-field validation
+    // ----------------------------
+    const FIELD_VALIDATORS = {
+      major:          v => v.trim() ? null : "Major is required.",
+      specialization: v => v.trim() ? null : "Specialization is required.",
+      modelTemplate: v => {
+        if (!v.trim()) return null;
+        // Only parse as URL when it looks like one; free-text names are also valid
+        if (/^https?:\/\//i.test(v.trim())) {
+          try { new URL(v.trim()); return null; }
+          catch { return "Enter a valid URL."; }
+        }
+        return null;
+      },
+      linkedin: v => {
+        if (!v.trim()) return null;
+        try { new URL(v.trim()); return null; }
+        catch { return "Enter a valid URL (e.g., https://linkedin.com/in/yourname)."; }
+      },
+      desiredRole: () => null,
+      jobAd:       () => null,
+    };
+
+    // Lazily create (or retrieve) the inline message element below a field
+    function getFieldMsg(id) {
+      let el = document.getElementById(`_msg_${id}`);
+      if (!el) {
+        const input = document.getElementById(id);
+        if (!input) return null;
+        el = document.createElement("div");
+        el.id = `_msg_${id}`;
+        el.style.cssText = "font-size:11.5px; margin-top:3px; min-height:14px;";
+        input.parentNode.insertBefore(el, input.nextSibling);
+      }
+      return el;
+    }
+
+    function validateField(id, showOk = false) {
+      const fn = FIELD_VALIDATORS[id];
+      if (!fn) return true;
+      const input = document.getElementById(id);
+      if (!input) return true;
+      const msg = getFieldMsg(id);
+      const err = fn(input.value);
+      if (err) {
+        input.style.borderColor = "rgba(251,171,156,.75)";
+        if (msg) { msg.textContent = err; msg.style.color = "rgba(251,171,156,.9)"; }
+        return false;
+      }
+      input.style.borderColor = "";
+      if (msg) {
+        if (showOk && input.value.trim()) {
+          msg.textContent = "✓";
+          msg.style.color = "rgba(118,176,34,.9)";
+        } else {
+          msg.textContent = "";
+        }
+      }
+      return true;
+    }
+
+    // Wire each field: validate on blur; re-check on input once an error is showing
+    Object.keys(FIELD_VALIDATORS).forEach(id => {
+      const input = document.getElementById(id);
+      if (!input) return;
+      input.addEventListener("blur",  () => validateField(id, true));
+      input.addEventListener("input", () => {
+        if (getFieldMsg(id)?.textContent) validateField(id, false);
+      });
+    });
+
+    // Resume upload: show filename, then kick off background analysis
+    document.getElementById("resumeUpload")?.addEventListener("change", () => {
+      const input  = document.getElementById("resumeUpload");
+      const hasFile = !!input?.files?.length;
+      let msg = document.getElementById("_msg_resumeUpload");
+      if (!msg) {
+        msg = document.createElement("div");
+        msg.id = "_msg_resumeUpload";
+        msg.style.cssText = "font-size:11.5px; margin-top:3px; min-height:14px;";
+        input.closest(".dropzone")?.after(msg);
+      }
+      msg.textContent = hasFile ? "✓ " + input.files[0].name : "";
+      msg.style.color = "rgba(118,176,34,.9)";
+
+      // Reset cache and kick off analysis
+      resumeAnalysisCache = null;
+      if (hasFile) {
+        analyzeResumeInBackground(input.files[0]);
+      } else {
+        setResumeAnalysisStatus("");
+      }
+    });
+
+    // ----------------------------
+    // Debug mode + provider selection
+    // ----------------------------
+    function isDebugMode() {
+      return (document.getElementById("major")?.value || "").toUpperCase().includes("DEBUG");
+    }
+
+    // Returns "openai" when major contains CHATGPT or OPENAI, else "claude"
+    function getAnalysisProvider() {
+      const v = (document.getElementById("major")?.value || "").toUpperCase();
+      if (v.includes("CHATGPT") || v.includes("OPENAI")) return "openai";
+      return "claude";
+    }
+
+    function updateProviderBadge() {
+      const badge = document.getElementById("providerBadge");
+      if (!badge) return;
+      const v = (document.getElementById("major")?.value || "").toUpperCase();
+      const hasKeyword = v.includes("CHATGPT") || v.includes("OPENAI") || v.includes("CLAUDE");
+      if (!hasKeyword) { badge.classList.add("hidden"); return; }
+      badge.classList.remove("hidden");
+      if (getAnalysisProvider() === "openai") {
+        badge.innerHTML = `<span style="background:rgba(16,163,127,.18);border:1px solid rgba(16,163,127,.45);border-radius:6px;padding:2px 7px;color:rgba(16,163,127,.95);">⚡ ChatGPT / GPT-4o</span>`;
+      } else {
+        badge.innerHTML = `<span style="background:rgba(251,171,156,.12);border:1px solid rgba(251,171,156,.4);border-radius:6px;padding:2px 7px;color:rgba(251,171,156,.9);">✦ Claude (Anthropic)</span>`;
+      }
+    }
+
+    function updateDebugBanner() {
+      const debug = isDebugMode();
+      const banner = document.getElementById("debugBanner");
+      if (banner) {
+        banner.classList.toggle("hidden", !debug);
+        if (debug) {
+          const label = getAnalysisProvider() === "openai" ? "ChatGPT/GPT-4o" : "Claude";
+          banner.textContent = `🐛 DEBUG MODE [${label}] — intermediate results and raw outputs will be available after generation`;
+        }
+      }
+      if (debug && resumeAnalysisCache) {
+        document.getElementById("resumeAnalysisPanel")?.classList.remove("hidden");
+      } else if (!debug) {
+        document.getElementById("resumeAnalysisPanel")?.classList.add("hidden");
+      }
+      if (debug && extractedTemplateCache) {
+        document.getElementById("templateExtractPanel")?.classList.remove("hidden");
+      } else if (!debug) {
+        document.getElementById("templateExtractPanel")?.classList.add("hidden");
+      }
+    }
+
+    document.getElementById("major")?.addEventListener("input", () => {
+      updateDebugBanner();
+      updateProviderBadge();
+    });
+
+    // ----------------------------
+    // Resume analysis (background)
+    // ----------------------------
+    function setResumeAnalysisStatus(text, color = "rgba(234,240,255,.6)") {
+      const el = document.getElementById("resumeAnalysisStatus");
+      if (el) { el.textContent = text; el.style.color = color; }
+    }
+
+    function populateResumeDebugPanel(json) {
+      const panel  = document.getElementById("resumeAnalysisPanel");
+      const pre    = document.getElementById("resumeAnalysisPre");
+      const dlBtn  = document.getElementById("dlResumeAnalysis");
+      const cpBtn  = document.getElementById("cpResumeAnalysis");
+      if (!panel || !pre) return;
+
+      const str = JSON.stringify(json, null, 2);
+      pre.textContent = str;
+
+      dlBtn?.addEventListener("click", () => downloadText("resume-analysis.json", str, "application/json"));
+      cpBtn?.addEventListener("click", e => copyToClipboard(str, e.currentTarget));
+
+      if (isDebugMode()) panel.classList.remove("hidden");
+
+      // Lift the "wait for analysis" block, then apply defaults
+      updateDesignOptionsReadiness();
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (source === "none" && !document.querySelector('input[name="designComposition"]:checked')) {
+        applyDesignDefaults(json);
+      }
+      applyColorDefaults(json);
+    }
+
+    function startAnalysisCountdown(timeoutSec) {
+      let remaining = timeoutSec;
+      setResumeAnalysisStatus(`Analyzing resume… ${remaining}s`, "rgba(141,224,255,.75)");
+      const timer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+          clearInterval(timer);
+        } else {
+          setResumeAnalysisStatus(`Analyzing resume… ${remaining}s`, "rgba(141,224,255,.75)");
+        }
+      }, 1000);
+      return timer;
+    }
+
+    async function analyzeResumeInBackground(file) {
+      // Only PDFs are supported for analysis
+      if (file.type && !file.type.includes("pdf")) {
+        setResumeAnalysisStatus("Analysis requires a PDF. Upload complete.", "rgba(234,240,255,.5)");
+        return;
+      }
+      resumeAnalysisPending = true;
+
+      let base64;
+      try {
+        base64 = await readFileAsBase64(file);
+      } catch (e) {
+        resumeAnalysisPending = false;
+        setResumeAnalysisStatus("Could not read resume file.", "rgba(251,171,156,.8)");
+        return;
+      }
+
+      const major          = document.getElementById("major")?.value?.trim() || "";
+      const specialization = document.getElementById("specialization")?.value?.trim() || "";
+      const provider       = getAnalysisProvider();
+
+      // Must match the `timeout = 120` set in netlify.toml [functions]
+      const TIMEOUT_SEC = 120;
+      const abortCtrl   = new AbortController();
+      const abortTimer  = setTimeout(() => abortCtrl.abort(), TIMEOUT_SEC * 1000);
+      const countdownTimer = startAnalysisCountdown(TIMEOUT_SEC);
+
+      let data;
+      try {
+        const res = await fetch("/.netlify/functions/analyzeResume", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider }),
+          signal: abortCtrl.signal
+        });
+        data = await res.json();
+      } catch (e) {
+        clearTimeout(abortTimer);
+        clearInterval(countdownTimer);
+        resumeAnalysisPending = false;
+        const msg = e?.name === "AbortError"
+          ? "Resume analysis timed out."
+          : "Resume analysis failed (network error).";
+        setResumeAnalysisStatus(msg, "rgba(251,171,156,.8)");
+        return;
+      }
+      clearTimeout(abortTimer);
+
+      clearInterval(countdownTimer);
+      resumeAnalysisPending = false;
+
+      if (data?.error) {
+        setResumeAnalysisStatus("Resume analysis failed: " + data.error, "rgba(251,171,156,.8)");
+        return;
+      }
+
+      resumeAnalysisCache = data;
+      setResumeAnalysisStatus("✓ Resume analyzed", "rgba(118,176,34,.9)");
+      populateResumeDebugPanel(data);
+    }
+
+    // Enter in Major field while containing "DEBUG" activates debug mode immediately
+    document.getElementById("major")?.addEventListener("keydown", e => {
+      if (e.key !== "Enter") return;
+      if (!isDebugMode()) return;
+      e.preventDefault();
+      updateDebugBanner();
+      const msg = getFieldMsg("major");
+      if (msg) {
+        msg.textContent = "🐛 Debug mode active";
+        msg.style.color = "rgba(251,171,156,.9)";
+        setTimeout(() => { if (msg.textContent.startsWith("🐛")) msg.textContent = ""; }, 2500);
+      }
+    });
+
+    // ----------------------------
     // Step/page navigation (Page 0..4)
     // ----------------------------
     const PAGES = [
@@ -103,25 +380,6 @@
     }
 
     // ----------------------------
-    // Phone pretty format (US-style)
-    // ----------------------------
-    const phoneInput = document.getElementById("phone");
-    function formatPhone(value){
-      const digits = (value || "").replace(/\D/g,"").slice(0,10);
-      const a = digits.slice(0,3);
-      const b = digits.slice(3,6);
-      const c = digits.slice(6,10);
-      if (digits.length <= 3) return a;
-      if (digits.length <= 6) return `(${a}) ${b}`;
-      return `(${a}) ${b}-${c}`;
-    }
-    phoneInput?.addEventListener("input", () => {
-      const start = phoneInput.selectionStart;
-      phoneInput.value = formatPhone(phoneInput.value);
-      try { phoneInput.setSelectionRange(start, start); } catch {}
-    });
-
-    // ----------------------------
     // Page 1: template screenshot preview
     // ----------------------------
     const templateScreenshotInput   = document.getElementById("templateScreenshot");
@@ -178,6 +436,112 @@
     });
 
     // ----------------------------
+    // Template extraction cache
+    // ----------------------------
+    let extractedTemplateCache = null;   // { templateHtml, embeddedJson }
+    let extractTemplatePending = false;
+    let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
+
+    function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
+      const el = document.getElementById("templateExtractStatus");
+      if (el) { el.textContent = text; el.style.color = color; }
+    }
+
+    function populateTemplateExtractPanel(result) {
+      const panel = document.getElementById("templateExtractPanel");
+      const pre   = document.getElementById("templateExtractPre");
+      const dlBtn = document.getElementById("dlTemplateExtract");
+      const cpBtn = document.getElementById("cpTemplateExtract");
+      if (!panel || !pre) return;
+
+      pre.textContent = result.templateHtml || "";
+      dlBtn?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
+      cpBtn?.addEventListener("click", e => copyToClipboard(result.templateHtml || "", e.currentTarget));
+
+      if (isDebugMode()) panel.classList.remove("hidden");
+
+      // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
+      const colors = result.embeddedJson?.default_color_scheme;
+      if (Array.isArray(colors) && colors.length >= 1) {
+        const slots = ["primary", "secondary", "accent", "dark", "light"];
+        const mapped = {};
+        slots.forEach((role, i) => {
+          const hex = normalizeToHex(colors[i]);
+          if (hex) mapped[role] = hex;
+        });
+        if (Object.keys(mapped).length) {
+          sampleColors = { ...sampleColors, ...mapped };
+          applyColors(sampleColors);
+        }
+      }
+    }
+
+    async function extractTemplateInBackground() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (!source || source === "none") return;
+
+      let key = "";
+      let requestBody = { provider: getAnalysisProvider() };
+
+      if (source === "url") {
+        const url = document.getElementById("modelTemplate")?.value?.trim() || "";
+        if (!url || !/^https?:\/\//i.test(url)) return;  // only actual URLs
+        if (url === lastExtractedTemplate) return;
+        key = url;
+        requestBody.templateUrl = url;
+      } else if (source === "file") {
+        const file = templateScreenshotInput?.files?.[0];
+        if (!file) return;
+        const fileKey = file.name + "_" + file.size;
+        if (fileKey === lastExtractedTemplate) return;
+        key = fileKey;
+        try {
+          const b64 = await readFileAsBase64(file);
+          if (file.type.startsWith("image/")) {
+            requestBody.templateImageBase64 = b64;
+            requestBody.templateImageMime   = file.type;
+          } else {
+            // HTML file
+            requestBody.templateHtmlBase64 = b64;
+          }
+        } catch {
+          setTemplateExtractStatus("Could not read template file.", "rgba(251,171,156,.8)");
+          return;
+        }
+      }
+
+      if (!key) return;
+      lastExtractedTemplate = key;
+      extractTemplatePending = true;
+      setTemplateExtractStatus("Extracting template… this may take ~30s", "rgba(141,224,255,.75)");
+
+      let data;
+      try {
+        const res = await fetch("/.netlify/functions/extractTemplate", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(requestBody)
+        });
+        data = await res.json();
+      } catch (e) {
+        extractTemplatePending = false;
+        setTemplateExtractStatus("Template extraction failed (network error).", "rgba(251,171,156,.8)");
+        return;
+      }
+
+      extractTemplatePending = false;
+
+      if (data?.error) {
+        setTemplateExtractStatus("Template extraction failed: " + data.error, "rgba(251,171,156,.8)");
+        return;
+      }
+
+      extractedTemplateCache = data;
+      setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
+      populateTemplateExtractPanel(data);
+    }
+
+    // ----------------------------
     // Page 2: sample color extraction
     // ----------------------------
     let sampleColors = null;
@@ -202,15 +566,142 @@
     }
 
     function updateTemplateCopyrightVisibility() {
-      const url = document.getElementById("modelTemplate")?.value?.trim();
-      const wrap = document.getElementById("templateCopyrightWrap");
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      const wrap   = document.getElementById("templateCopyrightWrap");
       if (!wrap) return;
-      const show = !!(url && !isOwnLibraryUrl(url));
+      let show = false;
+      if (source === "file") {
+        show = true;
+      } else if (source === "url") {
+        const url = document.getElementById("modelTemplate")?.value?.trim() || "";
+        show = /^https?:\/\//i.test(url) && !isOwnLibraryUrl(url);
+      }
       wrap.style.display = show ? "block" : "none";
       if (!show) document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
     }
 
+    function updateTemplateUI() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "url");
+      document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
+      const designWrap = document.getElementById("designOptionsWrap");
+      if (designWrap) {
+        if (source === "none") {
+          designWrap.classList.remove("hidden");
+          updateDesignOptionsReadiness();
+          if (resumeAnalysisCache && !document.querySelector('input[name="designComposition"]:checked')) {
+            applyDesignDefaults(resumeAnalysisCache);
+          }
+        } else {
+          designWrap.classList.add("hidden");
+        }
+      }
+      updateTemplateCopyrightVisibility();
+    }
+
+    function updateDesignOptionsReadiness() {
+      const designWrap = document.getElementById("designOptionsWrap");
+      if (!designWrap) return;
+      const analysisReady = !!resumeAnalysisCache;
+      const inputs = designWrap.querySelectorAll("input");
+
+      // Ensure the wait-message element exists
+      let waitMsg = document.getElementById("_designOptionsWaitMsg");
+      if (!waitMsg) {
+        waitMsg = document.createElement("div");
+        waitMsg.id = "_designOptionsWaitMsg";
+        waitMsg.style.cssText = "font-size:12px; padding:6px 8px; border-radius:8px; background:rgba(251,171,156,.12); color:rgba(251,171,156,.9); margin-bottom:4px;";
+        waitMsg.textContent = "Please wait for resume analysis to finish.";
+        designWrap.insertBefore(waitMsg, designWrap.firstChild);
+      }
+
+      if (analysisReady) {
+        waitMsg.style.display = "none";
+        inputs.forEach(inp => { inp.disabled = false; inp.style.opacity = ""; });
+      } else {
+        waitMsg.style.display = "block";
+        inputs.forEach(inp => { inp.disabled = true; inp.style.opacity = "0.35"; });
+      }
+    }
+
+    function applyDesignDefaults(resumeJson) {
+      const renderingStyles = (resumeJson?.motifs?.rendering_style || []).join(" ").toLowerCase();
+      const motifs          = (resumeJson?.motifs?.potential_visual_motifs || []).join(" ").toLowerCase();
+      const editorialMotifs = (resumeJson?.editorial_direction?.suggested_visual_motifs || []).join(" ").toLowerCase();
+      const domain          = (resumeJson?.motifs?.broad_primary_domain || "").toLowerCase();
+      const allText         = renderingStyles + " " + motifs + " " + editorialMotifs + " " + domain;
+
+      // ── Render mode ──────────────────────────────────────────────────────────
+      let renderVal = "cinematic technical minimalism";
+      if (/scientific|elegant|3d|soft/i.test(allText))                    renderVal = "3D scientific elegance";
+      else if (/futuristic|bold|engineering|schematic/i.test(allText))    renderVal = "bold futuristic engineering";
+      const renderRadio = document.querySelector(`input[name="designRenderMode"][value="${renderVal}"]`);
+      if (renderRadio) renderRadio.checked = true;
+
+      // ── Style ────────────────────────────────────────────────────────────────
+      let styleVal = "clean-minimal";
+      if (/dark|terminal|circuit|radar|cyber/i.test(allText))              styleVal = "dark terminal";
+      else if (/neon|tech|laser|glow|electric/i.test(allText))            styleVal = "neon-tech";
+      else if (/glass.*dark|dark.*glass/i.test(allText))                  styleVal = "glass-dark";
+      else if (/glass/i.test(allText))                                    styleVal = "glassmorphism";
+      else if (/pastel|soft|editorial|organic|bio/i.test(allText))        styleVal = "soft pastel editorial";
+      else if (/swiss|grid|structured|finance|account/i.test(allText))    styleVal = "Swiss grid";
+      else if (/brut/i.test(allText))                                     styleVal = "brutalist";
+      const styleRadio = document.querySelector(`input[name="designStyle"][value="${styleVal}"]`);
+      if (styleRadio) styleRadio.checked = true;
+
+      // ── Composition ──────────────────────────────────────────────────────────
+      let compVal = "split-left";
+      if (/lab|workshop|field|scene|environment|desk/i.test(allText))           compVal = "scene-based";
+      else if (/abstract|layered|gradient|ring|grid|constellation/i.test(allText)) compVal = "abstract_layered";
+      else if (/central|symmetric|center/i.test(allText))                       compVal = "central";
+      const compRadio = document.querySelector(`input[name="designComposition"][value="${compVal}"]`);
+      if (compRadio) compRadio.checked = true;
+    }
+
+    // Normalize any CSS color string to a 6-digit hex value using canvas
+    function normalizeToHex(color) {
+      if (!color) return null;
+      const s = String(color).trim();
+      if (/^#[0-9a-f]{6}$/i.test(s)) return s.toLowerCase();
+      if (/^#[0-9a-f]{3}$/i.test(s)) {
+        const [, r, g, b] = s;
+        return `#${r}${r}${g}${g}${b}${b}`.toLowerCase();
+      }
+      try {
+        const ctx = document.createElement("canvas").getContext("2d");
+        ctx.fillStyle = s;
+        const hex = ctx.fillStyle; // browser normalises to #rrggbb or rgba(...)
+        if (/^#[0-9a-f]{6}$/i.test(hex)) return hex.toLowerCase();
+      } catch {}
+      return null;
+    }
+
+    function applyColorDefaults(resumeJson) {
+      // Template colors take priority — skip if already extracted from a template
+      if (sampleColors) return;
+      const colors = resumeJson?.compatible_color_scheme?.five_key_colors;
+      if (!Array.isArray(colors) || colors.length === 0) return;
+      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      slots.forEach((id, i) => {
+        const hex = normalizeToHex(colors[i]);
+        if (!hex) return;
+        const input = document.getElementById(id);
+        if (input && input.type === "color") input.value = hex;
+      });
+    }
+
+    document.querySelectorAll('input[name="templateSource"]').forEach(r =>
+      r.addEventListener("change", () => {
+        updateTemplateUI();
+        // Fire extraction if switching to url (with existing value) or file (with existing file)
+        extractTemplateInBackground();
+      }));
     document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
+    document.getElementById("modelTemplate")?.addEventListener("blur", extractTemplateInBackground);
+
+    // Also trigger extraction when a file is selected while source=file
+    templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
 
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
@@ -256,11 +747,17 @@
     // Collectors
     // ----------------------------
     function getPage1(){
+      const templateSource = document.querySelector('input[name="templateSource"]:checked')?.value || "";
+      const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
       return {
         major: document.getElementById("major").value.trim(),
         specialization: document.getElementById("specialization").value.trim(),
-        model_template: document.getElementById("modelTemplate").value.trim(),
-        template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || ""
+        template_source: templateSource,
+        model_template: templateSource === "url" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
+        template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || "",
+        design_composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
+        design_style: styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
+        design_render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
       };
     }
 
@@ -342,10 +839,13 @@ function getPage3(){
       const resumeFile = resumeUpload.files[0];
       if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
 
-      const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
-      if (templateUrl && !isOwnLibraryUrl(templateUrl)) {
-        const selected = document.querySelector('input[name="templateCopyrightMode"]:checked');
-        if (!selected) throw new Error("Please indicate how the external template may be used before submitting.");
+      if (!document.querySelector('input[name="templateSource"]:checked'))
+        throw new Error("Please select a portfolio template option on page 1.");
+
+      const copyrightWrap = document.getElementById("templateCopyrightWrap");
+      if (copyrightWrap?.style.display !== "none") {
+        if (!document.querySelector('input[name="templateCopyrightMode"]:checked'))
+          throw new Error("Please indicate how the external template may be used before submitting.");
       }
 
       const page1 = getPage1();
@@ -423,9 +923,48 @@ function getPage3(){
             dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
             dlJson.classList.remove("hidden");
           }
-          if (page1.specialization === "Irene's Webworks") {
+          if (page1.specialization === "Irene's Webworks" || isDebugMode()) {
             dlHtml.classList.remove("hidden");
             dlSummary.classList.remove("hidden");
+          }
+
+          // ── Debug panel ──────────────────────────────────────────────────
+          if (isDebugMode()) {
+            const debugSection = document.getElementById("debugSection");
+            if (debugSection) debugSection.classList.remove("hidden");
+
+            // Form payload
+            const payload = { page1, page2, page3 };
+            const payloadStr = JSON.stringify(payload, null, 2);
+            const payloadPre = document.getElementById("debugPayloadPre");
+            if (payloadPre) payloadPre.textContent = payloadStr;
+            document.getElementById("dlDebugPayload")?.addEventListener("click", () =>
+              downloadText("payload.json", payloadStr, "application/json"));
+            document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
+              copyToClipboard(payloadStr, e.currentTarget));
+
+            // Resume JSON — prefer three-prompt resume_json, fall back to analyzeResume cache
+            const resumePre = document.getElementById("debugResumeJsonPre");
+            const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
+            if (resumeJsonToShow) {
+              const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
+              if (resumePre) resumePre.textContent = resumeStr;
+              const dlResume = document.getElementById("dlResumeJson");
+              if (dlResume) {
+                dlResume.onclick = () => downloadText("resume-extracted.json", resumeStr, "application/json");
+                dlResume.classList.remove("hidden");
+              }
+            } else {
+              if (resumePre) resumePre.textContent = "(not available — upload resume to trigger analysis)";
+            }
+
+            // API response metadata (omit large fields)
+            const { site_html: _html, ...metaData } = data;
+            const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html }, null, 2);
+            const apiResponsePre = document.getElementById("debugApiResponsePre");
+            if (apiResponsePre) apiResponsePre.textContent = metaStr;
+            document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
+              downloadText("api-response.json", metaStr, "application/json"));
           }
           finalStatus.innerHTML = data.truncated
             ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
@@ -451,21 +990,65 @@ function getPage3(){
     // Page 1
     const reset1 = document.getElementById("reset1");
     if (reset1) makeDoubleClickReset(reset1, () => {
-      ["name","email","phone","major","specialization","linkedin","github","modelTemplate"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["major","specialization","modelTemplate","linkedin"].forEach(id => {
+        const el = document.getElementById(id); if (el) el.value = "";
+      });
+      document.querySelectorAll('input[name="templateSource"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
+      extractedTemplateCache = null;
+      lastExtractedTemplate = "";
+      setTemplateExtractStatus("");
+      document.querySelectorAll('input[name="designComposition"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="designStyle"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="designRenderMode"]').forEach(r => r.checked = false);
+      const styleOther = document.getElementById("designStyleOther");
+      if (styleOther) styleOther.value = "";
+      updateTemplateUI();
       if (headshotInput) headshotInput.value = "";
       if (headshotPreview) headshotPreview.style.display = "none";
       if (headshotImg) headshotImg.src = "";
       if (templateScreenshotInput) templateScreenshotInput.value = "";
       if (templateScreenshotPreview) templateScreenshotPreview.style.display = "none";
       if (templateScreenshotImg) templateScreenshotImg.src = "";
+      if (resumeUpload) resumeUpload.value = "";
+      if (resumeFileList) resumeFileList.innerHTML = "";
     });
 
     document.getElementById("next1")?.addEventListener("click", () => {
-      const err = validatePage1Lenient();
-      if (err) { alert(err); return; }
+      // Validate required fields before advancing
+      const errs = [];
+      if (!validateField("major",          true)) errs.push("major");
+      if (!validateField("specialization", true)) errs.push("specialization");
+      if (!document.querySelector('input[name="templateSource"]:checked')) {
+        const msg = getFieldMsg("templateSource") || (() => {
+          const el = document.querySelector('[name="templateSource"]')?.closest("div");
+          if (!el) return null;
+          const m = document.createElement("div");
+          m.id = "_msg_templateSource";
+          m.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
+          el.after(m);
+          return m;
+        })();
+        if (msg) { msg.textContent = "Please select a template option."; msg.style.color = "rgba(251,171,156,.9)"; }
+        errs.push("template");
+      }
+      if (!resumeUpload.files?.length) {
+        const msg = document.getElementById("_msg_resumeUpload") || (() => {
+          const m = document.createElement("div");
+          m.id = "_msg_resumeUpload";
+          m.style.cssText = "font-size:11.5px; margin-top:3px; min-height:14px;";
+          resumeUpload.closest(".dropzone")?.after(m);
+          return m;
+        })();
+        msg.textContent = "Please upload your resume.";
+        msg.style.color = "rgba(251,171,156,.9)";
+        errs.push("resume");
+      }
+      if (errs.length) return;
       setStep(2);
       const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
       if (templateUrl) fetchSampleColors(templateUrl);
+      extractTemplateInBackground();
     });
 
     // Page 2 back
@@ -523,6 +1106,8 @@ function getPage3(){
     }
 
     applyDefaults();
+    updateDebugBanner();
+    updateProviderBadge();
     renderStepUI();
     setStep(0);
     window.addEventListener("message", (event) => {
