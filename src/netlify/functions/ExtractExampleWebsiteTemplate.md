@@ -6,19 +6,20 @@ The output is an HTML file with a JSON embedded in a comment near the top of the
 Convert the input into a template by replacing the textual content with place holders, infer the type of structure/composition, abstracting away the numbers of subsection elements. 
 You should maintain the layout of the website, including sections types and accessory visual elements, but IGNORE the textual content and exact numbers of cards/subsection elements. 
 
-Infer a 5-color set of variables for the website color palette, mainly based on the hero section. Encode the remainder of the website---the masthead, background, and body---with these variables, functions of these variable (eg., a shade or two lighter, darker, redder, greener, or blue-er) and/or neutral colors. Create a second palette using the same set of colors but with an oppositely constrasting scheme for alternating sections of the website. 
+Infer a 5-color set of variables for the website color palette, mainly based on the masthead. Encode the remainder of the website---the background and body---with these variables, functions of these variables (eg., a shade or two lighter, darker, redder, greener, or blue-er) and/or neutral colors. Create a second palette using the same set of colors but with an oppositely constrasting scheme for alternating sections of the website. 
 
-Pretty print the input website html. 
+Pretty print the output website html. 
 
-For each of the visual elements (emoji icons, images, animations) in the html file, gather the line number and report it in a json structure like the following (along with the previously discussed aspects):
+For each of the substantial visual elements (such as images and animations) with a src file name report it in a json structure like the following:
 
 {
-  "visual_elements_line_numbers": {
-    "headshot_photo": "",
-    "hero_image"
-    "emoji_icons": [],
-    "images": [],
-    "animations": []
+  "visual_elements": {
+    "images": [
+      { "src_file_name":"", "selector": "", "type": "img", "role": "" }
+    ],
+    "animations": [
+      { "src_file_name":"", "selector": "", "type": "", "name": "" }
+    ]
   },
   "exemplary_attributes": {
     "pacing": "",
@@ -26,17 +27,17 @@ For each of the visual elements (emoji icons, images, animations) in the html fi
     "compositional_feel": "",
     "section_density": "",
     "visual_treatment": ""
-    },
+  },
   "default_color_scheme": {
     "primary": "",
     "secondary": "",
     "accent": "",
     "dark": "",
     "light": ""
-  }
-  "composition_option": ""
-  "style_token": ""
-  "rendering_style": ""
+  },
+  "composition_option": "",
+  "style_token": "",
+  "rendering_style": "",
 }
 
 INSPIRATION FROM THE SAMPLE

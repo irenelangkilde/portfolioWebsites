@@ -1,15 +1,54 @@
-<!--
-  Emojis: lines 313, 331, 349, 369, 387, 405, 423, 443, 463, 475, 483, 491
-  Images: lines 47 (SVG background in hero::before via data URI), 243 (inline SVG in about-image)
-  Animations: lines 72-78 (fadeInUp keyframes), 73 (hero h1 animation property)
--->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>[SITE TITLE] - [NAME]'s Portfolio</title>
-    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <title>[PORTFOLIO_NAME] - [FIELD] Portfolio</title>
+
+    <!--
+{
+  "visual_elements_line_numbers": {
+    "headshot_photo": "",
+    "hero_image": "inline SVG background pattern embedded in CSS (hero::before), approximately nav+hero block",
+    "emoji_icons": [
+      "research-card 1 .research-image: 🧬",
+      "research-card 2 .research-image: 🦠",
+      "research-card 3 .research-image: 🌱",
+      "skill-category 1 h3: 🔬",
+      "skill-category 2 h3: 📊",
+      "skill-category 3 h3: 🌿",
+      "skill-category 4 h3: 🧪",
+      "contact-card 1 h3: 📧",
+      "contact-card 2 h3: 💼",
+      "contact-card 3 h3: 📍"
+    ],
+    "images": [
+      "about-image: inline SVG scientific illustration (DNA helix + cell structure)"
+    ],
+    "animations": [
+      "hero h1: fadeInUp CSS keyframe animation on load"
+    ]
+  },
+  "exemplary_attributes": {
+    "pacing": "steady and structured — flows linearly from hero through thematic sections with consistent vertical rhythm",
+    "mood": "optimistic and scientific — fresh greens and sky blues evoke living systems and open inquiry",
+    "compositional_feel": "central hero with split about section, then grid-based content blocks",
+    "section_density": "medium — each section contains 3–4 cards or list items with moderate text",
+    "visual_treatment": "clean cards with subtle drop shadows, gradient banners, glassmorphic contact cards, left-bordered publication items"
+  },
+  "default_color_scheme": {
+    "primary": "#16a34a",
+    "secondary": "#0ea5e9",
+    "accent": "#84cc16",
+    "dark": "#0f172a",
+    "light": "#f1f5f9"
+  },
+  "composition_option": "central",
+  "style_token": "clean-minimal",
+  "rendering_style": "stylized scientific illustration"
+}
+    -->
+
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap"
       rel="stylesheet"
@@ -21,16 +60,37 @@
         box-sizing: border-box;
       }
 
+      /* ── PALETTE A (default) ─────────────────────────────────────────── */
       :root {
-        --primary: #2e7d6e;
-        --primary-dark: #1f5c50;
-        --secondary: #4a90c4;
-        --accent: #a0c840;
-        --dark: #1a1a2e;
-        --light: #f1f5f9;
-        --white: #ffffff;
+        --primary:       #16a34a;
+        --primary-dark:  #15803d;
+        --secondary:     #0ea5e9;
+        --accent:        #84cc16;
+        --dark:          #0f172a;
+        --light:         #f1f5f9;
+        --white:         #ffffff;
+
+        /* functional derivatives */
+        --primary-tint:  #ecfdf5;   /* very light primary for tags / hover */
+        --text-muted:    #64748b;
+        --text-body:     #475569;
+        --border-light:  #e2e8f0;
+        --shadow-sm:     rgba(0,0,0,0.08);
+        --shadow-md:     rgba(0,0,0,0.12);
+        --shadow-lg:     rgba(0,0,0,0.18);
       }
 
+      /* ── PALETTE B (high-contrast inversion for alternating sections) ── */
+      .section-alt {
+        --section-bg:       var(--dark);
+        --section-heading:  var(--accent);
+        --section-text:     var(--light);
+        --section-muted:    #94a3b8;
+        --card-bg:          #1e293b;
+        --card-border:      var(--primary);
+      }
+
+      /* ── BASE ─────────────────────────────────────────────────────────── */
       body {
         font-family: 'Inter', sans-serif;
         line-height: 1.7;
@@ -48,14 +108,14 @@
         padding: 0 20px;
       }
 
-      /* Navigation */
+      /* ── NAVIGATION ───────────────────────────────────────────────────── */
       nav {
         background: var(--white);
         padding: 20px 0;
         position: sticky;
         top: 0;
         z-index: 1000;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 10px var(--shadow-md);
       }
 
       nav .container {
@@ -96,25 +156,33 @@
         color: var(--primary);
       }
 
-      /* Hero Section */
+      /* ── HERO ─────────────────────────────────────────────────────────── */
       .hero {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
         color: var(--white);
         padding: 100px 0;
         position: relative;
         overflow: hidden;
       }
 
+      /* SVG decorative background motif */
       .hero::before {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><circle cx="100" cy="100" r="50" fill="%23ffffff" opacity="0.1"/><circle cx="800" cy="400" r="80" fill="%23ffffff" opacity="0.1"/><circle cx="1000" cy="150" r="60" fill="%23ffffff" opacity="0.1"/><path d="M200,300 Q400,200 600,300 T1000,300" stroke="%23ffffff" stroke-width="2" fill="none" opacity="0.1"/></svg>');
-        background-size: cover;
+        inset: 0;
+        background: url('data:image/svg+xml,\
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">\
+<circle cx="100" cy="100" r="50"  fill="%23ffffff" opacity="0.1"/>\
+<circle cx="800" cy="400" r="80"  fill="%23ffffff" opacity="0.1"/>\
+<circle cx="1000" cy="150" r="60" fill="%23ffffff" opacity="0.1"/>\
+<path d="M200,300 Q400,200 600,300 T1000,300" stroke="%23ffffff" stroke-width="2" fill="none" opacity="0.1"/>\
+</svg>') center / cover no-repeat;
         opacity: 0.3;
+        pointer-events: none;
       }
 
       .hero-content {
@@ -128,7 +196,7 @@
       .hero h1 {
         font-size: 3.5rem;
         margin-bottom: 20px;
-        animation: fadeInUp 1s ease;
+        animation: fadeInUp 1s ease both;
       }
 
       .hero .subtitle {
@@ -144,14 +212,8 @@
       }
 
       @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(30px); }
+        to   { opacity: 1; transform: translateY(0); }
       }
 
       .hero-buttons {
@@ -161,6 +223,7 @@
         flex-wrap: wrap;
       }
 
+      /* ── BUTTONS ──────────────────────────────────────────────────────── */
       .btn {
         padding: 14px 35px;
         border-radius: 50px;
@@ -177,7 +240,7 @@
 
       .btn-primary:hover {
         transform: translateY(-3px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 10px 30px var(--shadow-lg);
       }
 
       .btn-secondary {
@@ -191,7 +254,7 @@
         color: var(--primary);
       }
 
-      /* Section Styles */
+      /* ── SECTION SHARED ───────────────────────────────────────────────── */
       section {
         padding: 80px 0;
       }
@@ -205,7 +268,7 @@
 
       .section-subtitle {
         text-align: center;
-        color: #64748b;
+        color: var(--text-muted);
         font-size: 1.15rem;
         margin-bottom: 60px;
         max-width: 700px;
@@ -213,7 +276,7 @@
         margin-right: auto;
       }
 
-      /* About Section */
+      /* ── ABOUT ────────────────────────────────────────────────────────── */
       .about {
         background: var(--light);
       }
@@ -225,15 +288,20 @@
         align-items: center;
       }
 
+      /* scientific illustration panel */
       .about-image {
         width: 100%;
         height: 450px;
-        background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
         border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 20px 60px var(--shadow-lg);
       }
 
       .about-image svg {
@@ -245,7 +313,7 @@
         margin-bottom: 20px;
         font-size: 1.05rem;
         line-height: 1.8;
-        color: #475569;
+        color: var(--text-body);
       }
 
       .stats {
@@ -260,7 +328,7 @@
         padding: 25px;
         border-radius: 15px;
         text-align: center;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 5px 20px var(--shadow-sm);
       }
 
       .stat-number {
@@ -271,18 +339,18 @@
       }
 
       .stat-label {
-        color: #64748b;
+        color: var(--text-muted);
         font-size: 0.95rem;
       }
 
-      /* Research Section */
+      /* ── RESEARCH ─────────────────────────────────────────────────────── */
       .research {
         background: var(--white);
       }
 
       .research-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 40px;
       }
 
@@ -290,31 +358,31 @@
         background: var(--white);
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 30px var(--shadow-md);
         transition: all 0.3s;
       }
 
       .research-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 20px 50px var(--shadow-lg);
       }
 
+      /* gradient banner per card; emoji icon centred */
       .research-image {
         width: 100%;
         height: 220px;
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 4rem;
       }
 
-      .research-card:nth-child(2) .research-image {
-        background: linear-gradient(135deg, var(--secondary), var(--accent));
+      .research-card:nth-child(odd) .research-image {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
       }
 
-      .research-card:nth-child(3) .research-image {
-        background: linear-gradient(135deg, var(--accent), var(--primary));
+      .research-card:nth-child(even) .research-image {
+        background: linear-gradient(135deg, var(--secondary), var(--accent));
       }
 
       .research-content {
@@ -328,7 +396,7 @@
       }
 
       .research-content p {
-        color: #64748b;
+        color: var(--text-muted);
         margin-bottom: 20px;
         line-height: 1.7;
       }
@@ -340,7 +408,7 @@
       }
 
       .tag {
-        background: #ecfdf5;
+        background: var(--primary-tint);
         color: var(--primary);
         padding: 6px 15px;
         border-radius: 20px;
@@ -348,14 +416,14 @@
         font-weight: 500;
       }
 
-      /* Skills Section */
+      /* ── SKILLS ───────────────────────────────────────────────────────── */
       .skills {
         background: var(--light);
       }
 
       .skills-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 30px;
       }
 
@@ -363,7 +431,7 @@
         background: var(--white);
         padding: 35px;
         border-radius: 20px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        box-shadow: 0 5px 20px var(--shadow-sm);
       }
 
       .skill-category h3 {
@@ -381,10 +449,10 @@
 
       .skill-list li {
         padding: 12px 0;
-        border-bottom: 1px solid #e2e8f0;
+        border-bottom: 1px solid var(--border-light);
         display: flex;
         justify-content: space-between;
-        color: #475569;
+        color: var(--text-body);
       }
 
       .skill-list li:last-child {
@@ -397,7 +465,7 @@
         font-size: 0.9rem;
       }
 
-      /* Publications Section */
+      /* ── PUBLICATIONS ─────────────────────────────────────────────────── */
       .publications {
         background: var(--white);
       }
@@ -418,7 +486,7 @@
 
       .publication-item:hover {
         transform: translateX(10px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 30px var(--shadow-md);
       }
 
       .publication-title {
@@ -429,19 +497,23 @@
       }
 
       .publication-meta {
-        color: #64748b;
+        color: var(--text-muted);
         font-size: 0.95rem;
         margin-bottom: 15px;
       }
 
       .publication-abstract {
-        color: #475569;
+        color: var(--text-body);
         line-height: 1.7;
       }
 
-      /* Contact Section */
+      /* ── CONTACT ──────────────────────────────────────────────────────── */
       .contact {
-        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        background: linear-gradient(
+          135deg,
+          var(--primary) 0%,
+          var(--secondary) 100%
+        );
         color: var(--white);
       }
 
@@ -452,18 +524,20 @@
 
       .contact-content {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 40px;
         margin-top: 60px;
       }
 
+      /* glassmorphic contact cards */
       .contact-card {
         background: rgba(255, 255, 255, 0.15);
         backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         padding: 40px;
         border-radius: 20px;
         text-align: center;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.25);
         transition: all 0.3s;
       }
 
@@ -477,17 +551,19 @@
         margin-bottom: 15px;
       }
 
-      .contact-card a {
+      .contact-card a,
+      .contact-card p {
         color: var(--white);
         text-decoration: none;
         transition: opacity 0.3s;
+        line-height: 1.7;
       }
 
       .contact-card a:hover {
         opacity: 0.8;
       }
 
-      /* Footer */
+      /* ── FOOTER ───────────────────────────────────────────────────────── */
       footer {
         background: var(--dark);
         color: var(--white);
@@ -499,7 +575,13 @@
         opacity: 0.8;
       }
 
-      /* Responsive */
+      footer .footer-quote {
+        margin-top: 10px;
+        opacity: 0.6;
+        font-style: italic;
+      }
+
+      /* ── RESPONSIVE ───────────────────────────────────────────────────── */
       @media (max-width: 968px) {
         .hero h1 {
           font-size: 2.5rem;
@@ -522,131 +604,159 @@
   </head>
   <body>
 
-    <!-- Navigation -->
+    <!-- ── NAVIGATION ─────────────────────────────────────────────────── -->
     <nav>
       <div class="container">
         <div class="logo">
+          <!-- domain-relevant SVG icon -->
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10
+                     10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8
+                     s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
             <circle cx="12" cy="12" r="3"/>
             <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
           </svg>
-          [LOGO TEXT]
+          [SITE_BRAND]
         </div>
         <ul>
-          <li><a href="#about">[NAV LINK 1]</a></li>
-          <li><a href="#research">[NAV LINK 2]</a></li>
-          <li><a href="#skills">[NAV LINK 3]</a></li>
-          <li><a href="#publications">[NAV LINK 4]</a></li>
-          <li><a href="#contact">[NAV LINK 5]</a></li>
+          <li><a href="#about">[NAV_LINK_1]</a></li>
+          <li><a href="#research">[NAV_LINK_2]</a></li>
+          <li><a href="#skills">[NAV_LINK_3]</a></li>
+          <li><a href="#publications">[NAV_LINK_4]</a></li>
+          <li><a href="#contact">[NAV_LINK_5]</a></li>
         </ul>
       </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- ── HERO ───────────────────────────────────────────────────────── -->
     <section class="hero">
       <div class="container">
         <div class="hero-content">
-          <h1>[FULL NAME]</h1>
-          <p class="subtitle">[TITLE / ROLE]</p>
-          <p class="tagline">[BRIEF PROFESSIONAL TAGLINE]</p>
+          <h1>[FULL_NAME]</h1>
+          <p class="subtitle">[PROFESSIONAL_TITLE]</p>
+          <p class="tagline">[HERO_TAGLINE]</p>
           <div class="hero-buttons">
-            <a href="#research" class="btn btn-primary">[PRIMARY CTA]</a>
-            <a href="#contact" class="btn btn-secondary">[SECONDARY CTA]</a>
+            <a href="#research" class="btn btn-primary">[CTA_PRIMARY]</a>
+            <a href="#contact"  class="btn btn-secondary">[CTA_SECONDARY]</a>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- About Section -->
+    <!-- ── ABOUT ──────────────────────────────────────────────────────── -->
     <section id="about" class="about">
       <div class="container">
-        <h2>[ABOUT SECTION HEADING]</h2>
-        <p class="section-subtitle">[ABOUT SECTION SUBTITLE]</p>
+        <h2>[ABOUT_HEADING]</h2>
+        <p class="section-subtitle">[ABOUT_SUBTITLE]</p>
         <div class="about-content">
+
+          <!-- text + stats column -->
           <div class="about-text">
-            <p>[ABOUT PARAGRAPH 1]</p>
-            <p>[ABOUT PARAGRAPH 2]</p>
-            <p>[ABOUT PARAGRAPH 3]</p>
+            <p>[ABOUT_PARAGRAPH_1]</p>
+            <p>[ABOUT_PARAGRAPH_2]</p>
+            <p>[ABOUT_PARAGRAPH_3]</p>
             <div class="stats">
               <div class="stat-card">
-                <div class="stat-number">[STAT 1 NUMBER]</div>
-                <div class="stat-label">[STAT 1 LABEL]</div>
+                <div class="stat-number">[STAT_1_VALUE]</div>
+                <div class="stat-label">[STAT_1_LABEL]</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number">[STAT 2 NUMBER]</div>
-                <div class="stat-label">[STAT 2 LABEL]</div>
+                <div class="stat-number">[STAT_2_VALUE]</div>
+                <div class="stat-label">[STAT_2_LABEL]</div>
               </div>
               <div class="stat-card">
-                <div class="stat-number">[STAT 3 NUMBER]</div>
-                <div class="stat-label">[STAT 3 LABEL]</div>
+                <div class="stat-number">[STAT_3_VALUE]</div>
+                <div class="stat-label">[STAT_3_LABEL]</div>
               </div>
             </div>
           </div>
+
+          <!-- stylized scientific illustration panel -->
           <div class="about-image">
             <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <radialGradient id="cellGrad">
-                  <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8"/>
-                  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.2"/>
+                <radialGradient id="panelGrad">
+                  <stop offset="0%"   style="stop-color:#ffffff;stop-opacity:0.8"/>
+                  <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.15"/>
                 </radialGradient>
               </defs>
-              <ellipse cx="200" cy="200" rx="120" ry="180" fill="none" stroke="white" stroke-width="4" opacity="0.6"/>
-              <ellipse cx="200" cy="200" rx="80" ry="180" fill="none" stroke="white" stroke-width="4" opacity="0.6"/>
-              <circle cx="200" cy="200" r="100" fill="url(#cellGrad)" opacity="0.4"/>
-              <circle cx="200" cy="200" r="30" fill="white" opacity="0.6"/>
-              <circle cx="120" cy="120" r="15" fill="white" opacity="0.5"/>
-              <circle cx="280" cy="120" r="15" fill="white" opacity="0.5"/>
-              <circle cx="120" cy="280" r="15" fill="white" opacity="0.5"/>
-              <circle cx="280" cy="280" r="15" fill="white" opacity="0.5"/>
+              <!-- outer orbital ring -->
+              <ellipse cx="200" cy="200" rx="150" ry="170"
+                       fill="none" stroke="white" stroke-width="3" opacity="0.5"/>
+              <!-- inner orbital ring -->
+              <ellipse cx="200" cy="200" rx="90" ry="170"
+                       fill="none" stroke="white" stroke-width="3" opacity="0.5"/>
+              <!-- central glow -->
+              <circle cx="200" cy="200" r="90"
+                      fill="url(#panelGrad)" opacity="0.35"/>
+              <circle cx="200" cy="200" r="28"
+                      fill="white" opacity="0.55"/>
+              <!-- corner node clusters -->
+              <circle cx="110" cy="110" r="14" fill="white" opacity="0.45"/>
+              <circle cx="290" cy="110" r="14" fill="white" opacity="0.45"/>
+              <circle cx="110" cy="290" r="14" fill="white" opacity="0.45"/>
+              <circle cx="290" cy="290" r="14" fill="white" opacity="0.45"/>
+              <!-- connector lines -->
+              <line x1="110" y1="110" x2="200" y2="200"
+                    stroke="white" stroke-width="1.5" opacity="0.3"/>
+              <line x1="290" y1="110" x2="200" y2="200"
+                    stroke="white" stroke-width="1.5" opacity="0.3"/>
+              <line x1="110" y1="290" x2="200" y2="200"
+                    stroke="white" stroke-width="1.5" opacity="0.3"/>
+              <line x1="290" y1="290" x2="200" y2="200"
+                    stroke="white" stroke-width="1.5" opacity="0.3"/>
             </svg>
           </div>
+
         </div>
       </div>
     </section>
 
-    <!-- Research Section -->
+    <!-- ── RESEARCH / PROJECTS ────────────────────────────────────────── -->
     <section id="research" class="research">
       <div class="container">
-        <h2>[RESEARCH SECTION HEADING]</h2>
-        <p class="section-subtitle">[RESEARCH SECTION SUBTITLE]</p>
+        <h2>[RESEARCH_HEADING]</h2>
+        <p class="section-subtitle">[RESEARCH_SUBTITLE]</p>
         <div class="research-grid">
 
+          <!-- card 1 -->
           <div class="research-card">
-            <div class="research-image">&#x1F9EC;</div>
+            <div class="research-image">🔬</div>
             <div class="research-content">
-              <h3>[RESEARCH TITLE 1]</h3>
-              <p>[RESEARCH DESCRIPTION 1]</p>
+              <h3>[PROJECT_1_TITLE]</h3>
+              <p>[PROJECT_1_DESCRIPTION]</p>
               <div class="research-tags">
-                <span class="tag">[TAG 1]</span>
-                <span class="tag">[TAG 2]</span>
-                <span class="tag">[TAG 3]</span>
+                <span class="tag">[TAG_1]</span>
+                <span class="tag">[TAG_2]</span>
+                <span class="tag">[TAG_3]</span>
               </div>
             </div>
           </div>
 
+          <!-- card 2 -->
           <div class="research-card">
-            <div class="research-image">&#x1F9A0;</div>
+            <div class="research-image">🧫</div>
             <div class="research-content">
-              <h3>[RESEARCH TITLE 2]</h3>
-              <p>[RESEARCH DESCRIPTION 2]</p>
+              <h3>[PROJECT_2_TITLE]</h3>
+              <p>[PROJECT_2_DESCRIPTION]</p>
               <div class="research-tags">
-                <span class="tag">[TAG 1]</span>
-                <span class="tag">[TAG 2]</span>
-                <span class="tag">[TAG 3]</span>
+                <span class="tag">[TAG_1]</span>
+                <span class="tag">[TAG_2]</span>
+                <span class="tag">[TAG_3]</span>
               </div>
             </div>
           </div>
 
+          <!-- card 3 -->
           <div class="research-card">
-            <div class="research-image">&#x1F331;</div>
+            <div class="research-image">🌿</div>
             <div class="research-content">
-              <h3>[RESEARCH TITLE 3]</h3>
-              <p>[RESEARCH DESCRIPTION 3]</p>
+              <h3>[PROJECT_3_TITLE]</h3>
+              <p>[PROJECT_3_DESCRIPTION]</p>
               <div class="research-tags">
-                <span class="tag">[TAG 1]</span>
-                <span class="tag">[TAG 2]</span>
-                <span class="tag">[TAG 3]</span>
+                <span class="tag">[TAG_1]</span>
+                <span class="tag">[TAG_2]</span>
+                <span class="tag">[TAG_3]</span>
               </div>
             </div>
           </div>
@@ -655,58 +765,58 @@
       </div>
     </section>
 
-    <!-- Skills Section -->
+    <!-- ── SKILLS ─────────────────────────────────────────────────────── -->
     <section id="skills" class="skills">
       <div class="container">
-        <h2>[SKILLS SECTION HEADING]</h2>
-        <p class="section-subtitle">[SKILLS SECTION SUBTITLE]</p>
+        <h2>[SKILLS_HEADING]</h2>
+        <p class="section-subtitle">[SKILLS_SUBTITLE]</p>
         <div class="skills-grid">
 
+          <!-- skill category 1 -->
           <div class="skill-category">
-            <h3>&#x1F52C; [SKILL CATEGORY 1 TITLE]</h3>
+            <h3>🔬 [SKILL_CAT_1_TITLE]</h3>
             <ul class="skill-list">
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+              <li><span>[SKILL_1]</span><span class="skill-level">[LEVEL_1]</span></li>
+              <li><span>[SKILL_2]</span><span class="skill-level">[LEVEL_2]</span></li>
+              <li><span>[SKILL_3]</span><span class="skill-level">[LEVEL_3]</span></li>
+              <li><span>[SKILL_4]</span><span class="skill-level">[LEVEL_4]</span></li>
+              <li><span>[SKILL_5]</span><span class="skill-level">[LEVEL_5]</span></li>
             </ul>
           </div>
 
+          <!-- skill category 2 -->
           <div class="skill-category">
-            <h3>&#x1F4CA; [SKILL CATEGORY 2 TITLE]</h3>
+            <h3>📊 [SKILL_CAT_2_TITLE]</h3>
             <ul class="skill-list">
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+              <li><span>[SKILL_1]</span><span class="skill-level">[LEVEL_1]</span></li>
+              <li><span>[SKILL_2]</span><span class="skill-level">[LEVEL_2]</span></li>
+              <li><span>[SKILL_3]</span><span class="skill-level">[LEVEL_3]</span></li>
+              <li><span>[SKILL_4]</span><span class="skill-level">[LEVEL_4]</span></li>
+              <li><span>[SKILL_5]</span><span class="skill-level">[LEVEL_5]</span></li>
             </ul>
           </div>
 
+          <!-- skill category 3 -->
           <div class="skill-category">
-            <h3>&#x1F33F; [SKILL CATEGORY 3 TITLE]</h3>
+            <h3>🌿 [SKILL_CAT_3_TITLE]</h3>
             <ul class="skill-list">
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+              <li><span>[SKILL_1]</span><span class="skill-level">[LEVEL_1]</span></li>
+              <li><span>[SKILL_2]</span><span class="skill-level">[LEVEL_2]</span></li>
+              <li><span>[SKILL_3]</span><span class="skill-level">[LEVEL_3]</span></li>
+              <li><span>[SKILL_4]</span><span class="skill-level">[LEVEL_4]</span></li>
+              <li><span>[SKILL_5]</span><span class="skill-level">[LEVEL_5]</span></li>
             </ul>
           </div>
 
+          <!-- skill category 4 -->
           <div class="skill-category">
-            <h3>&#x1F9EA; [SKILL CATEGORY 4 TITLE]</h3>
+            <h3>🧪 [SKILL_CAT_4_TITLE]</h3>
             <ul class="skill-list">
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
-              <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+              <li><span>[SKILL_1]</span><span class="skill-level">[LEVEL_1]</span></li>
+              <li><span>[SKILL_2]</span><span class="skill-level">[LEVEL_2]</span></li>
+              <li><span>[SKILL_3]</span><span class="skill-level">[LEVEL_3]</span></li>
+              <li><span>[SKILL_4]</span><span class="skill-level">[LEVEL_4]</span></li>
+              <li><span>[SKILL_5]</span><span class="skill-level">[LEVEL_5]</span></li>
             </ul>
           </div>
 
@@ -714,66 +824,66 @@
       </div>
     </section>
 
-    <!-- Publications Section -->
+    <!-- ── PUBLICATIONS / PRESENTATIONS ──────────────────────────────── -->
     <section id="publications" class="publications">
       <div class="container">
-        <h2>[PUBLICATIONS SECTION HEADING]</h2>
-        <p class="section-subtitle">[PUBLICATIONS SECTION SUBTITLE]</p>
+        <h2>[PUBLICATIONS_HEADING]</h2>
+        <p class="section-subtitle">[PUBLICATIONS_SUBTITLE]</p>
         <div class="publication-list">
 
           <div class="publication-item">
-            <div class="publication-title">[PUBLICATION TITLE 1]</div>
-            <div class="publication-meta">[AUTHORS] | [JOURNAL/VENUE] | [YEAR]</div>
-            <div class="publication-abstract">[ABSTRACT / SUMMARY 1]</div>
+            <div class="publication-title">[PUB_1_TITLE]</div>
+            <div class="publication-meta">[PUB_1_AUTHORS] | [PUB_1_VENUE] | [PUB_1_YEAR]</div>
+            <div class="publication-abstract">[PUB_1_ABSTRACT]</div>
           </div>
 
           <div class="publication-item">
-            <div class="publication-title">[PUBLICATION TITLE 2]</div>
-            <div class="publication-meta">[AUTHORS] | [JOURNAL/VENUE] | [YEAR]</div>
-            <div class="publication-abstract">[ABSTRACT / SUMMARY 2]</div>
+            <div class="publication-title">[PUB_2_TITLE]</div>
+            <div class="publication-meta">[PUB_2_AUTHORS] | [PUB_2_VENUE] | [PUB_2_YEAR]</div>
+            <div class="publication-abstract">[PUB_2_ABSTRACT]</div>
           </div>
 
           <div class="publication-item">
-            <div class="publication-title">[PUBLICATION TITLE 3]</div>
-            <div class="publication-meta">[AUTHORS] | [JOURNAL/VENUE] | [YEAR]</div>
-            <div class="publication-abstract">[ABSTRACT / SUMMARY 3]</div>
+            <div class="publication-title">[PUB_3_TITLE]</div>
+            <div class="publication-meta">[PUB_3_VENUE] | [PUB_3_YEAR]</div>
+            <div class="publication-abstract">[PUB_3_ABSTRACT]</div>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- Contact Section -->
+    <!-- ── CONTACT ────────────────────────────────────────────────────── -->
     <section id="contact" class="contact">
       <div class="container">
-        <h2>[CONTACT SECTION HEADING]</h2>
-        <p class="section-subtitle">[CONTACT SECTION SUBTITLE]</p>
+        <h2>[CONTACT_HEADING]</h2>
+        <p class="section-subtitle">[CONTACT_SUBTITLE]</p>
         <div class="contact-content">
 
           <div class="contact-card">
-            <h3>&#x1F4E7; [CONTACT TYPE 1]</h3>
-            <a href="mailto:[EMAIL ADDRESS]">[EMAIL ADDRESS]</a>
+            <h3>📧 [CONTACT_CARD_1_LABEL]</h3>
+            <a href="mailto:[EMAIL_ADDRESS]">[EMAIL_DISPLAY]</a>
           </div>
 
           <div class="contact-card">
-            <h3>&#x1F4BC; [CONTACT TYPE 2]</h3>
-            <a href="[PROFILE URL]">[PROFILE URL DISPLAY TEXT]</a>
+            <h3>💼 [CONTACT_CARD_2_LABEL]</h3>
+            <a href="[LINKEDIN_URL]">[LINKEDIN_DISPLAY]</a>
           </div>
 
           <div class="contact-card">
-            <h3>&#x1F4CD; [CONTACT TYPE 3]</h3>
-            <p>[CITY, STATE]<br/>[AVAILABILITY NOTE]</p>
+            <h3>📍 [CONTACT_CARD_3_LABEL]</h3>
+            <p>[LOCATION_LINE_1]<br/>[LOCATION_LINE_2]</p>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ── FOOTER ─────────────────────────────────────────────────────── -->
     <footer>
       <div class="container">
-        <p>&copy; [YEAR] [NAME] | [SITE TITLE] - [PORTFOLIO DESCRIPTOR]</p>
-        <p style="margin-top: 10px; opacity: 0.7;">"[FOOTER QUOTE]" - [QUOTE ATTRIBUTION]</p>
+        <p>&copy; [YEAR] [FULL_NAME] | [SITE_BRAND] — [FIELD] Portfolio</p>
+        <p class="footer-quote">"[INSPIRATIONAL_QUOTE]" — [QUOTE_AUTHOR]</p>
       </div>
     </footer>
 

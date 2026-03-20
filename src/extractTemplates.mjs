@@ -20,9 +20,9 @@ import Anthropic from "@anthropic-ai/sdk";
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
-const HTML_DIR     = new URL("html/", import.meta.url).pathname;
+const HTML_DIR     = new URL("../html/", import.meta.url).pathname;
 const PROMPT_FILE  = new URL(
-  "src/netlify/functions/ExtractExampleWebsiteTemplate.md",
+  "netlify/functions/ExtractExampleWebsiteTemplate.md",
   import.meta.url
 ).pathname;
 const MODEL        = "claude-sonnet-4-6";

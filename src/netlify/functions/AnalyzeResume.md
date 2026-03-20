@@ -59,7 +59,7 @@ OUTPUT JSON SHAPE
     "additional_background": []
   },
   "motifs": {
-    "broad_primary_domain": ""
+    "broad_primary_domain": "",
     "resume_keywords": [],
     "project_titles": [],
     "research_terms": [],
@@ -77,8 +77,8 @@ OUTPUT JSON SHAPE
     "suggested_section_possibilities": [],
     "website_advantages_to_leverage": [],
     "sample_inspiration_notes": "",
-    "color_strategy": "",
-  }
+    "color_strategy": ""
+  },
   "website_copy_seed": {
     "hero_headline_options": [],
     "hero_subheadline_options": [],
@@ -96,13 +96,12 @@ OUTPUT JSON SHAPE
       "how_used": ""
     }
   ]
-  }
 }
 
 GUIDELINES
 
 1. IDENTITY
-Fill in the candidate identity and contact fields from the input.
+Fill in the candidate identity and contact fields from the input.  The Major and Specialization entries should be populated from the form inputs.
 
 2. FACTUAL PROFILE
 Extract the factual content cleanly:

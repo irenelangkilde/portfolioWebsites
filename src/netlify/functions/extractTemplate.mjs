@@ -1,5 +1,36 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import https from "https";
+import http from "http";
+
+/** Fetch HTML via Node's http/https module — more tolerant of SSL chain issues than native fetch */
+function fetchHtmlNode(url) {
+  return new Promise((resolve, reject) => {
+    const mod = url.startsWith("https") ? https : http;
+    const req = mod.get(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      },
+      rejectUnauthorized: false   // tolerate self-signed / incomplete cert chains
+    }, res => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        // Follow one redirect
+        return fetchHtmlNode(res.headers.location).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`HTTP ${res.statusCode}`));
+      }
+      let body = "";
+      res.setEncoding("utf8");
+      res.on("data", chunk => { body += chunk; });
+      res.on("end", () => resolve(body));
+    });
+    req.setTimeout(20000, () => { req.destroy(); reject(new Error("timeout")); });
+    req.on("error", reject);
+  });
+}
 
 /**
  * Netlify Function: extractTemplate
@@ -72,17 +103,35 @@ export async function handler(event) {
 
   if (templateUrl) {
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), 10000);
-      const res = await fetch(templateUrl, { signal: controller.signal });
-      clearTimeout(timer);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      htmlText = await res.text();
+      // Try native fetch first; fall back to https module if SSL/network issues occur
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 20000);
+        const res = await fetch(templateUrl, {
+          signal: controller.signal,
+          redirect: "follow",
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Cache-Control": "no-cache"
+          }
+        });
+        clearTimeout(timer);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        htmlText = await res.text();
+      } catch {
+        // Native fetch failed (SSL chain, DNS, etc.) — retry with https module
+        htmlText = await fetchHtmlNode(templateUrl);
+      }
+      if (!htmlText) throw new Error("Empty response from URL");
+      const contentType = ""; // already consumed; trust it's HTML if we got here
+      void contentType;
     } catch (e) {
       return {
         statusCode: 200,
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ error: `Could not fetch template URL: ${e.message}` })
+        body: JSON.stringify({ error: `Could not fetch template URL (${templateUrl}): ${e.message}` })
       };
     }
   } else if (templateHtmlBase64) {

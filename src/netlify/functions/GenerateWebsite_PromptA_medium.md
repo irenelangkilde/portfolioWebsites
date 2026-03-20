@@ -61,7 +61,7 @@ OUTPUT JSON SHAPE
     "suggested_section_possibilities": [],
     "website_advantages_to_leverage": [],
     "sample_inspiration_notes": "",
-    "color_strategy": "",
+    "color_strategy": ""
   },
   "website_copy_seed": {
     "hero_headline_options": [],

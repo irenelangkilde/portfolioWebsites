@@ -163,6 +163,13 @@
     }
     input[type="file"]::file-selector-button:hover { background: rgba(78,112,241,.32); }
     input::placeholder, textarea::placeholder{ color: rgba(234,240,255,.55); }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0px 1000px #0f1a2e inset;
+      -webkit-text-fill-color: #eaf0ff;
+      caret-color: #eaf0ff;
+    }
     input:focus, textarea:focus, select:focus{
       border-color: color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.14));
       box-shadow: 0 0 0 3px rgba(141,224,255,.14);
@@ -336,13 +343,54 @@
     }
     .dropzone-label { pointer-events: none; color: var(--muted); font-size: 14px; line-height: 1.6; }
     .dropzone-label strong { color: #4E70F1; }
+
+    .artifactRow {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr;
+      align-items: center;
+    }
+    @media (min-width: 640px) {
+      .artifactRow {
+        grid-template-columns: 180px 1fr 180px 30px;
+      }
+    }
+    .artifactRow select,
+    .artifactRow input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.07);
+      color: var(--text);
+      outline: none;
+      font-family: var(--font);
+      font-size: 13px;
+    }
+    .artifactRow select option { background: #0b1220; }
+    .artifactColHead {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(234,240,255,.45);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <h1>Personal Portfolio Website Intake</h1>
-      <p class="sub">Fill this out once. Get a draft site fast. er.</p>
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px;">
+        <div>
+          <h1>Personal Portfolio Website Intake</h1>
+          <p class="sub">Fill this out once. Get a draft site fast. er.</p>
+        </div>
+        <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; padding-top:3px; max-width:260px;">
+          <span id="resumeAnalysisStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="stepConfirmStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="templateExtractStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+        </div>
+      </div>
     </header>
 
     <div class="progressCard">
@@ -371,14 +419,16 @@
     <!-- PAGE 0: Overview -->
     <section class="card" id="page0">
       <div class="sectionTitle">
-        <h2>Page 0 — Overview</h2>
-        <p class="hint">You’ll generate an preview at the end of Page 3, which you can then optionally refine.</p>
+        <h2>Overview</h2>
+        <p class="hint">You’ll generate a preview at the end of Page 5, which you can then optionally refine.</p>
       </div>
       <div class="note">
         <ol class="tipList">
-          <li><strong>Page 1:</strong> Basic information (major, specialization, resume, model website).</li>
-          <li><strong>Page 2:</strong> Choose colors.</li>
-          <li><strong>Page 3:</strong> Target job + job ad; submit for a tailored result; edit in Visual Editor.</li>
+          <li><strong>Page 1: Basic information (major, specialization, resume).</strong></li>
+          <li><strong>Page 2: List of artifacts (headshot image, project results, Github portfolio, etc). </strong></li>
+          <li><strong>Page 3: New website spec.</strong></li>
+          <li><strong>Page 4: Color scheme.</li>
+          <li><strong>Page 5: Target job ad; submit for a tailored result; refine in visual editor.</li>
         </ol>
       </div>
       <div class="btnRow">
@@ -405,14 +455,6 @@
         </div>
 
         <div>
-          <label for="headshot">Headshot Photo <span class="hint">(optional)</span></label>
-          <input type="file" id="headshot" name="headshot" accept="image/*" />
-          <div id="headshotPreview" style="margin-top:8px; display:none;">
-            <img id="headshotImg" src="" alt="Headshot preview" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;" />
-          </div>
-        </div>
-
-        <div>
           <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
           <div class="dropzone" id="resumeDropzone">
             <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
@@ -422,8 +464,7 @@
             </div>
           </div>
           <ul class="resume-filelist" id="resumeFileList"></ul>
-          <!-- Analysis status — always visible once a resume is selected -->
-          <div id="resumeAnalysisStatus" style="font-size:11.5px; margin-top:3px; min-height:14px;"></div>
+          <div id="resumeAnalysisStatusInline" style="font-size:11.5px; margin-top:3px; min-height:14px;"></div>
           <!-- Debug panel — shown in debug mode once analysis completes -->
           <div id="resumeAnalysisPanel" class="hidden" style="margin-top:8px;">
             <details>
@@ -437,138 +478,6 @@
           </div>
         </div>
 
-        <div>
-          <label>Portfolio template/model <span class="error">*</span></label>
-          <div class="grid" style="gap:6px; margin-top:6px;">
-
-            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-              <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <div>
-                <strong style="font-size:13px;">Enter a name or URL</strong>
-                <p class="hint" style="margin:2px 0 0; font-weight:400;">Use a keyword to choose a <a href="https://irenes-ventures.shop/collections/all-portfolio-websites" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> or enter an http URL link.</p>
-              </div>
-            </label>
-            <div id="tplUrlWrap" class="hidden" style="padding:0 4px 4px;">
-              <input id="modelTemplate" type="text" placeholder="e.g., Biology, Civil Engineering, Data Science…" list="templateKeywords" autocomplete="off" />
-              <datalist id="templateKeywords">
-                <option value="Blank">
-                <option value="Accounting">
-                <option value="Anthropology">
-                <option value="Art">
-                <option value="Biology">
-                <option value="Business Management">
-                <option value="Chemistry">
-                <option value="Civil Engineering">
-                <option value="Data Science">
-                <option value="Early Childhood Education">
-                <option value="Electrical Engineering">
-                <option value="Finance">
-                <option value="History">
-                <option value="Linguistics">
-                <option value="Physics">
-                <option value="Psychology">
-                <option value="Spanish">
-                <option value="Statistics">
-              </datalist>
-            </div>
-
-            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-              <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <div>
-                <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
-                <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
-              </div>
-            </label>
-            <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px;">
-              <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
-              <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
-                <img id="templateScreenshotImg" src="" alt="Template preview"
-                     style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
-              </div>
-            </div>
-
-            <div id="templateExtractStatus" style="font-size:11.5px; min-height:14px; background:transparent !important; border:none !important; padding:0 !important; border-radius:0; margin:0;"></div>
-
-            <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-              <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <div>
-                <strong style="font-size:13px;">Design options</strong>
-                <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose composition, style, and render mode. Defaults are influenced by your resume.</p>
-              </div>
-            </label>
-
-            <!-- Design options sub-panel — shown when "Design options" is selected -->
-            <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px; display:flex; flex-direction:column; gap:16px;">
-
-              <!-- Composition -->
-              <div>
-                <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Composition</p>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitLeft"  value="split-left"       style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split left</strong> — content left, visual right</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitRight" value="split-right"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split right</strong> — visual left, content right</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compCentral"    value="central"          style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Central</strong> — symmetric centered hero</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compScene"      value="scene-based"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Scene-based</strong> — lab, desk, workshop, or field with symbolic elements</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compAbstract"   value="abstract_layered" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Abstract layered</strong> — motifs as glowing lines, rings, grids, gradients</span></label>
-                </div>
-              </div>
-
-              <!-- Style -->
-              <div>
-                <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Style</p>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlass"     value="glassmorphism"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glassmorphism</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlassDark" value="glass-dark"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glass dark</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleBrutalist"  value="brutalist"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Brutalist</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleDarkTerm"   value="dark terminal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Dark terminal</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="stylePastel"     value="soft pastel editorial" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Soft pastel editorial</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleSwiss"      value="Swiss grid"            style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Swiss grid</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleNeon"       value="neon-tech"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Neon tech</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleClean"      value="clean-minimal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Clean minimal</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;">
-                    <input type="radio" name="designStyle" id="styleOther" value="other" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" />
-                    <span>Other: <input type="text" id="designStyleOther" placeholder="describe your style…" style="margin-left:6px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); border-radius:6px; color:#fff; font-size:12px; padding:2px 8px; width:180px;" /></span>
-                  </label>
-                </div>
-              </div>
-
-              <!-- Render mode -->
-              <div>
-                <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Render Mode</p>
-                <div style="display:flex; flex-direction:column; gap:5px;">
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderCinematic"  value="cinematic technical minimalism" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Cinematic technical minimalism</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="render3D"         value="3D scientific elegance"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>3D scientific elegance</span></label>
-                  <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderFuturistic" value="bold futuristic engineering"     style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Bold futuristic engineering</span></label>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Template extraction debug panel — shown in debug mode -->
-          <div id="templateExtractPanel" class="hidden" style="margin-top:4px;">
-            <details>
-              <summary style="font-size:12px; color:rgba(141,224,255,.85);">🐛 Template extract (ExtractExampleWebsiteTemplate.md)</summary>
-              <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-                <button class="btn mini" type="button" id="dlTemplateExtract">Download template.html</button>
-                <button class="btn mini ghost" type="button" id="cpTemplateExtract">Copy</button>
-              </div>
-              <pre id="templateExtractPre" style="margin-top:6px; max-height:320px;"></pre>
-            </details>
-          </div>
-
-          <!-- Copyright mode — shown for external URL or uploaded file -->
-          <div id="templateCopyrightWrap" style="display:none; margin-top:10px; padding:10px 12px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px;">
-            <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
-            <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
-              <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <span>I own the copyright or have written permission from the owner</span>
-            </label>
-            <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
-              <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <span>Use it for inspiration only</span>
-            </label>
-          </div>
-        </div>
       </div>
 
       <div class="btnRow">
@@ -577,10 +486,39 @@
       </div>
     </section>
 
-    <!-- PAGE 2: Color scheme + preview generation -->
+    <!-- PAGE 2: Artifacts -->
     <section class="card hidden" id="page2">
       <div class="sectionTitle">
-        <h2>Page 2 — Choose Color Scheme</h2>
+        <h2>Page 2 — Artifacts</h2>
+        <p class="hint">Optional supplementary materials to enrich your portfolio.</p>
+      </div>
+
+      <!-- Column headers (desktop only) -->
+      <div class="artifactRow" style="margin-bottom:2px;">
+        <span class="artifactColHead">Type</span>
+        <span class="artifactColHead">File / Link / Content</span>
+        <span class="artifactColHead">Tagline</span>
+        <span></span>
+      </div>
+
+      <!-- Artifact rows injected here by JS -->
+      <div id="artifactRows" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+      <div style="margin-top:10px;">
+        <button class="btn ghost mini" type="button" id="addArtifact">+ Add artifact</button>
+      </div>
+
+      <div class="btnRow" style="margin-top:14px;">
+        <button class="btn ghost" type="button" id="back2_bottom">Back</button>
+        <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Next</button>
+      </div>
+    </section>
+
+
+    <!-- PAGE 4: Color scheme -->
+    <section class="card hidden" id="page4">
+      <div class="sectionTitle">
+        <h2>Page 4 — Color Scheme</h2>
       </div>
 
       <div class="hr"></div>
@@ -593,14 +531,29 @@
       </label>
       <button type="button" id="resetToSampleColors" class="btn ghost" style="font-size:12px; padding:5px 12px; white-space:nowrap;">↺ Reset to sample colors</button>
     </div>
+<!-- Suggested palettes: template + AI-suggested from resume analysis -->
+<div id="suggestedPalettes" style="margin-bottom:16px;">
+  <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
+    <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
+    <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;">(Thinking…)</span>
+  </div>
+  <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
+</div>
+
 <div class="themeLayout" style="position:relative;">
   <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
+
   <div class="themeLeft">
-    <div class="field"><label for="primary">1. Primary</label><p class="hint" style="margin:2px 0 6px;">Headings, buttons, key branding</p><input id="primary" type="color" value="#000000" /></div>
-    <div class="field"><label for="secondary">2. Secondary</label><p class="hint" style="margin:2px 0 6px;">Subheadings, links, secondary buttons</p><input id="secondary" type="color" value="#000000" /></div>
-    <div class="field"><label for="accent">3. Accent</label><p class="hint" style="margin:2px 0 6px;">Highlights, hover states, calls to action</p><input id="accent" type="color" value="#000000" /></div>
-    <div class="field"><label for="dark">4. Dark</label><p class="hint" style="margin:2px 0 6px;">Dark section backgrounds</p><input id="dark" type="color" value="#000000" /></div>
-    <div class="field"><label for="light">5. Light</label><p class="hint" style="margin:2px 0 6px;">Light section backgrounds</p><input id="light" type="color" value="#000000" /></div>
+    <p style="font-size:11px; color:rgba(234,240,255,.4); margin:0 0 6px; font-style:italic;">Click to activate, then click a swatch to paste a color. Double-click to see color dialog.</p>
+    <div class="field"><label for="primary">1. Primary</label><input id="primary" type="color" value="#000000" /></div>
+    <div class="field"><label for="secondary">2. Secondary</label><input id="secondary" type="color" value="#000000" /></div>
+    <div class="field"><label for="accent">3. Accent</label><input id="accent" type="color" value="#000000" /></div>
+    <div class="field"><label for="dark">4. Dark</label><input id="dark" type="color" value="#000000" /></div>
+    <div class="field"><label for="light">5. Light</label><input id="light" type="color" value="#000000" /></div>
+    <div class="field" style="margin-top:14px;">
+      <label for="paletteUsageNote">Palette usage notes (optional)</label>
+      <textarea id="paletteUsageNote" rows="5" placeholder="Describe how this palette should be used across the site…" style="width:100%; margin-top:4px; resize:vertical;"></textarea>
+    </div>
   </div>
 
   <div class="themeRight">
@@ -642,16 +595,164 @@
         </div-->
 
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back2_bottom">Back</button>
-          <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Next</button>
+          <button class="btn ghost" type="button" id="back4">Back</button>
+          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Next</button>
         </div>
     </section>
 
 
-    <!-- PAGE 3: Job target -->
+    <!-- PAGE 3: Template + Job target -->
     <section class="card hidden" id="page3">
       <div class="sectionTitle">
-        <h2>Page 3 — Target Job</h2>
+        <h2>Page 3 — Website Spec</h2>
+      </div>
+
+      <div class="grid" style="gap:6px; margin-bottom:14px;">
+        <label style="font-weight:900; font-size:13px; margin-bottom:0;">Model or template <span class="error">*</span></label>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Enter a name or URL</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Use a keyword to choose a <a href="https://irenes-ventures.shop/collections/all-portfolio-websites" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> or enter an http URL link.</p>
+          </div>
+        </label>
+        <div id="tplUrlWrap" class="hidden" style="padding:0 4px 4px;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input id="modelTemplate" type="text" placeholder="e.g., Biology, Civil Engineering, Data Science…" list="templateKeywords" autocomplete="off" style="flex:1;" />
+            <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Refresh template list" style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
+          </div>
+          <datalist id="templateKeywords">
+            <!-- populated dynamically by listTemplates Netlify function -->
+          </datalist>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
+          </div>
+        </label>
+        <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px;">
+          <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
+          <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
+            <img id="templateScreenshotImg" src="" alt="Template preview"
+                 style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
+          </div>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Design options</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose composition, style, and render mode. Defaults are influenced by your resume.</p>
+          </div>
+        </label>
+
+        <!-- Design options sub-panel — shown when "Design options" is selected -->
+        <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px; display:flex; flex-direction:column; gap:16px;">
+
+          <!-- Composition -->
+          <div>
+            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Composition</p>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitLeft"  value="split-left"       style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split left</strong> — content left, visual right</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitRight" value="split-right"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split right</strong> — visual left, content right</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compCentral"    value="central"          style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Central</strong> — symmetric centered hero</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compScene"      value="scene-based"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Scene-based</strong> — lab, desk, workshop, or field with symbolic elements</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compAbstract"   value="abstract_layered" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Abstract layered</strong> — motifs as glowing lines, rings, grids, gradients</span></label>
+            </div>
+          </div>
+
+          <!-- Style -->
+          <div>
+            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Style</p>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlass"     value="glassmorphism"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glassmorphism</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlassDark" value="glass-dark"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glass dark</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleBrutalist"  value="brutalist"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Brutalist</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleDarkTerm"   value="dark terminal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Dark terminal</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="stylePastel"     value="soft pastel editorial" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Soft pastel editorial</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleSwiss"      value="Swiss grid"            style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Swiss grid</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleNeon"       value="neon-tech"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Neon tech</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleClean"      value="clean-minimal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Clean minimal</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;">
+                <input type="radio" name="designStyle" id="styleOther" value="other" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" />
+                <span>Other: <input type="text" id="designStyleOther" placeholder="describe your style…" style="margin-left:6px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); border-radius:6px; color:#fff; font-size:12px; padding:2px 8px; width:180px;" /></span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Render mode -->
+          <div>
+            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Render Mode</p>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderCinematic"  value="cinematic technical minimalism" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Cinematic technical minimalism</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="render3D"         value="3D scientific elegance"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>3D scientific elegance</span></label>
+              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderFuturistic" value="bold futuristic engineering"     style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Bold futuristic engineering</span></label>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Copyright mode — shown for external URL or uploaded file -->
+        <div id="templateCopyrightWrap" style="display:none; margin-top:10px; padding:10px 12px; background:rgba(0,0,0,.18); border:2px solid rgba(251,171,156,.7); border-radius:12px; box-shadow:0 0 12px rgba(251,171,156,.25);">
+          <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>I am the author/owner of the copyright or have written permission from the owner to use it exactly.</span>
+          </label>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>Use it for inspiration only</span>
+          </label>
+        </div>
+      </div>
+
+
+      <!-- Processing: countdown shown while extraction runs -->
+      <div id="extractProcessing" class="hidden" style="margin-top:14px; text-align:center; padding:16px 12px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.1); border-radius:14px;">
+        <div id="extractCounter" style="font-size:40px; font-weight:900; color:rgba(141,224,255,.9); line-height:1; margin-bottom:6px;">35</div>
+        <div id="extractCounterLabel" style="font-size:12px; color:rgba(234,240,255,.55);">seconds remaining</div>
+      </div>
+
+      <!-- Spec panels (shown after extraction / for design options) -->
+      <div id="templateExtractPanel" class="hidden" style="margin-top:12px;">
+        <details open>
+          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Website spec JSON (ExtractExampleWebsiteTemplate.md)</summary>
+          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
+            <button class="btn mini" type="button" id="dlTemplateJson">Download spec.json</button>
+            <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy JSON</button>
+            <button class="btn mini ghost" type="button" id="dlTemplateExtract">Download template.html</button>
+          </div>
+          <pre id="templateExtractJsonPre" style="margin-top:6px; max-height:320px;"></pre>
+        </details>
+      </div>
+
+      <div id="designSpecPanel" class="hidden" style="margin-top:12px;">
+        <details open>
+          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Website spec JSON (Design options)</summary>
+          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
+            <button class="btn mini" type="button" id="dlDesignSpec">Download design-spec.json</button>
+            <button class="btn mini ghost" type="button" id="cpDesignSpec">Copy JSON</button>
+          </div>
+          <pre id="designSpecPre" style="margin-top:6px; max-height:320px;"></pre>
+        </details>
+      </div>
+
+      <!-- Navigation -->
+      <div class="btnRow" style="margin-top:14px;">
+        <button class="btn ghost" type="button" id="back3_bottom">Back</button>
+        <button class="btn primary" type="button" id="next3_bottom" style="margin-left:auto;">Next</button>
+      </div>
+    </section>
+
+
+    <!-- PAGE 5: Job Ad + Submit -->
+    <section class="card hidden" id="page5">
+      <div class="sectionTitle">
+        <h2>Page 5 — Target Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
       </div>
 
@@ -678,7 +779,7 @@
       </div>
 
       <div class="btnRow">
-        <button class="btn ghost" type="button" id="back3_bottom">Back</button>
+        <button class="btn ghost" type="button" id="back5">Back</button>
         <button class="btn primary" type="button" id="submit_bottom">Submit</button>
       </div>
 
@@ -694,7 +795,7 @@
           <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
 
           <details>
-            <summary>Form payload (pages 1–3 data sent to API)</summary>
+            <summary>Form payload (pages 1–5 data sent to API)</summary>
             <div class="btnRow" style="justify-content:flex-start;">
               <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
               <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
@@ -726,7 +827,7 @@
         </div>
 
         <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
-          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Edit in Visual Editor</button>
+          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Refine in visual editor</button>
         </div>
       </div>
     </section>

@@ -3,9 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[PORTFOLIO_NAME] - [FIELD] Portfolio</title>
+    <title>[PORTFOLIO_OWNER_NAME] - [FIELD] Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
+        /*
+        {
+          "visual_elements_line_numbers": {
+            "headshot_photo": "245",
+            "hero_image": "245",
+            "emoji_icons": [116, 248, 346, 354, 362, 370, 392, 408, 425, 436, 447, 466, 471, 476, 513, 528, 536, 559, 565, 571, 593, 604, 618, 635, 649],
+            "images": ["245"],
+            "animations": []
+          },
+          "exemplary_attributes": {
+            "pacing": "steady and structured, section-by-section scroll with clear anchored navigation",
+            "mood": "professional, grounded, industrious — confident student-to-professional transition tone",
+            "compositional_feel": "central",
+            "section_density": "high — dense resume and project grids with labeled metadata",
+            "visual_treatment": "card-based with gradient image placeholders, left-border accents, emoji iconography, and pill-shaped tags"
+          },
+          "default_color_scheme": {
+            "primary": "#d97706",
+            "secondary": "#059669",
+            "accent": "#2563eb",
+            "dark": "#1f2937",
+            "light": "#f3f4f6"
+          },
+          "composition_option": "central",
+          "style_token": "clean-minimal",
+          "rendering_style": "clean editorial vector"
+        }
+        */
+
         * {
             margin: 0;
             padding: 0;
@@ -19,7 +48,11 @@
             --dark: #1f2937;
             --light: #f3f4f6;
             --gray: #6b7280;
-            --gradient: linear-gradient(135deg, var(--primary) 0%, #ea580c 100%);
+            --primary-dark: #b45309;
+            --primary-light: #fef3c7;
+            --dark-alt: #111827;
+            --gradient: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
+            --gradient-alt: linear-gradient(135deg, #b45309 0%, #c2410c 100%);
         }
 
         body {
@@ -39,9 +72,10 @@
             padding: 0 20px;
         }
 
+        /* Navigation */
         nav {
             background: white;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -64,7 +98,8 @@
             gap: 10px;
         }
 
-        nav .logo-icon {
+        nav .logo::before {
+            content: '🏗️';
             font-size: 1.8rem;
         }
 
@@ -85,6 +120,7 @@
             color: var(--primary);
         }
 
+        /* Hero Section */
         .hero {
             background: var(--gradient);
             color: white;
@@ -102,8 +138,8 @@
             right: 0;
             bottom: 0;
             background-image:
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
             background-size: 50px 50px;
             opacity: 0.3;
         }
@@ -121,7 +157,8 @@
             object-fit: cover;
             margin: 0 auto 25px;
             display: block;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            background: var(--gradient);
         }
 
         .hero h1 {
@@ -166,7 +203,7 @@
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+            box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
         }
 
         .btn-secondary {
@@ -180,6 +217,7 @@
             color: var(--primary);
         }
 
+        /* Section Styles */
         section {
             padding: 80px 0;
         }
@@ -212,6 +250,7 @@
             border-radius: 2px;
         }
 
+        /* About Section */
         .about {
             background: var(--light);
         }
@@ -228,6 +267,24 @@
             margin-bottom: 20px;
         }
 
+        /* Alt palette: about section inverted */
+        .about-alt {
+            background: var(--dark);
+        }
+
+        .about-alt h2 {
+            color: var(--primary);
+        }
+
+        .about-alt .section-subtitle {
+            color: #9ca3af;
+        }
+
+        .about-alt .about-content {
+            color: var(--light);
+        }
+
+        /* Skills Section */
         .skills-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -239,14 +296,14 @@
             background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
             border-top: 4px solid var(--primary);
         }
 
         .skill-category:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
         }
 
         .skill-category h3 {
@@ -284,6 +341,26 @@
             font-weight: 600;
         }
 
+        /* Alt palette: skills inverted */
+        .skills-alt .skill-category {
+            background: var(--dark-alt);
+            border-top-color: var(--primary);
+        }
+
+        .skills-alt .skill-category h3 {
+            color: var(--primary);
+        }
+
+        .skills-alt .skill-list li {
+            border-bottom-color: #374151;
+            color: var(--light);
+        }
+
+        .skills-alt .skill-level {
+            color: #9ca3af;
+        }
+
+        /* Projects Section */
         .projects {
             background: white;
         }
@@ -298,14 +375,14 @@
             background: white;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
             transition: all 0.3s;
             border: 2px solid transparent;
         }
 
         .project-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
             border-color: var(--primary);
         }
 
@@ -321,23 +398,23 @@
             position: relative;
         }
 
-        .project-image.variant-1 {
+        .project-image.type-a {
             background: linear-gradient(135deg, var(--accent) 0%, #1e40af 100%);
         }
 
-        .project-image.variant-2 {
+        .project-image.type-b {
             background: linear-gradient(135deg, var(--secondary) 0%, #047857 100%);
         }
 
-        .project-image.variant-3 {
+        .project-image.type-c {
             background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
         }
 
-        .project-image.variant-4 {
+        .project-image.type-d {
             background: linear-gradient(135deg, #92400e 0%, #78350f 100%);
         }
 
-        .project-image.variant-5 {
+        .project-image.type-e {
             background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
         }
 
@@ -353,7 +430,7 @@
 
         .project-type {
             display: inline-block;
-            background: var(--light);
+            background: var(--primary-light);
             color: var(--primary);
             padding: 5px 15px;
             border-radius: 20px;
@@ -384,6 +461,33 @@
             font-weight: 600;
         }
 
+        /* Alt palette: projects inverted */
+        .projects-alt {
+            background: var(--dark);
+        }
+
+        .projects-alt h2 {
+            color: var(--primary);
+        }
+
+        .projects-alt .section-subtitle {
+            color: #9ca3af;
+        }
+
+        .projects-alt .project-card {
+            background: var(--dark-alt);
+        }
+
+        .projects-alt .project-content h3 {
+            color: var(--light);
+        }
+
+        .projects-alt .tech-tag {
+            background: #374151;
+            color: var(--light);
+        }
+
+        /* Resume Section */
         .resume {
             background: var(--light);
         }
@@ -410,7 +514,7 @@
             padding: 25px;
             border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
             border-left: 4px solid var(--primary);
         }
 
@@ -443,6 +547,43 @@
             margin-top: 40px;
         }
 
+        /* Alt palette: resume inverted */
+        .resume-alt {
+            background: var(--dark-alt);
+        }
+
+        .resume-alt h2 {
+            color: var(--primary);
+        }
+
+        .resume-alt .section-subtitle {
+            color: #9ca3af;
+        }
+
+        .resume-alt .resume-section h3 {
+            color: var(--primary);
+            border-bottom-color: var(--primary-dark);
+        }
+
+        .resume-alt .resume-item {
+            background: #1f2937;
+            border-left-color: var(--primary);
+            color: var(--light);
+        }
+
+        .resume-alt .resume-item h4 {
+            color: var(--light);
+        }
+
+        .resume-alt .resume-item .meta {
+            color: #9ca3af;
+        }
+
+        .resume-alt .resume-item ul {
+            color: #d1d5db;
+        }
+
+        /* Certifications */
         .cert-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -454,7 +595,7 @@
             background: white;
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
             border-left: 4px solid var(--secondary);
         }
 
@@ -464,6 +605,7 @@
             font-size: 1.1rem;
         }
 
+        /* Contact Section */
         .contact {
             background: white;
         }
@@ -485,13 +627,13 @@
             background: var(--light);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
             transition: all 0.3s;
         }
 
         .contact-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
         }
 
         .contact-item h3 {
@@ -537,6 +679,33 @@
             box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
         }
 
+        /* Alt palette: contact inverted */
+        .contact-alt {
+            background: var(--dark);
+        }
+
+        .contact-alt h2 {
+            color: var(--primary);
+        }
+
+        .contact-alt .section-subtitle {
+            color: #9ca3af;
+        }
+
+        .contact-alt .contact-item {
+            background: var(--dark-alt);
+        }
+
+        .contact-alt .contact-item h3 {
+            color: var(--primary);
+        }
+
+        .contact-alt .contact-item a,
+        .contact-alt .contact-item p {
+            color: var(--light);
+        }
+
+        /* Footer */
         footer {
             background: var(--dark);
             color: white;
@@ -548,6 +717,7 @@
             opacity: 0.8;
         }
 
+        /* Responsive */
         @media (max-width: 768px) {
             nav ul {
                 gap: 1rem;
@@ -572,13 +742,11 @@
     </style>
 </head>
 <body>
+
+    <!-- Navigation -->
     <nav>
         <div class="container">
-            <div class="logo">
-                <!-- *** placeholder 1: nav logo icon -->
-                <span class="logo-icon"></span>
-                [PORTFOLIO_NAME]
-            </div>
+            <div class="logo">[OWNER_NAME]</div>
             <ul>
                 <li><a href="#about">[NAV_LINK_1]</a></li>
                 <li><a href="#skills">[NAV_LINK_2]</a></li>
@@ -589,20 +757,21 @@
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <!-- *** placeholder 2: profile photo -->
-            <img src="" alt="[PROFILE_NAME]" class="profile-photo">
-            <h1>[HERO_NAME]</h1>
-            <p class="subtitle">[HERO_TITLE]</p>
-            <p class="graduation">[HERO_CREDENTIAL_LINE]</p>
+            <img src="[HEADSHOT_PHOTO_URL]" alt="[OWNER_NAME]" class="profile-photo">
+            <h1>[OWNER_NAME]</h1>
+            <p class="subtitle">[OWNER_TITLE]</p>
+            <p class="graduation">🎓 [DEGREE_AND_STATUS_LINE]</p>
             <div class="cta-buttons">
-                <a href="#projects" class="btn btn-primary">[CTA_PRIMARY]</a>
-                <a href="#contact" class="btn btn-secondary">[CTA_SECONDARY]</a>
+                <a href="#projects" class="btn btn-primary">[CTA_PRIMARY_LABEL]</a>
+                <a href="#contact" class="btn btn-secondary">[CTA_SECONDARY_LABEL]</a>
             </div>
         </div>
     </section>
 
+    <!-- About Section -->
     <section id="about" class="about">
         <div class="container">
             <h2>[ABOUT_HEADING]</h2>
@@ -615,6 +784,7 @@
         </div>
     </section>
 
+    <!-- Skills Section -->
     <section id="skills">
         <div class="container">
             <h2>[SKILLS_HEADING]</h2>
@@ -622,62 +792,46 @@
             <div class="skills-grid">
 
                 <div class="skill-category">
-                    <h3>
-                        <!-- *** placeholder 3: skill category 1 icon -->
-                        <span class="skill-icon"></span>
-                        [SKILL_CATEGORY_1_TITLE]
-                    </h3>
+                    <h3><span class="skill-icon">🖥️</span>[SKILL_CATEGORY_1_TITLE]</h3>
                     <ul class="skill-list">
-                        <li><span>[SKILL_1_1]</span><span class="skill-level">[LEVEL_1_1]</span></li>
-                        <li><span>[SKILL_1_2]</span><span class="skill-level">[LEVEL_1_2]</span></li>
-                        <li><span>[SKILL_1_3]</span><span class="skill-level">[LEVEL_1_3]</span></li>
-                        <li><span>[SKILL_1_4]</span><span class="skill-level">[LEVEL_1_4]</span></li>
-                        <li><span>[SKILL_1_5]</span><span class="skill-level">[LEVEL_1_5]</span></li>
+                        <li><span>[SKILL_1_1]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_1_2]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_1_3]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_1_4]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_1_5]</span><span class="skill-level">[LEVEL]</span></li>
                     </ul>
                 </div>
 
                 <div class="skill-category">
-                    <h3>
-                        <!-- *** placeholder 4: skill category 2 icon -->
-                        <span class="skill-icon"></span>
-                        [SKILL_CATEGORY_2_TITLE]
-                    </h3>
+                    <h3><span class="skill-icon">📊</span>[SKILL_CATEGORY_2_TITLE]</h3>
                     <ul class="skill-list">
-                        <li><span>[SKILL_2_1]</span><span class="skill-level">[LEVEL_2_1]</span></li>
-                        <li><span>[SKILL_2_2]</span><span class="skill-level">[LEVEL_2_2]</span></li>
-                        <li><span>[SKILL_2_3]</span><span class="skill-level">[LEVEL_2_3]</span></li>
-                        <li><span>[SKILL_2_4]</span><span class="skill-level">[LEVEL_2_4]</span></li>
-                        <li><span>[SKILL_2_5]</span><span class="skill-level">[LEVEL_2_5]</span></li>
+                        <li><span>[SKILL_2_1]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_2_2]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_2_3]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_2_4]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_2_5]</span><span class="skill-level">[LEVEL]</span></li>
                     </ul>
                 </div>
 
                 <div class="skill-category">
-                    <h3>
-                        <!-- *** placeholder 5: skill category 3 icon -->
-                        <span class="skill-icon"></span>
-                        [SKILL_CATEGORY_3_TITLE]
-                    </h3>
+                    <h3><span class="skill-icon">🏗️</span>[SKILL_CATEGORY_3_TITLE]</h3>
                     <ul class="skill-list">
-                        <li><span>[SKILL_3_1]</span><span class="skill-level">[LEVEL_3_1]</span></li>
-                        <li><span>[SKILL_3_2]</span><span class="skill-level">[LEVEL_3_2]</span></li>
-                        <li><span>[SKILL_3_3]</span><span class="skill-level">[LEVEL_3_3]</span></li>
-                        <li><span>[SKILL_3_4]</span><span class="skill-level">[LEVEL_3_4]</span></li>
-                        <li><span>[SKILL_3_5]</span><span class="skill-level">[LEVEL_3_5]</span></li>
+                        <li><span>[SKILL_3_1]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_3_2]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_3_3]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_3_4]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_3_5]</span><span class="skill-level">[LEVEL]</span></li>
                     </ul>
                 </div>
 
                 <div class="skill-category">
-                    <h3>
-                        <!-- *** placeholder 6: skill category 4 icon -->
-                        <span class="skill-icon"></span>
-                        [SKILL_CATEGORY_4_TITLE]
-                    </h3>
+                    <h3><span class="skill-icon">🛠️</span>[SKILL_CATEGORY_4_TITLE]</h3>
                     <ul class="skill-list">
-                        <li><span>[SKILL_4_1]</span><span class="skill-level">[LEVEL_4_1]</span></li>
-                        <li><span>[SKILL_4_2]</span><span class="skill-level">[LEVEL_4_2]</span></li>
-                        <li><span>[SKILL_4_3]</span><span class="skill-level">[LEVEL_4_3]</span></li>
-                        <li><span>[SKILL_4_4]</span><span class="skill-level">[LEVEL_4_4]</span></li>
-                        <li><span>[SKILL_4_5]</span><span class="skill-level">[LEVEL_4_5]</span></li>
+                        <li><span>[SKILL_4_1]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_4_2]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_4_3]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_4_4]</span><span class="skill-level">[LEVEL]</span></li>
+                        <li><span>[SKILL_4_5]</span><span class="skill-level">[LEVEL]</span></li>
                     </ul>
                 </div>
 
@@ -685,6 +839,7 @@
         </div>
     </section>
 
+    <!-- Projects Section -->
     <section id="projects" class="projects">
         <div class="container">
             <h2>[PROJECTS_HEADING]</h2>
@@ -692,103 +847,91 @@
             <div class="projects-grid">
 
                 <div class="project-card">
-                    <div class="project-image variant-1">
-                        <!-- *** placeholder 7: project card 1 icon/image -->
-                    </div>
+                    <div class="project-image type-a">🌉</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_1_TYPE]</span>
                         <h3>[PROJECT_1_TITLE]</h3>
                         <p>[PROJECT_1_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_1_1]</span>
-                            <span class="tech-tag">[TAG_1_2]</span>
-                            <span class="tech-tag">[TAG_1_3]</span>
-                            <span class="tech-tag">[TAG_1_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="project-card">
-                    <div class="project-image variant-2">
-                        <!-- *** placeholder 8: project card 2 icon/image -->
-                    </div>
+                    <div class="project-image type-b">🛣️</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_2_TYPE]</span>
                         <h3>[PROJECT_2_TITLE]</h3>
                         <p>[PROJECT_2_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_2_1]</span>
-                            <span class="tech-tag">[TAG_2_2]</span>
-                            <span class="tech-tag">[TAG_2_3]</span>
-                            <span class="tech-tag">[TAG_2_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="project-card">
-                    <div class="project-image">
-                        <!-- *** placeholder 9: project card 3 icon/image -->
-                    </div>
+                    <div class="project-image">🏢</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_3_TYPE]</span>
                         <h3>[PROJECT_3_TITLE]</h3>
                         <p>[PROJECT_3_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_3_1]</span>
-                            <span class="tech-tag">[TAG_3_2]</span>
-                            <span class="tech-tag">[TAG_3_3]</span>
-                            <span class="tech-tag">[TAG_3_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="project-card">
-                    <div class="project-image variant-3">
-                        <!-- *** placeholder 10: project card 4 icon/image -->
-                    </div>
+                    <div class="project-image type-c">💧</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_4_TYPE]</span>
                         <h3>[PROJECT_4_TITLE]</h3>
                         <p>[PROJECT_4_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_4_1]</span>
-                            <span class="tech-tag">[TAG_4_2]</span>
-                            <span class="tech-tag">[TAG_4_3]</span>
-                            <span class="tech-tag">[TAG_4_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="project-card">
-                    <div class="project-image variant-4">
-                        <!-- *** placeholder 11: project card 5 icon/image -->
-                    </div>
+                    <div class="project-image type-d">⛏️</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_5_TYPE]</span>
                         <h3>[PROJECT_5_TITLE]</h3>
                         <p>[PROJECT_5_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_5_1]</span>
-                            <span class="tech-tag">[TAG_5_2]</span>
-                            <span class="tech-tag">[TAG_5_3]</span>
-                            <span class="tech-tag">[TAG_5_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
 
                 <div class="project-card">
-                    <div class="project-image variant-5">
-                        <!-- *** placeholder 12: project card 6 icon/image -->
-                    </div>
+                    <div class="project-image type-e">🌱</div>
                     <div class="project-content">
                         <span class="project-type">[PROJECT_6_TYPE]</span>
                         <h3>[PROJECT_6_TITLE]</h3>
                         <p>[PROJECT_6_DESCRIPTION]</p>
                         <div class="tech-tags">
-                            <span class="tech-tag">[TAG_6_1]</span>
-                            <span class="tech-tag">[TAG_6_2]</span>
-                            <span class="tech-tag">[TAG_6_3]</span>
-                            <span class="tech-tag">[TAG_6_4]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
+                            <span class="tech-tag">[TAG]</span>
                         </div>
                     </div>
                 </div>
@@ -797,6 +940,7 @@
         </div>
     </section>
 
+    <!-- Resume Section -->
     <section id="resume" class="resume">
         <div class="container">
             <h2>[RESUME_HEADING]</h2>
@@ -804,198 +948,165 @@
             <div class="resume-content">
 
                 <div class="resume-section">
-                    <h3>[RESUME_SECTION_1_TITLE]</h3>
+                    <h3>[RESUME_SECTION_1_HEADING]</h3>
                     <div class="resume-item">
                         <h4>[DEGREE_TITLE]</h4>
                         <div class="meta">
-                            <span>[INSTITUTION]</span>
-                            <span>[GRADUATION_DATE]</span>
-                            <span>[GPA]</span>
+                            <span>📍 [INSTITUTION_NAME]</span>
+                            <span>📅 [DATE_RANGE]</span>
+                            <span>🎯 [GPA_OR_HONORS]</span>
                         </div>
                         <ul>
-                            <li>[EDU_DETAIL_1]</li>
-                            <li>[EDU_DETAIL_2]</li>
-                            <li>[EDU_DETAIL_3]</li>
-                            <li>[EDU_DETAIL_4]</li>
+                            <li>[EDUCATION_DETAIL_1]</li>
+                            <li>[EDUCATION_DETAIL_2]</li>
+                            <li>[EDUCATION_DETAIL_3]</li>
+                            <li>[EDUCATION_DETAIL_4]</li>
                         </ul>
                     </div>
                 </div>
 
                 <div class="resume-section">
-                    <h3>[RESUME_SECTION_2_TITLE]</h3>
+                    <h3>[RESUME_SECTION_2_HEADING]</h3>
 
                     <div class="resume-item">
-                        <h4>[JOB_1_TITLE]</h4>
+                        <h4>[JOB_TITLE_1]</h4>
                         <div class="meta">
-                            <span>[JOB_1_COMPANY]</span>
-                            <span>[JOB_1_DATE]</span>
+                            <span>📍 [EMPLOYER_1]</span>
+                            <span>📅 [DATE_RANGE_1]</span>
                         </div>
                         <ul>
-                            <li>[JOB_1_DETAIL_1]</li>
-                            <li>[JOB_1_DETAIL_2]</li>
-                            <li>[JOB_1_DETAIL_3]</li>
-                            <li>[JOB_1_DETAIL_4]</li>
-                            <li>[JOB_1_DETAIL_5]</li>
+                            <li>[JOB_1_BULLET_1]</li>
+                            <li>[JOB_1_BULLET_2]</li>
+                            <li>[JOB_1_BULLET_3]</li>
+                            <li>[JOB_1_BULLET_4]</li>
                         </ul>
                     </div>
 
                     <div class="resume-item">
-                        <h4>[JOB_2_TITLE]</h4>
+                        <h4>[JOB_TITLE_2]</h4>
                         <div class="meta">
-                            <span>[JOB_2_COMPANY]</span>
-                            <span>[JOB_2_DATE]</span>
+                            <span>📍 [EMPLOYER_2]</span>
+                            <span>📅 [DATE_RANGE_2]</span>
                         </div>
                         <ul>
-                            <li>[JOB_2_DETAIL_1]</li>
-                            <li>[JOB_2_DETAIL_2]</li>
-                            <li>[JOB_2_DETAIL_3]</li>
-                            <li>[JOB_2_DETAIL_4]</li>
-                            <li>[JOB_2_DETAIL_5]</li>
+                            <li>[JOB_2_BULLET_1]</li>
+                            <li>[JOB_2_BULLET_2]</li>
+                            <li>[JOB_2_BULLET_3]</li>
+                            <li>[JOB_2_BULLET_4]</li>
                         </ul>
                     </div>
 
                     <div class="resume-item">
-                        <h4>[JOB_3_TITLE]</h4>
+                        <h4>[JOB_TITLE_3]</h4>
                         <div class="meta">
-                            <span>[JOB_3_COMPANY]</span>
-                            <span>[JOB_3_DATE]</span>
+                            <span>📍 [EMPLOYER_3]</span>
+                            <span>📅 [DATE_RANGE_3]</span>
                         </div>
                         <ul>
-                            <li>[JOB_3_DETAIL_1]</li>
-                            <li>[JOB_3_DETAIL_2]</li>
-                            <li>[JOB_3_DETAIL_3]</li>
-                            <li>[JOB_3_DETAIL_4]</li>
+                            <li>[JOB_3_BULLET_1]</li>
+                            <li>[JOB_3_BULLET_2]</li>
+                            <li>[JOB_3_BULLET_3]</li>
                         </ul>
                     </div>
 
                 </div>
 
                 <div class="resume-section">
-                    <h3>[RESUME_SECTION_3_TITLE]</h3>
+                    <h3>[RESUME_SECTION_3_HEADING]</h3>
                     <div class="cert-grid">
-
                         <div class="cert-item">
                             <h5>[CERT_1_TITLE]</h5>
                             <p>[CERT_1_DETAIL]</p>
                         </div>
-
                         <div class="cert-item">
                             <h5>[CERT_2_TITLE]</h5>
                             <p>[CERT_2_DETAIL]</p>
                         </div>
-
                         <div class="cert-item">
                             <h5>[CERT_3_TITLE]</h5>
                             <p>[CERT_3_DETAIL]</p>
                         </div>
-
                         <div class="cert-item">
                             <h5>[CERT_4_TITLE]</h5>
                             <p>[CERT_4_DETAIL]</p>
                         </div>
-
                     </div>
                 </div>
 
                 <div class="resume-section">
-                    <h3>[RESUME_SECTION_4_TITLE]</h3>
+                    <h3>[RESUME_SECTION_4_HEADING]</h3>
 
                     <div class="resume-item">
-                        <h4>[ACTIVITY_1_TITLE]</h4>
+                        <h4>[ACTIVITY_TITLE_1]</h4>
                         <div class="meta">
-                            <span>[ACTIVITY_1_DATE]</span>
+                            <span>📅 [DATE_RANGE_4]</span>
                         </div>
                         <ul>
-                            <li>[ACTIVITY_1_DETAIL_1]</li>
-                            <li>[ACTIVITY_1_DETAIL_2]</li>
-                            <li>[ACTIVITY_1_DETAIL_3]</li>
-                            <li>[ACTIVITY_1_DETAIL_4]</li>
+                            <li>[ACTIVITY_1_BULLET_1]</li>
+                            <li>[ACTIVITY_1_BULLET_2]</li>
+                            <li>[ACTIVITY_1_BULLET_3]</li>
                         </ul>
                     </div>
 
                     <div class="resume-item">
-                        <h4>[ACTIVITY_2_TITLE]</h4>
+                        <h4>[ACTIVITY_TITLE_2]</h4>
                         <div class="meta">
-                            <span>[ACTIVITY_2_DATE]</span>
+                            <span>📅 [DATE_RANGE_5]</span>
                         </div>
                         <ul>
-                            <li>[ACTIVITY_2_DETAIL_1]</li>
-                            <li>[ACTIVITY_2_DETAIL_2]</li>
-                            <li>[ACTIVITY_2_DETAIL_3]</li>
-                            <li>[ACTIVITY_2_DETAIL_4]</li>
+                            <li>[ACTIVITY_2_BULLET_1]</li>
+                            <li>[ACTIVITY_2_BULLET_2]</li>
+                            <li>[ACTIVITY_2_BULLET_3]</li>
                         </ul>
                     </div>
 
                 </div>
 
                 <div class="download-resume">
-                    <a href="#" class="btn btn-primary">
-                        <!-- *** placeholder 13: download resume icon -->
-                        [DOWNLOAD_RESUME_LABEL]
-                    </a>
+                    <a href="#" class="btn btn-primary">📄 [DOWNLOAD_RESUME_LABEL]</a>
                 </div>
 
             </div>
         </div>
     </section>
 
+    <!-- Contact Section -->
     <section id="contact" class="contact">
         <div class="container">
             <h2>[CONTACT_HEADING]</h2>
             <p class="section-subtitle">[CONTACT_SUBTITLE]</p>
             <div class="contact-content">
-
                 <div class="contact-info">
-
                     <div class="contact-item">
-                        <h3>
-                            <!-- *** placeholder 14: email contact icon -->
-                            [CONTACT_EMAIL_LABEL]
-                        </h3>
-                        <a href="mailto:[EMAIL_ADDRESS]">[EMAIL_ADDRESS]</a>
+                        <h3>📧 [CONTACT_LABEL_1]</h3>
+                        <a href="mailto:[EMAIL_ADDRESS]">[EMAIL_DISPLAY]</a>
                     </div>
-
                     <div class="contact-item">
-                        <h3>
-                            <!-- *** placeholder 15: phone contact icon -->
-                            [CONTACT_PHONE_LABEL]
-                        </h3>
-                        <a href="tel:[PHONE_NUMBER]">[PHONE_NUMBER]</a>
+                        <h3>📱 [CONTACT_LABEL_2]</h3>
+                        <a href="tel:[PHONE_NUMBER]">[PHONE_DISPLAY]</a>
                     </div>
-
                     <div class="contact-item">
-                        <h3>
-                            <!-- *** placeholder 16: location contact icon -->
-                            [CONTACT_LOCATION_LABEL]
-                        </h3>
-                        <p>[CITY_STATE]<br>[RELOCATION_NOTE]</p>
+                        <h3>📍 [CONTACT_LABEL_3]</h3>
+                        <p>[LOCATION_LINE_1]<br>[LOCATION_LINE_2]</p>
                     </div>
-
                 </div>
-
                 <div class="social-links">
-                    <a href="[LINKEDIN_URL]" target="_blank" title="LinkedIn">
-                        <!-- *** placeholder 17: LinkedIn icon -->
-                    </a>
-                    <a href="[GITHUB_URL]" target="_blank" title="GitHub">
-                        <!-- *** placeholder 18: GitHub icon -->
-                    </a>
-                    <a href="mailto:[EMAIL_ADDRESS]" title="Email">
-                        <!-- *** placeholder 19: email social icon -->
-                    </a>
+                    <a href="[LINKEDIN_URL]" target="_blank" title="LinkedIn">in</a>
+                    <a href="[GITHUB_URL]" target="_blank" title="GitHub">💻</a>
+                    <a href="mailto:[EMAIL_ADDRESS]" title="Email">✉️</a>
                 </div>
-
-                <p style="margin-top: 30px; color: var(--gray);">[CONTACT_INTERESTS_NOTE]</p>
-
+                <p style="margin-top: 30px; color: var(--gray);">[CONTACT_CLOSING_LINE]</p>
             </div>
         </div>
     </section>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
-            <p>[FOOTER_COPYRIGHT]</p>
+            <p>&copy; [YEAR] [OWNER_NAME] | [FIELD] Portfolio</p>
             <p style="margin-top: 5px; font-size: 0.9rem;">[FOOTER_TAGLINE]</p>
         </div>
     </footer>
+
 </body>
 </html>
