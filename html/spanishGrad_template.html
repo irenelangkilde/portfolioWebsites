@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>[PORTFOLIO_OWNER_NAME] - [FIELD] Portfolio</title>
-
   <!--
   {
-    "visual_elements_line_numbers": {
-      "headshot_photo": "",
-      "hero_image": "272",
-      "emoji_icons": [310, 334, 340, 346, 388, 408, 414, 420, 436, 448, 455, 461, 501, 510, 518, 574, 579, 584, 600, 604, 608, 612],
-      "images": ["272-290 (inline SVG hero pattern)"],
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "hero-pattern-inline-svg",
+          "selector": ".hero-image",
+          "type": "svg",
+          "role": "Decorative background pattern with book motifs, circles, and large typographic word embedded in hero masthead"
+        }
+      ],
       "animations": []
     },
     "exemplary_attributes": {
-      "pacing": "moderate - evenly spaced sections with generous vertical padding, unhurried scroll flow",
-      "mood": "warm, approachable, culturally expressive, academically credible",
-      "compositional_feel": "central with decorative background SVG motif; card-grid body",
-      "section_density": "medium - each section uses well-spaced cards or prose blocks, not overcrowded",
-      "visual_treatment": "gradient-accented cards with colored top borders and emoji icon headers; gradient text headings; pill badges"
+      "pacing": "Moderate — generous section padding, unhurried vertical rhythm with clear breathing room between content blocks",
+      "mood": "Warm, approachable, and culturally vibrant; optimistic academic energy with a bilingual personal brand",
+      "compositional_feel": "Central — hero and all sections are center-aligned with content radiating outward from a single axis",
+      "section_density": "Medium — each section carries 3–6 cards or items; resume section is text-heavy but well-chunked",
+      "visual_treatment": "Flat gradient illustration with emoji iconography, pill badges, and left-border-accented resume cards; friendly and editorial"
     },
     "default_color_scheme": {
       "primary": "#fbbf24",
@@ -28,24 +28,24 @@
       "dark": "#1e293b",
       "light": "#fef3c7"
     },
-    "alt_color_scheme": {
-      "primary": "#1e293b",
-      "secondary": "#fbbf24",
-      "accent": "#06b6d4",
-      "dark": "#fef3c7",
-      "light": "#1e3a5f"
-    },
-    "composition_option": "central",
-    "style_token": "soft pastel editorial",
-    "rendering_style": "clean editorial vector"
+    "design_factors": {
+      "composition_option": "central",
+      "style_token": "soft pastel editorial",
+      "rendering_style": "clean editorial vector"
+    }
   }
   -->
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[Portfolio Owner Name] - [Discipline] Portfolio</title>
   <link
     href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Merriweather:wght@400;700&display=swap"
     rel="stylesheet"
   />
   <style>
+    /* ============================================================
+       RESET & ROOT
+    ============================================================ */
     * {
       margin: 0;
       padding: 0;
@@ -53,42 +53,61 @@
     }
 
     :root {
-      --primary:   #fbbf24;
-      --secondary: #3b82f6;
-      --accent:    #06b6d4;
-      --dark:      #1e293b;
-      --light:     #fef3c7;
-      --orange:    #f97316;
-      --gradient:  linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+      /* ── Primary palette (masthead-driven) ── */
+      --primary:   #fbbf24;   /* golden amber   */
+      --secondary: #3b82f6;   /* cobalt blue    */
+      --accent:    #06b6d4;   /* cyan           */
+      --dark:      #1e293b;   /* slate navy     */
+      --light:     #fef3c7;   /* pale gold      */
 
-      /* Alt scheme (dark sections) */
-      --alt-bg:       #1e293b;
-      --alt-surface:  #1e3a5f;
-      --alt-text:     #fef3c7;
-      --alt-subtext:  #93c5fd;
-      --alt-border:   #fbbf24;
+      /* ── Derived / functional tokens ── */
+      --primary-dark:    #d97706;            /* primary −2 stops          */
+      --secondary-light: #93c5fd;            /* secondary +2 stops        */
+      --accent-dark:     #0891b2;            /* accent −1 stop            */
+      --body-bg:         #ffffff;
+      --body-text:       var(--dark);
+      --muted:           #64748b;
+      --surface:         #ffffff;
+      --border-subtle:   #f0f0f0;
+
+      /* ── Gradient shorthand ── */
+      --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+
+      /* ── Alternate-section palette (inverted contrast) ── */
+      --alt-bg:          var(--light);
+      --alt-surface:     #ffffff;
+      --alt-heading:     var(--secondary);
+      --alt-border:      var(--primary);
     }
 
+    /* ============================================================
+       BASE TYPOGRAPHY
+    ============================================================ */
     body {
       font-family: 'Poppins', sans-serif;
       line-height: 1.6;
-      color: var(--dark);
-      background: #ffffff;
+      color: var(--body-text);
+      background: var(--body-bg);
     }
 
     h1, h2, h3, h4 {
       font-family: 'Merriweather', serif;
     }
 
+    /* ============================================================
+       LAYOUT UTILITY
+    ============================================================ */
     .container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 0 20px;
     }
 
-    /* ── Navigation ───────────────────────────────────────────── */
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
     nav {
-      background: white;
+      background: var(--surface);
       box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
       position: sticky;
       top: 0;
@@ -129,7 +148,9 @@
       color: var(--primary);
     }
 
-    /* ── Hero ─────────────────────────────────────────────────── */
+    /* ============================================================
+       HERO SECTION
+    ============================================================ */
     .hero {
       position: relative;
       height: 600px;
@@ -137,7 +158,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
+      color: #ffffff;
     }
 
     .hero-background {
@@ -161,8 +182,8 @@
       inset: 0;
       background: linear-gradient(
         135deg,
-        rgba(251, 191, 36, 0.9)  0%,
-        rgba(59,  130, 246, 0.9) 100%
+        rgba(251, 191, 36, 0.9) 0%,
+        rgba(59, 130, 246, 0.9) 100%
       );
       z-index: 3;
     }
@@ -200,6 +221,9 @@
       flex-wrap: wrap;
     }
 
+    /* ============================================================
+       BUTTON COMPONENTS
+    ============================================================ */
     .btn {
       padding: 14px 35px;
       border-radius: 50px;
@@ -211,7 +235,7 @@
     }
 
     .btn-primary {
-      background: white;
+      background: var(--surface);
       color: var(--secondary);
     }
 
@@ -222,16 +246,18 @@
 
     .btn-secondary {
       background: transparent;
-      color: white;
-      border: 2px solid white;
+      color: #ffffff;
+      border: 2px solid #ffffff;
     }
 
     .btn-secondary:hover {
-      background: white;
+      background: #ffffff;
       color: var(--secondary);
     }
 
-    /* ── Shared Section Styles ────────────────────────────────── */
+    /* ============================================================
+       SHARED SECTION DEFAULTS
+    ============================================================ */
     section {
       padding: 85px 0;
     }
@@ -249,7 +275,7 @@
 
     .section-subtitle {
       text-align: center;
-      color: #64748b;
+      color: var(--muted);
       font-size: 1.15rem;
       margin-bottom: 55px;
       max-width: 700px;
@@ -257,9 +283,11 @@
       margin-right: auto;
     }
 
-    /* ── About (light alt scheme) ─────────────────────────────── */
+    /* ============================================================
+       ABOUT SECTION  (alternate palette)
+    ============================================================ */
     .about {
-      background: var(--light);
+      background: var(--alt-bg);
     }
 
     .about-content {
@@ -274,7 +302,7 @@
       margin-bottom: 20px;
     }
 
-    .language-badges {
+    .badge-row {
       display: flex;
       justify-content: center;
       gap: 20px;
@@ -282,8 +310,8 @@
       flex-wrap: wrap;
     }
 
-    .language-badge {
-      background: white;
+    .badge {
+      background: var(--alt-surface);
       padding: 15px 30px;
       border-radius: 50px;
       box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
@@ -291,7 +319,9 @@
       color: var(--secondary);
     }
 
-    /* ── Skills ───────────────────────────────────────────────── */
+    /* ============================================================
+       SKILLS SECTION  (default palette)
+    ============================================================ */
     .skills-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -300,7 +330,7 @@
     }
 
     .skill-category {
-      background: white;
+      background: var(--surface);
       padding: 35px;
       border-radius: 20px;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
@@ -325,7 +355,7 @@
 
     .skill-list li {
       padding: 12px 0;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid var(--border-subtle);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -341,9 +371,11 @@
       font-weight: 600;
     }
 
-    /* ── Projects ─────────────────────────────────────────────── */
+    /* ============================================================
+       PROJECTS SECTION  (default palette)
+    ============================================================ */
     .projects {
-      background: white;
+      background: var(--surface);
     }
 
     .projects-grid {
@@ -353,7 +385,7 @@
     }
 
     .project-card {
-      background: white;
+      background: var(--surface);
       border-radius: 20px;
       overflow: hidden;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
@@ -365,6 +397,7 @@
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
     }
 
+    /* Card illustration area — each gets its own gradient slice of the palette */
     .project-image {
       width: 100%;
       height: 240px;
@@ -372,31 +405,30 @@
       align-items: center;
       justify-content: center;
       font-size: 4.5rem;
-      color: white;
+      color: #ffffff;
     }
 
-    /* Each card accent gradient uses palette variables or tints */
-    .project-image.type-a {
-      background: linear-gradient(135deg, var(--primary) 0%, var(--orange) 100%);
+    .project-image.cat-a {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     }
 
-    .project-image.type-b {
+    .project-image.cat-b {
       background: linear-gradient(135deg, var(--secondary) 0%, #2563eb 100%);
     }
 
-    .project-image.type-c {
-      background: linear-gradient(135deg, var(--accent) 0%, #0891b2 100%);
+    .project-image.cat-c {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
     }
 
-    .project-image.type-d {
+    .project-image.cat-d {
       background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     }
 
-    .project-image.type-e {
+    .project-image.cat-e {
       background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
     }
 
-    .project-image.type-f {
+    .project-image.cat-f {
       background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     }
 
@@ -422,13 +454,15 @@
     }
 
     .project-content p {
-      color: #64748b;
+      color: var(--muted);
       line-height: 1.7;
     }
 
-    /* ── Resume (light alt scheme) ────────────────────────────── */
+    /* ============================================================
+       RESUME SECTION  (alternate palette)
+    ============================================================ */
     .resume {
-      background: var(--light);
+      background: var(--alt-bg);
     }
 
     .resume-content {
@@ -441,15 +475,15 @@
     }
 
     .resume-section h3 {
-      color: var(--secondary);
+      color: var(--alt-heading);
       font-size: 2rem;
       margin-bottom: 30px;
       padding-bottom: 15px;
-      border-bottom: 3px solid var(--primary);
+      border-bottom: 3px solid var(--alt-border);
     }
 
     .resume-item {
-      background: white;
+      background: var(--alt-surface);
       padding: 30px;
       border-radius: 15px;
       margin-bottom: 25px;
@@ -464,7 +498,7 @@
     }
 
     .resume-item .meta {
-      color: #64748b;
+      color: var(--muted);
       font-size: 0.95rem;
       margin-bottom: 15px;
       display: flex;
@@ -487,19 +521,11 @@
       margin-top: 50px;
     }
 
-    .download-resume .btn-primary {
-      background: var(--secondary);
-      color: white;
-    }
-
-    .download-resume .btn-primary:hover {
-      background: var(--primary);
-      color: var(--dark);
-    }
-
-    /* ── Contact ──────────────────────────────────────────────── */
+    /* ============================================================
+       CONTACT SECTION  (default palette)
+    ============================================================ */
     .contact {
-      background: white;
+      background: var(--body-bg);
     }
 
     .contact-content {
@@ -510,7 +536,7 @@
 
     .contact-info {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 30px;
       margin: 50px 0;
     }
@@ -558,7 +584,7 @@
       height: 55px;
       border-radius: 50%;
       background: var(--gradient);
-      color: white;
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -572,16 +598,18 @@
       box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
     }
 
-    .contact-interests {
+    .contact-footnote {
       margin-top: 40px;
-      color: #64748b;
+      color: var(--muted);
       font-size: 0.95rem;
     }
 
-    /* ── Footer ───────────────────────────────────────────────── */
+    /* ============================================================
+       FOOTER
+    ============================================================ */
     footer {
       background: var(--dark);
-      color: white;
+      color: #ffffff;
       text-align: center;
       padding: 40px 0;
     }
@@ -594,9 +622,12 @@
       margin-top: 10px;
       font-size: 0.9rem;
       font-style: italic;
+      opacity: 0.65;
     }
 
-    /* ── Responsive ───────────────────────────────────────────── */
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
     @media (max-width: 768px) {
       nav ul {
         gap: 1rem;
@@ -627,125 +658,157 @@
 </head>
 <body>
 
-  <!-- Navigation -->
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
   <nav>
     <div class="container">
-      <div class="logo">[OWNER_NAME]</div>
+      <div class="logo">[Portfolio Owner Name]</div>
       <ul>
-        <li><a href="#about">[NAV_LINK_1]</a></li>
-        <li><a href="#skills">[NAV_LINK_2]</a></li>
-        <li><a href="#projects">[NAV_LINK_3]</a></li>
-        <li><a href="#resume">[NAV_LINK_4]</a></li>
-        <li><a href="#contact">[NAV_LINK_5]</a></li>
+        <li><a href="#about">[Nav Link 1]</a></li>
+        <li><a href="#skills">[Nav Link 2]</a></li>
+        <li><a href="#projects">[Nav Link 3]</a></li>
+        <li><a href="#resume">[Nav Link 4]</a></li>
+        <li><a href="#contact">[Nav Link 5]</a></li>
       </ul>
     </div>
   </nav>
 
-  <!-- Hero Section -->
+  <!-- ============================================================
+       HERO SECTION
+  ============================================================ -->
   <section class="hero">
     <div class="hero-background"></div>
 
-    <!-- Decorative SVG background motif (field-specific repeating pattern) -->
-    <svg class="hero-image" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600">
+    <!-- Decorative inline SVG pattern — replace motifs to match discipline -->
+    <svg
+      class="hero-image"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1200 600"
+      aria-hidden="true"
+    >
       <defs>
-        <pattern id="motifPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-          <rect x="10" y="20" width="30" height="40"
-                fill="rgba(255,255,255,0.3)"
-                stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+        <pattern
+          id="disciplinePattern"
+          x="0" y="0"
+          width="100" height="100"
+          patternUnits="userSpaceOnUse"
+        >
+          <!-- Replace these shapes with discipline-appropriate motifs -->
+          <rect
+            x="10" y="20" width="30" height="40"
+            fill="rgba(255,255,255,0.3)"
+            stroke="rgba(255,255,255,0.5)"
+            stroke-width="2"
+          />
           <line x1="15" y1="28" x2="35" y2="28" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
           <line x1="15" y1="35" x2="35" y2="35" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
           <line x1="15" y1="42" x2="35" y2="42" stroke="rgba(255,255,255,0.4)" stroke-width="2"/>
         </pattern>
       </defs>
-      <rect width="1200" height="600" fill="url(#motifPattern)"/>
-      <circle cx="200" cy="150" r="80"  fill="rgba(255,255,255,0.2)"/>
-      <circle cx="900" cy="400" r="100" fill="rgba(255,255,255,0.15)"/>
-      <text x="600" y="300" font-size="120"
-            fill="rgba(255,255,255,0.15)"
-            text-anchor="middle"
-            font-family="serif"
-            font-weight="bold">[HERO_MOTIF_WORD]</text>
+      <rect width="1200" height="600" fill="url(#disciplinePattern)"/>
+      <circle cx="200"  cy="150" r="80"  fill="rgba(255,255,255,0.2)"/>
+      <circle cx="900"  cy="400" r="100" fill="rgba(255,255,255,0.15)"/>
+      <!-- Large watermark word — replace with discipline keyword -->
+      <text
+        x="600" y="300"
+        font-size="120"
+        fill="rgba(255,255,255,0.15)"
+        text-anchor="middle"
+        font-family="serif"
+        font-weight="bold"
+      >[discipline keyword]</text>
     </svg>
 
     <div class="hero-overlay"></div>
 
     <div class="hero-content">
-      <h1>[OWNER_FULL_NAME]</h1>
-      <p class="subtitle">[FIELD_OF_STUDY]</p>
-      <p class="tagline">🎓 [DEGREE_TITLE] | [MINOR_OR_FOCUS] | [GRADUATION_TIMELINE]</p>
+      <h1>[Portfolio Owner Full Name]</h1>
+      <p class="subtitle">[Primary Field of Study]</p>
+      <p class="tagline">[Degree Icon] [Degree Title] | [Minor or Concentration] | [Expected Graduation Term]</p>
       <div class="cta-buttons">
-        <a href="#projects" class="btn btn-primary">[CTA_PRIMARY]</a>
-        <a href="#contact"  class="btn btn-secondary">[CTA_SECONDARY]</a>
+        <a href="#projects" class="btn btn-primary">[Primary CTA Label]</a>
+        <a href="#contact"  class="btn btn-secondary">[Secondary CTA Label]</a>
       </div>
     </div>
   </section>
 
-  <!-- About Section -->
+  <!-- ============================================================
+       ABOUT SECTION  (alternate palette)
+  ============================================================ -->
   <section id="about" class="about">
     <div class="container">
-      <h2>[ABOUT_HEADING_BILINGUAL]</h2>
-      <p class="section-subtitle">[ABOUT_SUBTITLE]</p>
+      <h2>[About Section Heading / Bilingual Heading]</h2>
+      <p class="section-subtitle">[Short thematic tagline summarising the person's passion]</p>
       <div class="about-content">
-        <p>[ABOUT_PARAGRAPH_1]</p>
-        <p>[ABOUT_PARAGRAPH_2]</p>
-        <p>[ABOUT_PARAGRAPH_3]</p>
-        <div class="language-badges">
-          <span class="language-badge">🏳️ [LANGUAGE_OR_SKILL_BADGE_1]</span>
-          <span class="language-badge">🏳️ [LANGUAGE_OR_SKILL_BADGE_2]</span>
-          <span class="language-badge">🏳️ [LANGUAGE_OR_SKILL_BADGE_3]</span>
+        <p>[Introductory paragraph: personal identity, core passion, and overarching focus area.]</p>
+        <p>[Second paragraph: relevant experiences — coursework, fieldwork, study abroad, internships — and resulting competencies.]</p>
+        <p>[Third paragraph: career aspirations and types of opportunities sought.]</p>
+        <div class="badge-row">
+          <!-- Repeat .badge elements to match number of languages / credentials to highlight -->
+          <span class="badge">[Flag/Icon] [Language or Credential] — [Proficiency Level]</span>
+          <span class="badge">[Flag/Icon] [Language or Credential] — [Proficiency Level]</span>
+          <span class="badge">[Flag/Icon] [Language or Credential] — [Proficiency Level]</span>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Skills Section -->
+  <!-- ============================================================
+       SKILLS SECTION  (default palette)
+  ============================================================ -->
   <section id="skills">
     <div class="container">
-      <h2>[SKILLS_HEADING_BILINGUAL]</h2>
-      <p class="section-subtitle">[SKILLS_SUBTITLE]</p>
+      <h2>[Skills Section Heading / Bilingual Heading]</h2>
+      <p class="section-subtitle">[Short description of competency categories covered]</p>
       <div class="skills-grid">
 
+        <!-- Repeat .skill-category blocks to match number of competency categories -->
         <div class="skill-category">
-          <h3>💬 [SKILL_CATEGORY_1_TITLE]</h3>
+          <h3>[Icon] [Category Name A]</h3>
           <ul class="skill-list">
-            <li><span>[SKILL_1_1]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_1_2]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_1_3]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_1_4]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_1_5]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
           </ul>
         </div>
 
         <div class="skill-category">
-          <h3>📚 [SKILL_CATEGORY_2_TITLE]</h3>
+          <h3>[Icon] [Category Name B]</h3>
           <ul class="skill-list">
-            <li><span>[SKILL_2_1]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_2_2]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_2_3]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_2_4]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_2_5]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
           </ul>
         </div>
 
         <div class="skill-category">
-          <h3>🎯 [SKILL_CATEGORY_3_TITLE]</h3>
+          <h3>[Icon] [Category Name C]</h3>
           <ul class="skill-list">
-            <li><span>[SKILL_3_1]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_3_2]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_3_3]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_3_4]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_3_5]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
           </ul>
         </div>
 
         <div class="skill-category">
-          <h3>🛠️ [SKILL_CATEGORY_4_TITLE]</h3>
+          <h3>[Icon] [Category Name D]</h3>
           <ul class="skill-list">
-            <li><span>[SKILL_4_1]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_4_2]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_4_3]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_4_4]</span><span class="skill-level">[LEVEL]</span></li>
-            <li><span>[SKILL_4_5]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
           </ul>
         </div>
 
@@ -753,64 +816,67 @@
     </div>
   </section>
 
-  <!-- Projects Section -->
+  <!-- ============================================================
+       PROJECTS SECTION  (default palette)
+  ============================================================ -->
   <section id="projects" class="projects">
     <div class="container">
-      <h2>[PROJECTS_HEADING_BILINGUAL]</h2>
-      <p class="section-subtitle">[PROJECTS_SUBTITLE]</p>
+      <h2>[Projects Section Heading / Bilingual Heading]</h2>
+      <p class="section-subtitle">[Short description of the type of work showcased]</p>
       <div class="projects-grid">
 
+        <!-- Repeat .project-card blocks; cycle cat-a through cat-f for gradient variety -->
         <div class="project-card">
-          <div class="project-image type-a">🌐</div>
+          <div class="project-image cat-a">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_1]</span>
-            <h3>[PROJECT_TITLE_1]</h3>
-            <p>[PROJECT_DESCRIPTION_1]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-image type-b">📘</div>
+          <div class="project-image cat-b">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_2]</span>
-            <h3>[PROJECT_TITLE_2]</h3>
-            <p>[PROJECT_DESCRIPTION_2]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-image type-c">🎭</div>
+          <div class="project-image cat-c">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_3]</span>
-            <h3>[PROJECT_TITLE_3]</h3>
-            <p>[PROJECT_DESCRIPTION_3]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-image type-d">📖</div>
+          <div class="project-image cat-d">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_4]</span>
-            <h3>[PROJECT_TITLE_4]</h3>
-            <p>[PROJECT_DESCRIPTION_4]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-image type-e">📱</div>
+          <div class="project-image cat-e">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_5]</span>
-            <h3>[PROJECT_TITLE_5]</h3>
-            <p>[PROJECT_DESCRIPTION_5]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
         <div class="project-card">
-          <div class="project-image type-f">🤝</div>
+          <div class="project-image cat-f">[Icon/Emoji]</div>
           <div class="project-content">
-            <span class="project-type">[PROJECT_TYPE_6]</span>
-            <h3>[PROJECT_TITLE_6]</h3>
-            <p>[PROJECT_DESCRIPTION_6]</p>
+            <span class="project-type">[Project Type Label]</span>
+            <h3>[Project Title]</h3>
+            <p>[Short description of the project, its purpose, methods, and outcome.]</p>
           </div>
         </div>
 
@@ -818,172 +884,200 @@
     </div>
   </section>
 
-  <!-- Resume Section -->
+  <!-- ============================================================
+       RESUME SECTION  (alternate palette)
+  ============================================================ -->
   <section id="resume" class="resume">
     <div class="container">
-      <h2>[RESUME_HEADING_BILINGUAL]</h2>
-      <p class="section-subtitle">[RESUME_SUBTITLE]</p>
+      <h2>[Resume Section Heading / Bilingual Heading]</h2>
+      <p class="section-subtitle">[Short description: experience, education, achievements]</p>
       <div class="resume-content">
 
         <!-- Education -->
         <div class="resume-section">
-          <h3>[RESUME_SECTION_EDUCATION]</h3>
+          <h3>[Resume Subsection: Education]</h3>
           <div class="resume-item">
-            <h4>[DEGREE_FULL_TITLE]</h4>
+            <h4>[Degree Name & Major]</h4>
             <div class="meta">
-              <span>📍 [INSTITUTION_NAME]</span>
-              <span>📅 [GRADUATION_DATE]</span>
-              <span>🎯 [GPA_OR_HONORS]</span>
+              <span>[Location Icon] [Institution Name]</span>
+              <span>[Date Icon] [Enrollment Period]</span>
+              <span>[Achievement Icon] [GPA or Standing]</span>
             </div>
             <ul>
-              <li>[EDUCATION_DETAIL_1]</li>
-              <li>[EDUCATION_DETAIL_2]</li>
-              <li>[EDUCATION_DETAIL_3]</li>
-              <li>[EDUCATION_DETAIL_4]</li>
+              <li>[Minor, Concentration, or Honor]</li>
+              <li>[Honor Society or Academic Club Role]</li>
+              <li>[Study Abroad / Exchange Programs]</li>
+              <li>[Thesis or Capstone Title]</li>
+              <li>[Relevant Coursework Summary]</li>
             </ul>
           </div>
         </div>
 
         <!-- Experience -->
         <div class="resume-section">
-          <h3>[RESUME_SECTION_EXPERIENCE]</h3>
+          <h3>[Resume Subsection: Experience]</h3>
 
+          <!-- Repeat .resume-item for each position -->
           <div class="resume-item">
-            <h4>[JOB_TITLE_1]</h4>
+            <h4>[Job Title A]</h4>
             <div class="meta">
-              <span>📍 [EMPLOYER_1]</span>
-              <span>📅 [DATE_RANGE_1]</span>
+              <span>[Location Icon] [Employer / Organization]</span>
+              <span>[Date Icon] [Date Range]</span>
             </div>
             <ul>
-              <li>[JOB_BULLET_1_1]</li>
-              <li>[JOB_BULLET_1_2]</li>
-              <li>[JOB_BULLET_1_3]</li>
-              <li>[JOB_BULLET_1_4]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
             </ul>
           </div>
 
           <div class="resume-item">
-            <h4>[JOB_TITLE_2]</h4>
+            <h4>[Job Title B]</h4>
             <div class="meta">
-              <span>📍 [EMPLOYER_2]</span>
-              <span>📅 [DATE_RANGE_2]</span>
+              <span>[Location Icon] [Employer / Organization]</span>
+              <span>[Date Icon] [Date Range]</span>
             </div>
             <ul>
-              <li>[JOB_BULLET_2_1]</li>
-              <li>[JOB_BULLET_2_2]</li>
-              <li>[JOB_BULLET_2_3]</li>
-              <li>[JOB_BULLET_2_4]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
             </ul>
           </div>
 
           <div class="resume-item">
-            <h4>[JOB_TITLE_3]</h4>
+            <h4>[Job Title C]</h4>
             <div class="meta">
-              <span>📍 [EMPLOYER_3]</span>
-              <span>📅 [DATE_RANGE_3]</span>
+              <span>[Location Icon] [Employer / Organization]</span>
+              <span>[Date Icon] [Date Range]</span>
             </div>
             <ul>
-              <li>[JOB_BULLET_3_1]</li>
-              <li>[JOB_BULLET_3_2]</li>
-              <li>[JOB_BULLET_3_3]</li>
-              <li>[JOB_BULLET_3_4]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
             </ul>
           </div>
 
+          <div class="resume-item">
+            <h4>[Job Title D]</h4>
+            <div class="meta">
+              <span>[Location Icon] [Employer / Organization]</span>
+              <span>[Date Icon] [Date Range]</span>
+            </div>
+            <ul>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+              <li>[Responsibility or achievement bullet]</li>
+            </ul>
+          </div>
         </div>
 
-        <!-- Leadership -->
+        <!-- Leadership & Activities -->
         <div class="resume-section">
-          <h3>[RESUME_SECTION_LEADERSHIP]</h3>
+          <h3>[Resume Subsection: Leadership & Activities]</h3>
 
           <div class="resume-item">
-            <h4>[LEADERSHIP_ROLE_1]</h4>
+            <h4>[Organization Name — Role A]</h4>
             <div class="meta">
-              <span>📅 [DATE_RANGE]</span>
+              <span>[Date Icon] [Date Range]</span>
             </div>
             <ul>
-              <li>[LEADERSHIP_BULLET_1_1]</li>
-              <li>[LEADERSHIP_BULLET_1_2]</li>
-              <li>[LEADERSHIP_BULLET_1_3]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
             </ul>
           </div>
 
           <div class="resume-item">
-            <h4>[LEADERSHIP_ROLE_2]</h4>
+            <h4>[Organization Name — Role B]</h4>
             <div class="meta">
-              <span>📅 [DATE_RANGE]</span>
+              <span>[Date Icon] [Date Range]</span>
             </div>
             <ul>
-              <li>[LEADERSHIP_BULLET_2_1]</li>
-              <li>[LEADERSHIP_BULLET_2_2]</li>
-              <li>[LEADERSHIP_BULLET_2_3]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
+              <li>[Activity or impact bullet]</li>
             </ul>
           </div>
-
         </div>
 
         <!-- Certifications & Awards -->
         <div class="resume-section">
-          <h3>[RESUME_SECTION_CERTS]</h3>
+          <h3>[Resume Subsection: Certifications & Awards]</h3>
           <div class="resume-item">
             <ul>
-              <li>[CERT_OR_AWARD_1]</li>
-              <li>[CERT_OR_AWARD_2]</li>
-              <li>[CERT_OR_AWARD_3]</li>
-              <li>[CERT_OR_AWARD_4]</li>
-              <li>[CERT_OR_AWARD_5]</li>
+              <li>[Certification or Award Name] ([Year])</li>
+              <li>[Certification or Award Name] ([Year])</li>
+              <li>[Certification or Award Name] ([Year])</li>
+              <li>[Certification or Award Name] ([Year])</li>
+              <li>[Certification or Award Name]</li>
             </ul>
           </div>
         </div>
 
         <div class="download-resume">
-          <a href="#" class="btn btn-primary">📄 [DOWNLOAD_RESUME_LABEL]</a>
+          <a href="#" class="btn btn-primary">[Icon] [Download CTA Label]</a>
         </div>
 
       </div>
     </div>
   </section>
 
-  <!-- Contact Section -->
+  <!-- ============================================================
+       CONTACT SECTION  (default palette)
+  ============================================================ -->
   <section id="contact" class="contact">
     <div class="container">
-      <h2>[CONTACT_HEADING_BILINGUAL]</h2>
-      <p class="section-subtitle">[CONTACT_SUBTITLE]</p>
+      <h2>[Contact Section Heading / Bilingual Heading]</h2>
+      <p class="section-subtitle">[Short invitation to connect]</p>
       <div class="contact-content">
 
         <div class="contact-info">
+          <!-- Repeat .contact-item for each contact channel -->
           <div class="contact-item">
-            <h3>📧 [CONTACT_LABEL_EMAIL]</h3>
-            <a href="mailto:[EMAIL_ADDRESS]">[EMAIL_ADDRESS]</a>
+            <h3>[Icon] [Channel Label A]</h3>
+            <a href="mailto:[email]">[email address placeholder]</a>
           </div>
           <div class="contact-item">
-            <h3>📱 [CONTACT_LABEL_PHONE]</h3>
-            <a href="tel:[PHONE_NUMBER]">[PHONE_NUMBER]</a>
+            <h3>[Icon] [Channel Label B]</h3>
+            <a href="tel:[phone]">[phone number placeholder]</a>
           </div>
           <div class="contact-item">
-            <h3>📍 [CONTACT_LABEL_LOCATION]</h3>
-            <p>[CITY_STATE]<br />[RELOCATION_NOTE]</p>
+            <h3>[Icon] [Channel Label C]</h3>
+            <p>[Location] <br/>[Relocation note]</p>
           </div>
         </div>
 
         <div class="social-links">
-          <a href="[LINKEDIN_URL]"   target="_blank" title="LinkedIn">in</a>
-          <a href="[TWITTER_URL]"    target="_blank" title="Twitter">🐦</a>
-          <a href="[INSTAGRAM_URL]"  target="_blank" title="Instagram">📷</a>
-          <a href="mailto:[EMAIL_ADDRESS]"            title="Email">✉️</a>
+          <!-- Repeat <a> for each social platform -->
+          <a href="#" target="_blank" title="[Platform A]">[Icon/Abbrev]</a>
+          <a href="#" target="_blank" title="[Platform B]">[Icon/Abbrev]</a>
+          <a href="#" target="_blank" title="[Platform C]">[Icon/Abbrev]</a>
+          <a href="#"                 title="[Platform D]">[Icon/Abbrev]</a>
         </div>
 
-        <p class="contact-interests">[INTEREST_AREAS_TAGLINE]</p>
+        <p class="contact-footnote">
+          [Comma-separated list of interest areas or opportunity types sought]
+        </p>
 
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- ============================================================
+       FOOTER
+  ============================================================ -->
   <footer>
     <div class="container">
-      <p>&copy; [YEAR] [OWNER_NAME] | [FIELD] Portfolio</p>
-      <p class="quote">"[INSPIRATIONAL_QUOTE]" — [QUOTE_ATTRIBUTION]</p>
+      <p>&copy; [Graduation Year] [Portfolio Owner Name] | [Discipline] Portfolio</p>
+      <p class="quote">"[Inspirational quote relevant to the discipline]" — [Quote Author]</p>
     </div>
   </footer>
 

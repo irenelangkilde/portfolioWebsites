@@ -1,4 +1,6 @@
 import OpenAI, { toFile } from "openai";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import { getStore } from "@netlify/blobs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
@@ -109,7 +111,8 @@ Your tasks:
 5. Do NOT add, invent, or infer any content not present in the input JSON.
 6. Output the corrected JSON only — no markdown, no explanation.`;
 
-// ─── Stage 3: HTML Generation Prompt (long version — used in three-prompt mode) ─
+// ─── Stage 3: HTML Generation Prompt (long version — kept for reference) ──────
+// eslint-disable-next-line no-unused-vars
 const STAGE3_PROMPT = `You are building a personal portfolio website from structured resume data and a visual template.
 
 NON-NEGOTIABLE REQUIREMENTS:
@@ -159,7 +162,7 @@ TECHNICAL REQUIREMENTS:
 
 Output the complete HTML file only. No explanation, no markdown — just the file.`;
 
-// ─── Original single-prompt templates (preserved as fallback) ────────────────
+// eslint-disable-next-line no-unused-vars -- kept for reference
 const PROMPT_TEMPLATE = `You are building a personal portfolio website for a job seeker.
 Use all the content of the input resume PDF (e.g., name, contact info, education, experience, projects, skills, etc) as the foundation for the new website.
 You have a mandate to make improvements in overall quality and impactfulness, such as garnishing narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
@@ -174,6 +177,7 @@ Visual content should be adapted to match the themes of corresponding elements o
 Double-check that the text has enough contrast against the background so that it is easily visible.
 Output the complete, self-contained HTML file only (ready to save and open in a browser); no explanation, no markdown — just the file.`;
 
+// eslint-disable-next-line no-unused-vars -- kept for reference
 const PROMPT_TEMPLATE_LONG = `NON-NEGOTIABLE REQUIREMENTS (read before anything else):
 A. Output a SINGLE complete HTML file. Never stop mid-section. If content is long, be more concise per section rather than omitting sections.
 B. VISUAL FIDELITY — always: Mirror the template's visual design exactly — hero technique, card style, typography, spacing, layout patterns. This applies regardless of how different the majors are.
@@ -439,17 +443,18 @@ Languages: If multilingual, showcase prominently
 Volunteer Work: Include if relevant to career narrative
 `;
 /**
- * Netlify Background Function: generatePreview-background
+ * Netlify Background Function: buildWebsite-background
  * Netlify returns 202 immediately; this function runs for up to 15 minutes.
  * Result is stored in a Netlify Blob keyed by jobId.
  * Poll /.netlify/functions/getPreviewResult?jobId=<id> for the result.
  *
- * Supports two pipelines:
- *   - Three-prompt (body.use_three_prompt = true): Stage 1 extracts JSON from PDF,
- *     Stage 2 validates it, Stage 3 generates HTML from the JSON + template.
- *   - Single-prompt (default / fallback): Original approach — one prompt with PDF attached.
+ * Pipeline (GeneratePortfolioWebsite.md):
+ *   Stage 1 (optional): Extract resume PDF → structured JSON (skipped if client sends resumeAnalysisJson)
+ *   Stage 2: GeneratePortfolioWebsite.md → website_spec_json (strategy + visual + facts)
+ *   Stage 3: Generate portfolio HTML from website_spec_json + template
  */
 
+// eslint-disable-next-line no-unused-vars
 function fillTemplate(template, vars) {
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => vars[key] ?? "");
 }
@@ -504,104 +509,179 @@ function cleanHtml(rawHtml) {
   return html;
 }
 
-// ─── Three-prompt pipeline ───────────────────────────────────────────────────
-async function runThreePromptPipeline(client, store, jobId, {
+// ─── Prompt loaders ──────────────────────────────────────────────────────────
+function loadPromptFile(filename) {
+  const cwd = process.cwd();
+  for (const candidate of [
+    resolve(cwd, `src/netlify/functions/${filename}`),
+    resolve(cwd, `netlify/functions/${filename}`),
+    resolve(cwd, filename),
+  ]) {
+    try { return readFileSync(candidate, "utf-8"); } catch {}
+  }
+  throw new Error(`Could not load ${filename}`);
+}
+
+function parseJsonResponse(raw) {
+  const cleaned = raw.trim()
+    .replace(/^```[a-zA-Z]*\r?\n?/, "").replace(/\r?\n?```\s*$/, "").trim();
+  try { return JSON.parse(cleaned); } catch {}
+  const first = cleaned.indexOf("{"), last = cleaned.lastIndexOf("}");
+  if (first !== -1 && last > first) return JSON.parse(cleaned.slice(first, last + 1));
+  throw new Error("Response was not valid JSON");
+}
+
+// ─── Main pipeline ───────────────────────────────────────────────────────────
+async function runPortfolioWebsitePipeline(client, store, jobId, {
   page1, page2, page3, pdfBuffer,
-  templateScreenshotBase64, templateScreenshotMime,
-  sampleHtml, theme, headshotName
+  sampleHtml, theme, headshotName,
+  resumeAnalysisJson, templateAnalysisJson, templateHtml
 }) {
-  // ── Stage 1: Extract resume content → structured JSON ──────────────────────
-  await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Extracting resume content (1/3)…"
-  }), { ttl: 3600 });
+  const jobAnalysis = {
+    desired_role: page3?.desired_role || "",
+    job_ad:       page3?.job_ad       || ""
+  };
 
-  const uploadedFile = await client.files.create({
-    file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
-    purpose: "user_data"
-  });
+  // ── Stage 1 (optional): Extract resume PDF → JSON ───────────────────────────
+  let resumeJson = resumeAnalysisJson;
+  if (!resumeJson) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Extracting resume content (1/4)…"
+    }), { ttl: 3600 });
 
-  let stage1Json;
-  try {
-    const stage1Response = await client.responses.create({
+    const uploadedFile = await client.files.create({
+      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
+      purpose: "user_data"
+    });
+
+    let stage1Json;
+    try {
+      const r1 = await client.responses.create({
+        model: "gpt-4o",
+        input: [{ role: "user", content: [
+          { type: "input_file", file_id: uploadedFile.id },
+          { type: "input_text", text: STAGE1_PROMPT }
+        ]}],
+        max_output_tokens: 8000
+      });
+      stage1Json = parseJsonResponse(r1.output_text);
+    } finally {
+      client.files.del(uploadedFile.id).catch(() => {});
+    }
+
+    const r2 = await client.responses.create({
       model: "gpt-4o",
-      input: [{ role: "user", content: [
-        { type: "input_file", file_id: uploadedFile.id },
-        { type: "input_text", text: STAGE1_PROMPT }
-      ]}],
+      input: [{ role: "user", content: [{
+        type: "input_text",
+        text: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`
+      }]}],
       max_output_tokens: 8000
     });
-    const stage1Raw = stage1Response.output_text
-      .replace(/^```[a-zA-Z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-    stage1Json = JSON.parse(stage1Raw);
-  } finally {
-    // Clean up uploaded file regardless of success/failure
-    client.files.del(uploadedFile.id).catch(() => {});
+    resumeJson = parseJsonResponse(r2.output_text);
   }
 
-  // ── Stage 2: Validate and normalize the JSON ────────────────────────────────
+  // ── Stage 2: GeneratePortfolioWebsite.md → core_content_json ────────────────
   await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Validating resume data (2/3)…"
+    status: "pending", stage: "Building content strategy (2/4)…"
   }), { ttl: 3600 });
 
-  const stage2Response = await client.responses.create({
+  // Strip color scheme data — not needed for content strategy
+  const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
+
+  const contentPrompt = loadPromptFile("GeneratePortfolioWebsite.md")
+    .replace("{{RESUME_JSON}}",      JSON.stringify(resumeForStrategy, null, 2))
+    .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+
+  const contentResponse = await client.responses.create({
     model: "gpt-4o",
-    input: [{ role: "user", content: [{
-      type: "input_text",
-      text: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`
-    }]}],
+    input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
     max_output_tokens: 8000
   });
-  const stage2Raw = stage2Response.output_text
-    .replace(/^```[a-zA-Z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-  const validatedJson = JSON.parse(stage2Raw);
+  const aiStrategy = parseJsonResponse(contentResponse.output_text);
 
-  // ── Stage 3: Generate portfolio HTML from validated JSON + template ─────────
+  // Construct source_facts directly from resume_json — no AI re-extraction.
+  // This prevents information loss from AI summarisation or schema mismatches.
+  const coreContent = {
+    strategy: aiStrategy.strategy ?? aiStrategy,
+    source_facts: {
+      identity: resumeForStrategy.identity ?? {},
+      ...(resumeForStrategy.factual_profile ?? {})
+    }
+  };
+
+  // ── Stage 3: blendWebsite.md → website_json ──────────────────────────────────
   await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Generating portfolio website (3/3)…"
+    status: "pending", stage: "Blending design and content (3/4)…"
   }), { ttl: 3600 });
 
-  const colorInstruction = page2?.use_sample_colors
-    ? "Preserve the EXACT color scheme from the sample website — do NOT replace any colors. Use the provided color scheme JSON only as a fallback if no sample is available."
-    : `Replace ALL colors in the sample with the provided color scheme and apply them consistently. Try to use all five colors.\n\nPrimary: Main headings, primary buttons, key branding\nSecondary: Subheadings, links, secondary buttons\nAccent: Highlights, hover states, CTAs\nDark: Dark section backgrounds\nLight: Light section backgrounds\n\nCRITICAL: Replace every hardcoded hex (#rrggbb) and rgba() color value inside gradient stops and background declarations — not just CSS custom properties. Convert the provided hex colors to rgba() as needed. Do NOT carry over any hardcoded color values from the sample's original gradients.\n\nColor scheme:\n${JSON.stringify(theme, null, 2)}`;
+  const colorSpec = page2?.use_sample_colors
+    ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
+    : { ...theme, use_sample_colors: false };
 
-  const jobInfo = (page3?.desired_role || page3?.job_ad)
-    ? `Desired role: ${page3.desired_role || "(not specified)"}\n\nJob posting:\n${page3.job_ad || "(not provided)"}`
-    : "(not provided)";
+  const artifactsJson = page2?.artifacts || [];
 
-  const stage3Prompt = fillTemplate(STAGE3_PROMPT, {
-    COLOR_INSTRUCTION:   colorInstruction,
-    TEMPLATE_SCREENSHOT: templateScreenshotBase64
-      ? "A screenshot of the template website is attached as an image in this message. Use it as the PRIMARY visual style reference — faithfully reproduce its background gradients, decorative elements, and overall atmosphere using the provided color scheme."
-      : "(not provided — rely on the sample HTML below for style reference)",
-    MAJOR:               page1.major          || "",
-    SPECIALIZATION:      page1.specialization || "",
-    HEADSHOT_PHOTO:      headshotName
-      ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder`
-      : "not provided — render a CSS monogram using the person's initials",
-    JOB_INFO:            jobInfo,
-    SAMPLE_WEBSITE_HTML: sampleHtml || "(No sample website provided)",
-    TEMPLATE_USAGE:      templateUsageInstruction(page1.template_copyright_mode),
-    RESUME_JSON:         JSON.stringify(validatedJson, null, 2),
-    YEAR:                new Date().getFullYear().toString()
-  });
+  // Blender only needs strategy + motifs for design decisions — not source_facts.
+  const blendInput = {
+    strategy: coreContent.strategy,
+    motifs: resumeForStrategy.motifs ?? {}
+  };
 
-  const stage3Content = [];
-  if (templateScreenshotBase64 && templateScreenshotMime) {
-    stage3Content.push({
-      type: "input_image",
-      image_url: `data:${templateScreenshotMime};base64,${templateScreenshotBase64}`,
-      detail: "high"
-    });
-  }
-  stage3Content.push({ type: "input_text", text: stage3Prompt });
+  const blendPrompt = loadPromptFile("blendWebsite.md")
+    .replace("{{CORE_CONTENT_JSON}}", JSON.stringify(blendInput, null, 2))
+    .replace("{{DESIGN_SPEC_JSON}}",  JSON.stringify(templateAnalysisJson || {}, null, 2))
+    .replace("{{COLOR_SPEC_JSON}}",   JSON.stringify(colorSpec, null, 2))
+    .replace("{{ARTIFACTS_JSON}}",    JSON.stringify(artifactsJson.map(a => ({
+      label: a.label, type: a.type, description: a.description
+    })), null, 2));
 
-  const stage3Response = await client.responses.create({
+  const blendResponse = await client.responses.create({
     model: "gpt-4o",
-    input: [{ role: "user", content: stage3Content }],
+    input: [{ role: "user", content: [{ type: "input_text", text: blendPrompt }] }],
+    max_output_tokens: 8000
+  });
+  const blendResult = parseJsonResponse(blendResponse.output_text);
+
+  // Assemble website_json in code — source_facts flows directly, never through the blender.
+  const websiteJson = {
+    strategy: coreContent.strategy,
+    visual_direction: blendResult.visual_direction ?? blendResult,
+    source_facts: coreContent.source_facts
+  };
+
+  // Attach headshot guidance into website_json so the renderer has it
+  const candidateName = coreContent.source_facts?.identity?.name || "";
+  websiteJson._renderer_hints = {
+    candidate_name: candidateName || "UNKNOWN — check source_facts.identity.name",
+    headshot: headshotName
+      ? `provided — use <img src='${headshotName}' alt='${candidateName}'>`
+      : `not provided — render a CSS monogram using the initials of "${candidateName}"`,
+    template_usage: templateUsageInstruction(page1.template_copyright_mode),
+    year: new Date().getFullYear().toString()
+  };
+
+  // ── Stage 4: rendererPrompt.md → HTML ────────────────────────────────────────
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Generating portfolio website (4/4)…"
+  }), { ttl: 3600 });
+
+  // Use the template HTML sent by the client (from extractedTemplateCache.templateHtml).
+  // Fall back to the separately-fetched sampleHtml for URL-based templates.
+  const rendererSampleHtml = templateHtml || sampleHtml || "(No sample website provided)";
+
+  const rendererPrompt = loadPromptFile("rendererPrompt.md")
+    .replace("{{WEBSITE_JSON}}", JSON.stringify(websiteJson, null, 2))
+    .replace("{{SAMPLE_HTML}}",  rendererSampleHtml)
+    .replace("{{YEAR}}",         new Date().getFullYear().toString());
+
+  const rendererContent = [{ type: "input_text", text: rendererPrompt }];
+
+  const rendererResponse = await client.responses.create({
+    model: "gpt-4o",
+    input: [{ role: "user", content: rendererContent }],
     max_output_tokens: 32000
   });
 
-  const siteHtml = cleanHtml(stage3Response.output_text);
+  const siteHtml = cleanHtml(rendererResponse.output_text);
 
   if (!/<[a-z]/i.test(siteHtml)) {
     await store.set(jobId, JSON.stringify({
@@ -614,8 +694,8 @@ async function runThreePromptPipeline(client, store, jobId, {
   await store.set(jobId, JSON.stringify({
     status: "done",
     site_html: siteHtml,
-    resume_json: validatedJson,
-    truncated: stage3Response.incomplete_details?.reason === "max_output_tokens"
+    resume_json: websiteJson,
+    truncated: rendererResponse.incomplete_details?.reason === "max_output_tokens"
   }), { ttl: 3600 });
 }
 
@@ -642,7 +722,11 @@ export async function handler(event) {
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
 
-    const { page1 = {}, page2 = {}, page3 = {}, resumePdfBase64 = "", headshotName = "", templateScreenshotBase64 = "", templateScreenshotMime = "" } = body;
+    const {
+      page1 = {}, page2 = {}, page3 = {},
+      resumePdfBase64 = "", headshotName = "",
+      resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null
+    } = body;
 
     if (!resumePdfBase64) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
@@ -654,8 +738,7 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    // OPENAI_API_KEY_LOCAL bypasses Netlify dev's AI gateway proxy, which replaces
-    // OPENAI_API_KEY with a JWT and redirects the base URL, causing 404s on /v1/responses.
+    // OPENAI_API_KEY_LOCAL bypasses Netlify dev's AI gateway proxy.
     const apiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
     const client = new OpenAI({ apiKey, baseURL: "https://api.openai.com/v1" });
 
@@ -668,113 +751,16 @@ export async function handler(event) {
     };
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);
+    const pdfBuffer  = Buffer.from(resumePdfBase64, "base64");
 
-    // ── Three-prompt pipeline ────────────────────────────────────────────────
-    if (body.use_three_prompt) {
-      const pdfBuffer = Buffer.from(resumePdfBase64, "base64");
-      await runThreePromptPipeline(client, store, jobId, {
-        page1, page2, page3, pdfBuffer,
-        templateScreenshotBase64, templateScreenshotMime,
-        sampleHtml, theme, headshotName
-      });
-      return { statusCode: 202 };
-    }
-
-    // ── Single-prompt pipeline (original, preserved as fallback) ────────────
-    const jobInfo = (page3?.desired_role || page3?.job_ad)
-      ? `Desired role: ${page3.desired_role || "(not specified)"}\n\nJob posting:\n${page3.job_ad || "(not provided)"}`
-      : "(not provided)";
-
-    const prompt = fillTemplate(PROMPT_TEMPLATE, {
-      MAJOR:               page1.major          || "",
-      SPECIALIZATION:      page1.specialization || "",
-      SAMPLE_WEBSITE_HTML: sampleHtml           || "(No sample website provided)",
-      TEMPLATE_USAGE:      templateUsageInstruction(page1.template_copyright_mode),
-      HEADSHOT_PHOTO:      headshotName ? `provided — create an <img src='${headshotName}' alt='[Name]'> placeholder` : "not provided — render a CSS monogram using the person's initials",
-      YEAR:                new Date().getFullYear().toString(),
-      JOB_INFO:            jobInfo,
-      COLOR_INSTRUCTION:   page2?.use_sample_colors
-        ? "Preserve the EXACT color scheme from the sample website — do NOT replace any colors. Use the provided color scheme JSON only as a fallback if no sample is available."
-        : `Replace ALL colors in the sample with the provided color scheme and apply them consistently. Try to use all five colors.\n\nPrimary color: Main headings, primary buttons, key branding elements\nSecondary color: Subheadings, links, secondary buttons\nAccent color: Highlights, hover states, call-to-action elements\nDark: Dark section backgrounds\nLight: Light section backgrounds\n\nCRITICAL: Replace every hardcoded hex (#rrggbb) and rgba() color value inside gradient stops and background declarations — not just CSS custom properties. Convert the provided hex colors to rgba() as needed. Do NOT carry over any hardcoded color values from the sample's original gradients.\n\nProvided color scheme:\n${JSON.stringify(theme, null, 2)}`,
-      TEMPLATE_SCREENSHOT: templateScreenshotBase64
-        ? "A screenshot of the template website is attached as an image in this message. Use it as the PRIMARY visual style reference — faithfully reproduce its background gradients, decorative elements, and overall atmosphere using the provided color scheme."
-        : "(not provided — rely on the sample HTML below for style reference)"
+    await runPortfolioWebsitePipeline(client, store, jobId, {
+      page1, page2, page3, pdfBuffer,
+      sampleHtml, theme, headshotName,
+      resumeAnalysisJson, templateAnalysisJson, templateHtml
     });
-
-    // Upload PDF via Files API so it can be referenced by file_id
-    const pdfBuffer = Buffer.from(resumePdfBase64, "base64");
-    const uploadedFile = await client.files.create({
-      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
-      purpose: "user_data"
-    });
-
-    const inputContent = [];
-    inputContent.push({ type: "input_file", file_id: uploadedFile.id });
-    if (templateScreenshotBase64 && templateScreenshotMime) {
-      inputContent.push({
-        type: "input_image",
-        image_url: `data:${templateScreenshotMime};base64,${templateScreenshotBase64}`,
-        detail: "high"
-      });
-    }
-    const textPrompt = sampleHtml
-      ? `${prompt}\n\nSample website HTML (use for style/layout reference):\n${sampleHtml}`
-      : prompt;
-    inputContent.push({ type: "input_text", text: textPrompt });
-
-    const response = await client.responses.create({
-      model: "gpt-4o",
-input: [{ role: "user", content: inputContent }],
-      max_output_tokens: 32000
-    });
-
-    // Clean up the uploaded file (non-fatal if it fails)
-    client.files.del(uploadedFile.id).catch(() => {});
-
-    // Strip markdown fences if model wrapped output
-    let rawHtml = response.output_text
-      .replace(/^```[a-zA-Z]*\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-
-    // Fix invalid CSS: remove any "initial" layers from background-image comma-separated lists.
-    // Simple regex fails here because gradient values contain commas; use a depth-aware splitter.
-    rawHtml = rawHtml.replace(/background-image\s*:([^;]+);/g, (_match, value) => {
-      const parts = [];
-      let depth = 0, curr = "";
-      for (const ch of value) {
-        if (ch === "(") depth++;
-        else if (ch === ")") depth--;
-        if (ch === "," && depth === 0) { parts.push(curr.trim()); curr = ""; }
-        else curr += ch;
-      }
-      if (curr.trim()) parts.push(curr.trim());
-      const cleaned = parts.filter(p => p.toLowerCase() !== "initial");
-      return cleaned.length ? `background-image:${cleaned.join(", ")};` : "";
-    });
-
-    // Remove background sub-properties whose values are entirely comma-separated "initial" keywords —
-    // these are invalid in multi-value lists and can cause browsers to suppress the whole background stack
-    const siteHtml = rawHtml.replace(
-      /background-(?:position-x|position-y|size|repeat|attachment|origin|clip)\s*:\s*(?:initial\s*,?\s*)+;/g, ""
-    );
-
-    // Detect model refusals — a valid HTML file always starts with a tag.
-    // If the output contains no HTML tags, treat it as an error rather than rendering the refusal text.
-    if (!/<[a-z]/i.test(siteHtml)) {
-      await store.set(jobId, JSON.stringify({
-        status: "error",
-        error: "The AI declined to generate the portfolio. Try adjusting your inputs or color scheme and resubmitting."
-      }), { ttl: 3600 });
-      return { statusCode: 202 };
-    }
-
-    await store.set(jobId, JSON.stringify({
-      status: "done",
-      site_html: siteHtml,
-      truncated: response.incomplete_details?.reason === "max_output_tokens"
-    }), { ttl: 3600 });
   } catch (err) {
     const msg = err?.message || "Unknown error";
-    console.error("generatePreview-background error:", msg, err?.stack);
+    console.error("buildWebsite-background error:", msg, err?.stack);
     if (store) {
       try {
         await store.set(jobId, JSON.stringify({ status: "error", error: msg }), { ttl: 3600 });

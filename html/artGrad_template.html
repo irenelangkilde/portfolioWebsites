@@ -1,1069 +1,1037 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[Artist Name] - Art Portfolio</title>
-    <!--
-    {
-      "visual_elements_line_numbers": {
-        "headshot_photo": "263",
-        "hero_image": "263",
-        "emoji_icons": ["270", "316", "318", "320", "327", "329", "331", "335", "337", "339", "393", "395", "397", "399", "416", "418", "420", "422", "460", "462", "464", "466", "468", "470", "489", "500", "502", "504", "506", "516", "518", "520", "522"],
-        "images": ["263"],
-        "animations": ["hover-lift-cards", "underline-nav-links", "gradient-text-headings"]
-      },
-      "exemplary_attributes": {
-        "pacing": "leisurely and expressive — generous padding between sections, unhurried scrolling rhythm",
-        "mood": "warm, romantic, creative confidence — soft pinks and warm oranges evoke artistic passion",
-        "compositional_feel": "central — hero is fully centered with radial decorative circles; gallery uses symmetric grid",
-        "section_density": "medium-high — each section is rich with cards and list items but well-spaced",
-        "visual_treatment": "gradient-forward with pill badges, rounded cards, subtle hover lifts, and gradient text headings"
-      },
-      "default_color_scheme": {
-        "primary": "#d4567a",
-        "secondary": "#f7a072",
-        "accent": "#ffd166",
-        "dark": "#2d3142",
-        "light": "#fef6f0"
-      },
+  <!--
+  {
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "profile-photo.jpg",
+          "selector": ".profile-photo",
+          "type": "img",
+          "role": "Circular hero profile portrait of the artist"
+        }
+      ],
+      "animations": []
+    },
+    "exemplary_attributes": {
+      "pacing": "Relaxed and generous — wide padding, unhurried scroll through distinct sections",
+      "mood": "Warm, expressive, and inviting; femininely vibrant with artistic energy",
+      "compositional_feel": "Central — hero is axis-centered with radial decorative orbs; content flows in centered columns and auto-fit grids below",
+      "section_density": "Medium — each section is spacious with clearly delineated card groups",
+      "visual_treatment": "Gradient-forward with soft rounded cards, emoji-based iconography, and warm rose-to-amber palette accents"
+    },
+    "default_color_scheme": {
+      "primary": "#d4567a",
+      "secondary": "#f7a072",
+      "accent": "#ffd166",
+      "dark": "#2d3142",
+      "light": "#fef6f0"
+    },
+    "design_factors": {
       "composition_option": "central",
       "style_token": "soft pastel editorial",
-      "rendering_style": "gradient 3D illustration"
+      "rendering_style": "clean editorial vector"
     }
-    -->
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #d4567a;
-            --secondary: #f7a072;
-            --accent: #ffd166;
-            --dark: #2d3142;
-            --light: #fef6f0;
-            --gradient: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
-
-            /* Alt palette — dark scheme for alternating sections */
-            --alt-bg: #2d3142;
-            --alt-surface: #3a3f58;
-            --alt-text: #fef6f0;
-            --alt-muted: #c0b8c8;
-            --alt-border: rgba(212, 86, 122, 0.4);
-        }
-
-        body {
-            font-family: 'Montserrat', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background: #ffffff;
-        }
-
-        h1,
-        h2,
-        h3,
-        h4 {
-            font-family: 'Playfair Display', serif;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        /* ── Navigation ───────────────────────────────────────── */
-        nav {
-            background: white;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        nav .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1.2rem 20px;
-        }
-
-        nav .logo {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.8rem;
-            font-weight: 700;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--dark);
-            font-weight: 500;
-            transition: color 0.3s;
-            position: relative;
-        }
-
-        nav a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--gradient);
-            transition: width 0.3s;
-        }
-
-        nav a:hover::after {
-            width: 100%;
-        }
-
-        /* ── Hero Section ─────────────────────────────────────── */
-        .hero {
-            background: var(--gradient);
-            color: white;
-            padding: 100px 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -10%;
-            width: 500px;
-            height: 500px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-        }
-
-        .hero::after {
-            content: '';
-            position: absolute;
-            bottom: -30%;
-            left: -5%;
-            width: 400px;
-            height: 400px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 50%;
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .profile-photo {
-            width: 200px;
-            height: 200px;
-            border-radius: 50%;
-            border: 6px solid white;
-            object-fit: cover;
-            margin: 0 auto 25px;
-            display: block;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
-            background: linear-gradient(135deg, #ee9ca7 0%, #ffdde1 100%);
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-        .hero .subtitle {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
-            opacity: 0.95;
-            font-weight: 300;
-        }
-
-        .hero .tagline {
-            font-size: 1.1rem;
-            opacity: 0.9;
-            margin-bottom: 35px;
-            font-weight: 300;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 14px 35px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-block;
-            font-size: 1rem;
-        }
-
-        .btn-primary {
-            background: white;
-            color: var(--primary);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: white;
-            color: var(--primary);
-        }
-
-        /* ── Shared Section Styles ────────────────────────────── */
-        section {
-            padding: 90px 0;
-        }
-
-        section h2 {
-            text-align: center;
-            font-size: 3rem;
-            margin-bottom: 20px;
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            font-weight: 700;
-        }
-
-        .section-subtitle {
-            text-align: center;
-            font-size: 1.2rem;
-            color: #666;
-            margin-bottom: 60px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        /* ── About Section ────────────────────────────────────── */
-        .about {
-            background: var(--light);
-        }
-
-        .about-content {
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-            font-size: 1.15rem;
-            line-height: 1.9;
-        }
-
-        .about-content p {
-            margin-bottom: 20px;
-        }
-
-        /* ── Skills Section ───────────────────────────────────── */
-        /* Alt palette applied — dark background */
-        .skills {
-            background: var(--alt-bg);
-        }
-
-        .skills h2 {
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .skills .section-subtitle {
-            color: var(--alt-muted);
-        }
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 35px;
-            margin-top: 40px;
-        }
-
-        .skill-category {
-            background: var(--alt-surface);
-            padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25);
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .skill-category:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.35);
-            border-color: var(--primary);
-        }
-
-        .skill-category h3 {
-            color: var(--secondary);
-            margin-bottom: 25px;
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .skill-icon {
-            font-size: 2rem;
-        }
-
-        .skill-list {
-            list-style: none;
-        }
-
-        .skill-list li {
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1rem;
-            color: var(--alt-text);
-        }
-
-        .skill-list li:last-child {
-            border-bottom: none;
-        }
-
-        .skill-level {
-            font-size: 0.85rem;
-            color: var(--accent);
-            font-weight: 600;
-        }
-
-        /* ── Gallery Section ──────────────────────────────────── */
-        .gallery {
-            background: white;
-        }
-
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 35px;
-        }
-
-        .artwork-card {
-            background: white;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
-            transition: all 0.4s;
-        }
-
-        .artwork-card:hover {
-            transform: translateY(-15px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-        }
-
-        .artwork-image {
-            width: 100%;
-            height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 5rem;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .artwork-image.type-a {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .artwork-image.type-b {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-
-        .artwork-image.type-c {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-
-        .artwork-image.type-d {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-
-        .artwork-image.type-e {
-            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-        }
-
-        .artwork-image.type-f {
-            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-        }
-
-        .artwork-content {
-            padding: 30px;
-        }
-
-        .artwork-content h3 {
-            color: var(--dark);
-            margin-bottom: 10px;
-            font-size: 1.5rem;
-        }
-
-        .artwork-category {
-            display: inline-block;
-            background: var(--light);
-            color: var(--primary);
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .artwork-content p {
-            color: #666;
-            line-height: 1.7;
-            font-size: 0.95rem;
-        }
-
-        .artwork-details {
-            margin-top: 15px;
-            padding-top: 15px;
-            border-top: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.9rem;
-            color: #999;
-        }
-
-        /* ── Resume Section ───────────────────────────────────── */
-        /* Alt palette applied — dark background */
-        .resume {
-            background: var(--alt-bg);
-        }
-
-        .resume h2 {
-            background: var(--gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .resume .section-subtitle {
-            color: var(--alt-muted);
-        }
-
-        .resume-content {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .resume-section {
-            margin-bottom: 50px;
-        }
-
-        .resume-section h3 {
-            color: var(--secondary);
-            font-size: 2rem;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        .resume-item {
-            background: var(--alt-surface);
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-            border-left: 5px solid var(--primary);
-        }
-
-        .resume-item h4 {
-            color: var(--alt-text);
-            font-size: 1.4rem;
-            margin-bottom: 10px;
-        }
-
-        .resume-item .meta {
-            color: var(--alt-muted);
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-            display: flex;
-            gap: 25px;
-            flex-wrap: wrap;
-        }
-
-        .resume-item ul {
-            margin-left: 20px;
-            color: var(--alt-text);
-        }
-
-        .resume-item ul li {
-            margin-bottom: 10px;
-            line-height: 1.6;
-        }
-
-        .resume-item ul li strong {
-            color: var(--accent);
-        }
-
-        .download-resume {
-            text-align: center;
-            margin-top: 50px;
-        }
-
-        .download-resume .btn-primary {
-            background: var(--gradient);
-            color: white;
-        }
-
-        .download-resume .btn-primary:hover {
-            box-shadow: 0 8px 25px rgba(212, 86, 122, 0.4);
-        }
-
-        /* ── Contact Section ──────────────────────────────────── */
-        .contact {
-            background: white;
-        }
-
-        .contact-content {
-            max-width: 700px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .contact-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-            margin: 50px 0;
-        }
-
-        .contact-item {
-            background: var(--light);
-            padding: 35px;
-            border-radius: 20px;
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
-            transition: all 0.3s;
-        }
-
-        .contact-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-        }
-
-        .contact-item h3 {
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-
-        .contact-item a,
-        .contact-item p {
-            color: var(--dark);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-            font-size: 0.95rem;
-        }
-
-        .contact-item a:hover {
-            color: var(--primary);
-        }
-
-        .social-links {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 40px;
-            flex-wrap: wrap;
-        }
-
-        .social-links a {
-            width: 55px;
-            height: 55px;
-            border-radius: 50%;
-            background: var(--gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.5rem;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 700;
-            transition: all 0.3s;
-        }
-
-        .social-links a:hover {
-            transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 10px 25px rgba(212, 86, 122, 0.3);
-        }
-
-        .availability-note {
-            margin-top: 40px;
-            color: #999;
-            font-size: 0.95rem;
-        }
-
-        /* ── Footer ───────────────────────────────────────────── */
-        footer {
-            background: var(--dark);
-            color: white;
-            text-align: center;
-            padding: 40px 0;
-        }
-
-        footer p {
-            opacity: 0.8;
-        }
-
-        footer p + p {
-            margin-top: 10px;
-            font-size: 0.9rem;
-        }
-
-        /* ── Responsive ───────────────────────────────────────── */
-        @media (max-width: 768px) {
-            nav ul {
-                gap: 1rem;
-                font-size: 0.9rem;
-            }
-
-            .hero h1 {
-                font-size: 2.5rem;
-            }
-
-            .hero .subtitle {
-                font-size: 1.2rem;
-            }
-
-            section h2 {
-                font-size: 2.2rem;
-            }
-
-            .gallery-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .skills-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  }
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[Artist Name] — Art Portfolio</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Montserrat:wght@300;400;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ── Palette ── */
+    :root {
+      --primary:   #d4567a;
+      --secondary: #f7a072;
+      --accent:    #ffd166;
+      --dark:      #2d3142;
+      --light:     #fef6f0;
+
+      /* Derived neutrals & tints */
+      --primary-soft:    #f5d0db;      /* 2 shades lighter than primary  */
+      --secondary-soft:  #fde8dc;      /* light warm tint of secondary   */
+      --accent-soft:     #fff4d4;      /* light tint of accent           */
+      --body-bg:         #ffffff;
+      --card-bg:         #ffffff;
+      --text-muted:      #888898;
+      --border-light:    #f0eef5;
+
+      /* Gradients */
+      --gradient:        linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%);
+      --gradient-subtle: linear-gradient(135deg, var(--primary-soft) 0%, var(--accent-soft) 100%);
+    }
+
+    /* ── Alternate section palette (inverted contrast) ── */
+    .alt-section {
+      --section-bg:       var(--dark);
+      --section-text:     var(--light);
+      --heading-color:    var(--accent);
+      --card-bg-local:    #3a3f58;     /* dark + a touch lighter         */
+      --card-border-local: var(--primary);
+      --meta-color:       #aaaabd;
+      --muted-text:       #c0bfd4;
+    }
+
+    /* ── Typography ── */
+    body {
+      font-family: 'Montserrat', sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--body-bg);
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ════════════════════════════════════════
+       NAVIGATION
+    ════════════════════════════════════════ */
+    nav {
+      background: var(--body-bg);
+      box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.2rem 20px;
+    }
+
+    nav .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 500;
+      transition: color 0.3s;
+      position: relative;
+    }
+
+    nav a::after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: var(--gradient);
+      transition: width 0.3s;
+    }
+
+    nav a:hover::after {
+      width: 100%;
+    }
+
+    /* ════════════════════════════════════════
+       HERO  (central composition)
+    ════════════════════════════════════════ */
+    .hero {
+      background: var(--gradient);
+      color: white;
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Decorative orbs */
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: rgba(255, 255, 255, 0.10);
+      border-radius: 50%;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: -30%;
+      left: -5%;
+      width: 400px;
+      height: 400px;
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 50%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-photo {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      border: 6px solid white;
+      object-fit: cover;
+      margin: 0 auto 25px;
+      display: block;
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.20);
+      background: var(--gradient-subtle);
+    }
+
+    .hero h1 {
+      font-size: 3.5rem;
+      margin-bottom: 15px;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.5rem;
+      margin-bottom: 15px;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+
+    .hero .tagline {
+      font-size: 1.1rem;
+      opacity: 0.90;
+      margin-bottom: 35px;
+      font-weight: 300;
+    }
+
+    /* CTA buttons */
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 14px 35px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: inline-block;
+      font-size: 1rem;
+    }
+
+    .btn-primary {
+      background: white;
+      color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(255, 255, 255, 0.30);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: white;
+      border: 2px solid white;
+    }
+
+    .btn-secondary:hover {
+      background: white;
+      color: var(--primary);
+    }
+
+    /* ════════════════════════════════════════
+       SECTION SHARED STYLES
+    ════════════════════════════════════════ */
+    section {
+      padding: 90px 0;
+    }
+
+    section h2 {
+      text-align: center;
+      font-size: 3rem;
+      margin-bottom: 20px;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      font-weight: 700;
+    }
+
+    /* Alt-section heading override */
+    .alt-section h2 {
+      background: none;
+      -webkit-text-fill-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .section-subtitle {
+      text-align: center;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      margin-bottom: 60px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .alt-section .section-subtitle {
+      color: var(--muted-text, #c0bfd4);
+    }
+
+    /* ════════════════════════════════════════
+       ABOUT  (light)
+    ════════════════════════════════════════ */
+    .about {
+      background: var(--light);
+    }
+
+    .about-content {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+      font-size: 1.15rem;
+      line-height: 1.9;
+    }
+
+    .about-content p {
+      margin-bottom: 20px;
+    }
+
+    /* ════════════════════════════════════════
+       GALLERY  (white / default)
+    ════════════════════════════════════════ */
+    .gallery {
+      background: var(--body-bg);
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 35px;
+    }
+
+    .artwork-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.10);
+      transition: all 0.4s;
+    }
+
+    .artwork-card:hover {
+      transform: translateY(-15px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Artwork placeholder panels — each uses a distinct gradient */
+    .artwork-image {
+      width: 100%;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .artwork-image.type-a  { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+    .artwork-image.type-b  { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+    .artwork-image.type-c  { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+    .artwork-image.type-d  { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+    .artwork-image.type-e  { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+    .artwork-image.type-f  { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+
+    .artwork-content {
+      padding: 30px;
+    }
+
+    .artwork-content h3 {
+      color: var(--dark);
+      margin-bottom: 10px;
+      font-size: 1.5rem;
+    }
+
+    .artwork-category {
+      display: inline-block;
+      background: var(--light);
+      color: var(--primary);
+      padding: 5px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .artwork-content p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      font-size: 0.95rem;
+    }
+
+    .artwork-details {
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #b0afc0;
+    }
+
+    /* ════════════════════════════════════════
+       SKILLS  (alt — dark)
+    ════════════════════════════════════════ */
+    .skills.alt-section {
+      background: var(--dark);
+      color: var(--light);
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 35px;
+      margin-top: 40px;
+    }
+
+    .skill-category {
+      background: #3a3f58;
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.20);
+      transition: all 0.3s;
+      border: 2px solid transparent;
+    }
+
+    .skill-category:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.30);
+      border-color: var(--primary);
+    }
+
+    .skill-category h3 {
+      color: var(--accent);
+      margin-bottom: 25px;
+      font-size: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .skill-icon {
+      font-size: 2rem;
+    }
+
+    .skill-list {
+      list-style: none;
+    }
+
+    .skill-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1rem;
+      color: var(--light);
+    }
+
+    .skill-list li:last-child {
+      border-bottom: none;
+    }
+
+    .skill-level {
+      font-size: 0.82rem;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    /* ════════════════════════════════════════
+       RESUME  (light)
+    ════════════════════════════════════════ */
+    .resume {
+      background: var(--light);
+    }
+
+    .resume-content {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .resume-section {
+      margin-bottom: 50px;
+    }
+
+    .resume-section h3 {
+      color: var(--primary);
+      font-size: 2rem;
+      margin-bottom: 30px;
+      padding-bottom: 15px;
+      border-bottom: 3px solid var(--secondary);
+    }
+
+    .resume-item {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+      border-left: 5px solid var(--primary);
+    }
+
+    .resume-item h4 {
+      color: var(--dark);
+      font-size: 1.4rem;
+      margin-bottom: 10px;
+    }
+
+    .resume-item .meta {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 15px;
+      display: flex;
+      gap: 25px;
+      flex-wrap: wrap;
+    }
+
+    .resume-item ul {
+      margin-left: 20px;
+      color: var(--dark);
+    }
+
+    .resume-item ul li {
+      margin-bottom: 10px;
+      line-height: 1.6;
+    }
+
+    .download-resume {
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    .download-resume .btn-primary {
+      background: var(--gradient);
+      color: white;
+    }
+
+    .download-resume .btn-primary:hover {
+      box-shadow: 0 8px 25px rgba(212, 86, 122, 0.35);
+    }
+
+    /* ════════════════════════════════════════
+       CONTACT  (white / default)
+    ════════════════════════════════════════ */
+    .contact {
+      background: var(--body-bg);
+    }
+
+    .contact-content {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .contact-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 30px;
+      margin: 50px 0;
+    }
+
+    .contact-item {
+      background: var(--light);
+      padding: 35px;
+      border-radius: 20px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.06);
+      transition: all 0.3s;
+    }
+
+    .contact-item:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.10);
+    }
+
+    .contact-item h3 {
+      color: var(--primary);
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+
+    .contact-item a,
+    .contact-item p {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .contact-item a:hover {
+      color: var(--primary);
+    }
+
+    /* Social row */
+    .social-links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 40px;
+    }
+
+    .social-links a {
+      width: 55px;
+      height: 55px;
+      border-radius: 50%;
+      background: var(--gradient);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 1.4rem;
+      transition: all 0.3s;
+    }
+
+    .social-links a:hover {
+      transform: translateY(-5px) scale(1.1);
+      box-shadow: 0 10px 25px rgba(212, 86, 122, 0.35);
+    }
+
+    .contact-note {
+      margin-top: 40px;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════ */
+    footer {
+      background: var(--dark);
+      color: white;
+      text-align: center;
+      padding: 40px 0;
+    }
+
+    footer p {
+      opacity: 0.80;
+    }
+
+    footer .footer-sub {
+      margin-top: 10px;
+      font-size: 0.88rem;
+      opacity: 0.55;
+    }
+
+    /* ════════════════════════════════════════
+       RESPONSIVE
+    ════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      nav ul {
+        gap: 1rem;
+        font-size: 0.88rem;
+      }
+
+      .hero h1 {
+        font-size: 2.4rem;
+      }
+
+      .hero .subtitle {
+        font-size: 1.2rem;
+      }
+
+      section h2 {
+        font-size: 2.2rem;
+      }
+
+      .gallery-grid,
+      .skills-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Navigation -->
-    <nav>
-        <div class="container">
-            <div class="logo">[Your Name]</div>
+  <!-- ── Navigation ── -->
+  <nav>
+    <div class="container">
+      <div class="logo">[Artist Name]</div>
+      <ul>
+        <li><a href="#about">About</a></li>
+        <li><a href="#gallery">Gallery</a></li>
+        <li><a href="#skills">Skills</a></li>
+        <li><a href="#resume">Resume</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero-content">
+      <img
+        src="profile-photo.jpg"
+        alt="[Artist Name] profile photo"
+        class="profile-photo"
+      />
+      <h1>[Artist Name]</h1>
+      <p class="subtitle">[Primary Medium] Artist &amp; [Secondary Discipline]</p>
+      <p class="tagline">[Degree Program Icon] [Degree] | [Graduation Term]</p>
+      <div class="cta-buttons">
+        <a href="#gallery" class="btn btn-primary">View Portfolio</a>
+        <a href="#contact" class="btn btn-secondary">Let's Connect</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── About ── -->
+  <section id="about" class="about">
+    <div class="container">
+      <h2>About Me</h2>
+      <p class="section-subtitle">[Short creative tagline describing artistic philosophy]</p>
+      <div class="about-content">
+        <p>[Paragraph describing artistic disciplines, thematic interests, and approach.]</p>
+        <p>[Paragraph describing technical background, tools mastered, and creative strengths.]</p>
+        <p>[Paragraph describing career goals and types of opportunities sought.]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Gallery ── -->
+  <section id="gallery" class="gallery">
+    <div class="container">
+      <h2>Portfolio Gallery</h2>
+      <p class="section-subtitle">[Brief description of the selection scope]</p>
+      <div class="gallery-grid">
+
+        <!-- Card 1 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-a">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-b">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-c">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 4 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-d">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 5 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-e">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 6 -->
+        <div class="artwork-card">
+          <div class="artwork-image type-f">[Icon]</div>
+          <div class="artwork-content">
+            <span class="artwork-category">[Medium / Category]</span>
+            <h3>"[Work Title]"</h3>
+            <p>[Description of the work, techniques used, and conceptual intent.]</p>
+            <div class="artwork-details">
+              <span>[Dimensions or Format]</span>
+              <span>[Year]</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Skills  (alt dark section) ── -->
+  <section id="skills" class="skills alt-section">
+    <div class="container">
+      <h2>Skills &amp; Expertise</h2>
+      <p class="section-subtitle">[Brief description of technical breadth]</p>
+      <div class="skills-grid">
+
+        <!-- Category 1 -->
+        <div class="skill-category">
+          <h3><span class="skill-icon">[Icon]</span>[Category Name]</h3>
+          <ul class="skill-list">
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+          </ul>
+        </div>
+
+        <!-- Category 2 -->
+        <div class="skill-category">
+          <h3><span class="skill-icon">[Icon]</span>[Category Name]</h3>
+          <ul class="skill-list">
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+          </ul>
+        </div>
+
+        <!-- Category 3 -->
+        <div class="skill-category">
+          <h3><span class="skill-icon">[Icon]</span>[Category Name]</h3>
+          <ul class="skill-list">
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+          </ul>
+        </div>
+
+        <!-- Category 4 -->
+        <div class="skill-category">
+          <h3><span class="skill-icon">[Icon]</span>[Category Name]</h3>
+          <ul class="skill-list">
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+            <li><span>[Skill]</span><span class="skill-level">[Level]</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Resume ── -->
+  <section id="resume" class="resume">
+    <div class="container">
+      <h2>Resume</h2>
+      <p class="section-subtitle">[Tagline about experience, education, and achievements]</p>
+      <div class="resume-content">
+
+        <!-- Education -->
+        <div class="resume-section">
+          <h3>Education</h3>
+          <div class="resume-item">
+            <h4>[Degree Title]</h4>
+            <div class="meta">
+              <span>[Icon] [Institution Name]</span>
+              <span>[Icon] [Enrollment Period]</span>
+              <span>[Icon] [GPA or Honors]</span>
+            </div>
             <ul>
-                <li><a href="#about">[Nav Link 1]</a></li>
-                <li><a href="#gallery">[Nav Link 2]</a></li>
-                <li><a href="#skills">[Nav Link 3]</a></li>
-                <li><a href="#resume">[Nav Link 4]</a></li>
-                <li><a href="#contact">[Nav Link 5]</a></li>
+              <li>[Concentration or focus area]</li>
+              <li>[Honors, scholarships, or awards]</li>
+              <li>[Thesis or capstone project]</li>
+              <li>[Relevant coursework]</li>
             </ul>
+          </div>
         </div>
-    </nav>
 
-    <!-- Hero Section -->
-    <section class="hero">
-        <div class="hero-content">
-            <!-- LINE 263: headshot_photo / hero_image — circular profile photo rendered as inline SVG placeholder -->
-            <img
-                src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23ee9ca7;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23ffdde1;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='200' height='200'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='serif' font-size='80' fill='white' font-weight='bold'%3E[XX]%3C/text%3E%3C/svg%3E"
-                alt="[Artist Name]"
-                class="profile-photo"
-            >
-            <h1>[Artist Full Name]</h1>
-            <p class="subtitle">[Title / Creative Discipline]</p>
-            <!-- emoji_icon: palette/degree descriptor -->
-            <p class="tagline">🎨 [Degree Program] | [Graduation Timeline]</p>
-            <div class="cta-buttons">
-                <a href="#gallery" class="btn btn-primary">[Primary CTA]</a>
-                <a href="#contact" class="btn btn-secondary">[Secondary CTA]</a>
+        <!-- Experience -->
+        <div class="resume-section">
+          <h3>Experience</h3>
+
+          <div class="resume-item">
+            <h4>[Job Title]</h4>
+            <div class="meta">
+              <span>[Icon] [Employer]</span>
+              <span>[Icon] [Date Range]</span>
             </div>
-        </div>
-    </section>
+            <ul>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+            </ul>
+          </div>
 
-    <!-- About Section -->
-    <section id="about" class="about">
-        <div class="container">
-            <h2>[About Section Heading]</h2>
-            <p class="section-subtitle">[Short evocative tagline about artistic philosophy]</p>
-            <div class="about-content">
-                <p>[Paragraph describing artistic disciplines and thematic focus.]</p>
-                <p>[Paragraph describing technical foundation and creative approach.]</p>
-                <p>[Paragraph describing professional goals and opportunity interest.]</p>
+          <div class="resume-item">
+            <h4>[Job Title]</h4>
+            <div class="meta">
+              <span>[Icon] [Employer]</span>
+              <span>[Icon] [Date Range]</span>
             </div>
-        </div>
-    </section>
+            <ul>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+            </ul>
+          </div>
 
-    <!-- Gallery Section -->
-    <section id="gallery" class="gallery">
-        <div class="container">
-            <h2>[Gallery Section Heading]</h2>
-            <p class="section-subtitle">[Short description of work variety and selection]</p>
-            <div class="gallery-grid">
-
-                <!-- Artwork Card 1 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-a">🎨</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Artwork Card 2 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-b">🖌️</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Artwork Card 3 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-c">🗿</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Artwork Card 4 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-d">📷</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Artwork Card 5 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-e">✏️</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Artwork Card 6 -->
-                <div class="artwork-card">
-                    <!-- emoji_icon: medium symbol -->
-                    <div class="artwork-image type-f">🎭</div>
-                    <div class="artwork-content">
-                        <span class="artwork-category">[Medium / Category Label]</span>
-                        <h3>"[Artwork Title]"</h3>
-                        <p>[Description of this piece: subject, technique, intent, and materials used.]</p>
-                        <div class="artwork-details">
-                            <span>[Dimensions or format]</span>
-                            <span>[Year]</span>
-                        </div>
-                    </div>
-                </div>
-
+          <div class="resume-item">
+            <h4>[Job Title]</h4>
+            <div class="meta">
+              <span>[Icon] [Employer]</span>
+              <span>[Icon] [Date Range]</span>
             </div>
+            <ul>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+              <li>[Responsibility or achievement]</li>
+            </ul>
+          </div>
+
         </div>
-    </section>
 
-    <!-- Skills Section -->
-    <section id="skills" class="skills">
-        <div class="container">
-            <h2>[Skills Section Heading]</h2>
-            <p class="section-subtitle">[Short description of breadth across traditional and digital disciplines]</p>
-            <div class="skills-grid">
-
-                <!-- Skill Category 1 -->
-                <div class="skill-category">
-                    <!-- emoji_icon: category icon -->
-                    <h3><span class="skill-icon">🎨</span>[Category Name]</h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                    </ul>
-                </div>
-
-                <!-- Skill Category 2 -->
-                <div class="skill-category">
-                    <!-- emoji_icon: category icon -->
-                    <h3><span class="skill-icon">💻</span>[Category Name]</h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                    </ul>
-                </div>
-
-                <!-- Skill Category 3 -->
-                <div class="skill-category">
-                    <!-- emoji_icon: category icon -->
-                    <h3><span class="skill-icon">📸</span>[Category Name]</h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                    </ul>
-                </div>
-
-                <!-- Skill Category 4 -->
-                <div class="skill-category">
-                    <!-- emoji_icon: category icon -->
-                    <h3><span class="skill-icon">✨</span>[Category Name]</h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Proficiency]</span></li>
-                    </ul>
-                </div>
-
-            </div>
+        <!-- Exhibitions & Recognition -->
+        <div class="resume-section">
+          <h3>Exhibitions &amp; Recognition</h3>
+          <div class="resume-item">
+            <h4>[Section heading for awards list]</h4>
+            <ul>
+              <li><strong>[Award or Exhibition Name]</strong> — [Details and venue] ([Year])</li>
+              <li><strong>[Award or Exhibition Name]</strong> — [Details and venue] ([Year])</li>
+              <li><strong>[Award or Exhibition Name]</strong> — [Details and venue] ([Year])</li>
+              <li><strong>[Award or Exhibition Name]</strong> — [Details and venue] ([Year])</li>
+            </ul>
+          </div>
         </div>
-    </section>
 
-    <!-- Resume Section -->
-    <section id="resume" class="resume">
-        <div class="container">
-            <h2>[Resume Section Heading]</h2>
-            <p class="section-subtitle">[Short descriptor of what the section covers]</p>
-            <div class="resume-content">
-
-                <!-- Education -->
-                <div class="resume-section">
-                    <h3>[Education Subsection Heading]</h3>
-                    <div class="resume-item">
-                        <h4>[Degree Title]</h4>
-                        <div class="meta">
-                            <!-- emoji_icons: location, date, GPA markers -->
-                            <span>📍 [Institution Name]</span>
-                            <span>📅 [Graduation Date]</span>
-                            <span>🎯 [GPA or Honors]</span>
-                        </div>
-                        <ul>
-                            <li>[Concentration or focus area detail]</li>
-                            <li>[Honors, scholarships, or dean's list status]</li>
-                            <li>[Thesis or capstone project title]</li>
-                            <li>[Relevant coursework list]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Experience -->
-                <div class="resume-section">
-                    <h3>[Experience Subsection Heading]</h3>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>📍 [Organization / Context]</span>
-                            <span>📅 [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>📍 [Organization / Context]</span>
-                            <span>📅 [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>📍 [Organization / Context]</span>
-                            <span>📅 [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>📍 [Organization / Context]</span>
-                            <span>📅 [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                            <li>[Accomplishment or responsibility bullet]</li>
-                        </ul>
-                    </div>
-
-                </div>
-
-                <!-- Exhibitions & Recognition -->
-                <div class="resume-section">
-                    <h3>[Recognition Subsection Heading]</h3>
-                    <div class="resume-item">
-                        <h4>[Recognition Group Title]</h4>
-                        <ul>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                            <li><strong>[Award or Exhibition Name]</strong> — [Details, venue, date]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Professional Development -->
-                <div class="resume-section">
-                    <h3>[Professional Development Subsection Heading]</h3>
-                    <div class="resume-item">
-                        <h4>[Development Group Title]</h4>
-                        <ul>
-                            <li>[Workshop, certification, or seminar item]</li>
-                            <li>[Workshop, certification, or seminar item]</li>
-                            <li>[Workshop, certification, or seminar item]</li>
-                            <li>[Workshop, certification, or seminar item]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="download-resume">
-                    <!-- emoji_icon: document marker -->
-                    <a href="#" class="btn btn-primary">📄 [Download Resume CTA]</a>
-                </div>
-
-            </div>
+        <!-- Professional Development -->
+        <div class="resume-section">
+          <h3>Professional Development</h3>
+          <div class="resume-item">
+            <h4>[Section heading for certifications list]</h4>
+            <ul>
+              <li>[Workshop or certification name] ([Year])</li>
+              <li>[Workshop or certification name] ([Year])</li>
+              <li>[Workshop or certification name] ([Year])</li>
+            </ul>
+          </div>
         </div>
-    </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2>[Contact Section Heading]</h2>
-            <p class="section-subtitle">[Short statement of availability and openness to work]</p>
-            <div class="contact-content">
-
-                <div class="contact-info">
-                    <!-- emoji_icon: email marker -->
-                    <div class="contact-item">
-                        <h3>📧 [Contact Type]</h3>
-                        <a href="mailto:[email@placeholder.com]">[email@placeholder.com]</a>
-                    </div>
-                    <!-- emoji_icon: phone marker -->
-                    <div class="contact-item">
-                        <h3>📱 [Contact Type]</h3>
-                        <a href="tel:[phonenumber]">[Phone Number]</a>
-                    </div>
-                    <!-- emoji_icon: location marker -->
-                    <div class="contact-item">
-                        <h3>📍 [Contact Type]</h3>
-                        <p>[City, State]<br>[Remote availability note]</p>
-                    </div>
-                </div>
-
-                <div class="social-links">
-                    <!-- emoji_icon: social platform icons -->
-                    <a href="#" target="_blank" title="[Platform]">📷</a>
-                    <a href="#" target="_blank" title="[Platform]">🎨</a>
-                    <a href="#" target="_blank" title="[Platform]">in</a>
-                    <a href="#" target="_blank" title="[Platform]">📌</a>
-                    <a href="#" title="[Platform]">✉️</a>
-                </div>
-
-                <p class="availability-note">[Comma-separated list of work arrangement preferences]</p>
-
-            </div>
+        <div class="download-resume">
+          <a href="#" class="btn btn-primary">[Icon] Download Full Resume &amp; CV</a>
         </div>
-    </section>
 
-    <!-- Footer -->
-    <footer>
-        <div class="container">
-            <p>&copy; [Year] [Artist Name] | [Site Descriptor]</p>
-            <p>[Copyright or attribution note]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Contact ── -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <h2>Let's Create Together</h2>
+      <p class="section-subtitle">[Availability statement for commissions and collaborations]</p>
+      <div class="contact-content">
+
+        <div class="contact-info">
+          <div class="contact-item">
+            <h3>[Icon] Email</h3>
+            <a href="mailto:[email]">[email address]</a>
+          </div>
+          <div class="contact-item">
+            <h3>[Icon] Phone</h3>
+            <a href="tel:[phone]">[phone number]</a>
+          </div>
+          <div class="contact-item">
+            <h3>[Icon] Location</h3>
+            <p>[City, State]<br />[Remote availability note]</p>
+          </div>
         </div>
-    </footer>
+
+        <div class="social-links">
+          <a href="[url]" target="_blank" title="[Platform]">[Icon]</a>
+          <a href="[url]" target="_blank" title="[Platform]">[Icon]</a>
+          <a href="[url]" target="_blank" title="[Platform]">[Icon]</a>
+          <a href="[url]" target="_blank" title="[Platform]">[Icon]</a>
+          <a href="[url]" title="[Platform]">[Icon]</a>
+        </div>
+
+        <p class="contact-note">[Availability tags — e.g., commissions | representation | collaborations | full-time]</p>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="container">
+      <p>&copy; [Year] [Artist Name] | [Discipline] Portfolio</p>
+      <p class="footer-sub">[Copyright / rights statement]</p>
+    </div>
+  </footer>
 
 </body>
 </html>

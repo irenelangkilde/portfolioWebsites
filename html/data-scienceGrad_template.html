@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>[Your Name] — [Field] Graduate Portfolio</title>
-  <meta name="description" content="A clean, editorial portfolio for a soon-to-graduate student: projects, writing, skills, resume, and contact." />
   <!--
   {
-    "visual_elements_line_numbers": {
-      "headshot_photo": "",
-      "hero_image": "177",
-      "emoji_icons": [],
-      "images": ["177"],
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "hero-portfolio-graphic.png",
+          "selector": ".poster img",
+          "type": "img",
+          "role": "Hero poster image displayed in sticky left-column frame alongside bio copy"
+        }
+      ],
       "animations": []
     },
     "exemplary_attributes": {
-      "pacing": "measured and deliberate — generous whitespace between sections, unhurried scroll rhythm",
-      "mood": "professional yet approachable, intellectually credible, quietly confident",
-      "compositional_feel": "editorial print-inspired with digital glassmorphic layering",
-      "section_density": "low-to-medium — each section breathes, cards clustered in 2–3 column grids",
-      "visual_treatment": "frosted glass cards on a warm off-white gradient ground with violet-pink gradient accents"
+      "pacing": "Measured and editorial — generous whitespace, clear section breaks, unhurried reading rhythm",
+      "mood": "Polished-academic with a gentle creative warmth; confident but approachable",
+      "compositional_feel": "Split-panel hero (framed poster left, structured copy right) flowing into full-width editorial sections",
+      "section_density": "Medium-low — each section surfaces 2–4 items with breathing room between",
+      "visual_treatment": "Soft glassmorphic cards with subtle radial-gradient overlays, translucent paper surfaces, gradient monogram badge"
     },
     "default_color_scheme": {
       "primary": "#6b55ff",
@@ -28,56 +28,67 @@
       "dark": "#15141a",
       "light": "#fbfaf8"
     },
-    "composition_option": "split",
-    "style_token": "soft pastel editorial",
-    "rendering_style": "clean editorial vector"
+    "design_factors": {
+      "composition_option": "split",
+      "style_token": "glassmorphism",
+      "rendering_style": "clean editorial vector"
+    }
   }
   -->
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[Full Name] — [Field] Portfolio</title>
+  <meta name="description" content="Portfolio website for a graduating student in [field]: projects, writing, skills, and contact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
+    /* ─── Color Palette ─────────────────────────────────────────── */
     :root {
-      /* ── Primary palette (5 tokens) ── */
-      --primary:   #6b55ff;   /* violet — masthead gradient start */
-      --secondary: #4E70F1;   /* blue   — button gradient start   */
-      --accent:    #ff7bbd;   /* pink   — masthead gradient end   */
-      --dark:      #15141a;   /* near-black ink                   */
-      --light:     #fbfaf8;   /* warm off-white ground            */
+      /* 5-color core palette */
+      --primary:   #6b55ff;   /* violet — hero gradient, accents */
+      --secondary: #4e70f1;   /* blue — CTA primary, gradients */
+      --accent:    #ff7bbd;   /* pink — gradient partner, decorative */
+      --dark:      #15141a;   /* near-black ink */
+      --light:     #fbfaf8;   /* warm off-white background */
 
-      /* ── Derived / neutral fills ── */
-      --bg:          var(--light);
-      --paper:       #ffffff;
-      --ink:         var(--dark);
-      --muted:       #5f5b66;
-      --soft:        #ece9e2;
-      --soft2:       #f3f1ec;
-      --border:      rgba(21, 20, 26, .10);
-      --shadow:      0 18px 55px rgba(10, 10, 20, .10);
+      /* Derived surface & text tokens (light scheme) */
+      --bg:        var(--light);
+      --paper:     #ffffff;
+      --ink:       var(--dark);
+      --muted:     #5f5b66;          /* dark + desaturated */
+      --soft:      #ece9e2;          /* light – warm tint */
+      --soft2:     #f3f1ec;
+      --border:    rgba(21, 20, 26, .10);
+      --shadow:    0 18px 55px rgba(10, 10, 20, .10);
 
-      /* ── Alt section palette (inverted contrast) ── */
-      --alt-bg:      var(--dark);
-      --alt-paper:   #1e1c26;
-      --alt-ink:     var(--light);
-      --alt-muted:   #a09aad;
-      --alt-border:  rgba(251, 250, 248, .10);
-      --alt-shadow:  0 18px 55px rgba(0, 0, 0, .40);
+      --tag-bg:    rgba(107, 85, 255, .08);
+      --tag-border:rgba(107, 85, 255, .14);
 
-      /* ── Shape tokens ── */
+      /* Alternate section palette — dark/inverted */
+      --alt-bg:      #1a1825;        /* dark ≈ dark + blue-purple tint */
+      --alt-paper:   #221f30;        /* slightly lighter surface */
+      --alt-ink:     #f0edf8;        /* light, slightly violet tinted */
+      --alt-muted:   #9e99b0;
+      --alt-border:  rgba(255, 255, 255, .10);
+      --alt-tag-bg:  rgba(107, 85, 255, .22);
+      --alt-tag-border: rgba(107, 85, 255, .38);
+
       --radius-xl: 26px;
       --radius-lg: 20px;
       --radius-md: 14px;
-      --max:       1120px;
+      --max: 1120px;
     }
 
-    * { box-sizing: border-box; }
+    /* ─── Reset & Base ──────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
 
     body {
       margin: 0;
       background:
-        radial-gradient(1000px 600px at 12% 0%,   rgba(107, 85, 255, .10), transparent 55%),
-        radial-gradient(900px  560px at 88% 12%,  rgba(255, 123, 189, .10), transparent 55%),
+        radial-gradient(1000px 600px at 12% 0%,  rgba(107, 85, 255, .10), transparent 55%),
+        radial-gradient(900px  560px at 88% 12%, rgba(255, 123, 189, .10), transparent 55%),
         linear-gradient(180deg, var(--bg), #f7f6f3);
       color: var(--ink);
       font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
@@ -88,7 +99,16 @@
     a { color: inherit; }
     img { max-width: 100%; display: block; }
 
-    /* ── Header ── */
+    /* ─── Layout Wrapper ────────────────────────────────────────── */
+    .wrap   { min-height: 100%; display: flex; flex-direction: column; }
+    main    { flex: 1; }
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ─── Header ────────────────────────────────────────────────── */
     header {
       position: sticky;
       top: 0;
@@ -97,6 +117,7 @@
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
     }
+
     .topbar {
       max-width: var(--max);
       margin: 0 auto;
@@ -106,12 +127,14 @@
       justify-content: space-between;
       gap: 16px;
     }
+
     .id {
       display: flex;
       align-items: center;
       gap: 12px;
       min-width: 220px;
     }
+
     .monogram {
       width: 40px;
       height: 40px;
@@ -121,18 +144,21 @@
       justify-content: center;
       font-weight: 700;
       letter-spacing: .02em;
+      font-size: 15px;
       color: #fff;
       background:
         radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .60), transparent 55%),
         linear-gradient(135deg, var(--primary), var(--accent));
-      box-shadow: 0 16px 36px rgba(107, 85, 255, .16);
-      font-size: 14px;
+      box-shadow: 0 16px 36px rgba(107, 85, 255, .18);
+      user-select: none;
     }
+
     .id strong {
       display: block;
       font-family: "Playfair Display", Georgia, serif;
       letter-spacing: -.01em;
     }
+
     .id span {
       display: block;
       color: var(--muted);
@@ -150,23 +176,28 @@
       color: var(--muted);
       font-size: 14px;
     }
+
     nav a {
       text-decoration: none;
       padding: 8px 10px;
       border-radius: 999px;
+      transition: background 140ms ease, color 140ms ease;
     }
+
     nav a:hover {
       background: rgba(107, 85, 255, .08);
       color: var(--ink);
     }
+
     .actions { display: flex; gap: 10px; align-items: center; }
 
+    /* ─── Buttons ───────────────────────────────────────────────── */
     .btn {
       appearance: none;
       border: 1px solid var(--border);
       background: var(--paper);
       border-radius: 999px;
-      padding: 10px 14px;
+      padding: 10px 18px;
       font-weight: 600;
       font-size: 14px;
       cursor: pointer;
@@ -176,27 +207,34 @@
       align-items: center;
       gap: 10px;
       white-space: nowrap;
+      color: var(--ink);
     }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 12px 28px rgba(10, 10, 20, .10); }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 28px rgba(10, 10, 20, .10);
+    }
+
     .btn.primary {
       border: none;
       color: #fff;
       background: linear-gradient(135deg, var(--secondary), var(--primary));
     }
 
-    /* ── Layout shell ── */
-    .wrap { min-height: 100%; display: flex; flex-direction: column; }
-    main { flex: 1; }
-    .container { max-width: var(--max); margin: 0 auto; padding: 0 20px; }
+    .btn.primary:hover {
+      box-shadow: 0 12px 28px rgba(107, 85, 255, .30);
+    }
 
-    /* ── Hero ── */
+    /* ─── Hero ──────────────────────────────────────────────────── */
     .hero { padding: 28px 0 14px; }
+
     .hero-grid {
       display: grid;
       grid-template-columns: 0.9fr 1.1fr;
       gap: 26px;
       align-items: start;
     }
+
     .poster {
       border-radius: 28px;
       overflow: hidden;
@@ -206,12 +244,15 @@
       position: sticky;
       top: 84px;
     }
-    .poster img { width: 100%; height: auto; }
+
+    .poster img  { width: 100%; height: auto; }
+
     .poster .cap {
       padding: 14px 16px 16px;
       border-top: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--paper), rgba(251, 250, 248, .9));
+      background: linear-gradient(180deg, var(--paper), rgba(251, 250, 248, .90));
     }
+
     .cap strong { display: block; font-size: 14px; }
     .cap span   { display: block; color: var(--muted); font-size: 13px; margin-top: 2px; }
 
@@ -219,9 +260,10 @@
       background: rgba(255, 255, 255, .70);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
-      padding: 22px;
+      padding: 26px 24px;
       box-shadow: 0 12px 34px rgba(10, 10, 20, .06);
     }
+
     .kicker {
       display: inline-flex;
       align-items: center;
@@ -235,35 +277,40 @@
       text-transform: uppercase;
       border: 1px solid rgba(107, 85, 255, .14);
     }
+
     .dot {
       width: 10px;
       height: 10px;
       border-radius: 999px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
     }
+
     h1 {
-      margin: 12px 0 10px;
+      margin: 14px 0 10px;
       font-family: "Playfair Display", Georgia, serif;
       font-size: 52px;
       line-height: 1.05;
       letter-spacing: -.02em;
     }
+
     .lead {
       margin: 0 0 14px;
       color: var(--muted);
       font-size: 16px;
       max-width: 70ch;
     }
+
     .bullets {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px 14px;
-      margin: 14px 0 0;
+      margin: 16px 0 0;
       padding: 0;
       list-style: none;
       color: #2e2a36;
       font-size: 14px;
     }
+
     .bullets li {
       display: flex;
       gap: 10px;
@@ -273,6 +320,7 @@
       background: rgba(255, 255, 255, .78);
       border: 1px solid var(--border);
     }
+
     .tick {
       width: 20px;
       height: 20px;
@@ -286,6 +334,7 @@
       margin-top: 2px;
       font-size: 11px;
     }
+
     .cta {
       display: flex;
       gap: 12px;
@@ -294,75 +343,43 @@
       align-items: center;
     }
 
-    /* ── Section base ── */
-    .section { padding: 42px 0; }
+    /* ─── Section Base ──────────────────────────────────────────── */
+    .section { padding: 52px 0; }
+
     .section h2 {
       margin: 0 0 8px;
       font-family: "Playfair Display", Georgia, serif;
-      font-size: 28px;
+      font-size: 30px;
       letter-spacing: -.01em;
     }
-    .hint { margin: 0; color: var(--muted); max-width: 75ch; }
 
-    /* ── Alt section (inverted) ── */
-    .section.alt {
-      background:
-        radial-gradient(900px 500px at 80% 50%, rgba(107, 85, 255, .18), transparent 60%),
-        radial-gradient(700px 400px at 10% 60%, rgba(255, 123, 189, .12), transparent 55%),
-        var(--alt-bg);
-      color: var(--alt-ink);
-    }
-    .section.alt .hint   { color: var(--alt-muted); }
-    .section.alt h2      { color: var(--alt-ink); }
-    .section.alt .card,
-    .section.alt .post   {
-      background: rgba(255, 255, 255, .06);
-      border-color: var(--alt-border);
-      color: var(--alt-ink);
-    }
-    .section.alt .card::before {
-      background:
-        radial-gradient(circle at 30% 30%, rgba(107, 85, 255, .22), transparent 45%),
-        radial-gradient(circle at 70% 70%, rgba(255, 123, 189, .18), transparent 45%);
-    }
-    .section.alt .card h3,
-    .section.alt .post h3  { color: var(--alt-ink); }
-    .section.alt .card p,
-    .section.alt .post p   { color: var(--alt-muted); }
-    .section.alt .post .date { color: var(--alt-muted); }
-    .section.alt .tag {
-      background: rgba(107, 85, 255, .22);
-      border-color: rgba(107, 85, 255, .30);
-      color: #c8c0ff;
-    }
-    .section.alt .skill {
-      background: rgba(255, 255, 255, .08);
-      border-color: var(--alt-border);
-      color: var(--alt-ink);
-    }
-    .section.alt .kicker {
-      background: rgba(107, 85, 255, .18);
-      border-color: rgba(107, 85, 255, .28);
-      color: #c8c0ff;
-    }
+    .hint { margin: 0; color: var(--muted); max-width: 75ch; font-size: 15px; }
 
-    /* ── 12-col grid ── */
+    /* ─── Card Grid ─────────────────────────────────────────────── */
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: 16px;
-      margin-top: 16px;
+      margin-top: 20px;
     }
+
     .card {
       grid-column: span 6;
       background: rgba(255, 255, 255, .75);
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
-      padding: 18px;
+      padding: 20px;
       box-shadow: 0 12px 34px rgba(10, 10, 20, .06);
       position: relative;
       overflow: hidden;
+      transition: transform 180ms ease, box-shadow 180ms ease;
     }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 50px rgba(10, 10, 20, .11);
+    }
+
     .card::before {
       content: "";
       position: absolute;
@@ -374,90 +391,201 @@
       pointer-events: none;
       transform: rotate(8deg);
     }
+
     .card > * { position: relative; }
-    .card h3 { margin: 0 0 6px; font-size: 16px; letter-spacing: -.01em; }
-    .card p   { margin: 0; color: var(--muted); font-size: 14px; }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+
+    .card p  { margin: 0; color: var(--muted); font-size: 14px; }
+
     .meta {
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 12px;
       color: #2e2a36;
       font-size: 12px;
     }
+
     .tag {
       padding: 6px 10px;
       border-radius: 999px;
-      background: rgba(107, 85, 255, .08);
-      border: 1px solid rgba(107, 85, 255, .14);
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
     }
+
     .span-12 { grid-column: span 12; }
 
-    /* ── Writing posts ── */
+    /* ─── Alternate Section (dark inverted) ─────────────────────── */
+    .section.alt {
+      background:
+        radial-gradient(900px 500px at 10% 50%,  rgba(107, 85, 255, .14), transparent 55%),
+        radial-gradient(800px 460px at 90% 40%, rgba(78, 112, 241, .12), transparent 55%),
+        var(--alt-bg);
+      color: var(--alt-ink);
+    }
+
+    .section.alt h2   { color: var(--alt-ink); }
+    .section.alt .hint { color: var(--alt-muted); }
+
+    .section.alt .card,
+    .section.alt .post {
+      background: rgba(255, 255, 255, .06);
+      border-color: var(--alt-border);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, .30);
+    }
+
+    .section.alt .card h3,
+    .section.alt .post h3 { color: var(--alt-ink); }
+
+    .section.alt .card p,
+    .section.alt .post p   { color: var(--alt-muted); }
+
+    .section.alt .card::before {
+      background:
+        radial-gradient(circle at 30% 30%, rgba(107, 85, 255, .18), transparent 45%),
+        radial-gradient(circle at 70% 70%, rgba(255, 123, 189, .14), transparent 45%);
+    }
+
+    .section.alt .tag {
+      background: var(--alt-tag-bg);
+      border-color: var(--alt-tag-border);
+      color: #cbc6f5;
+    }
+
+    .section.alt .skill {
+      background: rgba(255, 255, 255, .07);
+      border-color: var(--alt-border);
+      color: var(--alt-ink);
+    }
+
+    .section.alt .meta { color: #cbc6f5; }
+    .section.alt .post .date { color: var(--alt-muted); }
+
+    /* ─── Writing Posts ─────────────────────────────────────────── */
     .post {
       grid-column: span 4;
       border-radius: var(--radius-xl);
       background: rgba(255, 255, 255, .75);
       border: 1px solid var(--border);
-      padding: 18px;
+      padding: 20px;
       box-shadow: 0 12px 34px rgba(10, 10, 20, .06);
+      transition: transform 180ms ease, box-shadow 180ms ease;
     }
+
+    .post:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 50px rgba(10, 10, 20, .11);
+    }
+
     .post .date {
       font-size: 12px;
       color: var(--muted);
       letter-spacing: .12em;
       text-transform: uppercase;
     }
-    .post h3 { margin: 8px 0 8px; font-size: 16px; }
-    .post p   { margin: 0; color: var(--muted); font-size: 14px; }
 
-    /* ── Skills ── */
+    .post .category {
+      display: inline-block;
+      margin-top: 4px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+      font-size: 11px;
+      color: #2e2a36;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+    }
+
+    .post h3 { margin: 10px 0 8px; font-size: 16px; }
+    .post p  { margin: 0; color: var(--muted); font-size: 14px; }
+
+    /* ─── Skills ────────────────────────────────────────────────── */
     .skills {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
+
     .skill {
-      padding: 9px 12px;
+      padding: 9px 14px;
       border-radius: 999px;
       background: rgba(255, 255, 255, .85);
       border: 1px solid var(--border);
       font-size: 13px;
       color: #2e2a36;
+      transition: transform 140ms ease, box-shadow 140ms ease;
     }
 
-    /* ── Contact ── */
+    .skill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(107, 85, 255, .12);
+    }
+
+    .skill-group-label {
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 2px;
+      width: 100%;
+    }
+
+    /* ─── Contact ───────────────────────────────────────────────── */
     .contact {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 16px;
-      margin-top: 16px;
+      margin-top: 20px;
     }
+
     .contact-card {
       border-radius: var(--radius-xl);
-      background: linear-gradient(135deg, rgba(78, 112, 241, .10), rgba(255, 123, 189, .08)), rgba(255, 255, 255, .75);
+      background:
+        linear-gradient(135deg, rgba(78, 112, 241, .10), rgba(255, 123, 189, .08)),
+        rgba(255, 255, 255, .75);
       border: 1px solid var(--border);
-      padding: 18px;
+      padding: 22px;
       box-shadow: var(--shadow);
     }
-    .contact-card h3 { margin: 0 0 8px; }
-    .contact-card p  { margin: 0 0 12px; color: var(--muted); font-size: 14px; }
-    .contact-card a  {
+
+    .contact-card h3 { margin: 0 0 10px; font-size: 18px; }
+
+    .contact-card p {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .contact-card a {
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
+    }
+
+    .contact-card .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 14px;
     }
 
     form {
       border-radius: var(--radius-xl);
       background: rgba(255, 255, 255, .75);
       border: 1px solid var(--border);
-      padding: 18px;
+      padding: 22px;
       box-shadow: 0 12px 34px rgba(10, 10, 20, .06);
       display: grid;
-      gap: 12px;
+      gap: 14px;
     }
+
     label {
       font-size: 12px;
       letter-spacing: .14em;
@@ -466,26 +594,31 @@
       display: block;
       margin-bottom: 6px;
     }
+
     input, textarea {
       width: 100%;
-      padding: 12px;
+      padding: 12px 14px;
       border-radius: 14px;
       border: 1px solid var(--border);
       background: rgba(255, 255, 255, .92);
       font-family: inherit;
       font-size: 14px;
       outline: none;
+      transition: border-color 160ms ease;
     }
+
     textarea { min-height: 110px; resize: vertical; }
+
     input:focus, textarea:focus { border-color: rgba(107, 85, 255, .35); }
 
-    /* ── Footer ── */
+    /* ─── Footer ────────────────────────────────────────────────── */
     footer {
       border-top: 1px solid var(--border);
       padding: 26px 0 40px;
       color: var(--muted);
       font-size: 12px;
     }
+
     .foot {
       display: flex;
       justify-content: space-between;
@@ -493,23 +626,26 @@
       flex-wrap: wrap;
       align-items: center;
     }
+
     .foot a { color: var(--muted); text-decoration: none; }
     .foot a:hover { color: var(--ink); }
+    .foot-links { display: flex; gap: 14px; }
 
-    /* ── Responsive ── */
+    /* ─── Responsive ────────────────────────────────────────────── */
     @media (max-width: 980px) {
-      .hero-grid               { grid-template-columns: 1fr; }
-      .poster                  { position: relative; top: 0; }
-      h1                       { font-size: 44px; }
-      .card                    { grid-column: span 12; }
-      .post                    { grid-column: span 12; }
-      .contact                 { grid-template-columns: 1fr; }
-      .bullets                 { grid-template-columns: 1fr; }
+      .hero-grid { grid-template-columns: 1fr; }
+      .poster    { position: relative; top: 0; }
+      h1         { font-size: 44px; }
+      .card      { grid-column: span 12; }
+      .post      { grid-column: span 12; }
+      .contact   { grid-template-columns: 1fr; }
+      .bullets   { grid-template-columns: 1fr; }
     }
+
     @media (max-width: 560px) {
       nav ul li:nth-child(-n+2) { display: none; }
-      h1                        { font-size: 38px; }
-      .id                       { min-width: auto; }
+      h1 { font-size: 38px; }
+      .id { min-width: auto; }
     }
   </style>
 </head>
@@ -517,83 +653,83 @@
 <body>
   <div class="wrap">
 
-    <!-- ── HEADER ── -->
+    <!-- ═══════════════════════════════════════════════════ HEADER -->
     <header>
       <div class="topbar">
-
         <div class="id">
           <div class="monogram" aria-hidden="true">[XX]</div>
           <div>
             <strong>[Full Name]</strong>
-            <span>[Field] &bull; [Graduating Year]</span>
+            <span>[Field] • [Graduation Year]</span>
           </div>
         </div>
 
         <nav aria-label="Primary">
           <ul>
-            <li><a href="#projects">[Nav Link 1]</a></li>
-            <li><a href="#writing">[Nav Link 2]</a></li>
-            <li><a href="#skills">[Nav Link 3]</a></li>
-            <li><a href="#contact">[Nav Link 4]</a></li>
+            <li><a href="#projects">[Section One]</a></li>
+            <li><a href="#writing">[Section Two]</a></li>
+            <li><a href="#skills">[Section Three]</a></li>
+            <li><a href="#contact">[Section Four]</a></li>
           </ul>
         </nav>
 
         <div class="actions">
-          <a class="btn" href="#projects">[Secondary CTA]</a>
-          <a class="btn primary" href="#contact">[Primary CTA]</a>
+          <a class="btn" href="#projects">[Primary CTA]</a>
+          <a class="btn primary" href="#contact">[Secondary CTA]</a>
         </div>
-
       </div>
     </header>
 
     <main>
 
-      <!-- ── HERO ── -->
+      <!-- ═══════════════════════════════════════════════════ HERO -->
       <section class="hero">
         <div class="container">
           <div class="hero-grid">
 
             <aside class="poster" aria-label="Hero image poster">
-              <img src="[hero-image-path]" alt="[Hero image description]" />
+              <img src="hero-portfolio-graphic.png" alt="[Descriptive alt text for hero image]" />
               <div class="cap">
-                <strong>[Hero Image Caption Headline]</strong>
-                <span>[Hero image caption subline]</span>
+                <strong>[Poster Caption Headline]</strong>
+                <span>[Poster subtitle or descriptor]</span>
               </div>
             </aside>
 
             <div class="hero-copy">
               <span class="kicker">
                 <span class="dot" aria-hidden="true"></span>
-                [Kicker / Discipline Label]
+                [Portfolio Category / Discipline]
               </span>
-              <h1>[Punchy headline that captures your value proposition]</h1>
+
+              <h1>[Memorable headline that captures your professional value proposition]</h1>
+
               <p class="lead">
-                [Two-to-three sentence positioning statement describing your focus,
-                approach, and what makes your work distinct.]
+                [2–3 sentence bio: who you are, what you focus on, and what makes your work distinctive.
+                Keep it honest, specific, and jargon-light.]
               </p>
 
               <div class="cta">
-                <a class="btn primary" href="#projects">[Primary CTA]</a>
-                <a class="btn" href="[resume-url]">[Resume Label]</a>
-                <a class="btn" href="[github-url]">[Code / Portfolio Link]</a>
+                <a class="btn primary" href="#projects">[CTA — View Work]</a>
+                <a class="btn" href="#">[CTA — Resume/CV]</a>
+                <a class="btn" href="#">[CTA — GitHub / Portfolio Link]</a>
               </div>
 
-              <ul class="bullets" aria-label="Highlights">
+              <ul class="bullets" aria-label="Key highlights">
                 <li>
-                  <span class="tick" aria-hidden="true">&#10003;</span>
-                  <span><strong>[Highlight 1 label]:</strong> [One-line supporting detail.]</span>
+                  <span class="tick" aria-hidden="true">✓</span>
+                  <span><strong>[Highlight One Label]:</strong> [One sentence describing this strength.]</span>
                 </li>
                 <li>
-                  <span class="tick" aria-hidden="true">&#10003;</span>
-                  <span><strong>[Highlight 2 label]:</strong> [One-line supporting detail.]</span>
+                  <span class="tick" aria-hidden="true">✓</span>
+                  <span><strong>[Highlight Two Label]:</strong> [One sentence describing this strength.]</span>
                 </li>
                 <li>
-                  <span class="tick" aria-hidden="true">&#10003;</span>
-                  <span><strong>[Highlight 3 label]:</strong> [One-line supporting detail.]</span>
+                  <span class="tick" aria-hidden="true">✓</span>
+                  <span><strong>[Highlight Three Label]:</strong> [One sentence describing this strength.]</span>
                 </li>
                 <li>
-                  <span class="tick" aria-hidden="true">&#10003;</span>
-                  <span><strong>[Highlight 4 label]:</strong> [One-line supporting detail.]</span>
+                  <span class="tick" aria-hidden="true">✓</span>
+                  <span><strong>[Highlight Four Label]:</strong> [One sentence describing this strength.]</span>
                 </li>
               </ul>
             </div>
@@ -602,51 +738,51 @@
         </div>
       </section>
 
-      <!-- ── SECTION 1: PRIMARY WORK (light) ── -->
+      <!-- ═══════════════════════════════════════════════ PROJECTS -->
       <section class="section" id="projects">
         <div class="container">
-          <h2>[Section 1 Heading]</h2>
-          <p class="hint">[Section 1 sub-heading / instruction hint]</p>
+          <h2>[Projects Section Title]</h2>
+          <p class="hint">[Brief descriptor — what readers will find here and what to do next.]</p>
 
           <div class="grid">
 
             <article class="card">
-              <h3>[Project Title A]</h3>
-              <p>[One-to-two sentence description of the project, outcome, and impact.]</p>
+              <h3>[Project Title One]</h3>
+              <p>[One or two sentences: problem, approach, and outcome. Link to notebook, demo, or repo.]</p>
               <div class="meta">
-                <span class="tag">[Tag 1]</span>
-                <span class="tag">[Tag 2]</span>
-                <span class="tag">[Tag 3]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
               </div>
             </article>
 
             <article class="card">
-              <h3>[Project Title B]</h3>
-              <p>[One-to-two sentence description of the project, outcome, and impact.]</p>
+              <h3>[Project Title Two]</h3>
+              <p>[One or two sentences: problem, approach, and outcome. Link to notebook, demo, or repo.]</p>
               <div class="meta">
-                <span class="tag">[Tag 1]</span>
-                <span class="tag">[Tag 2]</span>
-                <span class="tag">[Tag 3]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
               </div>
             </article>
 
             <article class="card">
-              <h3>[Project Title C]</h3>
-              <p>[One-to-two sentence description of the project, outcome, and impact.]</p>
+              <h3>[Project Title Three]</h3>
+              <p>[One or two sentences: problem, approach, and outcome. Link to notebook, demo, or repo.]</p>
               <div class="meta">
-                <span class="tag">[Tag 1]</span>
-                <span class="tag">[Tag 2]</span>
-                <span class="tag">[Tag 3]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
               </div>
             </article>
 
             <article class="card">
-              <h3>[Project Title D]</h3>
-              <p>[One-to-two sentence description of the project, outcome, and impact.]</p>
+              <h3>[Project Title Four]</h3>
+              <p>[One or two sentences: problem, approach, and outcome. Link to notebook, demo, or repo.]</p>
               <div class="meta">
-                <span class="tag">[Tag 1]</span>
-                <span class="tag">[Tag 2]</span>
-                <span class="tag">[Tag 3]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
+                <span class="tag">[Tool / Method]</span>
               </div>
             </article>
 
@@ -654,99 +790,105 @@
         </div>
       </section>
 
-      <!-- ── SECTION 2: WRITING / THINKING (alt / inverted) ── -->
+      <!-- ════════════════════════════════════════════════ WRITING -->
       <section class="section alt" id="writing">
         <div class="container">
-          <h2>[Section 2 Heading]</h2>
-          <p class="hint">[Section 2 sub-heading / instruction hint]</p>
+          <h2>[Writing / Thinking Section Title]</h2>
+          <p class="hint">[Brief descriptor — what these pieces demonstrate about how you think.]</p>
 
           <div class="grid">
 
             <article class="post">
-              <div class="date">[Post Category A]</div>
-              <h3>[Post Title A]</h3>
-              <p>[One-to-two sentence summary of the post and the core idea explored.]</p>
+              <div class="date">[Date or Category Label]</div>
+              <h3>[Article or Post Title One]</h3>
+              <p>[One or two sentences summarising the argument, method, or lesson.]</p>
             </article>
 
             <article class="post">
-              <div class="date">[Post Category B]</div>
-              <h3>[Post Title B]</h3>
-              <p>[One-to-two sentence summary of the post and the core idea explored.]</p>
+              <div class="date">[Date or Category Label]</div>
+              <h3>[Article or Post Title Two]</h3>
+              <p>[One or two sentences summarising the argument, method, or lesson.]</p>
             </article>
 
             <article class="post">
-              <div class="date">[Post Category C]</div>
-              <h3>[Post Title C]</h3>
-              <p>[One-to-two sentence summary of the post and the core idea explored.]</p>
+              <div class="date">[Date or Category Label]</div>
+              <h3>[Article or Post Title Three]</h3>
+              <p>[One or two sentences summarising the argument, method, or lesson.]</p>
             </article>
 
           </div>
         </div>
       </section>
 
-      <!-- ── SECTION 3: SKILLS (light) ── -->
+      <!-- ══════════════════════════════════════════════════ SKILLS -->
       <section class="section" id="skills">
         <div class="container">
-          <h2>[Section 3 Heading]</h2>
-          <p class="hint">[Section 3 sub-heading / instruction hint]</p>
+          <h2>[Skills Section Title]</h2>
+          <p class="hint">[Brief framing note — keep this aligned with the roles you want.]</p>
 
           <div class="grid">
+
             <div class="card span-12">
-              <h3>[Skill Group Label]</h3>
-              <div class="skills" aria-label="Skill chips">
-                <span class="skill">[Skill 1]</span>
-                <span class="skill">[Skill 2]</span>
-                <span class="skill">[Skill 3]</span>
-                <span class="skill">[Skill 4]</span>
-                <span class="skill">[Skill 5]</span>
-                <span class="skill">[Skill 6]</span>
-                <span class="skill">[Skill 7]</span>
-                <span class="skill">[Skill 8]</span>
-                <span class="skill">[Skill 9]</span>
+              <h3>[Skill Group One — e.g. Core Technical]</h3>
+              <div class="skills" aria-label="[Skill group one label]">
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
               </div>
             </div>
-          </div>
 
+            <div class="card span-12">
+              <h3>[Skill Group Two — e.g. Communication & Methods]</h3>
+              <div class="skills" aria-label="[Skill group two label]">
+                <span class="skill">[Skill or Competency]</span>
+                <span class="skill">[Skill or Competency]</span>
+                <span class="skill">[Skill or Competency]</span>
+                <span class="skill">[Skill or Competency]</span>
+                <span class="skill">[Skill or Competency]</span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </section>
 
-      <!-- ── SECTION 4: CONTACT (alt / inverted) ── -->
+      <!-- ════════════════════════════════════════════════ CONTACT -->
       <section class="section alt" id="contact">
         <div class="container">
-          <h2>[Section 4 Heading]</h2>
-          <p class="hint">[Section 4 sub-heading / instruction hint]</p>
+          <h2>[Contact Section Title]</h2>
+          <p class="hint">[Brief note about your availability and what kinds of conversations you welcome.]</p>
 
           <div class="contact">
 
             <div class="contact-card">
-              <h3>[Contact Card Heading]</h3>
-              <p>[Two-to-three sentence availability statement and what you are looking for.]</p>
-              <p>
-                <strong>[Label 1]:</strong>
-                <a href="mailto:[your-email]">[your-email@domain.com]</a><br />
-                <strong>[Label 2]:</strong>
-                <a href="[linkedin-url]">[linkedin.com/in/yourhandle]</a><br />
-                <strong>[Label 3]:</strong> [City, State] &bull; [Availability / Relocation note]
-              </p>
+              <h3>[Connection Headline — e.g. Let's connect]</h3>
+              <p>[2–3 sentences: what you are looking for and who should reach out.]</p>
+              <div class="info-row">
+                <span><strong>[Label — Email]:</strong> <a href="mailto:[email]">[email@domain.com]</a></span>
+                <span><strong>[Label — LinkedIn]:</strong> <a href="#">[linkedin.com/in/handle]</a></span>
+                <span><strong>[Label — Location]:</strong> [City, State / Country • Openness to relocation]</span>
+              </div>
             </div>
 
             <form action="#" method="post">
               <div>
-                <label for="name">[Name Label]</label>
-                <input id="name" name="name" type="text" placeholder="[Name placeholder]" />
+                <label for="f-name">[Name Field Label]</label>
+                <input id="f-name" name="name" type="text" placeholder="[Name placeholder]" />
               </div>
               <div>
-                <label for="email">[Email Label]</label>
-                <input id="email" name="email" type="email" placeholder="[Email placeholder]" />
+                <label for="f-email">[Email Field Label]</label>
+                <input id="f-email" name="email" type="email" placeholder="[Email placeholder]" />
               </div>
               <div>
-                <label for="message">[Message Label]</label>
-                <textarea id="message" name="message" placeholder="[Message placeholder]"></textarea>
+                <label for="f-message">[Message Field Label]</label>
+                <textarea id="f-message" name="message" placeholder="[Message placeholder — invite the right kind of note]"></textarea>
               </div>
-              <button class="btn primary" type="submit">[Submit Label]</button>
-              <p style="margin:0; color: var(--alt-muted); font-size: 12px;">
-                [Form integration note or tip]
-              </p>
+              <button class="btn primary" type="submit">[Submit Button Label]</button>
             </form>
 
           </div>
@@ -755,17 +897,17 @@
 
     </main>
 
-    <!-- ── FOOTER ── -->
+    <!-- ═══════════════════════════════════════════════════ FOOTER -->
     <footer>
       <div class="container">
         <div class="foot">
-          <span>&copy; [Year] [Your Name] &bull; [Portfolio Descriptor]</span>
-          <span style="display:flex; gap:14px;">
-            <a href="#projects">[Nav Link 1]</a>
-            <a href="#writing">[Nav Link 2]</a>
-            <a href="#skills">[Nav Link 3]</a>
-            <a href="#contact">[Nav Link 4]</a>
-          </span>
+          <span>© [Year] [Full Name] • [Field] Portfolio</span>
+          <nav class="foot-links" aria-label="Footer navigation">
+            <a href="#projects">[Section One]</a>
+            <a href="#writing">[Section Two]</a>
+            <a href="#skills">[Section Three]</a>
+            <a href="#contact">[Section Four]</a>
+          </nav>
         </div>
       </div>
     </footer>

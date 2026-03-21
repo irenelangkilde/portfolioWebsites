@@ -1,3 +1,9 @@
+Input:
+html_or_image
+{{DESIGN_INSPIRATION}}
+
+
+OUTPUT:
 {
   "job_ad": {
     "source": {

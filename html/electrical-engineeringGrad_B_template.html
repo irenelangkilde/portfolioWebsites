@@ -5,33 +5,39 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>[Name] - [Field] Portfolio</title>
     <!--
-{
-  "visual_elements_line_numbers": {
-    "headshot_photo": "223",
-    "hero_image": "223",
-    "emoji_icons": ["232", "311", "322", "333", "344", "355", "366", "404", "410", "416", "430", "437", "478", "481", "484", "500", "501", "502"],
-    "images": ["223"],
-    "animations": []
-  },
-  "exemplary_attributes": {
-    "pacing": "steady and structured, section-by-section scroll with generous vertical padding between each block",
-    "mood": "professional, competent, and approachable — technically grounded with clean academic energy",
-    "compositional_feel": "central column with card-grid layouts; symmetrical and orderly",
-    "section_density": "medium-high — each section contains multiple cards or list items, but whitespace prevents crowding",
-    "visual_treatment": "flat cards with soft box-shadows, gradient accents, rounded corners, minimal iconography via emoji"
-  },
-  "default_color_scheme": {
-    "primary": "#0d7377",
-    "secondary": "#14ffec",
-    "accent": "#32e0c4",
-    "dark": "#0a4d4e",
-    "light": "#e8f5f4"
-  },
-  "composition_option": "central",
-  "style_token": "clean-minimal",
-  "rendering_style": "clean editorial vector"
-}
--->
+    {
+      "visual_elements": {
+        "images": [
+          {
+            "src_file_name": "profile-photo.jpg",
+            "selector": ".profile-photo",
+            "type": "img",
+            "role": "Circular profile/avatar photo centered in hero masthead"
+          }
+        ],
+        "animations": []
+      },
+      "exemplary_attributes": {
+        "pacing": "Steady and structured; each section flows cleanly into the next with consistent vertical rhythm and generous padding",
+        "mood": "Professional, confident, and approachable; teal-cyan palette conveys technical precision with a fresh modern energy",
+        "compositional_feel": "Central, symmetrical, and document-like; hero is centered with a portrait, sections alternate light backgrounds for visual separation",
+        "section_density": "Medium; skills use a 4-column card grid, projects use a 2-3 column card grid, resume uses a stacked linear list",
+        "visual_treatment": "Clean editorial with soft card shadows, gradient accents, pill-shaped tags, and a wave SVG underlay in the hero"
+      },
+      "default_color_scheme": {
+        "primary": "#0d7377",
+        "secondary": "#14ffec",
+        "accent": "#32e0c4",
+        "dark": "#0a4d4e",
+        "light": "#e8f5f4"
+      },
+      "design_factors": {
+        "composition_option": "central",
+        "style_token": "clean-minimal",
+        "rendering_style": "clean editorial vector"
+      }
+    }
+    -->
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
       rel="stylesheet"
@@ -44,28 +50,41 @@
       }
 
       :root {
-        --primary: #0d7377;
+        /* ── Primary palette (5 core variables) ── */
+        --primary:   #0d7377;
         --secondary: #14ffec;
-        --accent: #32e0c4;
-        --dark: #0a4d4e;
-        --light: #e8f5f4;
-        --text: #2c3e50;
-        --gray: #6c757d;
-        --gradient: linear-gradient(135deg, #0d7377 0%, #14ffec 100%);
+        --accent:    #32e0c4;
+        --dark:      #0a4d4e;
+        --light:     #e8f5f4;
 
-        --alt-bg: var(--dark);
-        --alt-card-bg: #0d5e5f;
-        --alt-text: #e8f5f4;
-        --alt-heading: var(--secondary);
-        --alt-tag-bg: #0a4d4e;
-        --alt-tag-text: var(--secondary);
+        /* ── Derived / neutral tokens ── */
+        --primary-mid:    #0f8f94;           /* one step lighter than primary  */
+        --primary-pale:   #ccecea;           /* very pale tint of primary      */
+        --secondary-dim:  #0bbfb3;           /* secondary darkened             */
+        --text:           #2c3e50;
+        --text-muted:     #6c757d;
+        --surface:        #ffffff;
+
+        /* ── Gradients ── */
+        --gradient:      linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+        --gradient-dark: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+
+        /* ── Alternate (inverted) palette tokens ── */
+        --alt-bg:         var(--dark);
+        --alt-surface:    var(--primary);
+        --alt-text:       var(--light);
+        --alt-heading:    var(--secondary);
+        --alt-muted:      var(--accent);
       }
 
+      /* ════════════════════════════════════════
+         BASE
+      ════════════════════════════════════════ */
       body {
         font-family: "Inter", sans-serif;
         line-height: 1.6;
         color: var(--text);
-        background: #ffffff;
+        background: var(--surface);
       }
 
       .container {
@@ -74,10 +93,12 @@
         padding: 0 20px;
       }
 
-      /* Navigation */
+      /* ════════════════════════════════════════
+         NAVIGATION
+      ════════════════════════════════════════ */
       nav {
-        background: white;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        background: var(--surface);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.09);
         position: sticky;
         top: 0;
         z-index: 1000;
@@ -90,11 +111,12 @@
         padding: 1rem 20px;
       }
 
-      nav .logo {
+      .nav-logo {
         font-size: 1.5rem;
         font-weight: 700;
         color: var(--primary);
         font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.04em;
       }
 
       nav ul {
@@ -114,26 +136,26 @@
         color: var(--primary);
       }
 
-      /* Hero Section */
+      /* ════════════════════════════════════════
+         HERO
+      ════════════════════════════════════════ */
       .hero {
         background: var(--gradient);
-        color: white;
-        padding: 80px 0;
+        color: var(--surface);
+        padding: 90px 0 100px;
         text-align: center;
         position: relative;
         overflow: hidden;
       }
 
+      /* Decorative wave SVG underlay */
       .hero::before {
         content: "";
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,101.3C1248,85,1344,75,1392,69.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>')
-          no-repeat bottom;
+        inset: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.08" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,101.3C1248,85,1344,75,1392,69.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>') no-repeat bottom;
         background-size: cover;
+        pointer-events: none;
       }
 
       .hero-content {
@@ -145,34 +167,33 @@
         width: 180px;
         height: 180px;
         border-radius: 50%;
-        border: 5px solid white;
+        border: 5px solid var(--surface);
         object-fit: cover;
-        margin: 0 auto 20px;
+        margin: 0 auto 22px;
         display: block;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-        background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
+        background: var(--gradient-dark);
       }
 
       .hero h1 {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
+        font-size: 2.6rem;
         font-weight: 700;
+        margin-bottom: 10px;
+        letter-spacing: -0.02em;
       }
 
       .hero .subtitle {
-        font-size: 1.3rem;
-        margin-bottom: 20px;
+        font-size: 1.25rem;
+        margin-bottom: 14px;
         opacity: 0.95;
+        font-weight: 400;
       }
 
       .hero .tagline {
-        font-size: 1rem;
-        opacity: 0.9;
-        margin-bottom: 30px;
-      }
-
-      .hero .tagline span.hero-icon {
-        margin-right: 4px;
+        font-size: 0.95rem;
+        opacity: 0.88;
+        margin-bottom: 34px;
+        font-family: "JetBrains Mono", monospace;
       }
 
       .cta-buttons {
@@ -182,48 +203,56 @@
         flex-wrap: wrap;
       }
 
+      /* ── Shared button base ── */
       .btn {
-        padding: 12px 30px;
+        padding: 12px 32px;
         border-radius: 50px;
         text-decoration: none;
         font-weight: 600;
+        font-size: 0.95rem;
         transition: all 0.3s;
         display: inline-block;
+        cursor: pointer;
+        border: none;
       }
 
       .btn-primary {
-        background: white;
+        background: var(--surface);
         color: var(--primary);
       }
 
       .btn-primary:hover {
         transform: translateY(-2px);
-        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+        box-shadow: 0 6px 22px rgba(255, 255, 255, 0.28);
       }
 
       .btn-secondary {
         background: transparent;
-        color: white;
-        border: 2px solid white;
+        color: var(--surface);
+        border: 2px solid var(--surface);
       }
 
       .btn-secondary:hover {
-        background: white;
+        background: var(--surface);
         color: var(--primary);
       }
 
-      /* Section Styles */
+      /* ════════════════════════════════════════
+         SHARED SECTION BASE
+      ════════════════════════════════════════ */
       section {
-        padding: 80px 0;
+        padding: 84px 0;
       }
 
       section h2 {
         text-align: center;
-        font-size: 2.5rem;
-        margin-bottom: 50px;
+        font-size: 2.3rem;
+        margin-bottom: 52px;
         color: var(--primary);
         position: relative;
-        padding-bottom: 15px;
+        padding-bottom: 16px;
+        font-weight: 700;
+        letter-spacing: -0.015em;
       }
 
       section h2::after {
@@ -238,7 +267,9 @@
         border-radius: 2px;
       }
 
-      /* About Section */
+      /* ════════════════════════════════════════
+         ABOUT  (light alternate section)
+      ════════════════════════════════════════ */
       .about {
         background: var(--light);
       }
@@ -248,46 +279,48 @@
         margin: 0 auto;
         text-align: center;
         font-size: 1.1rem;
-        line-height: 1.8;
+        line-height: 1.85;
+        color: var(--text);
       }
 
       .about-content p + p {
         margin-top: 1.2rem;
       }
 
-      /* Skills Section */
+      /* ════════════════════════════════════════
+         SKILLS  (white section)
+      ════════════════════════════════════════ */
       .skills-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 30px;
-        margin-top: 30px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 28px;
       }
 
       .skill-category {
-        background: white;
+        background: var(--surface);
         padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
-        transition: transform 0.3s;
+        border-radius: 16px;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+        transition: transform 0.3s, box-shadow 0.3s;
       }
 
       .skill-category:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
       }
 
       .skill-category h3 {
         color: var(--primary);
         margin-bottom: 20px;
-        font-size: 1.4rem;
+        font-size: 1.15rem;
+        font-weight: 700;
         display: flex;
         align-items: center;
         gap: 10px;
       }
 
-      .skill-category h3::before {
-        content: "⚡";
-        font-size: 1.5rem;
+      .skill-category h3 .cat-icon {
+        font-size: 1.3rem;
       }
 
       .skill-list {
@@ -296,10 +329,11 @@
 
       .skill-list li {
         padding: 10px 0;
-        border-bottom: 1px solid #eee;
+        border-bottom: 1px solid var(--primary-pale);
         display: flex;
         justify-content: space-between;
         align-items: center;
+        font-size: 0.95rem;
       }
 
       .skill-list li:last-child {
@@ -307,161 +341,177 @@
       }
 
       .skill-level {
-        font-size: 0.85rem;
-        color: var(--gray);
+        font-size: 0.78rem;
+        color: var(--text-muted);
         font-weight: 600;
         font-family: "JetBrains Mono", monospace;
+        letter-spacing: 0.03em;
       }
 
-      /* Projects Section — Alternate Palette */
+      /* ════════════════════════════════════════
+         PROJECTS  (light alternate section)
+      ════════════════════════════════════════ */
       .projects {
-        background: var(--alt-bg);
-      }
-
-      .projects h2 {
-        color: var(--alt-heading);
-      }
-
-      .projects h2::after {
-        background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+        background: var(--light);
       }
 
       .projects-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-        gap: 30px;
+        gap: 28px;
       }
 
       .project-card {
-        background: var(--alt-card-bg);
-        border-radius: 15px;
+        background: var(--surface);
+        border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.25);
-        transition: transform 0.3s;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.07);
+        transition: transform 0.3s, box-shadow 0.3s;
+        display: flex;
+        flex-direction: column;
       }
 
       .project-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 18px 44px rgba(0, 0, 0, 0.13);
       }
 
       .project-image {
         width: 100%;
         height: 220px;
-        background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+        background: var(--gradient);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 4rem;
-        color: white;
+        color: var(--surface);
+        flex-shrink: 0;
       }
 
       .project-content {
-        padding: 25px;
+        padding: 26px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
       }
 
       .project-content h3 {
-        color: var(--alt-heading);
+        color: var(--primary);
         margin-bottom: 10px;
-        font-size: 1.4rem;
+        font-size: 1.2rem;
+        font-weight: 700;
       }
 
       .project-content p {
-        color: rgba(232, 245, 244, 0.75);
-        margin-bottom: 15px;
-        line-height: 1.6;
+        color: var(--text-muted);
+        margin-bottom: 14px;
+        line-height: 1.65;
+        font-size: 0.95rem;
+        flex: 1;
       }
 
       .tech-tags {
         display: flex;
         flex-wrap: wrap;
         gap: 8px;
-        margin-top: 15px;
+        margin-top: 12px;
       }
 
       .tech-tag {
-        background: var(--alt-tag-bg);
-        color: var(--alt-tag-text);
-        padding: 5px 12px;
+        background: var(--light);
+        color: var(--primary);
+        padding: 5px 13px;
         border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
+        font-size: 0.78rem;
+        font-weight: 700;
         font-family: "JetBrains Mono", monospace;
-        border: 1px solid rgba(20, 255, 236, 0.2);
+        letter-spacing: 0.02em;
       }
 
       .project-link {
         display: inline-block;
-        margin-top: 15px;
-        color: var(--accent);
+        margin-top: 16px;
+        color: var(--primary);
         font-weight: 600;
         text-decoration: none;
-        transition: color 0.3s;
+        font-size: 0.9rem;
+        transition: color 0.3s, letter-spacing 0.2s;
       }
 
       .project-link:hover {
-        color: var(--secondary);
+        color: var(--accent);
+        letter-spacing: 0.04em;
       }
 
-      /* Resume Section */
+      /* ════════════════════════════════════════
+         RESUME  (white section)
+      ════════════════════════════════════════ */
       .resume-content {
         max-width: 900px;
         margin: 0 auto;
       }
 
       .resume-section {
-        margin-bottom: 40px;
+        margin-bottom: 46px;
       }
 
-      .resume-section h3 {
+      .resume-section > h3 {
         color: var(--primary);
-        font-size: 1.8rem;
-        margin-bottom: 25px;
+        font-size: 1.55rem;
+        font-weight: 700;
+        margin-bottom: 22px;
         padding-bottom: 10px;
         border-bottom: 2px solid var(--light);
       }
 
       .resume-item {
-        background: white;
-        padding: 25px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+        background: var(--surface);
+        padding: 26px 28px;
+        border-radius: 13px;
+        margin-bottom: 18px;
+        box-shadow: 0 3px 14px rgba(0, 0, 0, 0.05);
         border-left: 4px solid var(--primary);
       }
 
       .resume-item h4 {
         color: var(--primary);
-        font-size: 1.3rem;
+        font-size: 1.15rem;
+        font-weight: 700;
         margin-bottom: 8px;
       }
 
       .resume-item .meta {
-        color: var(--gray);
-        font-size: 0.95rem;
-        margin-bottom: 12px;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        margin-bottom: 14px;
         display: flex;
-        gap: 20px;
+        gap: 18px;
         flex-wrap: wrap;
+        font-family: "JetBrains Mono", monospace;
       }
 
       .resume-item ul {
         margin-left: 20px;
         color: var(--text);
+        font-size: 0.95rem;
       }
 
       .resume-item ul li {
-        margin-bottom: 8px;
+        margin-bottom: 7px;
+        line-height: 1.6;
       }
 
       .download-resume {
         text-align: center;
-        margin-top: 40px;
+        margin-top: 44px;
       }
 
-      /* Contact Section — Alternate Palette */
+      /* ════════════════════════════════════════
+         CONTACT  (inverted dark alternate section)
+      ════════════════════════════════════════ */
       .contact {
         background: var(--alt-bg);
+        color: var(--alt-text);
       }
 
       .contact h2 {
@@ -472,39 +522,51 @@
         background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
       }
 
-      .contact-content {
-        max-width: 700px;
-        margin: 0 auto;
+      .contact-intro {
+        max-width: 600px;
+        margin: -20px auto 0;
         text-align: center;
-        color: var(--alt-text);
+        color: var(--alt-muted);
+        font-size: 1rem;
+        line-height: 1.7;
       }
 
       .contact-info {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 30px;
-        margin: 40px 0;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 24px;
+        margin: 44px auto 0;
+        max-width: 820px;
       }
 
       .contact-item {
-        background: var(--alt-card-bg);
-        padding: 30px;
-        border-radius: 15px;
-        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-        border: 1px solid rgba(20, 255, 236, 0.1);
+        background: var(--alt-surface);
+        padding: 30px 24px;
+        border-radius: 16px;
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
+        text-align: center;
+        transition: transform 0.3s;
+      }
+
+      .contact-item:hover {
+        transform: translateY(-4px);
       }
 
       .contact-item h3 {
-        color: var(--alt-heading);
-        margin-bottom: 15px;
-        font-size: 1.1rem;
+        color: var(--secondary);
+        margin-bottom: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        font-family: "JetBrains Mono", monospace;
       }
 
       .contact-item a,
       .contact-item p {
-        color: rgba(232, 245, 244, 0.8);
+        color: var(--alt-text);
         text-decoration: none;
         font-weight: 500;
+        font-size: 0.95rem;
         transition: color 0.3s;
       }
 
@@ -514,46 +576,60 @@
 
       .social-links {
         display: flex;
-        gap: 20px;
+        gap: 18px;
         justify-content: center;
-        margin-top: 30px;
+        margin-top: 40px;
       }
 
       .social-links a {
-        width: 50px;
-        height: 50px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
-        background: var(--primary);
-        color: white;
+        background: var(--primary-mid);
+        color: var(--surface);
         display: flex;
         align-items: center;
         justify-content: center;
         text-decoration: none;
-        font-size: 1.3rem;
+        font-size: 1.2rem;
         font-weight: 700;
         font-family: "JetBrains Mono", monospace;
         transition: all 0.3s;
-        border: 1px solid rgba(20, 255, 236, 0.25);
+        border: 2px solid transparent;
       }
 
       .social-links a:hover {
-        background: var(--accent);
-        transform: translateY(-3px);
+        background: var(--secondary);
+        color: var(--dark);
+        border-color: var(--secondary);
+        transform: translateY(-4px);
+        box-shadow: 0 8px 20px rgba(20, 255, 236, 0.3);
       }
 
-      /* Footer */
+      /* ════════════════════════════════════════
+         FOOTER
+      ════════════════════════════════════════ */
       footer {
-        background: #06292a;
-        color: rgba(232, 245, 244, 0.7);
+        background: var(--dark);
+        color: var(--light);
         text-align: center;
-        padding: 30px 0;
-        font-size: 0.9rem;
+        padding: 28px 0;
+        font-size: 0.88rem;
+        letter-spacing: 0.02em;
+        border-top: 2px solid var(--primary);
       }
 
-      /* Responsive */
+      footer span {
+        color: var(--accent);
+      }
+
+      /* ════════════════════════════════════════
+         RESPONSIVE
+      ════════════════════════════════════════ */
       @media (max-width: 768px) {
         nav ul {
           gap: 1rem;
+          font-size: 0.9rem;
         }
 
         .hero h1 {
@@ -561,76 +637,90 @@
         }
 
         .hero .subtitle {
-          font-size: 1.1rem;
+          font-size: 1.05rem;
         }
 
         section h2 {
-          font-size: 2rem;
+          font-size: 1.9rem;
         }
 
         .projects-grid {
           grid-template-columns: 1fr;
+        }
+
+        .skills-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .cta-buttons {
+          flex-direction: column;
+          align-items: center;
+        }
+
+        .resume-item .meta {
+          flex-direction: column;
+          gap: 6px;
         }
       }
     </style>
   </head>
   <body>
 
-    <!-- Navigation -->
+    <!-- ══ NAVIGATION ══════════════════════════════════════ -->
     <nav>
       <div class="container">
-        <div class="logo">[XX]</div>
+        <div class="nav-logo">[Initials]</div>
         <ul>
-          <li><a href="#about">[Nav Link]</a></li>
-          <li><a href="#skills">[Nav Link]</a></li>
-          <li><a href="#projects">[Nav Link]</a></li>
-          <li><a href="#resume">[Nav Link]</a></li>
-          <li><a href="#contact">[Nav Link]</a></li>
+          <li><a href="#about">About</a></li>
+          <li><a href="#skills">Skills</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#resume">Resume</a></li>
+          <li><a href="#contact">Contact</a></li>
         </ul>
       </div>
     </nav>
 
-    <!-- Hero Section -->
+    <!-- ══ HERO ════════════════════════════════════════════ -->
     <section class="hero">
-      <div class="hero-content">
+      <div class="hero-content container">
         <img
-          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect fill='%230d7377' width='180' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='white' font-weight='bold'%3EXX%3C/text%3E%3C/svg%3E"
-          alt="[Full Name]"
+          src="profile-photo.jpg"
+          alt="[Full Name] profile photo"
           class="profile-photo"
         />
         <h1>[Full Name]</h1>
-        <p class="subtitle">[Professional Title / Degree Program]</p>
-        <p class="tagline">
-          <span class="hero-icon">🎓</span>[Graduation / Availability Statement]
-        </p>
+        <p class="subtitle">[Degree Program] Student</p>
+        <p class="tagline">🎓 [Expected Graduation] &nbsp;|&nbsp; [Availability Status]</p>
         <div class="cta-buttons">
-          <a href="#projects" class="btn btn-primary">[Primary CTA]</a>
-          <a href="#contact" class="btn btn-secondary">[Secondary CTA]</a>
+          <a href="#projects" class="btn btn-primary">View My Work</a>
+          <a href="#contact"  class="btn btn-secondary">Get In Touch</a>
         </div>
       </div>
     </section>
 
-    <!-- About Section -->
+    <!-- ══ ABOUT ═══════════════════════════════════════════ -->
     <section id="about" class="about">
       <div class="container">
-        <h2>[Section Title]</h2>
+        <h2>About Me</h2>
         <div class="about-content">
-          <p>[Brief personal and academic background paragraph describing core interests and technical focus areas.]</p>
-          <p>[Career goals and opportunities sought paragraph.]</p>
+          <p>[Primary bio paragraph — background, focus areas, and hands-on experience summary.]</p>
+          <p>[Secondary bio paragraph — career goals, what the candidate is seeking, and preferred start date.]</p>
         </div>
       </div>
     </section>
 
-    <!-- Skills Section -->
+    <!-- ══ SKILLS ══════════════════════════════════════════ -->
     <section id="skills">
       <div class="container">
-        <h2>[Section Title]</h2>
+        <h2>Technical Skills</h2>
         <div class="skills-grid">
 
+          <!-- Skill Category 1 -->
           <div class="skill-category">
-            <h3>[Skill Category Title]</h3>
+            <h3><span class="cat-icon">⚡</span>[Category Name]</h3>
             <ul class="skill-list">
-              <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
@@ -638,10 +728,10 @@
             </ul>
           </div>
 
+          <!-- Skill Category 2 -->
           <div class="skill-category">
-            <h3>[Skill Category Title]</h3>
+            <h3><span class="cat-icon">⚡</span>[Category Name]</h3>
             <ul class="skill-list">
-              <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
@@ -649,10 +739,10 @@
             </ul>
           </div>
 
+          <!-- Skill Category 3 -->
           <div class="skill-category">
-            <h3>[Skill Category Title]</h3>
+            <h3><span class="cat-icon">⚡</span>[Category Name]</h3>
             <ul class="skill-list">
-              <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
@@ -660,10 +750,10 @@
             </ul>
           </div>
 
+          <!-- Skill Category 4 (optional — add or remove cards freely) -->
           <div class="skill-category">
-            <h3>[Skill Category Title]</h3>
+            <h3><span class="cat-icon">⚡</span>[Category Name]</h3>
             <ul class="skill-list">
-              <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
               <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
@@ -675,230 +765,182 @@
       </div>
     </section>
 
-    <!-- Projects Section -->
+    <!-- ══ PROJECTS ════════════════════════════════════════ -->
     <section id="projects" class="projects">
       <div class="container">
-        <h2>[Section Title]</h2>
+        <h2>Featured Projects</h2>
         <div class="projects-grid">
 
+          <!-- Project Card — repeat as needed -->
           <div class="project-card">
-            <div class="project-image">🔌</div>
+            <div class="project-image">[emoji / icon]</div>
             <div class="project-content">
               <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
+              <p>[Brief description of the project: what was built, how it works, and key outcomes or metrics.]</p>
               <div class="tech-tags">
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
               </div>
-              <a href="#" class="project-link">[Link Label] →</a>
+              <a href="#" class="project-link">View Details →</a>
             </div>
           </div>
 
           <div class="project-card">
-            <div class="project-image">🤖</div>
+            <div class="project-image">[emoji / icon]</div>
             <div class="project-content">
               <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
+              <p>[Brief description of the project: what was built, how it works, and key outcomes or metrics.]</p>
               <div class="tech-tags">
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
               </div>
-              <a href="#" class="project-link">[Link Label] →</a>
+              <a href="#" class="project-link">View Details →</a>
             </div>
           </div>
 
           <div class="project-card">
-            <div class="project-image">📡</div>
+            <div class="project-image">[emoji / icon]</div>
             <div class="project-content">
               <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
+              <p>[Brief description of the project: what was built, how it works, and key outcomes or metrics.]</p>
               <div class="tech-tags">
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
                 <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
               </div>
-              <a href="#" class="project-link">[Link Label] →</a>
+              <a href="#" class="project-link">View Details →</a>
             </div>
           </div>
 
-          <div class="project-card">
-            <div class="project-image">⚡</div>
-            <div class="project-content">
-              <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
-              <div class="tech-tags">
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-              </div>
-              <a href="#" class="project-link">[Link Label] →</a>
-            </div>
-          </div>
-
-          <div class="project-card">
-            <div class="project-image">🎵</div>
-            <div class="project-content">
-              <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
-              <div class="tech-tags">
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-              </div>
-              <a href="#" class="project-link">[Link Label] →</a>
-            </div>
-          </div>
-
-          <div class="project-card">
-            <div class="project-image">🌡️</div>
-            <div class="project-content">
-              <h3>[Project Title]</h3>
-              <p>[Project description summarizing the technical challenge, approach, and outcome.]</p>
-              <div class="tech-tags">
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-                <span class="tech-tag">[Tech]</span>
-              </div>
-              <a href="#" class="project-link">[Link Label] →</a>
-            </div>
-          </div>
+          <!-- Add or remove project cards as needed -->
 
         </div>
       </div>
     </section>
 
-    <!-- Resume Section -->
+    <!-- ══ RESUME ══════════════════════════════════════════ -->
     <section id="resume">
       <div class="container">
-        <h2>[Section Title]</h2>
+        <h2>Resume</h2>
         <div class="resume-content">
 
+          <!-- Education -->
           <div class="resume-section">
-            <h3>[Subsection: Education]</h3>
+            <h3>Education</h3>
             <div class="resume-item">
-              <h4>[Degree Title]</h4>
+              <h4>[Degree Name]</h4>
               <div class="meta">
                 <span>📍 [Institution Name]</span>
-                <span>📅 [Expected Graduation Date]</span>
-                <span>🎯 [GPA / Honors]</span>
+                <span>📅 [Graduation Date]</span>
+                <span>🎯 [GPA or Honors]</span>
               </div>
               <ul>
-                <li>[Relevant coursework or academic details.]</li>
-                <li>[Honors, awards, or distinctions.]</li>
+                <li>[Relevant coursework or academic achievement]</li>
+                <li>[Honor, award, or distinction]</li>
               </ul>
             </div>
           </div>
 
+          <!-- Experience -->
           <div class="resume-section">
-            <h3>[Subsection: Experience]</h3>
+            <h3>Experience</h3>
 
             <div class="resume-item">
-              <h4>[Position Title]</h4>
+              <h4>[Job Title]</h4>
               <div class="meta">
-                <span>📍 [Organization Name]</span>
+                <span>📍 [Organization]</span>
                 <span>📅 [Date Range]</span>
               </div>
               <ul>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
+                <li>[Responsibility or accomplishment]</li>
+                <li>[Responsibility or accomplishment]</li>
+                <li>[Responsibility or accomplishment]</li>
               </ul>
             </div>
 
             <div class="resume-item">
-              <h4>[Position Title]</h4>
+              <h4>[Job Title]</h4>
               <div class="meta">
-                <span>📍 [Organization Name]</span>
+                <span>📍 [Organization]</span>
                 <span>📅 [Date Range]</span>
               </div>
               <ul>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
+                <li>[Responsibility or accomplishment]</li>
+                <li>[Responsibility or accomplishment]</li>
+                <li>[Responsibility or accomplishment]</li>
               </ul>
             </div>
 
-            <div class="resume-item">
-              <h4>[Position Title]</h4>
-              <div class="meta">
-                <span>📍 [Organization Name]</span>
-                <span>📅 [Date Range]</span>
-              </div>
-              <ul>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-                <li>[Responsibility or achievement bullet point.]</li>
-              </ul>
-            </div>
+            <!-- Add or remove resume-item blocks as needed -->
 
           </div>
 
+          <!-- Leadership & Activities -->
           <div class="resume-section">
-            <h3>[Subsection: Leadership & Activities]</h3>
+            <h3>Leadership &amp; Activities</h3>
+
             <div class="resume-item">
-              <h4>[Role / Organization Title]</h4>
+              <h4>[Role / Organization]</h4>
               <div class="meta">
                 <span>📅 [Date Range]</span>
               </div>
               <ul>
-                <li>[Leadership or activity bullet point.]</li>
-                <li>[Leadership or activity bullet point.]</li>
-                <li>[Leadership or activity bullet point.]</li>
+                <li>[Key contribution or achievement]</li>
+                <li>[Key contribution or achievement]</li>
               </ul>
             </div>
+
           </div>
 
           <div class="download-resume">
-            <a href="#" class="btn btn-primary">📄 [Download Resume Label]</a>
+            <a href="#" class="btn btn-primary">📄 Download Full Resume (PDF)</a>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- Contact Section -->
+    <!-- ══ CONTACT ═════════════════════════════════════════ -->
     <section id="contact" class="contact">
       <div class="container">
-        <h2>[Section Title]</h2>
-        <div class="contact-content">
-          <p>[Brief availability or outreach invitation statement.]</p>
-          <div class="contact-info">
-            <div class="contact-item">
-              <h3>📧 [Contact Type]</h3>
-              <a href="mailto:[email]">[email address]</a>
-            </div>
-            <div class="contact-item">
-              <h3>📱 [Contact Type]</h3>
-              <a href="tel:[phone]">[phone number]</a>
-            </div>
-            <div class="contact-item">
-              <h3>📍 [Contact Type]</h3>
-              <p>[City, State]<br />[Relocation note]</p>
-            </div>
+        <h2>Get In Touch</h2>
+        <p class="contact-intro">
+          [Brief availability statement or invitation to connect — one or two sentences.]
+        </p>
+        <div class="contact-info">
+
+          <div class="contact-item">
+            <h3>📧 Email</h3>
+            <a href="mailto:[email]">[email@domain.com]</a>
           </div>
-          <div class="social-links">
-            <a href="#" target="_blank" title="[Platform]">in</a>
-            <a href="#" target="_blank" title="[Platform]">💻</a>
-            <a href="#" title="[Platform]">✉️</a>
+
+          <div class="contact-item">
+            <h3>📱 Phone</h3>
+            <a href="tel:[phone]">[Phone Number]</a>
           </div>
+
+          <div class="contact-item">
+            <h3>📍 Location</h3>
+            <p>[City, State]<br />[Relocation preference]</p>
+          </div>
+
         </div>
+
+        <div class="social-links">
+          <a href="[linkedin-url]" target="_blank" title="LinkedIn">in</a>
+          <a href="[github-url]"   target="_blank" title="GitHub">gh</a>
+          <a href="mailto:[email]"                 title="Email">✉</a>
+        </div>
+
       </div>
     </section>
 
-    <!-- Footer -->
+    <!-- ══ FOOTER ══════════════════════════════════════════ -->
     <footer>
       <div class="container">
-        <p>[Copyright notice] | [Portfolio Label]</p>
+        <p>© [Year] <span>[Full Name]</span> &nbsp;|&nbsp; [Field] Portfolio</p>
       </div>
     </footer>
 

@@ -53,14 +53,14 @@ export async function handler(event) {
     const cwd = process.cwd();
     let promptTemplate;
     for (const candidate of [
-      resolve(cwd, "src/netlify/functions/AnalyzeResume.md"),
-      resolve(cwd, "netlify/functions/AnalyzeResume.md"),
-      resolve(cwd, "AnalyzeResume.md"),
+      resolve(cwd, "src/netlify/functions/extractResumeProfile.md"),
+      resolve(cwd, "netlify/functions/extractResumeProfile.md"),
+      resolve(cwd, "extractResumeProfile.md"),
     ]) {
       try { promptTemplate = readFileSync(candidate, "utf-8"); break; } catch {}
     }
     if (!promptTemplate) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "Could not load AnalyzeResume.md" }), { ttl: 3600 });
+      await store.set(jobId, JSON.stringify({ status: "error", error: "Could not load extractResumeProfile.md" }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 

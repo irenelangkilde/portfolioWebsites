@@ -4,95 +4,130 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>[Your Name] — [Field] Portfolio</title>
-  <meta name="description" content="Portfolio website for a soon-to-graduate [field] major: projects, skills, resume, and contact." />
+  <meta name="description" content="Portfolio website for a [field] professional: projects, skills, resume, and contact." />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
 
   <!--
   {
-    "visual_elements_line_numbers": {
-      "headshot_photo": "",
-      "hero_image": "255",
-      "emoji_icons": [],
-      "images": ["255"],
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "hero-illustration.png",
+          "selector": ".hero-card img",
+          "type": "img",
+          "role": "Hero section illustration, right-side panel of split layout"
+        }
+      ],
       "animations": []
     },
     "exemplary_attributes": {
-      "pacing": "measured and spacious — generous section padding, unhurried scroll rhythm with clear visual breaks between topics",
-      "mood": "confident and aspirational — dark tech aesthetic with warm coral accents softens the technical seriousness",
-      "compositional_feel": "split hero anchors the page; body flows through a 12-column card grid with variable span widths for visual hierarchy",
-      "section_density": "moderate — each section surfaces 3-6 discrete content units; skills section condenses into a single pill-cloud card",
-      "visual_treatment": "glassmorphism dark — frosted panels, radial gradient halos, backdrop-blur headers, soft glow shadows on interactive elements"
+      "pacing": "Measured and confident — generous whitespace between sections, unhurried scroll rhythm",
+      "mood": "Ambitious yet approachable; dark-tech professionalism softened by coral warmth",
+      "compositional_feel": "Split hero with left-aligned editorial copy and right-side visual card; body flows through stacked full-width sections",
+      "section_density": "Moderate — each section is focused with 2–5 cards; skills as a single chip cloud",
+      "visual_treatment": "Glassmorphism dark: frosted panels over deep navy gradient field with radial glow halos in brand blue and coral accent"
     },
     "default_color_scheme": {
       "primary": "#4E70F1",
       "secondary": "#F28B86",
-      "accent": "#7C9BF5",
+      "accent": "#7B95F5",
       "dark": "#0b1020",
       "light": "rgba(255,255,255,0.92)"
     },
-    "alternate_color_scheme": {
-      "primary": "#F28B86",
-      "secondary": "#4E70F1",
-      "accent": "#F7B8B5",
-      "dark": "#1a0e1c",
-      "light": "rgba(255,255,255,0.92)"
-    },
-    "composition_option": "split",
-    "style_token": "glass-dark",
-    "rendering_style": "gradient 3D illustration"
+    "design_factors": {
+      "composition_option": "split",
+      "style_token": "glass-dark",
+      "rendering_style": "gradient 3D illustration"
+    }
   }
   -->
 
   <style>
+    /* =====================================================================
+       COLOR PALETTE (5 core variables)
+       Primary:   --c1  deep navy background
+       Secondary: --c2  brand blue
+       Accent:    --c3  coral / warm rose
+       Dark:      --c4  near-black ink
+       Light:     --c5  soft white text
+       Derived shades and neutral overlays built from these five.
+    ===================================================================== */
     :root {
-      --bg:        #0b1020;
-      --panel:     rgba(255, 255, 255, .06);
-      --stroke:    rgba(255, 255, 255, .10);
-      --text:      rgba(255, 255, 255, .92);
-      --muted:     rgba(255, 255, 255, .70);
-      --brand:     #4E70F1;
-      --accent:    #F28B86;
-      --shadow:    0 18px 60px rgba(0, 0, 0, .45);
+      /* Core 5 */
+      --c1: #0b1020;          /* deep navy  */
+      --c2: #4E70F1;          /* brand blue */
+      --c3: #F28B86;          /* coral      */
+      --c4: #060810;          /* near-black */
+      --c5: #f0f2ff;          /* near-white */
+
+      /* Derived */
+      --c2-dim:  rgba(78, 112, 241, 0.22);
+      --c2-glow: rgba(78, 112, 241, 0.30);
+      --c3-dim:  rgba(242, 139, 134, 0.18);
+      --c3-glow: rgba(242, 139, 134, 0.22);
+      --c2-mid:  rgba(78, 112, 241, 0.65);
+
+      /* Semantic */
+      --bg:     var(--c1);
+      --panel:  rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.10);
+      --text:   rgba(255,255,255,.92);
+      --muted:  rgba(255,255,255,.70);
+      --brand:  var(--c2);
+      --accent: var(--c3);
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+
+      /* Radii */
       --radius-xl: 26px;
       --radius-lg: 20px;
       --radius-md: 14px;
-      --max:       1120px;
+      --max: 1120px;
+
+      /* Alternate section palette (inverted contrast) */
+      --alt-bg:     #101628;
+      --alt-panel:  rgba(255,255,255,.04);
+      --alt-stroke: rgba(78,112,241,.22);
     }
 
-    /* ALT SECTION palette — swapped brand/accent, deeper bg tint */
-    .section-alt {
-      --brand:  #F28B86;
-      --accent: #4E70F1;
+    /* =====================================================================
+       ALT SECTION — second palette (same hues, opposite contrast emphasis)
+       Slightly lighter base, blue-tinted stroke, coral glow reversed to top-right
+    ===================================================================== */
+    .section--alt {
       background:
-        radial-gradient(900px 600px at 80% 10%, rgba(242, 139, 134, .18), transparent 55%),
-        radial-gradient(800px 600px at 10% 50%, rgba(78, 112, 241, .16), transparent 55%),
-        rgba(255, 255, 255, .015);
-      border-radius: var(--radius-xl);
-      margin: 0 20px;
-      border: 1px solid rgba(255, 255, 255, .07);
+        radial-gradient(800px 500px at 80% 10%, var(--c2-dim), transparent 55%),
+        radial-gradient(700px 450px at 15% 80%, var(--c3-dim), transparent 55%),
+        linear-gradient(180deg, var(--alt-bg), #0d1322);
+    }
+    .section--alt .card {
+      background: var(--alt-panel);
+      border-color: var(--alt-stroke);
     }
 
-    * { box-sizing: border-box }
+    /* =====================================================================
+       RESET & BASE
+    ===================================================================== */
+    *, *::before, *::after { box-sizing: border-box }
     html, body { height: 100% }
-
     body {
       margin: 0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(1000px 650px at 10% 10%, rgba(78, 112, 241, .30), transparent 55%),
-        radial-gradient(900px  650px at 90% 20%, rgba(242, 139, 134, .22), transparent 55%),
-        linear-gradient(180deg, var(--bg), #090a12);
+        radial-gradient(1000px 650px at 10% 10%, var(--c2-glow), transparent 55%),
+        radial-gradient(900px 650px at 90% 20%, var(--c3-glow), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--c4));
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
-
     a { color: inherit; text-decoration: none }
     img { max-width: 100%; display: block }
 
-    /* ── Header ── */
+    /* =====================================================================
+       HEADER
+    ===================================================================== */
     header {
       position: sticky;
       top: 0;
@@ -101,7 +136,6 @@
       background: rgba(11, 16, 32, .62);
       border-bottom: 1px solid var(--stroke);
     }
-
     .nav {
       max-width: var(--max);
       margin: 0 auto;
@@ -111,7 +145,6 @@
       justify-content: space-between;
       gap: 16px;
     }
-
     .brand {
       display: flex;
       align-items: center;
@@ -120,18 +153,16 @@
       letter-spacing: .02em;
       font-family: "Space Grotesk", Inter, system-ui, sans-serif;
     }
-
     .mark {
       width: 34px;
       height: 34px;
       border-radius: 14px;
       background:
-        radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .60), transparent 55%),
-        linear-gradient(135deg, var(--brand), rgba(242, 139, 134, .95));
-      border: 1px solid rgba(255, 255, 255, .16);
-      box-shadow: 0 16px 40px rgba(78, 112, 241, .18);
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.60), transparent 55%),
+        linear-gradient(135deg, var(--brand), rgba(242,139,134,.95));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 16px 40px rgba(78,112,241,.18);
     }
-
     nav ul {
       list-style: none;
       margin: 0;
@@ -142,7 +173,6 @@
       color: var(--muted);
       font-size: 14px;
     }
-
     nav a:hover { color: var(--text) }
 
     .btn {
@@ -152,8 +182,8 @@
       gap: 10px;
       padding: 10px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
       color: var(--text);
       font-weight: 600;
       font-size: 14px;
@@ -161,63 +191,58 @@
       transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
       white-space: nowrap;
     }
-
     .btn:hover { transform: translateY(-1px); opacity: .98 }
-
     .btn.primary {
       border: none;
-      background: linear-gradient(135deg, var(--brand), rgba(78, 112, 241, .65));
-      box-shadow: 0 18px 50px rgba(78, 112, 241, .20);
+      background: linear-gradient(135deg, var(--brand), var(--c2-mid));
+      box-shadow: 0 18px 50px rgba(78,112,241,.20);
     }
 
-    /* ── Layout helpers ── */
+    /* =====================================================================
+       LAYOUT HELPERS
+    ===================================================================== */
     .wrap { min-height: 100%; display: flex; flex-direction: column }
-    main  { flex: 1 }
+    main { flex: 1 }
     .container { max-width: var(--max); margin: 0 auto; padding: 0 20px }
-
     .section { padding: 56px 0 }
-
     .section h2 {
       margin: 0 0 10px;
       font-family: "Space Grotesk", Inter, system-ui, sans-serif;
       letter-spacing: -.01em;
       font-size: 28px;
     }
-
     .hint { margin: 0; color: var(--muted); max-width: 70ch }
 
-    /* ── Hero ── */
+    /* =====================================================================
+       HERO
+    ===================================================================== */
     .hero { padding: 34px 0 20px }
-
     .hero-grid {
       display: grid;
       grid-template-columns: 1.05fr .95fr;
       gap: 28px;
       align-items: center;
     }
-
     .kicker {
       display: inline-flex;
       align-items: center;
       gap: 10px;
       padding: 8px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
       color: var(--muted);
       letter-spacing: .14em;
       text-transform: uppercase;
       font-size: 12px;
     }
-
     .dot {
       width: 10px;
       height: 10px;
       border-radius: 999px;
       background: linear-gradient(135deg, var(--brand), var(--accent));
-      box-shadow: 0 14px 32px rgba(242, 139, 134, .18);
+      box-shadow: 0 14px 32px var(--c3-dim);
     }
-
     h1 {
       margin: 14px 0 10px;
       font-family: "Space Grotesk", Inter, system-ui, sans-serif;
@@ -225,16 +250,18 @@
       line-height: 1.05;
       letter-spacing: -.02em;
     }
-
     .subhead {
       margin: 0 0 18px;
       color: var(--muted);
       font-size: 16px;
       max-width: 60ch;
     }
-
-    .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px }
-
+    .cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
     .micro {
       margin-top: 14px;
       display: flex;
@@ -243,44 +270,40 @@
       color: var(--muted);
       font-size: 13px;
     }
-
     .pill {
       padding: 8px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
     }
 
-    /* ── Hero image card ── */
+    /* Hero image card */
     .hero-card {
       position: relative;
       border-radius: 34px;
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
       box-shadow: var(--shadow);
     }
-
     .hero-card::before {
       content: "";
       position: absolute;
       inset: -40%;
       background:
-        radial-gradient(circle at 30% 30%, rgba(78, 112, 241, .25), transparent 45%),
-        radial-gradient(circle at 70% 60%, rgba(242, 139, 134, .18), transparent 48%),
-        radial-gradient(circle at 50% 20%, rgba(255, 255, 255, .10), transparent 40%);
+        radial-gradient(circle at 30% 30%, var(--c2-dim), transparent 45%),
+        radial-gradient(circle at 70% 60%, var(--c3-dim), transparent 48%),
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,.10), transparent 40%);
       filter: blur(1px);
       opacity: .9;
       pointer-events: none;
     }
-
     .hero-card img {
       position: relative;
       width: 100%;
       height: auto;
       display: block;
     }
-
     .hero-card .caption {
       position: absolute;
       left: 14px;
@@ -288,76 +311,80 @@
       bottom: 14px;
       padding: 12px;
       border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(11, 16, 32, .55);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(11,16,32,.55);
       backdrop-filter: blur(10px);
-      color: rgba(255, 255, 255, .86);
+      color: rgba(255,255,255,.86);
       font-size: 13px;
     }
 
-    /* ── Cards & grids ── */
+    /* =====================================================================
+       CARDS & GRID
+    ===================================================================== */
     .grid {
       display: grid;
       grid-template-columns: repeat(12, minmax(0, 1fr));
       gap: 16px;
       margin-top: 18px;
     }
-
     .card {
       grid-column: span 4;
       border-radius: var(--radius-xl);
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
       padding: 18px;
-      box-shadow: 0 12px 38px rgba(0, 0, 0, .25);
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
     }
-
     .card h3 {
       margin: 0 0 8px;
       font-size: 16px;
       letter-spacing: -.01em;
       font-family: "Space Grotesk", Inter, system-ui, sans-serif;
     }
-
     .card p { margin: 0; color: var(--muted); font-size: 14px }
-
     .meta {
       margin-top: 10px;
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
-      color: rgba(255, 255, 255, .80);
+      color: rgba(255,255,255,.80);
       font-size: 12px;
     }
-
     .tag {
       padding: 6px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
     }
-
+    .outcome {
+      margin-top: 10px;
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+    }
     .span-6  { grid-column: span 6 }
     .span-12 { grid-column: span 12 }
 
-    /* ── Skills list ── */
+    /* =====================================================================
+       SKILLS
+    ===================================================================== */
     .skills {
       display: flex;
       flex-wrap: wrap;
       gap: 10px;
       margin-top: 12px;
     }
-
     .skill {
       padding: 9px 12px;
       border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .04);
-      color: rgba(255, 255, 255, .86);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.86);
       font-size: 13px;
     }
 
-    /* ── Contact ── */
+    /* =====================================================================
+       CONTACT
+    ===================================================================== */
     .contact {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -365,37 +392,35 @@
       margin-top: 18px;
       align-items: stretch;
     }
-
     .contact-card {
       border-radius: var(--radius-xl);
-      border: 1px solid rgba(255, 255, 255, .12);
+      border: 1px solid rgba(255,255,255,.12);
       background:
-        radial-gradient(900px 600px at 20% 20%, rgba(78, 112, 241, .22), transparent 55%),
-        radial-gradient(700px 500px at 80% 40%, rgba(242, 139, 134, .18), transparent 55%),
-        rgba(255, 255, 255, .05);
+        radial-gradient(900px 600px at 20% 20%, rgba(78,112,241,.22), transparent 55%),
+        radial-gradient(700px 500px at 80% 40%, rgba(242,139,134,.18), transparent 55%),
+        rgba(255,255,255,.05);
       padding: 18px;
       box-shadow: var(--shadow);
     }
-
-    .contact-card h3 { margin: 0 0 8px; font-family: "Space Grotesk", Inter, sans-serif }
-    .contact-card p  { margin: 0 0 12px; color: var(--muted); font-size: 14px }
-
+    .contact-card h3 {
+      margin: 0 0 8px;
+      font-family: "Space Grotesk", Inter, sans-serif;
+    }
+    .contact-card p { margin: 0 0 12px; color: var(--muted); font-size: 14px }
     .contact-card a {
       text-decoration: underline;
       text-underline-offset: 3px;
       text-decoration-thickness: 1px;
     }
-
     form {
       border-radius: var(--radius-xl);
-      border: 1px solid rgba(255, 255, 255, .12);
-      background: rgba(255, 255, 255, .05);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
       padding: 18px;
-      box-shadow: 0 12px 38px rgba(0, 0, 0, .25);
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
       display: grid;
       gap: 12px;
     }
-
     label {
       display: block;
       font-size: 12px;
@@ -404,35 +429,32 @@
       color: var(--muted);
       margin-bottom: 6px;
     }
-
     input, textarea {
       width: 100%;
       padding: 12px;
       border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, .14);
-      background: rgba(255, 255, 255, .06);
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
       color: var(--text);
       font-family: inherit;
       font-size: 14px;
       outline: none;
     }
-
     textarea { min-height: 110px; resize: vertical }
-
-    input:focus,
-    textarea:focus {
-      border-color: rgba(78, 112, 241, .55);
-      background: rgba(255, 255, 255, .08);
+    input:focus, textarea:focus {
+      border-color: rgba(78,112,241,.55);
+      background: rgba(255,255,255,.08);
     }
 
-    /* ── Footer ── */
+    /* =====================================================================
+       FOOTER
+    ===================================================================== */
     footer {
-      border-top: 1px solid rgba(255, 255, 255, .10);
+      border-top: 1px solid rgba(255,255,255,.10);
       padding: 26px 0 40px;
       color: var(--muted);
       font-size: 12px;
     }
-
     .foot {
       display: flex;
       align-items: center;
@@ -440,18 +462,18 @@
       gap: 12px;
       flex-wrap: wrap;
     }
-
     .foot a:hover { color: var(--text) }
 
-    /* ── Responsive ── */
+    /* =====================================================================
+       RESPONSIVE
+    ===================================================================== */
     @media (max-width: 980px) {
-      .hero-grid  { grid-template-columns: 1fr }
-      h1          { font-size: 44px }
-      .card       { grid-column: span 12 }
-      .span-6     { grid-column: span 12 }
-      .contact    { grid-template-columns: 1fr }
+      .hero-grid { grid-template-columns: 1fr }
+      h1 { font-size: 44px }
+      .card { grid-column: span 12 }
+      .span-6 { grid-column: span 12 }
+      .contact { grid-template-columns: 1fr }
     }
-
     @media (max-width: 560px) {
       nav ul li:nth-child(-n+2) { display: none }
       h1 { font-size: 38px }
@@ -462,8 +484,12 @@
 <body>
   <div class="wrap">
 
+    <!-- ================================================================
+         HEADER
+    ================================================================ -->
     <header>
       <div class="nav">
+
         <div class="brand">
           <div class="mark" aria-hidden="true"></div>
           <span>[Your Name]</span>
@@ -479,53 +505,53 @@
         </nav>
 
         <div style="display:flex; gap:10px; align-items:center;">
-          <a class="btn"         href="#projects">[Secondary CTA]</a>
+          <a class="btn" href="#projects">[Secondary CTA]</a>
           <a class="btn primary" href="#contact">[Primary CTA]</a>
         </div>
+
       </div>
     </header>
 
     <main>
 
-      <!-- ════════════════════════════════════════
+      <!-- ==============================================================
            HERO — split composition
-           Left: text / CTAs  |  Right: hero-card image
-      ════════════════════════════════════════ -->
+      ============================================================== -->
       <section class="hero">
         <div class="container">
           <div class="hero-grid">
 
-            <!-- Left column -->
+            <!-- Left: editorial copy -->
             <div>
               <span class="kicker">
                 <span class="dot" aria-hidden="true"></span>
-                [Field / Discipline] • [Graduation Year or Status]
+                [Discipline] • [Status / Tagline]
               </span>
 
-              <h1>[Hero headline — value proposition or tagline]</h1>
+              <h1>[Hero Headline — Value Proposition]</h1>
 
               <p class="subhead">
-                [2–3 sentence bio: field of study, core skills, and what you help teams or projects accomplish.]
+                [Two-to-three sentence summary of who you are, what you do,
+                and what makes your work valuable to the reader.]
               </p>
 
               <div class="cta-row">
                 <a class="btn primary" href="#projects">[Primary CTA]</a>
-                <a class="btn"         href="#resume">[Secondary CTA]</a>
+                <a class="btn" href="#resume">[Secondary CTA]</a>
               </div>
 
-              <div class="micro" aria-label="Skill highlights">
-                <span class="pill">[Skill cluster 1]</span>
-                <span class="pill">[Skill cluster 2]</span>
-                <span class="pill">[Skill cluster 3]</span>
+              <div class="micro" aria-label="Highlights">
+                <span class="pill">[Skill Group A]</span>
+                <span class="pill">[Skill Group B]</span>
+                <span class="pill">[Skill Group C]</span>
               </div>
             </div>
 
-            <!-- Right column — hero image card -->
+            <!-- Right: hero image card -->
             <aside class="hero-card" aria-label="Hero image">
-              <img src="../assets/images/hero-placeholder.png"
-                   alt="[Descriptive alt text for hero illustration]" />
+              <img src="hero-illustration.png" alt="[Descriptive alt text for hero illustration]" />
               <div class="caption">
-                [Seeking: Role type • Employment type • Location preference]
+                [Short status line — role sought, availability, or location note]
               </div>
             </aside>
 
@@ -533,79 +559,68 @@
         </div>
       </section>
 
-      <!-- ════════════════════════════════════════
-           PROJECTS — 12-col card grid
-           3 equal cards (span 4) + 2 wide cards (span 6)
-      ════════════════════════════════════════ -->
+      <!-- ==============================================================
+           PROJECTS — 12-column grid, varied spans
+      ============================================================== -->
       <section class="section" id="projects">
         <div class="container">
           <h2>[Section Title — e.g., Featured Projects]</h2>
-          <p class="hint">[Section subtitle or instructional note about this section's purpose.]</p>
+          <p class="hint">[Optional sub-heading or instructional hint for this section.]</p>
 
           <div class="grid">
 
-            <!-- Project card — span 4 (repeat 3×) -->
+            <!-- Small card (span 4) — repeat 3× for top row -->
             <article class="card">
               <h3>[Project Title]</h3>
-              <p>[1–2 sentence description of the problem and approach.]</p>
+              <p>[One to two sentence description of the problem, approach, and key method used.]</p>
               <div class="meta">
-                <span class="tag">[Tool / Method 1]</span>
-                <span class="tag">[Tool / Method 2]</span>
-                <span class="tag">[Tool / Method 3]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
               </div>
-              <p style="margin-top:10px; color:rgba(255,255,255,.86); font-size:13px;">
-                Outcome: [Measurable result or key takeaway.]
-              </p>
+              <p class="outcome">[Outcome: measurable result or key takeaway.]</p>
             </article>
 
             <article class="card">
               <h3>[Project Title]</h3>
-              <p>[1–2 sentence description of the problem and approach.]</p>
+              <p>[One to two sentence description of the problem, approach, and key method used.]</p>
               <div class="meta">
-                <span class="tag">[Tool / Method 1]</span>
-                <span class="tag">[Tool / Method 2]</span>
-                <span class="tag">[Tool / Method 3]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
               </div>
-              <p style="margin-top:10px; color:rgba(255,255,255,.86); font-size:13px;">
-                Outcome: [Measurable result or key takeaway.]
-              </p>
+              <p class="outcome">[Outcome: measurable result or key takeaway.]</p>
             </article>
 
             <article class="card">
               <h3>[Project Title]</h3>
-              <p>[1–2 sentence description of the problem and approach.]</p>
+              <p>[One to two sentence description of the problem, approach, and key method used.]</p>
               <div class="meta">
-                <span class="tag">[Tool / Method 1]</span>
-                <span class="tag">[Tool / Method 2]</span>
-                <span class="tag">[Tool / Method 3]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
               </div>
-              <p style="margin-top:10px; color:rgba(255,255,255,.86); font-size:13px;">
-                Outcome: [Measurable result or key takeaway.]
-              </p>
+              <p class="outcome">[Outcome: measurable result or key takeaway.]</p>
             </article>
 
-            <!-- Wide project card — span 6 (repeat 2×) -->
+            <!-- Wide cards (span 6) — second row -->
             <article class="card span-6">
-              <h3>[Wide Project / Case Study Title]</h3>
-              <p>
-                [2–3 sentence description covering the scope, methodology, and any governance or process elements worth noting.]
-              </p>
+              <h3>[Featured Project / Case Study Title]</h3>
+              <p>[Two to three sentence description covering context, method, and deliverable.]</p>
               <div class="meta">
-                <span class="tag">[Tool / Method 1]</span>
-                <span class="tag">[Tool / Method 2]</span>
-                <span class="tag">[Tool / Method 3]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
               </div>
             </article>
 
             <article class="card span-6">
-              <h3>[Wide Project / Case Study Title]</h3>
-              <p>
-                [2–3 sentence description covering the scope, methodology, and any governance or process elements worth noting.]
-              </p>
+              <h3>[Featured Project / Case Study Title]</h3>
+              <p>[Two to three sentence description covering context, method, and deliverable.]</p>
               <div class="meta">
-                <span class="tag">[Tool / Method 1]</span>
-                <span class="tag">[Tool / Method 2]</span>
-                <span class="tag">[Tool / Method 3]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
+                <span class="tag">[Tool / Tech]</span>
               </div>
             </article>
 
@@ -613,74 +628,71 @@
         </div>
       </section>
 
-      <!-- ════════════════════════════════════════
-           SKILLS — single full-width pill cloud
-           ALT palette section
-      ════════════════════════════════════════ -->
-      <section class="section section-alt" id="skills">
+      <!-- ==============================================================
+           SKILLS — alternate section palette
+      ============================================================== -->
+      <section class="section section--alt" id="skills">
         <div class="container">
-          <h2>[Section Title — e.g., Skills &amp; Tools]</h2>
-          <p class="hint">[Brief guidance on how this list relates to target roles.]</p>
+          <h2>[Section Title — e.g., Skills & Tools]</h2>
+          <p class="hint">[Optional sub-heading or guidance for this section.]</p>
 
           <div class="grid">
             <div class="card span-12">
               <div class="skills" aria-label="Skill chips">
-                <span class="skill">[Skill / Tool 1]</span>
-                <span class="skill">[Skill / Tool 2]</span>
-                <span class="skill">[Skill / Tool 3]</span>
-                <span class="skill">[Skill / Tool 4]</span>
-                <span class="skill">[Skill / Tool 5]</span>
-                <span class="skill">[Skill / Tool 6]</span>
-                <span class="skill">[Skill / Tool 7]</span>
-                <span class="skill">[Skill / Tool 8]</span>
-                <span class="skill">[Skill / Tool 9]</span>
-                <span class="skill">[Skill / Tool 10]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
+                <span class="skill">[Skill or Tool]</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- ════════════════════════════════════════
-           RESUME SNAPSHOT — education + experience + links
-      ════════════════════════════════════════ -->
+      <!-- ==============================================================
+           RESUME / ABOUT — education + experience + links
+      ============================================================== -->
       <section class="section" id="resume">
         <div class="container">
           <h2>[Section Title — e.g., Resume Snapshot]</h2>
-          <p class="hint">[Brief note about what this section contains and where the full PDF lives.]</p>
+          <p class="hint">[Optional sub-heading or guidance for this section.]</p>
 
           <div class="grid">
 
-            <!-- Education — span 6 -->
             <div class="card span-6">
-              <h3>[Education Block Title]</h3>
-              <p><strong>[Degree, Major]</strong> — [Institution Name]</p>
+              <h3>[Education Heading]</h3>
+              <p><strong>[Degree & Major]</strong> — [Institution Name]</p>
               <p style="margin-top:8px;">[Graduation date] • [Optional GPA or honors]</p>
-              <p style="margin-top:10px;">[Relevant coursework or concentration highlights.]</p>
+              <p style="margin-top:10px;">[Relevant coursework or academic highlights.]</p>
             </div>
 
-            <!-- Experience — span 6 -->
             <div class="card span-6">
-              <h3>[Experience Block Title]</h3>
-              <p><strong>[Role Title]</strong> — [Company / Organization] ([Date range])</p>
-              <p style="margin-top:10px;">[2–3 bullet-style highlights of responsibilities and impact.]</p>
+              <h3>[Experience Heading]</h3>
+              <p><strong>[Role Title]</strong> — [Company Name] ([Date Range])</p>
+              <p style="margin-top:10px;">[Two to three sentence summary of responsibilities and impact.]</p>
               <div class="meta">
-                <span class="tag">[Tool 1]</span>
-                <span class="tag">[Tool 2]</span>
-                <span class="tag">[Tool 3]</span>
+                <span class="tag">[Skill]</span>
+                <span class="tag">[Skill]</span>
+                <span class="tag">[Skill]</span>
               </div>
             </div>
 
-            <!-- Resume links — span 12 -->
             <div class="card span-12">
-              <h3>[Links Block Title — e.g., Resume &amp; Links]</h3>
+              <h3>[Links Heading]</h3>
               <p>
-                <a class="btn primary" href="#">[Download Resume (PDF)]</a>
-                <a class="btn"         href="#">[GitHub]</a>
-                <a class="btn"         href="#">[LinkedIn]</a>
+                <a class="btn primary" href="#">[Download Resume / PDF]</a>
+                <a class="btn" href="#">[GitHub]</a>
+                <a class="btn" href="#">[LinkedIn]</a>
               </p>
-              <p style="margin-top:10px; color:var(--muted); font-size:13px;">
-                [Tip or note about where files are hosted or how to update links.]
+              <p style="margin-top:10px; color: var(--muted); font-size: 13px;">
+                [Optional note or instruction about the links above.]
               </p>
             </div>
 
@@ -688,47 +700,44 @@
         </div>
       </section>
 
-      <!-- ════════════════════════════════════════
-           CONTACT — info card + contact form
-           ALT palette section
-      ════════════════════════════════════════ -->
-      <section class="section section-alt" id="contact">
+      <!-- ==============================================================
+           CONTACT — alternate section palette, two-column layout
+      ============================================================== -->
+      <section class="section section--alt" id="contact">
         <div class="container">
           <h2>[Section Title — e.g., Contact]</h2>
-          <p class="hint">[One-line framing of availability or intent.]</p>
+          <p class="hint">[Optional sub-heading or guidance for this section.]</p>
 
           <div class="contact">
 
-            <!-- Left: contact details -->
+            <!-- Left: info card -->
             <div class="contact-card">
-              <h3>[Contact Card Headline — e.g., Let's connect]</h3>
+              <h3>[Contact Card Heading]</h3>
+              <p>[Two sentence invitation to reach out — role sought, collaboration interest, etc.]</p>
               <p>
-                [2–3 sentences about availability, role types sought, and openness to collaboration.]
-              </p>
-              <p style="margin:0;">
-                <strong>[Label 1]:</strong> <a href="mailto:[your@email.com]">[your@email.com]</a><br />
-                <strong>[Label 2]:</strong> [City, State — location or preference note]<br />
-                <strong>[Label 3]:</strong> <a href="#">[Profile URL or handle]</a>
+                <strong>[Label]:</strong> <a href="#">[Email or Link]</a><br />
+                <strong>[Label]:</strong> [Location or availability note]<br />
+                <strong>[Label]:</strong> <a href="#">[Profile URL or handle]</a>
               </p>
             </div>
 
             <!-- Right: contact form -->
             <form action="#" method="post">
               <div>
-                <label for="name">[Name Field Label]</label>
-                <input id="name" name="name" type="text" placeholder="[Placeholder text]" />
+                <label for="name">[Name Label]</label>
+                <input id="name" name="name" type="text" placeholder="[Name placeholder]" />
               </div>
               <div>
-                <label for="email">[Email Field Label]</label>
-                <input id="email" name="email" type="email" placeholder="[Placeholder text]" />
+                <label for="email">[Email Label]</label>
+                <input id="email" name="email" type="email" placeholder="[Email placeholder]" />
               </div>
               <div>
-                <label for="message">[Message Field Label]</label>
-                <textarea id="message" name="message" placeholder="[Placeholder prompt — what to include in the message]"></textarea>
+                <label for="message">[Message Label]</label>
+                <textarea id="message" name="message" placeholder="[Message placeholder]"></textarea>
               </div>
-              <button class="btn primary" type="submit">[Submit Button Label]</button>
-              <p style="margin:0; color:var(--muted); font-size:12px;">
-                [Form disclaimer or integration note.]
+              <button class="btn primary" type="submit">[Submit Label]</button>
+              <p style="margin:0; color: var(--muted); font-size: 12px;">
+                [Optional disclaimer or note about form submission.]
               </p>
             </form>
 
@@ -738,17 +747,17 @@
 
     </main>
 
-    <!-- ════════════════════════════════════════
+    <!-- ==============================================================
          FOOTER
-    ════════════════════════════════════════ -->
+    ============================================================== -->
     <footer>
       <div class="container">
         <div class="foot">
-          <span>© [Year] [Your Name] • [Tagline or field descriptor]</span>
+          <span>© [Year] [Your Name] • [Portfolio Tagline]</span>
           <span style="display:flex; gap:14px;">
-            <a href="#projects">[Footer Link 1]</a>
-            <a href="#skills">[Footer Link 2]</a>
-            <a href="#contact">[Footer Link 3]</a>
+            <a href="#projects">[Nav Link 1]</a>
+            <a href="#skills">[Nav Link 2]</a>
+            <a href="#contact">[Nav Link 3]</a>
           </span>
         </div>
       </div>

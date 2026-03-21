@@ -6,19 +6,29 @@
     <title>[PORTFOLIO_OWNER_NAME] - [FIELD] Portfolio</title>
     <!--
 {
-  "visual_elements_line_numbers": {
-    "headshot_photo": "154",
-    "hero_image": "140",
-    "emoji_icons": ["204", "218", "232", "246", "295", "303", "311", "319", "349", "357", "365", "373"],
-    "images": ["154"],
+  "visual_elements": {
+    "images": [
+      {
+        "src_file_name": "hero_portrait.jpg",
+        "selector": ".hero-photo img",
+        "type": "img",
+        "role": "Circular portrait photo of portfolio owner centered in hero card"
+      },
+      {
+        "src_file_name": "hero_background.svg",
+        "selector": ".hero-image",
+        "type": "svg",
+        "role": "Decorative dark gradient background with abstract silhouette motif inside the hero card"
+      }
+    ],
     "animations": []
   },
   "exemplary_attributes": {
-    "pacing": "steady and generous — wide section padding, deliberate whitespace between cards, unhurried scroll rhythm",
-    "mood": "energetic yet academic — bold color-block framing contrasts with clean analytic grid inside",
-    "compositional_feel": "central card hero flanked by bold decorative color planes; body alternates between light and muted-light backgrounds",
-    "section_density": "medium — 4-6 items per section, breathing room between each unit",
-    "visual_treatment": "flat color gradients, soft card shadows, pill-shaped tags, rounded corners throughout, emoji as section icons"
+    "pacing": "Generous vertical rhythm; each section breathes with 100px padding and ample internal spacing",
+    "mood": "Energetic yet academic; bold accent colors contrast with dark moody hero and clean white body sections",
+    "compositional_feel": "Central hero card framing with colorful edge bleed accent blocks, transitioning to grid-based content sections",
+    "section_density": "Moderate; about 4–6 content units per section, balanced whitespace throughout",
+    "visual_treatment": "Vivid flat color gradients for category coding, glassmorphism contact cards on dark background, subtle card hover lifts"
   },
   "default_color_scheme": {
     "primary": "#10b981",
@@ -27,16 +37,11 @@
     "dark": "#1a1a1a",
     "light": "#f8f9fa"
   },
-  "alternate_color_scheme": {
-    "primary": "#059669",
-    "secondary": "#db2777",
-    "accent": "#ea580c",
-    "dark": "#0f172a",
-    "light": "#e2e8f0"
-  },
-  "composition_option": "central",
-  "style_token": "clean-minimal",
-  "rendering_style": "clean editorial vector"
+  "design_factors": {
+    "composition_option": "central",
+    "style_token": "clean-minimal",
+    "rendering_style": "clean editorial vector"
+  }
 }
     -->
     <link
@@ -44,53 +49,50 @@
       rel="stylesheet"
     />
     <style>
-      /* ── Reset ─────────────────────────────────────────────── */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      /* ── Design tokens ─────────────────────────────────────── */
+      /* ─── CSS Custom Properties ─────────────────────────────────────────── */
       :root {
-        --primary:   #10b981;
-        --secondary: #ec4899;
-        --accent:    #f97316;
-        --dark:      #1a1a1a;
-        --light:     #f8f9fa;
+        /* 5-color palette derived from hero accent blocks */
+        --clr-primary:   #10b981; /* emerald green */
+        --clr-secondary: #ec4899; /* vibrant pink   */
+        --clr-accent:    #f97316; /* warm orange    */
+        --clr-dark:      #1a1a1a; /* near-black     */
+        --clr-light:     #f8f9fa; /* off-white      */
 
         /* Functional derivations */
-        --primary-dark:    #059669;
-        --secondary-dark:  #db2777;
-        --accent-dark:     #ea580c;
-        --purple:          #7c3aed;
-        --purple-light:    #a855f7;
-        --hero-card-bg:    #2d3748;
-        --hero-overlay-bg: #1a202c;
-        --body-text:       #333333;
-        --muted-text:      #555555;
-        --subtle-text:     #666666;
-        --border-light:    #eeeeee;
-        --tag-bg:          #f1f5f9;
-        --tag-text:        #555555;
-        --footer-bg:       #0f172a;
-        --glass-bg:        rgba(255, 255, 255, 0.10);
-        --glass-border:    rgba(255, 255, 255, 0.20);
-        --shadow-sm:       0 5px 20px  rgba(0, 0, 0, 0.05);
-        --shadow-md:       0 10px 30px rgba(0, 0, 0, 0.10);
-        --shadow-lg:       0 25px 50px rgba(0, 0, 0, 0.50);
+        --clr-primary-deep:   #059669;
+        --clr-secondary-deep: #db2777;
+        --clr-accent-deep:    #ea580c;
+        --clr-purple:         #7c3aed;
+        --clr-purple-deep:    #6d28d9;
+        --clr-hero-card:      #2d3748;
+        --clr-hero-card-dark: #1a202c;
+        --clr-body-text:      #333333;
+        --clr-muted:          #666666;
+        --clr-subtle:         #555555;
+        --clr-rule:           #eeeeee;
+        --clr-surface:        #ffffff;
+        --clr-surface-alt:    #f1f5f9;
+        --clr-footer:         #0f172a;
+
+        /* Alt palette (dark-inverted sections) */
+        --alt-bg:        linear-gradient(135deg, var(--clr-dark) 0%, var(--clr-hero-card) 100%);
+        --alt-text:      #ffffff;
+        --alt-muted:     rgba(255,255,255,0.75);
+        --alt-card-bg:   rgba(255,255,255,0.10);
+        --alt-card-bdr:  rgba(255,255,255,0.20);
+        --alt-heading:   var(--clr-primary);
       }
 
-      /* ── Base ──────────────────────────────────────────────── */
+      /* ─── Reset ─────────────────────────────────────────────────────────── */
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
       body {
         font-family: 'Inter', sans-serif;
-        background: var(--light);
-        color: var(--body-text);
+        background: var(--clr-light);
+        color: var(--clr-body-text);
       }
 
-      /* ══════════════════════════════════════════════════════════
-         HERO SECTION
-      ══════════════════════════════════════════════════════════ */
+      /* ─── Hero ───────────────────────────────────────────────────────────── */
       .hero {
         position: relative;
         height: 100vh;
@@ -98,16 +100,16 @@
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        background: var(--dark);
+        background: var(--clr-dark);
       }
 
-      /* Decorative color-plane blocks */
+      /* Colorful accent corner blocks */
       .accent-block { position: absolute; z-index: 1; }
 
       .accent-primary {
         width: 350px;
         height: 100%;
-        background: var(--primary);
+        background: var(--clr-primary);
         left: 0;
         top: 0;
       }
@@ -115,7 +117,7 @@
       .accent-accent {
         width: 100%;
         height: 200px;
-        background: var(--accent);
+        background: var(--clr-accent);
         right: 0;
         top: 0;
       }
@@ -123,7 +125,7 @@
       .accent-secondary {
         width: 350px;
         height: 60%;
-        background: var(--secondary);
+        background: var(--clr-secondary);
         right: 0;
         bottom: 0;
       }
@@ -131,12 +133,11 @@
       .accent-purple {
         width: 60%;
         height: 200px;
-        background: linear-gradient(135deg, var(--purple) 0%, var(--purple-light) 100%);
+        background: linear-gradient(135deg, var(--clr-purple) 0%, #a855f7 100%);
         left: 0;
         bottom: 0;
       }
 
-      /* Hero card */
       .hero-content {
         position: relative;
         z-index: 2;
@@ -148,12 +149,12 @@
       }
 
       .hero-card {
-        background: var(--hero-card-bg);
+        background: var(--clr-hero-card);
         border-radius: 40px;
         overflow: hidden;
         width: 100%;
         max-width: 1100px;
-        box-shadow: var(--shadow-lg);
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         position: relative;
         min-height: 600px;
         display: flex;
@@ -161,7 +162,6 @@
         justify-content: center;
       }
 
-      /* Decorative SVG background */
       .hero-image {
         position: absolute;
         top: 0;
@@ -174,24 +174,16 @@
 
       .hero-overlay {
         position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          135deg,
-          rgba(0, 0, 0, 0.30) 0%,
-          rgba(0, 0, 0, 0.50) 100%
-        );
+        inset: 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.50) 100%);
         z-index: 1;
       }
 
-      /* Hero text cluster */
       .hero-text {
         position: relative;
         z-index: 2;
         text-align: center;
-        color: white;
+        color: #ffffff;
         padding: 60px 40px;
         display: flex;
         flex-direction: column;
@@ -199,14 +191,13 @@
         gap: 20px;
       }
 
-      /* Circular headshot */
       .hero-photo {
         width: 160px;
         height: 160px;
         border-radius: 50%;
         overflow: hidden;
-        border: 4px solid rgba(255, 255, 255, 0.35);
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.30);
+        border: 4px solid rgba(255,255,255,0.35);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.30);
       }
 
       .hero-photo img {
@@ -225,7 +216,7 @@
       .hero-text p {
         font-size: 1.3rem;
         font-weight: 300;
-        color: rgba(255, 255, 255, 0.90);
+        color: rgba(255,255,255,0.90);
         max-width: 600px;
         line-height: 1.7;
       }
@@ -234,23 +225,22 @@
         display: inline-block;
         padding: 15px 40px;
         background: transparent;
-        color: white;
+        color: #ffffff;
         text-decoration: none;
-        border: 2px solid white;
+        border: 2px solid #ffffff;
         border-radius: 50px;
         font-weight: 600;
         font-size: 1rem;
         transition: all 0.3s;
+        margin-top: 20px;
       }
 
       .hero-cta:hover {
-        background: white;
-        color: var(--hero-card-bg);
+        background: #ffffff;
+        color: var(--clr-hero-card);
       }
 
-      /* ══════════════════════════════════════════════════════════
-         SHARED SECTION STYLES
-      ══════════════════════════════════════════════════════════ */
+      /* ─── Shared Section Styles ──────────────────────────────────────────── */
       section { padding: 100px 20px; }
 
       .container {
@@ -261,20 +251,18 @@
       section h2 {
         font-size: 3rem;
         margin-bottom: 20px;
-        color: var(--dark);
         font-weight: 700;
+        color: var(--clr-dark);
       }
 
       .section-subtitle {
         font-size: 1.2rem;
-        color: var(--subtle-text);
+        color: var(--clr-muted);
         margin-bottom: 60px;
       }
 
-      /* ══════════════════════════════════════════════════════════
-         ABOUT SECTION  (light background — palette A)
-      ══════════════════════════════════════════════════════════ */
-      .about { background: white; }
+      /* ─── About (light palette) ──────────────────────────────────────────── */
+      .about { background: var(--clr-surface); }
 
       .about-content {
         display: grid;
@@ -286,12 +274,11 @@
       .about-text {
         font-size: 1.1rem;
         line-height: 1.8;
-        color: var(--muted-text);
+        color: var(--clr-subtle);
       }
 
       .about-text p { margin-bottom: 20px; }
 
-      /* 2×2 stat grid */
       .about-stats {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -301,21 +288,22 @@
       .stat-card {
         padding: 30px;
         border-radius: 15px;
-        color: white;
+        color: #ffffff;
         text-align: center;
       }
 
+      /* Category-coded stat cards using palette variables */
       .stat-card:nth-child(1) {
-        background: linear-gradient(135deg, var(--primary)   0%, var(--primary-dark)   100%);
+        background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-primary-deep) 100%);
       }
       .stat-card:nth-child(2) {
-        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+        background: linear-gradient(135deg, var(--clr-secondary) 0%, var(--clr-secondary-deep) 100%);
       }
       .stat-card:nth-child(3) {
-        background: linear-gradient(135deg, var(--accent)    0%, var(--accent-dark)    100%);
+        background: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-deep) 100%);
       }
       .stat-card:nth-child(4) {
-        background: linear-gradient(135deg, var(--purple)    0%, #6d28d9               100%);
+        background: linear-gradient(135deg, var(--clr-purple) 0%, var(--clr-purple-deep) 100%);
       }
 
       .stat-number {
@@ -329,10 +317,8 @@
         opacity: 0.95;
       }
 
-      /* ══════════════════════════════════════════════════════════
-         SKILLS SECTION  (muted-light background — palette B)
-      ══════════════════════════════════════════════════════════ */
-      .skills { background: var(--light); }
+      /* ─── Skills (alt-light palette) ────────────────────────────────────── */
+      .skills { background: var(--clr-light); }
 
       .skills-grid {
         display: grid;
@@ -341,46 +327,44 @@
       }
 
       .skill-card {
-        background: white;
+        background: var(--clr-surface);
         padding: 40px;
         border-radius: 20px;
-        box-shadow: var(--shadow-sm);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
         transition: all 0.3s;
       }
 
       .skill-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.10);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.10);
       }
 
       .skill-card h3 {
         font-size: 1.5rem;
         margin-bottom: 20px;
-        color: var(--dark);
+        color: var(--clr-dark);
       }
 
       .skill-list { list-style: none; }
 
       .skill-list li {
         padding: 12px 0;
-        border-bottom: 1px solid var(--border-light);
+        border-bottom: 1px solid var(--clr-rule);
         display: flex;
         justify-content: space-between;
-        color: var(--muted-text);
+        color: var(--clr-subtle);
       }
 
       .skill-list li:last-child { border-bottom: none; }
 
       .skill-level {
-        color: var(--primary);
+        color: var(--clr-primary);
         font-weight: 600;
         font-size: 0.9rem;
       }
 
-      /* ══════════════════════════════════════════════════════════
-         PROJECTS SECTION  (white background — palette A)
-      ══════════════════════════════════════════════════════════ */
-      .projects { background: white; }
+      /* ─── Projects (light palette) ──────────────────────────────────────── */
+      .projects { background: var(--clr-surface); }
 
       .projects-grid {
         display: grid;
@@ -389,19 +373,18 @@
       }
 
       .project-card {
-        background: white;
+        background: var(--clr-surface);
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: var(--shadow-md);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.10);
         transition: all 0.3s;
       }
 
       .project-card:hover {
         transform: translateY(-15px);
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
       }
 
-      /* Coloured project image banners */
       .project-image {
         width: 100%;
         height: 250px;
@@ -409,20 +392,21 @@
         align-items: center;
         justify-content: center;
         font-size: 4rem;
-        color: white;
+        color: #ffffff;
       }
 
-      .project-image.theme-a {
-        background: linear-gradient(135deg, var(--primary)   0%, var(--primary-dark)   100%);
+      /* Category-coded project header bands */
+      .project-image.cat-1 {
+        background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-primary-deep) 100%);
       }
-      .project-image.theme-b {
-        background: linear-gradient(135deg, var(--secondary) 0%, var(--secondary-dark) 100%);
+      .project-image.cat-2 {
+        background: linear-gradient(135deg, var(--clr-secondary) 0%, var(--clr-secondary-deep) 100%);
       }
-      .project-image.theme-c {
-        background: linear-gradient(135deg, var(--purple)    0%, #6d28d9               100%);
+      .project-image.cat-3 {
+        background: linear-gradient(135deg, var(--clr-purple) 0%, var(--clr-purple-deep) 100%);
       }
-      .project-image.theme-d {
-        background: linear-gradient(135deg, var(--accent)    0%, var(--accent-dark)    100%);
+      .project-image.cat-4 {
+        background: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-deep) 100%);
       }
 
       .project-content { padding: 30px; }
@@ -430,11 +414,11 @@
       .project-content h3 {
         font-size: 1.5rem;
         margin-bottom: 15px;
-        color: var(--dark);
+        color: var(--clr-dark);
       }
 
       .project-content p {
-        color: var(--subtle-text);
+        color: var(--clr-muted);
         line-height: 1.7;
         margin-bottom: 20px;
       }
@@ -446,23 +430,26 @@
       }
 
       .project-tag {
-        background: var(--tag-bg);
+        background: var(--clr-surface-alt);
         padding: 6px 15px;
         border-radius: 20px;
         font-size: 0.85rem;
-        color: var(--tag-text);
+        color: var(--clr-subtle);
       }
 
-      /* ══════════════════════════════════════════════════════════
-         CONTACT SECTION  (dark gradient — palette B inverted)
-      ══════════════════════════════════════════════════════════ */
+      /* ─── Contact (dark / inverted palette) ─────────────────────────────── */
       .contact {
-        background: linear-gradient(135deg, var(--dark) 0%, var(--hero-card-bg) 100%);
-        color: white;
+        background: var(--alt-bg);
+        color: var(--alt-text);
       }
 
-      .contact h2,
-      .contact .section-subtitle { color: white; }
+      .contact h2 {
+        color: var(--alt-text);
+      }
+
+      .contact .section-subtitle {
+        color: var(--alt-muted);
+      }
 
       .contact-content {
         display: grid;
@@ -472,46 +459,44 @@
       }
 
       .contact-card {
-        background: var(--glass-bg);
+        background: var(--alt-card-bg);
         padding: 40px;
         border-radius: 20px;
         text-align: center;
         backdrop-filter: blur(10px);
-        border: 1px solid var(--glass-border);
+        border: 1px solid var(--alt-card-bdr);
       }
 
       .contact-card h3 {
         font-size: 1.3rem;
         margin-bottom: 15px;
-        color: var(--primary);
+        color: var(--alt-heading);
       }
 
-      .contact-card a {
-        color: white;
+      .contact-card a,
+      .contact-card p {
+        color: var(--alt-text);
         text-decoration: none;
         transition: color 0.3s;
+        line-height: 1.6;
       }
 
-      .contact-card a:hover { color: var(--primary); }
+      .contact-card a:hover { color: var(--clr-primary); }
 
-      /* ══════════════════════════════════════════════════════════
-         FOOTER
-      ══════════════════════════════════════════════════════════ */
+      /* ─── Footer ─────────────────────────────────────────────────────────── */
       footer {
-        background: var(--footer-bg);
-        color: white;
+        background: var(--clr-footer);
+        color: #ffffff;
         text-align: center;
         padding: 40px 20px;
       }
 
       footer p + p {
         margin-top: 10px;
-        opacity: 0.7;
+        opacity: 0.70;
       }
 
-      /* ══════════════════════════════════════════════════════════
-         RESPONSIVE
-      ══════════════════════════════════════════════════════════ */
+      /* ─── Responsive ─────────────────────────────────────────────────────── */
       @media (max-width: 968px) {
         .hero-text h1   { font-size: 3rem; }
         .hero-text p    { font-size: 1.1rem; }
@@ -534,12 +519,9 @@
   </head>
   <body>
 
-    <!-- ════════════════════════════════════════════════════════
-         HERO SECTION
-    ════════════════════════════════════════════════════════ -->
+    <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
     <section class="hero">
-
-      <!-- Decorative color planes -->
+      <!-- Colorful corner accent blocks -->
       <div class="accent-block accent-primary"></div>
       <div class="accent-block accent-accent"></div>
       <div class="accent-block accent-secondary"></div>
@@ -548,28 +530,26 @@
       <div class="hero-content">
         <div class="hero-card">
 
-          <!-- Decorative SVG hero background -->
+          <!-- Hero background illustration / SVG placeholder -->
           <svg
             class="hero-image"
             viewBox="0 0 1100 600"
             xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
           >
             <defs>
               <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%"   style="stop-color:#2d3748;stop-opacity:1" />
-                <stop offset="100%" style="stop-color:#1a202c;stop-opacity:1" />
+                <stop offset="0%"   stop-color="#2d3748" />
+                <stop offset="100%" stop-color="#1a202c" />
               </linearGradient>
             </defs>
             <rect width="1100" height="600" fill="url(#heroGrad)" />
-            <!-- Abstract field / discipline motif — replace with domain-specific illustration -->
-            <ellipse cx="550" cy="220" rx="160" ry="80" fill="#10b981" opacity="0.08" />
-            <ellipse cx="550" cy="220" rx="260" ry="140" fill="#10b981" opacity="0.05" />
-            <circle  cx="200" cy="450" r="120"           fill="#ec4899" opacity="0.06" />
-            <circle  cx="900" cy="150" r="100"           fill="#f97316" opacity="0.07" />
-            <!-- Monogram watermark -->
+            <!-- Abstract decorative motif — replace with thematic illustration -->
+            <ellipse cx="550" cy="200" rx="110" ry="130" fill="#1a1a1a" opacity="0.5" />
+            <rect x="475" y="325" width="150" height="275" fill="#1a1a1a" opacity="0.5" rx="12" />
             <text
-              x="550" y="560"
-              font-size="140"
+              x="550" y="555"
+              font-size="130"
               fill="#2d3748"
               text-anchor="middle"
               font-weight="bold"
@@ -580,13 +560,13 @@
           <div class="hero-overlay"></div>
 
           <div class="hero-text">
-            <!-- Headshot -->
+            <!-- Portrait photo -->
             <div class="hero-photo">
-              <img src="[HEADSHOT_URL]" alt="[PORTFOLIO_OWNER_NAME] portrait" />
+              <img src="hero_portrait.jpg" alt="[OWNER_NAME] portrait" />
             </div>
 
             <h1>[PORTFOLIO_TITLE]</h1>
-            <p>[HERO_TAGLINE_OR_BRIEF_INTRO]</p>
+            <p>[HERO_TAGLINE_OR_BRIEF_INTRO_SENTENCE]</p>
             <a href="#about" class="hero-cta">[CTA_LABEL]</a>
           </div>
 
@@ -594,48 +574,44 @@
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════
-         ABOUT SECTION
-    ════════════════════════════════════════════════════════ -->
+    <!-- ═══ ABOUT ══════════════════════════════════════════════════════════ -->
     <section id="about" class="about">
       <div class="container">
         <h2>[ABOUT_HEADING]</h2>
         <p class="section-subtitle">[ABOUT_SUBTITLE]</p>
 
         <div class="about-content">
-          <!-- Narrative paragraphs -->
+          <!-- Narrative text -->
           <div class="about-text">
             <p>[ABOUT_PARAGRAPH_1]</p>
             <p>[ABOUT_PARAGRAPH_2]</p>
             <p>[ABOUT_PARAGRAPH_3]</p>
           </div>
 
-          <!-- Stat cards — repeat as needed -->
+          <!-- Key metric stat cards (repeat as needed) -->
           <div class="about-stats">
             <div class="stat-card">
-              <div class="stat-number">[STAT_NUMBER]</div>
-              <div class="stat-label">[STAT_LABEL]</div>
+              <div class="stat-number">[STAT_VALUE_1]</div>
+              <div class="stat-label">[STAT_LABEL_1]</div>
             </div>
             <div class="stat-card">
-              <div class="stat-number">[STAT_NUMBER]</div>
-              <div class="stat-label">[STAT_LABEL]</div>
+              <div class="stat-number">[STAT_VALUE_2]</div>
+              <div class="stat-label">[STAT_LABEL_2]</div>
             </div>
             <div class="stat-card">
-              <div class="stat-number">[STAT_NUMBER]</div>
-              <div class="stat-label">[STAT_LABEL]</div>
+              <div class="stat-number">[STAT_VALUE_3]</div>
+              <div class="stat-label">[STAT_LABEL_3]</div>
             </div>
             <div class="stat-card">
-              <div class="stat-number">[STAT_NUMBER]</div>
-              <div class="stat-label">[STAT_LABEL]</div>
+              <div class="stat-number">[STAT_VALUE_4]</div>
+              <div class="stat-label">[STAT_LABEL_4]</div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════
-         SKILLS / COMPETENCIES SECTION
-    ════════════════════════════════════════════════════════ -->
+    <!-- ═══ SKILLS ═════════════════════════════════════════════════════════ -->
     <section id="skills" class="skills">
       <div class="container">
         <h2>[SKILLS_HEADING]</h2>
@@ -643,10 +619,15 @@
 
         <div class="skills-grid">
 
-          <!-- Skill card — repeat as needed -->
+          <!-- Skill category card — repeat block for each category -->
           <div class="skill-card">
-            <h3>[SKILL_CATEGORY_EMOJI] [SKILL_CATEGORY_NAME]</h3>
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_1_TITLE]</h3>
             <ul class="skill-list">
+              <!-- Repeat <li> for each skill item -->
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
               <li>
                 <span>[SKILL_NAME]</span>
                 <span class="skill-level">[PROFICIENCY_LEVEL]</span>
@@ -667,8 +648,12 @@
           </div>
 
           <div class="skill-card">
-            <h3>[SKILL_CATEGORY_EMOJI] [SKILL_CATEGORY_NAME]</h3>
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_2_TITLE]</h3>
             <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
               <li>
                 <span>[SKILL_NAME]</span>
                 <span class="skill-level">[PROFICIENCY_LEVEL]</span>
@@ -689,8 +674,12 @@
           </div>
 
           <div class="skill-card">
-            <h3>[SKILL_CATEGORY_EMOJI] [SKILL_CATEGORY_NAME]</h3>
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_3_TITLE]</h3>
             <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
               <li>
                 <span>[SKILL_NAME]</span>
                 <span class="skill-level">[PROFICIENCY_LEVEL]</span>
@@ -711,8 +700,12 @@
           </div>
 
           <div class="skill-card">
-            <h3>[SKILL_CATEGORY_EMOJI] [SKILL_CATEGORY_NAME]</h3>
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_4_TITLE]</h3>
             <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
               <li>
                 <span>[SKILL_NAME]</span>
                 <span class="skill-level">[PROFICIENCY_LEVEL]</span>
@@ -736,9 +729,7 @@
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════
-         PROJECTS SECTION
-    ════════════════════════════════════════════════════════ -->
+    <!-- ═══ PROJECTS ═══════════════════════════════════════════════════════ -->
     <section id="projects" class="projects">
       <div class="container">
         <h2>[PROJECTS_HEADING]</h2>
@@ -746,55 +737,55 @@
 
         <div class="projects-grid">
 
-          <!-- Project card — repeat as needed, rotating theme-a/b/c/d -->
+          <!-- Project card — repeat block for each project -->
           <div class="project-card">
-            <div class="project-image theme-a">[PROJECT_EMOJI]</div>
+            <div class="project-image cat-1">[PROJECT_ICON_1]</div>
             <div class="project-content">
-              <h3>[PROJECT_TITLE]</h3>
-              <p>[PROJECT_DESCRIPTION]</p>
+              <h3>[PROJECT_1_TITLE]</h3>
+              <p>[PROJECT_1_DESCRIPTION]</p>
               <div class="project-tags">
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
               </div>
             </div>
           </div>
 
           <div class="project-card">
-            <div class="project-image theme-b">[PROJECT_EMOJI]</div>
+            <div class="project-image cat-2">[PROJECT_ICON_2]</div>
             <div class="project-content">
-              <h3>[PROJECT_TITLE]</h3>
-              <p>[PROJECT_DESCRIPTION]</p>
+              <h3>[PROJECT_2_TITLE]</h3>
+              <p>[PROJECT_2_DESCRIPTION]</p>
               <div class="project-tags">
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
               </div>
             </div>
           </div>
 
           <div class="project-card">
-            <div class="project-image theme-c">[PROJECT_EMOJI]</div>
+            <div class="project-image cat-3">[PROJECT_ICON_3]</div>
             <div class="project-content">
-              <h3>[PROJECT_TITLE]</h3>
-              <p>[PROJECT_DESCRIPTION]</p>
+              <h3>[PROJECT_3_TITLE]</h3>
+              <p>[PROJECT_3_DESCRIPTION]</p>
               <div class="project-tags">
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
               </div>
             </div>
           </div>
 
           <div class="project-card">
-            <div class="project-image theme-d">[PROJECT_EMOJI]</div>
+            <div class="project-image cat-4">[PROJECT_ICON_4]</div>
             <div class="project-content">
-              <h3>[PROJECT_TITLE]</h3>
-              <p>[PROJECT_DESCRIPTION]</p>
+              <h3>[PROJECT_4_TITLE]</h3>
+              <p>[PROJECT_4_DESCRIPTION]</p>
               <div class="project-tags">
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
-                <span class="project-tag">[TAG]</span>
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
               </div>
             </div>
           </div>
@@ -803,9 +794,7 @@
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════
-         CONTACT SECTION
-    ════════════════════════════════════════════════════════ -->
+    <!-- ═══ CONTACT (inverted / dark palette) ══════════════════════════════ -->
     <section id="contact" class="contact">
       <div class="container">
         <h2>[CONTACT_HEADING]</h2>
@@ -813,32 +802,30 @@
 
         <div class="contact-content">
 
-          <!-- Contact card — repeat as needed -->
+          <!-- Contact card — repeat for each channel -->
           <div class="contact-card">
-            <h3>[CONTACT_CHANNEL_EMOJI] [CONTACT_CHANNEL_LABEL]</h3>
-            <a href="[CONTACT_LINK]">[CONTACT_DISPLAY_TEXT]</a>
+            <h3>[CONTACT_CHANNEL_1_ICON] [CONTACT_CHANNEL_1_LABEL]</h3>
+            <a href="[CONTACT_CHANNEL_1_HREF]">[CONTACT_CHANNEL_1_DISPLAY]</a>
           </div>
 
           <div class="contact-card">
-            <h3>[CONTACT_CHANNEL_EMOJI] [CONTACT_CHANNEL_LABEL]</h3>
-            <a href="[CONTACT_LINK]">[CONTACT_DISPLAY_TEXT]</a>
+            <h3>[CONTACT_CHANNEL_2_ICON] [CONTACT_CHANNEL_2_LABEL]</h3>
+            <a href="[CONTACT_CHANNEL_2_HREF]">[CONTACT_CHANNEL_2_DISPLAY]</a>
           </div>
 
           <div class="contact-card">
-            <h3>[CONTACT_CHANNEL_EMOJI] [CONTACT_CHANNEL_LABEL]</h3>
-            <p>[CONTACT_DISPLAY_TEXT]</p>
+            <h3>[CONTACT_CHANNEL_3_ICON] [CONTACT_CHANNEL_3_LABEL]</h3>
+            <p>[CONTACT_CHANNEL_3_LINE_1]<br />[CONTACT_CHANNEL_3_LINE_2]</p>
           </div>
 
         </div>
       </div>
     </section>
 
-    <!-- ════════════════════════════════════════════════════════
-         FOOTER
-    ════════════════════════════════════════════════════════ */
+    <!-- ═══ FOOTER ═════════════════════════════════════════════════════════ -->
     <footer>
       <div class="container">
-        <p>[COPYRIGHT_NOTICE]</p>
+        <p>[FOOTER_COPYRIGHT_LINE]</p>
         <p>[FOOTER_QUOTE_OR_TAGLINE]</p>
       </div>
     </footer>

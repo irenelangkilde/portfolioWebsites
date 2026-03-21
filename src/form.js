@@ -11,7 +11,8 @@
     // ----------------------------
     // Resume analysis cache
     // ----------------------------
-    let resumeAnalysisCache = null;   // parsed JSON from analyzeResume
+    let resumeAnalysisCache = null;   // parsed JSON from analyzeResume (debug mode only)
+    let lastAnalysisData    = null;   // always set after analysis — used for palette rendering
     let resumeAnalysisPending = false; // true while request in flight
 
     // ----------------------------
@@ -22,11 +23,7 @@
       specialization: v => v.trim() ? null : "Specialization is required.",
       modelTemplate: v => {
         if (!v.trim()) return null;
-        // Only parse as URL when it looks like one; free-text names are also valid
-        if (looksLikeUrl(v.trim())) {
-          try { new URL(normalizeTemplateUrl(v.trim())); return null; }
-          catch { return "Enter a valid URL or keyword."; }
-        }
+        if (looksLikeUrl(v.trim())) return "Please enter a name or keyword, not a URL.";
         return null;
       },
       linkedin: v => {
@@ -118,6 +115,7 @@
 
       // Reset cache and kick off analysis
       resumeAnalysisCache = null;
+      lastAnalysisData = null;
       if (hasFile) {
         analyzeResumeInBackground(input.files[0]);
       } else {
@@ -183,6 +181,30 @@
     // ----------------------------
     // Resume analysis (background)
     // ----------------------------
+    function updateSubmitReadiness() {
+      const btn = document.getElementById("submit_bottom");
+      const msg = document.getElementById("submitReadinessMsg");
+      if (!btn) return;
+      const resumePending  = !!resumeAnalysisPending;
+      const extractPending = !!extractTemplatePending;
+      const busy = resumePending || extractPending;
+      btn.disabled = busy;
+      btn.style.opacity = busy ? "0.45" : "";
+      btn.style.cursor  = busy ? "not-allowed" : "";
+      if (msg) {
+        if (busy) {
+          const parts = [];
+          if (resumePending)  parts.push("resume analysis");
+          if (extractPending) parts.push("template extraction");
+          msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
+          msg.style.display = "block";
+        } else {
+          msg.style.display = "none";
+        }
+      }
+    }
+
+    // ----------------------------
     function setResumeAnalysisStatus(text, color = "rgba(234,240,255,.6)") {
       ["resumeAnalysisStatus", "resumeAnalysisStatusInline"].forEach(id => {
         const el = document.getElementById(id);
@@ -228,19 +250,41 @@
       return timer;
     }
 
+    function resumeCacheKey(file) {
+      return `resumeAnalysis_v3:${file.name}:${file.size}:${file.lastModified}`;
+    }
+
     async function analyzeResumeInBackground(file) {
       // Only PDFs are supported for analysis
       if (file.type && !file.type.includes("pdf")) {
         setResumeAnalysisStatus("Analysis requires a PDF. Upload complete.", "rgba(234,240,255,.5)");
         return;
       }
+
+      // Check localStorage cache before hitting the API
+      let cachedData = null;
+      try {
+        const cached = localStorage.getItem(resumeCacheKey(file));
+        if (cached) cachedData = JSON.parse(cached);
+      } catch {}
+      if (cachedData) {
+        lastAnalysisData = cachedData;
+        if (isDebugMode()) resumeAnalysisCache = cachedData;
+        setResumeAnalysisStatus("✓ Resume analyzed (cached)", "rgba(118,176,34,.9)");
+        populateResumeDebugPanel(cachedData);
+        renderSuggestedPalettes(cachedData);
+        return;
+      }
+
       resumeAnalysisPending = true;
+      updateSubmitReadiness();
 
       let base64;
       try {
         base64 = await readFileAsBase64(file);
       } catch (e) {
         resumeAnalysisPending = false;
+        updateSubmitReadiness();
         setResumeAnalysisStatus("Could not read resume file.", "rgba(251,171,156,.8)");
         return;
       }
@@ -264,12 +308,14 @@
         if (!submitRes.ok) {
           clearInterval(countdownTimer);
           resumeAnalysisPending = false;
+          updateSubmitReadiness();
           setResumeAnalysisStatus("Resume analysis failed (could not start).", "rgba(251,171,156,.8)");
           return;
         }
       } catch (e) {
         clearInterval(countdownTimer);
         resumeAnalysisPending = false;
+        updateSubmitReadiness();
         setResumeAnalysisStatus("Resume analysis failed (network error).", "rgba(251,171,156,.8)");
         return;
       }
@@ -284,6 +330,7 @@
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
           clearInterval(countdownTimer);
           resumeAnalysisPending = false;
+          updateSubmitReadiness();
           setResumeAnalysisStatus("Resume analysis timed out — try again.", "rgba(251,171,156,.8)");
           return;
         }
@@ -306,6 +353,7 @@
 
         clearInterval(countdownTimer);
         resumeAnalysisPending = false;
+        updateSubmitReadiness();
 
         if (result.status === "error") {
           setResumeAnalysisStatus("Resume analysis failed: " + (result.error || "Unknown error"), "rgba(251,171,156,.8)");
@@ -326,7 +374,10 @@
           if (specialization) data.identity.specialization = specialization;
         }
 
-        // Cache only in debug mode; always pass data directly to consumers
+        // Persist to localStorage for reuse after refresh
+        try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
+
+        lastAnalysisData = data;
         if (isDebugMode()) resumeAnalysisCache = data;
         else               resumeAnalysisCache = null;
 
@@ -401,6 +452,7 @@
       });
       renderStepUI();
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (currentStep === 4) renderSuggestedPalettes();
     }
 
     // ----------------------------
@@ -627,80 +679,75 @@
 
     function extractTemplateInBackground() {
       if (extractTemplatePending) return extractTemplatePending; // join in-flight call
-      extractTemplatePending = _doExtractTemplate().finally(() => { extractTemplatePending = null; });
+      extractTemplatePending = _doExtractTemplate().finally(() => {
+        extractTemplatePending = null;
+        updateSubmitReadiness();
+      });
+      updateSubmitReadiness();
       return extractTemplatePending;
     }
 
     async function _doExtractTemplate() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (!source || source === "none") return;
+      if (!source) return;
+
+      if (source === "none") {
+        const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
+        extractedTemplateCache = {
+          templateHtml: null,
+          embeddedJson: {
+            source: "design_options",
+            composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
+            style: styleVal === "other"
+              ? (document.getElementById("designStyleOther")?.value?.trim() || "custom")
+              : styleVal,
+            render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
+          }
+        };
+        setTemplateExtractStatus("✓ Design options applied", "rgba(118,176,34,.9)");
+        return;
+      }
 
       let key = "";
       let requestBody = { provider: getAnalysisProvider() };
 
       if (source === "url") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
-        if (!val) return;
-        if (looksLikeUrl(val)) {
-          const url = normalizeTemplateUrl(val);
-          if (url === lastExtractedTemplate) return;
-          key = url;
+        if (!val || looksLikeUrl(val)) return;
 
-          // Try client-side fetch first — avoids server-side network/SSL issues in local dev.
-          // Falls back to server-side fetch (templateUrl) if CORS blocks us.
-          setTemplateExtractStatus("Fetching template…", "rgba(141,224,255,.75)");
-          try {
-            const clientRes = await fetch(url);
-            if (clientRes.ok) {
-              const ct = clientRes.headers.get("content-type") || "";
-              if (ct.includes("html") || ct.includes("text")) {
-                const html = await clientRes.text();
-                requestBody.templateHtmlBase64 = btoa(new TextEncoder().encode(html).reduce((s, b) => s + String.fromCharCode(b), ""));
-              } else {
-                requestBody.templateUrl = url; // non-HTML — let server handle it
-              }
-            } else {
-              requestBody.templateUrl = url; // non-200 — let server try
-            }
-          } catch {
-            // CORS or network error from browser — let server fetch instead
-            requestBody.templateUrl = url;
-          }
-        } else {
-          // Keyword — try pre-compiled _template.html first, fall back to calling Claude
-          const srcPath      = templateLabelToPath(val);
-          const compiledPath = srcPath.replace(/\.html$/, "_template.html");
-          if (compiledPath === lastExtractedTemplate) return;
+        // Keyword — try pre-compiled _template.html first, fall back to calling Claude
+        const srcPath      = templateLabelToPath(val);
+        const compiledPath = srcPath.replace(/\.html$/, "_template.html");
+        if (compiledPath === lastExtractedTemplate) return;
 
-          // Try pre-compiled version (no API call needed)
-          try {
-            const res = await fetch(compiledPath);
-            if (res.ok) {
-              const templateHtml = await res.text();
-              const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
-              let embeddedJson = null;
-              if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
-              lastExtractedTemplate = compiledPath;
-              extractedTemplateCache = { templateHtml, embeddedJson };
-              setTemplateExtractStatus("✓ Template loaded", "rgba(118,176,34,.9)");
-              populateTemplateExtractPanel(extractedTemplateCache);
-              renderSuggestedPalettes();
-              return;
-            }
-          } catch {}
-
-          // No pre-compiled file — fetch source HTML and send to Claude
-          if (srcPath === lastExtractedTemplate) return;
-          try {
-            const res = await fetch(srcPath);
-            if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
-            const html = await res.text();
-            requestBody.templateHtmlBase64 = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
-            key = srcPath;
-          } catch (e) {
-            setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+        // Try pre-compiled version (no API call needed)
+        try {
+          const res = await fetch(compiledPath);
+          if (res.ok) {
+            const templateHtml = await res.text();
+            const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
+            let embeddedJson = null;
+            if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
+            lastExtractedTemplate = compiledPath;
+            extractedTemplateCache = { templateHtml, embeddedJson };
+            setTemplateExtractStatus("✓ Template loaded", "rgba(118,176,34,.9)");
+            populateTemplateExtractPanel(extractedTemplateCache);
+            renderSuggestedPalettes();
             return;
           }
+        } catch {}
+
+        // No pre-compiled file — fetch source HTML and send to Claude
+        if (srcPath === lastExtractedTemplate) return;
+        try {
+          const res = await fetch(srcPath);
+          if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
+          const html = await res.text();
+          requestBody.templateHtmlBase64 = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
+          key = srcPath;
+        } catch (e) {
+          setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+          return;
         }
       } else if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
@@ -833,9 +880,6 @@
       let show = false;
       if (source === "file") {
         show = true;
-      } else if (source === "url") {
-        const url = document.getElementById("modelTemplate")?.value?.trim() || "";
-        show = looksLikeUrl(url) && !isOwnLibraryUrl(normalizeTemplateUrl(url));
       }
       wrap.style.display = show ? "block" : "none";
       if (!show) document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
@@ -1015,7 +1059,10 @@
 
     // Refresh design spec JSON live as design options change
     document.querySelectorAll('input[name="designComposition"], input[name="designStyle"], input[name="designRenderMode"]')
-      .forEach(r => r.addEventListener("change", updateDesignSpecPanel));
+      .forEach(r => r.addEventListener("change", () => {
+        updateDesignSpecPanel();
+        extractTemplateInBackground();
+      }));
 
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
@@ -1072,12 +1119,49 @@
     // ----------------------------
     const ARTIFACT_TYPES = [
       { value: "image",    label: "Image (png/jpg/svg)" },
-      { value: "url",      label: "URL" },
       { value: "html",     label: "HTML" },
       { value: "youtube",  label: "YouTube video" },
       { value: "text",     label: "Text / Markdown" },
     ];
     let artifactRowCount = 0;
+
+    function buildArtifactContentInput(wrap, type, existingContent = "") {
+      wrap.innerHTML = "";
+      if (type === "image") {
+        const fi = document.createElement("input");
+        fi.type = "file";
+        fi.accept = "image/*";
+        wrap.appendChild(fi);
+      } else if (type === "youtube") {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.placeholder = "https://www.youtube.com/watch?v=…";
+        inp.value = existingContent;
+        const warn = document.createElement("span");
+        warn.style.cssText = "font-size:11px; color:rgba(251,100,100,.9); display:none;";
+        warn.textContent = "Must be a YouTube URL (youtube.com or youtu.be)";
+        inp.addEventListener("blur", () => {
+          const val = inp.value.trim();
+          const ok = !val || /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(val);
+          warn.style.display = ok ? "none" : "block";
+          inp.style.borderColor = ok ? "" : "rgba(251,100,100,.8)";
+        });
+        inp.addEventListener("focus", () => { warn.style.display = "none"; inp.style.borderColor = ""; });
+        wrap.append(inp, warn);
+      } else if (type === "text") {
+        const ta = document.createElement("textarea");
+        ta.placeholder = "Paste your text or Markdown here…";
+        ta.value = existingContent;
+        ta.style.cssText = "width:100%; min-height:80px; resize:vertical;";
+        wrap.appendChild(ta);
+      } else {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.placeholder = type === "html" ? "File name or HTML URL…" : "File name, URL, or content…";
+        inp.value = existingContent;
+        wrap.appendChild(inp);
+      }
+    }
 
     function addArtifactRow(type = "", content = "", tagline = "") {
       const id = ++artifactRowCount;
@@ -1091,13 +1175,14 @@
           `<option value="${t.value}"${type === t.value ? " selected" : ""}>${t.label}</option>`
         ).join("");
 
-      const txt = document.createElement("input");
-      txt.type = "text";
-      txt.placeholder = "File name, URL, or content…";
-      txt.value = content;
+      const contentWrap = document.createElement("div");
+      contentWrap.className = "artifactContentWrap";
+      buildArtifactContentInput(contentWrap, type, content);
+      sel.addEventListener("change", () => buildArtifactContentInput(contentWrap, sel.value, ""));
 
       const tag = document.createElement("input");
       tag.type = "text";
+      tag.className = "artifactTagline";
       tag.placeholder = "Tagline…";
       tag.value = tagline;
 
@@ -1108,21 +1193,29 @@
       del.style.cssText = "padding:4px 9px; font-size:15px; line-height:1;";
       del.addEventListener("click", () => row.remove());
 
-      row.append(sel, txt, tag, del);
+      row.append(sel, contentWrap, tag, del);
       document.getElementById("artifactRows").appendChild(row);
     }
 
-    function getPage2Artifacts(){
+    async function getPage2Artifacts(){
       const rows = [];
-      document.querySelectorAll("#artifactRows .artifactRow").forEach(row => {
-        const sel = row.querySelector("select");
-        const inputs = row.querySelectorAll("input[type='text']");
-        rows.push({
-          type:    sel?.value || "",
-          content: inputs[0]?.value?.trim() || "",
-          tagline: inputs[1]?.value?.trim() || ""
-        });
-      });
+      for (const row of document.querySelectorAll("#artifactRows .artifactRow")) {
+        const type = row.querySelector("select")?.value || "";
+        const wrap = row.querySelector(".artifactContentWrap");
+        const tagline = row.querySelector(".artifactTagline")?.value?.trim() || "";
+
+        let content = "";
+        if (type === "image") {
+          const file = wrap?.querySelector("input[type='file']")?.files?.[0];
+          if (file) { try { content = await readFileAsBase64(file); } catch {} }
+        } else if (type === "text") {
+          content = wrap?.querySelector("textarea")?.value?.trim() || "";
+        } else {
+          content = wrap?.querySelector("input[type='text']")?.value?.trim() || "";
+        }
+
+        rows.push({ type, content, tagline });
+      }
       return { artifacts: rows };
     }
 
@@ -1228,7 +1321,7 @@
 
       // Collect new page data and map to API-compatible structure
       const p1 = getPage1();
-      const p2 = getPage2Artifacts();
+      const p2 = await getPage2Artifacts();
       const p3 = getPage3Template();
       const p4 = getPage4Colors();
       const p5 = getPage5Job();
@@ -1251,24 +1344,14 @@
         throw new Error("Could not read resume PDF: " + e.message);
       }
 
-      const headshotName = headshotInput.files?.[0]?.name || "";
-
-      let templateScreenshotBase64 = "";
-      let templateScreenshotMime = "";
-      const screenshotFile = templateScreenshotInput?.files?.[0];
-      if (screenshotFile && screenshotFile.type.startsWith("image/")) {
-        try {
-          templateScreenshotBase64 = await readFileAsBase64(screenshotFile);
-          templateScreenshotMime = screenshotFile.type;
-        } catch { /* non-fatal — proceed without screenshot */ }
-      }
+      const headshotName = headshotInput?.files?.[0]?.name || "";
 
       finalStatus.textContent = "Submitting request…";
 
-      const res = await fetch("/.netlify/functions/generatePreview-background", {
+      const res = await fetch("/.netlify/functions/buildWebsite-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime, use_three_prompt: document.getElementById("useThreePrompt")?.checked || false })
+        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, resumeAnalysisJson: lastAnalysisData || null, templateAnalysisJson: extractedTemplateCache?.embeddedJson || null, templateHtml: extractedTemplateCache?.templateHtml || null })
       });
 
       if (!res.ok && res.status !== 202) {
@@ -1381,6 +1464,7 @@
       if (resumeUpload) resumeUpload.value = "";
       if (resumeFileList) resumeFileList.innerHTML = "";
       resumeAnalysisCache = null;
+      lastAnalysisData = null;
       setResumeAnalysisStatus("");
     });
 
@@ -1408,7 +1492,7 @@
     document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(1));
     document.getElementById("next2_bottom")?.addEventListener("click", () => {
       const el = document.getElementById("stepConfirmStatus");
-      if (el) { el.textContent = "Artifacts noted"; el.style.color = "rgba(118,176,34,.9)"; }
+      if (el) { el.textContent = "✓ Artifacts noted"; el.style.color = "rgba(118,176,34,.9)"; }
       setStep(3);
     });
 
@@ -1449,7 +1533,8 @@
       // Pre-validate inputs before touching the UI
       if (source === "url") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
-        if (!val) { showSourceMsg("Please enter a URL or keyword (e.g. biology, psychology)."); return; }
+        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return; }
+        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return; }
       }
       if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
@@ -1510,7 +1595,8 @@
       }
 
       // Slots 1-3: up to 3 AI palettes from resume analysis
-      const aiPalettes = (analysisData ?? resumeAnalysisCache)?.compatible_color_schemes ?? [];
+      const resolvedData = analysisData ?? lastAnalysisData;
+      const aiPalettes = resolvedData?.compatible_color_schemes ?? [];
       const aiRows = aiPalettes
         .filter(p => p.primary || p.secondary || p.accent)
         .slice(0, 3)
@@ -1525,7 +1611,18 @@
 
       const MAX = 4;
       const populated = visible.filter(Boolean).length;
-      if (msg) msg.style.display = populated >= MAX ? "none" : "block";
+      const dataLoaded = !!(resolvedData);
+      if (msg) {
+        if (populated >= MAX) {
+          msg.style.display = "none";
+        } else if (dataLoaded) {
+          msg.textContent = populated === 0 ? "(No palettes found in analysis)" : `(${populated} of ${MAX} loaded)`;
+          msg.style.display = "block";
+        } else {
+          msg.textContent = "(Thinking\u2026)";
+          msg.style.display = "block";
+        }
+      }
 
       rows.innerHTML = "";
       visible.slice(0, MAX).forEach(palette => {
@@ -1579,9 +1676,9 @@
     }
 
     renderSuggestedPalettes(); // render blank rows immediately
-    document.getElementById("next3_bottom")?.addEventListener("click", renderSuggestedPalettes);
+    document.getElementById("next3_bottom")?.addEventListener("click", () => renderSuggestedPalettes());
     document.getElementById("back4")?.addEventListener("click", () => setStep(3));
-    document.getElementById("next4")?.addEventListener("click", () => setStep(5));
+    document.getElementById("next4")?.addEventListener("click", () => { setStep(5); updateSubmitReadiness(); });
 
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];

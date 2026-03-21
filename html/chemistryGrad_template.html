@@ -1,860 +1,775 @@
 <!doctype html>
 <html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[Your Name] | [Major / Field]</title>
+  <meta name="description" content="[Field] portfolio: research projects, skills, and career-ready highlights." />
+
   <!--
-{
-  "visual_elements_line_numbers": {
-    "headshot_photo": "",
-    "hero_image": "",
-    "emoji_icons": [],
-    "images": [],
-    "animations": []
-  },
-  "exemplary_attributes": {
-    "pacing": "light and airy, unhurried scroll with one featured card anchoring attention before secondary mini-cards cascade below",
-    "mood": "calm, professional, approachable — soft science-lab optimism with a frosted-glass cleanliness",
-    "compositional_feel": "central hero with pill-tab navigation switching between content panels; featured 2-col grid splits a decorative media bubble from body text",
-    "section_density": "low-to-medium — generous white space, one hero card per tab plus a supporting stack of mini-cards",
-    "visual_treatment": "glassmorphism surfaces over a soft multi-stop radial-gradient background; subtle drop shadows and backdrop blur; no photography, purely CSS decorative bubbles"
-  },
-  "default_color_scheme": {
-    "primary": "#526be5",
-    "secondary": "#7c6810",
-    "accent": "#44b746",
-    "dark": "#111111",
-    "light": "#f6f7fb"
-  },
-  "alternate_color_scheme": {
-    "primary": "#f6f7fb",
-    "secondary": "#e8e2c4",
-    "accent": "#c8ffe3",
-    "dark": "#526be5",
-    "light": "#111111"
-  },
-  "composition_option": "central",
-  "style_token": "glassmorphism",
-  "rendering_style": "gradient 3D illustration"
-}
+  {
+    "visual_elements": {
+      "images": [],
+      "animations": [
+        {
+          "src_file_name": "bubble-orb",
+          "selector": ".bubble",
+          "type": "css-pseudo-element",
+          "name": "Floating glass orb / radial-gradient bubble decoration in hero media panel"
+        },
+        {
+          "src_file_name": "background-gradient-field",
+          "selector": "body",
+          "type": "css-radial-gradient",
+          "name": "Multi-stop radial gradient ambient background across full page"
+        },
+        {
+          "src_file_name": "brand-mark-gradient",
+          "selector": ".brand .mark",
+          "type": "css-radial-gradient",
+          "name": "Small rounded logomark with layered radial+linear gradient"
+        }
+      ]
+    },
+    "exemplary_attributes": {
+      "pacing": "calm and unhurried; generous whitespace between sections, single-focus tabbed panels prevent cognitive overload",
+      "mood": "clean, professional, approachable; soft glass aesthetic with subtle warmth — trustworthy rather than flashy",
+      "compositional_feel": "central hero with descending split-grid body; pill navigation anchors attention before content unfolds below",
+      "section_density": "low-to-medium; one featured card plus a 2-column mini-card grid per tab keeps each view digestible",
+      "visual_treatment": "glassmorphism with frosted card surfaces, translucent backgrounds, radial ambient glow, and fine 1-px stroke borders"
+    },
+    "default_color_scheme": {
+      "primary": "#526be5",
+      "secondary": "#44b746",
+      "accent": "#6e76ff",
+      "dark": "#111111",
+      "light": "#f6f7fb"
+    },
+    "design_factors": {
+      "composition_option": "central-hero + split-grid",
+      "style_token": "glassmorphism",
+      "rendering_style": "clean editorial vector with ambient gradient illustration"
+    }
+  }
   -->
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>[FULL NAME] | [MAJOR / FIELD]</title>
-    <meta
-      name="description"
-      content="[Field] portfolio: research projects, lab skills, and career-ready highlights."
-    />
-    <style>
-      :root {
-        --ink: #111;
-        --muted: #5b5b5b;
-        --card: #ffffffb8;
-        --glass: #ffffffa8;
-        --stroke: #00000012;
 
-        --shadow: 0 18px 50px rgba(0, 0, 0, 0.1);
-        --shadow-soft: 0 12px 30px rgba(0, 0, 0, 0.08);
-        --radius: 24px;
-        --radius-sm: 18px;
+  <style>
+    /* ── Palette ────────────────────────────────────────────────── */
+    :root {
+      /* 5-color base palette */
+      --p1: #526be5;   /* cobalt-blue   — primary brand   */
+      --p2: #44b746;   /* leaf-green    — secondary accent */
+      --p3: #6e76ff;   /* periwinkle    — accent / pill    */
+      --p4: #111111;   /* near-black    — ink              */
+      --p5: #f6f7fb;   /* ice-white     — page base        */
 
-        /* 5-color palette derived from masthead radial gradient */
-        --c1: #526be5; /* cool indigo — primary brand */
-        --c2: #7c6810; /* warm ochre — secondary warmth */
-        --c3: #44b746; /* fresh green — accent energy */
-        --c4: #111111; /* near-black — dark ink */
-        --c5: #f6f7fb; /* off-white — light base */
+      /* Derived tokens — default (light) scheme */
+      --ink:          var(--p4);
+      --muted:        #5a5f6e;
+      --card:         rgba(255,255,255,.73);
+      --glass:        rgba(255,255,255,.65);
+      --stroke:       rgba(0,0,0,.07);
 
-        /* Semantic aliases — default (light) scheme */
-        --accent: #6e76ff;
-        --accent-ink: #2e2a77;
-        --accent-soft: #6e76ff2a;
+      --accent:       var(--p3);
+      --accent-ink:   #2a2f85;
+      --accent-soft:  rgba(110,118,255,.18);
 
-        --max: 1120px;
-      }
+      --shadow:       0 18px 50px rgba(0,0,0,.10);
+      --shadow-soft:  0 12px 30px rgba(0,0,0,.07);
+      --radius:       24px;
+      --radius-sm:    18px;
+      --max:          1120px;
+    }
 
-      /* ── Alternate scheme used for contrast sections ───────────────────── */
-      .alt-scheme {
-        --ink: var(--c5);
-        --muted: #c8d0f0;
-        --card: rgba(82, 107, 229, 0.22);
-        --glass: rgba(82, 107, 229, 0.18);
-        --stroke: rgba(255, 255, 255, 0.14);
-        --accent: var(--c3);
-        --accent-ink: #e8ffe9;
-        --accent-soft: rgba(68, 183, 70, 0.25);
-        background: linear-gradient(135deg, #1a2260 0%, #0f3d18 100%);
-        color: var(--c5);
-      }
+    /* ── Alternate / inverse scheme (used on even sections) ────── */
+    .scheme-alt {
+      --ink:        #f0f2ff;
+      --muted:      #b8bdda;
+      --card:       rgba(30,34,80,.72);
+      --glass:      rgba(30,34,80,.60);
+      --stroke:     rgba(255,255,255,.10);
+      --accent-ink: #b8c0ff;
+      --accent-soft:rgba(110,118,255,.30);
+    }
 
-      * {
-        box-sizing: border-box;
-      }
-      html,
-      body {
-        height: 100%;
-      }
-      body {
-        margin: 0;
-        color: var(--ink);
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
-          Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-        letter-spacing: -0.01em;
-        background: radial-gradient(
-              1200px 650px at 15% 10%,
-              var(--c1) 0%,
-              transparent 60%
-            ),
-            radial-gradient(
-              1000px 600px at 60% 20%,
-              var(--c2) 0%,
-              transparent 65%
-            ),
-            radial-gradient(
-              1100px 700px at 90% 10%,
-              var(--c3) 0%,
-              transparent 60%
-            ),
-            radial-gradient(
-              900px 600px at 35% 35%,
-              color-mix(in srgb, var(--c2) 80%, var(--c3) 20%) 0%,
-              transparent 65%
-            ),
-            var(--c5);
-        overflow-x: hidden;
-      }
+    /* ── Reset & base ───────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
 
-      a {
-        color: inherit;
-        text-decoration: none;
-      }
-      a:hover {
-        opacity: 0.92;
-      }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+                   Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      letter-spacing: -0.01em;
+      overflow-x: hidden;
+      background:
+        radial-gradient(1200px 650px at 12%  8%,  color-mix(in srgb, var(--p1) 55%, transparent) 0%, transparent 60%),
+        radial-gradient(1000px 600px at 62% 18%,  color-mix(in srgb, var(--p2) 30%, transparent) 0%, transparent 65%),
+        radial-gradient(1100px 700px at 92% 10%,  color-mix(in srgb, var(--p3) 40%, transparent) 0%, transparent 60%),
+        radial-gradient(900px  600px at 38% 32%,  color-mix(in srgb, var(--p1) 22%, transparent) 0%, transparent 65%),
+        var(--p5);
+    }
 
-      .wrap {
-        max-width: var(--max);
-        margin: 0 auto;
-        padding: 28px 22px 70px;
-      }
+    a { color: inherit; text-decoration: none; }
+    a:hover { opacity: .88; }
 
-      /* ── Top bar ────────────────────────────────────────────────────────── */
-      .top {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 8px 6px 18px;
-      }
-      .brand {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-weight: 500;
-        color: #1a1a1a;
-      }
-      .brand .mark {
-        width: 28px;
-        height: 28px;
-        border-radius: 10px;
-        background: radial-gradient(
-              12px 12px at 30% 35%,
-              #ffffff 0%,
-              transparent 65%
-            ),
-            linear-gradient(
-              135deg,
-              var(--c1) 0%,
-              color-mix(in srgb, var(--c3) 60%, white 40%) 60%,
-              color-mix(in srgb, var(--c2) 50%, white 50%) 100%
-            );
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
-        border: 1px solid var(--stroke);
-      }
-      .brand .name {
-        font-size: 18px;
-      }
-      .icons {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-      }
-      .icon-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 12px;
-        display: grid;
-        place-items: center;
-        background: var(--glass);
-        border: 1px solid var(--stroke);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-      }
-      .icon-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
-      }
-      .icon {
-        width: 18px;
-        height: 18px;
-        opacity: 0.85;
-      }
+    /* ── Layout wrapper ─────────────────────────────────────────── */
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 28px 22px 70px;
+    }
 
-      /* ── Hero ───────────────────────────────────────────────────────────── */
-      .hero {
-        padding: 44px 10px 28px;
-        text-align: center;
-      }
-      .hero h1 {
-        margin: 0 auto;
-        font-size: clamp(28px, 4.2vw, 44px);
-        line-height: 1.2;
-        font-weight: 500;
-        max-width: 980px;
-      }
-      .hero .sub {
-        margin: 14px auto 0;
-        max-width: 900px;
-        color: var(--muted);
-        font-size: clamp(15px, 2vw, 18px);
-        line-height: 1.5;
-      }
+    /* ── Top bar ────────────────────────────────────────────────── */
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 8px 6px 18px;
+    }
 
-      /* ── Pill nav ───────────────────────────────────────────────────────── */
-      .pillbar {
-        margin: 24px auto 0;
-        width: min(720px, 100%);
-        background: rgba(255, 255, 255, 0.55);
-        border: 1px solid var(--stroke);
-        border-radius: 999px;
-        padding: 10px;
-        display: flex;
-        gap: 10px;
-        box-shadow: var(--shadow-soft);
-        backdrop-filter: blur(10px);
-      }
-      .pill {
-        flex: 1;
-        border: 0;
-        cursor: pointer;
-        padding: 14px 16px;
-        border-radius: 999px;
-        background: transparent;
-        color: #6a6a6a;
-        font-size: clamp(15px, 2vw, 20px);
-        font-weight: 500;
-        transition: background 0.15s ease, color 0.15s ease,
-          transform 0.15s ease;
-      }
-      .pill[aria-selected="true"] {
-        background: var(--accent-soft);
-        color: var(--accent-ink);
-        box-shadow: inset 0 0 0 1px rgba(110, 118, 255, 0.2);
-      }
-      .pill:hover {
-        transform: translateY(-1px);
-      }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 500;
+      color: #1a1a1a;
+    }
 
-      /* ── Sections ───────────────────────────────────────────────────────── */
-      section {
-        margin-top: 46px;
-        display: none;
-      }
-      section.active {
-        display: block;
-      }
+    .brand .mark {
+      width: 28px;
+      height: 28px;
+      border-radius: 10px;
+      background:
+        radial-gradient(12px 12px at 30% 35%, #fff 0%, transparent 65%),
+        linear-gradient(135deg, var(--p3) 0%, color-mix(in srgb, var(--p2) 60%, #fff) 55%, #ffd5b0 100%);
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+      border: 1px solid var(--stroke);
+    }
 
-      .grid {
-        display: grid;
-        grid-template-columns: 1.05fr 0.95fr;
-        gap: 22px;
-        align-items: stretch;
-        margin-top: 28px;
-      }
-      @media (max-width: 900px) {
-        .grid {
-          grid-template-columns: 1fr;
-          gap: 18px;
-        }
-      }
+    .brand .name { font-size: 18px; }
 
-      .card {
-        background: var(--card);
-        border: 1px solid var(--stroke);
-        border-radius: var(--radius);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(10px);
-        overflow: hidden;
-      }
+    .icons {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-      /* ── Decorative media panel ─────────────────────────────────────────── */
-      .media {
-        min-height: 320px;
-        background: radial-gradient(
-              180px 180px at 25% 55%,
-              rgba(82, 107, 229, 0.35) 0%,
-              transparent 65%
-            ),
-            radial-gradient(
-              180px 180px at 55% 45%,
-              rgba(124, 104, 16, 0.3) 0%,
-              transparent 65%
-            ),
-            radial-gradient(
-              260px 260px at 75% 70%,
-              rgba(68, 183, 70, 0.35) 0%,
-              transparent 65%
-            ),
-            linear-gradient(
-              135deg,
-              rgba(255, 255, 255, 0.35),
-              rgba(255, 255, 255, 0.1)
-            );
-        position: relative;
-      }
-      .bubble {
-        position: absolute;
-        inset: auto;
-        width: 170px;
-        height: 170px;
-        border-radius: 999px;
-        left: 26%;
-        top: 28%;
-        background: radial-gradient(
-              circle at 30% 30%,
-              #fff 0%,
-              rgba(255, 255, 255, 0.2) 25%,
-              transparent 55%
-            ),
-            linear-gradient(
-              140deg,
-              rgba(82, 107, 229, 0.35),
-              rgba(124, 104, 16, 0.2),
-              rgba(68, 183, 70, 0.25)
-            );
-        border: 1px solid rgba(255, 255, 255, 0.35);
-        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.1);
-        filter: saturate(1.05);
-      }
-      .bubble.sm {
-        width: 44px;
-        height: 44px;
-        left: 18%;
-        top: 40%;
-        opacity: 0.85;
-      }
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: var(--glass);
+      border: 1px solid var(--stroke);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
 
-      /* ── Card content ───────────────────────────────────────────────────── */
-      .content {
-        padding: 26px 26px 24px;
-      }
-      .kicker {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        color: #2d2d2d;
-        margin-bottom: 12px;
-        font-size: 14px;
-      }
-      .tag {
-        background: rgba(255, 255, 255, 0.55);
-        border: 1px solid var(--stroke);
-        padding: 8px 10px;
-        border-radius: 999px;
-      }
-      h2 {
-        margin: 0;
-        font-size: 34px;
-        letter-spacing: -0.02em;
-        font-weight: 500;
-      }
-      .desc {
-        margin: 10px 0 0;
-        color: var(--muted);
-        line-height: 1.55;
-        font-size: 17px;
-      }
-      .bullets {
-        margin: 16px 0 0;
-        padding-left: 18px;
-        color: #404040;
-        line-height: 1.6;
-      }
+    .icon-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(0,0,0,.08);
+    }
 
-      .cta-row {
-        margin-top: 18px;
-        display: flex;
-        gap: 12px;
-        flex-wrap: wrap;
-      }
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px 14px;
-        border-radius: 14px;
-        border: 1px solid var(--stroke);
-        background: rgba(255, 255, 255, 0.65);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-        transition: transform 0.15s ease, box-shadow 0.15s ease;
-        font-weight: 600;
-      }
-      .btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08);
-      }
-      .btn.primary {
-        background: linear-gradient(
-          135deg,
-          rgba(82, 107, 229, 0.22),
-          rgba(124, 104, 16, 0.18),
-          rgba(68, 183, 70, 0.18)
-        );
-        border-color: rgba(82, 107, 229, 0.2);
-      }
-      .btn small {
-        font-weight: 600;
-        opacity: 0.75;
-      }
+    .icon { width: 18px; height: 18px; opacity: .82; }
 
-      /* ── Mini card stack ────────────────────────────────────────────────── */
-      .stack {
-        display: grid;
-        gap: 16px;
-      }
-      .mini {
-        padding: 18px 18px;
-        border-radius: var(--radius-sm);
-        border: 1px solid var(--stroke);
-        background: rgba(255, 255, 255, 0.55);
-        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
-      }
-      .mini h3 {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-      }
-      .mini p {
-        margin: 8px 0 0;
-        color: var(--muted);
-        line-height: 1.5;
-      }
-      .mini .meta {
-        margin-top: 10px;
-        color: #444;
-        font-size: 14px;
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-      }
-      .mini .meta span {
-        opacity: 0.85;
-      }
+    /* ── Hero ───────────────────────────────────────────────────── */
+    .hero {
+      padding: 44px 10px 28px;
+      text-align: center;
+    }
 
-      /* ── Footer ─────────────────────────────────────────────────────────── */
-      footer {
-        margin-top: 70px;
-        color: #666;
-        font-size: 14px;
-        text-align: center;
-        opacity: 0.9;
-      }
+    .hero h1 {
+      margin: 0 auto;
+      font-size: clamp(26px, 4.2vw, 44px);
+      line-height: 1.22;
+      font-weight: 500;
+      max-width: 980px;
+    }
 
-      /* ── Print ──────────────────────────────────────────────────────────── */
-      @media print {
-        .pillbar,
-        .icons {
-          display: none !important;
-        }
-        body {
-          background: #fff;
-        }
-        .card,
-        .mini {
-          box-shadow: none;
-        }
-        section {
-          display: block !important;
-        }
-      }
-    </style>
-  </head>
+    .hero .sub {
+      margin: 14px auto 0;
+      max-width: 900px;
+      color: var(--muted);
+      font-size: clamp(15px, 2vw, 18px);
+      line-height: 1.55;
+    }
 
-  <body>
-    <div class="wrap">
-      <!-- Top bar -->
-      <header class="top">
-        <div class="brand" aria-label="Site brand">
-          <div class="mark" aria-hidden="true"></div>
-          <div class="name">[FULL NAME]</div>
+    /* ── Pill navigation bar ────────────────────────────────────── */
+    .pillbar {
+      margin: 26px auto 0;
+      width: min(740px, 100%);
+      background: rgba(255,255,255,.52);
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(12px);
+    }
+
+    .pill {
+      flex: 1;
+      border: 0;
+      cursor: pointer;
+      padding: 13px 16px;
+      border-radius: 999px;
+      background: transparent;
+      color: #6a6a7a;
+      font-size: clamp(14px, 2vw, 19px);
+      font-weight: 500;
+      transition: background .15s ease, color .15s ease, transform .15s ease;
+    }
+
+    .pill[aria-selected="true"] {
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      box-shadow: inset 0 0 0 1px rgba(110,118,255,.22);
+    }
+
+    .pill:hover { transform: translateY(-1px); }
+
+    /* ── Tab sections ───────────────────────────────────────────── */
+    section {
+      margin-top: 46px;
+      display: none;
+    }
+
+    section.active { display: block; }
+
+    /* ── Two-column grid ────────────────────────────────────────── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 22px;
+      align-items: stretch;
+      margin-top: 28px;
+    }
+
+    @media (max-width: 900px) {
+      .grid { grid-template-columns: 1fr; gap: 18px; }
+    }
+
+    /* ── Card ───────────────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(12px);
+      overflow: hidden;
+    }
+
+    /* ── Visual / media panel ───────────────────────────────────── */
+    .media {
+      min-height: 320px;
+      position: relative;
+      background:
+        radial-gradient(180px 180px at 25% 55%, rgba(82,107,229,.32)    0%, transparent 65%),
+        radial-gradient(180px 180px at 58% 44%, rgba(255,213,176,.40)   0%, transparent 65%),
+        radial-gradient(260px 260px at 76% 70%, rgba(68,183,70,.32)     0%, transparent 65%),
+        linear-gradient(135deg, rgba(255,255,255,.32), rgba(255,255,255,.08));
+    }
+
+    .bubble {
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border-radius: 999px;
+      left: 26%;
+      top: 28%;
+      background:
+        radial-gradient(circle at 30% 30%, #fff 0%, rgba(255,255,255,.18) 25%, transparent 55%),
+        linear-gradient(140deg,
+          rgba(110,118,255,.32),
+          rgba(255,213,176,.24),
+          rgba(68,183,70,.22));
+      border: 1px solid rgba(255,255,255,.32);
+      box-shadow: 0 24px 60px rgba(0,0,0,.10);
+      filter: saturate(1.05);
+    }
+
+    .bubble.sm {
+      width: 44px;
+      height: 44px;
+      left: 18%;
+      top: 40%;
+      opacity: .82;
+    }
+
+    /* ── Content panel ──────────────────────────────────────────── */
+    .content { padding: 26px 26px 24px; }
+
+    .kicker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: #2d2d3a;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+
+    .tag {
+      background: rgba(255,255,255,.52);
+      border: 1px solid var(--stroke);
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: 34px;
+      letter-spacing: -0.02em;
+      font-weight: 500;
+    }
+
+    .desc {
+      margin: 10px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 17px;
+    }
+
+    .bullets {
+      margin: 16px 0 0;
+      padding-left: 18px;
+      color: #3e3e4a;
+      line-height: 1.62;
+    }
+
+    /* ── CTA row ────────────────────────────────────────────────── */
+    .cta-row {
+      margin-top: 18px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.62);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      transition: transform .15s ease, box-shadow .15s ease;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 30px rgba(0,0,0,.09);
+    }
+
+    .btn.primary {
+      background: linear-gradient(135deg,
+        rgba(82,107,229,.20),
+        rgba(110,118,255,.18),
+        rgba(68,183,70,.15));
+      border-color: rgba(110,118,255,.22);
+    }
+
+    .btn small { font-weight: 600; opacity: .72; }
+
+    /* ── Mini card stack ────────────────────────────────────────── */
+    .stack { display: grid; gap: 16px; }
+
+    .mini {
+      padding: 18px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.52);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+    }
+
+    .mini h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .mini p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.52;
+    }
+
+    .mini .meta {
+      margin-top: 10px;
+      color: #444;
+      font-size: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mini .meta span { opacity: .85; }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+    footer {
+      margin-top: 70px;
+      color: #666;
+      font-size: 14px;
+      text-align: center;
+      opacity: .88;
+    }
+
+    /* ── Print ──────────────────────────────────────────────────── */
+    @media print {
+      .pillbar, .icons { display: none !important; }
+      body { background: #fff; }
+      .card, .mini { box-shadow: none; }
+      section { display: block !important; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+
+    <!-- ── Top bar ──────────────────────────────────────────────── -->
+    <header class="top">
+      <div class="brand" aria-label="Site brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="name">[Your Name]</div>
+      </div>
+
+      <nav class="icons" aria-label="Social links">
+        <!-- Social icon 1 — e.g. LinkedIn -->
+        <a class="icon-btn" href="#" title="[Social Network 1]" aria-label="[Social Network 1]">
+          <svg class="icon" viewBox="0 0 24 24" fill="none">
+            <path d="M6.5 9.5V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M6.5 5.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+            <path d="M10.5 20v-6.2c0-1.8 1.2-3.3 3-3.3s3 1.5 3 3.3V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M10.5 11v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </a>
+
+        <!-- Social icon 2 — e.g. GitHub / repo -->
+        <a class="icon-btn" href="#" title="[Portfolio Repository]" aria-label="[Portfolio Repository]">
+          <svg class="icon" viewBox="0 0 24 24" fill="none">
+            <path d="M9 19c-3 1-3-1-4-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 19v-3c0-.8.3-1.3.7-1.6-2.3-.3-4.7-1.1-4.7-5A3.9 3.9 0 0 1 12 6.6a3.6 3.6 0 0 1 .1-2.6s.9-.3 2.9 1.1a10 10 0 0 1 5.2 0C22.2 3.7 23 4 23 4a3.6 3.6 0 0 1 .1 2.6A3.9 3.9 0 0 1 24 9.4c0 3.9-2.4 4.7-4.7 5 .4.3.7 1 .7 2V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" transform="translate(-1 -1)"/>
+          </svg>
+        </a>
+
+        <!-- Social icon 3 — Email -->
+        <a class="icon-btn" href="mailto:[your@email.com]" title="Email" aria-label="Email">
+          <svg class="icon" viewBox="0 0 24 24" fill="none">
+            <path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+            <path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+          </svg>
+        </a>
+      </nav>
+    </header>
+
+    <!-- ── Hero ─────────────────────────────────────────────────── -->
+    <div class="hero">
+      <h1>[Friendly greeting introducing your name, field of study, and primary professional focus.]</h1>
+      <p class="sub">
+        [One to two sentences describing your hands-on experience, methodological strengths, and the types of roles or
+        environments you are targeting.]
+      </p>
+
+      <!-- Pill nav -->
+      <div class="pillbar" role="tablist" aria-label="Primary navigation">
+        <button class="pill" id="tab-projects"   role="tab" aria-selected="true"  aria-controls="projects"  >[Tab Label 1]</button>
+        <button class="pill" id="tab-playground" role="tab" aria-selected="false" aria-controls="playground">[Tab Label 2]</button>
+        <button class="pill" id="tab-about"      role="tab" aria-selected="false" aria-controls="about"     >[Tab Label 3]</button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  TAB 1 — PROJECTS                                         -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="projects" class="active" role="tabpanel" aria-labelledby="tab-projects">
+
+      <!-- Featured project row -->
+      <div class="grid">
+
+        <!-- Visual / media panel -->
+        <div class="card" aria-label="[Featured project visual]">
+          <div class="media">
+            <div class="bubble"    aria-hidden="true"></div>
+            <div class="bubble sm" aria-hidden="true"></div>
+          </div>
         </div>
 
-        <nav class="icons" aria-label="Social links">
-          <a
-            class="icon-btn"
-            href="#"
-            title="[SOCIAL PLATFORM 1]"
-            aria-label="[SOCIAL PLATFORM 1]"
-          >
-            <svg class="icon" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M6.5 9.5V20"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M6.5 5.5h.01"
-                stroke="currentColor"
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-              <path
-                d="M10.5 20v-6.2c0-1.8 1.2-3.3 3-3.3s3 1.5 3 3.3V20"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M10.5 11v9"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
-          </a>
-          <a
-            class="icon-btn"
-            href="#"
-            title="[SOCIAL PLATFORM 2]"
-            aria-label="[SOCIAL PLATFORM 2]"
-          >
-            <svg class="icon" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M9 19c-3 1-3-1-4-1"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <path
-                d="M15 19v-3c0-.8.3-1.3.7-1.6-2.3-.3-4.7-1.1-4.7-5A3.9 3.9 0 0 1 12 6.6a3.6 3.6 0 0 1 .1-2.6s.9-.3 2.9 1.1a10 10 0 0 1 5.2 0C22.2 3.7 23 4 23 4a3.6 3.6 0 0 1 .1 2.6A3.9 3.9 0 0 1 24 9.4c0 3.9-2.4 4.7-4.7 5 .4.3.7 1 .7 2V19"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                transform="translate(-1 -1)"
-              />
-            </svg>
-          </a>
-          <a
-            class="icon-btn"
-            href="mailto:[EMAIL]"
-            title="[EMAIL LABEL]"
-            aria-label="[EMAIL LABEL]"
-          >
-            <svg class="icon" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M4 6h16v12H4z"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linejoin="round"
-              />
-              <path
-                d="M4 7l8 6 8-6"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </a>
-        </nav>
-      </header>
+        <!-- Featured project text -->
+        <div class="content">
+          <div class="kicker">
+            <span class="tag">[Label 1]</span>
+            <span class="tag">[Discipline Tag]</span>
+            <span class="tag">[Method Tag]</span>
+          </div>
 
-      <!-- Hero -->
-      <div class="hero">
-        <h1>[HERO HEADLINE — introduce yourself and your focus area]</h1>
-        <p class="sub">[HERO SUBTEXT — 2–3 sentences on your background, experience areas, and the types of roles you are targeting]</p>
+          <h2>[Featured Project Title]</h2>
+          <p class="desc">
+            [Two to three sentences summarizing the featured project — its goal, approach, and what was demonstrated
+            or produced.]
+          </p>
+          <ul class="bullets">
+            <li>[Key task or finding — preparation, execution, or measurement step.]</li>
+            <li>[Key task or finding — analysis, modeling, or evaluation step.]</li>
+            <li>[Key task or finding — reporting, documentation, or communication step.]</li>
+          </ul>
 
-        <!-- Pill nav -->
-        <div class="pillbar" role="tablist" aria-label="Primary navigation">
-          <button
-            class="pill"
-            id="tab-section1"
-            role="tab"
-            aria-selected="true"
-            aria-controls="section1"
-          >
-            [TAB LABEL 1]
-          </button>
-          <button
-            class="pill"
-            id="tab-section2"
-            role="tab"
-            aria-selected="false"
-            aria-controls="section2"
-          >
-            [TAB LABEL 2]
-          </button>
-          <button
-            class="pill"
-            id="tab-section3"
-            role="tab"
-            aria-selected="false"
-            aria-controls="section3"
-          >
-            [TAB LABEL 3]
-          </button>
+          <div class="cta-row">
+            <a class="btn primary" href="#" aria-label="[Primary output]">
+              [CTA Label 1] <small>([Format])</small>
+            </a>
+            <a class="btn" href="#" aria-label="[Secondary output]">
+              [CTA Label 2] <small>([Format])</small>
+            </a>
+            <a class="btn" href="#" aria-label="[Tertiary output]">
+              [CTA Label 3] <small>([Format])</small>
+            </a>
+          </div>
         </div>
       </div>
 
-      <!-- Section 1 — Featured work / projects -->
-      <section id="section1" class="active" role="tabpanel" aria-labelledby="tab-section1">
-        <div class="grid">
-          <!-- Decorative media card -->
-          <div class="card" aria-label="[FEATURED ITEM VISUAL LABEL]">
-            <div class="media">
-              <div class="bubble" aria-hidden="true"></div>
-              <div class="bubble sm" aria-hidden="true"></div>
+      <div style="height:18px"></div>
+
+      <!-- Additional projects + sidebar highlights -->
+      <div class="grid" style="align-items:start">
+
+        <!-- Additional project mini-cards -->
+        <div class="stack" aria-label="Additional projects">
+
+          <div class="mini">
+            <h3>[Project 2 Title — Short descriptor]</h3>
+            <p>[One to two sentences describing the method, result, or skill demonstrated.]</p>
+            <div class="meta">
+              <span>[Tool / instrument used]</span>
+              <span>[Skill demonstrated]</span>
             </div>
           </div>
 
-          <!-- Featured item content -->
-          <div class="content">
-            <div class="kicker">
-              <span class="tag">[CATEGORY TAG 1]</span>
-              <span class="tag">[CATEGORY TAG 2]</span>
-              <span class="tag">[CATEGORY TAG 3]</span>
+          <div class="mini">
+            <h3>[Project 3 Title — Short descriptor]</h3>
+            <p>[One to two sentences describing the method, result, or skill demonstrated.]</p>
+            <div class="meta">
+              <span>[Tool / instrument used]</span>
+              <span>[Skill demonstrated]</span>
             </div>
+          </div>
 
-            <h2>[FEATURED ITEM TITLE]</h2>
-            <p class="desc">[FEATURED ITEM DESCRIPTION — 2–3 sentences summarizing the project or work sample]</p>
-            <ul class="bullets">
-              <li>[KEY POINT / OUTCOME 1]</li>
-              <li>[KEY POINT / OUTCOME 2]</li>
-              <li>[KEY POINT / OUTCOME 3]</li>
-            </ul>
-
-            <div class="cta-row">
-              <a class="btn primary" href="#" aria-label="[PRIMARY CTA LABEL]">
-                [PRIMARY CTA] <small>([FILE TYPE])</small>
-              </a>
-              <a class="btn" href="#" aria-label="[SECONDARY CTA LABEL]">
-                [SECONDARY CTA] <small>([FILE TYPE])</small>
-              </a>
-              <a class="btn" href="#" aria-label="[TERTIARY CTA LABEL]">
-                [TERTIARY CTA] <small>([DESCRIPTOR])</small>
-              </a>
+          <div class="mini">
+            <h3>[Project 4 Title — Short descriptor]</h3>
+            <p>[One to two sentences describing the method, result, or skill demonstrated.]</p>
+            <div class="meta">
+              <span>[Focus area]</span>
+              <span>[Skill demonstrated]</span>
             </div>
+          </div>
+
+        </div>
+
+        <!-- Sidebar highlights -->
+        <div class="stack" aria-label="Quick highlights">
+
+          <div class="mini">
+            <h3>[What you are looking for]</h3>
+            <p>[Target role types, seniority level, work arrangement preferences.]</p>
+          </div>
+
+          <div class="mini">
+            <h3>[Top strengths]</h3>
+            <p>[Two to three sentences describing core professional strengths and what makes your work trustworthy.]</p>
+          </div>
+
+          <div class="mini">
+            <h3>[Availability]</h3>
+            <p>
+              Start date: <strong>[Date or immediately]</strong>.
+              Location: <strong>[Preference]</strong>.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  TAB 2 — SKILLS / PLAYGROUND                              -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="playground" role="tabpanel" aria-labelledby="tab-playground">
+      <div class="grid">
+
+        <!-- Main skills card -->
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">[Category 1]</span>
+            <span class="tag">[Category 2]</span>
+            <span class="tag">[Category 3]</span>
+          </div>
+
+          <h2>[Tab 2 Heading]</h2>
+          <p class="desc">
+            [One to two sentences framing this section — its purpose for the viewer and what it demonstrates about
+            your working style or discipline.]
+          </p>
+
+          <ul class="bullets">
+            <li><strong>[Skill area 1]:</strong> [Brief description of relevant tools, techniques, or habits.]</li>
+            <li><strong>[Skill area 2]:</strong> [Brief description of relevant tools, techniques, or habits.]</li>
+            <li><strong>[Skill area 3]:</strong> [Brief description of relevant tools, techniques, or habits.]</li>
+            <li><strong>[Skill area 4]:</strong> [Brief description of relevant tools, techniques, or habits.]</li>
+          </ul>
+
+          <div class="cta-row">
+            <a class="btn primary" href="#">[Primary Download] <small>([Format])</small></a>
+            <a class="btn"         href="#">[Secondary Doc]    <small>([Format])</small></a>
+            <a class="btn"         href="#">[Tertiary Doc]     <small>([Format])</small></a>
           </div>
         </div>
 
-        <div style="height: 18px"></div>
+        <!-- Mini demos -->
+        <div class="stack">
 
-        <!-- Secondary grid: two mini-card stacks -->
-        <div class="grid" style="align-items: start">
-          <!-- Stack A — additional projects -->
-          <div class="stack" aria-label="[ADDITIONAL ITEMS LIST LABEL]">
-            <div class="mini">
-              <h3>[ITEM 2 TITLE]</h3>
-              <p>[ITEM 2 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META LABEL A]</span>
-                <span>[META LABEL B]</span>
-              </div>
-            </div>
-
-            <div class="mini">
-              <h3>[ITEM 3 TITLE]</h3>
-              <p>[ITEM 3 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META LABEL A]</span>
-                <span>[META LABEL B]</span>
-              </div>
-            </div>
-
-            <div class="mini">
-              <h3>[ITEM 4 TITLE]</h3>
-              <p>[ITEM 4 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META LABEL A]</span>
-                <span>[META LABEL B]</span>
-              </div>
+          <div class="mini">
+            <h3>[Mini Demo 1 Title]</h3>
+            <p>[One to two sentences describing what this short artifact demonstrates.]</p>
+            <div class="meta">
+              <span>[Good for: role type]</span>
+              <span>[Format]</span>
             </div>
           </div>
 
-          <!-- Stack B — quick-glance highlights -->
-          <div class="stack" aria-label="[HIGHLIGHTS LABEL]">
-            <div class="mini">
-              <h3>[HIGHLIGHT CARD 1 HEADING]</h3>
-              <p>[HIGHLIGHT CARD 1 BODY]</p>
+          <div class="mini">
+            <h3>[Mini Demo 2 Title]</h3>
+            <p>[One to two sentences describing what this short artifact demonstrates.]</p>
+            <div class="meta">
+              <span>[Good for: role type]</span>
+              <span>[Format]</span>
             </div>
+          </div>
 
-            <div class="mini">
-              <h3>[HIGHLIGHT CARD 2 HEADING]</h3>
-              <p>[HIGHLIGHT CARD 2 BODY]</p>
+          <div class="mini">
+            <h3>[Mini Demo 3 Title]</h3>
+            <p>[One to two sentences describing what this short artifact demonstrates.]</p>
+            <div class="meta">
+              <span>[Good for: role type]</span>
+              <span>[Format]</span>
             </div>
+          </div>
 
-            <div class="mini">
-              <h3>[HIGHLIGHT CARD 3 HEADING]</h3>
-              <p>[HIGHLIGHT CARD 3 BODY]</p>
-            </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <!--  TAB 3 — ABOUT                                            -->
+    <!-- ══════════════════════════════════════════════════════════ -->
+    <section id="about" role="tabpanel" aria-labelledby="tab-about">
+      <div class="grid">
+
+        <!-- Bio card -->
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">[Field]</span>
+            <span class="tag">[Context tag]</span>
+            <span class="tag">[Contact tag]</span>
+          </div>
+
+          <h2>[About heading]</h2>
+          <p class="desc">
+            [Two to three sentences with a personal description of your background, approach to work, and what
+            drives you professionally.]
+          </p>
+
+          <ul class="bullets">
+            <li><strong>[Education label]:</strong> [Degree], [Institution] ([Expected graduation or year])</li>
+            <li><strong>[Coursework label]:</strong> [List of relevant courses]</li>
+            <li><strong>[Interests label]:</strong> [Professional interests and target domains]</li>
+          </ul>
+
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:[your@email.com]">[your@email.com]</a>
+            <a class="btn" href="#">[Social Link]</a>
+            <a class="btn" href="#">[Portfolio Doc] <small>([Format])</small></a>
           </div>
         </div>
-      </section>
 
-      <!-- Section 2 — Skills / micro-portfolio / playground -->
-      <section id="section2" role="tabpanel" aria-labelledby="tab-section2">
-        <div class="grid">
-          <!-- Main content card -->
-          <div class="content card" style="padding: 26px">
-            <div class="kicker">
-              <span class="tag">[TAG 1]</span>
-              <span class="tag">[TAG 2]</span>
-              <span class="tag">[TAG 3]</span>
-            </div>
-            <h2>[SECTION 2 HEADING]</h2>
-            <p class="desc">[SECTION 2 INTRO — 1–2 sentences describing what this section offers]</p>
+        <!-- Sidebar about cards -->
+        <div class="stack">
 
-            <ul class="bullets">
-              <li><strong>[SKILL CATEGORY 1]:</strong> [brief description]</li>
-              <li><strong>[SKILL CATEGORY 2]:</strong> [brief description]</li>
-              <li><strong>[SKILL CATEGORY 3]:</strong> [brief description]</li>
-              <li><strong>[SKILL CATEGORY 4]:</strong> [brief description]</li>
-            </ul>
-
-            <div class="cta-row">
-              <a class="btn primary" href="#">[PRIMARY CTA] <small>([FILE TYPE])</small></a>
-              <a class="btn" href="#">[SECONDARY CTA] <small>([FILE TYPE])</small></a>
-              <a class="btn" href="#">[TERTIARY CTA] <small>([FILE TYPE])</small></a>
+          <div class="mini">
+            <h3>[Quick facts heading]</h3>
+            <p>[Two to three sentences highlighting standout personal or professional traits.]</p>
+            <div class="meta">
+              <span>[Location / region]</span>
+              <span>[Work arrangement preference]</span>
             </div>
           </div>
 
-          <!-- Mini demo stack -->
-          <div class="stack">
-            <div class="mini">
-              <h3>[DEMO 1 TITLE]</h3>
-              <p>[DEMO 1 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META A]</span>
-                <span>[META B]</span>
-              </div>
-            </div>
-
-            <div class="mini">
-              <h3>[DEMO 2 TITLE]</h3>
-              <p>[DEMO 2 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META A]</span>
-                <span>[META B]</span>
-              </div>
-            </div>
-
-            <div class="mini">
-              <h3>[DEMO 3 TITLE]</h3>
-              <p>[DEMO 3 SHORT DESCRIPTION]</p>
-              <div class="meta">
-                <span>[META A]</span>
-                <span>[META B]</span>
-              </div>
+          <div class="mini">
+            <h3>[Value proposition heading]</h3>
+            <p>[One to two sentences describing the specific value or habits you bring to a team or workplace.]</p>
+            <div class="meta">
+              <span>[Best fit role type]</span>
             </div>
           </div>
+
+          <div class="mini">
+            <h3>[References heading]</h3>
+            <p>[One sentence on reference availability or how to request them.]</p>
+            <div class="meta">
+              <span>[Format / delivery method]</span>
+            </div>
+          </div>
+
         </div>
-      </section>
+      </div>
+    </section>
 
-      <!-- Section 3 — About / contact -->
-      <section id="section3" role="tabpanel" aria-labelledby="tab-section3">
-        <div class="grid">
-          <!-- Bio card -->
-          <div class="content card" style="padding: 26px">
-            <div class="kicker">
-              <span class="tag">[TAG 1]</span>
-              <span class="tag">[TAG 2]</span>
-              <span class="tag">[TAG 3]</span>
-            </div>
-            <h2>[SECTION 3 HEADING]</h2>
-            <p class="desc">[BIO — 2 sentences describing your background, working style, and what drives you]</p>
+    <!-- ── Footer ────────────────────────────────────────────────── -->
+    <footer>
+      &copy; <span id="y"></span> [Your Name] &bull; [Short tagline describing the purpose of this portfolio site.]
+    </footer>
 
-            <ul class="bullets">
-              <li><strong>[BIO POINT 1 LABEL]:</strong> [value]</li>
-              <li><strong>[BIO POINT 2 LABEL]:</strong> [value]</li>
-              <li><strong>[BIO POINT 3 LABEL]:</strong> [value]</li>
-            </ul>
+  </div><!-- /.wrap -->
 
-            <div class="cta-row">
-              <a class="btn primary" href="mailto:[EMAIL]">[EMAIL DISPLAY]</a>
-              <a class="btn" href="#">[SOCIAL LINK LABEL]</a>
-              <a class="btn" href="#">[DOCUMENT LINK LABEL] <small>([FILE TYPE])</small></a>
-            </div>
-          </div>
+  <script>
+    /* ── Tab switching ─────────────────────────────────────────── */
+    const tabs = [
+      { btn: document.getElementById('tab-projects'),   panel: document.getElementById('projects')   },
+      { btn: document.getElementById('tab-playground'), panel: document.getElementById('playground') },
+      { btn: document.getElementById('tab-about'),      panel: document.getElementById('about')      }
+    ];
 
-          <!-- About mini cards -->
-          <div class="stack">
-            <div class="mini">
-              <h3>[ABOUT CARD 1 HEADING]</h3>
-              <p>[ABOUT CARD 1 BODY]</p>
-              <div class="meta">
-                <span>[META A]</span>
-                <span>[META B]</span>
-              </div>
-            </div>
+    function activate(index) {
+      tabs.forEach(function(t, i) {
+        const on = (i === index);
+        t.btn.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.panel.classList.toggle('active', on);
+      });
+    }
 
-            <div class="mini">
-              <h3>[ABOUT CARD 2 HEADING]</h3>
-              <p>[ABOUT CARD 2 BODY]</p>
-              <div class="meta">
-                <span>[META A]</span>
-              </div>
-            </div>
+    tabs.forEach(function(t, i) {
+      t.btn.addEventListener('click', function() { activate(i); });
+    });
 
-            <div class="mini">
-              <h3>[ABOUT CARD 3 HEADING]</h3>
-              <p>[ABOUT CARD 3 BODY]</p>
-              <div class="meta">
-                <span>[META A]</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+    /* ── Hash-based deep links ─────────────────────────────────── */
+    function fromHash() {
+      const h   = (location.hash || '#projects').replace('#', '');
+      const idx = tabs.findIndex(function(t) { return t.panel.id === h; });
+      activate(idx < 0 ? 0 : idx);
+    }
 
-      <footer>
-        &copy; <span id="y"></span> [FULL NAME] &bull; [FOOTER TAGLINE]
-      </footer>
-    </div>
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
 
-    <script>
-      const tabs = [
-        {
-          btn: document.getElementById("tab-section1"),
-          panel: document.getElementById("section1"),
-        },
-        {
-          btn: document.getElementById("tab-section2"),
-          panel: document.getElementById("section2"),
-        },
-        {
-          btn: document.getElementById("tab-section3"),
-          panel: document.getElementById("section3"),
-        },
-      ];
-
-      function activate(index) {
-        tabs.forEach((t, i) => {
-          const active = i === index;
-          t.btn.setAttribute("aria-selected", active ? "true" : "false");
-          t.panel.classList.toggle("active", active);
-        });
-      }
-
-      tabs.forEach((t, i) => t.btn.addEventListener("click", () => activate(i)));
-
-      function fromHash() {
-        const h = (location.hash || "#section1").replace("#", "");
-        const idx = tabs.findIndex((t) => t.panel.id === h);
-        activate(idx === -1 ? 0 : idx);
-      }
-      window.addEventListener("hashchange", fromHash);
-      fromHash();
-
-      document.getElementById("y").textContent = new Date().getFullYear();
-    </script>
-  </body>
+    /* ── Footer year ───────────────────────────────────────────── */
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
 </html>

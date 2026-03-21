@@ -13,7 +13,7 @@ No markdown.
 No explanation.
 No comments.
 
-OUTPUT JSON SHAPE
+OUTPUT JSON SHAPE (TWO STRUCTURES)
 
 {
   "identity": {

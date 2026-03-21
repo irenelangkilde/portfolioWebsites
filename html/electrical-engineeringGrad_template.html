@@ -1,197 +1,233 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Electrical engineering student portfolio: projects, skills, experience, and contact." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title>[Your Name] — Electrical Engineering Portfolio</title>
+
   <!--
   {
     "visual_elements": {
       "images": [
-        {
-          "src_file_name": "headshot_photo.png",
-          "selector": "nav .hero-photo",
-          "type": "img",
-          "role": "Professional headshot displayed in navbar / masthead brand area"
-        },
-        {
-          "src_file_name": "project_card_image_1.jpg",
-          "selector": "#projects .card:nth-child(1) .project-media img",
-          "type": "img",
-          "role": "Hero image for first featured project card"
-        },
-        {
-          "src_file_name": "project_card_image_2.jpg",
-          "selector": "#projects .card:nth-child(2) .project-media img",
-          "type": "img",
-          "role": "Hero image for second featured project card"
-        },
-        {
-          "src_file_name": "project_card_image_3.jpg",
-          "selector": "#projects .card:nth-child(3) .project-media img",
-          "type": "img",
-          "role": "Hero image for third featured project card"
-        }
+        { "src_file_name": "headshot.png", "selector": "img.hero-photo", "type": "img", "role": "Personal headshot displayed in the sticky nav bar above the name wordmark" },
+        { "src_file_name": "project-card-1.jpg", "selector": "#projects .card:nth-child(1) .project-media img", "type": "img", "role": "16/9 thumbnail for first featured project card" },
+        { "src_file_name": "project-card-2.jpg", "selector": "#projects .card:nth-child(2) .project-media img", "type": "img", "role": "16/9 thumbnail for second featured project card" },
+        { "src_file_name": "project-card-3.jpg", "selector": "#projects .card:nth-child(3) .project-media img", "type": "img", "role": "16/9 thumbnail for third featured project card" }
       ],
       "animations": []
     },
     "exemplary_attributes": {
-      "pacing": "moderate — generous section padding with clear visual breathing room between sections",
-      "mood": "serious, technical, and confident; dark engineering aesthetic with green-accented status indicators",
-      "compositional_feel": "split hero with asymmetric columns; card-grid body; timeline for experience",
-      "section_density": "medium — each section has one primary content block with 3–4 sub-elements",
-      "visual_treatment": "glassmorphic dark panels with subtle borders, radial gradients, monospace accent text, and pill-shaped skill chips"
+      "pacing": "steady and methodical — each section occupies generous vertical space with clear breathing room between blocks",
+      "mood": "professional-technical, focused, quietly ambitious; dark-mode conveys precision and depth",
+      "compositional_feel": "split hero (text-left / info-card-right) transitioning into uniform card-grid body sections",
+      "section_density": "medium — each section holds one primary content block or 3-column grid, never overwhelming",
+      "visual_treatment": "glassmorphic dark panels with subtle gradient fills, monospace accent labels, pill-shaped skill chips, and a vertical timeline for experience"
     },
     "default_color_scheme": {
       "primary": "#0f172a",
       "secondary": "#2563eb",
       "accent": "#22c55e",
-      "dark": "#070c17",
+      "dark": "#0b1220",
       "light": "#e5e7eb"
     },
-    "composition_option": "split",
-    "style_token": "glass-dark",
-    "rendering_style": "technical schematic aesthetic"
+    "design_factors": {
+      "composition_option": "split",
+      "style_token": "glass-dark",
+      "rendering_style": "technical schematic aesthetic"
+    }
   }
   -->
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="[FIELD: meta_description — e.g. Electrical engineering student portfolio with projects, skills, and contact]" />
-  <meta name="theme-color" content="#0f172a" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet" />
-  <title>[FIELD: full_name] — [FIELD: discipline] Portfolio</title>
 
   <style>
-    /* ── PALETTE ────────────────────────────────────────────────────── */
+    /* ─── Design Tokens ─────────────────────────────────────────────────────── */
     :root {
-      /* 5 base palette variables */
-      --c1: #0f172a;   /* deep navy — primary background */
-      --c2: #2563eb;   /* electric blue — secondary / CTA */
-      --c3: #22c55e;   /* vivid green — accent / status */
-      --c4: #070c17;   /* near-black — card depth */
-      --c5: #e5e7eb;   /* off-white — body text */
+      /* 5-color palette */
+      --primary:   #0f172a;   /* deep slate — main background */
+      --secondary: #2563eb;   /* electric blue — CTAs, links */
+      --accent:    #22c55e;   /* circuit green — badges, highlights */
+      --dark:      #07090f;   /* near-black — deepest panel fill */
+      --light:     #e5e7eb;   /* cool white — body text */
 
-      /* Derived neutrals & tints */
-      --bg:          var(--c1);
-      --bg-deep:     var(--c4);
-      --panel:       #0b1220;
-      --muted:       #94a3b8;
-      --text:        var(--c5);
-      --accent:      var(--c2);
-      --accent-2:    var(--c3);
-      --chip:        #1f2937;
-      --border:      rgba(148,163,184,.18);
-      --border-soft: rgba(148,163,184,.12);
+      /* Derived / functional */
+      --bg:             linear-gradient(180deg, var(--primary) 0%, #0b1329 55%, #0a0f1f 100%);
+      --panel:          #0b1220;
+      --panel-alt:      #111827;        /* alternate section bg (slightly lighter) */
+      --muted:          #94a3b8;
+      --text:           var(--light);
+      --chip-bg:        #1f2937;
+      --border:         rgba(148, 163, 184, 0.15);
+      --border-medium:  rgba(148, 163, 184, 0.25);
+      --border-input:   rgba(148, 163, 184, 0.35);
+      --input-bg:       #0a1324;
+      --accent-glow:    rgba(37, 99, 235, 0.35);
+      --green-glow:     rgba(34, 197, 94, 0.28);
+      --shadow:         0 10px 30px rgba(0, 0, 0, 0.38);
+      --radius:         18px;
+      --radius-sm:      12px;
+      --radius-pill:    9999px;
 
-      /* Section alt palette (light-on-dark inversion feel) */
-      --alt-bg:        #0a1b1f;
-      --alt-panel:     #0d2230;
-      --alt-accent:    #38bdf8;   /* sky-400 — cool shift */
-      --alt-accent-2:  #a3e635;   /* lime-400 */
-      --alt-text:      #f0f9ff;
-      --alt-muted:     #7dd3fc;
-      --alt-border:    rgba(56,189,248,.2);
-
-      --radius:  18px;
-      --radius-sm: 12px;
-      --shadow:  0 10px 30px rgba(0,0,0,.38);
-      --glow-blue: 0 0 0 3px rgba(37,99,235,.32);
+      /* Inverse palette — used in alternating sections */
+      --alt-bg:         #dbeafe;        /* blue-100 tint for alt section bg */
+      --alt-panel:      #eff6ff;
+      --alt-text:       #0f172a;
+      --alt-muted:      #475569;
+      --alt-chip-bg:    #bfdbfe;
+      --alt-border:     rgba(37, 99, 235, 0.25);
     }
 
-    /* ── RESET ──────────────────────────────────────────────────────── */
+    /* ─── Reset & Base ───────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; }
     html, body { height: 100%; }
     body {
       margin: 0;
-      background: linear-gradient(180deg, var(--bg) 0%, #0b1329 55%, #0a0f1f 100%);
+      background: var(--bg);
       color: var(--text);
-      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       line-height: 1.6;
     }
-    a { color: var(--accent); text-decoration: none; }
+    a { color: var(--secondary); text-decoration: none; }
     a:hover { text-decoration: underline; }
-    ul { margin: 0.4rem 0 0; padding-left: 1.1rem; line-height: 1.65; }
+    ul { padding-left: 1.2rem; }
+    li { margin-bottom: 4px; }
 
-    /* ── LAYOUT ─────────────────────────────────────────────────────── */
-    .container { max-width: 1100px; margin: 0 auto; padding: 28px; }
-    .section    { padding: 64px 0; }
+    /* ─── Layout Utilities ───────────────────────────────────────────────────── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 28px;
+    }
+    .section { padding: 72px 0; }
 
-    /* ── HEADER / NAV ───────────────────────────────────────────────── */
+    /* ─── Sticky Header ──────────────────────────────────────────────────────── */
     header {
       position: sticky;
       top: 0;
       backdrop-filter: blur(10px);
-      background: rgba(10,15,31,.62);
-      border-bottom: 1px solid var(--border-soft);
-      z-index: 10;
+      -webkit-backdrop-filter: blur(10px);
+      background: rgba(10, 15, 31, 0.65);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
     }
+    header .container { padding-top: 10px; padding-bottom: 10px; }
     nav {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 18px;
     }
+
+    /* Brand / logo cluster */
     .brand {
       display: flex;
-      gap: 12px;
       align-items: center;
+      gap: 12px;
     }
-    .brand .logo {
+    .brand .logo-mark {
       width: 36px;
       height: 36px;
       border-radius: 10px;
       background: radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);
-      box-shadow: 0 6px 18px rgba(37,99,235,.45);
+      box-shadow: 0 6px 18px var(--accent-glow);
       flex-shrink: 0;
     }
-    .brand h1 {
-      font-size: 18px;
-      margin: 0;
-      font-weight: 700;
-      letter-spacing: .4px;
-    }
-    .hero-photo {
-      display: block;
-      width: 42px;
-      height: 42px;
+    .brand .hero-photo {
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
       object-fit: cover;
-      box-shadow: 0 0 0 2px var(--accent);
-      flex-shrink: 0;
+      border: 2px solid rgba(37, 99, 235, 0.5);
+      box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
     }
-    .links a {
-      margin-left: 18px;
+    .brand h1 {
+      font-size: 17px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.4px;
+      color: var(--light);
+    }
+
+    /* Nav links */
+    .nav-links { display: flex; align-items: center; gap: 4px; }
+    .nav-links a {
       font-weight: 600;
       color: #cbd5e1;
+      padding: 6px 10px;
+      border-radius: 8px;
+      transition: color 0.15s, background 0.15s;
     }
-    .links a:hover { color: #fff; }
+    .nav-links a:hover { color: #fff; background: rgba(255, 255, 255, 0.06); text-decoration: none; }
 
-    /* ── BUTTONS ────────────────────────────────────────────────────── */
+    /* ─── Buttons ────────────────────────────────────────────────────────────── */
     .btn {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      background: var(--accent);
+      gap: 8px;
+      background: var(--secondary);
       color: #fff;
-      border: 0;
-      padding: 12px 20px;
+      border: none;
+      padding: 11px 20px;
       border-radius: var(--radius-sm);
       font-weight: 700;
       font-size: 14px;
-      box-shadow: 0 8px 20px rgba(37,99,235,.35);
+      box-shadow: 0 8px 20px var(--accent-glow);
       cursor: pointer;
-      transition: filter .15s, box-shadow .15s;
+      transition: filter 0.15s, transform 0.1s;
+      text-decoration: none;
     }
-    .btn:hover { filter: brightness(1.08); text-decoration: none; }
+    .btn:hover { filter: brightness(1.1); transform: translateY(-1px); text-decoration: none; }
+    .btn:active { transform: translateY(0); }
     .btn.secondary {
       background: transparent;
-      border: 1px solid rgba(148,163,184,.35);
+      border: 1px solid var(--border-input);
       color: #e2e8f0;
       box-shadow: none;
     }
+    .btn.secondary:hover { background: rgba(255, 255, 255, 0.05); }
 
-    /* ── HERO ───────────────────────────────────────────────────────── */
-    .hero {
+    /* ─── Cards ──────────────────────────────────────────────────────────────── */
+    .card {
+      background: linear-gradient(160deg, #0a1222, #070c17);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .card h3 { margin-top: 4px; margin-bottom: 8px; font-size: 16px; }
+
+    /* ─── Grid helpers ───────────────────────────────────────────────────────── */
+    .grid { display: grid; gap: 18px; }
+    .cols-3 { grid-template-columns: repeat(3, 1fr); }
+    .cols-2 { grid-template-columns: repeat(2, 1fr); }
+
+    /* ─── Chip / pill tags ───────────────────────────────────────────────────── */
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      background: var(--chip-bg);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: #cbd5e1;
+      padding: 5px 11px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      margin: 4px 4px 0 0;
+      white-space: nowrap;
+    }
+
+    /* ─── Monospace accent label ─────────────────────────────────────────────── */
+    .mono {
+      font-family: "Fira Code", ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: #a5b4fc;
+      font-size: 13px;
+    }
+
+    /* ─── HERO SECTION ───────────────────────────────────────────────────────── */
+    .hero-grid {
       display: grid;
-      grid-template-columns: 1.15fr .85fr;
+      grid-template-columns: 1.15fr 0.85fr;
       gap: 32px;
       align-items: center;
     }
@@ -199,107 +235,72 @@
       display: inline-flex;
       align-items: center;
       gap: 10px;
-      background: rgba(34,197,94,.12);
+      background: rgba(34, 197, 94, 0.12);
       color: #bbf7d0;
-      border: 1px solid rgba(34,197,94,.35);
-      padding: 8px 14px;
-      border-radius: 9999px;
+      border: 1px solid rgba(34, 197, 94, 0.38);
+      padding: 7px 14px;
+      border-radius: var(--radius-pill);
       font-weight: 700;
       font-size: 13px;
-      letter-spacing: .3px;
+      letter-spacing: 0.3px;
+      margin-bottom: 14px;
     }
     .badge::before {
       content: "";
       display: inline-block;
       width: 8px;
       height: 8px;
+      background: #4ade80;
       border-radius: 50%;
-      background: var(--accent-2);
-      box-shadow: 0 0 6px rgba(34,197,94,.7);
+      box-shadow: 0 0 6px #22c55e;
+      animation: pulse-dot 2s ease-in-out infinite;
     }
-    h2 {
-      font-size: clamp(24px, 3vw, 36px);
-      margin: 14px 0 8px;
-      line-height: 1.2;
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.75); }
     }
+    .hero-headline {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.22;
+      margin: 0 0 14px;
+    }
+    .hero-headline em { font-style: normal; color: #93c5fd; }
     p.lead {
       color: #cbd5e1;
       font-size: 17px;
-      line-height: 1.68;
+      line-height: 1.7;
+      margin-top: 0;
     }
-    .hero-cta { margin-top: 18px; display: flex; gap: 12px; flex-wrap: wrap; }
-    .hero-note { margin-top: 10px; color: var(--muted); font-size: 13px; }
+    .hero-cta-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+      margin-bottom: 10px;
+    }
+    .hero-availability {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 6px;
+    }
 
-    /* Hero at-a-glance card */
+    /* Hero info card */
     .hero-card {
-      background: linear-gradient(160deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.92), rgba(2, 6, 23, 0.92));
       border: 1px solid var(--border);
       border-radius: var(--radius);
       padding: 20px;
       box-shadow: var(--shadow);
     }
 
-    /* ── GRID / CARDS ───────────────────────────────────────────────── */
-    .grid { display: grid; gap: 18px; }
-    .grid.cols-2 { grid-template-columns: repeat(2, 1fr); }
-    .grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
-    .grid.cols-4 { grid-template-columns: repeat(4, 1fr); }
-    .card {
-      background: linear-gradient(180deg, #0a1222, var(--c4));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 18px;
-      box-shadow: var(--shadow);
-      transition: transform .18s, box-shadow .18s;
-    }
-    .card:hover { transform: translateY(-2px); box-shadow: 0 16px 40px rgba(0,0,0,.45); }
-    .card h3 { margin: 4px 0 8px; font-size: 15px; }
-
-    /* ── ALT-SECTION CARDS (inverted tint) ─────────────────────────── */
-    .section-alt {
-      background: linear-gradient(180deg, var(--alt-bg), var(--alt-panel));
-      border-radius: 24px;
-      padding: 48px 32px;
-      margin: 0 -8px;
-    }
-    .section-alt .card {
-      background: linear-gradient(180deg, #0d2535, #091a26);
-      border-color: var(--alt-border);
-    }
-    .section-alt h2, .section-alt h3 { color: var(--alt-text); }
-    .section-alt p, .section-alt li  { color: var(--alt-muted); }
-    .section-alt .mono               { color: var(--alt-accent); }
-    .section-alt .chip               { background: rgba(56,189,248,.12); border-color: rgba(56,189,248,.3); color: #bae6fd; }
-
-    /* ── CHIPS / TAGS ───────────────────────────────────────────────── */
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--chip);
-      border: 1px solid rgba(148,163,184,.22);
-      color: #cbd5e1;
-      padding: 5px 10px;
-      border-radius: 9999px;
-      font-size: 12px;
-      margin: 4px 4px 0 0;
-    }
-
-    /* ── MONO LABEL ─────────────────────────────────────────────────── */
-    .mono {
-      font-family: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      color: #a5b4fc;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-
-    /* ── PROJECT MEDIA ──────────────────────────────────────────────── */
+    /* ─── PROJECT MEDIA ──────────────────────────────────────────────────────── */
     .project-media {
       aspect-ratio: 16 / 9;
-      border-radius: var(--radius-sm);
-      overflow: hidden;
-      border: 1px dashed rgba(148,163,184,.28);
       background: radial-gradient(120% 120% at 0% 0%, #0b1329 0%, #0a0f1f 60%);
+      border-radius: var(--radius-sm);
+      border: 1px dashed var(--border-medium);
+      overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -311,11 +312,11 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: block;
+      border-radius: var(--radius-sm);
     }
 
-    /* ── TIMELINE ───────────────────────────────────────────────────── */
-    .timeline { position: relative; margin-top: 6px; }
+    /* ─── TIMELINE ───────────────────────────────────────────────────────────── */
+    .timeline { position: relative; }
     .timeline::before {
       content: "";
       position: absolute;
@@ -323,13 +324,14 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: rgba(148,163,184,.22);
+      background: var(--border-medium);
     }
     .t-item {
       position: relative;
       margin-left: 40px;
       padding: 14px 0;
     }
+    .t-item + .t-item { border-top: 1px solid var(--border); }
     .t-item::before {
       content: "";
       position: absolute;
@@ -338,29 +340,44 @@
       width: 10px;
       height: 10px;
       background: #38bdf8;
-      border: 2px solid #0b1220;
+      border: 2px solid var(--panel);
       border-radius: 50%;
-      box-shadow: 0 0 0 3px rgba(56,189,248,.28);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28);
     }
-    .t-item h3  { margin: 0 0 4px; font-size: 15px; }
-    .t-item .mono { margin-bottom: 6px; }
+    .t-item h3 { margin: 0 0 4px; font-size: 16px; }
 
-    /* ── SKILLS LIST ────────────────────────────────────────────────── */
-    .skills-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
-    .skills-col h3 { font-size: 14px; margin-bottom: 8px; color: #93c5fd; }
-    .skills-col ul li { font-size: 14px; color: #cbd5e1; }
+    /* ─── SKILLS SECTION (alternating palette) ───────────────────────────────── */
+    #skills {
+      background: linear-gradient(160deg, #060d1c 0%, #0b1525 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .skills-inner {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+    }
+    .skill-col { padding: 12px 16px; }
+    .skill-col + .skill-col { border-left: 1px solid var(--border); }
+    .skill-col h3 {
+      margin-top: 0;
+      font-size: 15px;
+      color: #93c5fd;
+      letter-spacing: 0.3px;
+    }
+    .skill-col ul { margin: 0; color: #cbd5e1; font-size: 14px; }
 
-    /* ── RESUME CTA ─────────────────────────────────────────────────── */
-    .resume-row {
+    /* ─── RESUME CTA ─────────────────────────────────────────────────────────── */
+    .resume-cta {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
+      gap: 16px;
       flex-wrap: wrap;
     }
-    .resume-row p { margin: 0; }
+    .resume-cta p { margin: 0; color: #cbd5e1; font-size: 15px; }
 
-    /* ── CONTACT FORM ───────────────────────────────────────────────── */
+    /* ─── CONTACT FORM ───────────────────────────────────────────────────────── */
     .contact-form {
       display: grid;
       gap: 14px;
@@ -369,7 +386,7 @@
     .contact-form label {
       display: flex;
       flex-direction: column;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
       color: var(--muted);
       gap: 6px;
@@ -377,28 +394,46 @@
     .contact-form label.full { grid-column: 1 / -1; }
     .contact-form input,
     .contact-form textarea {
+      width: 100%;
       padding: 12px 14px;
       border-radius: 10px;
-      border: 1px solid rgba(148,163,184,.32);
-      background: #0a1324;
-      color: var(--text);
+      border: 1px solid var(--border-input);
+      background: var(--input-bg);
+      color: var(--light);
       font-family: inherit;
       font-size: 14px;
       resize: vertical;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
     .contact-form input:focus,
     .contact-form textarea:focus {
       outline: none;
-      border-color: var(--accent);
-      box-shadow: var(--glow-blue);
+      border-color: var(--secondary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
     }
-    .form-actions { display: flex; gap: 10px; align-items: center; }
+    .form-actions { grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; }
 
-    /* ── FOOTER ─────────────────────────────────────────────────────── */
+    /* ─── SECTION HEADINGS ───────────────────────────────────────────────────── */
+    .section-heading {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 0 0 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .section-heading::after {
+      content: "";
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(37, 99, 235, 0.45), transparent);
+    }
+
+    /* ─── FOOTER ─────────────────────────────────────────────────────────────── */
     footer {
-      border-top: 1px solid rgba(148,163,184,.17);
-      padding: 38px 0;
-      color: #94a3b8;
+      border-top: 1px solid var(--border);
+      padding: 36px 0;
+      color: var(--muted);
     }
     .footer-inner {
       display: flex;
@@ -409,59 +444,46 @@
     }
     .footer-status { color: #a3e635; font-weight: 600; font-size: 14px; }
 
-    /* ── SECTION LABELS ─────────────────────────────────────────────── */
-    .section-label {
-      font-size: 11px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 6px;
-      font-weight: 600;
-    }
-
-    /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+    /* ─── Responsive ─────────────────────────────────────────────────────────── */
     @media (max-width: 960px) {
-      .hero         { grid-template-columns: 1fr; }
-      .grid.cols-3  { grid-template-columns: 1fr 1fr; }
-      .grid.cols-4  { grid-template-columns: 1fr 1fr; }
-      .skills-grid  { grid-template-columns: 1fr; gap: 18px; }
+      .hero-grid        { grid-template-columns: 1fr; }
+      .cols-3           { grid-template-columns: 1fr; }
+      .skills-inner     { grid-template-columns: 1fr; }
+      .skill-col + .skill-col { border-left: none; border-top: 1px solid var(--border); }
     }
     @media (max-width: 640px) {
-      .grid.cols-3,
-      .grid.cols-2  { grid-template-columns: 1fr; }
-      .contact-form { grid-template-columns: 1fr; }
-      .contact-form label.full { grid-column: 1; }
-      .links a:not(.btn) { display: none; }
+      .cols-2           { grid-template-columns: 1fr; }
+      .contact-form     { grid-template-columns: 1fr; }
+      .contact-form label.full { grid-column: span 1; }
+      .nav-links .hide-sm { display: none; }
+      .hero-headline    { font-size: 26px; }
+      .section-heading  { font-size: 22px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       HEADER
-  ══════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════
+       HEADER / NAV
+  ═══════════════════════════════════════════════════════════════ -->
   <header>
     <div class="container">
-      <nav aria-label="Primary navigation">
-
+      <nav>
         <div class="brand">
-          <!-- Headshot: swap src for actual photo -->
           <img
-            src="[ASSET: headshot_photo.png]"
-            alt="[FIELD: full_name] — [FIELD: discipline]"
+            src="[headshot.png]"
+            alt="[Your Name] — Electrical Engineering"
             class="hero-photo"
           />
-          <h1>[FIELD: full_name]</h1>
+          <h1>[Your Name]</h1>
         </div>
-
-        <div class="links">
-          <a href="#projects">[LABEL: nav_projects]</a>
-          <a href="#skills">[LABEL: nav_skills]</a>
-          <a href="#experience">[LABEL: nav_experience]</a>
-          <a href="#contact">[LABEL: nav_contact]</a>
-          <a class="btn secondary" href="#resume">[LABEL: nav_resume_cta]</a>
+        <div class="nav-links">
+          <a href="#projects" class="hide-sm">Projects</a>
+          <a href="#skills"   class="hide-sm">Skills</a>
+          <a href="#experience" class="hide-sm">Experience</a>
+          <a href="#contact"  class="hide-sm">Contact</a>
+          <a class="btn secondary" href="#resume" style="margin-left: 8px;">Resume</a>
         </div>
-
       </nav>
     </div>
   </header>
@@ -469,347 +491,271 @@
   <main>
 
     <!-- ═══════════════════════════════════════════════════════════════
-         HERO  —  split composition
-    ════════════════════════════════════════════════════════════════════ -->
-    <section class="section" aria-labelledby="hero-h">
-      <div class="container hero">
+         HERO
+    ═══════════════════════════════════════════════════════════════ -->
+    <section class="section" aria-label="Hero introduction">
+      <div class="container hero-grid">
 
-        <!-- LEFT COLUMN: identity + CTA -->
+        <!-- Left column: identity + pitch -->
         <div>
-          <div class="section-label">[FIELD: discipline] Portfolio</div>
-
-          <span class="badge">
-            [FIELD: program_name] — [FIELD: graduation_label]
-          </span>
-
-          <h2 id="hero-h">[FIELD: hero_headline]</h2>
-
+          <div class="badge">[Discipline] — Class of [Graduation Term]</div>
+          <h2 class="hero-headline">
+            [Primary value proposition headline — one sharp sentence about what you build or design.]
+          </h2>
           <p class="lead">
-            I'm <strong>[FIELD: full_name]</strong>, [FIELD: hero_bio_sentence_one].
-            [FIELD: hero_bio_sentence_two]
+            I'm <strong>[Your Name]</strong>, a [major] student focused on
+            <em>[specialty area 1]</em>, <em>[specialty area 2]</em>, and <em>[specialty area 3]</em>.
+            [One-sentence summary of your engineering approach and what excites you.]
           </p>
-
-          <div class="hero-cta">
-            <a class="btn" href="#contact">[LABEL: cta_primary]</a>
-            <a class="btn secondary" href="#projects">[LABEL: cta_secondary]</a>
+          <div class="hero-cta-row">
+            <a class="btn" href="#contact">Hire Me</a>
+            <a class="btn secondary" href="#projects">See Projects</a>
           </div>
-
-          <p class="hero-note">
-            [FIELD: open_to_statement]
+          <p class="hero-availability">
+            Open to: [Role Type 1] • [Role Type 2] • [Role Type 3] • [Role Type 4]
           </p>
         </div>
 
-        <!-- RIGHT COLUMN: at-a-glance card grid -->
-        <div class="hero-card" aria-label="[LABEL: hero_card_aria]">
-          <div class="grid cols-2" style="gap:12px;">
-
+        <!-- Right column: at-a-glance card -->
+        <div class="hero-card" aria-label="At-a-glance summary">
+          <div class="grid cols-2" style="gap: 12px;">
             <div class="card">
-              <div class="mono">[LABEL: glance_card_1_title]</div>
-              <!-- Repeat .chip elements for primary skill tags -->
-              <span class="chip">[FIELD: skill_chip]</span>
-              <span class="chip">[FIELD: skill_chip]</span>
-              <span class="chip">[FIELD: skill_chip]</span>
-              <span class="chip">[FIELD: skill_chip]</span>
+              <div class="mono">Core Focus</div>
+              <div class="chip">[Skill / Tool 1]</div>
+              <div class="chip">[Skill / Tool 2]</div>
+              <div class="chip">[Skill / Tool 3]</div>
+              <div class="chip">[Skill / Tool 4]</div>
             </div>
-
             <div class="card">
-              <div class="mono">[LABEL: glance_card_2_title]</div>
-              <!-- Repeat .chip elements for toolchain tags -->
-              <span class="chip">[FIELD: tool_chip]</span>
-              <span class="chip">[FIELD: tool_chip]</span>
-              <span class="chip">[FIELD: tool_chip]</span>
-              <span class="chip">[FIELD: tool_chip]</span>
+              <div class="mono">Toolchain</div>
+              <div class="chip">[Tool A]</div>
+              <div class="chip">[Tool B]</div>
+              <div class="chip">[Tool C]</div>
+              <div class="chip">[Tool D]</div>
             </div>
-
             <div class="card">
-              <div class="mono">[LABEL: glance_card_3_title]</div>
-              <ul style="font-size:13px; padding-left:1rem; line-height:1.55;">
-                <!-- Repeat <li> for each highlight bullet -->
-                <li>[FIELD: highlight_bullet]</li>
-                <li>[FIELD: highlight_bullet]</li>
-                <li>[FIELD: highlight_bullet]</li>
+              <div class="mono">Highlights</div>
+              <ul style="margin: 0.3rem 0 0; font-size: 13px; line-height: 1.5; padding-left: 1rem;">
+                <li>[Key achievement or project stat #1]</li>
+                <li>[Key achievement or project stat #2]</li>
+                <li>[Key achievement or project stat #3]</li>
               </ul>
             </div>
-
             <div class="card">
-              <div class="mono">[LABEL: glance_card_4_title]</div>
-              <p style="margin:.3rem 0 0; font-size:14px;">
-                <a href="[FIELD: linkedin_url]" target="_blank" rel="noopener">[LABEL: link_linkedin]</a>
-                &middot;
-                <a href="[FIELD: github_url]" target="_blank" rel="noopener">[LABEL: link_github]</a>
-                &middot;
-                <a href="#resume">[LABEL: link_resume_pdf]</a>
+              <div class="mono">Links</div>
+              <p style="margin: 0.3rem 0 0; font-size: 14px; line-height: 1.9;">
+                <a href="#" target="_blank" rel="noopener">LinkedIn</a> ·
+                <a href="#" target="_blank" rel="noopener">GitHub</a> ·
+                <a href="#resume">Resume (PDF)</a>
               </p>
             </div>
-
           </div>
         </div>
 
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════════
-         PROJECTS  —  3-column card grid (ALT palette)
-    ════════════════════════════════════════════════════════════════════ -->
+         PROJECTS
+    ═══════════════════════════════════════════════════════════════ -->
     <section id="projects" class="section" aria-labelledby="projects-h">
       <div class="container">
-        <div class="section-alt">
+        <h2 id="projects-h" class="section-heading">Selected Projects</h2>
+        <div class="grid cols-3">
 
-          <div class="section-label">[LABEL: section_label_projects]</div>
-          <h2 id="projects-h">[LABEL: section_heading_projects]</h2>
+          <!-- Project card — repeat as needed -->
+          <article class="card" aria-label="[Project Title]">
+            <div class="project-media">
+              <img
+                src="[project-card-1.jpg]"
+                alt="[Descriptive alt text for project 1 image]"
+              />
+            </div>
+            <h3>[Project Title One]</h3>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.55;">
+              [2–3 sentence description: what you built, key technical decisions, and measurable outcome.]
+            </p>
+            <div class="chip">[Tag 1]</div>
+            <div class="chip">[Tag 2]</div>
+            <div class="chip">[Tag 3]</div>
+          </article>
 
-          <div class="grid cols-3" style="margin-top:24px;">
+          <article class="card" aria-label="[Project Title]">
+            <div class="project-media">
+              <img
+                src="[project-card-2.jpg]"
+                alt="[Descriptive alt text for project 2 image]"
+              />
+            </div>
+            <h3>[Project Title Two]</h3>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.55;">
+              [2–3 sentence description: what you built, key technical decisions, and measurable outcome.]
+            </p>
+            <div class="chip">[Tag 1]</div>
+            <div class="chip">[Tag 2]</div>
+            <div class="chip">[Tag 3]</div>
+          </article>
 
-            <!-- Repeat this <article> block for each project (3–6 typical) -->
-            <article class="card" aria-label="[FIELD: project_aria_label]">
-              <div class="project-media">
-                <img
-                  src="[ASSET: project_card_image_1.jpg]"
-                  alt="[FIELD: project_image_alt]"
-                />
-              </div>
-              <h3>[FIELD: project_title]</h3>
-              <p style="font-size:14px; color:#94a3b8; line-height:1.55;">
-                [FIELD: project_description]
-              </p>
-              <!-- Repeat .chip for each technology tag -->
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-            </article>
-
-            <article class="card" aria-label="[FIELD: project_aria_label]">
-              <div class="project-media">
-                <img
-                  src="[ASSET: project_card_image_2.jpg]"
-                  alt="[FIELD: project_image_alt]"
-                />
-              </div>
-              <h3>[FIELD: project_title]</h3>
-              <p style="font-size:14px; color:#94a3b8; line-height:1.55;">
-                [FIELD: project_description]
-              </p>
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-            </article>
-
-            <article class="card" aria-label="[FIELD: project_aria_label]">
-              <div class="project-media">
-                <img
-                  src="[ASSET: project_card_image_3.jpg]"
-                  alt="[FIELD: project_image_alt]"
-                />
-              </div>
-              <h3>[FIELD: project_title]</h3>
-              <p style="font-size:14px; color:#94a3b8; line-height:1.55;">
-                [FIELD: project_description]
-              </p>
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-              <span class="chip">[FIELD: tech_tag]</span>
-            </article>
-
-          </div>
+          <article class="card" aria-label="[Project Title]">
+            <div class="project-media">
+              <img
+                src="[project-card-3.jpg]"
+                alt="[Descriptive alt text for project 3 image]"
+              />
+            </div>
+            <h3>[Project Title Three]</h3>
+            <p style="font-size: 14px; color: #94a3b8; line-height: 1.55;">
+              [2–3 sentence description: what you built, key technical decisions, and measurable outcome.]
+            </p>
+            <div class="chip">[Tag 1]</div>
+            <div class="chip">[Tag 2]</div>
+            <div class="chip">[Tag 3]</div>
+          </article>
 
         </div>
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════════
-         SKILLS  —  3-column category list
-    ════════════════════════════════════════════════════════════════════ -->
+         SKILLS  (alternate dark tint)
+    ═══════════════════════════════════════════════════════════════ -->
     <section id="skills" class="section" aria-labelledby="skills-h">
       <div class="container">
+        <h2 id="skills-h" class="section-heading">Skills</h2>
+        <div class="card">
+          <div class="skills-inner">
 
-        <div class="section-label">[LABEL: section_label_skills]</div>
-        <h2 id="skills-h">[LABEL: section_heading_skills]</h2>
-
-        <div class="card" style="margin-top:20px;">
-          <div class="skills-grid">
-
-            <!-- Repeat .skills-col for each skill category -->
-            <div class="skills-col">
-              <h3>[FIELD: skill_category_title]</h3>
+            <!-- Skill column — repeat for each category -->
+            <div class="skill-col">
+              <h3>[Skill Category 1]</h3>
               <ul>
-                <!-- Repeat <li> for each skill in this category -->
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
               </ul>
             </div>
 
-            <div class="skills-col">
-              <h3>[FIELD: skill_category_title]</h3>
+            <div class="skill-col">
+              <h3>[Skill Category 2]</h3>
               <ul>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
               </ul>
             </div>
 
-            <div class="skills-col">
-              <h3>[FIELD: skill_category_title]</h3>
+            <div class="skill-col">
+              <h3>[Skill Category 3]</h3>
               <ul>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
-                <li>[FIELD: skill_item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
+                <li>[Skill item]</li>
               </ul>
             </div>
 
           </div>
         </div>
-
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════════
-         EXPERIENCE  —  vertical timeline (ALT palette)
-    ════════════════════════════════════════════════════════════════════ -->
+         EXPERIENCE / TIMELINE
+    ═══════════════════════════════════════════════════════════════ -->
     <section id="experience" class="section" aria-labelledby="exp-h">
       <div class="container">
-        <div class="section-alt">
+        <h2 id="exp-h" class="section-heading">Experience</h2>
+        <div class="card timeline">
 
-          <div class="section-label">[LABEL: section_label_experience]</div>
-          <h2 id="exp-h">[LABEL: section_heading_experience]</h2>
+          <!-- Timeline item — repeat as needed -->
+          <div class="t-item">
+            <h3>[Role Title] — [Organization Name]</h3>
+            <p class="mono">[Duration] · [Location]</p>
+            <ul style="font-size: 14px; color: #cbd5e1;">
+              <li>[Bullet: specific technical contribution + measurable result]</li>
+              <li>[Bullet: specific technical contribution + measurable result]</li>
+            </ul>
+          </div>
 
-          <div class="card timeline" style="margin-top:20px;">
-
-            <!-- Repeat .t-item for each role (internships, assistantships, etc.) -->
-            <div class="t-item">
-              <h3>[FIELD: role_title] — [FIELD: company_name]</h3>
-              <p class="mono">[FIELD: date_range] · [FIELD: location]</p>
-              <ul>
-                <li>[FIELD: accomplishment_bullet]</li>
-                <li>[FIELD: accomplishment_bullet]</li>
-              </ul>
-            </div>
-
-            <div class="t-item">
-              <h3>[FIELD: role_title] — [FIELD: company_name]</h3>
-              <p class="mono">[FIELD: date_range] · [FIELD: location]</p>
-              <ul>
-                <li>[FIELD: accomplishment_bullet]</li>
-                <li>[FIELD: accomplishment_bullet]</li>
-              </ul>
-            </div>
-
-            <div class="t-item">
-              <h3>[FIELD: role_title] — [FIELD: company_name]</h3>
-              <p class="mono">[FIELD: date_range] · [FIELD: location]</p>
-              <ul>
-                <li>[FIELD: accomplishment_bullet]</li>
-                <li>[FIELD: accomplishment_bullet]</li>
-              </ul>
-            </div>
-
+          <div class="t-item">
+            <h3>[Role Title] — [Organization Name]</h3>
+            <p class="mono">[Duration] · [Location]</p>
+            <ul style="font-size: 14px; color: #cbd5e1;">
+              <li>[Bullet: specific technical contribution + measurable result]</li>
+              <li>[Bullet: specific technical contribution + measurable result]</li>
+            </ul>
           </div>
 
         </div>
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════════
-         RESUME CTA  —  single-row card
-    ════════════════════════════════════════════════════════════════════ -->
+         RESUME CTA
+    ═══════════════════════════════════════════════════════════════ -->
     <section id="resume" class="section" aria-labelledby="resume-h">
       <div class="container">
-
-        <div class="section-label">[LABEL: section_label_resume]</div>
-        <h2 id="resume-h">[LABEL: section_heading_resume]</h2>
-
-        <div class="card resume-row" style="margin-top:20px;">
+        <h2 id="resume-h" class="section-heading">Resume</h2>
+        <div class="card resume-cta">
           <p>
-            [FIELD: resume_description_sentence]
-            <span class="mono">[FIELD: resume_meta_note]</span>
+            Download a one-page PDF with coursework, projects, and experience.
+            <span class="mono">[Academic standing], graduation: [Term Year].</span>
           </p>
-          <a class="btn" href="[ASSET: resume.pdf]" download>[LABEL: resume_download_cta]</a>
+          <a class="btn" href="#" download>Download PDF</a>
         </div>
-
       </div>
     </section>
 
-
     <!-- ═══════════════════════════════════════════════════════════════
-         CONTACT  —  2-column form (ALT palette)
-    ════════════════════════════════════════════════════════════════════ -->
+         CONTACT
+    ═══════════════════════════════════════════════════════════════ -->
     <section id="contact" class="section" aria-labelledby="contact-h">
       <div class="container">
-        <div class="section-alt">
-
-          <div class="section-label">[LABEL: section_label_contact]</div>
-          <h2 id="contact-h">[LABEL: section_heading_contact]</h2>
-
-          <div class="card" style="margin-top:20px;">
-            <form
-              class="contact-form"
-              onsubmit="event.preventDefault(); alert('[FIELD: form_success_message]');"
-            >
-              <label>
-                [LABEL: form_field_name]
-                <input
-                  required
-                  type="text"
-                  placeholder="[FIELD: form_name_placeholder]"
-                />
-              </label>
-
-              <label>
-                [LABEL: form_field_email]
-                <input
-                  required
-                  type="email"
-                  placeholder="[FIELD: form_email_placeholder]"
-                />
-              </label>
-
-              <label class="full">
-                [LABEL: form_field_message]
-                <textarea
-                  required
-                  rows="5"
-                  placeholder="[FIELD: form_message_placeholder]"
-                ></textarea>
-              </label>
-
-              <div class="form-actions full">
-                <button class="btn" type="submit">[LABEL: form_submit_cta]</button>
-                <a class="btn secondary" href="mailto:[FIELD: contact_email]">[LABEL: form_email_cta]</a>
-              </div>
-            </form>
-          </div>
-
+        <h2 id="contact-h" class="section-heading">Contact</h2>
+        <div class="card">
+          <form
+            class="contact-form"
+            onsubmit="event.preventDefault(); alert('Message sent — I\'ll be in touch soon!');"
+          >
+            <label>
+              Name
+              <input type="text" required placeholder="[Recruiter / Collaborator Name]" />
+            </label>
+            <label>
+              Email
+              <input type="email" required placeholder="[email@company.com]" />
+            </label>
+            <label class="full">
+              Message
+              <textarea rows="4" required placeholder="[Hi — we'd love to discuss an opportunity…]"></textarea>
+            </label>
+            <div class="form-actions">
+              <button class="btn" type="submit">Send Message</button>
+              <a class="btn secondary" href="mailto:[your@email.com]">Email Me Directly</a>
+            </div>
+          </form>
         </div>
       </div>
     </section>
 
   </main>
 
-
-  <!-- ═══════════════════════════════════════════════════════════════════
+  <!-- ═══════════════════════════════════════════════════════════════
        FOOTER
-  ══════════════════════════════════════════════════════════════════════ -->
+  ═══════════════════════════════════════════════════════════════ -->
   <footer>
     <div class="container">
       <div class="footer-inner">
-        <span>
-          &copy; <span id="footer-year"></span>
-          [FIELD: full_name]. All rights reserved.
-        </span>
-        <span class="footer-status">[FIELD: footer_availability_statement]</span>
+        <span>© <span id="year"></span> [Your Name]. All rights reserved.</span>
+        <span class="footer-status">[Availability status — e.g., Ready for interviews · Open to relocation]</span>
       </div>
     </div>
   </footer>
 
   <script>
-    document.getElementById('footer-year').textContent = new Date().getFullYear();
+    document.getElementById("year").textContent = new Date().getFullYear();
   </script>
 
 </body>

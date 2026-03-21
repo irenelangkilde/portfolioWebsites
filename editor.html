@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Portfolio — Irene's Webworks</title>
+  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 48px; }
+
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      background: #16213e;
+      color: white;
+      height: 48px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 9999;
+    }
+    #toolbar h1 { font-size: 15px; font-weight: 600; flex: 1; opacity: .9; }
+    .tbtn {
+      padding: 6px 14px; border: none; border-radius: 6px;
+      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .tbtn-ghost   { background: rgba(255,255,255,.12); color: #fff; }
+    .tbtn-ghost:hover  { background: rgba(255,255,255,.22); }
+    .tbtn-primary { background: #667eea; color: #fff; }
+    .tbtn-primary:hover { background: #5568d4; }
+    .tbtn-green   { background: #3a9e6e; color: #fff; }
+    .tbtn-green:hover  { background: #2f8259; }
+
+    /* Main layout: canvas + color panel side by side */
+    #editorLayout {
+      display: flex;
+      height: calc(100vh - 48px);
+    }
+    #gjs { flex: 1; min-width: 0; }
+
+    /* Color panel — hidden in preview mode */
+    #colorPanel {
+      width: 180px;
+      flex-shrink: 0;
+      background: #16213e;
+      border-left: 1px solid rgba(255,255,255,.1);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: width .2s, opacity .2s;
+    }
+    #colorPanel.hidden { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+
+    #colorPanel h2 {
+      font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(255,255,255,.45); padding: 14px 14px 8px;
+    }
+    .color-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 5px 14px;
+    }
+    .color-row label { font-size: 12px; color: rgba(234,240,255,.7); flex: 1; }
+    .color-row input[type="color"] {
+      width: 32px; height: 24px; border: none; border-radius: 4px;
+      cursor: pointer; padding: 1px; background: none;
+    }
+    #colorPanel .divider {
+      border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px;
+    }
+    #colorPanel .hint {
+      font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px;
+      line-height: 1.5;
+    }
+
+    /* Force GrapesJS canvas iframe to fill full height */
+    .gjs-cv-canvas,
+    .gjs-frame-wrapper,
+    .gjs-frame { height: 100% !important; min-height: 100% !important; }
+
+    /* Hide all GrapesJS chrome — we use our own toolbar */
+    .gjs-pn-panels,
+    .gjs-devices-c,
+    .gjs-device-label,
+    .gjs-rte-toolbar { display: none !important; }
+
+    #no-preview {
+      display: none; position: fixed; inset: 0;
+      background: #1a1a2e; color: white;
+      align-items: center; justify-content: center;
+      flex-direction: column; gap: 16px; font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="toolbar">
+    <h1>Irene's Webworks — Visual Editor</h1>
+    <button class="tbtn tbtn-ghost"   id="btnBack">← Back to Form</button>
+    <button class="tbtn tbtn-green"   id="btnToggleEdit">✏️ Edit</button>
+    <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
+  </div>
+
+  <div id="editorLayout">
+    <div id="gjs"></div>
+
+    <div id="colorPanel" class="hidden">
+      <h2>Colors</h2>
+      <div class="color-row"><label>Primary</label>  <input type="color" id="cp-primary"></div>
+      <div class="color-row"><label>Secondary</label><input type="color" id="cp-secondary"></div>
+      <div class="color-row"><label>Accent</label>   <input type="color" id="cp-accent"></div>
+      <div class="color-row"><label>Dark</label>     <input type="color" id="cp-dark"></div>
+      <div class="color-row"><label>Light</label>    <input type="color" id="cp-light"></div>
+      <hr class="divider">
+      <p class="hint">Changes apply live. Download to save.</p>
+    </div>
+  </div>
+
+  <div id="no-preview">
+    <p>No portfolio found. Please generate one on Page 5 first.</p>
+    <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
+  </div>
+
+  <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
+  <script>
+    const fullHtml = localStorage.getItem("portfolio_preview_html");
+
+    if (!fullHtml) {
+      document.getElementById("no-preview").style.display = "flex";
+      document.getElementById("editorLayout").style.display = "none";
+      document.getElementById("toolbar").style.display = "none";
+    } else {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(fullHtml, "text/html");
+      const bodyHtml = doc.body.innerHTML;
+      const css = Array.from(doc.querySelectorAll("style"))
+        .map(s => s.textContent)
+        .join("\n");
+      const headExtras = Array.from(doc.head.children)
+        .filter(el => el.tagName !== "STYLE")
+        .map(el => el.outerHTML)
+        .join("\n");
+
+      // ── Extract CSS custom property values from the stylesheet ────────────────
+      const CSS_VAR_NAMES = ["primary", "secondary", "accent", "dark", "light"];
+
+      // cssVarMap: logical name → actual CSS variable name used in the stylesheet
+      // e.g. { primary: "--primary-color", secondary: "--secondary-color", ... }
+      const cssVarMap = {};
+
+      function extractCssVars(cssText) {
+        // Find all --xxx: value declarations anywhere in the CSS
+        const allVars = {};
+        for (const [, name, val] of cssText.matchAll(/--([a-zA-Z0-9_-]+)\s*:\s*([^;}\n]+)/g)) {
+          allVars[name.trim().toLowerCase()] = val.trim().replace(/^['"]|['"]$/g, "");
+        }
+
+        const vars = {};
+        for (const name of CSS_VAR_NAMES) {
+          const candidates = [
+            name,
+            `${name}-color`, `color-${name}`,
+            `${name}-bg`, `bg-${name}`,
+            `clr-${name}`
+          ];
+          for (const c of candidates) {
+            if (allVars[c] !== undefined) {
+              vars[name] = allVars[c];
+              cssVarMap[name] = `--${c}`; // remember the actual variable name
+              break;
+            }
+          }
+        }
+        return vars;
+      }
+
+      function toHexColor(val) {
+        if (!val) return "#000000";
+        const clean = val.trim().replace(/^['"]|['"]$/g, "");
+        if (/^#[0-9a-f]{6}$/i.test(clean)) return clean;
+        if (/^#[0-9a-f]{3}$/i.test(clean))
+          return "#" + clean.slice(1).split("").map(c => c + c).join("");
+        const el = document.createElement("div");
+        el.style.color = clean;
+        document.body.appendChild(el);
+        const computed = getComputedStyle(el).color;
+        document.body.removeChild(el);
+        const m = computed.match(/\d+/g);
+        if (!m || m.length < 3) return "#000000";
+        return "#" + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, "0")).join("");
+      }
+
+      // ── GrapesJS init ─────────────────────────────────────────────────────────
+      let editor = window._gjsEditor = grapesjs.init({
+        container: "#gjs",
+        height: "100%",
+        storageManager: false,
+        panels: { defaults: [] },
+        deviceManager: false,
+        components: bodyHtml,
+        style: css
+      });
+
+      let isPreviewing = false;
+      const currentColors = {}; // name → current hex value
+
+      function applyColorOverride() {
+        try {
+          const body = editor.Canvas.getBody();
+          if (!body) return;
+          for (const [k, v] of Object.entries(currentColors)) {
+            body.style.setProperty(cssVarMap[k] || `--${k}`, v);
+          }
+        } catch (e) { console.warn("applyColorOverride failed:", e); }
+      }
+
+      function initColorPickers() {
+        const extracted = extractCssVars(css);
+        for (const name of CSS_VAR_NAMES) {
+          const raw = extracted[name];
+          const hex = raw ? toHexColor(raw) : "#000000";
+          currentColors[name] = hex;
+          const input = document.getElementById(`cp-${name}`);
+          if (input) {
+            input.value = hex;
+            input.addEventListener("input", () => {
+              currentColors[name] = input.value;
+              applyColorOverride();
+            });
+          }
+        }
+      }
+
+      editor.on("load", () => {
+        // Fix GrapesJS background shorthand mangling
+        try {
+          const iframeDoc = editor.Canvas.getBody()?.ownerDocument;
+          if (iframeDoc?.head) {
+            const fix = iframeDoc.createElement("style");
+            fix.textContent = css;
+            iframeDoc.head.appendChild(fix);
+          }
+        } catch (e) { console.warn("CSS fix injection failed:", e); }
+
+        initColorPickers();
+
+        editor.runCommand("core:preview");
+        isPreviewing = true;
+        document.getElementById("btnToggleEdit").textContent = "✏️ Edit";
+        document.getElementById("btnToggleEdit").className = "tbtn tbtn-green";
+      });
+
+      // ── Toggle edit / preview ─────────────────────────────────────────────────
+      document.getElementById("btnToggleEdit").onclick = () => {
+        const btn = document.getElementById("btnToggleEdit");
+        const panel = document.getElementById("colorPanel");
+        if (isPreviewing) {
+          editor.stopCommand("core:preview");
+          btn.textContent = "👁 Preview";
+          btn.className = "tbtn tbtn-ghost";
+          panel.classList.remove("hidden");
+          // Re-inject overrides — canvas may have refreshed on mode switch
+          setTimeout(applyColorOverride, 50);
+        } else {
+          editor.runCommand("core:preview");
+          btn.textContent = "✏️ Edit";
+          btn.className = "tbtn tbtn-green";
+          panel.classList.add("hidden");
+        }
+        isPreviewing = !isPreviewing;
+      };
+
+      // ── Back / Download ───────────────────────────────────────────────────────
+      document.getElementById("btnBack").onclick = () => {
+        if (window.opener) window.opener.focus();
+        window.close();
+      };
+
+      document.getElementById("btnDownload").onclick = () => {
+        const editedBody = editor.getHtml();
+        const grapesCss  = editor.getCss();
+        // Build color override block from current picker values
+        const colorOverrideCss = Object.entries(currentColors).length
+          ? `:root { ${Object.entries(currentColors).map(([k,v]) => `${cssVarMap[k] || "--"+k}: ${v};`).join(" ")} }`
+          : "";
+        const combined = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+${headExtras}
+<style>${grapesCss}</style>
+<style>/* original CSS — fixes GrapesJS background shorthand mangling */
+${css}</style>
+${colorOverrideCss ? `<style>/* color picker overrides */\n${colorOverrideCss}\n</style>` : ""}
+</head>
+<body>${editedBody}</body>
+</html>`;
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([combined], { type: "text/html;charset=utf-8" }));
+        a.download = "portfolio.html";
+        a.click();
+        URL.revokeObjectURL(a.href);
+      };
+    }
+  </script>
+</body>
+</html>
