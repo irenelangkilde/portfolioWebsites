@@ -3,45 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[FULL NAME] – [PROFESSIONAL TITLE]</title>
+    <title>[FirstName] [LastName] – [Professional Title]</title>
+
+    <!--
+    {
+      "visual_elements": {
+        "images": [],
+        "animations": [
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".shape",
+            "type": "css-keyframe",
+            "name": "float"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-text",
+            "type": "css-keyframe",
+            "name": "slideInLeft"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-visual",
+            "type": "css-keyframe",
+            "name": "slideInRight"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".card-1",
+            "type": "css-keyframe",
+            "name": "cardFloat1"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".card-2",
+            "type": "css-keyframe",
+            "name": "cardFloat2"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".card-3",
+            "type": "css-keyframe",
+            "name": "cardFloat3"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-label",
+            "type": "css-keyframe",
+            "name": "fadeIn"
+          }
+        ]
+      },
+      "exemplary_attributes": {
+        "pacing": "measured and confident — generous section spacing, unhurried scroll rhythm",
+        "mood": "polished, aspirational, warm-professional",
+        "compositional_feel": "split hero with animated card-stack accent on the right; vertical timeline for experience; grid tiles for skills and expertise",
+        "section_density": "low-to-medium — each section breathes; hero and about are fullwidth split, stats is a compact banner, experience is a linear timeline",
+        "visual_treatment": "soft editorial with radial-gradient ambient shapes, floating card-stack 3D perspective, progress-bar skill indicators, glassmorphism contact form on dark ground"
+      },
+      "default_color_scheme": {
+        "primary": "#9D2235",
+        "secondary": "#F5D6DC",
+        "accent": "#7A1B2B",
+        "dark": "#2A1A1F",
+        "light": "#FFF0F3"
+      },
+      "design_factors": {
+        "composition_option": "split",
+        "style_token": "soft pastel editorial",
+        "rendering_style": "clean editorial vector"
+      }
+    }
+    -->
+
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
     <style>
+        /* ─── Palette A (default) ──────────────────────────────── */
         :root {
-            --primary: #9D2235;
-            --primary-deep: #7A1B2B;
-            --secondary: #F5D6DC;
-            --secondary-light: #FFF0F3;
-            --light: #F5EDE4;
-            --light-dark: #E8DDD0;
-            --warm-white: #FFFBF7;
-            --dark: #2A1A1F;
-            --text-muted: #8B7A74;
-            --footer-dark: #1a0f12;
+            --primary:       #9D2235;   /* ruby red          */
+            --primary-deep:  #7A1B2B;   /* darker ruby       */
+            --secondary:     #F5D6DC;   /* soft pink         */
+            --light:         #FFF0F3;   /* pale blush        */
+            --accent:        #F5EDE4;   /* warm beige        */
+            --accent-dark:   #E8DDD0;   /* deeper beige      */
+            --warm-white:    #FFFBF7;
+            --dark:          #2A1A1F;   /* near-black        */
+            --muted:         #8B7A74;
+
+            /* derived neutrals */
+            --primary-glow:  rgba(157, 34, 53, 0.18);
+            --primary-soft:  rgba(157, 34, 53, 0.08);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        /* ─── Palette B (inverted / contrast sections) ─────────── */
+        .scheme-b {
+            --section-bg:    var(--primary);
+            --section-text:  #ffffff;
+            --section-muted: rgba(255,255,255,0.75);
+            --card-bg:       var(--primary-deep);
+            --card-border:   rgba(255,255,255,0.15);
         }
+
+        * { margin:0; padding:0; box-sizing:border-box; }
 
         body {
             font-family: 'Manrope', sans-serif;
-            background: var(--light);
+            background: var(--accent);
             color: var(--dark);
             line-height: 1.6;
             overflow-x: hidden;
         }
 
+        /* ═══════════════════════════════════════
+           NAVIGATION
+        ═══════════════════════════════════════ */
         nav {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(255, 251, 247, 0.95);
+            top: 0; left: 0; right: 0;
+            background: rgba(255,251,247,0.95);
             backdrop-filter: blur(10px);
             z-index: 1000;
-            border-bottom: 1px solid rgba(157, 34, 53, 0.1);
+            border-bottom: 1px solid var(--primary-soft);
         }
 
         .nav-container {
@@ -77,9 +160,7 @@
             transition: color 0.3s ease;
         }
 
-        .nav-links a:hover {
-            color: var(--primary);
-        }
+        .nav-links a:hover { color: var(--primary); }
 
         .nav-cta {
             background: var(--primary);
@@ -96,9 +177,12 @@
         .nav-cta:hover {
             background: var(--primary-deep);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(157, 34, 53, 0.25);
+            box-shadow: 0 8px 20px var(--primary-glow);
         }
 
+        /* ═══════════════════════════════════════
+           HERO — split layout, palette A
+        ═══════════════════════════════════════ */
         .hero {
             margin-top: 80px;
             min-height: 85vh;
@@ -106,15 +190,13 @@
             align-items: center;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, var(--secondary-light) 0%, var(--light) 50%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--light) 0%, var(--accent) 50%, var(--secondary) 100%);
         }
 
+        /* ambient floating shapes */
         .hero-shapes {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             overflow: hidden;
             z-index: 1;
         }
@@ -127,37 +209,31 @@
         }
 
         .shape-1 {
-            width: 400px;
-            height: 400px;
+            width: 400px; height: 400px;
             background: radial-gradient(circle at 30% 30%, var(--primary), transparent);
-            top: -200px;
-            right: 10%;
+            top: -200px; right: 10%;
             animation-delay: 0s;
         }
 
         .shape-2 {
-            width: 300px;
-            height: 300px;
+            width: 300px; height: 300px;
             background: radial-gradient(circle at 70% 70%, var(--secondary), transparent);
-            bottom: -100px;
-            left: 5%;
+            bottom: -100px; left: 5%;
             animation-delay: 5s;
         }
 
         .shape-3 {
-            width: 200px;
-            height: 200px;
-            background: radial-gradient(circle at 50% 50%, rgba(157, 34, 53, 0.3), transparent);
-            top: 40%;
-            left: 15%;
+            width: 200px; height: 200px;
+            background: radial-gradient(circle at 50% 50%, var(--primary-glow), transparent);
+            top: 40%; left: 15%;
             animation-delay: 10s;
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -30px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.9); }
-            75% { transform: translate(40px, 10px) scale(1.05); }
+            0%,100% { transform: translate(0,0) scale(1); }
+            25%      { transform: translate(30px,-30px) scale(1.1); }
+            50%      { transform: translate(-20px,20px) scale(0.9); }
+            75%      { transform: translate(40px,10px) scale(1.05); }
         }
 
         .hero-content {
@@ -172,13 +248,11 @@
             z-index: 2;
         }
 
-        .hero-text {
-            animation: slideInLeft 0.8s ease-out;
-        }
+        .hero-text { animation: slideInLeft 0.8s ease-out; }
 
         @keyframes slideInLeft {
-            from { opacity: 0; transform: translateX(-50px); }
-            to { opacity: 1; transform: translateX(0); }
+            from { opacity:0; transform:translateX(-50px); }
+            to   { opacity:1; transform:translateX(0); }
         }
 
         .hero-label {
@@ -196,8 +270,8 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from { opacity:0; }
+            to   { opacity:1; }
         }
 
         h1 {
@@ -212,7 +286,7 @@
 
         .hero-subtitle {
             font-size: 20px;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 32px;
             line-height: 1.7;
             animation: fadeIn 0.8s ease-out 0.6s both;
@@ -239,7 +313,7 @@
         .btn-primary:hover {
             background: var(--primary-deep);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(157, 34, 53, 0.3);
+            box-shadow: 0 12px 30px rgba(157,34,53,0.3);
         }
 
         .btn-secondary {
@@ -260,6 +334,7 @@
             transform: translateY(-3px);
         }
 
+        /* ── hero right: animated card stack ── */
         .hero-visual {
             position: relative;
             height: 500px;
@@ -268,37 +343,29 @@
         }
 
         @keyframes slideInRight {
-            from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
+            from { opacity:0; transform:translateX(50px); }
+            to   { opacity:1; transform:translateX(0); }
         }
 
-        .card-stack {
-            position: relative;
-            width: 100%;
-            height: 100%;
-        }
+        .card-stack { position:relative; width:100%; height:100%; }
 
         .hero-card {
             position: absolute;
-            width: 320px;
-            height: 420px;
+            width: 320px; height: 420px;
             background: white;
             border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             transition: all 0.5s ease;
         }
 
-        .hero-card:hover {
-            transform: translateY(-10px) !important;
-        }
+        .hero-card:hover { transform: translateY(-10px) !important; }
 
         .card-1 {
-            top: 0;
-            left: 50%;
+            top:0; left:50%;
             transform: translateX(-50%) rotate(-8deg);
             background: linear-gradient(135deg, var(--primary), var(--primary-deep));
             color: white;
@@ -307,8 +374,7 @@
         }
 
         .card-2 {
-            top: 40px;
-            left: 50%;
+            top:40px; left:50%;
             transform: translateX(-50%) rotate(4deg);
             background: white;
             border: 2px solid var(--secondary);
@@ -317,8 +383,7 @@
         }
 
         .card-3 {
-            top: 80px;
-            left: 50%;
+            top:80px; left:50%;
             transform: translateX(-50%) rotate(-2deg);
             background: var(--secondary);
             z-index: 1;
@@ -326,24 +391,23 @@
         }
 
         @keyframes cardFloat1 {
-            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-8deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-8deg); }
+            from { opacity:0; transform:translateX(-50%) translateY(50px) rotate(-8deg); }
+            to   { opacity:1; transform:translateX(-50%) translateY(0) rotate(-8deg); }
         }
 
         @keyframes cardFloat2 {
-            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(4deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(4deg); }
+            from { opacity:0; transform:translateX(-50%) translateY(50px) rotate(4deg); }
+            to   { opacity:1; transform:translateX(-50%) translateY(0) rotate(4deg); }
         }
 
         @keyframes cardFloat3 {
-            from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-2deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-2deg); }
+            from { opacity:0; transform:translateX(-50%) translateY(50px) rotate(-2deg); }
+            to   { opacity:1; transform:translateX(-50%) translateY(0) rotate(-2deg); }
         }
 
         .card-icon {
-            width: 60px;
-            height: 60px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 60px; height: 60px;
+            background: rgba(255,255,255,0.2);
             border-radius: 16px;
             display: flex;
             align-items: center;
@@ -352,9 +416,8 @@
             margin-bottom: 20px;
         }
 
-        .card-2 .card-icon, .card-3 .card-icon {
-            background: var(--secondary-light);
-        }
+        .card-2 .card-icon,
+        .card-3 .card-icon { background: var(--light); }
 
         .card-title {
             font-family: 'Cormorant Garamond', serif;
@@ -363,20 +426,17 @@
             margin-bottom: 12px;
         }
 
-        .card-2 .card-title, .card-3 .card-title {
-            color: var(--primary);
-        }
+        .card-2 .card-title,
+        .card-3 .card-title { color: var(--primary); }
 
-        .card-desc {
-            font-size: 14px;
-            line-height: 1.6;
-            opacity: 0.9;
-        }
+        .card-desc { font-size:14px; line-height:1.6; opacity:0.9; }
 
-        .card-2 .card-desc, .card-3 .card-desc {
-            color: var(--text-muted);
-        }
+        .card-2 .card-desc,
+        .card-3 .card-desc { color: var(--muted); }
 
+        /* ═══════════════════════════════════════
+           STATS BANNER — palette B (inverted)
+        ═══════════════════════════════════════ */
         .stats {
             background: var(--primary);
             color: white;
@@ -391,9 +451,7 @@
             gap: 60px;
         }
 
-        .stat-item {
-            text-align: center;
-        }
+        .stat-item { text-align: center; }
 
         .stat-number {
             font-family: 'Cormorant Garamond', serif;
@@ -410,6 +468,9 @@
             letter-spacing: 1px;
         }
 
+        /* ═══════════════════════════════════════
+           ABOUT — palette A (warm white)
+        ═══════════════════════════════════════ */
         .about {
             padding: 120px 40px;
             background: var(--warm-white);
@@ -445,7 +506,7 @@
         .about-text {
             font-size: 17px;
             line-height: 1.8;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 32px;
         }
 
@@ -464,13 +525,10 @@
 
         .expertise-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(157, 34, 53, 0.15);
+            box-shadow: 0 10px 30px var(--primary-glow);
         }
 
-        .expertise-icon {
-            font-size: 32px;
-            margin-bottom: 12px;
-        }
+        .expertise-icon { font-size:32px; margin-bottom:12px; }
 
         .expertise-title {
             font-weight: 700;
@@ -481,13 +539,17 @@
 
         .expertise-desc {
             font-size: 14px;
-            color: var(--text-muted);
+            color: var(--muted);
             line-height: 1.6;
         }
 
+        /* ═══════════════════════════════════════
+           EXPERIENCE — palette A (accent/beige)
+           vertical timeline
+        ═══════════════════════════════════════ */
         .experience {
             padding: 120px 40px;
-            background: var(--light);
+            background: var(--accent);
         }
 
         .experience-container {
@@ -508,9 +570,7 @@
         .timeline::before {
             content: '';
             position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
+            left: 0; top: 0; bottom: 0;
             width: 3px;
             background: linear-gradient(to bottom, var(--primary), var(--secondary));
         }
@@ -523,13 +583,11 @@
 
         .timeline-dot {
             position: absolute;
-            left: -9px;
-            top: 0;
-            width: 20px;
-            height: 20px;
+            left: -9px; top: 0;
+            width: 20px; height: 20px;
             background: var(--primary);
             border-radius: 50%;
-            border: 4px solid var(--light);
+            border: 4px solid var(--accent);
             box-shadow: 0 0 0 4px var(--secondary);
         }
 
@@ -552,25 +610,26 @@
 
         .timeline-company {
             font-size: 16px;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 16px;
         }
 
         .timeline-desc {
             font-size: 15px;
             line-height: 1.7;
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
+        /* ═══════════════════════════════════════
+           SKILLS — palette B (light blush)
+           progress-bar grid cards
+        ═══════════════════════════════════════ */
         .skills {
             padding: 120px 40px;
-            background: var(--secondary-light);
+            background: var(--light);
         }
 
-        .skills-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .skills-container { max-width:1200px; margin:0 auto; }
 
         .skills-grid {
             display: grid;
@@ -591,7 +650,7 @@
         .skill-card:hover {
             border-color: var(--primary);
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(157, 34, 53, 0.15);
+            box-shadow: 0 15px 40px var(--primary-glow);
         }
 
         .skill-name {
@@ -603,7 +662,7 @@
 
         .skill-level {
             height: 8px;
-            background: var(--light-dark);
+            background: var(--accent-dark);
             border-radius: 10px;
             overflow: hidden;
         }
@@ -615,6 +674,10 @@
             transition: width 1s ease;
         }
 
+        /* ═══════════════════════════════════════
+           CONTACT — palette B (dark ground)
+           glassmorphism form card
+        ═══════════════════════════════════════ */
         .contact {
             padding: 120px 40px;
             background: var(--dark);
@@ -629,8 +692,14 @@
             gap: 80px;
         }
 
-        .contact h2 {
-            color: white;
+        .contact h2 { color: white; }
+
+        .contact .section-label { color: var(--secondary); }
+
+        .contact-intro {
+            opacity: 0.8;
+            margin-bottom: 40px;
+            line-height: 1.7;
         }
 
         .contact-info {
@@ -646,14 +715,14 @@
         }
 
         .contact-icon {
-            width: 50px;
-            height: 50px;
+            width: 50px; height: 50px;
             background: var(--primary);
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 22px;
+            flex-shrink: 0;
         }
 
         .contact-details h4 {
@@ -670,15 +739,14 @@
         }
 
         .contact-form {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255,255,255,0.05);
             padding: 40px;
             border-radius: 24px;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.08);
         }
 
-        .form-group {
-            margin-bottom: 24px;
-        }
+        .form-group { margin-bottom: 24px; }
 
         .form-group label {
             display: block;
@@ -693,8 +761,8 @@
         .form-group textarea {
             width: 100%;
             padding: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.1);
             border-radius: 12px;
             color: white;
             font-family: inherit;
@@ -706,7 +774,7 @@
         .form-group textarea:focus {
             outline: none;
             border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(255,255,255,0.15);
         }
 
         .form-group textarea {
@@ -716,7 +784,7 @@
 
         .form-group input::placeholder,
         .form-group textarea::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255,255,255,0.45);
         }
 
         .submit-btn {
@@ -737,20 +805,20 @@
         .submit-btn:hover {
             background: var(--primary-deep);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(157, 34, 53, 0.4);
+            box-shadow: 0 10px 30px rgba(157,34,53,0.4);
         }
 
+        /* ═══════════════════════════════════════
+           FOOTER
+        ═══════════════════════════════════════ */
         footer {
-            background: var(--footer-dark);
+            background: color-mix(in srgb, var(--dark) 90%, black 10%);
             color: white;
             padding: 40px;
             text-align: center;
         }
 
-        .footer-content {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
+        .footer-content { max-width:1200px; margin:0 auto; }
 
         .social-links {
             display: flex;
@@ -760,16 +828,16 @@
         }
 
         .social-link {
-            width: 45px;
-            height: 45px;
-            background: rgba(255, 255, 255, 0.1);
+            width: 45px; height: 45px;
+            background: rgba(255,255,255,0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             text-decoration: none;
-            font-size: 20px;
+            font-size: 14px;
+            font-weight: 700;
             transition: all 0.3s ease;
         }
 
@@ -778,46 +846,51 @@
             transform: translateY(-3px);
         }
 
-        .copyright {
-            font-size: 14px;
-            opacity: 0.6;
-        }
+        .copyright { font-size:14px; opacity:0.55; }
 
+        /* ═══════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════ */
         @media (max-width: 1200px) {
-            .hero-content {
-                grid-template-columns: 1fr;
-                gap: 60px;
-            }
-            .hero-visual { height: 400px; }
-            .hero-card { width: 280px; height: 360px; }
-            h1 { font-size: 56px; }
+            .hero-content { grid-template-columns:1fr; gap:60px; }
+            .hero-visual { height:400px; }
+            .hero-card { width:280px; height:360px; }
+            h1 { font-size:56px; }
         }
 
         @media (max-width: 768px) {
-            .nav-container { padding: 16px 24px; }
-            .nav-links { display: none; }
-            h1 { font-size: 42px; }
-            .hero-subtitle { font-size: 18px; }
-            .stats-container { grid-template-columns: repeat(2, 1fr); gap: 40px; }
-            .about-container, .contact-container { grid-template-columns: 1fr; gap: 40px; }
-            .expertise-grid { grid-template-columns: 1fr; }
-            .hero-visual { display: none; }
+            .nav-container { padding:16px 24px; }
+            .nav-links { display:none; }
+            h1 { font-size:42px; }
+            .hero-subtitle { font-size:18px; }
+            .stats-container { grid-template-columns:repeat(2,1fr); gap:40px; }
+            .about-container,
+            .contact-container { grid-template-columns:1fr; gap:40px; }
+            .expertise-grid { grid-template-columns:1fr; }
+            .hero-visual { display:none; }
         }
     </style>
 </head>
 <body>
+
+    <!-- ─── Navigation ─────────────────────────────── -->
     <nav>
         <div class="nav-container">
-            <div class="logo">[INITIALS]</div>
+            <div class="logo">[Initials]</div>
             <ul class="nav-links">
-                <li><a href="#about">[NAV LINK 1]</a></li>
-                <li><a href="#experience">[NAV LINK 2]</a></li>
-                <li><a href="#skills">[NAV LINK 3]</a></li>
-                <li><a href="#contact"><button class="nav-cta">[CTA LABEL]</button></a></li>
+                <li><a href="#about">[Nav Link 1]</a></li>
+                <li><a href="#experience">[Nav Link 2]</a></li>
+                <li><a href="#skills">[Nav Link 3]</a></li>
+                <li>
+                    <a href="#contact">
+                        <button class="nav-cta">[CTA Label]</button>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
 
+    <!-- ─── Hero ───────────────────────────────────── -->
     <section class="hero">
         <div class="hero-shapes">
             <div class="shape shape-1"></div>
@@ -826,244 +899,265 @@
         </div>
 
         <div class="hero-content">
+            <!-- Left: text block -->
             <div class="hero-text">
-                <span class="hero-label">[CREDENTIAL / YEAR]</span>
-                <h1>[FULL NAME]</h1>
-                <p class="hero-subtitle">[HERO TAGLINE / SHORT BIO PARAGRAPH]</p>
+                <span class="hero-label">[Credential / Role Badge]</span>
+                <h1>[Full Name]</h1>
+                <p class="hero-subtitle">
+                    [Two-sentence professional value proposition — highlight domain expertise, approach, and passion area.]
+                </p>
                 <div class="hero-buttons">
-                    <button class="btn-primary" onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})">[PRIMARY CTA]</button>
-                    <button class="btn-secondary" onclick="document.querySelector('#experience').scrollIntoView({behavior: 'smooth'})">[SECONDARY CTA]</button>
+                    <button class="btn-primary" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">[Primary CTA]</button>
+                    <button class="btn-secondary" onclick="document.querySelector('#experience').scrollIntoView({behavior:'smooth'})">[Secondary CTA]</button>
                 </div>
             </div>
 
+            <!-- Right: animated card stack (3 rotating feature cards) -->
             <div class="hero-visual">
                 <div class="card-stack">
                     <div class="hero-card card-1">
                         <div>
-                            <div class="card-icon"><!-- *** 1 --></div>
-                            <h3 class="card-title">[CARD TITLE 1]</h3>
+                            <div class="card-icon">[Icon 1]</div>
+                            <h3 class="card-title">[Skill / Domain 1]</h3>
                         </div>
-                        <p class="card-desc">[CARD DESCRIPTION 1]</p>
+                        <p class="card-desc">[Short value-prop for skill 1]</p>
                     </div>
                     <div class="hero-card card-2">
                         <div>
-                            <div class="card-icon"><!-- *** 2 --></div>
-                            <h3 class="card-title">[CARD TITLE 2]</h3>
+                            <div class="card-icon">[Icon 2]</div>
+                            <h3 class="card-title">[Skill / Domain 2]</h3>
                         </div>
-                        <p class="card-desc">[CARD DESCRIPTION 2]</p>
+                        <p class="card-desc">[Short value-prop for skill 2]</p>
                     </div>
                     <div class="hero-card card-3">
                         <div>
-                            <div class="card-icon"><!-- *** 3 --></div>
-                            <h3 class="card-title">[CARD TITLE 3]</h3>
+                            <div class="card-icon">[Icon 3]</div>
+                            <h3 class="card-title">[Skill / Domain 3]</h3>
                         </div>
-                        <p class="card-desc">[CARD DESCRIPTION 3]</p>
+                        <p class="card-desc">[Short value-prop for skill 3]</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- ─── Stats Banner (palette B) ──────────────── -->
     <section class="stats">
         <div class="stats-container">
+            <!-- repeat stat-item as needed -->
             <div class="stat-item">
-                <span class="stat-number">[STAT NUMBER 1]</span>
-                <span class="stat-label">[STAT LABEL 1]</span>
+                <span class="stat-number">[#]</span>
+                <span class="stat-label">[Metric Label]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[STAT NUMBER 2]</span>
-                <span class="stat-label">[STAT LABEL 2]</span>
+                <span class="stat-number">[#]</span>
+                <span class="stat-label">[Metric Label]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[STAT NUMBER 3]</span>
-                <span class="stat-label">[STAT LABEL 3]</span>
+                <span class="stat-number">[#]</span>
+                <span class="stat-label">[Metric Label]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[STAT NUMBER 4]</span>
-                <span class="stat-label">[STAT LABEL 4]</span>
+                <span class="stat-number">[#]</span>
+                <span class="stat-label">[Metric Label]</span>
             </div>
         </div>
     </section>
 
+    <!-- ─── About (palette A warm-white, split) ───── -->
     <section class="about" id="about">
         <div class="about-container">
+            <!-- Left: bio text -->
             <div>
-                <span class="section-label">[ABOUT SECTION LABEL]</span>
-                <h2>[ABOUT HEADING]</h2>
-                <p class="about-text">[ABOUT PARAGRAPH 1]</p>
-                <p class="about-text">[ABOUT PARAGRAPH 2]</p>
+                <span class="section-label">[Section Label]</span>
+                <h2>[About Headline]</h2>
+                <p class="about-text">[First paragraph — background, credentials, years of experience.]</p>
+                <p class="about-text">[Second paragraph — methodology, philosophy, differentiator.]</p>
             </div>
 
+            <!-- Right: 2×N expertise tile grid -->
             <div class="expertise-grid">
+                <!-- repeat expertise-item as needed -->
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 4 --></div>
-                    <div class="expertise-title">[EXPERTISE TITLE 1]</div>
-                    <div class="expertise-desc">[EXPERTISE DESCRIPTION 1]</div>
+                    <div class="expertise-icon">[Icon]</div>
+                    <div class="expertise-title">[Area of Expertise]</div>
+                    <div class="expertise-desc">[One-line description of this expertise]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 5 --></div>
-                    <div class="expertise-title">[EXPERTISE TITLE 2]</div>
-                    <div class="expertise-desc">[EXPERTISE DESCRIPTION 2]</div>
+                    <div class="expertise-icon">[Icon]</div>
+                    <div class="expertise-title">[Area of Expertise]</div>
+                    <div class="expertise-desc">[One-line description of this expertise]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 6 --></div>
-                    <div class="expertise-title">[EXPERTISE TITLE 3]</div>
-                    <div class="expertise-desc">[EXPERTISE DESCRIPTION 3]</div>
+                    <div class="expertise-icon">[Icon]</div>
+                    <div class="expertise-title">[Area of Expertise]</div>
+                    <div class="expertise-desc">[One-line description of this expertise]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 7 --></div>
-                    <div class="expertise-title">[EXPERTISE TITLE 4]</div>
-                    <div class="expertise-desc">[EXPERTISE DESCRIPTION 4]</div>
+                    <div class="expertise-icon">[Icon]</div>
+                    <div class="expertise-title">[Area of Expertise]</div>
+                    <div class="expertise-desc">[One-line description of this expertise]</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- ─── Experience — vertical timeline ─────────── -->
     <section class="experience" id="experience">
         <div class="experience-container">
             <div class="section-header">
-                <span class="section-label">[EXPERIENCE SECTION LABEL]</span>
-                <h2>[EXPERIENCE HEADING]</h2>
+                <span class="section-label">[Section Label]</span>
+                <h2>[Experience Headline]</h2>
             </div>
 
             <div class="timeline">
+                <!-- repeat timeline-item as needed -->
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[DATE RANGE 1]</div>
-                    <h3 class="timeline-title">[JOB TITLE 1]</h3>
-                    <div class="timeline-company">[COMPANY NAME 1], [LOCATION 1]</div>
-                    <p class="timeline-desc">[JOB DESCRIPTION 1]</p>
+                    <div class="timeline-date">[Start Year] – [End Year / Present]</div>
+                    <h3 class="timeline-title">[Job Title]</h3>
+                    <div class="timeline-company">[Organization Name], [Location]</div>
+                    <p class="timeline-desc">[2–3 sentence description of responsibilities and key achievements.]</p>
                 </div>
 
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[DATE RANGE 2]</div>
-                    <h3 class="timeline-title">[JOB TITLE 2]</h3>
-                    <div class="timeline-company">[COMPANY NAME 2], [LOCATION 2]</div>
-                    <p class="timeline-desc">[JOB DESCRIPTION 2]</p>
+                    <div class="timeline-date">[Start Year] – [End Year]</div>
+                    <h3 class="timeline-title">[Job Title]</h3>
+                    <div class="timeline-company">[Organization Name], [Location]</div>
+                    <p class="timeline-desc">[2–3 sentence description of responsibilities and key achievements.]</p>
                 </div>
 
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[DATE RANGE 3]</div>
-                    <h3 class="timeline-title">[JOB TITLE 3]</h3>
-                    <div class="timeline-company">[COMPANY NAME 3], [LOCATION 3]</div>
-                    <p class="timeline-desc">[JOB DESCRIPTION 3]</p>
+                    <div class="timeline-date">[Start Year] – [End Year]</div>
+                    <h3 class="timeline-title">[Job Title]</h3>
+                    <div class="timeline-company">[Organization Name], [Location]</div>
+                    <p class="timeline-desc">[2–3 sentence description of responsibilities and key achievements.]</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- ─── Skills — progress-bar card grid ────────── -->
     <section class="skills" id="skills">
         <div class="skills-container">
             <div class="section-header">
-                <span class="section-label">[SKILLS SECTION LABEL]</span>
-                <h2>[SKILLS HEADING]</h2>
+                <span class="section-label">[Section Label]</span>
+                <h2>[Skills Headline]</h2>
             </div>
 
             <div class="skills-grid">
+                <!-- repeat skill-card as needed; adjust width % per proficiency -->
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 1]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 1]%"></div>
+                        <div class="skill-progress" style="width: 90%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 2]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 2]%"></div>
+                        <div class="skill-progress" style="width: 85%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 3]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 3]%"></div>
+                        <div class="skill-progress" style="width: 80%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 4]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 4]%"></div>
+                        <div class="skill-progress" style="width: 75%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 5]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 5]%"></div>
+                        <div class="skill-progress" style="width: 92%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[SKILL NAME 6]</div>
+                    <div class="skill-name">[Skill Name]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [SKILL LEVEL 6]%"></div>
+                        <div class="skill-progress" style="width: 88%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- ─── Contact (palette B dark, glassmorphism form) -->
     <section class="contact" id="contact">
         <div class="contact-container">
+            <!-- Left: contact info -->
             <div>
-                <span class="section-label">[CONTACT SECTION LABEL]</span>
-                <h2>[CONTACT HEADING]</h2>
-                <p style="opacity: 0.8; margin-bottom: 40px;">[CONTACT INTRO PARAGRAPH]</p>
+                <span class="section-label">[Section Label]</span>
+                <h2>[Contact Headline]</h2>
+                <p class="contact-intro">[One or two sentences inviting collaboration or inquiries.]</p>
 
                 <div class="contact-info">
+                    <!-- repeat contact-item as needed -->
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 8 --></div>
+                        <div class="contact-icon">[Icon]</div>
                         <div class="contact-details">
-                            <h4>[CONTACT TYPE 1]</h4>
-                            <p>[CONTACT VALUE 1]</p>
+                            <h4>[Channel Label]</h4>
+                            <p>[contact@example.com]</p>
                         </div>
                     </div>
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 9 --></div>
+                        <div class="contact-icon">[Icon]</div>
                         <div class="contact-details">
-                            <h4>[CONTACT TYPE 2]</h4>
-                            <p>[CONTACT VALUE 2]</p>
+                            <h4>[Channel Label]</h4>
+                            <p>[+X (XXX) XXX-XXXX]</p>
                         </div>
                     </div>
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 10 --></div>
+                        <div class="contact-icon">[Icon]</div>
                         <div class="contact-details">
-                            <h4>[CONTACT TYPE 3]</h4>
-                            <p>[CONTACT VALUE 3]</p>
+                            <h4>[Channel Label]</h4>
+                            <p>[City, Country]</p>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <!-- Right: glassmorphism contact form -->
             <div class="contact-form">
                 <form>
                     <div class="form-group">
-                        <label>[FORM FIELD LABEL 1]</label>
-                        <input type="text" placeholder="[FORM FIELD PLACEHOLDER 1]" required>
+                        <label>[Field Label]</label>
+                        <input type="text" placeholder="[Placeholder text]" required>
                     </div>
                     <div class="form-group">
-                        <label>[FORM FIELD LABEL 2]</label>
-                        <input type="email" placeholder="[FORM FIELD PLACEHOLDER 2]" required>
+                        <label>[Field Label]</label>
+                        <input type="email" placeholder="[Placeholder text]" required>
                     </div>
                     <div class="form-group">
-                        <label>[FORM FIELD LABEL 3]</label>
-                        <textarea placeholder="[FORM FIELD PLACEHOLDER 3]" required></textarea>
+                        <label>[Field Label]</label>
+                        <textarea placeholder="[Placeholder text]" required></textarea>
                     </div>
-                    <button type="submit" class="submit-btn">[FORM SUBMIT LABEL]</button>
+                    <button type="submit" class="submit-btn">[Submit Button Label]</button>
                 </form>
             </div>
         </div>
     </section>
 
+    <!-- ─── Footer ─────────────────────────────────── -->
     <footer>
         <div class="footer-content">
             <div class="social-links">
-                <a href="#" class="social-link"><!-- *** 11 --></a>
-                <a href="#" class="social-link"><!-- *** 12 --></a>
-                <a href="#" class="social-link"><!-- *** 13 --></a>
-                <a href="#" class="social-link"><!-- *** 14 --></a>
+                <!-- repeat social-link as needed -->
+                <a href="#" class="social-link">[S1]</a>
+                <a href="#" class="social-link">[S2]</a>
+                <a href="#" class="social-link">[S3]</a>
+                <a href="#" class="social-link">[S4]</a>
             </div>
-            <p class="copyright">© [YEAR] [FULL NAME]. [COPYRIGHT TEXT]</p>
+            <p class="copyright">© [Year] [Full Name]. All rights reserved.</p>
         </div>
     </footer>
+
 </body>
 </html>

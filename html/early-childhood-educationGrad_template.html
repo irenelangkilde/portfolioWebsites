@@ -3,300 +3,533 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>[Your Name] | [Field of Study]</title>
-  <meta name="description" content="Resume & portfolio website template." />
+  <title>[Name] | [Field of Study]</title>
+  <meta name="description" content="Resume & portfolio website for a [Field of Study] student." />
+
+  <!--
+  {
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "headshot.jpg",
+          "selector": "img.headshot",
+          "type": "img",
+          "role": "Professional portrait photograph displayed in the contact section alongside contact details"
+        }
+      ],
+      "animations": []
+    },
+    "exemplary_attributes": {
+      "pacing": "Unhurried and approachable — generous vertical spacing between sections with soft scroll anchors gives a calm, readable rhythm",
+      "mood": "Warm, trustworthy, and professionally optimistic; coral and mint accents soften the confident blue to feel caring rather than corporate",
+      "compositional_feel": "Split hero (text-left / card-right) transitioning into a single-column narrative scroll with alternating timeline and two-column card grids",
+      "section_density": "Medium-light — each section surfaces 2–4 digestible items; no section feels crowded",
+      "visual_treatment": "Glassmorphism panels over a multi-radial-gradient paper background; frosted cards, pill badges, and soft drop shadows throughout"
+    },
+    "default_color_scheme": {
+      "primary": "#4E70F1",
+      "secondary": "#F28B86",
+      "accent": "#8FD4C1",
+      "dark": "#1f2328",
+      "light": "#f7f9fb"
+    },
+    "design_factors": {
+      "composition_option": "split",
+      "style_token": "glassmorphism",
+      "rendering_style": "clean editorial vector"
+    }
+  }
+  -->
 
   <style>
-    :root{
-      --primary: #4E70F1;
-      --secondary: #F28B86;
-      --accent: #8FD4C1;
-      --dark: #1f2328;
-      --light: #f7f9fb;
+    :root {
+      /* ── Core 5-color palette ── */
+      --primary:   #4E70F1;   /* confident blue  */
+      --secondary: #F28B86;   /* warm coral      */
+      --accent:    #8FD4C1;   /* gentle mint     */
+      --dark:      #1f2328;   /* near-black ink  */
+      --light:     #f7f9fb;   /* paper white     */
 
-      --ink: var(--dark);
-      --muted: #5b6672;
-      --paper: var(--light);
-      --card: rgba(255,255,255,0.88);
-      --stroke: rgba(0,0,0,0.10);
-      --shadow: 0 18px 55px rgba(0,0,0,0.12);
-      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
-      --radius: 22px;
+      /* ── Derived tones ── */
+      --primary-dim:      rgba(78,112,241,.12);
+      --primary-mid:      rgba(78,112,241,.70);
+      --primary-deep:     #2640a6;
+      --secondary-dim:    rgba(242,139,134,.14);
+      --secondary-glass:  rgba(242,139,134,.22);
+      --accent-dim:       rgba(143,212,193,.12);
+      --ink:              var(--dark);
+      --muted:            #5b6672;
+      --card:             rgba(255,255,255,.88);
+      --stroke:           rgba(0,0,0,.10);
+      --shadow:           0 18px 55px rgba(0,0,0,.12);
+      --shadow-soft:      0 10px 28px rgba(0,0,0,.10);
+      --radius:           22px;
+      --max:              1120px;
 
-      --max: 1120px;
+      /* ── Alternate-section palette (dark-on-primary inversion) ── */
+      --alt-bg:           var(--primary);
+      --alt-text:         #ffffff;
+      --alt-muted:        rgba(255,255,255,.78);
+      --alt-card:         rgba(255,255,255,.14);
+      --alt-stroke:       rgba(255,255,255,.18);
+      --alt-tag-bg:       rgba(255,255,255,.16);
+      --alt-tag-border:   rgba(255,255,255,.24);
+      --alt-tag-text:     #ffffff;
     }
 
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color:var(--ink);
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
       background:
-        radial-gradient(1000px 520px at 12% 8%, rgba(78,112,241,.14) 0%, transparent 60%),
-        radial-gradient(900px 520px at 85% 0%, rgba(242,139,134,.14) 0%, transparent 58%),
-        radial-gradient(900px 520px at 55% 25%, rgba(143,212,193,.12) 0%, transparent 58%),
-        var(--paper);
-      overflow-x:hidden;
+        radial-gradient(1000px 520px at 12% 8%,  rgba(78,112,241,.14)  0%, transparent 60%),
+        radial-gradient(900px  520px at 85% 0%,   rgba(242,139,134,.14) 0%, transparent 58%),
+        radial-gradient(900px  520px at 55% 25%,  rgba(143,212,193,.12) 0%, transparent 58%),
+        var(--light);
+      overflow-x: hidden;
     }
 
-    a{ color:inherit; }
-    .wrap{ max-width:var(--max); margin:0 auto; padding:0 22px 74px; }
+    a { color: inherit; }
 
-    header{
-      color:#fff;
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px 74px;
+    }
+
+    /* ═══════════════════════════════
+       HEADER / MASTHEAD
+    ═══════════════════════════════ */
+    header {
+      color: #fff;
       background:
         radial-gradient(900px 420px at 20% 30%, rgba(242,139,134,.22), transparent 60%),
         radial-gradient(900px 420px at 80% 20%, rgba(143,212,193,.22), transparent 60%),
         linear-gradient(120deg, rgba(78,112,241,.92), rgba(78,112,241,.70));
-      position:relative;
-      overflow:hidden;
+      position: relative;
+      overflow: hidden;
     }
-    header::after{
-      content:"";
-      position:absolute; inset:-40px -80px -80px -80px;
+
+    header::after {
+      content: "";
+      position: absolute;
+      inset: -40px -80px -80px -80px;
       background:
         radial-gradient(circle at 15% 30%, rgba(255,255,255,.18) 0 22%, transparent 23%),
         radial-gradient(circle at 45% 20%, rgba(255,255,255,.12) 0 16%, transparent 17%),
         radial-gradient(circle at 75% 40%, rgba(255,255,255,.12) 0 20%, transparent 21%),
         radial-gradient(circle at 85% 15%, rgba(255,255,255,.10) 0 14%, transparent 15%);
       filter: blur(1px);
-      opacity:.85;
-      pointer-events:none;
+      opacity: .85;
+      pointer-events: none;
     }
 
-    .topbar{
-      position:relative;
-      max-width:var(--max);
-      margin:0 auto;
-      padding:18px 22px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
-      z-index:1;
+    /* ── Top bar ── */
+    .topbar {
+      position: relative;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      z-index: 1;
     }
 
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
       min-width: 260px;
     }
-    .mark{
-      width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
-      border:1px solid rgba(255,255,255,.24);
-      box-shadow: 0 12px 26px rgba(0,0,0,.22);
-    }
-    .brandText{ display:flex; flex-direction:column; line-height:1.1; }
-    .brandText strong{ font-size:16px; letter-spacing:.02em; }
-    .brandText span{ font-size:12.5px; opacity:.92; }
 
-    nav{
-      display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-end;
-      z-index:1;
+    .mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
+      border: 1px solid rgba(255,255,255,.24);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+      flex-shrink: 0;
     }
-    nav a{
-      text-decoration:none;
-      font-weight:750;
-      font-size:13.5px;
-      padding:10px 12px;
-      border-radius:999px;
+
+    .brand-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .brand-text strong { font-size: 16px; letter-spacing: .02em; }
+    .brand-text span   { font-size: 12.5px; opacity: .92; }
+
+    nav {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      z-index: 1;
+    }
+
+    nav a {
+      text-decoration: none;
+      font-weight: 750;
+      font-size: 13.5px;
+      padding: 10px 12px;
+      border-radius: 999px;
       background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.18);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    nav a:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
 
-    .hero{
-      position:relative;
-      max-width:var(--max);
-      margin:0 auto;
-      padding:64px 22px 74px;
-      display:grid;
+    nav a:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.22);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 64px 22px 74px;
+      display: grid;
       grid-template-columns: 1.15fr .85fr;
-      gap:26px;
-      align-items:end;
-      z-index:1;
-    }
-    @media (max-width: 920px){
-      .hero{ grid-template-columns:1fr; padding:52px 22px 62px; }
-      .brand{ min-width:auto; }
+      gap: 26px;
+      align-items: end;
+      z-index: 1;
     }
 
-    .hero h1{
-      margin:0;
+    .hero h1 {
+      margin: 0;
       font-size: clamp(30px, 4vw, 52px);
-      line-height:1.12;
-      letter-spacing:-0.02em;
-      font-weight:850;
+      line-height: 1.12;
+      letter-spacing: -0.02em;
+      font-weight: 850;
     }
-    .hero p{
-      margin:14px 0 0;
+
+    .hero p {
+      margin: 14px 0 0;
       font-size: clamp(15px, 2vw, 18px);
-      line-height:1.55;
-      opacity:.96;
+      line-height: 1.55;
+      opacity: .96;
       max-width: 64ch;
     }
 
-    .heroCard{
+    .hero-card {
       background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.18);
       border-radius: var(--radius);
       box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
-      padding:18px;
+      padding: 18px;
     }
-    .pillRow{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
-    .pill{
-      display:inline-flex;
-      padding:8px 10px;
-      border-radius:999px;
+
+    .pill-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      display: inline-flex;
+      padding: 8px 10px;
+      border-radius: 999px;
       background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
-      font-size:12.5px;
-      font-weight:850;
-      letter-spacing:.02em;
+      border: 1px solid rgba(255,255,255,.18);
+      font-size: 12.5px;
+      font-weight: 850;
+      letter-spacing: .02em;
     }
-    .heroCard ul{
-      margin:10px 0 0;
-      padding-left:18px;
-      line-height:1.55;
+
+    .hero-card ul {
+      margin: 10px 0 0;
+      padding-left: 18px;
+      line-height: 1.55;
       font-size: 14.5px;
-      opacity:.96;
+      opacity: .96;
     }
-    .ctaRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.22);
+
+    .cta-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.22);
       background: rgba(255,255,255,.14);
-      color:#fff;
-      text-decoration:none;
-      font-weight:850;
-      font-size:13.5px;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 850;
+      font-size: 13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
-    .btn.primary{
-      background: rgba(242,139,134,.22);
-      border-color: rgba(242,139,134,.28);
+
+    .btn:hover {
+      transform: translateY(-1px);
+      background: rgba(255,255,255,.22);
     }
 
-    .section{ padding:66px 0 0; }
-    .section h2{
-      margin:0 0 12px;
+    .btn.primary {
+      background: var(--secondary-glass);
+      border-color: rgba(242,139,134,.32);
+    }
+
+    /* ═══════════════════════════════
+       MAIN SECTIONS — default palette
+    ═══════════════════════════════ */
+    .section { padding: 66px 0 0; }
+
+    .section h2 {
+      margin: 0 0 12px;
       font-size: 28px;
-      letter-spacing:-0.02em;
+      letter-spacing: -0.02em;
       color: var(--primary);
     }
-    .subhead{ margin:0 0 22px; color:var(--muted); max-width: 85ch; }
 
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:18px;
+    .subhead {
+      margin: 0 0 22px;
+      color: var(--muted);
+      max-width: 85ch;
+      line-height: 1.6;
     }
-    @media (max-width: 900px){ .grid2{ grid-template-columns:1fr; } }
 
-    .card{
+    /* ── Two-column card grid ── */
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    /* ── Individual cards ── */
+    .card {
       background: var(--card);
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       border-radius: var(--radius);
-      box-shadow: var(--shadowSoft);
-      padding:20px;
+      box-shadow: var(--shadow-soft);
+      padding: 20px;
       backdrop-filter: blur(8px);
     }
-    .card h3{ margin:0 0 8px; font-size:18px; }
-    .meta{ color:var(--muted); font-size:13.5px; margin-bottom:10px; }
-    .bullets{ margin:12px 0 0; padding-left:18px; }
-    .bullets li{ margin:6px 0; }
 
-    .tagRow{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
-    .tag{
-      font-size:12.5px;
-      font-weight:850;
-      padding:7px 10px;
-      border-radius:999px;
-      background: rgba(78,112,241,.12);
-      border:1px solid rgba(78,112,241,.18);
-      color:#2640a6;
+    .card h3 { margin: 0 0 8px; font-size: 18px; }
+
+    .meta {
+      color: var(--muted);
+      font-size: 13.5px;
+      margin-bottom: 10px;
     }
 
-    .timeline{ display:grid; gap:14px; }
-    .item{
-      padding:18px;
-      border-radius:18px;
-      border:1px solid var(--stroke);
+    .bullets { margin: 12px 0 0; padding-left: 18px; }
+    .bullets li { margin: 6px 0; line-height: 1.55; }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .tag {
+      font-size: 12.5px;
+      font-weight: 850;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--primary-dim);
+      border: 1px solid rgba(78,112,241,.18);
+      color: var(--primary-deep);
+    }
+
+    /* ── Timeline list ── */
+    .timeline { display: grid; gap: 14px; }
+
+    .item {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid var(--stroke);
       background: rgba(255,255,255,.74);
       box-shadow: 0 10px 22px rgba(0,0,0,.06);
       backdrop-filter: blur(8px);
     }
-    .itemTop{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:baseline;
-      margin-bottom:6px;
-    }
-    .itemTop strong{ font-size:16px; }
-    .itemTop span{ color:var(--muted); font-size:13.5px; }
 
-    .contactWrap{
-      display:grid;
-      grid-template-columns: 280px 1fr;
-      gap:18px;
-      align-items:stretch;
+    .item-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: baseline;
+      margin-bottom: 6px;
     }
-    @media (max-width: 900px){ .contactWrap{ grid-template-columns:1fr; } }
-    .headshot{
-      width:100%;
+
+    .item-top strong { font-size: 16px; }
+    .item-top span   { color: var(--muted); font-size: 13.5px; }
+
+    /* ═══════════════════════════════
+       ALTERNATE SECTION (inverted)
+    ═══════════════════════════════ */
+    .section-alt {
+      padding: 66px 0 0;
+    }
+
+    .section-alt-inner {
+      background:
+        radial-gradient(700px 340px at 10% 40%, rgba(242,139,134,.18), transparent 60%),
+        radial-gradient(700px 340px at 90% 20%, rgba(143,212,193,.16), transparent 60%),
+        var(--primary);
+      border-radius: var(--radius);
+      padding: 44px 36px;
+      color: var(--alt-text);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-alt-inner::after {
+      content: "";
+      position: absolute;
+      inset: -40px -60px -60px -60px;
+      background:
+        radial-gradient(circle at 20% 60%, rgba(255,255,255,.10) 0 18%, transparent 19%),
+        radial-gradient(circle at 80% 30%, rgba(255,255,255,.08) 0 14%, transparent 15%);
+      filter: blur(1px);
+      pointer-events: none;
+    }
+
+    .section-alt-inner h2 {
+      margin: 0 0 12px;
+      font-size: 28px;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .section-alt-inner .subhead {
+      color: var(--alt-muted);
+    }
+
+    .section-alt-inner .card {
+      background: var(--alt-card);
+      border-color: var(--alt-stroke);
+      color: #fff;
+      box-shadow: 0 12px 32px rgba(0,0,0,.22);
+    }
+
+    .section-alt-inner .card h3 { color: #fff; }
+
+    .section-alt-inner .meta {
+      color: var(--alt-muted);
+    }
+
+    .section-alt-inner .tag {
+      background: var(--alt-tag-bg);
+      border-color: var(--alt-tag-border);
+      color: var(--alt-tag-text);
+    }
+
+    .section-alt-inner .item {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.18);
+    }
+
+    .section-alt-inner .item-top strong { color: #fff; }
+    .section-alt-inner .item-top span   { color: var(--alt-muted); }
+    .section-alt-inner .bullets         { color: rgba(255,255,255,.92); }
+
+    /* ═══════════════════════════════
+       CONTACT
+    ═══════════════════════════════ */
+    .contact-wrap {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+
+    .headshot {
+      width: 100%;
       aspect-ratio: 4/5;
       border-radius: var(--radius);
       object-fit: cover;
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:#ddd;
+      background: #ddd;
+      display: block;
     }
-    .contactCard{
-      padding:22px;
+
+    .contact-card {
+      padding: 22px;
       border-radius: var(--radius);
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       background: rgba(255,255,255,.82);
-      box-shadow: var(--shadowSoft);
+      box-shadow: var(--shadow-soft);
       backdrop-filter: blur(8px);
     }
-    .contactCard h3{ margin:0 0 8px; }
-    .contactRow{ display:grid; gap:10px; margin-top:14px; }
-    .contactRow a{ color: var(--primary); font-weight:850; text-decoration:none; }
 
-    footer{
-      margin-top:70px;
-      padding:28px 0 0;
-      color:#6f7b73;
-      font-size:13.5px;
-      text-align:center;
+    .contact-card h3 { margin: 0 0 8px; font-size: 20px; }
+
+    .contact-row { display: grid; gap: 10px; margin-top: 14px; }
+
+    .contact-row a {
+      color: var(--primary);
+      font-weight: 850;
+      text-decoration: none;
     }
 
-    html{ scroll-behavior:smooth; }
+    .contact-row a:hover { text-decoration: underline; }
+
+    /* ═══════════════════════════════
+       FOOTER
+    ═══════════════════════════════ */
+    footer {
+      margin-top: 70px;
+      padding: 28px 0 0;
+      color: var(--muted);
+      font-size: 13.5px;
+      text-align: center;
+    }
+
+    /* ═══════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════ */
+    @media (max-width: 920px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: 52px 22px 62px;
+      }
+      .brand { min-width: auto; }
+    }
+
+    @media (max-width: 900px) {
+      .grid2          { grid-template-columns: 1fr; }
+      .contact-wrap   { grid-template-columns: 1fr; }
+      .section-alt-inner { padding: 32px 22px; }
+    }
+
+    html { scroll-behavior: smooth; }
   </style>
 </head>
 
 <body>
+
+  <!-- ═══════════════════════════════
+       HEADER / HERO
+  ═══════════════════════════════ -->
   <header>
     <div class="topbar">
       <div class="brand">
-        <!-- *** placeholder 1: brand logo mark or monogram icon -->
         <div class="mark" aria-hidden="true"></div>
-        <div class="brandText">
-          <strong>[Your Name]</strong>
-          <span>[Field of Study] • [Graduation Timeline]</span>
+        <div class="brand-text">
+          <strong>[Full Name]</strong>
+          <span>[Field of Study] • [Degree Timeline Label]: [Month Year]</span>
         </div>
       </div>
 
@@ -312,22 +545,24 @@
 
     <div class="hero">
       <div>
-        <h1>[Portfolio Headline]</h1>
-        <p>[Brief personal introduction and professional summary. Describe your passion, focus area, and the types of roles or opportunities you are seeking.]</p>
+        <h1>[Hero Headline — Field &amp; Portfolio Title]</h1>
+        <p>
+          [2–3 sentence personal pitch: who you are, your core approach or passion, and the types of roles or placements you are seeking.]
+        </p>
       </div>
 
-      <aside class="heroCard" aria-label="Quick highlights">
-        <div class="pillRow">
-          <span class="pill">[Skill Pill 1]</span>
-          <span class="pill">[Skill Pill 2]</span>
-          <span class="pill">[Skill Pill 3]</span>
+      <aside class="hero-card" aria-label="Quick highlights">
+        <div class="pill-row">
+          <span class="pill">[Specialty Area 1]</span>
+          <span class="pill">[Specialty Area 2]</span>
+          <span class="pill">[Specialty Area 3]</span>
         </div>
         <ul>
-          <li>[Key highlight or competency 1]</li>
-          <li>[Key highlight or competency 2]</li>
-          <li>[Key highlight or competency 3]</li>
+          <li>[Key competency or highlight point 1]</li>
+          <li>[Key competency or highlight point 2]</li>
+          <li>[Key competency or highlight point 3]</li>
         </ul>
-        <div class="ctaRow">
+        <div class="cta-row">
           <a class="btn primary" href="#portfolio">[Primary CTA Label]</a>
           <a class="btn" href="#contact">[Secondary CTA Label]</a>
         </div>
@@ -335,94 +570,104 @@
     </div>
   </header>
 
+  <!-- ═══════════════════════════════
+       MAIN CONTENT
+  ═══════════════════════════════ -->
   <main class="wrap">
 
+    <!-- ── ABOUT ── -->
     <section id="about" class="section">
       <h2>[About Section Heading]</h2>
-      <p class="subhead">[A short paragraph introducing your background, core beliefs, and areas of special interest.]</p>
+      <p class="subhead">
+        [2–3 sentence overview of your beliefs, interests, and approach. This is the reader's first impression of who you are beyond the headline.]
+      </p>
 
       <div class="grid2">
         <div class="card">
-          <h3>[Strengths Card Heading]</h3>
+          <h3>[Card Title — e.g. Strengths]</h3>
           <ul class="bullets">
-            <li>[Strength 1]</li>
-            <li>[Strength 2]</li>
-            <li>[Strength 3]</li>
-            <li>[Strength 4]</li>
+            <li>[Strength or quality 1]</li>
+            <li>[Strength or quality 2]</li>
+            <li>[Strength or quality 3]</li>
+            <li>[Strength or quality 4]</li>
           </ul>
-          <div class="tagRow">
-            <span class="tag">[Tag 1]</span>
-            <span class="tag">[Tag 2]</span>
-            <span class="tag">[Tag 3]</span>
+          <div class="tag-row">
+            <span class="tag">[Skill Tag 1]</span>
+            <span class="tag">[Skill Tag 2]</span>
+            <span class="tag">[Skill Tag 3]</span>
           </div>
         </div>
 
         <div class="card">
-          <h3>[Goals Card Heading]</h3>
-          <p class="meta">[Role type 1] • [Role type 2] • [Role type 3]</p>
+          <h3>[Card Title — e.g. What I'm Seeking]</h3>
+          <p class="meta">[Comma-separated list of target role types or settings]</p>
           <ul class="bullets">
-            <li>[Goal or preference 1]</li>
-            <li>[Goal or preference 2]</li>
-            <li>[Goal or preference 3]</li>
+            <li>[Desired environment or team quality 1]</li>
+            <li>[Desired environment or team quality 2]</li>
+            <li>[Desired environment or team quality 3]</li>
           </ul>
         </div>
       </div>
     </section>
 
-    <section id="education" class="section">
-      <h2>[Education Section Heading]</h2>
-      <p class="subhead">[Brief description or instruction for this section.]</p>
+    <!-- ── EDUCATION (alternate palette) ── -->
+    <section id="education" class="section-alt">
+      <div class="section-alt-inner">
+        <h2>[Education Section Heading]</h2>
+        <p class="subhead">[Brief framing note for this section, optional.]</p>
 
-      <div class="timeline">
-        <div class="item">
-          <div class="itemTop">
-            <strong>[Degree Title and Major]</strong>
-            <span>[Expected Graduation Date]</span>
+        <div class="timeline">
+          <div class="item">
+            <div class="item-top">
+              <strong>[Degree Type &amp; Major]</strong>
+              <span>[Expected or Completed: Month Year]</span>
+            </div>
+            <div class="meta">[Institution Name] • [City, State] • [Optional: GPA or Honors]</div>
+            <ul class="bullets">
+              <li>[Relevant coursework or academic focus area 1]</li>
+              <li>[Practicum, field experience, or thesis note]</li>
+            </ul>
           </div>
-          <div class="meta">[Institution Name] • [City, State] • [GPA or Honors (optional)]</div>
-          <ul class="bullets">
-            <li>[Relevant coursework or concentration]</li>
-            <li>[Practicum, fieldwork, or special program]</li>
-          </ul>
-        </div>
 
-        <div class="item">
-          <div class="itemTop">
-            <strong>[Additional Certification or Credential Title]</strong>
-            <span>[Date or Year]</span>
+          <div class="item">
+            <div class="item-top">
+              <strong>[Certificate, Minor, or Additional Credential]</strong>
+              <span>[Year]</span>
+            </div>
+            <div class="meta">[Issuing Institution or Program]</div>
+            <ul class="bullets">
+              <li>[Key focus or outcome of this credential]</li>
+            </ul>
           </div>
-          <div class="meta">[Issuing Organization] • [Location or Online]</div>
-          <ul class="bullets">
-            <li>[Detail about credential or relevant training]</li>
-          </ul>
         </div>
       </div>
     </section>
 
+    <!-- ── EXPERIENCE ── -->
     <section id="experience" class="section">
       <h2>[Experience Section Heading]</h2>
-      <p class="subhead">[Brief description of what types of experience to include.]</p>
+      <p class="subhead">[Brief guidance note — types of experience to include: internships, practicums, volunteer work, etc.]</p>
 
       <div class="timeline">
         <div class="item">
-          <div class="itemTop">
-            <strong>[Role Title, Setting Type]</strong>
-            <span>[Start Date] – [End Date]</span>
+          <div class="item-top">
+            <strong>[Role Title, Setting (e.g. Practicum Student, Classroom Name)]</strong>
+            <span>[Month Year] – [Month Year or Present]</span>
           </div>
-          <div class="meta">[Organization or Program Name] • [City, State]</div>
+          <div class="meta">[Organization / School Name] • [City, State]</div>
           <ul class="bullets">
-            <li>[Responsibility or accomplishment 1]</li>
+            <li>[Responsibility or accomplishment — action verb + context + outcome]</li>
             <li>[Responsibility or accomplishment 2]</li>
             <li>[Responsibility or accomplishment 3]</li>
           </ul>
         </div>
 
         <div class="item">
-          <div class="itemTop">
-            <strong>[Role Title, Setting Type]</strong>
-            <span>[Start Date] – [End Date]</span>
+          <div class="item-top">
+            <strong>[Role Title 2]</strong>
+            <span>[Month Year] – [Month Year]</span>
           </div>
-          <div class="meta">[Organization or Program Name] • [City, State]</div>
+          <div class="meta">[Organization Name] • [City, State]</div>
           <ul class="bullets">
             <li>[Responsibility or accomplishment 1]</li>
             <li>[Responsibility or accomplishment 2]</li>
@@ -430,11 +675,11 @@
         </div>
 
         <div class="item">
-          <div class="itemTop">
-            <strong>[Role Title, Setting Type]</strong>
-            <span>[Start Date] – [End Date]</span>
+          <div class="item-top">
+            <strong>[Role Title 3 — Volunteer / Other]</strong>
+            <span>[Month Year] – [Month Year]</span>
           </div>
-          <div class="meta">[Organization or Program Name] • [City, State]</div>
+          <div class="meta">[Organization Name] • [City, State]</div>
           <ul class="bullets">
             <li>[Responsibility or accomplishment 1]</li>
             <li>[Responsibility or accomplishment 2]</li>
@@ -443,105 +688,112 @@
       </div>
     </section>
 
-    <section id="portfolio" class="section">
-      <h2>[Portfolio Section Heading]</h2>
-      <p class="subhead">[Brief description of what types of artifacts or work samples to include.]</p>
+    <!-- ── PORTFOLIO (alternate palette) ── -->
+    <section id="portfolio" class="section-alt">
+      <div class="section-alt-inner">
+        <h2>[Portfolio Section Heading]</h2>
+        <p class="subhead">[Brief description of what types of artifacts are shown — lesson plans, visuals, reflections, assessments, etc.]</p>
 
-      <div class="grid2">
-        <div class="card">
-          <!-- *** placeholder 2: portfolio artifact thumbnail or preview image -->
-          <h3>[Portfolio Item Title 1]</h3>
-          <div class="meta">[Artifact type or subtitle]</div>
-          <ul class="bullets">
-            <li>[Description point 1]</li>
-            <li>[Description point 2]</li>
-            <li>[Description point 3]</li>
-          </ul>
-          <div class="tagRow">
-            <span class="tag">[Tag 1]</span>
-            <span class="tag">[Tag 2]</span>
-            <span class="tag">[Tag 3]</span>
+        <div class="grid2">
+          <div class="card">
+            <h3>[Artifact Title 1]</h3>
+            <div class="meta">[Format label: e.g. Lesson Plan • Age Group • Subject]</div>
+            <ul class="bullets">
+              <li>[Key element or decision in this artifact]</li>
+              <li>[Instructional strategy or differentiation approach]</li>
+              <li>[Reflection or outcome note]</li>
+            </ul>
+            <div class="tag-row">
+              <span class="tag">[Topic Tag 1]</span>
+              <span class="tag">[Topic Tag 2]</span>
+              <span class="tag">[Topic Tag 3]</span>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <!-- *** placeholder 3: portfolio artifact thumbnail or preview image -->
-          <h3>[Portfolio Item Title 2]</h3>
-          <div class="meta">[Artifact type or subtitle]</div>
-          <ul class="bullets">
-            <li>[Description point 1]</li>
-            <li>[Description point 2]</li>
-            <li>[Description point 3]</li>
-          </ul>
-          <div class="tagRow">
-            <span class="tag">[Tag 1]</span>
-            <span class="tag">[Tag 2]</span>
-            <span class="tag">[Tag 3]</span>
+          <div class="card">
+            <h3>[Artifact Title 2]</h3>
+            <div class="meta">[Format label: e.g. Classroom Tool • Strategy • Observation]</div>
+            <ul class="bullets">
+              <li>[Key element or decision in this artifact]</li>
+              <li>[Instructional strategy or approach]</li>
+              <li>[Reflection or outcome note]</li>
+            </ul>
+            <div class="tag-row">
+              <span class="tag">[Topic Tag 1]</span>
+              <span class="tag">[Topic Tag 2]</span>
+              <span class="tag">[Topic Tag 3]</span>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <!-- *** placeholder 4: portfolio artifact thumbnail or preview image -->
-          <h3>[Portfolio Item Title 3]</h3>
-          <div class="meta">[Artifact type or subtitle]</div>
-          <ul class="bullets">
-            <li>[Description point 1]</li>
-            <li>[Description point 2]</li>
-          </ul>
-          <div class="tagRow">
-            <span class="tag">[Tag 1]</span>
-            <span class="tag">[Tag 2]</span>
+          <div class="card">
+            <h3>[Artifact Title 3]</h3>
+            <div class="meta">[Format label]</div>
+            <ul class="bullets">
+              <li>[Key element or decision in this artifact]</li>
+              <li>[Instructional strategy or approach]</li>
+              <li>[Reflection or outcome note]</li>
+            </ul>
+            <div class="tag-row">
+              <span class="tag">[Topic Tag 1]</span>
+              <span class="tag">[Topic Tag 2]</span>
+            </div>
           </div>
-        </div>
 
-        <div class="card">
-          <!-- *** placeholder 5: portfolio artifact thumbnail or preview image -->
-          <h3>[Portfolio Item Title 4]</h3>
-          <div class="meta">[Artifact type or subtitle]</div>
-          <ul class="bullets">
-            <li>[Description point 1]</li>
-            <li>[Description point 2]</li>
-          </ul>
-          <div class="tagRow">
-            <span class="tag">[Tag 1]</span>
-            <span class="tag">[Tag 2]</span>
+          <div class="card">
+            <h3>[Artifact Title 4]</h3>
+            <div class="meta">[Format label]</div>
+            <ul class="bullets">
+              <li>[Key element or decision in this artifact]</li>
+              <li>[Instructional strategy or approach]</li>
+            </ul>
+            <div class="tag-row">
+              <span class="tag">[Topic Tag 1]</span>
+              <span class="tag">[Topic Tag 2]</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ── PHILOSOPHY ── -->
     <section id="philosophy" class="section">
-      <h2>[Philosophy Section Heading]</h2>
-      <p class="subhead">[Brief instruction or context for this section.]</p>
+      <h2>[Philosophy / Approach Section Heading]</h2>
+      <p class="subhead">
+        [One sentence framing — e.g. a short reflective statement you can adapt for applications and interviews.]
+      </p>
 
       <div class="card">
-        <h3>[Philosophy Card Heading]</h3>
+        <h3>[Philosophy Card Title — e.g. My Approach / My Belief]</h3>
         <p style="margin:0; color:#2a3138; line-height:1.7;">
-          [Write your personal or professional philosophy statement here. Describe your core beliefs, your approach to your field, how you engage with the people you serve, and how you reflect and grow. This statement can be tailored for applications and interviews.]
+          [3–5 sentence personal philosophy statement. Describe your core beliefs about learning and growth, the environment you create, the methods you use, how you work with others (families, colleagues), and your commitment to continual improvement.]
         </p>
       </div>
     </section>
 
+    <!-- ── CONTACT ── -->
     <section id="contact" class="section">
       <h2>[Contact Section Heading]</h2>
-      <p class="subhead">[Brief instruction or context for this section.]</p>
+      <p class="subhead">[Brief framing note — e.g. inviting collaborators, employers, or placement coordinators to reach out.]</p>
 
-      <div class="contactWrap">
-        <!-- *** placeholder 6: professional headshot photo -->
-        <img class="headshot" src="headshot.jpg" alt="Headshot of [Your Name]" />
+      <div class="contact-wrap">
+        <!-- Replace headshot.jpg with your photo file in the same folder -->
+        <img class="headshot" src="headshot.jpg" alt="Headshot of [Full Name]" />
 
-        <div class="contactCard">
-          <h3>[Your Name]</h3>
-          <div class="meta">[Field of Study] • [Graduation Timeline] • [Availability or role interest summary]</div>
-
-          <div class="contactRow">
-            <div><strong>Email:</strong> <a href="mailto:[your@email.com]">[your@email.com]</a></div>
-            <div><strong>Phone:</strong> <a href="tel:[+10000000000]">[(000) 000-0000]</a></div>
-            <div><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer">[linkedin.com/in/yourprofile]</a></div>
-            <div><strong>Location:</strong> [City, State]</div>
+        <div class="contact-card">
+          <h3>[Full Name]</h3>
+          <div class="meta">
+            [Field of Study] • [Degree Timeline Label]: [Month Year] • [Availability or Open-to Statement]
           </div>
 
-          <div class="tagRow" style="margin-top:16px">
+          <div class="contact-row">
+            <div><strong>[Label — e.g. Email]:</strong> <a href="mailto:[email]">[email address]</a></div>
+            <div><strong>[Label — e.g. Phone]:</strong> <a href="tel:[number]">[phone number]</a></div>
+            <div><strong>[Label — e.g. LinkedIn]:</strong> <a href="#" target="_blank" rel="noreferrer">[profile url or handle]</a></div>
+            <div><strong>[Label — e.g. Portfolio / Website]:</strong> <a href="#" target="_blank" rel="noreferrer">[url]</a></div>
+            <div><strong>[Label — e.g. Location]:</strong> [City, State]</div>
+          </div>
+
+          <div class="tag-row" style="margin-top:16px;">
             <span class="tag">[Keyword Tag 1]</span>
             <span class="tag">[Keyword Tag 2]</span>
             <span class="tag">[Keyword Tag 3]</span>
@@ -553,12 +805,14 @@
     </section>
 
     <footer>
-      © <span id="y"></span> [Your Name] • [Field of Study] Portfolio
+      &copy; <span id="y"></span> [Full Name] • [Field of Study] Portfolio
     </footer>
+
   </main>
 
   <script>
     document.getElementById('y').textContent = new Date().getFullYear();
   </script>
+
 </body>
 </html>

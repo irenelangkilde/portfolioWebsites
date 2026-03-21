@@ -3,24 +3,78 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[FULL NAME] - [MAJOR] Portfolio</title>
+    <title>[First Name] [Last Name] - [Major] Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!--
+    {
+      "visual_elements": {
+        "images": [],
+        "animations": [
+          {
+            "src_file_name": "inline-svg-noise",
+            "selector": ".hero::before",
+            "type": "svg-filter-texture",
+            "name": "grainy-noise-overlay"
+          }
+        ]
+      },
+      "exemplary_attributes": {
+        "pacing": "generous and unhurried — large type-driven hero, spacious padded sections",
+        "mood": "bold yet refined, vibrant energy balanced by serif editorial calm",
+        "compositional_feel": "central — hero is typographically monumental with centered name at display scale; body alternates symmetric two-column grids with full-width cards",
+        "section_density": "medium-low — each section breathes with 100px padding, content spread across auto-fit grids",
+        "visual_treatment": "painterly gradient hero with SVG grain overlay, clean white/light-grey alternating body sections, matching gradient contact footer that echoes the hero palette"
+      },
+      "default_color_scheme": {
+        "primary": "#e74c3c",
+        "secondary": "#3498db",
+        "accent": "#f39c12",
+        "dark": "#2c3e50",
+        "light": "#f4e8d8"
+      },
+      "design_factors": {
+        "composition_option": "central",
+        "style_token": "soft pastel editorial",
+        "rendering_style": "gradient painterly with grain-texture overlay"
+      }
+    }
+    -->
+
     <style>
+        /* ── Color Palette Variables ─────────────────────────────────────── */
         :root {
-            --color-primary: #3498db;
-            --color-secondary: #9b59b6;
-            --color-accent: #e74c3c;
-            --color-dark: #2c3e50;
-            --color-light: #f9f9f9;
-            --color-muted: #7f8c8d;
-            --color-text: #555555;
-            --color-white: #ffffff;
-            --color-badge-bg: #f4e8d8;
-            --color-border-light: #ecf0f1;
-            --color-card-bg: #f9f9f9;
+            --primary:      #e74c3c;
+            --secondary:    #3498db;
+            --accent:       #f39c12;
+            --dark:         #2c3e50;
+            --light:        #f4e8d8;
+
+            /* Derived neutrals & tints */
+            --dark-muted:   #4a6278;          /* dark lightened ~30% */
+            --body-bg-a:    #f9f8f6;          /* warm near-white  */
+            --body-bg-b:    #ffffff;
+            --body-bg-c:    #eceff1;          /* cool near-white  */
+            --text-body:    #555555;
+            --text-meta:    #7f8c8d;
+            --card-bg:      #ffffff;
+            --card-alt:     #f9f8f6;
+            --border-accent: var(--secondary);
+            --tag-bg:       var(--secondary);
+            --stat-border:  var(--secondary);
         }
 
-        * {
+        /* Alternate-section palette (inverted contrast) */
+        .alt-palette {
+            --card-bg:      #eaf4fb;          /* secondary tint */
+            --card-alt:     #fef9ee;          /* accent tint    */
+            --border-accent: var(--primary);
+            --stat-border:  var(--primary);
+            --tag-bg:       var(--primary);
+        }
+
+        /* ── Reset ───────────────────────────────────────────────────────── */
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -29,19 +83,26 @@
         body {
             font-family: 'Playfair Display', serif;
             overflow-x: hidden;
+            color: var(--text-body);
         }
 
+        /* ── Hero ────────────────────────────────────────────────────────── */
         .hero {
             min-height: 100vh;
             position: relative;
             background:
-                radial-gradient(circle at 20% 30%, rgba(52, 152, 219, 0.6) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(155, 89, 182, 0.5) 0%, transparent 45%),
-                radial-gradient(circle at 40% 70%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, rgba(230, 126, 34, 0.7) 0%, transparent 55%),
-                radial-gradient(circle at 10% 80%, rgba(231, 76, 60, 0.6) 0%, transparent 45%),
-                radial-gradient(circle at 90% 85%, rgba(192, 57, 43, 0.5) 0%, transparent 50%),
-                linear-gradient(135deg, #f39c12 0%, var(--color-accent) 25%, var(--color-secondary) 50%, var(--color-primary) 75%, #27ae60 100%);
+                radial-gradient(circle at 20% 30%, rgba(52, 152, 219, 0.60) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(155, 89, 182, 0.50) 0%, transparent 45%),
+                radial-gradient(circle at 40% 70%, rgba(241, 196, 15, 0.60) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(230, 126, 34, 0.70) 0%, transparent 55%),
+                radial-gradient(circle at 10% 80%, rgba(231, 76, 60, 0.60) 0%, transparent 45%),
+                radial-gradient(circle at 90% 85%, rgba(192, 57, 43, 0.50) 0%, transparent 50%),
+                linear-gradient(135deg,
+                    var(--accent)    0%,
+                    var(--primary)  25%,
+                    #9b59b6         50%,
+                    var(--secondary) 75%,
+                    #27ae60         100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -49,73 +110,74 @@
             overflow: hidden;
         }
 
+        /* Grainy texture overlay */
         .hero::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
             opacity: 0.15;
             mix-blend-mode: overlay;
             pointer-events: none;
         }
 
-        .major-badge {
+        /* Discipline / field badge */
+        .field-badge {
             position: absolute;
             top: 40px;
             right: 40px;
-            background: var(--color-badge-bg);
+            background: var(--light);
             padding: 12px 24px;
             border-radius: 50px;
             transform: rotate(5deg);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            z-index: 5;
         }
 
-        .major-badge span {
-            color: var(--color-accent);
+        .field-badge span {
+            color: var(--primary);
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
 
-        .main-text {
+        /* Main display name */
+        .hero-text {
             text-align: center;
-            color: var(--color-white);
+            color: #ffffff;
             z-index: 1;
             padding: 0 20px;
         }
 
-        .main-text h1 {
+        .hero-text h1 {
+            font-family: 'Cinzel', serif;
             font-size: clamp(80px, 15vw, 220px);
             font-weight: 400;
             line-height: 0.9;
             letter-spacing: 0.02em;
-            margin-bottom: 0;
-            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
-            font-family: 'Cinzel', serif;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.10);
         }
 
-        .main-text .first-line {
+        .hero-text h1 .line-1,
+        .hero-text h1 .line-2 {
             display: block;
         }
 
-        .main-text .second-line {
-            display: block;
+        .hero-text h1 .line-2 {
             margin-top: -10px;
         }
 
-        .subtitle {
+        .hero-tagline {
             margin-top: 40px;
-            color: var(--color-white);
+            color: #ffffff;
+            font-family: 'Cormorant Garamond', serif;
             font-size: clamp(22px, 2.5vw, 32px);
             font-weight: 300;
-            font-family: 'Cormorant Garamond', serif;
             letter-spacing: 0.05em;
         }
 
+        /* Navigation dots */
         .nav-dots {
             position: absolute;
             bottom: 40px;
@@ -131,35 +193,41 @@
             height: 14px;
             border-radius: 50%;
             background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(255, 255, 255, 0.60);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.3s ease, transform 0.3s ease;
         }
 
         .dot.active {
-            background: var(--color-white);
+            background: #ffffff;
             transform: scale(1.2);
         }
 
         .dot:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.50);
         }
 
-        .about-section {
-            padding: 100px 40px;
-            background: var(--color-light);
-        }
-
-        .section-content {
+        /* ── Shared section wrapper ──────────────────────────────────────── */
+        .section-inner {
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        .about-section h2 {
+        .section-title {
             font-size: clamp(40px, 6vw, 70px);
-            margin-bottom: 30px;
-            color: var(--color-dark);
+            color: var(--dark);
             text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* ── About ───────────────────────────────────────────────────────── */
+        .about-section {
+            padding: 100px 40px;
+            background: var(--body-bg-a);
+        }
+
+        .about-section .section-title {
+            margin-bottom: 30px;
         }
 
         .about-grid {
@@ -170,15 +238,15 @@
         }
 
         .about-text p {
+            font-family: 'Cormorant Garamond', serif;
             font-size: clamp(16px, 2vw, 18px);
             line-height: 1.8;
             margin-bottom: 20px;
-            color: var(--color-text);
-            font-family: 'Cormorant Garamond', serif;
+            color: var(--text-body);
         }
 
         .stats-box {
-            background: var(--color-white);
+            background: var(--card-bg);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
@@ -190,20 +258,21 @@
 
         .stat-item h3 {
             font-size: 18px;
-            color: var(--color-dark);
+            color: var(--dark);
             margin-bottom: 5px;
             font-weight: 600;
         }
 
         .stat-item p {
-            color: var(--color-muted);
-            font-size: 15px;
             font-family: 'Cormorant Garamond', serif;
+            font-size: 15px;
+            color: var(--text-meta);
         }
 
+        /* ── Experience / Education ──────────────────────────────────────── */
         .experience-section {
             padding: 100px 40px;
-            background: var(--color-white);
+            background: var(--body-bg-b);
         }
 
         .exp-grid {
@@ -214,20 +283,20 @@
         }
 
         .exp-card {
-            background: var(--color-card-bg);
+            background: var(--body-bg-a);
             padding: 35px;
             border-radius: 15px;
-            border-left: 5px solid var(--color-primary);
+            border-left: 5px solid var(--border-accent);
         }
 
         .exp-card h3 {
             font-size: 22px;
-            color: var(--color-dark);
+            color: var(--dark);
             margin-bottom: 8px;
         }
 
         .exp-card .meta {
-            color: var(--color-muted);
+            color: var(--text-meta);
             font-size: 14px;
             margin-bottom: 15px;
             text-transform: uppercase;
@@ -235,14 +304,15 @@
         }
 
         .exp-card p {
-            color: var(--color-text);
-            line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
+            color: var(--text-body);
+            line-height: 1.7;
         }
 
+        /* ── Skills ──────────────────────────────────────────────────────── */
         .skills-section {
             padding: 100px 40px;
-            background: var(--color-border-light);
+            background: var(--body-bg-c);
         }
 
         .skills-grid {
@@ -253,7 +323,7 @@
         }
 
         .skill-category {
-            background: var(--color-white);
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
@@ -261,35 +331,37 @@
 
         .skill-category h3 {
             font-size: 20px;
-            color: var(--color-dark);
+            color: var(--dark);
             margin-bottom: 20px;
-            border-bottom: 2px solid var(--color-primary);
             padding-bottom: 10px;
+            border-bottom: 2px solid var(--secondary);
         }
 
         .skill-list {
             list-style: none;
+            padding-left: 1em;
         }
 
         .skill-list li {
             padding: 8px 0;
-            color: var(--color-text);
             font-family: 'Cormorant Garamond', serif;
             font-size: 16px;
+            color: var(--text-body);
         }
 
-        .skill-list li:before {
+        .skill-list li::before {
             content: "▪";
-            color: var(--color-primary);
+            color: var(--secondary);
             font-weight: bold;
             display: inline-block;
             width: 1em;
             margin-left: -1em;
         }
 
+        /* ── Projects ────────────────────────────────────────────────────── */
         .projects-section {
             padding: 100px 40px;
-            background: var(--color-white);
+            background: var(--body-bg-b);
         }
 
         .projects-grid {
@@ -300,7 +372,7 @@
         }
 
         .project-card {
-            background: var(--color-card-bg);
+            background: var(--body-bg-a);
             padding: 35px;
             border-radius: 15px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -308,19 +380,19 @@
 
         .project-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.10);
         }
 
         .project-card h3 {
             font-size: 24px;
-            color: var(--color-dark);
+            color: var(--dark);
             margin-bottom: 10px;
         }
 
         .project-card .tag {
             display: inline-block;
-            background: var(--color-primary);
-            color: var(--color-white);
+            background: var(--tag-bg);
+            color: #ffffff;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 12px;
@@ -328,31 +400,36 @@
         }
 
         .project-card p {
-            color: var(--color-text);
-            line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
+            color: var(--text-body);
+            line-height: 1.7;
         }
 
+        /* ── Contact ─────────────────────────────────────────────────────── */
         .contact-section {
             padding: 100px 40px;
             background:
-                radial-gradient(circle at 30% 40%, rgba(46, 204, 113, 0.6) 0%, transparent 50%),
-                radial-gradient(circle at 70% 30%, rgba(155, 89, 182, 0.5) 0%, transparent 50%),
-                radial-gradient(circle at 50% 80%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
-                linear-gradient(135deg, #1abc9c 0%, var(--color-primary) 25%, var(--color-secondary) 50%, var(--color-accent) 100%);
+                radial-gradient(circle at 30% 40%, rgba(46, 204, 113, 0.60) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(155, 89, 182, 0.50) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(241, 196, 15, 0.60) 0%, transparent 50%),
+                linear-gradient(135deg,
+                    #1abc9c          0%,
+                    var(--secondary) 25%,
+                    #9b59b6          50%,
+                    var(--primary)  100%);
             text-align: center;
-            color: var(--color-white);
+            color: #ffffff;
         }
 
-        .contact-section h2 {
-            font-size: clamp(40px, 6vw, 70px);
+        .contact-section .section-title {
+            color: #ffffff;
             margin-bottom: 30px;
         }
 
-        .contact-section p {
+        .contact-section .lead {
+            font-family: 'Cormorant Garamond', serif;
             font-size: clamp(18px, 2vw, 22px);
             margin-bottom: 40px;
-            font-family: 'Cormorant Garamond', serif;
         }
 
         .contact-links {
@@ -363,248 +440,286 @@
         }
 
         .contact-btn {
-            background: var(--color-white);
-            color: var(--color-dark);
+            background: #ffffff;
+            color: var(--dark);
             padding: 15px 35px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             display: inline-block;
         }
 
         .contact-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.20);
         }
 
+        /* ── Responsive ──────────────────────────────────────────────────── */
         @media (max-width: 968px) {
             .about-grid,
             .exp-grid {
                 grid-template-columns: 1fr;
             }
 
-            .major-badge {
+            .field-badge {
                 top: 20px;
                 right: 20px;
                 padding: 8px 16px;
             }
 
-            .major-badge span {
+            .field-badge span {
                 font-size: 11px;
             }
         }
     </style>
 </head>
 <body>
+
+    <!-- ░░ HERO ░░ -->
     <section class="hero">
-        <div class="major-badge">
-            <span>[FIELD / MAJOR LABEL]</span>
+
+        <div class="field-badge">
+            <span>[Field / Major Label]</span>
         </div>
 
-        <div class="main-text">
+        <div class="hero-text">
             <h1>
-                <span class="first-line">[FIRST NAME]</span>
-                <span class="second-line">[LAST NAME]</span>
+                <span class="line-1">[FIRST]</span>
+                <span class="line-2">[LAST]</span>
             </h1>
-            <div class="subtitle">
-                [DEGREE TITLE] [GRADUATION YEAR]
-            </div>
+            <div class="hero-tagline">[Degree Program] · Class of [Year]</div>
         </div>
 
-        <div class="nav-dots">
-            <div class="dot active"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
+        <nav class="nav-dots" aria-label="Section navigation">
+            <div class="dot active" role="button" tabindex="0"></div>
+            <div class="dot" role="button" tabindex="0"></div>
+            <div class="dot" role="button" tabindex="0"></div>
+            <div class="dot" role="button" tabindex="0"></div>
+            <div class="dot" role="button" tabindex="0"></div>
+        </nav>
+
     </section>
 
+    <!-- ░░ ABOUT ░░ -->
     <section class="about-section">
-        <div class="section-content">
-            <h2>[ABOUT SECTION HEADING]</h2>
+        <div class="section-inner">
+
+            <h2 class="section-title">[About Section Heading]</h2>
+
             <div class="about-grid">
+
                 <div class="about-text">
-                    <p>[INTRODUCTORY PARAGRAPH — who you are, your field of study and primary interests]</p>
-                    <p>[SECOND PARAGRAPH — skills developed through coursework and projects]</p>
-                    <p>[THIRD PARAGRAPH — career goals and types of opportunities sought]</p>
+                    <p>[Bio paragraph one — background, area of study, and overarching interests.]</p>
+                    <p>[Bio paragraph two — skills developed through coursework and projects.]</p>
+                    <p>[Bio paragraph three — career goals and what opportunities you are seeking.]</p>
                 </div>
+
                 <div class="stats-box">
                     <div class="stat-item">
-                        <h3>[STAT LABEL 1]</h3>
-                        <p>[STAT VALUE 1]</p>
+                        <h3>[Stat Label A]</h3>
+                        <p>[Stat Value A]</p>
                     </div>
                     <div class="stat-item">
-                        <h3>[STAT LABEL 2]</h3>
-                        <p>[STAT VALUE 2]</p>
+                        <h3>[Stat Label B]</h3>
+                        <p>[Stat Value B]</p>
                     </div>
                     <div class="stat-item">
-                        <h3>[STAT LABEL 3]</h3>
-                        <p>[STAT VALUE 3]</p>
+                        <h3>[Stat Label C]</h3>
+                        <p>[Stat Value C]</p>
                     </div>
                     <div class="stat-item">
-                        <h3>[STAT LABEL 4]</h3>
-                        <p>[STAT VALUE 4]</p>
+                        <h3>[Stat Label D]</h3>
+                        <p>[Stat Value D]</p>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
 
+    <!-- ░░ EDUCATION & EXPERIENCE ░░ -->
     <section class="experience-section">
-        <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark); margin-bottom: 20px;">[EXPERIENCE SECTION HEADING]</h2>
+        <div class="section-inner">
+
+            <h2 class="section-title">[Education &amp; Experience Heading]</h2>
+
             <div class="exp-grid">
+
                 <div class="exp-card">
-                    <h3>[ROLE / POSITION TITLE]</h3>
-                    <p class="meta">[ORGANIZATION NAME] • [DATE RANGE]</p>
-                    <p>[DESCRIPTION OF RESPONSIBILITIES AND ACCOMPLISHMENTS]</p>
+                    <h3>[Role / Degree Title A]</h3>
+                    <p class="meta">[Institution A] · [Date Range A]</p>
+                    <p>[Description of responsibilities, achievements, or coursework for entry A.]</p>
                 </div>
+
                 <div class="exp-card">
-                    <h3>[ROLE / POSITION TITLE]</h3>
-                    <p class="meta">[ORGANIZATION NAME] • [DATE RANGE]</p>
-                    <p>[DESCRIPTION OF RESPONSIBILITIES AND ACCOMPLISHMENTS]</p>
+                    <h3>[Role / Degree Title B]</h3>
+                    <p class="meta">[Institution B] · [Date Range B]</p>
+                    <p>[Description of responsibilities, achievements, or coursework for entry B.]</p>
                 </div>
+
                 <div class="exp-card">
-                    <h3>[ROLE / POSITION TITLE]</h3>
-                    <p class="meta">[ORGANIZATION NAME] • [DATE RANGE]</p>
-                    <p>[DESCRIPTION OF RESPONSIBILITIES AND ACCOMPLISHMENTS]</p>
+                    <h3>[Role / Degree Title C]</h3>
+                    <p class="meta">[Institution C] · [Date Range C]</p>
+                    <p>[Description of responsibilities, achievements, or coursework for entry C.]</p>
                 </div>
+
                 <div class="exp-card">
-                    <h3>[ROLE / POSITION TITLE]</h3>
-                    <p class="meta">[ORGANIZATION NAME] • [DATE RANGE]</p>
-                    <p>[DESCRIPTION OF RESPONSIBILITIES AND ACCOMPLISHMENTS]</p>
+                    <h3>[Role / Degree Title D]</h3>
+                    <p class="meta">[Institution D] · [Date Range D]</p>
+                    <p>[Description of responsibilities, achievements, or coursework for entry D.]</p>
                 </div>
+
             </div>
         </div>
     </section>
 
+    <!-- ░░ SKILLS ░░ -->
     <section class="skills-section">
-        <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark);">[SKILLS SECTION HEADING]</h2>
+        <div class="section-inner">
+
+            <h2 class="section-title">[Skills Section Heading]</h2>
+
             <div class="skills-grid">
+
                 <div class="skill-category">
-                    <h3>[SKILL CATEGORY 1]</h3>
+                    <h3>[Skill Group A]</h3>
                     <ul class="skill-list">
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
+                        <li>[Skill A-1]</li>
+                        <li>[Skill A-2]</li>
+                        <li>[Skill A-3]</li>
+                        <li>[Skill A-4]</li>
+                        <li>[Skill A-5]</li>
                     </ul>
                 </div>
+
                 <div class="skill-category">
-                    <h3>[SKILL CATEGORY 2]</h3>
+                    <h3>[Skill Group B]</h3>
                     <ul class="skill-list">
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
+                        <li>[Skill B-1]</li>
+                        <li>[Skill B-2]</li>
+                        <li>[Skill B-3]</li>
+                        <li>[Skill B-4]</li>
+                        <li>[Skill B-5]</li>
                     </ul>
                 </div>
+
                 <div class="skill-category">
-                    <h3>[SKILL CATEGORY 3]</h3>
+                    <h3>[Skill Group C]</h3>
                     <ul class="skill-list">
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
+                        <li>[Skill C-1]</li>
+                        <li>[Skill C-2]</li>
+                        <li>[Skill C-3]</li>
+                        <li>[Skill C-4]</li>
+                        <li>[Skill C-5]</li>
                     </ul>
                 </div>
+
                 <div class="skill-category">
-                    <h3>[SKILL CATEGORY 4]</h3>
+                    <h3>[Skill Group D]</h3>
                     <ul class="skill-list">
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
-                        <li>[SKILL ITEM]</li>
+                        <li>[Skill D-1]</li>
+                        <li>[Skill D-2]</li>
+                        <li>[Skill D-3]</li>
+                        <li>[Skill D-4]</li>
+                        <li>[Skill D-5]</li>
                     </ul>
                 </div>
+
             </div>
         </div>
     </section>
 
+    <!-- ░░ PROJECTS ░░ -->
     <section class="projects-section">
-        <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark);">[PROJECTS SECTION HEADING]</h2>
+        <div class="section-inner">
+
+            <h2 class="section-title">[Projects Section Heading]</h2>
+
             <div class="projects-grid">
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 1]</span>
+                    <h3>[Project Title 1]</h3>
+                    <p>[Brief description of project 1 — methods used, tools, and outcomes.]</p>
                 </div>
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 2]</span>
+                    <h3>[Project Title 2]</h3>
+                    <p>[Brief description of project 2 — methods used, tools, and outcomes.]</p>
                 </div>
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 3]</span>
+                    <h3>[Project Title 3]</h3>
+                    <p>[Brief description of project 3 — methods used, tools, and outcomes.]</p>
                 </div>
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 4]</span>
+                    <h3>[Project Title 4]</h3>
+                    <p>[Brief description of project 4 — methods used, tools, and outcomes.]</p>
                 </div>
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 5]</span>
+                    <h3>[Project Title 5]</h3>
+                    <p>[Brief description of project 5 — methods used, tools, and outcomes.]</p>
                 </div>
+
                 <div class="project-card">
-                    <span class="tag">[PROJECT CATEGORY TAG]</span>
-                    <h3>[PROJECT TITLE]</h3>
-                    <p>[PROJECT DESCRIPTION — methods used, tools applied, and outcomes achieved]</p>
+                    <span class="tag">[Category Tag 6]</span>
+                    <h3>[Project Title 6]</h3>
+                    <p>[Brief description of project 6 — methods used, tools, and outcomes.]</p>
                 </div>
+
             </div>
         </div>
     </section>
 
+    <!-- ░░ CONTACT ░░ -->
     <section class="contact-section">
-        <h2>[CONTACT SECTION HEADING]</h2>
-        <p>[CONTACT SECTION TAGLINE OR INVITATION]</p>
+
+        <h2 class="section-title">[Contact Heading]</h2>
+        <p class="lead">[Brief invitation to connect or collaborate.]</p>
+
         <div class="contact-links">
-            <a href="mailto:[EMAIL ADDRESS]" class="contact-btn"><!-- *** placeholder 1 -->[EMAIL BUTTON LABEL]</a>
-            <a href="[LINKEDIN URL]" class="contact-btn"><!-- *** placeholder 2 -->[LINKEDIN BUTTON LABEL]</a>
-            <a href="[RESUME URL]" class="contact-btn"><!-- *** placeholder 3 -->[RESUME BUTTON LABEL]</a>
+            <a href="#" class="contact-btn">[CTA Button 1]</a>
+            <a href="#" class="contact-btn">[CTA Button 2]</a>
+            <a href="#" class="contact-btn">[CTA Button 3]</a>
         </div>
+
     </section>
 
     <script>
-        const dots = document.querySelectorAll('.dot');
-        const sections = document.querySelectorAll('section');
+        (function () {
+            const dots    = document.querySelectorAll('.dot');
+            const sections = document.querySelectorAll('section');
 
-        dots.forEach((dot, index) => {
-            dot.addEventListener('click', () => {
-                dots.forEach(d => d.classList.remove('active'));
-                dot.classList.add('active');
-                sections[index].scrollIntoView({ behavior: 'smooth' });
-            });
-        });
-
-        window.addEventListener('scroll', () => {
-            let current = '';
-            sections.forEach((section, index) => {
-                const sectionTop = section.offsetTop;
-                if (scrollY >= sectionTop - 200) {
-                    current = index;
-                }
-            });
-
-            dots.forEach((dot, index) => {
-                dot.classList.remove('active');
-                if (index === current) {
+            dots.forEach((dot, i) => {
+                dot.addEventListener('click', () => {
+                    dots.forEach(d => d.classList.remove('active'));
                     dot.classList.add('active');
-                }
+                    if (sections[i]) {
+                        sections[i].scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
             });
-        });
+
+            window.addEventListener('scroll', () => {
+                let current = 0;
+                sections.forEach((sec, i) => {
+                    if (window.scrollY >= sec.offsetTop - 200) {
+                        current = i;
+                    }
+                });
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === current);
+                });
+            });
+        })();
     </script>
+
 </body>
 </html>

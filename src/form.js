@@ -1,8 +1,18 @@
 
+    // Returns true when a modelTemplate value should be treated as an external URL
+    function looksLikeUrl(val) {
+      return /^https?:\/\//i.test(val) || val.includes(".");
+    }
+    // Ensures a URL-like value has a protocol prefix
+    function normalizeTemplateUrl(val) {
+      return /^https?:\/\//i.test(val) ? val : "https://" + val;
+    }
+
     // ----------------------------
     // Resume analysis cache
     // ----------------------------
-    let resumeAnalysisCache = null;   // parsed JSON from analyzeResume
+    let resumeAnalysisCache = null;   // parsed JSON from analyzeResume (debug mode only)
+    let lastAnalysisData    = null;   // always set after analysis — used for palette rendering
     let resumeAnalysisPending = false; // true while request in flight
 
     // ----------------------------
@@ -13,11 +23,7 @@
       specialization: v => v.trim() ? null : "Specialization is required.",
       modelTemplate: v => {
         if (!v.trim()) return null;
-        // Only parse as URL when it looks like one; free-text names are also valid
-        if (/^https?:\/\//i.test(v.trim())) {
-          try { new URL(v.trim()); return null; }
-          catch { return "Enter a valid URL."; }
-        }
+        if (looksLikeUrl(v.trim())) return "Please enter a name or keyword, not a URL.";
         return null;
       },
       linkedin: v => {
@@ -29,7 +35,7 @@
       jobAd:       () => null,
     };
 
-    // Lazily create (or retrieve) the inline message element below a field
+    // Lazily create (or retrieve) the inline error message element below a field
     function getFieldMsg(id) {
       let el = document.getElementById(`_msg_${id}`);
       if (!el) {
@@ -43,27 +49,43 @@
       return el;
     }
 
+    // Lazily create (or retrieve) the ✓ overlay inside the field on the left
+    function getFieldOkMark(id) {
+      let el = document.getElementById(`_ok_${id}`);
+      if (!el) {
+        const input = document.getElementById(id);
+        if (!input) return null;
+        // Wrap just the input so top:50% is relative to the input height, not the whole field div
+        const inputWrap = document.createElement("div");
+        inputWrap.style.cssText = "position:relative; display:block;";
+        input.parentNode.insertBefore(inputWrap, input);
+        inputWrap.appendChild(input);
+        input.style.paddingLeft = "26px";
+        el = document.createElement("span");
+        el.id = `_ok_${id}`;
+        el.style.cssText = "position:absolute; left:9px; top:50%; transform:translateY(-50%); font-size:13px; pointer-events:none; color:rgba(118,176,34,.9);";
+        inputWrap.appendChild(el);
+      }
+      return el;
+    }
+
     function validateField(id, showOk = false) {
       const fn = FIELD_VALIDATORS[id];
       if (!fn) return true;
       const input = document.getElementById(id);
       if (!input) return true;
       const msg = getFieldMsg(id);
+      const ok  = getFieldOkMark(id);
       const err = fn(input.value);
       if (err) {
         input.style.borderColor = "rgba(251,171,156,.75)";
         if (msg) { msg.textContent = err; msg.style.color = "rgba(251,171,156,.9)"; }
+        if (ok)  ok.textContent = "";
         return false;
       }
       input.style.borderColor = "";
-      if (msg) {
-        if (showOk && input.value.trim()) {
-          msg.textContent = "✓";
-          msg.style.color = "rgba(118,176,34,.9)";
-        } else {
-          msg.textContent = "";
-        }
-      }
+      if (msg) msg.textContent = "";
+      if (ok)  ok.textContent = (showOk && input.value.trim()) ? "✓" : "";
       return true;
     }
 
@@ -93,6 +115,7 @@
 
       // Reset cache and kick off analysis
       resumeAnalysisCache = null;
+      lastAnalysisData = null;
       if (hasFile) {
         analyzeResumeInBackground(input.files[0]);
       } else {
@@ -158,9 +181,35 @@
     // ----------------------------
     // Resume analysis (background)
     // ----------------------------
+    function updateSubmitReadiness() {
+      const btn = document.getElementById("submit_bottom");
+      const msg = document.getElementById("submitReadinessMsg");
+      if (!btn) return;
+      const resumePending  = !!resumeAnalysisPending;
+      const extractPending = !!extractTemplatePending;
+      const busy = resumePending || extractPending;
+      btn.disabled = busy;
+      btn.style.opacity = busy ? "0.45" : "";
+      btn.style.cursor  = busy ? "not-allowed" : "";
+      if (msg) {
+        if (busy) {
+          const parts = [];
+          if (resumePending)  parts.push("resume analysis");
+          if (extractPending) parts.push("template extraction");
+          msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
+          msg.style.display = "block";
+        } else {
+          msg.style.display = "none";
+        }
+      }
+    }
+
+    // ----------------------------
     function setResumeAnalysisStatus(text, color = "rgba(234,240,255,.6)") {
-      const el = document.getElementById("resumeAnalysisStatus");
-      if (el) { el.textContent = text; el.style.color = color; }
+      ["resumeAnalysisStatus", "resumeAnalysisStatusInline"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.textContent = text; el.style.color = color; }
+      });
     }
 
     function populateResumeDebugPanel(json) {
@@ -201,19 +250,41 @@
       return timer;
     }
 
+    function resumeCacheKey(file) {
+      return `resumeAnalysis_v3:${file.name}:${file.size}:${file.lastModified}`;
+    }
+
     async function analyzeResumeInBackground(file) {
       // Only PDFs are supported for analysis
       if (file.type && !file.type.includes("pdf")) {
         setResumeAnalysisStatus("Analysis requires a PDF. Upload complete.", "rgba(234,240,255,.5)");
         return;
       }
+
+      // Check localStorage cache before hitting the API
+      let cachedData = null;
+      try {
+        const cached = localStorage.getItem(resumeCacheKey(file));
+        if (cached) cachedData = JSON.parse(cached);
+      } catch {}
+      if (cachedData) {
+        lastAnalysisData = cachedData;
+        if (isDebugMode()) resumeAnalysisCache = cachedData;
+        setResumeAnalysisStatus("✓ Resume analyzed (cached)", "rgba(118,176,34,.9)");
+        populateResumeDebugPanel(cachedData);
+        renderSuggestedPalettes(cachedData);
+        return;
+      }
+
       resumeAnalysisPending = true;
+      updateSubmitReadiness();
 
       let base64;
       try {
         base64 = await readFileAsBase64(file);
       } catch (e) {
         resumeAnalysisPending = false;
+        updateSubmitReadiness();
         setResumeAnalysisStatus("Could not read resume file.", "rgba(251,171,156,.8)");
         return;
       }
@@ -222,44 +293,100 @@
       const specialization = document.getElementById("specialization")?.value?.trim() || "";
       const provider       = getAnalysisProvider();
 
-      // Must match the `timeout = 120` set in netlify.toml [functions]
-      const TIMEOUT_SEC = 120;
-      const abortCtrl   = new AbortController();
-      const abortTimer  = setTimeout(() => abortCtrl.abort(), TIMEOUT_SEC * 1000);
-      const countdownTimer = startAnalysisCountdown(TIMEOUT_SEC);
+      // Generate a unique jobId for this analysis run
+      const jobId = "resume_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      let data;
+      const countdownTimer = startAnalysisCountdown(120);
+
+      // Submit to background function (returns 202 immediately)
       try {
-        const res = await fetch("/.netlify/functions/analyzeResume", {
+        const submitRes = await fetch("/.netlify/functions/analyzeResume-background", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider }),
-          signal: abortCtrl.signal
+          body: JSON.stringify({ jobId, resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider })
         });
-        data = await res.json();
+        if (!submitRes.ok) {
+          clearInterval(countdownTimer);
+          resumeAnalysisPending = false;
+          updateSubmitReadiness();
+          setResumeAnalysisStatus("Resume analysis failed (could not start).", "rgba(251,171,156,.8)");
+          return;
+        }
       } catch (e) {
-        clearTimeout(abortTimer);
         clearInterval(countdownTimer);
         resumeAnalysisPending = false;
-        const msg = e?.name === "AbortError"
-          ? "Resume analysis timed out."
-          : "Resume analysis failed (network error).";
-        setResumeAnalysisStatus(msg, "rgba(251,171,156,.8)");
-        return;
-      }
-      clearTimeout(abortTimer);
-
-      clearInterval(countdownTimer);
-      resumeAnalysisPending = false;
-
-      if (data?.error) {
-        setResumeAnalysisStatus("Resume analysis failed: " + data.error, "rgba(251,171,156,.8)");
+        updateSubmitReadiness();
+        setResumeAnalysisStatus("Resume analysis failed (network error).", "rgba(251,171,156,.8)");
         return;
       }
 
-      resumeAnalysisCache = data;
-      setResumeAnalysisStatus("✓ Resume analyzed", "rgba(118,176,34,.9)");
-      populateResumeDebugPanel(data);
+      // Poll getPreviewResult until done or timeout
+      const POLL_INTERVAL_MS = 2500;
+      const POLL_TIMEOUT_MS  = 180000; // 3 minutes max
+      const pollStart = Date.now();
+
+      const poll = async () => {
+        if (!resumeAnalysisPending) return; // cancelled externally (e.g. new file uploaded)
+        if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
+          clearInterval(countdownTimer);
+          resumeAnalysisPending = false;
+          updateSubmitReadiness();
+          setResumeAnalysisStatus("Resume analysis timed out — try again.", "rgba(251,171,156,.8)");
+          return;
+        }
+
+        let result;
+        try {
+          const res = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const text = await res.text();
+          try { result = JSON.parse(text); } catch { result = null; }
+        } catch {
+          // Network blip — keep polling
+          setTimeout(poll, POLL_INTERVAL_MS);
+          return;
+        }
+
+        if (!result || result.status === "pending") {
+          setTimeout(poll, POLL_INTERVAL_MS);
+          return;
+        }
+
+        clearInterval(countdownTimer);
+        resumeAnalysisPending = false;
+        updateSubmitReadiness();
+
+        if (result.status === "error") {
+          setResumeAnalysisStatus("Resume analysis failed: " + (result.error || "Unknown error"), "rgba(251,171,156,.8)");
+          return;
+        }
+
+        // result.status === "done" — strip the status field to get the analysis data
+        const data = Object.fromEntries(Object.entries(result).filter(([k]) => k !== "status"));
+
+        if (!data || Object.keys(data).length === 0) {
+          setResumeAnalysisStatus("Resume analysis returned empty data.", "rgba(251,171,156,.8)");
+          return;
+        }
+
+        // Ensure form-supplied values win over AI inferences
+        if (data.identity) {
+          if (major)          data.identity.major          = major;
+          if (specialization) data.identity.specialization = specialization;
+        }
+
+        // Persist to localStorage for reuse after refresh
+        try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
+
+        lastAnalysisData = data;
+        if (isDebugMode()) resumeAnalysisCache = data;
+        else               resumeAnalysisCache = null;
+
+        setResumeAnalysisStatus("✓ Resume analyzed", "rgba(118,176,34,.9)");
+        populateResumeDebugPanel(data);
+        renderSuggestedPalettes(data);
+      };
+
+      setTimeout(poll, POLL_INTERVAL_MS);
     }
 
     // Enter in Major field while containing "DEBUG" activates debug mode immediately
@@ -281,9 +408,13 @@
     // ----------------------------
     const PAGES = [
       { id: "page0", label: "0 Overview" },
-      { id: "page1", label: "1 Basic" },
-      { id: "page2", label: "2 Colors" },
-      { id: "page3", label: "3 Target Job" }
+      { id: "page1", label: "1 Resume" },
+      { id: "page2", label: "2 Artifacts" },
+      { id: "page3", label: "3 Website spec" },
+      { id: "page4", label: "4 Color scheme" },
+      { id: "page5a", pageId: "page5", label: "5 Job Ad" },
+      { id: "page5b", pageId: "page5", label: "6 Edit" },
+      { id: "page5c", pageId: "page5", label: "7 Publish" }
     ];
     let currentStep = 0;
 
@@ -291,27 +422,37 @@
     const stepLabel = document.getElementById("stepLabel");
     const progressBar = document.getElementById("progressBar");
 
+    function getPageId(entry){ return entry.pageId ?? entry.id; }
+
     function renderStepUI(){
+      const activePageId = getPageId(PAGES[currentStep]);
       stepPills.innerHTML = "";
       PAGES.forEach((p, idx) => {
+        if (idx === 0) return; // skip Overview pill
         const pill = document.createElement("div");
-        pill.className = "pill" + (idx === currentStep ? " active" : "");
+        pill.className = "pill" + (getPageId(p) === activePageId ? " active" : "");
         pill.textContent = p.label;
         stepPills.appendChild(pill);
       });
-      stepLabel.textContent = `Step ${currentStep} of ${PAGES.length - 1}`;
-      const pct = (currentStep / (PAGES.length - 1)) * 100;
+      stepLabel.textContent = currentStep > 0 ? `Step ${currentStep} of ${PAGES.length - 1}` : "";
+      const pct = currentStep > 0 ? (currentStep / (PAGES.length - 1)) * 100 : 0;
       progressBar.style.width = `${pct}%`;
     }
 
     function setStep(step){
       currentStep = Math.max(0, Math.min(PAGES.length - 1, step));
-      PAGES.forEach((p, idx) => {
-        const el = document.getElementById(p.id);
-        el.classList.toggle("hidden", idx !== currentStep);
+      const activePageId = getPageId(PAGES[currentStep]);
+      const seen = new Set();
+      PAGES.forEach(p => {
+        const pageId = getPageId(p);
+        if (seen.has(pageId)) return;
+        seen.add(pageId);
+        const el = document.getElementById(pageId);
+        if (el) el.classList.toggle("hidden", pageId !== activePageId);
       });
       renderStepUI();
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (currentStep === 4) renderSuggestedPalettes();
     }
 
     // ----------------------------
@@ -436,10 +577,66 @@
     });
 
     // ----------------------------
+    // Template list — populate datalist dynamically, cached in localStorage for 24h
+    // ----------------------------
+    const TEMPLATE_CACHE_KEY = "templateKeywordsCache";
+    const TEMPLATE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+    function applyTemplatesToDatalist(templates) {
+      const dl = document.getElementById("templateKeywords");
+      if (!dl || !Array.isArray(templates) || templates.length === 0) return;
+      dl.innerHTML = templates.map(t => `<option value="${t}">`).join("");
+    }
+
+    async function loadTemplateSuggestions({ force = false } = {}) {
+      const btn = document.getElementById("refreshTemplateList");
+      // Try cache first (unless forced)
+      if (!force) {
+        try {
+          const cached = JSON.parse(localStorage.getItem(TEMPLATE_CACHE_KEY) || "null");
+          if (cached && Date.now() - cached.timestamp < TEMPLATE_CACHE_TTL) {
+            applyTemplatesToDatalist(cached.templates);
+            return;
+          }
+        } catch {}
+      }
+
+      if (btn) { btn.textContent = "…"; btn.disabled = true; }
+      try {
+        const res = await fetch("/.netlify/functions/listTemplates");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data.templates) && data.templates.length > 0) {
+          applyTemplatesToDatalist(data.templates);
+          localStorage.setItem(TEMPLATE_CACHE_KEY, JSON.stringify({ templates: data.templates, timestamp: Date.now() }));
+        }
+      } catch { /* silently skip if function is unavailable */ }
+      finally {
+        if (btn) { btn.textContent = "↻"; btn.disabled = false; }
+      }
+    }
+
+    loadTemplateSuggestions();
+    document.getElementById("refreshTemplateList")?.addEventListener("click", () => loadTemplateSuggestions({ force: true }));
+
+    // Convert a user-entered label → local file path
+    // Handles both "Biology" → html/biologyGrad.html
+    //          and "Biology A" / "biology_A" → html/biologyGrad_A.html
+    function templateLabelToPath(val) {
+      const variantMatch = val.match(/^(.*?)[\s_]+([A-Za-z])$/);
+      if (variantMatch) {
+        const base = variantMatch[1].trim().toLowerCase().replace(/\s+/g, "-");
+        const variant = variantMatch[2].toUpperCase();
+        return `html/${base}Grad_${variant}.html`;
+      }
+      return `html/${val.trim().toLowerCase().replace(/\s+/g, "-")}Grad.html`;
+    }
+
+    // ----------------------------
     // Template extraction cache
     // ----------------------------
     let extractedTemplateCache = null;   // { templateHtml, embeddedJson }
-    let extractTemplatePending = false;
+    let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
@@ -448,17 +645,21 @@
     }
 
     function populateTemplateExtractPanel(result) {
-      const panel = document.getElementById("templateExtractPanel");
-      const pre   = document.getElementById("templateExtractPre");
-      const dlBtn = document.getElementById("dlTemplateExtract");
-      const cpBtn = document.getElementById("cpTemplateExtract");
-      if (!panel || !pre) return;
+      const panel   = document.getElementById("templateExtractPanel");
+      const jsonPre = document.getElementById("templateExtractJsonPre");
+      const dlJson  = document.getElementById("dlTemplateJson");
+      const cpJson  = document.getElementById("cpTemplateJson");
+      const dlHtml  = document.getElementById("dlTemplateExtract");
+      if (!panel) return;
 
-      pre.textContent = result.templateHtml || "";
-      dlBtn?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
-      cpBtn?.addEventListener("click", e => copyToClipboard(result.templateHtml || "", e.currentTarget));
+      const jsonStr = JSON.stringify(result.embeddedJson ?? {}, null, 2);
+      if (jsonPre) jsonPre.textContent = jsonStr;
+      dlJson?.addEventListener("click", () => downloadText("spec.json", jsonStr, "application/json"));
+      cpJson?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
+      dlHtml?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
 
       if (isDebugMode()) panel.classList.remove("hidden");
+      document.getElementById("designSpecPanel")?.classList.add("hidden");
 
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
@@ -476,19 +677,78 @@
       }
     }
 
-    async function extractTemplateInBackground() {
+    function extractTemplateInBackground() {
+      if (extractTemplatePending) return extractTemplatePending; // join in-flight call
+      extractTemplatePending = _doExtractTemplate().finally(() => {
+        extractTemplatePending = null;
+        updateSubmitReadiness();
+      });
+      updateSubmitReadiness();
+      return extractTemplatePending;
+    }
+
+    async function _doExtractTemplate() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (!source || source === "none") return;
+      if (!source) return;
+
+      if (source === "none") {
+        const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
+        extractedTemplateCache = {
+          templateHtml: null,
+          embeddedJson: {
+            source: "design_options",
+            composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
+            style: styleVal === "other"
+              ? (document.getElementById("designStyleOther")?.value?.trim() || "custom")
+              : styleVal,
+            render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
+          }
+        };
+        setTemplateExtractStatus("✓ Design options applied", "rgba(118,176,34,.9)");
+        return;
+      }
 
       let key = "";
       let requestBody = { provider: getAnalysisProvider() };
 
       if (source === "url") {
-        const url = document.getElementById("modelTemplate")?.value?.trim() || "";
-        if (!url || !/^https?:\/\//i.test(url)) return;  // only actual URLs
-        if (url === lastExtractedTemplate) return;
-        key = url;
-        requestBody.templateUrl = url;
+        const val = document.getElementById("modelTemplate")?.value?.trim() || "";
+        if (!val || looksLikeUrl(val)) return;
+
+        // Keyword — try pre-compiled _template.html first, fall back to calling Claude
+        const srcPath      = templateLabelToPath(val);
+        const compiledPath = srcPath.replace(/\.html$/, "_template.html");
+        if (compiledPath === lastExtractedTemplate) return;
+
+        // Try pre-compiled version (no API call needed)
+        try {
+          const res = await fetch(compiledPath);
+          if (res.ok) {
+            const templateHtml = await res.text();
+            const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
+            let embeddedJson = null;
+            if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
+            lastExtractedTemplate = compiledPath;
+            extractedTemplateCache = { templateHtml, embeddedJson };
+            setTemplateExtractStatus("✓ Template loaded", "rgba(118,176,34,.9)");
+            populateTemplateExtractPanel(extractedTemplateCache);
+            renderSuggestedPalettes();
+            return;
+          }
+        } catch {}
+
+        // No pre-compiled file — fetch source HTML and send to Claude
+        if (srcPath === lastExtractedTemplate) return;
+        try {
+          const res = await fetch(srcPath);
+          if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
+          const html = await res.text();
+          requestBody.templateHtmlBase64 = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
+          key = srcPath;
+        } catch (e) {
+          setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+          return;
+        }
       } else if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
         if (!file) return;
@@ -512,33 +772,81 @@
 
       if (!key) return;
       lastExtractedTemplate = key;
-      extractTemplatePending = true;
-      setTemplateExtractStatus("Extracting template… this may take ~30s", "rgba(141,224,255,.75)");
 
-      let data;
+      const jobId = "extract_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
+
+      let seconds = 120;
+      setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
+      const ticker = setInterval(() => {
+        seconds = Math.max(1, seconds - 1);
+        setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
+      }, 1000);
+
+      // Submit to background function (returns 202 immediately)
       try {
-        const res = await fetch("/.netlify/functions/extractTemplate", {
+        const submitRes = await fetch("/.netlify/functions/extractTemplate-background", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify(requestBody)
+          body: JSON.stringify({ jobId, ...requestBody })
         });
-        data = await res.json();
+        if (!submitRes.ok) {
+          clearInterval(ticker);
+          setTemplateExtractStatus("Template extraction failed (could not start).", "rgba(251,171,156,.8)");
+          return;
+        }
       } catch (e) {
-        extractTemplatePending = false;
-        setTemplateExtractStatus("Template extraction failed (network error).", "rgba(251,171,156,.8)");
+        clearInterval(ticker);
+        setTemplateExtractStatus(`Template extraction failed: ${e?.message || e}`, "rgba(251,171,156,.8)");
         return;
       }
 
-      extractTemplatePending = false;
+      // Poll for result
+      const POLL_INTERVAL_MS = 2500;
+      const POLL_TIMEOUT_MS  = 180000;
+      const pollStart = Date.now();
 
-      if (data?.error) {
-        setTemplateExtractStatus("Template extraction failed: " + data.error, "rgba(251,171,156,.8)");
-        return;
-      }
+      const pollExtract = async () => {
+        if (lastExtractedTemplate !== key) { clearInterval(ticker); return; } // superseded
+        if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
+          clearInterval(ticker);
+          setTemplateExtractStatus("Template extraction timed out — try a smaller page or upload the HTML file instead.", "rgba(251,171,156,.8)");
+          return;
+        }
 
-      extractedTemplateCache = data;
-      setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
-      populateTemplateExtractPanel(data);
+        let result;
+        try {
+          const res = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const text = await res.text();
+          try { result = JSON.parse(text); } catch { result = null; }
+        } catch {
+          setTimeout(pollExtract, POLL_INTERVAL_MS);
+          return;
+        }
+
+        if (!result || result.status === "pending") {
+          setTimeout(pollExtract, POLL_INTERVAL_MS);
+          return;
+        }
+
+        clearInterval(ticker);
+
+        if (result.status === "error") {
+          const isNetworkErr = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed/i.test(result.error || "");
+          const msg = isNetworkErr
+            ? "Can't reach that URL from the server (DNS/network error). Save the page as HTML and use the \"Upload\" option instead."
+            : "Template extraction failed: " + (result.error || "Unknown error");
+          setTemplateExtractStatus(msg, "rgba(251,171,156,.8)");
+          return;
+        }
+
+        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson };
+        extractedTemplateCache = data;
+        setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
+        populateTemplateExtractPanel(data);
+        renderSuggestedPalettes();
+      };
+
+      setTimeout(pollExtract, POLL_INTERVAL_MS);
     }
 
     // ----------------------------
@@ -572,9 +880,6 @@
       let show = false;
       if (source === "file") {
         show = true;
-      } else if (source === "url") {
-        const url = document.getElementById("modelTemplate")?.value?.trim() || "";
-        show = /^https?:\/\//i.test(url) && !isOwnLibraryUrl(url);
       }
       wrap.style.display = show ? "block" : "none";
       if (!show) document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
@@ -597,6 +902,31 @@
         }
       }
       updateTemplateCopyrightVisibility();
+
+      // Show the appropriate spec panel immediately based on selection
+      const extractPanel = document.getElementById("templateExtractPanel");
+      const designPanel  = document.getElementById("designSpecPanel");
+      if (source === "none") {
+        extractPanel?.classList.add("hidden");
+        if (designPanel && isDebugMode()) {
+          designPanel.classList.remove("hidden");
+          updateDesignSpecPanel();
+        }
+      } else if (source === "url" || source === "file") {
+        designPanel?.classList.add("hidden");
+        if (extractPanel && isDebugMode()) {
+          extractPanel.classList.remove("hidden");
+          if (extractedTemplateCache) {
+            populateTemplateExtractPanel(extractedTemplateCache);
+          } else {
+            const pre = document.getElementById("templateExtractJsonPre");
+            if (pre && !pre.textContent) pre.textContent = "Click Next → to extract the template spec.";
+          }
+        }
+      } else {
+        extractPanel?.classList.add("hidden");
+        designPanel?.classList.add("hidden");
+      }
     }
 
     function updateDesignOptionsReadiness() {
@@ -691,9 +1021,33 @@
       });
     }
 
+    function updateDesignSpecPanel() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      const extractPanel = document.getElementById("templateExtractPanel");
+      const designPanel  = document.getElementById("designSpecPanel");
+      if (source === "none") {
+        extractPanel?.classList.add("hidden");
+        if (designPanel) {
+          const spec    = getPage3Template();
+          const jsonStr = JSON.stringify(spec, null, 2);
+          const pre     = document.getElementById("designSpecPre");
+          if (pre) pre.textContent = jsonStr;
+          const dlBtn = document.getElementById("dlDesignSpec");
+          const cpBtn = document.getElementById("cpDesignSpec");
+          dlBtn?.addEventListener("click", () => downloadText("design-spec.json", jsonStr, "application/json"));
+          cpBtn?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
+          if (isDebugMode()) designPanel.classList.remove("hidden");
+        }
+      } else {
+        designPanel?.classList.add("hidden");
+        // templateExtractPanel visibility is managed by populateTemplateExtractPanel after extraction
+      }
+    }
+
     document.querySelectorAll('input[name="templateSource"]').forEach(r =>
       r.addEventListener("change", () => {
         updateTemplateUI();
+        updateDesignSpecPanel();
         // Fire extraction if switching to url (with existing value) or file (with existing file)
         extractTemplateInBackground();
       }));
@@ -702,6 +1056,13 @@
 
     // Also trigger extraction when a file is selected while source=file
     templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
+
+    // Refresh design spec JSON live as design options change
+    document.querySelectorAll('input[name="designComposition"], input[name="designStyle"], input[name="designRenderMode"]')
+      .forEach(r => r.addEventListener("change", () => {
+        updateDesignSpecPanel();
+        extractTemplateInBackground();
+      }));
 
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
@@ -747,11 +1108,121 @@
     // Collectors
     // ----------------------------
     function getPage1(){
+      return {
+        major: document.getElementById("major").value.trim(),
+        specialization: document.getElementById("specialization").value.trim()
+      };
+    }
+
+    // ----------------------------
+    // Artifact rows (Page 2)
+    // ----------------------------
+    const ARTIFACT_TYPES = [
+      { value: "image",    label: "Image (png/jpg/svg)" },
+      { value: "html",     label: "HTML" },
+      { value: "youtube",  label: "YouTube video" },
+      { value: "text",     label: "Text / Markdown" },
+    ];
+    let artifactRowCount = 0;
+
+    function buildArtifactContentInput(wrap, type, existingContent = "") {
+      wrap.innerHTML = "";
+      if (type === "image") {
+        const fi = document.createElement("input");
+        fi.type = "file";
+        fi.accept = "image/*";
+        wrap.appendChild(fi);
+      } else if (type === "youtube") {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.placeholder = "https://www.youtube.com/watch?v=…";
+        inp.value = existingContent;
+        const warn = document.createElement("span");
+        warn.style.cssText = "font-size:11px; color:rgba(251,100,100,.9); display:none;";
+        warn.textContent = "Must be a YouTube URL (youtube.com or youtu.be)";
+        inp.addEventListener("blur", () => {
+          const val = inp.value.trim();
+          const ok = !val || /^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(val);
+          warn.style.display = ok ? "none" : "block";
+          inp.style.borderColor = ok ? "" : "rgba(251,100,100,.8)";
+        });
+        inp.addEventListener("focus", () => { warn.style.display = "none"; inp.style.borderColor = ""; });
+        wrap.append(inp, warn);
+      } else if (type === "text") {
+        const ta = document.createElement("textarea");
+        ta.placeholder = "Paste your text or Markdown here…";
+        ta.value = existingContent;
+        ta.style.cssText = "width:100%; min-height:80px; resize:vertical;";
+        wrap.appendChild(ta);
+      } else {
+        const inp = document.createElement("input");
+        inp.type = "text";
+        inp.placeholder = type === "html" ? "File name or HTML URL…" : "File name, URL, or content…";
+        inp.value = existingContent;
+        wrap.appendChild(inp);
+      }
+    }
+
+    function addArtifactRow(type = "", content = "", tagline = "") {
+      const id = ++artifactRowCount;
+      const row = document.createElement("div");
+      row.id = `artifactRow_${id}`;
+      row.className = "artifactRow";
+
+      const sel = document.createElement("select");
+      sel.innerHTML = `<option value="">— type —</option>` +
+        ARTIFACT_TYPES.map(t =>
+          `<option value="${t.value}"${type === t.value ? " selected" : ""}>${t.label}</option>`
+        ).join("");
+
+      const contentWrap = document.createElement("div");
+      contentWrap.className = "artifactContentWrap";
+      buildArtifactContentInput(contentWrap, type, content);
+      sel.addEventListener("change", () => buildArtifactContentInput(contentWrap, sel.value, ""));
+
+      const tag = document.createElement("input");
+      tag.type = "text";
+      tag.className = "artifactTagline";
+      tag.placeholder = "Tagline…";
+      tag.value = tagline;
+
+      const del = document.createElement("button");
+      del.type = "button";
+      del.textContent = "×";
+      del.className = "btn ghost mini";
+      del.style.cssText = "padding:4px 9px; font-size:15px; line-height:1;";
+      del.addEventListener("click", () => row.remove());
+
+      row.append(sel, contentWrap, tag, del);
+      document.getElementById("artifactRows").appendChild(row);
+    }
+
+    async function getPage2Artifacts(){
+      const rows = [];
+      for (const row of document.querySelectorAll("#artifactRows .artifactRow")) {
+        const type = row.querySelector("select")?.value || "";
+        const wrap = row.querySelector(".artifactContentWrap");
+        const tagline = row.querySelector(".artifactTagline")?.value?.trim() || "";
+
+        let content = "";
+        if (type === "image") {
+          const file = wrap?.querySelector("input[type='file']")?.files?.[0];
+          if (file) { try { content = await readFileAsBase64(file); } catch {} }
+        } else if (type === "text") {
+          content = wrap?.querySelector("textarea")?.value?.trim() || "";
+        } else {
+          content = wrap?.querySelector("input[type='text']")?.value?.trim() || "";
+        }
+
+        rows.push({ type, content, tagline });
+      }
+      return { artifacts: rows };
+    }
+
+    function getPage3Template(){
       const templateSource = document.querySelector('input[name="templateSource"]:checked')?.value || "";
       const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
       return {
-        major: document.getElementById("major").value.trim(),
-        specialization: document.getElementById("specialization").value.trim(),
         template_source: templateSource,
         model_template: templateSource === "url" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
         template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || "",
@@ -761,7 +1232,7 @@
       };
     }
 
-    function getPage2(){
+    function getPage4Colors(){
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -775,7 +1246,7 @@
       };
     }
 
-function getPage3(){
+    function getPage5Job(){
       return {
         desired_role: document.getElementById("desiredRole").value.trim(),
         job_ad: document.getElementById("jobAd").value
@@ -840,7 +1311,7 @@ function getPage3(){
       if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
 
       if (!document.querySelector('input[name="templateSource"]:checked'))
-        throw new Error("Please select a portfolio template option on page 1.");
+        throw new Error("Please select a portfolio template option on page 3.");
 
       const copyrightWrap = document.getElementById("templateCopyrightWrap");
       if (copyrightWrap?.style.display !== "none") {
@@ -848,9 +1319,16 @@ function getPage3(){
           throw new Error("Please indicate how the external template may be used before submitting.");
       }
 
-      const page1 = getPage1();
-      const page2 = getPage2();
-      const page3 = getPage3();
+      // Collect new page data and map to API-compatible structure
+      const p1 = getPage1();
+      const p2 = await getPage2Artifacts();
+      const p3 = getPage3Template();
+      const p4 = getPage4Colors();
+      const p5 = getPage5Job();
+      // Backend expects: page1 = basic+template, page2 = colors, page3 = job
+      const page1 = { ...p1, ...p3, artifacts: p2 };
+      const page2 = p4;
+      const page3 = p5;
       const jobId = crypto.randomUUID();
 
       const finalBox = document.getElementById("finalBox");
@@ -866,24 +1344,14 @@ function getPage3(){
         throw new Error("Could not read resume PDF: " + e.message);
       }
 
-      const headshotName = headshotInput.files?.[0]?.name || "";
-
-      let templateScreenshotBase64 = "";
-      let templateScreenshotMime = "";
-      const screenshotFile = templateScreenshotInput?.files?.[0];
-      if (screenshotFile && screenshotFile.type.startsWith("image/")) {
-        try {
-          templateScreenshotBase64 = await readFileAsBase64(screenshotFile);
-          templateScreenshotMime = screenshotFile.type;
-        } catch { /* non-fatal — proceed without screenshot */ }
-      }
+      const headshotName = headshotInput?.files?.[0]?.name || "";
 
       finalStatus.textContent = "Submitting request…";
 
-      const res = await fetch("/.netlify/functions/generatePreview-background", {
+      const res = await fetch("/.netlify/functions/buildWebsite-background", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, templateScreenshotBase64, templateScreenshotMime, use_three_prompt: document.getElementById("useThreePrompt")?.checked || false })
+        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, resumeAnalysisJson: lastAnalysisData || null, templateAnalysisJson: extractedTemplateCache?.embeddedJson || null, templateHtml: extractedTemplateCache?.templateHtml || null })
       });
 
       if (!res.ok && res.status !== 202) {
@@ -916,7 +1384,7 @@ function getPage3(){
           const dlSummary = document.getElementById("dlSummaryHtml");
           const dlJson = document.getElementById("dlResumeJson");
           dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
-          const all = { page1, page2, page3 };
+          const all = { page1, page2, page3, artifacts: p2 };
           const summaryHtml = buildSummaryHtml(all);
           dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
           if (data.resume_json) {
@@ -987,51 +1455,23 @@ function getPage3(){
     // ----------------------------
     document.getElementById("toPage1")?.addEventListener("click", () => setStep(1));
 
-    // Page 1
+    // Page 1 — reset resets only page 1 fields (major, specialization, resume)
     const reset1 = document.getElementById("reset1");
     if (reset1) makeDoubleClickReset(reset1, () => {
-      ["major","specialization","modelTemplate","linkedin"].forEach(id => {
+      ["major","specialization"].forEach(id => {
         const el = document.getElementById(id); if (el) el.value = "";
       });
-      document.querySelectorAll('input[name="templateSource"]').forEach(r => r.checked = false);
-      document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
-      extractedTemplateCache = null;
-      lastExtractedTemplate = "";
-      setTemplateExtractStatus("");
-      document.querySelectorAll('input[name="designComposition"]').forEach(r => r.checked = false);
-      document.querySelectorAll('input[name="designStyle"]').forEach(r => r.checked = false);
-      document.querySelectorAll('input[name="designRenderMode"]').forEach(r => r.checked = false);
-      const styleOther = document.getElementById("designStyleOther");
-      if (styleOther) styleOther.value = "";
-      updateTemplateUI();
-      if (headshotInput) headshotInput.value = "";
-      if (headshotPreview) headshotPreview.style.display = "none";
-      if (headshotImg) headshotImg.src = "";
-      if (templateScreenshotInput) templateScreenshotInput.value = "";
-      if (templateScreenshotPreview) templateScreenshotPreview.style.display = "none";
-      if (templateScreenshotImg) templateScreenshotImg.src = "";
       if (resumeUpload) resumeUpload.value = "";
       if (resumeFileList) resumeFileList.innerHTML = "";
+      resumeAnalysisCache = null;
+      lastAnalysisData = null;
+      setResumeAnalysisStatus("");
     });
 
     document.getElementById("next1")?.addEventListener("click", () => {
-      // Validate required fields before advancing
       const errs = [];
       if (!validateField("major",          true)) errs.push("major");
       if (!validateField("specialization", true)) errs.push("specialization");
-      if (!document.querySelector('input[name="templateSource"]:checked')) {
-        const msg = getFieldMsg("templateSource") || (() => {
-          const el = document.querySelector('[name="templateSource"]')?.closest("div");
-          if (!el) return null;
-          const m = document.createElement("div");
-          m.id = "_msg_templateSource";
-          m.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
-          el.after(m);
-          return m;
-        })();
-        if (msg) { msg.textContent = "Please select a template option."; msg.style.color = "rgba(251,171,156,.9)"; }
-        errs.push("template");
-      }
       if (!resumeUpload.files?.length) {
         const msg = document.getElementById("_msg_resumeUpload") || (() => {
           const m = document.createElement("div");
@@ -1046,18 +1486,199 @@ function getPage3(){
       }
       if (errs.length) return;
       setStep(2);
-      const templateUrl = document.getElementById("modelTemplate")?.value?.trim();
-      if (templateUrl) fetchSampleColors(templateUrl);
-      extractTemplateInBackground();
     });
 
-    // Page 2 back
-    ["back2_top","back2_bottom"].forEach(id => {
-      document.getElementById(id)?.addEventListener("click", () => setStep(1));
+    // Page 2 (Colors)
+    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(1));
+    document.getElementById("next2_bottom")?.addEventListener("click", () => {
+      const el = document.getElementById("stepConfirmStatus");
+      if (el) { el.textContent = "✓ Artifacts noted"; el.style.color = "rgba(118,176,34,.9)"; }
+      setStep(3);
     });
 
-    // Page 2 next (top/bottom) -> generate preview (do not auto-advance)
-    document.getElementById("next2_bottom")?.addEventListener("click", () => setStep(3));
+    // Artifact rows — wire add button
+    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
+
+    // Page 3 (Website Spec / Template)
+    function onEnterPage3() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (source === "none") {
+        updateDesignSpecPanel();
+      } else if (extractedTemplateCache) {
+        populateTemplateExtractPanel(extractedTemplateCache);
+      }
+    }
+
+    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
+
+    document.getElementById("next3_bottom")?.addEventListener("click", async () => {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+
+      // Helper to show an inline error near the radio group
+      function showSourceMsg(text) {
+        let msg = document.getElementById("_msg_templateSource");
+        if (!msg) {
+          msg = document.createElement("div");
+          msg.id = "_msg_templateSource";
+          msg.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
+          const anchor = document.querySelector('[name="templateSource"]')?.closest(".grid");
+          if (anchor) anchor.after(msg);
+        }
+        msg.textContent = text;
+      }
+
+      if (!source) { showSourceMsg("Please select a template option."); return; }
+      document.getElementById("_msg_templateSource") && (document.getElementById("_msg_templateSource").textContent = "");
+
+      // Pre-validate inputs before touching the UI
+      if (source === "url") {
+        const val = document.getElementById("modelTemplate")?.value?.trim() || "";
+        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return; }
+        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return; }
+      }
+      if (source === "file") {
+        const file = templateScreenshotInput?.files?.[0];
+        if (!file) { showSourceMsg("Please select a screenshot or HTML file."); return; }
+      }
+
+      // c) Copyright question must be answered if the panel is visible
+      const copyrightWrap = document.getElementById("templateCopyrightWrap");
+      if (copyrightWrap && copyrightWrap.style.display !== "none") {
+        const copyrightAnswered = !!document.querySelector('input[name="templateCopyrightMode"]:checked');
+        if (!copyrightAnswered) {
+          showSourceMsg("Please answer the website spec question before continuing.");
+          copyrightWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          return;
+        }
+      }
+
+      if (source === "none") {
+        updateDesignSpecPanel();
+        if (isDebugMode()) document.getElementById("designSpecPanel")?.classList.remove("hidden");
+        setStep(4);
+        return;
+      }
+
+      // b) Fire extraction (or join in-flight), then proceed to page 4 immediately
+      extractTemplateInBackground().then(() => {
+        if (isDebugMode() && extractedTemplateCache) {
+          populateTemplateExtractPanel(extractedTemplateCache);
+          document.getElementById("templateExtractPanel")?.classList.remove("hidden");
+          document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
+          document.getElementById("designSpecPanel")?.querySelector("details")?.setAttribute("open", "");
+        }
+      });
+
+      setStep(4);
+    });
+
+    document.getElementById("next2_bottom")?.addEventListener("click", onEnterPage3);
+    document.getElementById("back4")?.addEventListener("click", onEnterPage3);
+
+    // Page 4 (Colors)
+    const PALETTE_SLOTS = ["primary", "secondary", "accent", "dark", "light"];
+
+    function renderSuggestedPalettes(analysisData) {
+      const msg = document.getElementById("suggestedPalettesMsg");
+      const container = document.getElementById("suggestedPalettes");
+      const rows      = document.getElementById("suggestedPalettesRows");
+      if (!container || !rows) return;
+
+      // Slot 0: template palette (null if unavailable)
+      const tplColors = extractedTemplateCache?.embeddedJson?.default_color_scheme;
+      let tplPalette = null;
+      if (tplColors && !Array.isArray(tplColors) && typeof tplColors === "object") {
+        const { primary, secondary, accent, dark, light } = tplColors;
+        if (primary || secondary || accent) {
+          tplPalette = { label: "Template palette", colors: { primary, secondary, accent, dark, light } };
+        }
+      }
+
+      // Slots 1-3: up to 3 AI palettes from resume analysis
+      const resolvedData = analysisData ?? lastAnalysisData;
+      const aiPalettes = resolvedData?.compatible_color_schemes ?? [];
+      const aiRows = aiPalettes
+        .filter(p => p.primary || p.secondary || p.accent)
+        .slice(0, 3)
+        .map((p, i) => ({
+          label: p.how_used || `AI palette ${i + 1}`,
+          colors: { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light }
+        }));
+
+      // Fixed layout: [template, ai1, ai2, ai3] — null for empty slots
+      const visible = [tplPalette, ...aiRows];
+      while (visible.length < 4) visible.push(null);
+
+      const MAX = 4;
+      const populated = visible.filter(Boolean).length;
+      const dataLoaded = !!(resolvedData);
+      if (msg) {
+        if (populated >= MAX) {
+          msg.style.display = "none";
+        } else if (dataLoaded) {
+          msg.textContent = populated === 0 ? "(No palettes found in analysis)" : `(${populated} of ${MAX} loaded)`;
+          msg.style.display = "block";
+        } else {
+          msg.textContent = "(Thinking\u2026)";
+          msg.style.display = "block";
+        }
+      }
+
+      rows.innerHTML = "";
+      visible.slice(0, MAX).forEach(palette => {
+        const empty = !palette;
+        const row = document.createElement("label");
+        row.style.cssText = `display:flex; flex-direction:column; gap:5px; padding:7px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15); cursor:${empty ? "default" : "pointer"};`;
+
+        const cb = document.createElement("input");
+        cb.type = "radio";
+        cb.name = "suggestedPalette";
+        cb.disabled = empty;
+        cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
+        if (!empty) cb.style.cursor = "pointer";
+        cb.addEventListener("change", () => {
+          if (cb.checked) applyColors(palette.colors);
+        });
+
+        const swatches = document.createElement("div");
+        swatches.style.cssText = "display:flex; gap:3px; flex-shrink:0; margin-left:10px;";
+        PALETTE_SLOTS.forEach(slot => {
+          const s = document.createElement("span");
+          const color = empty ? "rgba(255,255,255,.07)" : (palette.colors[slot] || "#888");
+          s.style.cssText = `width:44px; height:23px; border-radius:4px; background:${color}; border:2px solid rgba(255,255,255,.85); display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.25);${empty ? "" : " cursor:pointer;"}`;
+          if (!empty) {
+            // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
+            const applySwatchColor = e => {
+              e.stopPropagation();
+              e.preventDefault();
+              const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
+              const input = document.getElementById(targetId);
+              if (input) input.value = palette.colors[slot] || "#000000";
+            };
+            s.addEventListener("click", applySwatchColor);
+            s.addEventListener("dblclick", applySwatchColor);
+          }
+          swatches.appendChild(s);
+        });
+
+        const topRow = document.createElement("div");
+        topRow.style.cssText = "display:flex; align-items:center; gap:10px;";
+        topRow.append(cb, swatches);
+
+        const lbl = document.createElement("span");
+        lbl.style.cssText = "font-size:12px; font-weight:400; line-height:1.4; white-space:normal; width:100%;";
+        lbl.style.color = empty ? "rgba(255,255,255,.18)" : "rgba(234,240,255,.7)";
+        lbl.textContent = empty ? "" : palette.label;
+
+        row.append(topRow, lbl);
+        rows.appendChild(row);
+      });
+    }
+
+    renderSuggestedPalettes(); // render blank rows immediately
+    document.getElementById("next3_bottom")?.addEventListener("click", () => renderSuggestedPalettes());
+    document.getElementById("back4")?.addEventListener("click", () => setStep(3));
+    document.getElementById("next4")?.addEventListener("click", () => { setStep(5); updateSubmitReadiness(); });
 
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
@@ -1074,12 +1695,39 @@ function getPage3(){
       if (el) el.value = msg.color;
     });
 
-    // Page 3
-    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
+    // Page 5 (Job / Submit)
+    document.getElementById("back5_top")?.addEventListener("click", () => setStep(4));
+    document.getElementById("back5")?.addEventListener("click",     () => setStep(4));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
-      window.open("src/editor.html", "_blank");
+      window.open("editor.html", "_blank");
     });
     async function doSubmit(){
+      if (!document.querySelector('input[name="templateSource"]:checked')) {
+        let msg = document.getElementById("_msg_templateSource");
+        if (!msg) {
+          msg = document.createElement("div");
+          msg.id = "_msg_templateSource";
+          msg.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
+          const anchor = document.querySelector('[name="templateSource"]')?.closest(".grid");
+          if (anchor) anchor.after(msg);
+        }
+        if (msg) { msg.textContent = "Please select a template option."; msg.style.color = "rgba(251,171,156,.9)"; }
+        return;
+      }
+      const copyrightWrap = document.getElementById("templateCopyrightWrap");
+      if (copyrightWrap?.style.display !== "none") {
+        if (!document.querySelector('input[name="templateCopyrightMode"]:checked')) {
+          let msg = document.getElementById("_msg_templateCopyright");
+          if (!msg) {
+            msg = document.createElement("div");
+            msg.id = "_msg_templateCopyright";
+            msg.style.cssText = "font-size:11.5px; margin-top:4px; color:rgba(251,171,156,.9);";
+            copyrightWrap.appendChild(msg);
+          }
+          msg.textContent = "Please indicate how the template may be used.";
+          return;
+        }
+      }
       const btn = document.getElementById("submit_bottom");
       btn.disabled = true;
       try{
@@ -1091,6 +1739,7 @@ function getPage3(){
         btn.disabled = false;
       }
     }
+    document.getElementById("submit_top")?.addEventListener("click",    doSubmit);
     document.getElementById("submit_bottom")?.addEventListener("click", doSubmit);
 
     // ----------------------------

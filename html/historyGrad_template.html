@@ -1,945 +1,928 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8"/>
-        <title>[Name] – [Title] Portfolio</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1"/>
-        <link href="css/theme.css" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-        <style>
-            :root {
-                --color-primary: #f3e5d8;
-                --color-secondary: #f7eee4;
-                --color-accent: #e3c0af;
-                --color-dark: #171515;
-                --color-light: #fefefe;
-                --text-muted: #9b8579;
-                --text-main: #2a211c;
-                --max-width: 1120px;
-                --radius-lg: 32px;
-            }
-
-            * {
-                box-sizing: border-box;
-                margin: 0;
-                padding: 0;
-            }
-
-            body {
-                background: var(--color-primary);
-                font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-                color: var(--text-main);
-                line-height: 1.6;
-                -webkit-font-smoothing: antialiased;
-                position: relative;
-            }
-
-            body::before {
-                content: "";
-                position: fixed;
-                inset: 0;
-                background-image:
-                    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 255, 255, 0.03) 10px, rgba(255, 255, 255, 0.03) 20px),
-                    repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(107, 78, 61, 0.02) 10px, rgba(107, 78, 61, 0.02) 20px);
-                pointer-events: none;
-                z-index: 0;
-            }
-
-            a {
-                color: inherit;
-                text-decoration: none;
-            }
-
-            .page-wrapper {
-                min-height: 100vh;
-                display: flex;
-                flex-direction: column;
-                position: relative;
-                z-index: 1;
-            }
-
-            header {
-                padding: 24px 32px 0;
-            }
-
-            .nav {
-                max-width: var(--max-width);
-                margin: 0 auto;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-            }
-
-            .brand {
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                font-weight: 600;
-                font-size: 18px;
-            }
-
-            .brand-mark {
-                width: 24px;
-                height: 24px;
-                border-radius: 999px;
-                background: radial-gradient(circle at 25% 25%, var(--color-dark) 35%, transparent 36%),
-                    radial-gradient(circle at 75% 25%, var(--color-dark) 35%, transparent 36%),
-                    radial-gradient(circle at 25% 75%, var(--color-dark) 35%, transparent 36%),
-                    radial-gradient(circle at 75% 75%, var(--color-dark) 35%, transparent 36%);
-            }
-
-            nav ul {
-                display: flex;
-                align-items: center;
-                gap: 32px;
-                list-style: none;
-                font-size: 14px;
-            }
-
-            nav a {
-                opacity: 0.85;
-            }
-
-            nav a:hover {
-                opacity: 1;
-            }
-
-            .nav-cta {
-                padding: 8px 20px;
-                border-radius: 999px;
-                background: var(--color-dark);
-                color: var(--color-light);
-                font-size: 14px;
-                border: none;
-                cursor: pointer;
-            }
-
-            .nav-cta:hover {
-                opacity: 0.9;
-            }
-
-            .hero {
-                max-width: var(--max-width);
-                margin: 40px auto 80px;
-                padding: 40px 32px 0;
-                display: grid;
-                grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
-                gap: 48px;
-                align-items: center;
-            }
-
-            .hero-media {
-                position: relative;
-                background: var(--color-secondary);
-                border-radius: 32px;
-                padding: 20px 24px 12px;
-                max-width: 440px;
-                margin-inline: auto;
-                overflow: visible;
-            }
-
-            .hero-media-inner {
-                position: relative;
-                height: 100%;
-                min-height: 320px;
-                display: flex;
-                align-items: flex-end;
-                justify-content: center;
-            }
-
-            .hero-circle {
-                position: absolute;
-                width: 320px;
-                height: 320px;
-                border-radius: 50%;
-                background: var(--color-accent);
-                left: -8%;
-                top: 12%;
-                opacity: 0.85;
-            }
-
-            .hero-figure {
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: flex-end;
-            }
-
-            .hero-photo-card {
-                position: relative;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-
-            .hero-photo-card img {
-                width: 170px;
-                height: 220px;
-                border-radius: 15px;
-                object-fit: cover;
-                margin-bottom: 16px;
-                position: relative;
-                z-index: 2;
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            }
-
-            .hero-figure {
-                position: relative;
-                width: 160px;
-                height: 210px;
-                border-radius: 18px;
-                background: linear-gradient(160deg, #2a3c55 10%, #0d1a27 90%);
-                overflow: hidden;
-                display: flex;
-                align-items: flex-end;
-                justify-content: center;
-                padding: 14px;
-                color: #f6f6f6;
-            }
-
-            .hero-figure::before {
-                content: "";
-                position: absolute;
-                inset: 0;
-                background: radial-gradient(circle at 20% 10%, rgba(255, 255, 255, 0.35), transparent 60%),
-                    radial-gradient(circle at 80% 90%, rgba(255, 255, 255, 0.1), transparent 55%);
-                mix-blend-mode: screen;
-            }
-
-            .hero-figure-content {
-                position: relative;
-                text-align: center;
-                z-index: 2;
-            }
-
-            .hero-figure-name {
-                font-weight: 600;
-                margin-bottom: 6px;
-                letter-spacing: 0.02em;
-            }
-
-            .hero-figure-tag {
-                font-size: 12px;
-                opacity: 0.9;
-            }
-
-            .hero-figure-line {
-                margin-top: 16px;
-                height: 1px;
-                width: 60%;
-                background: rgba(255, 255, 255, 0.3);
-            }
-
-            .hero-shapes {
-                position: absolute;
-                right: -60px;
-                bottom: -22px;
-                display: flex;
-                align-items: flex-end;
-                gap: 12px;
-            }
-
-            .hero-balls {
-                position: absolute;
-                bottom: -32px;
-                left: 6%;
-                right: 10%;
-                display: flex;
-                justify-content: space-between;
-                pointer-events: none;
-            }
-
-            .hero-ball {
-                display: block;
-                border-radius: 50%;
-                opacity: 0.75;
-                box-shadow: 0 10px 25px rgba(23, 21, 21, 0.12);
-            }
-
-            .hero-bubbles {
-                position: absolute;
-                inset: -72px;
-                pointer-events: none;
-                z-index: 1;
-            }
-
-            .hero-bubble {
-                position: absolute;
-                border-radius: 50%;
-                box-shadow: 0 10px 30px rgba(23, 21, 21, 0.14);
-            }
-
-            .bubble-g1 {
-                width: 54px;
-                height: 54px;
-                background: radial-gradient(circle at 30% 30%, #ffe9da 0%, var(--color-accent) 70%);
-                top: -6px;
-                left: 22%;
-            }
-
-            .bubble-g2 {
-                width: 42px;
-                height: 42px;
-                background: radial-gradient(circle at 40% 25%, #fbe8de 0%, #d2a48f 75%);
-                top: -18px;
-                right: 26%;
-            }
-
-            .bubble-g3 {
-                width: 38px;
-                height: 38px;
-                background: radial-gradient(circle at 50% 45%, #fff2e7 0%, #cfa087 80%);
-                bottom: 2px;
-                left: 12%;
-            }
-
-            .bubble-s1 {
-                width: 24px;
-                height: 24px;
-                background: #e6c6b6;
-                top: 32%;
-                left: -10px;
-                opacity: 0.8;
-            }
-
-            .bubble-s2 {
-                width: 30px;
-                height: 30px;
-                background: #d9b39f;
-                bottom: -8px;
-                right: 12%;
-                opacity: 0.72;
-            }
-
-            .bubble-s4 {
-                width: 26px;
-                height: 26px;
-                background: #cfa087;
-                bottom: 8%;
-                left: 46%;
-                opacity: 0.7;
-            }
-
-            .ball-1 {
-                width: 58px;
-                height: 58px;
-                background: radial-gradient(circle at 35% 35%, #ffe7d8 0%, var(--color-accent) 70%);
-                transform: translateY(12px);
-            }
-
-            .ball-2 {
-                width: 42px;
-                height: 42px;
-                background: radial-gradient(circle at 40% 30%, #f4ded1 0%, #d9b39f 70%);
-                transform: translateY(4px);
-            }
-
-            .ball-3 {
-                width: 30px;
-                height: 30px;
-                background: radial-gradient(circle at 45% 40%, #fbe8de 0%, #cfa087 75%);
-                transform: translateY(-2px);
-            }
-
-            .ball-4 {
-                width: 52px;
-                height: 52px;
-                background: radial-gradient(circle at 40% 45%, #f9e5d9 0%, #d2a48f 70%);
-                transform: translateY(-4px);
-            }
-
-            .ball-5 {
-                width: 22px;
-                height: 22px;
-                background: radial-gradient(circle at 50% 50%, #fff1e8 0%, #c38c70 75%);
-                transform: translateY(10px);
-            }
-
-            .shape-rect {
-                width: 80px;
-                height: 70px;
-                border-radius: 999px;
-                background: var(--color-accent);
-            }
-
-            .shape-rect-tall {
-                height: 110px;
-            }
-
-            .shape-circle {
-                width: 42px;
-                height: 42px;
-                border-radius: 50%;
-                background: #d2a48f;
-                transform: translateY(-18px);
-            }
-
-            .shape-block {
-                width: 50px;
-                height: 32px;
-                border-radius: 16px;
-                background: #d9b39f;
-                transform: translateY(8px);
-            }
-
-            .hero-copy {
-                padding-top: 32px;
-                max-width: 460px;
-                justify-self: flex-start;
-            }
-
-            .kicker {
-                font-size: 13px;
-                text-transform: uppercase;
-                letter-spacing: 0.16em;
-                color: var(--text-muted);
-                margin-bottom: 10px;
-            }
-
-            h1 {
-                font-family: "Playfair Display", "Times New Roman", serif;
-                font-size: 46px;
-                line-height: 1.1;
-                margin-bottom: 18px;
-            }
-
-            .hero-text {
-                font-size: 15px;
-                color: #7e6658;
-                margin-bottom: 26px;
-                max-width: 34rem;
-            }
-
-            .hero-actions {
-                display: flex;
-                align-items: center;
-                gap: 16px;
-            }
-
-            .btn-primary {
-                background: var(--color-dark);
-                color: var(--color-light);
-                border-radius: 999px;
-                padding: 12px 28px;
-                border: none;
-                font-size: 14px;
-                font-weight: 500;
-                cursor: pointer;
-            }
-
-            .btn-primary:hover {
-                opacity: 0.9;
-            }
-
-            .btn-ghost {
-                background: transparent;
-                border: 1px solid rgba(0, 0, 0, 0.22);
-                border-radius: 999px;
-                padding: 10px 20px;
-                font-size: 13px;
-                cursor: pointer;
-                color: #4a372d;
-            }
-
-            .btn-ghost:hover {
-                background: rgba(255, 255, 255, 0.5);
-            }
-
-            main {
-                flex: 1;
-            }
-
-            section {
-                max-width: var(--max-width);
-                margin: 0 auto;
-                padding: 56px 32px 72px;
-            }
-
-            .section-header {
-                max-width: 620px;
-                margin-bottom: 28px;
-            }
-
-            .section-title {
-                font-family: "Playfair Display", serif;
-                font-size: 28px;
-                margin-bottom: 8px;
-            }
-
-            .section-subtitle {
-                font-size: 14px;
-                color: #7e6658;
-            }
-
-            .two-col {
-                display: grid;
-                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-                gap: 40px;
-            }
-
-            .card {
-                background: rgba(255, 255, 255, 0.5);
-                border-radius: var(--radius-lg);
-                padding: 24px 26px;
-                border: 1px solid rgba(255, 255, 255, 0.65);
-                box-shadow: 0 14px 45px rgba(55, 36, 24, 0.08);
-            }
-
-            .meta-label {
-                text-transform: uppercase;
-                letter-spacing: 0.18em;
-                font-size: 11px;
-                color: var(--text-muted);
-                margin-bottom: 12px;
-            }
-
-            .list {
-                list-style: none;
-                display: grid;
-                gap: 18px;
-                font-size: 14px;
-                color: #574237;
-            }
-
-            .list-item-title {
-                font-weight: 600;
-            }
-
-            .list-item-meta {
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.12em;
-                color: var(--text-muted);
-                margin-top: 4px;
-            }
-
-            .skills-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 10px;
-                font-size: 13px;
-            }
-
-            .skill-pill {
-                padding: 8px 12px;
-                border-radius: 999px;
-                background: rgba(255, 255, 255, 0.7);
-                border: 1px solid rgba(0, 0, 0, 0.04);
-                text-align: center;
-            }
-
-            .contact-layout {
-                display: grid;
-                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
-                gap: 36px;
-            }
-
-            .contact-card {
-                border-radius: var(--radius-lg);
-                padding: 26px 26px 24px;
-                background: var(--color-dark);
-                color: #f4ece5;
-            }
-
-            .contact-card h3 {
-                font-family: "Playfair Display", serif;
-                font-size: 24px;
-                margin-bottom: 10px;
-            }
-
-            .contact-card p {
-                font-size: 14px;
-                color: #d3c3b6;
-                margin-bottom: 20px;
-            }
-
-            .contact-meta {
-                font-size: 14px;
-                display: grid;
-                gap: 6px;
-            }
-
-            .contact-meta span {
-                opacity: 0.9;
-            }
-
-            .contact-meta a {
-                color: #f4ece5;
-                text-decoration: underline;
-                text-decoration-thickness: 1px;
-            }
-
-            .contact-form {
-                display: grid;
-                gap: 16px;
-                font-size: 14px;
-            }
-
-            .field label {
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.14em;
-                color: var(--text-muted);
-                margin-bottom: 4px;
-                display: block;
-            }
-
-            .field input,
-            .field textarea {
-                width: 100%;
-                border-radius: 999px;
-                border: 1px solid rgba(0, 0, 0, 0.08);
-                background: rgba(255, 255, 255, 0.7);
-                padding: 10px 14px;
-                font-family: inherit;
-                font-size: 14px;
-                outline: none;
-            }
-
-            .field textarea {
-                border-radius: 18px;
-                min-height: 96px;
-                resize: vertical;
-                padding: 12px 14px;
-            }
-
-            .field input:focus,
-            .field textarea:focus {
-                border-color: rgba(0, 0, 0, 0.4);
-                background: rgba(255, 255, 255, 0.95);
-            }
-
-            footer {
-                padding: 24px 32px 40px;
-                font-size: 12px;
-                color: var(--text-muted);
-            }
-
-            .footer-inner {
-                max-width: var(--max-width);
-                margin: 0 auto;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 20px;
-                flex-wrap: wrap;
-            }
-
-            .footer-links {
-                display: flex;
-                gap: 14px;
-            }
-
-            @media (max-width: 960px) {
-                .hero {
-                    grid-template-columns: minmax(0, 1fr);
-                    margin-top: 20px;
-                }
-
-                .hero-copy {
-                    order: -1;
-                    padding-top: 10px;
-                }
-
-                .hero-media-inner {
-                    min-height: 300px;
-                }
-
-                .two-col,
-                .contact-layout {
-                    grid-template-columns: minmax(0, 1fr);
-                }
-
-                header {
-                    padding-inline: 20px;
-                }
-
-                section {
-                    padding-inline: 20px;
-                }
-            }
-
-            @media (max-width: 700px) {
-                nav ul {
-                    gap: 18px;
-                    font-size: 13px;
-                }
-
-                .hero {
-                    padding-inline: 20px;
-                }
-
-                h1 {
-                    font-size: 36px;
-                }
-            }
-
-            @media (max-width: 520px) {
-                nav ul li:not(:last-child) {
-                    display: none;
-                }
-
-                .hero-media {
-                    padding-inline: 20px;
-                }
-
-                .hero-figure {
-                    width: 220px;
-                    height: 300px;
-                }
-
-                .hero-photo-card {
-                    height: 150px;
-                    width: auto;
-                    object-fit: contain;
-                }
-            }
-        </style>
-    </head>
-    <body>
-        <div class="page-wrapper">
-            <header id="top">
-                <div class="nav">
-                    <div class="brand">
-                        <div class="brand-mark" aria-hidden="true"></div><span>[Brand Name]</span>
-                    </div>
-                    <nav aria-label="Primary">
-                        <ul>
-                            <li><a href="#about">[Nav Link 1]</a></li>
-                            <li><a href="#experience">[Nav Link 2]</a></li>
-                            <li><a href="#projects">[Nav Link 3]</a></li>
-                            <li><a href="#contact">[Nav Link 4]</a></li>
-                            <li><a href="#contact"><button class="nav-cta">[CTA Label]</button></a></li>
-                        </ul>
-                    </nav>
-                </div>
-            </header>
-            <main>
-                <section class="hero" aria-labelledby="hero-heading">
-                    <div class="hero-media" aria-hidden="true">
-                        <div class="hero-media-inner">
-                            <div class="hero-photo-card">
-                                <div class="hero-bubbles" aria-hidden="true">
-                                    <span class="hero-bubble bubble-g1"></span>
-                                    <span class="hero-bubble bubble-g2"></span>
-                                    <span class="hero-bubble bubble-g3"></span>
-                                    <span class="hero-bubble bubble-s1"></span>
-                                    <span class="hero-bubble bubble-s2"></span>
-                                    <span class="hero-bubble bubble-s4"></span>
-                                </div>
-                                <!-- *** 1 -->
-                                <img src="" alt="[Profile photo alt text]">
-                                <div class="hero-figure-content">
-                                    <div class="hero-figure-name">[Full Name]</div>
-                                    <div class="hero-figure-tag">[Field] &bull; [Class Year or Title]</div>
-                                    <div class="hero-figure-line"></div>
-                                </div>
-                            </div>
-                            <div class="hero-shapes">
-                                <div class="shape-rect shape-rect-tall"></div>
-                                <div class="shape-circle"></div>
-                                <div class="shape-rect"></div>
-                                <div class="shape-block"></div>
-                            </div>
-                            <div class="hero-balls" aria-hidden="true">
-                                <span class="hero-ball ball-1"></span>
-                                <span class="hero-ball ball-2"></span>
-                                <span class="hero-ball ball-3"></span>
-                                <span class="hero-ball ball-4"></span>
-                                <span class="hero-ball ball-5"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="hero-copy">
-                        <p class="kicker">[Kicker / Portfolio Label]</p>
-                        <h1 id="hero-heading">[Hero Headline<br>Line Two]</h1>
-                        <p class="hero-text">[Hero description paragraph introducing who you are, what you do, and what kinds of roles you are seeking.]</p>
-                        <div class="hero-actions">
-                            <a href="#contact"><button class="btn-primary">[Primary CTA]</button></a>
-                            <a href="#projects"><button class="btn-ghost">[Secondary CTA]</button></a>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="about">
-                    <div class="section-header">
-                        <h2 class="section-title">[About Section Title]</h2>
-                        <p class="section-subtitle">[About section subtitle tagline.]</p>
-                    </div>
-                    <div class="two-col">
-                        <div>
-                            <p>[About paragraph one. Introduce yourself, your area of study or expertise, and the transferable skills you bring.]</p>
-                            <br>
-                            <p>[About paragraph two. Describe how you work, what you care about, and the types of roles or environments that interest you.]</p>
-                        </div>
-                        <div class="card">
-                            <p class="meta-label">[Snapshot Label]</p>
-                            <ul class="list">
-                                <li>
-                                    <div class="list-item-title">[Degree or Credential]</div>
-                                    <div class="list-item-meta">[Expected graduation or completion date]</div>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Focus Areas Label]</div>
-                                    <div class="list-item-meta">[Focus area 1], [Focus area 2], [Focus area 3]</div>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Location Label]</div>
-                                    <div class="list-item-meta">[City, State] &bull; [Availability note]</div>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="experience">
-                    <div class="section-header">
-                        <h2 class="section-title">[Experience Section Title]</h2>
-                        <p class="section-subtitle">[Experience section subtitle describing the range of experience shown.]</p>
-                    </div>
-                    <div class="two-col">
-                        <div class="card">
-                            <p class="meta-label">[Experience Group 1 Label]</p>
-                            <ul class="list">
-                                <li>
-                                    <div class="list-item-title">[Role Title, Organization]</div>
-                                    <div class="list-item-meta">[Date range]</div>
-                                    <p>[Brief description of responsibilities and achievements in this role.]</p>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Role Title, Organization]</div>
-                                    <div class="list-item-meta">[Date range]</div>
-                                    <p>[Brief description of responsibilities and achievements in this role.]</p>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Role Title, Organization]</div>
-                                    <div class="list-item-meta">[Date range]</div>
-                                    <p>[Brief description of responsibilities and achievements in this role.]</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <p class="meta-label">[Experience Group 2 Label]</p>
-                            <ul class="list">
-                                <li>
-                                    <div class="list-item-title">[Role Title, Organization]</div>
-                                    <div class="list-item-meta">[Date range]</div>
-                                    <p>[Brief description of responsibilities and achievements in this role.]</p>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Role Title, Organization]</div>
-                                    <div class="list-item-meta">[Date range]</div>
-                                    <p>[Brief description of responsibilities and achievements in this role.]</p>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="projects">
-                    <div class="section-header">
-                        <h2 class="section-title">[Projects Section Title]</h2>
-                        <p class="section-subtitle">[Projects section subtitle describing the variety of work shown.]</p>
-                    </div>
-                    <div class="two-col">
-                        <div class="card">
-                            <p class="meta-label">[Project Group 1 Label]</p>
-                            <ul class="list">
-                                <li>
-                                    <div class="list-item-title">[Project Title]</div>
-                                    <div class="list-item-meta">[Status or year]</div>
-                                    <p>[Description of the project, its purpose, methods, and intended audience.]</p>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Project Title]</div>
-                                    <div class="list-item-meta">[Status or year]</div>
-                                    <p>[Description of the project, its purpose, methods, and intended audience.]</p>
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="card">
-                            <p class="meta-label">[Project Group 2 Label]</p>
-                            <ul class="list">
-                                <li>
-                                    <div class="list-item-title">[Project Title]</div>
-                                    <div class="list-item-meta">[Tool or format] &bull; [Year]</div>
-                                    <p>[Description of the project, its purpose, methods, and intended audience.]</p>
-                                </li>
-                                <li>
-                                    <div class="list-item-title">[Project Title]</div>
-                                    <div class="list-item-meta">[Format detail] &bull; [Year]</div>
-                                    <p>[Description of the project, its purpose, methods, and intended audience.]</p>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="skills">
-                    <div class="section-header">
-                        <h2 class="section-title">[Skills Section Title]</h2>
-                        <p class="section-subtitle">[Skills section subtitle.]</p>
-                    </div>
-                    <div class="card">
-                        <div class="skills-grid">
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                            <div class="skill-pill">[Skill]</div>
-                        </div>
-                    </div>
-                </section>
-
-                <section id="contact">
-                    <div class="section-header">
-                        <h2 class="section-title">[Contact Section Title]</h2>
-                        <p class="section-subtitle">[Contact section subtitle with availability note.]</p>
-                    </div>
-                    <div class="contact-layout">
-                        <div class="contact-card">
-                            <h3>[Contact Card Heading]</h3>
-                            <p>[Contact card description explaining who should reach out and why.]</p>
-                            <div class="contact-meta">
-                                <span><strong>[Contact Method 1]</strong> &mdash; <a href="mailto:[email]">[email address]</a></span>
-                                <span><strong>[Contact Method 2]</strong> &mdash; <a href="#">[profile URL]</a></span>
-                                <span><strong>[Contact Method 3]</strong> &mdash; <a href="#">[download label]</a></span>
-                            </div>
-                        </div>
-                        <form class="contact-form" action="#" method="post">
-                            <div class="field">
-                                <label for="name">[Name Label]</label>
-                                <input id="name" name="name" type="text" placeholder="[Name placeholder]"/>
-                            </div>
-                            <div class="field">
-                                <label for="email">[Email Label]</label>
-                                <input id="email" name="email" type="email" placeholder="[Email placeholder]"/>
-                            </div>
-                            <div class="field">
-                                <label for="message">[Message Label]</label>
-                                <textarea id="message" name="message" placeholder="[Message placeholder]"></textarea>
-                            </div>
-                            <button class="btn-primary" type="submit">[Submit Button Label]</button>
-                        </form>
-                    </div>
-                </section>
-            </main>
-            <footer>
-                <div class="footer-inner">
-                    <span>&copy; [Year] [Name]. All rights reserved.</span>
-                    <div class="footer-links">
-                        <a href="#top">[Footer Link 1]</a>
-                        <a href="#projects">[Footer Link 2]</a>
-                        <a href="#contact">[Footer Link 3]</a>
-                    </div>
-                </div>
-            </footer>
+  <head>
+    <meta charset="UTF-8" />
+    <title>[Your Name] – Graduate Portfolio</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!--
+    {
+      "visual_elements": {
+        "images": [
+          {
+            "src_file_name": "headshot.jpg",
+            "selector": ".hero-photo-card img",
+            "type": "img",
+            "role": "Portrait photo displayed in a decorative card in the hero media panel"
+          }
+        ],
+        "animations": []
+      },
+      "exemplary_attributes": {
+        "pacing": "Relaxed and contemplative, with generous vertical spacing and unhurried section progression",
+        "mood": "Warm, scholarly, approachable — earthy tones evoke aged parchment and archive shelves",
+        "compositional_feel": "Split hero with decorative organic bubble and shape clusters balancing the copy side",
+        "section_density": "Medium — two-column card layouts with clear typographic hierarchy and breathing room",
+        "visual_treatment": "Soft editorial with painterly radial gradients, frosted-glass cards, and decorative CSS-only blob/ball elements"
+      },
+      "default_color_scheme": {
+        "primary": "#f3e5d8",
+        "secondary": "#e3c0af",
+        "accent": "#d2a48f",
+        "dark": "#2a211c",
+        "light": "#f7eee4"
+      },
+      "design_factors": {
+        "composition_option": "split",
+        "style_token": "soft pastel editorial",
+        "rendering_style": "clean editorial vector with decorative CSS illustration"
+      }
+    }
+    -->
+    <style>
+      :root {
+        /* ── Core palette ── */
+        --primary:   #f3e5d8;
+        --secondary: #e3c0af;
+        --accent:    #d2a48f;
+        --dark:      #2a211c;
+        --light:     #f7eee4;
+
+        /* ── Derived tokens ── */
+        --bg-main:      var(--primary);
+        --bg-card:      var(--light);
+        --accent-soft:  var(--secondary);
+        --accent-dark:  #171515;
+        --text-muted:   #9b8579;
+        --text-main:    var(--dark);
+        --button-dark:  #000000;
+        --button-light: #fefefe;
+
+        /* ── Alt (inverted) palette for alternating sections ── */
+        --alt-bg:        var(--dark);
+        --alt-bg-card:   #3d2e26;
+        --alt-text:      var(--light);
+        --alt-text-muted:#c4a896;
+        --alt-accent:    var(--secondary);
+
+        --max-width: 1120px;
+        --radius-lg: 32px;
+      }
+
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      body {
+        background: var(--bg-main);
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--text-main);
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        position: relative;
+      }
+
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background-image:
+          repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.03) 10px, rgba(255,255,255,0.03) 20px),
+          repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(107,78,61,0.02) 10px, rgba(107,78,61,0.02) 20px);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      a { color: inherit; text-decoration: none; }
+
+      .page-wrapper {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        z-index: 1;
+      }
+
+      /* ── NAV ── */
+      header { padding: 24px 32px 0; }
+
+      .nav {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 18px;
+      }
+
+      .brand-mark {
+        width: 24px;
+        height: 24px;
+        border-radius: 999px;
+        background:
+          radial-gradient(circle at 25% 25%, #000 35%, transparent 36%),
+          radial-gradient(circle at 75% 25%, #000 35%, transparent 36%),
+          radial-gradient(circle at 25% 75%, #000 35%, transparent 36%),
+          radial-gradient(circle at 75% 75%, #000 35%, transparent 36%);
+      }
+
+      nav ul {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        list-style: none;
+        font-size: 14px;
+      }
+
+      nav a { opacity: 0.85; }
+      nav a:hover { opacity: 1; }
+
+      .nav-cta {
+        padding: 8px 20px;
+        border-radius: 999px;
+        background: var(--button-dark);
+        color: #fff;
+        font-size: 14px;
+        border: none;
+        cursor: pointer;
+      }
+      .nav-cta:hover { opacity: 0.9; }
+
+      /* ── HERO ── */
+      .hero {
+        max-width: var(--max-width);
+        margin: 40px auto 80px;
+        padding: 40px 32px 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+        gap: 48px;
+        align-items: center;
+      }
+
+      .hero-media {
+        position: relative;
+        background: var(--bg-card);
+        border-radius: 32px;
+        padding: 20px 24px 12px;
+        max-width: 440px;
+        margin-inline: auto;
+        overflow: visible;
+      }
+
+      .hero-media-inner {
+        position: relative;
+        height: 100%;
+        min-height: 320px;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+      }
+
+      .hero-circle {
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: var(--accent-soft);
+        left: -8%;
+        top: 12%;
+        opacity: 0.85;
+      }
+
+      .hero-photo-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+
+      .hero-photo-card img {
+        width: 170px;
+        height: 220px;
+        border-radius: 15px;
+        object-fit: cover;
+        margin-bottom: 16px;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      }
+
+      .hero-figure-content {
+        position: relative;
+        text-align: center;
+        z-index: 2;
+      }
+
+      .hero-figure-name {
+        font-weight: 600;
+        margin-bottom: 6px;
+        letter-spacing: 0.02em;
+        font-size: 15px;
+      }
+
+      .hero-figure-tag {
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .hero-figure-line {
+        margin-top: 16px;
+        height: 1px;
+        width: 60%;
+        background: rgba(0,0,0,0.12);
+        margin-inline: auto;
+      }
+
+      /* decorative bubbles */
+      .hero-bubbles {
+        position: absolute;
+        inset: -72px;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      .hero-bubble {
+        position: absolute;
+        border-radius: 50%;
+        box-shadow: 0 10px 30px rgba(23,21,21,0.14);
+      }
+
+      .bubble-g1 {
+        width: 54px; height: 54px;
+        background: radial-gradient(circle at 30% 30%, #ffe9da 0%, #e3c0af 70%);
+        top: -6px; left: 22%;
+      }
+      .bubble-g2 {
+        width: 42px; height: 42px;
+        background: radial-gradient(circle at 40% 25%, #fbe8de 0%, #d2a48f 75%);
+        top: -18px; right: 26%;
+      }
+      .bubble-g3 {
+        width: 38px; height: 38px;
+        background: radial-gradient(circle at 50% 45%, #fff2e7 0%, #cfa087 80%);
+        bottom: 2px; left: 12%;
+      }
+      .bubble-s1 {
+        width: 24px; height: 24px;
+        background: #e6c6b6;
+        top: 32%; left: -10px; opacity: 0.8;
+      }
+      .bubble-s2 {
+        width: 30px; height: 30px;
+        background: #d9b39f;
+        bottom: -8px; right: 12%; opacity: 0.72;
+      }
+      .bubble-s4 {
+        width: 26px; height: 26px;
+        background: #cfa087;
+        bottom: 8%; left: 46%; opacity: 0.7;
+      }
+
+      /* decorative shapes */
+      .hero-shapes {
+        position: absolute;
+        right: -60px;
+        bottom: -22px;
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+      }
+
+      .shape-rect {
+        width: 80px; height: 70px;
+        border-radius: 999px;
+        background: var(--secondary);
+      }
+      .shape-rect-tall { height: 110px; }
+      .shape-circle {
+        width: 42px; height: 42px;
+        border-radius: 50%;
+        background: var(--accent);
+        transform: translateY(-18px);
+      }
+      .shape-block {
+        width: 50px; height: 32px;
+        border-radius: 16px;
+        background: #d9b39f;
+        transform: translateY(8px);
+      }
+
+      /* decorative balls */
+      .hero-balls {
+        position: absolute;
+        bottom: -32px;
+        left: 6%; right: 10%;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+      }
+
+      .hero-ball {
+        display: block;
+        border-radius: 50%;
+        opacity: 0.75;
+        box-shadow: 0 10px 25px rgba(23,21,21,0.12);
+      }
+
+      .ball-1 { width:58px;height:58px; background:radial-gradient(circle at 35% 35%,#ffe7d8 0%,#e3c0af 70%); transform:translateY(12px); }
+      .ball-2 { width:42px;height:42px; background:radial-gradient(circle at 40% 30%,#f4ded1 0%,#d9b39f 70%); transform:translateY(4px); }
+      .ball-3 { width:30px;height:30px; background:radial-gradient(circle at 45% 40%,#fbe8de 0%,#cfa087 75%); transform:translateY(-2px); }
+      .ball-4 { width:52px;height:52px; background:radial-gradient(circle at 40% 45%,#f9e5d9 0%,#d2a48f 70%); transform:translateY(-4px); }
+      .ball-5 { width:22px;height:22px; background:radial-gradient(circle at 50% 50%,#fff1e8 0%,#c38c70 75%); transform:translateY(10px); }
+
+      /* hero copy */
+      .hero-copy {
+        padding-top: 32px;
+        max-width: 460px;
+        justify-self: flex-start;
+      }
+
+      .kicker {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--text-muted);
+        margin-bottom: 10px;
+      }
+
+      h1 {
+        font-family: "Playfair Display", "Times New Roman", serif;
+        font-size: 46px;
+        line-height: 1.1;
+        margin-bottom: 18px;
+      }
+
+      .hero-text {
+        font-size: 15px;
+        color: #7e6658;
+        margin-bottom: 26px;
+        max-width: 34rem;
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .btn-primary {
+        background: var(--button-dark);
+        color: #fff;
+        border-radius: 999px;
+        padding: 12px 28px;
+        border: none;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .btn-primary:hover { opacity: 0.9; }
+
+      .btn-ghost {
+        background: transparent;
+        border: 1px solid rgba(0,0,0,0.22);
+        border-radius: 999px;
+        padding: 10px 20px;
+        font-size: 13px;
+        cursor: pointer;
+        color: #4a372d;
+      }
+      .btn-ghost:hover { background: rgba(255,255,255,0.5); }
+
+      /* ── MAIN / SECTIONS ── */
+      main { flex: 1; }
+
+      section {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 56px 32px 72px;
+      }
+
+      /* alternating section band */
+      .section-band {
+        background: var(--alt-bg);
+        color: var(--alt-text);
+        width: 100%;
+      }
+      .section-band .section-subtitle,
+      .section-band .list,
+      .section-band p { color: var(--alt-text-muted); }
+      .section-band .section-title { color: var(--alt-text); }
+      .section-band .card {
+        background: rgba(255,255,255,0.06);
+        border-color: rgba(255,255,255,0.1);
+        color: var(--alt-text);
+      }
+      .section-band .meta-label { color: var(--alt-accent); }
+      .section-band .list { color: var(--alt-text-muted); }
+      .section-band .skill-pill {
+        background: rgba(255,255,255,0.08);
+        border-color: rgba(255,255,255,0.1);
+        color: var(--alt-text);
+      }
+
+      .section-header {
+        max-width: 620px;
+        margin-bottom: 28px;
+      }
+
+      .section-title {
+        font-family: "Playfair Display", serif;
+        font-size: 28px;
+        margin-bottom: 8px;
+      }
+
+      .section-subtitle {
+        font-size: 14px;
+        color: #7e6658;
+      }
+
+      .two-col {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 40px;
+      }
+
+      .card {
+        background: rgba(255,255,255,0.5);
+        border-radius: var(--radius-lg);
+        padding: 24px 26px;
+        border: 1px solid rgba(255,255,255,0.65);
+        box-shadow: 0 14px 45px rgba(55,36,24,0.08);
+      }
+
+      .meta-label {
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-bottom: 12px;
+      }
+
+      .list {
+        list-style: none;
+        display: grid;
+        gap: 18px;
+        font-size: 14px;
+        color: #574237;
+      }
+
+      .list-item-title { font-weight: 600; }
+
+      .list-item-meta {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: var(--text-muted);
+        margin-top: 4px;
+      }
+
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 10px;
+        font-size: 13px;
+      }
+
+      .skill-pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255,255,255,0.7);
+        border: 1px solid rgba(0,0,0,0.04);
+        text-align: center;
+      }
+
+      /* ── CONTACT ── */
+      .contact-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 36px;
+      }
+
+      .contact-card {
+        border-radius: var(--radius-lg);
+        padding: 26px 26px 24px;
+        background: #000;
+        color: #f4ece5;
+      }
+
+      .contact-card h3 {
+        font-family: "Playfair Display", serif;
+        font-size: 24px;
+        margin-bottom: 10px;
+      }
+
+      .contact-card p {
+        font-size: 14px;
+        color: #d3c3b6;
+        margin-bottom: 20px;
+      }
+
+      .contact-meta {
+        font-size: 14px;
+        display: grid;
+        gap: 6px;
+      }
+
+      .contact-meta span { opacity: 0.9; }
+
+      .contact-meta a {
+        color: #f4ece5;
+        text-decoration: underline;
+        text-decoration-thickness: 1px;
+      }
+
+      .contact-form {
+        display: grid;
+        gap: 16px;
+        font-size: 14px;
+      }
+
+      .field label {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+        display: block;
+      }
+
+      .field input,
+      .field textarea {
+        width: 100%;
+        border-radius: 999px;
+        border: 1px solid rgba(0,0,0,0.08);
+        background: rgba(255,255,255,0.7);
+        padding: 10px 14px;
+        font-family: inherit;
+        font-size: 14px;
+        outline: none;
+      }
+
+      .field textarea {
+        border-radius: 18px;
+        min-height: 96px;
+        resize: vertical;
+        padding: 12px 14px;
+      }
+
+      .field input:focus,
+      .field textarea:focus {
+        border-color: rgba(0,0,0,0.4);
+        background: rgba(255,255,255,0.95);
+      }
+
+      /* ── FOOTER ── */
+      footer {
+        padding: 24px 32px 40px;
+        font-size: 12px;
+        color: var(--text-muted);
+      }
+
+      .footer-inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+
+      .footer-links { display: flex; gap: 14px; }
+
+      /* ── RESPONSIVE ── */
+      @media (max-width: 960px) {
+        .hero {
+          grid-template-columns: minmax(0,1fr);
+          margin-top: 20px;
+        }
+        .hero-copy { order: -1; padding-top: 10px; }
+        .hero-media-inner { min-height: 300px; }
+        .two-col,
+        .contact-layout { grid-template-columns: minmax(0,1fr); }
+        header { padding-inline: 20px; }
+        section { padding-inline: 20px; }
+      }
+
+      @media (max-width: 700px) {
+        nav ul { gap: 18px; font-size: 13px; }
+        .hero { padding-inline: 20px; }
+        h1 { font-size: 36px; }
+      }
+
+      @media (max-width: 520px) {
+        nav ul li:not(:last-child) { display: none; }
+        .hero-media { padding-inline: 20px; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-wrapper">
+
+      <!-- NAV -->
+      <header id="top">
+        <div class="nav">
+          <div class="brand">
+            <div class="brand-mark" aria-hidden="true"></div>
+            <span>[Brand Name]</span>
+          </div>
+          <nav aria-label="Primary">
+            <ul>
+              <li><a href="#about">[Nav Link 1]</a></li>
+              <li><a href="#experience">[Nav Link 2]</a></li>
+              <li><a href="#projects">[Nav Link 3]</a></li>
+              <li><a href="#contact">[Nav Link 4]</a></li>
+              <li>
+                <a href="#contact">
+                  <button class="nav-cta">[CTA Label]</button>
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
-    </body>
+      </header>
+
+      <main>
+
+        <!-- ── HERO (split) ── -->
+        <section class="hero" aria-labelledby="hero-heading">
+
+          <!-- LEFT: decorative media panel -->
+          <div class="hero-media" aria-hidden="true">
+            <div class="hero-media-inner">
+              <div class="hero-photo-card">
+                <div class="hero-bubbles">
+                  <span class="hero-bubble bubble-g1"></span>
+                  <span class="hero-bubble bubble-g2"></span>
+                  <span class="hero-bubble bubble-g3"></span>
+                  <span class="hero-bubble bubble-s1"></span>
+                  <span class="hero-bubble bubble-s2"></span>
+                  <span class="hero-bubble bubble-s4"></span>
+                </div>
+                <img src="headshot.jpg" alt="[Your Name] headshot" />
+                <div class="hero-figure-content">
+                  <div class="hero-figure-name">[Full Name]</div>
+                  <div class="hero-figure-tag">[Degree] • [Graduation Year]</div>
+                  <div class="hero-figure-line"></div>
+                </div>
+              </div>
+              <div class="hero-shapes">
+                <div class="shape-rect shape-rect-tall"></div>
+                <div class="shape-circle"></div>
+                <div class="shape-rect"></div>
+                <div class="shape-block"></div>
+              </div>
+              <div class="hero-balls" aria-hidden="true">
+                <span class="hero-ball ball-1"></span>
+                <span class="hero-ball ball-2"></span>
+                <span class="hero-ball ball-3"></span>
+                <span class="hero-ball ball-4"></span>
+                <span class="hero-ball ball-5"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RIGHT: copy -->
+          <div class="hero-copy">
+            <p class="kicker">[Kicker / Role Label]</p>
+            <h1 id="hero-heading">[Hero Headline,<br>Two Lines]</h1>
+            <p class="hero-text">
+              [A short paragraph introducing who you are, what you do, and what kinds
+              of roles or opportunities you are seeking. Keep it warm, direct, and
+              specific to your field.]
+            </p>
+            <div class="hero-actions">
+              <a href="#contact">
+                <button class="btn-primary">[Primary CTA]</button>
+              </a>
+              <a href="#projects">
+                <button class="btn-ghost">[Secondary CTA]</button>
+              </a>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- ── ABOUT (default palette) ── -->
+        <section id="about">
+          <div class="section-header">
+            <h2 class="section-title">[About Section Title]</h2>
+            <p class="section-subtitle">[One-line description of your character or approach]</p>
+          </div>
+          <div class="two-col">
+            <div>
+              <p>
+                [Opening paragraph. Introduce yourself by name, your field of study or
+                specialization, and the core skills your academic work has developed.
+                Mention how those skills transfer to professional roles.]
+              </p>
+              <br />
+              <p>
+                [Second paragraph. Describe the kinds of work or projects you are most
+                drawn to, any cross-disciplinary interests, and the types of
+                organizations or roles where you hope to apply your expertise.]
+              </p>
+            </div>
+            <div class="card">
+              <p class="meta-label">[Snapshot Label]</p>
+              <ul class="list">
+                <li>
+                  <div class="list-item-title">[Degree Name]</div>
+                  <div class="list-item-meta">[Expected graduation timeline]</div>
+                </li>
+                <li>
+                  <div class="list-item-title">[Focus Areas Label]</div>
+                  <div class="list-item-meta">[Area 1], [Area 2], [Area 3]</div>
+                </li>
+                <li>
+                  <div class="list-item-title">[Location Label]</div>
+                  <div class="list-item-meta">[City, State] • [Relocation preference]</div>
+                </li>
+                <li>
+                  <div class="list-item-title">[Additional Snapshot Item]</div>
+                  <div class="list-item-meta">[Detail]</div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── EXPERIENCE (alt / dark palette) ── -->
+        <div class="section-band">
+          <section id="experience">
+            <div class="section-header">
+              <h2 class="section-title">[Experience Section Title]</h2>
+              <p class="section-subtitle">[Brief description of the types of experience covered]</p>
+            </div>
+            <div class="two-col">
+              <div class="card">
+                <p class="meta-label">[Experience Category 1]</p>
+                <ul class="list">
+                  <li>
+                    <div class="list-item-title">[Role Title, Organization Name]</div>
+                    <div class="list-item-meta">[Date Range]</div>
+                    <p>[Two-to-three sentence description of responsibilities and accomplishments.]</p>
+                  </li>
+                  <li>
+                    <div class="list-item-title">[Role Title, Organization Name]</div>
+                    <div class="list-item-meta">[Date Range]</div>
+                    <p>[Two-to-three sentence description of responsibilities and accomplishments.]</p>
+                  </li>
+                  <li>
+                    <div class="list-item-title">[Role Title, Organization Name]</div>
+                    <div class="list-item-meta">[Date Range]</div>
+                    <p>[Two-to-three sentence description of responsibilities and accomplishments.]</p>
+                  </li>
+                </ul>
+              </div>
+              <div class="card">
+                <p class="meta-label">[Experience Category 2]</p>
+                <ul class="list">
+                  <li>
+                    <div class="list-item-title">[Role Title, Organization Name]</div>
+                    <div class="list-item-meta">[Date Range]</div>
+                    <p>[Two-to-three sentence description of responsibilities and accomplishments.]</p>
+                  </li>
+                  <li>
+                    <div class="list-item-title">[Role Title, Organization Name]</div>
+                    <div class="list-item-meta">[Date Range]</div>
+                    <p>[Two-to-three sentence description of responsibilities and accomplishments.]</p>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── PROJECTS (default palette) ── -->
+        <section id="projects">
+          <div class="section-header">
+            <h2 class="section-title">[Projects Section Title]</h2>
+            <p class="section-subtitle">[Brief description of what the projects demonstrate]</p>
+          </div>
+          <div class="two-col">
+            <div class="card">
+              <p class="meta-label">[Project Category 1]</p>
+              <ul class="list">
+                <li>
+                  <div class="list-item-title">[Project Name]</div>
+                  <div class="list-item-meta">[Status or Year]</div>
+                  <p>[Two-to-three sentence description of the project, methodology, and significance.]</p>
+                </li>
+                <li>
+                  <div class="list-item-title">[Project Name]</div>
+                  <div class="list-item-meta">[Status or Year]</div>
+                  <p>[Two-to-three sentence description of the project, methodology, and significance.]</p>
+                </li>
+              </ul>
+            </div>
+            <div class="card">
+              <p class="meta-label">[Project Category 2]</p>
+              <ul class="list">
+                <li>
+                  <div class="list-item-title">[Project Name]</div>
+                  <div class="list-item-meta">[Platform / Year]</div>
+                  <p>[Two-to-three sentence description of the project, tools used, and audience.]</p>
+                </li>
+                <li>
+                  <div class="list-item-title">[Project Name]</div>
+                  <div class="list-item-meta">[Format / Year]</div>
+                  <p>[Two-to-three sentence description of the project, tools used, and audience.]</p>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── SKILLS (alt / dark palette) ── -->
+        <div class="section-band">
+          <section id="skills">
+            <div class="section-header">
+              <h2 class="section-title">[Skills Section Title]</h2>
+              <p class="section-subtitle">[One-line framing of your skill set]</p>
+            </div>
+            <div class="card">
+              <div class="skills-grid">
+                <div class="skill-pill">[Skill or Tool 1]</div>
+                <div class="skill-pill">[Skill or Tool 2]</div>
+                <div class="skill-pill">[Skill or Tool 3]</div>
+                <div class="skill-pill">[Skill or Tool 4]</div>
+                <div class="skill-pill">[Skill or Tool 5]</div>
+                <div class="skill-pill">[Skill or Tool 6]</div>
+                <div class="skill-pill">[Skill or Tool 7]</div>
+                <div class="skill-pill">[Skill or Tool 8]</div>
+                <div class="skill-pill">[Skill or Tool 9]</div>
+                <div class="skill-pill">[Skill or Tool 10]</div>
+                <div class="skill-pill">[Skill or Tool 11]</div>
+                <div class="skill-pill">[Skill or Tool 12]</div>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- ── CONTACT (default palette) ── -->
+        <section id="contact">
+          <div class="section-header">
+            <h2 class="section-title">[Contact Section Title]</h2>
+            <p class="section-subtitle">[Availability statement or call-to-action framing]</p>
+          </div>
+          <div class="contact-layout">
+            <div class="contact-card">
+              <h3>[Contact Card Headline]</h3>
+              <p>
+                [Two-to-three sentences explaining what you bring to an organization,
+                what kinds of roles interest you, and a warm invitation to reach out.]
+              </p>
+              <div class="contact-meta">
+                <span><strong>[Label 1]</strong> &mdash; <a href="mailto:you@example.com">[email address]</a></span>
+                <span><strong>[Label 2]</strong> &mdash; <a href="#">[LinkedIn or portfolio URL]</a></span>
+                <span><strong>[Label 3]</strong> &mdash; <a href="#">[Resume download link label]</a></span>
+              </div>
+            </div>
+            <form class="contact-form" action="#" method="post">
+              <div class="field">
+                <label for="name">[Name Field Label]</label>
+                <input id="name" name="name" type="text" placeholder="[Name placeholder]" />
+              </div>
+              <div class="field">
+                <label for="email">[Email Field Label]</label>
+                <input id="email" name="email" type="email" placeholder="[Email placeholder]" />
+              </div>
+              <div class="field">
+                <label for="org">[Organization Field Label]</label>
+                <input id="org" name="org" type="text" placeholder="[Organization placeholder]" />
+              </div>
+              <div class="field">
+                <label for="message">[Message Field Label]</label>
+                <textarea id="message" name="message" placeholder="[Message placeholder]"></textarea>
+              </div>
+              <button class="btn-primary" type="submit">[Submit Button Label]</button>
+            </form>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- FOOTER -->
+      <footer>
+        <div class="footer-inner">
+          <span>© [Year] [Your Name]. All rights reserved.</span>
+          <div class="footer-links">
+            <a href="#top">[Back to top]</a>
+            <a href="#projects">[Projects]</a>
+            <a href="#contact">[Contact]</a>
+          </div>
+        </div>
+      </footer>
+
+    </div>
+  </body>
 </html>

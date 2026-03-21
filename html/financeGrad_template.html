@@ -3,19 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[Name] – [Professional Title]</title>
+    <title>[FULL_NAME] – [PROFESSIONAL_TITLE]</title>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!--
+    {
+      "visual_elements": {
+        "images": [],
+        "animations": [
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".shape",
+            "type": "css-animation",
+            "name": "float"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-text",
+            "type": "css-animation",
+            "name": "slideInLeft"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-visual",
+            "type": "css-animation",
+            "name": "slideInRight"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-card.card-1",
+            "type": "css-animation",
+            "name": "cardFloat1"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-card.card-2",
+            "type": "css-animation",
+            "name": "cardFloat2"
+          },
+          {
+            "src_file_name": "inline-css-keyframes",
+            "selector": ".hero-card.card-3",
+            "type": "css-animation",
+            "name": "cardFloat3"
+          }
+        ]
+      },
+      "exemplary_attributes": {
+        "pacing": "measured and elegant — generous whitespace between sections, slow reveal animations",
+        "mood": "polished, confident, refined — professional warmth with editorial restraint",
+        "compositional_feel": "split — text-left / decorative-card-stack-right in hero; vertical timeline in body",
+        "section_density": "medium — 6 to 7 content sections with breathing room; stats bar punctuates flow",
+        "visual_treatment": "gradient 3D illustration feel via layered rotated cards; radial-gradient ambient shapes; progress-bar skill meters"
+      },
+      "default_color_scheme": {
+        "primary": "#9D2235",
+        "secondary": "#F5D6DC",
+        "accent": "#7A1B2B",
+        "dark": "#2A1A1F",
+        "light": "#FFF0F3"
+      },
+      "design_factors": {
+        "composition_option": "split",
+        "style_token": "soft pastel editorial",
+        "rendering_style": "gradient 3D illustration"
+      }
+    }
+    -->
+
     <style>
         :root {
-            --primary: #9D2235;
-            --primary-deep: #7A1B2B;
-            --secondary: #F5D6DC;
-            --light: #FFF0F3;
-            --accent: #F5EDE4;
-            --accent-dark: #E8DDD0;
-            --warm-white: #FFFBF7;
-            --dark: #2A1A1F;
-            --text-muted: #8B7A74;
+            /* ── Primary palette (derived from masthead) ── */
+            --primary:        #9D2235;
+            --primary-deep:   #7A1B2B;
+            --secondary:      #F5D6DC;
+            --secondary-pale: #FFF0F3;
+            --accent:         #F5EDE4;
+            --accent-dark:    #E8DDD0;
+            --dark:           #2A1A1F;
+            --dark-deeper:    #1a0f12;
+            --light:          #FFFBF7;
+            --muted:          #8B7A74;
+
+            /* ── Alternate-section palette (inverted contrast) ── */
+            --alt-bg:         var(--primary);
+            --alt-text:       #FFFBF7;
+            --alt-accent:     var(--secondary);
+            --alt-muted:      rgba(255,251,247,0.75);
         }
 
         * {
@@ -32,6 +106,9 @@
             overflow-x: hidden;
         }
 
+        /* ────────────────────────────────
+           NAV
+        ──────────────────────────────── */
         nav {
             position: fixed;
             top: 0;
@@ -98,6 +175,9 @@
             box-shadow: 0 8px 20px rgba(157, 34, 53, 0.25);
         }
 
+        /* ────────────────────────────────
+           HERO  (section A — light)
+        ──────────────────────────────── */
         .hero {
             margin-top: 80px;
             min-height: 85vh;
@@ -105,15 +185,12 @@
             align-items: center;
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg, var(--light) 0%, var(--accent) 50%, var(--secondary) 100%);
+            background: linear-gradient(135deg, var(--secondary-pale) 0%, var(--accent) 50%, var(--secondary) 100%);
         }
 
         .hero-shapes {
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            inset: 0;
             overflow: hidden;
             z-index: 1;
         }
@@ -153,10 +230,10 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            25% { transform: translate(30px, -30px) scale(1.1); }
-            50% { transform: translate(-20px, 20px) scale(0.9); }
-            75% { transform: translate(40px, 10px) scale(1.05); }
+            0%,  100% { transform: translate(0, 0) scale(1); }
+            25%        { transform: translate(30px, -30px) scale(1.1); }
+            50%        { transform: translate(-20px, 20px) scale(0.9); }
+            75%        { transform: translate(40px, 10px) scale(1.05); }
         }
 
         .hero-content {
@@ -177,7 +254,7 @@
 
         @keyframes slideInLeft {
             from { opacity: 0; transform: translateX(-50px); }
-            to { opacity: 1; transform: translateX(0); }
+            to   { opacity: 1; transform: translateX(0); }
         }
 
         .hero-label {
@@ -196,7 +273,7 @@
 
         @keyframes fadeIn {
             from { opacity: 0; }
-            to { opacity: 1; }
+            to   { opacity: 1; }
         }
 
         h1 {
@@ -211,7 +288,7 @@
 
         .hero-subtitle {
             font-size: 20px;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 32px;
             line-height: 1.7;
             animation: fadeIn 0.8s ease-out 0.6s both;
@@ -259,6 +336,7 @@
             transform: translateY(-3px);
         }
 
+        /* ── Hero card stack ── */
         .hero-visual {
             position: relative;
             height: 500px;
@@ -268,7 +346,7 @@
 
         @keyframes slideInRight {
             from { opacity: 0; transform: translateX(50px); }
-            to { opacity: 1; transform: translateX(0); }
+            to   { opacity: 1; transform: translateX(0); }
         }
 
         .card-stack {
@@ -326,17 +404,17 @@
 
         @keyframes cardFloat1 {
             from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-8deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-8deg); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-8deg); }
         }
 
         @keyframes cardFloat2 {
             from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(4deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(4deg); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0) rotate(4deg); }
         }
 
         @keyframes cardFloat3 {
             from { opacity: 0; transform: translateX(-50%) translateY(50px) rotate(-2deg); }
-            to { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-2deg); }
+            to   { opacity: 1; transform: translateX(-50%) translateY(0) rotate(-2deg); }
         }
 
         .card-icon {
@@ -351,8 +429,9 @@
             margin-bottom: 20px;
         }
 
-        .card-2 .card-icon, .card-3 .card-icon {
-            background: var(--light);
+        .card-2 .card-icon,
+        .card-3 .card-icon {
+            background: var(--secondary-pale);
         }
 
         .card-title {
@@ -362,7 +441,8 @@
             margin-bottom: 12px;
         }
 
-        .card-2 .card-title, .card-3 .card-title {
+        .card-2 .card-title,
+        .card-3 .card-title {
             color: var(--primary);
         }
 
@@ -372,13 +452,17 @@
             opacity: 0.9;
         }
 
-        .card-2 .card-desc, .card-3 .card-desc {
-            color: var(--text-muted);
+        .card-2 .card-desc,
+        .card-3 .card-desc {
+            color: var(--muted);
         }
 
+        /* ────────────────────────────────
+           STATS BAR  (section B — inverted / primary bg)
+        ──────────────────────────────── */
         .stats {
-            background: var(--primary);
-            color: white;
+            background: var(--alt-bg);
+            color: var(--alt-text);
             padding: 60px 40px;
         }
 
@@ -409,9 +493,12 @@
             letter-spacing: 1px;
         }
 
+        /* ────────────────────────────────
+           ABOUT  (section A — light)
+        ──────────────────────────────── */
         .about {
             padding: 120px 40px;
-            background: var(--warm-white);
+            background: var(--light);
         }
 
         .about-container {
@@ -430,6 +517,7 @@
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 16px;
+            display: block;
         }
 
         h2 {
@@ -444,7 +532,7 @@
         .about-text {
             font-size: 17px;
             line-height: 1.8;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 32px;
         }
 
@@ -480,10 +568,13 @@
 
         .expertise-desc {
             font-size: 14px;
-            color: var(--text-muted);
+            color: var(--muted);
             line-height: 1.6;
         }
 
+        /* ────────────────────────────────
+           EXPERIENCE  (section B — soft accent)
+        ──────────────────────────────── */
         .experience {
             padding: 120px 40px;
             background: var(--accent);
@@ -551,19 +642,22 @@
 
         .timeline-company {
             font-size: 16px;
-            color: var(--text-muted);
+            color: var(--muted);
             margin-bottom: 16px;
         }
 
         .timeline-desc {
             font-size: 15px;
             line-height: 1.7;
-            color: var(--text-muted);
+            color: var(--muted);
         }
 
+        /* ────────────────────────────────
+           SKILLS  (section A — pale secondary)
+        ──────────────────────────────── */
         .skills {
             padding: 120px 40px;
-            background: var(--light);
+            background: var(--secondary-pale);
         }
 
         .skills-container {
@@ -614,6 +708,74 @@
             transition: width 1s ease;
         }
 
+        /* ────────────────────────────────
+           CERTIFICATIONS  (section B — light)
+        ──────────────────────────────── */
+        .certifications {
+            padding: 120px 40px;
+            background: var(--light);
+        }
+
+        .certifications-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .cert-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .cert-card {
+            background: white;
+            padding: 32px;
+            border-radius: 20px;
+            border: 2px solid var(--secondary);
+            transition: all 0.3s ease;
+        }
+
+        .cert-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(157, 34, 53, 0.15);
+        }
+
+        .cert-badge {
+            width: 60px;
+            height: 60px;
+            background: var(--secondary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .cert-title {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--dark);
+            margin-bottom: 8px;
+        }
+
+        .cert-issuer {
+            font-size: 14px;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .cert-date {
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        /* ────────────────────────────────
+           CONTACT  (section — dark inverted)
+        ──────────────────────────────── */
         .contact {
             padding: 120px 40px;
             background: var(--dark);
@@ -630,6 +792,17 @@
 
         .contact h2 {
             color: white;
+        }
+
+        .contact .section-label {
+            color: var(--secondary);
+        }
+
+        .contact-intro {
+            opacity: 0.8;
+            margin-bottom: 40px;
+            font-size: 17px;
+            line-height: 1.7;
         }
 
         .contact-info {
@@ -653,6 +826,7 @@
             align-items: center;
             justify-content: center;
             font-size: 22px;
+            flex-shrink: 0;
         }
 
         .contact-details h4 {
@@ -739,70 +913,11 @@
             box-shadow: 0 10px 30px rgba(157, 34, 53, 0.4);
         }
 
-        .certifications {
-            padding: 120px 40px;
-            background: var(--warm-white);
-        }
-
-        .certifications-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .cert-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .cert-card {
-            background: white;
-            padding: 32px;
-            border-radius: 20px;
-            border: 2px solid var(--secondary);
-            transition: all 0.3s ease;
-        }
-
-        .cert-card:hover {
-            border-color: var(--primary);
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(157, 34, 53, 0.15);
-        }
-
-        .cert-badge {
-            width: 60px;
-            height: 60px;
-            background: var(--secondary);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            margin-bottom: 20px;
-        }
-
-        .cert-title {
-            font-weight: 700;
-            font-size: 18px;
-            color: var(--dark);
-            margin-bottom: 8px;
-        }
-
-        .cert-issuer {
-            font-size: 14px;
-            color: var(--primary);
-            margin-bottom: 12px;
-            font-weight: 600;
-        }
-
-        .cert-date {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
+        /* ────────────────────────────────
+           FOOTER
+        ──────────────────────────────── */
         footer {
-            background: #1a0f12;
+            background: var(--dark-deeper);
             color: white;
             padding: 40px;
             text-align: center;
@@ -830,7 +945,8 @@
             justify-content: center;
             color: white;
             text-decoration: none;
-            font-size: 20px;
+            font-size: 18px;
+            font-weight: 600;
             transition: all 0.3s ease;
         }
 
@@ -844,6 +960,9 @@
             opacity: 0.6;
         }
 
+        /* ────────────────────────────────
+           RESPONSIVE
+        ──────────────────────────────── */
         @media (max-width: 1200px) {
             .hero-content {
                 grid-template-columns: 1fr;
@@ -903,18 +1022,25 @@
     </style>
 </head>
 <body>
+
+    <!-- Navigation -->
     <nav>
         <div class="nav-container">
-            <div class="logo">[Initials]</div>
+            <div class="logo">[INITIALS]</div>
             <ul class="nav-links">
-                <li><a href="#about">[Nav Link 1]</a></li>
-                <li><a href="#experience">[Nav Link 2]</a></li>
-                <li><a href="#skills">[Nav Link 3]</a></li>
-                <li><a href="#contact"><button class="nav-cta">[CTA Label]</button></a></li>
+                <li><a href="#about">[NAV_LINK_1]</a></li>
+                <li><a href="#experience">[NAV_LINK_2]</a></li>
+                <li><a href="#skills">[NAV_LINK_3]</a></li>
+                <li>
+                    <a href="#contact">
+                        <button class="nav-cta">[CTA_LABEL]</button>
+                    </a>
+                </li>
             </ul>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-shapes">
             <div class="shape shape-1"></div>
@@ -924,252 +1050,262 @@
 
         <div class="hero-content">
             <div class="hero-text">
-                <span class="hero-label">[Hero Badge Text]</span>
-                <h1>[Full Name]</h1>
-                <p class="hero-subtitle">[Hero subtitle describing professional background and value proposition in two to three sentences.]</p>
+                <span class="hero-label">[HERO_BADGE_TEXT]</span>
+                <h1>[FULL_NAME]</h1>
+                <p class="hero-subtitle">[HERO_SUBTITLE_PARAGRAPH]</p>
                 <div class="hero-buttons">
-                    <button class="btn-primary" onclick="document.querySelector('#contact').scrollIntoView({behavior: 'smooth'})">[Primary CTA]</button>
-                    <button class="btn-secondary" onclick="document.querySelector('#experience').scrollIntoView({behavior: 'smooth'})">[Secondary CTA]</button>
+                    <button class="btn-primary" onclick="document.querySelector('#contact').scrollIntoView({behavior:'smooth'})">[PRIMARY_BTN_LABEL]</button>
+                    <button class="btn-secondary" onclick="document.querySelector('#experience').scrollIntoView({behavior:'smooth'})">[SECONDARY_BTN_LABEL]</button>
                 </div>
             </div>
 
+            <!-- Decorative card stack — 3 rotating feature cards -->
             <div class="hero-visual">
                 <div class="card-stack">
                     <div class="hero-card card-1">
                         <div>
-                            <div class="card-icon"><!-- *** 1 --></div>
-                            <h3 class="card-title">[Card Title 1]</h3>
+                            <div class="card-icon">[ICON_1]</div>
+                            <h3 class="card-title">[CARD_1_TITLE]</h3>
                         </div>
-                        <p class="card-desc">[Short description of card one specialty]</p>
+                        <p class="card-desc">[CARD_1_DESC]</p>
                     </div>
                     <div class="hero-card card-2">
                         <div>
-                            <div class="card-icon"><!-- *** 2 --></div>
-                            <h3 class="card-title">[Card Title 2]</h3>
+                            <div class="card-icon">[ICON_2]</div>
+                            <h3 class="card-title">[CARD_2_TITLE]</h3>
                         </div>
-                        <p class="card-desc">[Short description of card two specialty]</p>
+                        <p class="card-desc">[CARD_2_DESC]</p>
                     </div>
                     <div class="hero-card card-3">
                         <div>
-                            <div class="card-icon"><!-- *** 3 --></div>
-                            <h3 class="card-title">[Card Title 3]</h3>
+                            <div class="card-icon">[ICON_3]</div>
+                            <h3 class="card-title">[CARD_3_TITLE]</h3>
                         </div>
-                        <p class="card-desc">[Short description of card three specialty]</p>
+                        <p class="card-desc">[CARD_3_DESC]</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Stats Bar -->
     <section class="stats">
         <div class="stats-container">
+            <!-- Repeat stat-item as needed -->
             <div class="stat-item">
-                <span class="stat-number">[Stat 1]</span>
-                <span class="stat-label">[Stat Label 1]</span>
+                <span class="stat-number">[STAT_VALUE_1]</span>
+                <span class="stat-label">[STAT_LABEL_1]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[Stat 2]</span>
-                <span class="stat-label">[Stat Label 2]</span>
+                <span class="stat-number">[STAT_VALUE_2]</span>
+                <span class="stat-label">[STAT_LABEL_2]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[Stat 3]</span>
-                <span class="stat-label">[Stat Label 3]</span>
+                <span class="stat-number">[STAT_VALUE_3]</span>
+                <span class="stat-label">[STAT_LABEL_3]</span>
             </div>
             <div class="stat-item">
-                <span class="stat-number">[Stat 4]</span>
-                <span class="stat-label">[Stat Label 4]</span>
+                <span class="stat-number">[STAT_VALUE_4]</span>
+                <span class="stat-label">[STAT_LABEL_4]</span>
             </div>
         </div>
     </section>
 
+    <!-- About Section -->
     <section class="about" id="about">
         <div class="about-container">
             <div>
-                <span class="section-label">[About Section Label]</span>
-                <h2>[About Section Heading]</h2>
-                <p class="about-text">[First paragraph of about bio text describing background and education.]</p>
-                <p class="about-text">[Second paragraph of about bio text describing passion and approach.]</p>
+                <span class="section-label">[ABOUT_SECTION_LABEL]</span>
+                <h2>[ABOUT_HEADING]</h2>
+                <p class="about-text">[ABOUT_PARAGRAPH_1]</p>
+                <p class="about-text">[ABOUT_PARAGRAPH_2]</p>
             </div>
 
+            <!-- Expertise grid — repeat expertise-item as needed -->
             <div class="expertise-grid">
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 4 --></div>
-                    <div class="expertise-title">[Expertise Title 1]</div>
-                    <div class="expertise-desc">[Short description of expertise area one]</div>
+                    <div class="expertise-icon">[EXPERTISE_ICON_1]</div>
+                    <div class="expertise-title">[EXPERTISE_TITLE_1]</div>
+                    <div class="expertise-desc">[EXPERTISE_DESC_1]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 5 --></div>
-                    <div class="expertise-title">[Expertise Title 2]</div>
-                    <div class="expertise-desc">[Short description of expertise area two]</div>
+                    <div class="expertise-icon">[EXPERTISE_ICON_2]</div>
+                    <div class="expertise-title">[EXPERTISE_TITLE_2]</div>
+                    <div class="expertise-desc">[EXPERTISE_DESC_2]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 6 --></div>
-                    <div class="expertise-title">[Expertise Title 3]</div>
-                    <div class="expertise-desc">[Short description of expertise area three]</div>
+                    <div class="expertise-icon">[EXPERTISE_ICON_3]</div>
+                    <div class="expertise-title">[EXPERTISE_TITLE_3]</div>
+                    <div class="expertise-desc">[EXPERTISE_DESC_3]</div>
                 </div>
                 <div class="expertise-item">
-                    <div class="expertise-icon"><!-- *** 7 --></div>
-                    <div class="expertise-title">[Expertise Title 4]</div>
-                    <div class="expertise-desc">[Short description of expertise area four]</div>
+                    <div class="expertise-icon">[EXPERTISE_ICON_4]</div>
+                    <div class="expertise-title">[EXPERTISE_TITLE_4]</div>
+                    <div class="expertise-desc">[EXPERTISE_DESC_4]</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Experience / Timeline Section -->
     <section class="experience" id="experience">
         <div class="experience-container">
             <div class="section-header">
-                <span class="section-label">[Experience Section Label]</span>
-                <h2>[Experience Section Heading]</h2>
+                <span class="section-label">[EXPERIENCE_SECTION_LABEL]</span>
+                <h2>[EXPERIENCE_HEADING]</h2>
             </div>
 
+            <!-- Timeline — repeat timeline-item as needed -->
             <div class="timeline">
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[Date Range 1]</div>
-                    <h3 class="timeline-title">[Job Title 1]</h3>
-                    <div class="timeline-company">[Company Name 1], [Location 1]</div>
-                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role one.]</p>
+                    <div class="timeline-date">[ROLE_1_DATE_RANGE]</div>
+                    <h3 class="timeline-title">[ROLE_1_TITLE]</h3>
+                    <div class="timeline-company">[ROLE_1_ORGANIZATION]</div>
+                    <p class="timeline-desc">[ROLE_1_DESCRIPTION]</p>
                 </div>
-
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[Date Range 2]</div>
-                    <h3 class="timeline-title">[Job Title 2]</h3>
-                    <div class="timeline-company">[Company Name 2], [Location 2]</div>
-                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role two.]</p>
+                    <div class="timeline-date">[ROLE_2_DATE_RANGE]</div>
+                    <h3 class="timeline-title">[ROLE_2_TITLE]</h3>
+                    <div class="timeline-company">[ROLE_2_ORGANIZATION]</div>
+                    <p class="timeline-desc">[ROLE_2_DESCRIPTION]</p>
                 </div>
-
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[Date Range 3]</div>
-                    <h3 class="timeline-title">[Job Title 3]</h3>
-                    <div class="timeline-company">[Company Name 3], [Location 3]</div>
-                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role three.]</p>
+                    <div class="timeline-date">[ROLE_3_DATE_RANGE]</div>
+                    <h3 class="timeline-title">[ROLE_3_TITLE]</h3>
+                    <div class="timeline-company">[ROLE_3_ORGANIZATION]</div>
+                    <p class="timeline-desc">[ROLE_3_DESCRIPTION]</p>
                 </div>
-
                 <div class="timeline-item">
                     <div class="timeline-dot"></div>
-                    <div class="timeline-date">[Date Range 4]</div>
-                    <h3 class="timeline-title">[Job Title 4]</h3>
-                    <div class="timeline-company">[Company Name 4], [Location 4]</div>
-                    <p class="timeline-desc">[Description of responsibilities, achievements, and impact for role four.]</p>
+                    <div class="timeline-date">[ROLE_4_DATE_RANGE]</div>
+                    <h3 class="timeline-title">[ROLE_4_TITLE]</h3>
+                    <div class="timeline-company">[ROLE_4_ORGANIZATION]</div>
+                    <p class="timeline-desc">[ROLE_4_DESCRIPTION]</p>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Skills Section -->
     <section class="skills" id="skills">
         <div class="skills-container">
             <div class="section-header">
-                <span class="section-label">[Skills Section Label]</span>
-                <h2>[Skills Section Heading]</h2>
+                <span class="section-label">[SKILLS_SECTION_LABEL]</span>
+                <h2>[SKILLS_HEADING]</h2>
             </div>
 
+            <!-- Repeat skill-card as needed -->
             <div class="skills-grid">
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 1]</div>
+                    <div class="skill-name">[SKILL_NAME_1]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_1]%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 2]</div>
+                    <div class="skill-name">[SKILL_NAME_2]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_2]%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 3]</div>
+                    <div class="skill-name">[SKILL_NAME_3]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_3]%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 4]</div>
+                    <div class="skill-name">[SKILL_NAME_4]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_4]%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 5]</div>
+                    <div class="skill-name">[SKILL_NAME_5]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_5]%"></div>
                     </div>
                 </div>
                 <div class="skill-card">
-                    <div class="skill-name">[Skill Name 6]</div>
+                    <div class="skill-name">[SKILL_NAME_6]</div>
                     <div class="skill-level">
-                        <div class="skill-progress" style="width: [XX%]"></div>
+                        <div class="skill-progress" style="width: [SKILL_PCT_6]%"></div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Certifications / Credentials Section -->
     <section class="certifications">
         <div class="certifications-container">
             <div class="section-header">
-                <span class="section-label">[Certifications Section Label]</span>
-                <h2>[Certifications Section Heading]</h2>
+                <span class="section-label">[CERTS_SECTION_LABEL]</span>
+                <h2>[CERTS_HEADING]</h2>
             </div>
 
+            <!-- Repeat cert-card as needed -->
             <div class="cert-grid">
                 <div class="cert-card">
-                    <div class="cert-badge"><!-- *** 8 --></div>
-                    <div class="cert-title">[Certification Title 1]</div>
-                    <div class="cert-issuer">[Issuing Organization 1]</div>
-                    <div class="cert-date">[Date Obtained 1]</div>
+                    <div class="cert-badge">[CERT_ICON_1]</div>
+                    <div class="cert-title">[CERT_NAME_1]</div>
+                    <div class="cert-issuer">[CERT_ISSUER_1]</div>
+                    <div class="cert-date">[CERT_DATE_1]</div>
                 </div>
                 <div class="cert-card">
-                    <div class="cert-badge"><!-- *** 9 --></div>
-                    <div class="cert-title">[Certification Title 2]</div>
-                    <div class="cert-issuer">[Issuing Organization 2]</div>
-                    <div class="cert-date">[Date Obtained 2]</div>
+                    <div class="cert-badge">[CERT_ICON_2]</div>
+                    <div class="cert-title">[CERT_NAME_2]</div>
+                    <div class="cert-issuer">[CERT_ISSUER_2]</div>
+                    <div class="cert-date">[CERT_DATE_2]</div>
                 </div>
                 <div class="cert-card">
-                    <div class="cert-badge"><!-- *** 10 --></div>
-                    <div class="cert-title">[Certification Title 3]</div>
-                    <div class="cert-issuer">[Issuing Organization 3]</div>
-                    <div class="cert-date">[Date Obtained 3]</div>
+                    <div class="cert-badge">[CERT_ICON_3]</div>
+                    <div class="cert-title">[CERT_NAME_3]</div>
+                    <div class="cert-issuer">[CERT_ISSUER_3]</div>
+                    <div class="cert-date">[CERT_DATE_3]</div>
                 </div>
                 <div class="cert-card">
-                    <div class="cert-badge"><!-- *** 11 --></div>
-                    <div class="cert-title">[Certification Title 4]</div>
-                    <div class="cert-issuer">[Issuing Organization 4]</div>
-                    <div class="cert-date">[Date Obtained 4]</div>
+                    <div class="cert-badge">[CERT_ICON_4]</div>
+                    <div class="cert-title">[CERT_NAME_4]</div>
+                    <div class="cert-issuer">[CERT_ISSUER_4]</div>
+                    <div class="cert-date">[CERT_DATE_4]</div>
                 </div>
             </div>
         </div>
     </section>
 
+    <!-- Contact Section -->
     <section class="contact" id="contact">
         <div class="contact-container">
             <div>
-                <span class="section-label">[Contact Section Label]</span>
-                <h2>[Contact Section Heading]</h2>
-                <p style="opacity: 0.8; margin-bottom: 40px;">[Contact section introductory paragraph inviting visitors to reach out.]</p>
+                <span class="section-label">[CONTACT_SECTION_LABEL]</span>
+                <h2>[CONTACT_HEADING]</h2>
+                <p class="contact-intro">[CONTACT_INTRO_PARAGRAPH]</p>
 
+                <!-- Repeat contact-item as needed -->
                 <div class="contact-info">
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 12 --></div>
+                        <div class="contact-icon">[CONTACT_ICON_1]</div>
                         <div class="contact-details">
-                            <h4>[Contact Type 1]</h4>
-                            <p>[contact-value-1@example.com]</p>
+                            <h4>[CONTACT_TYPE_1]</h4>
+                            <p>[CONTACT_VALUE_1]</p>
                         </div>
                     </div>
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 13 --></div>
+                        <div class="contact-icon">[CONTACT_ICON_2]</div>
                         <div class="contact-details">
-                            <h4>[Contact Type 2]</h4>
-                            <p>[+X (XXX) XXX-XXXX]</p>
+                            <h4>[CONTACT_TYPE_2]</h4>
+                            <p>[CONTACT_VALUE_2]</p>
                         </div>
                     </div>
                     <div class="contact-item">
-                        <div class="contact-icon"><!-- *** 14 --></div>
+                        <div class="contact-icon">[CONTACT_ICON_3]</div>
                         <div class="contact-details">
-                            <h4>[Contact Type 3]</h4>
-                            <p>[City, State]</p>
+                            <h4>[CONTACT_TYPE_3]</h4>
+                            <p>[CONTACT_VALUE_3]</p>
                         </div>
                     </div>
                 </div>
@@ -1178,33 +1314,36 @@
             <div class="contact-form">
                 <form>
                     <div class="form-group">
-                        <label>[Form Field Label 1]</label>
-                        <input type="text" placeholder="[Placeholder text 1]" required>
+                        <label>[FORM_FIELD_LABEL_1]</label>
+                        <input type="text" placeholder="[FORM_PLACEHOLDER_1]" required>
                     </div>
                     <div class="form-group">
-                        <label>[Form Field Label 2]</label>
-                        <input type="email" placeholder="[Placeholder text 2]" required>
+                        <label>[FORM_FIELD_LABEL_2]</label>
+                        <input type="email" placeholder="[FORM_PLACEHOLDER_2]" required>
                     </div>
                     <div class="form-group">
-                        <label>[Form Field Label 3]</label>
-                        <textarea placeholder="[Placeholder text 3]" required></textarea>
+                        <label>[FORM_FIELD_LABEL_3]</label>
+                        <textarea placeholder="[FORM_PLACEHOLDER_3]" required></textarea>
                     </div>
-                    <button type="submit" class="submit-btn">[Submit Button Label]</button>
+                    <button type="submit" class="submit-btn">[FORM_SUBMIT_LABEL]</button>
                 </form>
             </div>
         </div>
     </section>
 
+    <!-- Footer -->
     <footer>
         <div class="footer-content">
+            <!-- Repeat social-link as needed -->
             <div class="social-links">
-                <a href="#" class="social-link"><!-- *** 15 --></a>
-                <a href="#" class="social-link"><!-- *** 16 --></a>
-                <a href="#" class="social-link"><!-- *** 17 --></a>
-                <a href="#" class="social-link"><!-- *** 18 --></a>
+                <a href="#" class="social-link">[SOCIAL_1]</a>
+                <a href="#" class="social-link">[SOCIAL_2]</a>
+                <a href="#" class="social-link">[SOCIAL_3]</a>
+                <a href="#" class="social-link">[SOCIAL_4]</a>
             </div>
-            <p class="copyright">© [Year] [Full Name]. All rights reserved.</p>
+            <p class="copyright">[COPYRIGHT_TEXT]</p>
         </div>
     </footer>
+
 </body>
 </html>

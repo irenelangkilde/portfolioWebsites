@@ -1,1190 +1,1231 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>[Name] - [Field] Portfolio</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        :root {
-            --primary: #8b5cf6;
-            --secondary: #3b82f6;
-            --accent: #06b6d4;
-            --dark: #1e1b4b;
-            --light: #f0f9ff;
-            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --cosmic: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%);
-        }
-
-        body {
-            font-family: 'IBM Plex Sans', sans-serif;
-            line-height: 1.6;
-            color: var(--dark);
-            background: #ffffff;
-        }
-
-        h1, h2, h3, h4 {
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 20px;
-        }
-
-        nav {
-            background: white;
-            box-shadow: 0 2px 15px rgba(139, 92, 246, 0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        nav .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 20px;
-        }
-
-        nav .logo {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        nav .logo-icon {
-            font-size: 1.8rem;
-        }
-
-        nav ul {
-            display: flex;
-            list-style: none;
-            gap: 2rem;
-        }
-
-        nav a {
-            text-decoration: none;
-            color: var(--dark);
-            font-weight: 600;
-            transition: color 0.3s;
-        }
-
-        nav a:hover {
-            color: var(--primary);
-        }
-
-        .hero {
-            background: var(--cosmic);
-            color: white;
-            padding: 100px 0;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image:
-                radial-gradient(2px 2px at 20% 30%, white, transparent),
-                radial-gradient(2px 2px at 60% 70%, white, transparent),
-                radial-gradient(1px 1px at 50% 50%, white, transparent),
-                radial-gradient(1px 1px at 80% 10%, white, transparent),
-                radial-gradient(2px 2px at 90% 60%, white, transparent),
-                radial-gradient(1px 1px at 33% 80%, white, transparent);
-            background-size: 200% 200%;
-            animation: stars 60s linear infinite;
-            opacity: 0.6;
-        }
-
-        @keyframes stars {
-            from { background-position: 0 0; }
-            to { background-position: -200% -200%; }
-        }
-
-        .hero-content {
-            position: relative;
-            z-index: 1;
-        }
-
-        .profile-photo {
-            width: 190px;
-            height: 190px;
-            border-radius: 50%;
-            border: 5px solid rgba(255,255,255,0.3);
-            object-fit: cover;
-            margin: 0 auto 25px;
-            display: block;
-            box-shadow: 0 0 40px rgba(139, 92, 246, 0.5);
-            background: var(--gradient);
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 10px;
-            font-weight: 700;
-            letter-spacing: -0.5px;
-        }
-
-        .hero .subtitle {
-            font-size: 1.4rem;
-            margin-bottom: 20px;
-            opacity: 0.95;
-            font-weight: 300;
-        }
-
-        .hero .tagline {
-            font-size: 1.05rem;
-            opacity: 0.9;
-            margin-bottom: 30px;
-            font-weight: 300;
-        }
-
-        .cta-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 13px 32px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s;
-            display: inline-block;
-        }
-
-        .btn-primary {
-            background: white;
-            color: var(--primary);
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
-        }
-
-        .btn-secondary {
-            background: transparent;
-            color: white;
-            border: 2px solid white;
-        }
-
-        .btn-secondary:hover {
-            background: white;
-            color: var(--primary);
-        }
-
-        section {
-            padding: 85px 0;
-        }
-
-        section h2 {
-            text-align: center;
-            font-size: 2.8rem;
-            margin-bottom: 15px;
-            color: var(--primary);
-            font-weight: 700;
-        }
-
-        .section-subtitle {
-            text-align: center;
-            color: #6b7280;
-            font-size: 1.15rem;
-            margin-bottom: 55px;
-        }
-
-        .about {
-            background: var(--light);
-        }
-
-        .about-content {
-            max-width: 800px;
-            margin: 0 auto;
-            text-align: center;
-            font-size: 1.1rem;
-            line-height: 1.9;
-        }
-
-        .about-content p {
-            margin-bottom: 20px;
-        }
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-            gap: 30px;
-            margin-top: 30px;
-        }
-
-        .skill-category {
-            background: white;
-            padding: 32px;
-            border-radius: 18px;
-            box-shadow: 0 5px 25px rgba(139, 92, 246, 0.1);
-            transition: all 0.3s;
-            border-top: 4px solid var(--primary);
-        }
-
-        .skill-category:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 40px rgba(139, 92, 246, 0.2);
-        }
-
-        .skill-category h3 {
-            color: var(--primary);
-            margin-bottom: 22px;
-            font-size: 1.35rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .skill-icon {
-            font-size: 1.6rem;
-        }
-
-        .skill-list {
-            list-style: none;
-        }
-
-        .skill-list li {
-            padding: 11px 0;
-            border-bottom: 1px solid #f0f0f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .skill-list li:last-child {
-            border-bottom: none;
-        }
-
-        .skill-level {
-            font-size: 0.85rem;
-            color: #9ca3af;
-            font-weight: 600;
-        }
-
-        .research {
-            background: white;
-        }
-
-        .research-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-            gap: 35px;
-        }
-
-        .research-card {
-            background: white;
-            border-radius: 18px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            transition: all 0.3s;
-            border: 2px solid transparent;
-        }
-
-        .research-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 50px rgba(139, 92, 246, 0.2);
-            border-color: var(--primary);
-        }
-
-        .research-image {
-            width: 100%;
-            height: 230px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4.5rem;
-            color: white;
-            position: relative;
-        }
-
-        .research-image.style-a {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .research-image.style-b {
-            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
-        }
-
-        .research-image.style-c {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        }
-
-        .research-image.style-d {
-            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-        }
-
-        .research-image.style-e {
-            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        }
-
-        .research-image.style-f {
-            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        }
-
-        .research-content {
-            padding: 28px;
-        }
-
-        .research-content h3 {
-            color: var(--dark);
-            margin-bottom: 12px;
-            font-size: 1.45rem;
-        }
-
-        .research-field {
-            display: inline-block;
-            background: var(--light);
-            color: var(--primary);
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 14px;
-        }
-
-        .research-content p {
-            color: #6b7280;
-            margin-bottom: 15px;
-            line-height: 1.7;
-        }
-
-        .research-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .research-tag {
-            background: #f3f4f6;
-            color: var(--dark);
-            padding: 5px 13px;
-            border-radius: 20px;
-            font-size: 0.82rem;
-            font-weight: 600;
-        }
-
-        .resume {
-            background: var(--light);
-        }
-
-        .resume-content {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .resume-section {
-            margin-bottom: 45px;
-        }
-
-        .resume-section h3 {
-            color: var(--primary);
-            font-size: 1.9rem;
-            margin-bottom: 28px;
-            padding-bottom: 12px;
-            border-bottom: 3px solid var(--primary);
-        }
-
-        .resume-item {
-            background: white;
-            padding: 28px;
-            border-radius: 15px;
-            margin-bottom: 22px;
-            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.08);
-            border-left: 5px solid var(--primary);
-        }
-
-        .resume-item h4 {
-            color: var(--dark);
-            font-size: 1.35rem;
-            margin-bottom: 10px;
-        }
-
-        .resume-item .meta {
-            color: #6b7280;
-            font-size: 0.95rem;
-            margin-bottom: 14px;
-            display: flex;
-            gap: 22px;
-            flex-wrap: wrap;
-        }
-
-        .resume-item ul {
-            margin-left: 20px;
-            color: var(--dark);
-        }
-
-        .resume-item ul li {
-            margin-bottom: 9px;
-            line-height: 1.6;
-        }
-
-        .download-resume {
-            text-align: center;
-            margin-top: 45px;
-        }
-
-        .publications {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 18px;
-            box-shadow: 0 3px 15px rgba(139, 92, 246, 0.06);
-            border-left: 4px solid var(--secondary);
-        }
-
-        .publications h5 {
-            color: var(--secondary);
-            margin-bottom: 10px;
-            font-size: 1.05rem;
-        }
-
-        .publications p {
-            color: #6b7280;
-            font-size: 0.92rem;
-            line-height: 1.5;
-        }
-
-        .contact {
-            background: white;
-        }
-
-        .contact-content {
-            max-width: 650px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .contact-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin: 45px 0;
-        }
-
-        .contact-item {
-            background: var(--light);
-            padding: 32px;
-            border-radius: 18px;
-            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.08);
-            transition: all 0.3s;
-        }
-
-        .contact-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 35px rgba(139, 92, 246, 0.15);
-        }
-
-        .contact-item h3 {
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 1.25rem;
-        }
-
-        .contact-item a {
-            color: var(--dark);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.3s;
-        }
-
-        .contact-item a:hover {
-            color: var(--primary);
-        }
-
-        .social-links {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 35px;
-        }
-
-        .social-links a {
-            width: 52px;
-            height: 52px;
-            border-radius: 50%;
-            background: var(--gradient);
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-decoration: none;
-            font-size: 1.5rem;
-            transition: all 0.3s;
-        }
-
-        .social-links a:hover {
-            transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
-        }
-
-        footer {
-            background: var(--dark);
-            color: white;
-            text-align: center;
-            padding: 35px 0;
-        }
-
-        footer p {
-            opacity: 0.85;
-        }
-
-        .wave-canvas-container {
-            position: relative;
-            width: 100%;
-            max-width: 900px;
-            margin: 50px auto 0;
-            padding: 30px;
-            background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
-            border-radius: 20px;
-            border: 2px solid rgba(139, 92, 246, 0.2);
-            box-shadow: 0 10px 40px rgba(139, 92, 246, 0.15);
-        }
-
-        .wave-canvas-container h3 {
-            text-align: center;
-            color: var(--primary);
-            margin-bottom: 15px;
-            font-size: 1.4rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .wave-equation {
-            text-align: center;
-            font-family: 'Times New Roman', serif;
-            font-style: italic;
-            color: #6b7280;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-
-        #waveCanvas {
-            width: 100%;
-            height: 300px;
-            border-radius: 12px;
-            background: white;
-            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
-        }
-
-        .wave-controls {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-
-        .wave-control {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.9rem;
-            color: var(--dark);
-        }
-
-        .wave-control label {
-            font-weight: 600;
-        }
-
-        .wave-control input[type="range"] {
-            width: 120px;
-            accent-color: var(--primary);
-        }
-
-        @media (max-width: 768px) {
-            nav ul {
-                gap: 1rem;
-                font-size: 0.9rem;
-            }
-
-            .hero h1 {
-                font-size: 2.2rem;
-            }
-
-            .hero .subtitle {
-                font-size: 1.1rem;
-            }
-
-            section h2 {
-                font-size: 2rem;
-            }
-
-            .research-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .wave-canvas-container {
-                padding: 20px;
-            }
-
-            #waveCanvas {
-                height: 200px;
-            }
-        }
-    </style>
+  <!--
+  {
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "profile_photo.jpg",
+          "selector": ".profile-photo",
+          "type": "img",
+          "role": "Circular hero portrait of the portfolio owner, centered above name and title in the masthead"
+        }
+      ],
+      "animations": [
+        {
+          "src_file_name": "",
+          "selector": ".hero::before",
+          "type": "css-keyframe",
+          "name": "stars — drifting radial-gradient star-field parallax on the hero background"
+        },
+        {
+          "src_file_name": "",
+          "selector": "#waveCanvas",
+          "type": "canvas-requestAnimationFrame",
+          "name": "Quantum Wave Interference Simulator — interactive multi-wave canvas with frequency, amplitude, and wave-count sliders"
+        }
+      ]
+    },
+    "exemplary_attributes": {
+      "pacing": "Moderate — generous padding between sections keeps content breathable without feeling sparse",
+      "mood": "Cosmic-academic; deep indigo/violet palette evokes space and quantum physics while remaining professional",
+      "compositional_feel": "Central — hero content and all section bodies are centre-aligned with wide-margin containers",
+      "section_density": "Medium — each section carries a focused set of cards or prose blocks; no overwhelming information density",
+      "visual_treatment": "Gradient-rich dark hero with glowing shadows, pastel-tinted light alternating sections, and an interactive canvas widget as a signature element"
+    },
+    "default_color_scheme": {
+      "primary": "#8b5cf6",
+      "secondary": "#3b82f6",
+      "accent": "#06b6d4",
+      "dark": "#1e1b4b",
+      "light": "#f0f9ff"
+    },
+    "design_factors": {
+      "composition_option": "central",
+      "style_token": "neon-tech",
+      "rendering_style": "gradient 3D illustration"
+    }
+  }
+  -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>[OWNER NAME] — [FIELD] Portfolio</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ── Reset ───────────────────────────────────────────────── */
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* ── Design tokens ───────────────────────────────────────── */
+    :root {
+      /* 5-colour palette (derived from deep-indigo/violet masthead) */
+      --primary:   #8b5cf6;   /* violet – brand accent                 */
+      --secondary: #3b82f6;   /* blue   – supporting accent            */
+      --accent:    #06b6d4;   /* cyan   – highlight / interactive      */
+      --dark:      #1e1b4b;   /* near-black indigo – text / footer bg  */
+      --light:     #f0f9ff;   /* ice-blue tint – alternate section bg  */
+
+      /* Derived shades */
+      --primary-dim:    rgba(139, 92, 246, 0.10);
+      --primary-glow:   rgba(139, 92, 246, 0.50);
+      --secondary-dim:  rgba(59, 130, 246, 0.10);
+      --dark-mid:       #312e81;   /* one step lighter than --dark     */
+      --dark-soft:      #6b7280;   /* body-copy grey                   */
+      --surface:        #ffffff;
+      --border-subtle:  #f0f0f0;
+
+      /* Gradients */
+      --grad-hero:    linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, #1e1b4b 100%);
+      --grad-brand:   linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --grad-card-a:  linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --grad-card-b:  linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+      --grad-card-c:  linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      --grad-card-d:  linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+      --grad-card-e:  linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+      --grad-card-f:  linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+
+      /* Alternate palette – inverted contrast for dark-section swap */
+      --alt-bg:       var(--dark);
+      --alt-surface:  var(--dark-mid);
+      --alt-text:     var(--light);
+      --alt-heading:  #c4b5fd;   /* light violet on dark bg           */
+      --alt-muted:    #a5b4fc;
+    }
+
+    /* ── Base typography ─────────────────────────────────────── */
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      line-height: 1.6;
+      color: var(--dark);
+      background: var(--surface);
+    }
+
+    h1, h2, h3, h4 {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    /* ── Navigation ──────────────────────────────────────────── */
+    nav {
+      background: var(--surface);
+      box-shadow: 0 2px 15px var(--primary-dim);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    nav .container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 20px;
+    }
+
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo .logo-icon {
+      font-size: 1.8rem;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      gap: 2rem;
+    }
+
+    nav a {
+      text-decoration: none;
+      color: var(--dark);
+      font-weight: 600;
+      transition: color 0.3s;
+    }
+
+    nav a:hover {
+      color: var(--primary);
+    }
+
+    /* ── Hero ────────────────────────────────────────────────── */
+    .hero {
+      background: var(--grad-hero);
+      color: var(--surface);
+      padding: 100px 0;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Star-field parallax */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(2px 2px at 60% 70%, white, transparent),
+        radial-gradient(1px 1px at 50% 50%, white, transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent),
+        radial-gradient(2px 2px at 90% 60%, white, transparent),
+        radial-gradient(1px 1px at 33% 80%, white, transparent),
+        radial-gradient(1px 1px at 10% 55%, white, transparent),
+        radial-gradient(2px 2px at 45% 15%, white, transparent);
+      background-size: 200% 200%;
+      animation: stars 60s linear infinite;
+      opacity: 0.55;
+      pointer-events: none;
+    }
+
+    @keyframes stars {
+      from { background-position: 0 0; }
+      to   { background-position: -200% -200%; }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .profile-photo {
+      width: 190px;
+      height: 190px;
+      border-radius: 50%;
+      border: 5px solid rgba(255, 255, 255, 0.3);
+      object-fit: cover;
+      margin: 0 auto 25px;
+      display: block;
+      box-shadow: 0 0 40px var(--primary-glow);
+      background: var(--grad-brand);
+    }
+
+    .hero h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .hero .subtitle {
+      font-size: 1.4rem;
+      margin-bottom: 20px;
+      opacity: 0.95;
+      font-weight: 300;
+    }
+
+    .hero .tagline {
+      font-size: 1.05rem;
+      opacity: 0.90;
+      margin-bottom: 30px;
+      font-weight: 300;
+    }
+
+    .cta-buttons {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 13px 32px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: all 0.3s;
+      display: inline-block;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: var(--surface);
+      color: var(--primary);
+      border: 2px solid var(--surface);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--surface);
+      border: 2px solid var(--surface);
+    }
+
+    .btn-secondary:hover {
+      background: var(--surface);
+      color: var(--primary);
+    }
+
+    /* ── Shared section shell ────────────────────────────────── */
+    section {
+      padding: 85px 0;
+    }
+
+    section h2 {
+      text-align: center;
+      font-size: 2.8rem;
+      margin-bottom: 15px;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--dark-soft);
+      font-size: 1.15rem;
+      margin-bottom: 55px;
+    }
+
+    /* ── About (light alt) ───────────────────────────────────── */
+    .about {
+      background: var(--light);
+    }
+
+    .about-body {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+      font-size: 1.1rem;
+      line-height: 1.9;
+    }
+
+    .about-body p + p {
+      margin-top: 20px;
+    }
+
+    /* Interactive widget */
+    .wave-canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      margin: 50px auto 0;
+      padding: 30px;
+      background: linear-gradient(
+        135deg,
+        rgba(139, 92, 246, 0.05) 0%,
+        rgba(59, 130, 246, 0.05) 100%
+      );
+      border-radius: 20px;
+      border: 2px solid rgba(139, 92, 246, 0.2);
+      box-shadow: 0 10px 40px rgba(139, 92, 246, 0.15);
+    }
+
+    .wave-canvas-container h3 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-size: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .wave-equation {
+      text-align: center;
+      font-family: 'Times New Roman', serif;
+      font-style: italic;
+      color: var(--dark-soft);
+      margin-bottom: 20px;
+      font-size: 1.1rem;
+    }
+
+    #waveCanvas {
+      width: 100%;
+      height: 300px;
+      border-radius: 12px;
+      background: var(--surface);
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .wave-controls {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .wave-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      color: var(--dark);
+    }
+
+    .wave-control label {
+      font-weight: 600;
+    }
+
+    .wave-control input[type="range"] {
+      width: 120px;
+      accent-color: var(--primary);
+    }
+
+    /* ── Skills (white surface) ──────────────────────────────── */
+    .skills {
+      background: var(--surface);
+    }
+
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 30px;
+    }
+
+    .skill-card {
+      background: var(--surface);
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow: 0 5px 25px var(--primary-dim);
+      border-top: 4px solid var(--primary);
+      transition: all 0.3s;
+    }
+
+    .skill-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(139, 92, 246, 0.2);
+    }
+
+    .skill-card h3 {
+      color: var(--primary);
+      margin-bottom: 22px;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .skill-icon {
+      font-size: 1.6rem;
+    }
+
+    .skill-list {
+      list-style: none;
+    }
+
+    .skill-list li {
+      padding: 11px 0;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .skill-list li:last-child {
+      border-bottom: none;
+    }
+
+    .skill-level {
+      font-size: 0.85rem;
+      color: #9ca3af;
+      font-weight: 600;
+    }
+
+    /* ── Research (white surface) ────────────────────────────── */
+    .research {
+      background: var(--surface);
+    }
+
+    .research-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 35px;
+    }
+
+    .research-card {
+      background: var(--surface);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      border: 2px solid transparent;
+      transition: all 0.3s;
+    }
+
+    .research-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 20px 50px rgba(139, 92, 246, 0.2);
+      border-color: var(--primary);
+    }
+
+    .research-thumb {
+      width: 100%;
+      height: 230px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4.5rem;
+      color: var(--surface);
+    }
+
+    /* Thumb colour variants – use any from the token list */
+    .research-thumb.variant-a { background: var(--grad-card-a); }
+    .research-thumb.variant-b { background: var(--grad-card-b); }
+    .research-thumb.variant-c { background: var(--grad-card-c); }
+    .research-thumb.variant-d { background: var(--grad-card-d); }
+    .research-thumb.variant-e { background: var(--grad-card-e); }
+    .research-thumb.variant-f { background: var(--grad-card-f); }
+
+    .research-body {
+      padding: 28px;
+    }
+
+    .research-body h3 {
+      color: var(--dark);
+      margin-bottom: 12px;
+      font-size: 1.45rem;
+    }
+
+    .research-field-tag {
+      display: inline-block;
+      background: var(--light);
+      color: var(--primary);
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+
+    .research-body p {
+      color: var(--dark-soft);
+      margin-bottom: 15px;
+      line-height: 1.7;
+    }
+
+    .research-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .research-tag {
+      background: #f3f4f6;
+      color: var(--dark);
+      padding: 5px 13px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    /* ── Resume (light alt) ──────────────────────────────────── */
+    .resume {
+      background: var(--light);
+    }
+
+    .resume-body {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .resume-group {
+      margin-bottom: 45px;
+    }
+
+    .resume-group h3 {
+      color: var(--primary);
+      font-size: 1.9rem;
+      margin-bottom: 28px;
+      padding-bottom: 12px;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    .resume-item {
+      background: var(--surface);
+      padding: 28px;
+      border-radius: 15px;
+      margin-bottom: 22px;
+      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.08);
+      border-left: 5px solid var(--primary);
+    }
+
+    .resume-item h4 {
+      color: var(--dark);
+      font-size: 1.35rem;
+      margin-bottom: 10px;
+    }
+
+    .resume-item .meta {
+      color: var(--dark-soft);
+      font-size: 0.95rem;
+      margin-bottom: 14px;
+      display: flex;
+      gap: 22px;
+      flex-wrap: wrap;
+    }
+
+    .resume-item ul {
+      margin-left: 20px;
+      color: var(--dark);
+    }
+
+    .resume-item ul li {
+      margin-bottom: 9px;
+      line-height: 1.6;
+    }
+
+    .publication-entry {
+      background: var(--surface);
+      padding: 25px;
+      border-radius: 12px;
+      margin-bottom: 18px;
+      box-shadow: 0 3px 15px rgba(59, 130, 246, 0.06);
+      border-left: 4px solid var(--secondary);
+    }
+
+    .publication-entry h5 {
+      color: var(--secondary);
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+    }
+
+    .publication-entry p {
+      color: var(--dark-soft);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .resume-download {
+      text-align: center;
+      margin-top: 45px;
+    }
+
+    /* ── Contact (white surface) ─────────────────────────────── */
+    .contact {
+      background: var(--surface);
+    }
+
+    .contact-inner {
+      max-width: 650px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .contact-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 30px;
+      margin: 45px 0;
+    }
+
+    .contact-card {
+      background: var(--light);
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow: 0 5px 20px rgba(139, 92, 246, 0.08);
+      transition: all 0.3s;
+    }
+
+    .contact-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 35px rgba(139, 92, 246, 0.15);
+    }
+
+    .contact-card h3 {
+      color: var(--primary);
+      margin-bottom: 12px;
+      font-size: 1.2rem;
+    }
+
+    .contact-card a,
+    .contact-card p {
+      color: var(--dark);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .contact-card a:hover {
+      color: var(--primary);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 35px;
+    }
+
+    .social-links a {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: var(--grad-brand);
+      color: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-size: 1.4rem;
+      font-weight: 700;
+      transition: all 0.3s;
+    }
+
+    .social-links a:hover {
+      transform: translateY(-4px) scale(1.08);
+      box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
+    }
+
+    .contact-interests {
+      margin-top: 30px;
+      color: var(--dark-soft);
+      font-size: 0.95rem;
+    }
+
+    /* ── Footer ──────────────────────────────────────────────── */
+    footer {
+      background: var(--dark);
+      color: var(--surface);
+      text-align: center;
+      padding: 35px 0;
+    }
+
+    footer p {
+      opacity: 0.85;
+    }
+
+    footer .footer-quote {
+      margin-top: 8px;
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      nav ul { gap: 1rem; font-size: 0.9rem; }
+      .hero h1 { font-size: 2.2rem; }
+      .hero .subtitle { font-size: 1.1rem; }
+      section h2 { font-size: 2rem; }
+      .research-grid { grid-template-columns: 1fr; }
+      #waveCanvas { height: 200px; }
+      .wave-canvas-container { padding: 20px; }
+    }
+  </style>
 </head>
 <body>
 
-    <nav>
-        <div class="container">
-            <div class="logo">
-                <!-- ***1 -->
-                <span class="logo-icon"></span>
-                [Your Name]
+  <!-- ── Navigation ─────────────────────────────────────────── -->
+  <nav>
+    <div class="container">
+      <div class="nav-logo">
+        <span class="logo-icon">[ICON]</span>
+        [OWNER SHORT NAME]
+      </div>
+      <ul>
+        <li><a href="#about">[NAV LINK 1]</a></li>
+        <li><a href="#skills">[NAV LINK 2]</a></li>
+        <li><a href="#research">[NAV LINK 3]</a></li>
+        <li><a href="#resume">[NAV LINK 4]</a></li>
+        <li><a href="#contact">[NAV LINK 5]</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ── Hero ───────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-content container">
+      <img src="profile_photo.jpg" alt="[OWNER NAME]" class="profile-photo" />
+      <h1>[OWNER FULL NAME]</h1>
+      <p class="subtitle">[TITLE / ROLE] | [SPECIALTY DESCRIPTOR]</p>
+      <p class="tagline">[ICON] [DEGREE PROGRAM] | [TIMELINE] | [FOCUS AREA]</p>
+      <div class="cta-buttons">
+        <a href="#research" class="btn btn-primary">[PRIMARY CTA]</a>
+        <a href="#contact"  class="btn btn-secondary">[SECONDARY CTA]</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── About ──────────────────────────────────────────────── -->
+  <section id="about" class="about">
+    <div class="container">
+      <h2>[ABOUT HEADING]</h2>
+      <p class="section-subtitle">[ABOUT SUBHEADING]</p>
+
+      <div class="about-body">
+        <p>[PARAGRAPH — background, interests, and passion statement]</p>
+        <p>[PARAGRAPH — skills, tools, and experience overview]</p>
+        <p>[PARAGRAPH — career goals and what you are seeking]</p>
+      </div>
+
+      <!-- Interactive domain-specific widget -->
+      <div class="wave-canvas-container">
+        <h3>[WIDGET ICON] [WIDGET TITLE]</h3>
+        <div class="wave-equation">[FORMULA / EQUATION PLACEHOLDER]</div>
+        <canvas id="waveCanvas"></canvas>
+        <div class="wave-controls">
+          <div class="wave-control">
+            <label>[PARAM 1 LABEL]:</label>
+            <input type="range" id="frequency" min="1" max="10" value="3" step="0.5" />
+            <span id="freqValue">3</span>
+          </div>
+          <div class="wave-control">
+            <label>[PARAM 2 LABEL]:</label>
+            <input type="range" id="amplitude" min="20" max="80" value="50" step="5" />
+            <span id="ampValue">50</span>
+          </div>
+          <div class="wave-control">
+            <label>[PARAM 3 LABEL]:</label>
+            <input type="range" id="waveCount" min="1" max="5" value="2" step="1" />
+            <span id="waveValue">2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Skills ─────────────────────────────────────────────── -->
+  <section id="skills" class="skills">
+    <div class="container">
+      <h2>[SKILLS HEADING]</h2>
+      <p class="section-subtitle">[SKILLS SUBHEADING]</p>
+      <div class="skills-grid">
+
+        <!-- Repeat .skill-card blocks as needed -->
+        <div class="skill-card">
+          <h3><span class="skill-icon">[ICON]</span>[SKILL CATEGORY 1]</h3>
+          <ul class="skill-list">
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+          </ul>
+        </div>
+
+        <div class="skill-card">
+          <h3><span class="skill-icon">[ICON]</span>[SKILL CATEGORY 2]</h3>
+          <ul class="skill-list">
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+          </ul>
+        </div>
+
+        <div class="skill-card">
+          <h3><span class="skill-icon">[ICON]</span>[SKILL CATEGORY 3]</h3>
+          <ul class="skill-list">
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+          </ul>
+        </div>
+
+        <div class="skill-card">
+          <h3><span class="skill-icon">[ICON]</span>[SKILL CATEGORY 4]</h3>
+          <ul class="skill-list">
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+            <li><span>[SKILL NAME]</span><span class="skill-level">[LEVEL]</span></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Research / Projects ────────────────────────────────── -->
+  <section id="research" class="research">
+    <div class="container">
+      <h2>[RESEARCH HEADING]</h2>
+      <p class="section-subtitle">[RESEARCH SUBHEADING]</p>
+      <div class="research-grid">
+
+        <!-- Repeat .research-card blocks; cycle variant-a … variant-f for thumb colours -->
+        <div class="research-card">
+          <div class="research-thumb variant-a">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-card">
+          <div class="research-thumb variant-b">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-card">
+          <div class="research-thumb variant-c">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-card">
+          <div class="research-thumb variant-d">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-card">
+          <div class="research-thumb variant-e">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="research-card">
+          <div class="research-thumb variant-f">[EMOJI / ICON]</div>
+          <div class="research-body">
+            <span class="research-field-tag">[FIELD TAG]</span>
+            <h3>[PROJECT TITLE]</h3>
+            <p>[PROJECT DESCRIPTION — methods, outcomes, and contribution]</p>
+            <div class="research-tags">
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+              <span class="research-tag">[TAG]</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Resume ─────────────────────────────────────────────── -->
+  <section id="resume" class="resume">
+    <div class="container">
+      <h2>[RESUME HEADING]</h2>
+      <p class="section-subtitle">[RESUME SUBHEADING]</p>
+      <div class="resume-body">
+
+        <!-- Education -->
+        <div class="resume-group">
+          <h3>[EDUCATION GROUP HEADING]</h3>
+          <div class="resume-item">
+            <h4>[DEGREE TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [INSTITUTION]</span>
+              <span>[ICON] [DATE RANGE]</span>
+              <span>[ICON] [GPA / HONOURS]</span>
             </div>
             <ul>
-                <li><a href="#about">[Nav Link 1]</a></li>
-                <li><a href="#skills">[Nav Link 2]</a></li>
-                <li><a href="#research">[Nav Link 3]</a></li>
-                <li><a href="#resume">[Nav Link 4]</a></li>
-                <li><a href="#contact">[Nav Link 5]</a></li>
+              <li>[HONOURS / PROGRAMME DETAIL]</li>
+              <li>[CONCENTRATION / SPECIALISATION]</li>
+              <li>[THESIS / CAPSTONE TITLE]</li>
+              <li>[KEY COURSEWORK SUMMARY]</li>
             </ul>
+          </div>
         </div>
-    </nav>
 
-    <section class="hero">
-        <div class="hero-content">
-            <!-- ***2 -->
-            <img src="" alt="[Your Name]" class="profile-photo">
-            <h1>[Your Full Name]</h1>
-            <p class="subtitle">[Degree / Major] | [Professional Title]</p>
-            <p class="tagline">[Emoji Icon] [Degree Program] | [Expected Graduation] | [Research Focus]</p>
-            <div class="cta-buttons">
-                <a href="#research" class="btn btn-primary">[Primary CTA]</a>
-                <a href="#contact" class="btn btn-secondary">[Secondary CTA]</a>
+        <!-- Experience -->
+        <div class="resume-group">
+          <h3>[EXPERIENCE GROUP HEADING]</h3>
+
+          <div class="resume-item">
+            <h4>[POSITION TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [ORGANISATION / LAB]</span>
+              <span>[ICON] [DATE RANGE]</span>
             </div>
-        </div>
-    </section>
+            <ul>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+            </ul>
+          </div>
 
-    <section id="about" class="about">
-        <div class="container">
-            <h2>[About Section Heading]</h2>
-            <p class="section-subtitle">[About section subtitle tagline]</p>
-            <div class="about-content">
-                <p>[Introductory paragraph about background, interests, and research areas.]</p>
-                <p>[Paragraph about skills, tools, and technical experience.]</p>
-                <p>[Paragraph about career goals and what you are seeking.]</p>
+          <div class="resume-item">
+            <h4>[POSITION TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [ORGANISATION / LAB]</span>
+              <span>[ICON] [DATE RANGE]</span>
             </div>
+            <ul>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+            </ul>
+          </div>
 
-            <div class="wave-canvas-container">
-                <h3>
-                    <!-- ***3 -->
-                    [Interactive Visualization Title]
-                </h3>
-                <div class="wave-equation">[Formula or Equation Display]</div>
-                <canvas id="waveCanvas"></canvas>
-                <div class="wave-controls">
-                    <div class="wave-control">
-                        <label>[Parameter 1]:</label>
-                        <input type="range" id="frequency" min="1" max="10" value="3" step="0.5">
-                        <span id="freqValue">3</span>
-                    </div>
-                    <div class="wave-control">
-                        <label>[Parameter 2]:</label>
-                        <input type="range" id="amplitude" min="20" max="80" value="50" step="5">
-                        <span id="ampValue">50</span>
-                    </div>
-                    <div class="wave-control">
-                        <label>[Parameter 3]:</label>
-                        <input type="range" id="waveCount" min="1" max="5" value="2" step="1">
-                        <span id="waveValue">2</span>
-                    </div>
-                </div>
+          <div class="resume-item">
+            <h4>[POSITION TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [ORGANISATION / LAB]</span>
+              <span>[ICON] [DATE RANGE]</span>
             </div>
+            <ul>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+            </ul>
+          </div>
         </div>
-    </section>
 
-    <section id="skills">
-        <div class="container">
-            <h2>[Skills Section Heading]</h2>
-            <p class="section-subtitle">[Skills section subtitle]</p>
-            <div class="skills-grid">
+        <!-- Publications & Presentations -->
+        <div class="resume-group">
+          <h3>[PUBLICATIONS GROUP HEADING]</h3>
+          <div class="publication-entry">
+            <h5>[PUBLICATION TYPE]</h5>
+            <p>[AUTHORS]. "[PAPER TITLE]" — [JOURNAL / VENUE] ([YEAR], [STATUS])</p>
+          </div>
+          <div class="publication-entry">
+            <h5>[PRESENTATION TYPE]</h5>
+            <p>"[TALK TITLE]" — [CONFERENCE / EVENT] ([YEAR])</p>
+            <p>"[TALK TITLE]" — [CONFERENCE / EVENT] ([YEAR])</p>
+          </div>
+        </div>
 
-                <div class="skill-category">
-                    <h3>
-                        <!-- ***4 -->
-                        <span class="skill-icon"></span>
-                        [Skill Category 1 Title]
-                    </h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                    </ul>
-                </div>
-
-                <div class="skill-category">
-                    <h3>
-                        <!-- ***5 -->
-                        <span class="skill-icon"></span>
-                        [Skill Category 2 Title]
-                    </h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                    </ul>
-                </div>
-
-                <div class="skill-category">
-                    <h3>
-                        <!-- ***6 -->
-                        <span class="skill-icon"></span>
-                        [Skill Category 3 Title]
-                    </h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                    </ul>
-                </div>
-
-                <div class="skill-category">
-                    <h3>
-                        <!-- ***7 -->
-                        <span class="skill-icon"></span>
-                        [Skill Category 4 Title]
-                    </h3>
-                    <ul class="skill-list">
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                        <li><span>[Skill Name]</span><span class="skill-level">[Level]</span></li>
-                    </ul>
-                </div>
-
+        <!-- Teaching & Leadership -->
+        <div class="resume-group">
+          <h3>[TEACHING GROUP HEADING]</h3>
+          <div class="resume-item">
+            <h4>[ROLE TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [DATE RANGE]</span>
             </div>
-        </div>
-    </section>
-
-    <section id="research" class="research">
-        <div class="container">
-            <h2>[Research Section Heading]</h2>
-            <p class="section-subtitle">[Research section subtitle]</p>
-            <div class="research-grid">
-
-                <div class="research-card">
-                    <div class="research-image style-a">
-                        <!-- ***8 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card">
-                    <div class="research-image style-b">
-                        <!-- ***9 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card">
-                    <div class="research-image style-c">
-                        <!-- ***10 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card">
-                    <div class="research-image style-d">
-                        <!-- ***11 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card">
-                    <div class="research-image style-e">
-                        <!-- ***12 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="research-card">
-                    <div class="research-image style-f">
-                        <!-- ***13 -->
-                    </div>
-                    <div class="research-content">
-                        <span class="research-field">[Field Label]</span>
-                        <h3>[Research Project Title]</h3>
-                        <p>[Short description of the research project, methods used, and key contributions.]</p>
-                        <div class="research-tags">
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                            <span class="research-tag">[Tag]</span>
-                        </div>
-                    </div>
-                </div>
-
+            <ul>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+            </ul>
+          </div>
+          <div class="resume-item">
+            <h4>[LEADERSHIP ROLE TITLE]</h4>
+            <div class="meta">
+              <span>[ICON] [DATE RANGE]</span>
             </div>
+            <ul>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+              <li>[RESPONSIBILITY / ACHIEVEMENT]</li>
+            </ul>
+          </div>
         </div>
-    </section>
 
-    <section id="resume" class="resume">
-        <div class="container">
-            <h2>[Resume Section Heading]</h2>
-            <p class="section-subtitle">[Resume section subtitle]</p>
-            <div class="resume-content">
-
-                <div class="resume-section">
-                    <h3>[Education Heading]</h3>
-                    <div class="resume-item">
-                        <h4>[Degree Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Institution Name]</span>
-                            <span>[Emoji] [Graduation Date]</span>
-                            <span>[Emoji] [GPA]</span>
-                        </div>
-                        <ul>
-                            <li>[Honor / Program / Distinction]</li>
-                            <li>[Concentration or Focus Area]</li>
-                            <li>[Thesis or Capstone Title]</li>
-                            <li>[Relevant Coursework List]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="resume-section">
-                    <h3>[Research Experience Heading]</h3>
-
-                    <div class="resume-item">
-                        <h4>[Position Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Lab / Department / Institution]</span>
-                            <span>[Emoji] [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Position Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Lab / Department / Institution]</span>
-                            <span>[Emoji] [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Position Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Lab / Department / Institution]</span>
-                            <span>[Emoji] [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="resume-section">
-                    <h3>[Publications Heading]</h3>
-                    <div class="publications">
-                        <h5>[Publication Type Label]</h5>
-                        <p>[Author(s). "Title of Paper" - Journal Name (Year, Status)]</p>
-                    </div>
-                    <div class="publications">
-                        <h5>[Presentation Type Label]</h5>
-                        <p>"[Presentation Title]" - [Conference Name] ([Year])</p>
-                        <p>"[Presentation Title]" - [Symposium Name] ([Year])</p>
-                    </div>
-                </div>
-
-                <div class="resume-section">
-                    <h3>[Teaching and Leadership Heading]</h3>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                        </ul>
-                    </div>
-
-                    <div class="resume-item">
-                        <h4>[Role Title]</h4>
-                        <div class="meta">
-                            <span>[Emoji] [Date Range]</span>
-                        </div>
-                        <ul>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                            <li>[Responsibility or Achievement]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="resume-section">
-                    <h3>[Awards Heading]</h3>
-                    <div class="resume-item">
-                        <ul>
-                            <li>[Award Name and Year]</li>
-                            <li>[Award Name and Year]</li>
-                            <li>[Award Name and Year]</li>
-                            <li>[Award Name and Year]</li>
-                            <li>[Award Name and Year]</li>
-                            <li>[Award Name and Year]</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="download-resume">
-                    <a href="#" class="btn btn-primary">[Emoji] [Download CV Label]</a>
-                </div>
-
-            </div>
+        <!-- Awards -->
+        <div class="resume-group">
+          <h3>[AWARDS GROUP HEADING]</h3>
+          <div class="resume-item">
+            <ul>
+              <li>[AWARD NAME] ([YEAR])</li>
+              <li>[AWARD NAME] ([YEAR])</li>
+              <li>[AWARD NAME] ([YEAR])</li>
+              <li>[AWARD NAME] ([YEAR])</li>
+              <li>[AWARD NAME]</li>
+            </ul>
+          </div>
         </div>
-    </section>
 
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2>[Contact Section Heading]</h2>
-            <p class="section-subtitle">[Contact section subtitle]</p>
-            <div class="contact-content">
-
-                <div class="contact-info">
-                    <div class="contact-item">
-                        <h3>[Emoji] [Contact Type 1]</h3>
-                        <a href="mailto:[email]">[email address]</a>
-                    </div>
-                    <div class="contact-item">
-                        <h3>[Emoji] [Contact Type 2]</h3>
-                        <a href="tel:[phone]">[phone number]</a>
-                    </div>
-                    <div class="contact-item">
-                        <h3>[Emoji] [Contact Type 3]</h3>
-                        <p>[City, State]<br>[Availability Note]</p>
-                    </div>
-                </div>
-
-                <div class="social-links">
-                    <!-- ***14 -->
-                    <a href="[linkedin-url]" target="_blank" title="LinkedIn">[Icon]</a>
-                    <!-- ***15 -->
-                    <a href="[github-url]" target="_blank" title="GitHub">[Icon]</a>
-                    <!-- ***16 -->
-                    <a href="[profile-url]" target="_blank" title="[Profile Label]">[Icon]</a>
-                    <!-- ***17 -->
-                    <a href="mailto:[email]" title="Email">[Icon]</a>
-                </div>
-
-                <p style="margin-top: 30px; color: #6b7280;">[Interest Keywords Tagline]</p>
-
-            </div>
+        <div class="resume-download">
+          <a href="cv.pdf" class="btn btn-primary">[ICON] [DOWNLOAD CTA TEXT]</a>
         </div>
-    </section>
 
-    <footer>
-        <div class="container">
-            <p>&copy; [Year] [Your Name] | [Portfolio Type] Portfolio</p>
-            <p style="margin-top: 8px; font-size: 0.9rem;">"[Inspirational Quote]" - [Quote Author]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Contact ────────────────────────────────────────────── -->
+  <section id="contact" class="contact">
+    <div class="container">
+      <h2>[CONTACT HEADING]</h2>
+      <p class="section-subtitle">[CONTACT SUBHEADING]</p>
+      <div class="contact-inner">
+
+        <div class="contact-cards">
+          <div class="contact-card">
+            <h3>[ICON] [CONTACT TYPE 1]</h3>
+            <a href="mailto:[EMAIL]">[EMAIL PLACEHOLDER]</a>
+          </div>
+          <div class="contact-card">
+            <h3>[ICON] [CONTACT TYPE 2]</h3>
+            <a href="tel:[PHONE]">[PHONE PLACEHOLDER]</a>
+          </div>
+          <div class="contact-card">
+            <h3>[ICON] [CONTACT TYPE 3]</h3>
+            <p>[LOCATION / AVAILABILITY]</p>
+          </div>
         </div>
-    </footer>
 
-    <script>
-        const canvas = document.getElementById('waveCanvas');
-        const ctx = canvas.getContext('2d');
+        <div class="social-links">
+          <a href="#" target="_blank" title="[SOCIAL 1]">[S1]</a>
+          <a href="#" target="_blank" title="[SOCIAL 2]">[S2]</a>
+          <a href="#" target="_blank" title="[SOCIAL 3]">[S3]</a>
+          <a href="#"               title="[SOCIAL 4]">[S4]</a>
+        </div>
 
-        function resizeCanvas() {
-            canvas.width = canvas.offsetWidth;
-            canvas.height = canvas.offsetHeight;
+        <p class="contact-interests">[INTEREST KEYWORDS LIST]</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ─────────────────────────────────────────────── -->
+  <footer>
+    <div class="container">
+      <p>&copy; [YEAR] [OWNER NAME] | [PORTFOLIO TYPE]</p>
+      <p class="footer-quote">"[INSPIRATIONAL QUOTE]" — [ATTRIBUTION]</p>
+    </div>
+  </footer>
+
+  <!-- ── Canvas animation ───────────────────────────────────── -->
+  <script>
+    const canvas = document.getElementById('waveCanvas');
+    const ctx    = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    let frequency = 3;
+    let amplitude = 50;
+    let waveCount = 2;
+    let time      = 0;
+
+    document.getElementById('frequency').addEventListener('input', function () {
+      frequency = parseFloat(this.value);
+      document.getElementById('freqValue').textContent = frequency;
+    });
+
+    document.getElementById('amplitude').addEventListener('input', function () {
+      amplitude = parseFloat(this.value);
+      document.getElementById('ampValue').textContent = amplitude;
+    });
+
+    document.getElementById('waveCount').addEventListener('input', function () {
+      waveCount = parseInt(this.value, 10);
+      document.getElementById('waveValue').textContent = waveCount;
+    });
+
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const centerY = canvas.height / 2;
+      const w       = canvas.width;
+
+      /* Axis */
+      ctx.strokeStyle = '#e5e7eb';
+      ctx.lineWidth   = 1;
+      ctx.beginPath();
+      ctx.moveTo(0, centerY);
+      ctx.lineTo(w, centerY);
+      ctx.stroke();
+
+      /* Pre-compute combined wave */
+      const combined = [];
+      for (let x = 0; x < w; x++) {
+        let y = 0;
+        for (let i = 0; i < waveCount; i++) {
+          const k     = (frequency * (i + 1)) * 0.02;
+          const phase = i * Math.PI / 3;
+          y += amplitude * Math.sin(k * x - time + phase) / waveCount;
         }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        combined.push(y);
+      }
 
-        let frequency = 3;
-        let amplitude = 50;
-        let waveCount = 2;
-        let time = 0;
-
-        document.getElementById('frequency').addEventListener('input', (e) => {
-            frequency = parseFloat(e.target.value);
-            document.getElementById('freqValue').textContent = frequency;
-        });
-
-        document.getElementById('amplitude').addEventListener('input', (e) => {
-            amplitude = parseFloat(e.target.value);
-            document.getElementById('ampValue').textContent = amplitude;
-        });
-
-        document.getElementById('waveCount').addEventListener('input', (e) => {
-            waveCount = parseInt(e.target.value);
-            document.getElementById('waveValue').textContent = waveCount;
-        });
-
-        function animate() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const centerY = canvas.height / 2;
-            const width = canvas.width;
-
-            ctx.strokeStyle = '#e5e7eb';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(0, centerY);
-            ctx.lineTo(width, centerY);
-            ctx.stroke();
-
-            const combinedWave = [];
-            for (let x = 0; x < width; x++) {
-                let y = 0;
-                for (let i = 0; i < waveCount; i++) {
-                    const k = (frequency * (i + 1)) * 0.02;
-                    const phase = i * Math.PI / 3;
-                    y += amplitude * Math.sin(k * x - time + phase) / waveCount;
-                }
-                combinedWave.push(y);
-            }
-
-            for (let i = 0; i < waveCount; i++) {
-                ctx.beginPath();
-                ctx.strokeStyle = `hsla(${250 + i * 30}, 70%, 60%, 0.3)`;
-                ctx.lineWidth = 1.5;
-
-                for (let x = 0; x < width; x++) {
-                    const k = (frequency * (i + 1)) * 0.02;
-                    const phase = i * Math.PI / 3;
-                    const y = centerY + amplitude * Math.sin(k * x - time + phase) / waveCount;
-                    if (x === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
-                }
-                ctx.stroke();
-            }
-
-            ctx.beginPath();
-            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#8b5cf6';
-            ctx.lineWidth = 3;
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
-
-            for (let x = 0; x < width; x++) {
-                const y = centerY + combinedWave[x];
-                if (x === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }
-            }
-            ctx.stroke();
-            ctx.shadowBlur = 0;
-
-            for (let x = 0; x < width; x += 20) {
-                const y = centerY + combinedWave[x];
-                const intensity = Math.abs(combinedWave[x]) / amplitude;
-                const size = 2 + intensity * 4;
-                ctx.fillStyle = `rgba(139, 92, 246, ${intensity * 0.8})`;
-                ctx.beginPath();
-                ctx.arc(x, y, size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-
-            time += 0.05;
-            requestAnimationFrame(animate);
+      /* Individual waves (faded) */
+      for (let i = 0; i < waveCount; i++) {
+        ctx.beginPath();
+        ctx.strokeStyle = `hsla(${250 + i * 30}, 70%, 60%, 0.3)`;
+        ctx.lineWidth   = 1.5;
+        for (let x = 0; x < w; x++) {
+          const k     = (frequency * (i + 1)) * 0.02;
+          const phase = i * Math.PI / 3;
+          const y     = centerY + amplitude * Math.sin(k * x - time + phase) / waveCount;
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
+        ctx.stroke();
+      }
 
-        animate();
-    </script>
+      /* Combined interference wave */
+      ctx.beginPath();
+      ctx.strokeStyle  = '#8b5cf6';
+      ctx.lineWidth    = 3;
+      ctx.shadowBlur   = 10;
+      ctx.shadowColor  = 'rgba(139, 92, 246, 0.5)';
+      for (let x = 0; x < w; x++) {
+        const y = centerY + combined[x];
+        x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      /* Probability-density particles */
+      for (let x = 0; x < w; x += 20) {
+        const y         = centerY + combined[x];
+        const intensity = Math.abs(combined[x]) / amplitude;
+        const size      = 2 + intensity * 4;
+        ctx.fillStyle = `rgba(139, 92, 246, ${intensity * 0.8})`;
+        ctx.beginPath();
+        ctx.arc(x, y, size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      time += 0.05;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
+
 </body>
 </html>

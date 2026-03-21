@@ -3,720 +3,825 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>[STUDENT NAME] | [MAJOR] Portfolio</title>
-  <meta name="description" content="Resume and portfolio website for a college student majoring in [MAJOR]." />
+  <title>[Your Name] | [Field] Portfolio</title>
+  <meta name="description" content="Resume and portfolio website for a college student." />
+
+  <!--
+  {
+    "visual_elements": {
+      "images": [
+        {
+          "src_file_name": "hero_background.jpg",
+          "selector": ".masthead",
+          "type": "css-background",
+          "role": "Full-bleed masthead background image establishing field/discipline mood"
+        },
+        {
+          "src_file_name": "hero_background.jpg",
+          "selector": "body",
+          "type": "css-background",
+          "role": "Subtle watermark-style body background, same image at low opacity"
+        },
+        {
+          "src_file_name": "headshot.jpg",
+          "selector": ".headshot",
+          "type": "img",
+          "role": "Professional portrait photo in the contact section"
+        }
+      ],
+      "animations": []
+    },
+    "exemplary_attributes": {
+      "pacing": "Measured and unhurried — tall sections with generous vertical spacing invite careful reading",
+      "mood": "Warm, scholarly, and grounded — earthy tones evoke fieldwork, material culture, and academia",
+      "compositional_feel": "split",
+      "section_density": "Medium — two-column grids and single-column timelines with breathing room",
+      "visual_treatment": "Glassmorphism cards layered over a textured photographic background; soft blur and translucency throughout"
+    },
+    "default_color_scheme": {
+      "primary": "#b8744f",
+      "secondary": "#e2beab",
+      "accent": "#fde7cd",
+      "dark": "#1f1a16",
+      "light": "#fbf7f3"
+    },
+    "design_factors": {
+      "composition_option": "split",
+      "style_token": "glassmorphism",
+      "rendering_style": "clean editorial vector"
+    }
+  }
+  -->
 
   <style>
-    :root{
-      --primary:#1f1a16;
-      --secondary:#5c514a;
-      --accent:#b8744f;
-      --accent2:#e2beab;
-      --accent3:#fde7cd;
-      --dark:#1f1a16;
-      --light:#fbf7f3;
+    :root {
+      /* === 5-color palette (warm earth / field-notes) === */
+      --c1: #b8744f;       /* terracotta — primary accent */
+      --c2: #e2beab;       /* warm sand — secondary */
+      --c3: #fde7cd;       /* pale ochre — highlight / light accent */
+      --c4: #1f1a16;       /* deep charcoal — dark base */
+      --c5: #fbf7f3;       /* parchment — light base */
 
-      --ink:var(--primary);
-      --muted:var(--secondary);
-      --paper:var(--light);
-      --card:#ffffffcc;
-      --glass:#ffffffa8;
-      --stroke:#00000014;
-      --shadow:0 18px 55px rgba(0,0,0,.12);
-      --shadowSoft:0 10px 28px rgba(0,0,0,.10);
-      --radius:22px;
+      /* Derived tokens — default (light) scheme */
+      --ink:        var(--c4);
+      --muted:      #5c514a;           /* c4 lightened 40% */
+      --paper:      var(--c5);
+      --card:       rgba(255,255,255,.80);
+      --glass:      rgba(255,255,255,.66);
+      --stroke:     rgba(0,0,0,.08);
+      --shadow:     0 18px 55px rgba(0,0,0,.12);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,.09);
+      --radius:     22px;
 
-      --btn:var(--dark);
-      --btnText:#fff;
+      --btn:        var(--c4);
+      --btnText:    #fff;
 
-      --max:1120px;
+      --max: 1120px;
     }
 
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-        margin:0;
-        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-        color:var(--ink);
-        background:
-            linear-gradient(
-            rgba(251,247,243,0.72),
-            rgba(251,247,243,0.72)
-            ),
-            /* *** 1 */ center / 180% no-repeat fixed;
-        overflow-x:hidden;
-        }
+    /* === Alternate palette — dark / inverted sections === */
+    .alt {
+      --ink:        var(--c5);
+      --muted:      var(--c2);
+      --paper:      var(--c4);
+      --card:       rgba(31,26,22,.82);
+      --glass:      rgba(31,26,22,.65);
+      --stroke:     rgba(255,255,255,.10);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,.30);
+      background:   var(--c4);
+      color:        var(--c5);
+    }
+    .alt h2          { color: var(--c3); }
+    .alt .subhead    { color: var(--c2); }
+    .alt .card       {
+      background: rgba(255,255,255,.07);
+      border-color: rgba(255,255,255,.10);
+      color: var(--c5);
+    }
+    .alt .card p,
+    .alt .card ul,
+    .alt .bullets    { color: var(--c2); }
+    .alt .card h3    { color: var(--c3); }
+    .alt .meta       { color: var(--c2); }
+    .alt .tag {
+      background: rgba(184,116,79,.22);
+      border-color: rgba(184,116,79,.30);
+      color: var(--c3);
+    }
+    .alt .item {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.10);
+    }
+    .alt .writing {
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.10);
+      color: var(--c5);
+    }
+    .alt .writing small { color: var(--c2); }
+    .alt .writing a     { color: var(--c3); }
 
-    a{color:inherit}
-    .wrap{max-width:var(--max); margin:0 auto; padding:0 22px 80px;}
-
-    .masthead{
-      margin:0 auto;
+    /* ===== Reset & base ===== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
       background:
-        linear-gradient(0deg, rgba(20,14,10,.62), rgba(20,14,10,.45)),
-        /* *** 2 */ center/cover no-repeat;
-      color:#fff;
+        linear-gradient(rgba(251,247,243,.74), rgba(251,247,243,.74)),
+        url("hero_background.jpg") center / 180% no-repeat fixed;
+      overflow-x: hidden;
+    }
+    a { color: inherit; }
+    html { scroll-behavior: smooth; }
+
+    .wrap {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 22px 90px;
     }
 
-    .topbar{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:18px 22px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:14px;
+    /* ===== Masthead ===== */
+    .masthead {
+      margin: 0 auto;
+      background:
+        linear-gradient(0deg, rgba(20,14,10,.64), rgba(20,14,10,.44)),
+        url("hero_background.jpg") center / cover no-repeat;
+      color: #fff;
     }
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      min-width: 240px;
+
+    /* Topbar */
+    .topbar {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
     }
-    .brandMark{
-      width:34px;height:34px;border-radius:12px;
-      background: linear-gradient(135deg, rgba(253,231,205,.9), rgba(184,116,79,.7));
-      border:1px solid rgba(255,255,255,.25);
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .brandMark {
+      width: 34px;
+      height: 34px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(253,231,205,.88), rgba(184,116,79,.70));
+      border: 1px solid rgba(255,255,255,.25);
       box-shadow: 0 12px 26px rgba(0,0,0,.25);
+      flex-shrink: 0;
     }
-    .brandText{display:flex; flex-direction:column; line-height:1.1}
-    .brandText strong{font-size:16px; letter-spacing:.02em}
-    .brandText span{font-size:12.5px; opacity:.9}
+    .brandText {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+    .brandText strong { font-size: 16px; letter-spacing: .02em; }
+    .brandText span   { font-size: 12.5px; opacity: .88; }
 
-    .navLinks{
-      display:flex; gap:18px; flex-wrap:wrap;
-      justify-content:flex-end;
+    .navLinks {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
-    .navLinks a{
-      text-decoration:none;
-      font-weight:600;
-      font-size:13.5px;
-      letter-spacing:.02em;
-      padding:10px 12px;
-      border-radius:999px;
+    .navLinks a {
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: .02em;
+      padding: 9px 13px;
+      border-radius: 999px;
       background: rgba(255,255,255,.10);
-      border:1px solid rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.18);
       backdrop-filter: blur(8px);
       transition: transform .15s ease, background .15s ease;
     }
-    .navLinks a:hover{transform: translateY(-1px); background: rgba(255,255,255,.16);}
+    .navLinks a:hover { transform: translateY(-1px); background: rgba(255,255,255,.18); }
 
-    .hero{
-      max-width:var(--max);
-      margin:0 auto;
-      padding:74px 22px 74px;
-      display:grid;
+    /* Hero */
+    .hero {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 74px 22px 80px;
+      display: grid;
       grid-template-columns: 1.15fr .85fr;
-      gap:26px;
-      align-items:end;
+      gap: 28px;
+      align-items: end;
     }
-    @media (max-width: 920px){
-      .hero{grid-template-columns:1fr; padding:54px 22px 62px;}
-      .brand{min-width:auto}
+    @media (max-width: 920px) {
+      .hero           { grid-template-columns: 1fr; padding: 52px 22px 64px; }
+      .brand          { min-width: auto; }
+      .contactWrap    { grid-template-columns: 1fr; }
+      .grid2          { grid-template-columns: 1fr; }
     }
 
-    .hero h1{
-      margin:0;
-      font-size: clamp(30px, 4vw, 52px);
-      line-height:1.12;
-      letter-spacing:-0.02em;
-      font-weight:800;
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 54px);
+      line-height: 1.10;
+      letter-spacing: -.025em;
+      font-weight: 800;
     }
-    .hero p{
-      margin:14px 0 0;
+    .hero > div > p {
+      margin: 14px 0 0;
       font-size: clamp(15px, 2vw, 18px);
-      line-height:1.55;
-      opacity:.95;
-      max-width: 60ch;
+      line-height: 1.55;
+      opacity: .94;
+      max-width: 58ch;
     }
 
-    .heroCard{
+    .heroCard {
       background: rgba(255,255,255,.12);
-      border:1px solid rgba(255,255,255,.18);
+      border: 1px solid rgba(255,255,255,.18);
       border-radius: var(--radius);
       box-shadow: 0 18px 44px rgba(0,0,0,.18);
-      backdrop-filter: blur(10px);
-      padding:18px;
+      backdrop-filter: blur(12px);
+      padding: 20px;
     }
-    .heroCard .row{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      align-items:center;
-      margin-bottom:10px;
-    }
-    .heroActions {
-        display: flex;
-        flex-direction: column;
-        gap: 14px;
-        }
+    .heroActions     { display: flex; flex-direction: column; gap: 14px; }
+    .heroAction      { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+    .heroAction p    { margin: 0; font-size: 14px; line-height: 1.45; opacity: .94; }
 
-        .heroAction {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 14px;
-        align-items: center;
-        }
-
-        .heroAction p {
-        margin: 0;
-        font-size: 14.5px;
-        line-height: 1.45;
-        opacity: 0.95;
-        }
-
-    .pill{
-      display:inline-flex;
-      padding:8px 10px;
-      border-radius:999px;
-      background: rgba(253,231,205,.18);
-      border:1px solid rgba(253,231,205,.22);
-      font-size:12.5px;
-      font-weight:700;
-      letter-spacing:.02em;
-    }
-    .heroCard ul{
-      margin:10px 0 0;
-      padding-left:18px;
-      line-height:1.55;
-      font-size: 14.5px;
-      opacity:.95;
-    }
-    .ctaRow{
-      display:flex; gap:10px; flex-wrap:wrap;
-      margin-top:14px;
-    }
-    .btn{
-      display:inline-flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      padding:12px 14px;
-      border-radius:14px;
-      border:1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.14);
-      color:#fff;
-      text-decoration:none;
-      font-weight:800;
-      font-size:13.5px;
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 15px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.13);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+      font-size: 13px;
+      white-space: nowrap;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{transform: translateY(-1px); background: rgba(255,255,255,.20);}
-    .btn.primary{
+    .btn:hover   { transform: translateY(-1px); background: rgba(255,255,255,.22); }
+    .btn.primary {
       background: rgba(253,231,205,.22);
-      border-color: rgba(253,231,205,.30);
+      border-color: rgba(253,231,205,.32);
     }
 
-    .section{
-      padding:66px 0 0;
+    /* ===== Content sections ===== */
+    .section {
+      padding: 68px 0 0;
     }
-    .section h2{
-      margin:0 0 14px;
+    .section h2 {
+      margin: 0 0 12px;
       font-size: 28px;
-      letter-spacing:-0.02em;
+      letter-spacing: -.02em;
       color: var(--ink);
     }
-    .subhead{
-      margin:0 0 22px;
-      color:var(--muted);
+    .subhead {
+      margin: 0 0 24px;
+      color: var(--muted);
       max-width: 80ch;
+      line-height: 1.6;
     }
 
-    .grid2{
-      display:grid;
+    /* Wrapped sections with alt background */
+    .sectionWrap {
+      padding: 68px 0 0;
+    }
+    .sectionWrap .altBand {
+      padding: 52px 22px 56px;
+      margin: 0 calc(-50vw + 50%);
+    }
+    .altBand > .inner {
+      max-width: var(--max);
+      margin: 0 auto;
+    }
+    .altBand h2    { margin: 0 0 12px; font-size: 28px; letter-spacing: -.02em; }
+    .altBand .subhead { margin: 0 0 24px; max-width: 80ch; line-height: 1.6; }
+
+    /* Grid */
+    .grid2 {
+      display: grid;
       grid-template-columns: 1fr 1fr;
-      gap:18px;
-    }
-    @media (max-width: 900px){
-      .grid2{grid-template-columns:1fr}
+      gap: 18px;
     }
 
-    .card{
+    /* Cards */
+    .card {
       background: var(--card);
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       border-radius: var(--radius);
       box-shadow: var(--shadowSoft);
-      padding:20px 20px;
+      padding: 22px;
       backdrop-filter: blur(10px);
     }
-    .card h3{
-      margin:0 0 8px;
-      font-size:18px;
-      letter-spacing:-0.01em;
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 17px;
+      letter-spacing: -.01em;
     }
-    .meta{
-      color:var(--muted);
-      font-size:13.5px;
-      margin-bottom:10px;
+    .meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 10px;
     }
-    .card p{margin:10px 0 0; color:#2c241f}
-    .card,
-    .contactCard,
-    .item,
-    .writing {
-         backdrop-filter: blur(6px);
-        background-color: rgba(255,255,255,0.78);
+    .card p   { margin: 10px 0 0; color: #2c241f; }
+    .bullets  {
+      margin: 12px 0 0;
+      padding-left: 18px;
+      color: #2c241f;
+      line-height: 1.6;
     }
-    .bullets{
-      margin:12px 0 0;
-      padding-left:18px;
-      color:#2c241f;
-    }
-    .bullets li{margin:6px 0}
+    .bullets li { margin: 6px 0; }
 
-    .tagRow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
-    .tag{
-      font-size:12.5px;
-      font-weight:700;
-      padding:7px 10px;
-      border-radius:999px;
+    .tagRow { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .tag {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 6px 11px;
+      border-radius: 999px;
       background: rgba(184,116,79,.12);
-      border:1px solid rgba(184,116,79,.18);
-      color:#5c3622;
+      border: 1px solid rgba(184,116,79,.20);
+      color: #5c3622;
     }
 
-    .timeline{
-      display:grid;
-      gap:14px;
+    /* Timeline */
+    .timeline { display: grid; gap: 14px; }
+    .item {
+      padding: 20px;
+      border-radius: 18px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.74);
+      box-shadow: 0 8px 22px rgba(0,0,0,.06);
+      backdrop-filter: blur(6px);
     }
-    .item{
-      padding:18px;
-      border-radius:18px;
-      border:1px solid var(--stroke);
-      background: rgba(255,255,255,.70);
-      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    .itemTop {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: baseline;
+      margin-bottom: 6px;
     }
-    .itemTop{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      flex-wrap:wrap;
-      align-items:baseline;
-      margin-bottom:6px;
-    }
-    .itemTop strong{font-size:16px}
-    .itemTop span{color:var(--muted); font-size:13.5px}
+    .itemTop strong { font-size: 16px; }
+    .itemTop span   { color: var(--muted); font-size: 13px; }
 
-    .writingList{
-      display:grid;
-      gap:12px;
+    /* Writing list */
+    .writingList { display: grid; gap: 12px; }
+    .writing {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 15px 18px;
+      border-radius: 16px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.75);
+      backdrop-filter: blur(6px);
     }
-    .writing{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      padding:14px 16px;
-      border-radius:16px;
-      border:1px solid var(--stroke);
-      background: rgba(255,255,255,.72);
+    .writing a {
+      text-decoration: none;
+      font-weight: 800;
+      color: var(--c1);
+      white-space: nowrap;
     }
-    .writing a{
-      text-decoration:none;
-      font-weight:800;
-      color: var(--accent);
-    }
-    .writing small{color:var(--muted)}
+    .writing small { color: var(--muted); }
 
-    .contactWrap{
-      display:grid;
-      grid-template-columns: 280px 1fr;
-      gap:18px;
-      align-items:stretch;
+    /* Contact */
+    .contactWrap {
+      display: grid;
+      grid-template-columns: 270px 1fr;
+      gap: 18px;
+      align-items: stretch;
     }
-    @media (max-width: 900px){
-      .contactWrap{grid-template-columns:1fr}
-    }
-    .headshot{
-      width:100%;
-      aspect-ratio: 4/5;
+    .headshot {
+      width: 100%;
+      aspect-ratio: 4 / 5;
       border-radius: var(--radius);
       object-fit: cover;
-      border:1px solid var(--stroke);
+      border: 1px solid var(--stroke);
       box-shadow: var(--shadow);
       background: #ddd;
+      display: block;
     }
-    .contactCard{
-      padding:22px;
+    .contactCard {
+      padding: 24px;
       border-radius: var(--radius);
-      border:1px solid var(--stroke);
-      background: rgba(255,255,255,.78);
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.80);
       box-shadow: var(--shadowSoft);
+      backdrop-filter: blur(10px);
     }
-    .contactCard h3{margin:0 0 8px}
-    .contactRow{
-      display:grid;
-      gap:10px;
-      margin-top: 14px;
-    }
-    .contactRow a{
-      color: var(--accent);
-      font-weight:800;
-      text-decoration:none;
-    }
+    .contactCard h3 { margin: 0 0 8px; font-size: 20px; }
+    .contactRow     { display: grid; gap: 11px; margin-top: 16px; }
+    .contactRow a   { color: var(--c1); font-weight: 800; text-decoration: none; }
 
-    footer{
-      margin-top:70px;
-      padding:28px 0 0;
-      color:var(--secondary);
-      font-size:13.5px;
-      text-align:center;
+    /* Footer */
+    footer {
+      margin-top: 76px;
+      padding: 28px 0 0;
+      color: #7b6d64;
+      font-size: 13px;
+      text-align: center;
     }
-
-    html{scroll-behavior:smooth}
   </style>
 </head>
 
 <body>
-  <div class="masthead" role="banner" aria-label="Header and hero with background image">
+
+  <!-- Masthead: topbar + hero -->
+  <div class="masthead" role="banner" aria-label="Site header and hero">
+
     <div class="topbar">
-      <div class="brand" aria-label="Brand">
+      <div class="brand" aria-label="Site brand">
         <div class="brandMark" aria-hidden="true"></div>
         <div class="brandText">
-          <strong>[STUDENT NAME]</strong>
-          <span>[MAJOR] • Graduation: [MONTH YEAR]</span>
+          <strong>[Your Full Name]</strong>
+          <span>[Major] &bull; [Expected Graduation]</span>
         </div>
       </div>
 
-      <div class="navLinks" aria-label="Site navigation">
-        <a href="#about">[NAV LINK 1]</a>
-        <a href="#education">[NAV LINK 2]</a>
-        <a href="#experience">[NAV LINK 3]</a>
-        <a href="#projects">[NAV LINK 4]</a>
-        <a href="#writing">[NAV LINK 5]</a>
-        <a href="#contact">[NAV LINK 6]</a>
-      </div>
+      <nav class="navLinks" aria-label="Primary navigation">
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#experience">Experience</a>
+        <a href="#projects">Projects</a>
+        <a href="#writing">Writing</a>
+        <a href="#contact">Contact</a>
+      </nav>
     </div>
 
     <div class="hero">
       <div>
-        <h1>[PORTFOLIO HEADLINE]</h1>
-        <p>[HERO DESCRIPTION: A brief statement about your field of study, interests, and the types of opportunities you are seeking.]</p>
+        <h1>[Your Discipline] Portfolio &amp; Resume</h1>
+        <p>
+          [One to two sentences describing your scholarly focus and the kinds of opportunities you are seeking.
+          Keep it specific enough to show direction but broad enough to fit several role types.]
+        </p>
       </div>
-      <aside class="heroCard" aria-label="Quick highlights">
+
+      <aside class="heroCard" aria-label="Key highlights">
         <div class="heroActions">
 
           <div class="heroAction">
-            <a class="btn primary" href="#projects">[CTA LABEL 1]</a>
-            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 1]</p>
+            <a class="btn primary" href="#projects">[Highlight 1]</a>
+            <p>[Short phrase describing the value or method behind Highlight 1]</p>
           </div>
 
           <div class="heroAction">
-            <a class="btn primary" href="#skills">[CTA LABEL 2]</a>
-            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 2]</p>
+            <a class="btn primary" href="#skills">[Highlight 2]</a>
+            <p>[Short phrase describing the value or method behind Highlight 2]</p>
           </div>
 
           <div class="heroAction">
-            <a class="btn primary" href="#writing">[CTA LABEL 3]</a>
-            <p>[SHORT DESCRIPTION OF HIGHLIGHT AREA 3]</p>
+            <a class="btn primary" href="#writing">[Highlight 3]</a>
+            <p>[Short phrase describing the value or method behind Highlight 3]</p>
           </div>
 
         </div>
       </aside>
     </div>
   </div>
+  <!-- end masthead -->
 
   <main class="wrap">
+
+    <!-- ABOUT -->
     <section id="about" class="section">
-      <h2>[ABOUT SECTION HEADING]</h2>
-      <p class="subhead">[ABOUT SUBHEADING: A concise paragraph describing your academic background, interests, and what drives your work.]</p>
+      <h2>About</h2>
+      <p class="subhead">
+        [Two to three sentences summarizing your academic identity, intellectual interests, and the kinds of
+        environments or problems where you do your best work.]
+      </p>
 
       <div class="grid2">
         <div class="card">
-          <h3>[FOCUS AREAS CARD HEADING]</h3>
+          <h3>[Focus Area Title]</h3>
           <ul class="bullets">
-            <li>[FOCUS AREA 1]</li>
-            <li>[FOCUS AREA 2]</li>
-            <li>[FOCUS AREA 3]</li>
+            <li>[Focus area description 1]</li>
+            <li>[Focus area description 2]</li>
+            <li>[Focus area description 3]</li>
           </ul>
           <div class="tagRow">
-            <span class="tag">[TAG 1]</span>
-            <span class="tag">[TAG 2]</span>
-            <span class="tag">[TAG 3]</span>
+            <span class="tag">[Keyword 1]</span>
+            <span class="tag">[Keyword 2]</span>
+            <span class="tag">[Keyword 3]</span>
           </div>
         </div>
 
         <div class="card">
-          <h3>[GOALS CARD HEADING]</h3>
-          <p>[DESCRIPTION OF ROLES OR ENVIRONMENTS YOU ARE SEEKING]</p>
+          <h3>[What You Are Looking For]</h3>
+          <p>[One sentence on the type of work environment or role you want.]</p>
           <ul class="bullets">
-            <li>[OPPORTUNITY TYPE 1]</li>
-            <li>[OPPORTUNITY TYPE 2]</li>
-            <li>[OPPORTUNITY TYPE 3]</li>
+            <li>[Role type or sector 1]</li>
+            <li>[Role type or sector 2]</li>
+            <li>[Role type or sector 3]</li>
           </ul>
         </div>
       </div>
     </section>
 
+    <!-- EDUCATION -->
     <section id="education" class="section">
-      <h2>[EDUCATION SECTION HEADING]</h2>
-      <p class="subhead">[EDUCATION SUBHEADING]</p>
+      <h2>Education</h2>
+      <p class="subhead">[Optional framing sentence about your academic path.]</p>
 
       <div class="timeline">
-        <div class="item">
-          <div class="itemTop">
-            <strong>[DEGREE NAME]</strong>
-            <span>[GRADUATION DATE]</span>
-          </div>
-          <div class="meta">[INSTITUTION NAME] • [GPA OPTIONAL] • [LOCATION]</div>
-          <ul class="bullets">
-            <li>[RELEVANT COURSEWORK OR ACADEMIC DETAIL 1]</li>
-            <li>[RELEVANT COURSEWORK OR ACADEMIC DETAIL 2]</li>
-          </ul>
-        </div>
 
         <div class="item">
           <div class="itemTop">
-            <strong>[ADDITIONAL DEGREE OR CERTIFICATE]</strong>
-            <span>[DATE]</span>
+            <strong>[Degree] in [Field]</strong>
+            <span>[Expected or Completed Date]</span>
           </div>
-          <div class="meta">[INSTITUTION NAME] • [LOCATION]</div>
+          <div class="meta">[University Name] &bull; [GPA if applicable] &bull; [City, State]</div>
           <ul class="bullets">
-            <li>[DETAIL 1]</li>
-            <li>[DETAIL 2]</li>
+            <li>[Relevant coursework or concentration note]</li>
+            <li>[Thesis, capstone, or honors project if applicable]</li>
           </ul>
         </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>[Additional Credential or Earlier Degree]</strong>
+            <span>[Date]</span>
+          </div>
+          <div class="meta">[Institution] &bull; [City, State]</div>
+          <ul class="bullets">
+            <li>[Notable detail 1]</li>
+          </ul>
+        </div>
+
       </div>
     </section>
 
-    <section id="skills" class="section">
-      <h2>[SKILLS SECTION HEADING]</h2>
-      <p class="subhead">[SKILLS SUBHEADING]</p>
+    <!-- SKILLS — alternate dark band -->
+    <div class="sectionWrap">
+      <div class="altBand alt" id="skills">
+        <div class="inner">
+          <h2>Skills</h2>
+          <p class="subhead">[One sentence framing what the skills section demonstrates to a recruiter.]</p>
 
-      <div class="grid2">
-        <div class="card">
-          <h3>[SKILL CATEGORY 1 HEADING]</h3>
-          <ul class="bullets">
-            <li>[SKILL 1]</li>
-            <li>[SKILL 2]</li>
-            <li>[SKILL 3]</li>
-            <li>[SKILL 4]</li>
-          </ul>
-        </div>
+          <div class="grid2">
+            <div class="card">
+              <h3>[Skill Category 1]</h3>
+              <ul class="bullets">
+                <li>[Skill item 1]</li>
+                <li>[Skill item 2]</li>
+                <li>[Skill item 3]</li>
+                <li>[Skill item 4]</li>
+              </ul>
+            </div>
 
-        <div class="card">
-          <h3>[SKILL CATEGORY 2 HEADING]</h3>
-          <ul class="bullets">
-            <li>[SKILL 1]</li>
-            <li>[SKILL 2]</li>
-            <li>[SKILL 3]</li>
-            <li>[SKILL 4]</li>
-          </ul>
+            <div class="card">
+              <h3>[Skill Category 2]</h3>
+              <ul class="bullets">
+                <li>[Skill item 1]</li>
+                <li>[Skill item 2]</li>
+                <li>[Skill item 3]</li>
+                <li>[Skill item 4]</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
 
+    <!-- EXPERIENCE -->
     <section id="experience" class="section">
-      <h2>[EXPERIENCE SECTION HEADING]</h2>
-      <p class="subhead">[EXPERIENCE SUBHEADING]</p>
+      <h2>Experience</h2>
+      <p class="subhead">[Optional sentence encouraging inclusion of campus, volunteer, and research roles.]</p>
 
       <div class="timeline">
+
         <div class="item">
           <div class="itemTop">
-            <strong>[JOB TITLE, ORGANIZATION]</strong>
-            <span>[START DATE – END DATE]</span>
+            <strong>[Job Title], [Organization]</strong>
+            <span>[Start Date] – [End Date or Present]</span>
           </div>
-          <div class="meta">[DEPARTMENT / ORGANIZATION NAME] • [CITY, STATE]</div>
+          <div class="meta">[Department or Division] &bull; [City, State]</div>
           <ul class="bullets">
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 3]</li>
+            <li>[Accomplishment or responsibility 1]</li>
+            <li>[Accomplishment or responsibility 2]</li>
+            <li>[Accomplishment or responsibility 3]</li>
           </ul>
         </div>
 
         <div class="item">
           <div class="itemTop">
-            <strong>[JOB TITLE, ORGANIZATION]</strong>
-            <span>[START DATE – END DATE]</span>
+            <strong>[Job Title], [Organization]</strong>
+            <span>[Start Date] – [End Date]</span>
           </div>
-          <div class="meta">[ORGANIZATION NAME] • [CITY, STATE]</div>
+          <div class="meta">[Department or Division] &bull; [City, State]</div>
           <ul class="bullets">
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
+            <li>[Accomplishment or responsibility 1]</li>
+            <li>[Accomplishment or responsibility 2]</li>
           </ul>
         </div>
 
         <div class="item">
           <div class="itemTop">
-            <strong>[JOB TITLE, ORGANIZATION]</strong>
-            <span>[START DATE – END DATE]</span>
+            <strong>[Job Title], [Organization]</strong>
+            <span>[Start Date] – [End Date]</span>
           </div>
-          <div class="meta">[ORGANIZATION NAME] • [CITY, STATE]</div>
+          <div class="meta">[Department or Division] &bull; [City, State]</div>
           <ul class="bullets">
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 1]</li>
-            <li>[RESPONSIBILITY OR ACHIEVEMENT 2]</li>
+            <li>[Accomplishment or responsibility 1]</li>
           </ul>
         </div>
+
       </div>
     </section>
 
+    <!-- PROJECTS -->
     <section id="projects" class="section">
-      <h2>[PROJECTS SECTION HEADING]</h2>
-      <p class="subhead">[PROJECTS SUBHEADING]</p>
+      <h2>Projects</h2>
+      <p class="subhead">[Optional sentence explaining how you have framed or selected these projects.]</p>
 
       <div class="grid2">
+
         <div class="card">
-          <h3>[PROJECT TITLE 1]</h3>
-          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
-          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <h3>[Project Title 1]</h3>
+          <div class="meta">[Method] &bull; [Tool or Context] &bull; [Format]</div>
+          <p>[Two to three sentences describing purpose, approach, and outcome of this project.]</p>
           <ul class="bullets">
-            <li>[KEY TASK OR FINDING 1]</li>
-            <li>[KEY TASK OR FINDING 2]</li>
+            <li>[Key process step or contribution 1]</li>
+            <li>[Key process step or contribution 2]</li>
           </ul>
           <div class="tagRow">
-            <span class="tag">[TAG 1]</span>
-            <span class="tag">[TAG 2]</span>
-            <span class="tag">[TAG 3]</span>
+            <span class="tag">[Tag A]</span>
+            <span class="tag">[Tag B]</span>
+            <span class="tag">[Tag C]</span>
           </div>
         </div>
 
         <div class="card">
-          <h3>[PROJECT TITLE 2]</h3>
-          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
-          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <h3>[Project Title 2]</h3>
+          <div class="meta">[Method] &bull; [Tool or Context] &bull; [Format]</div>
+          <p>[Two to three sentences describing purpose, approach, and outcome of this project.]</p>
           <ul class="bullets">
-            <li>[KEY TASK OR FINDING 1]</li>
-            <li>[KEY TASK OR FINDING 2]</li>
+            <li>[Key process step or contribution 1]</li>
+            <li>[Key process step or contribution 2]</li>
           </ul>
           <div class="tagRow">
-            <span class="tag">[TAG 1]</span>
-            <span class="tag">[TAG 2]</span>
-            <span class="tag">[TAG 3]</span>
+            <span class="tag">[Tag A]</span>
+            <span class="tag">[Tag B]</span>
+            <span class="tag">[Tag C]</span>
           </div>
         </div>
 
         <div class="card">
-          <h3>[PROJECT TITLE 3]</h3>
-          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
-          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <h3>[Project Title 3]</h3>
+          <div class="meta">[Method] &bull; [Tool or Context] &bull; [Format]</div>
+          <p>[Two to three sentences describing purpose, approach, and outcome of this project.]</p>
           <ul class="bullets">
-            <li>[KEY TASK OR FINDING 1]</li>
-            <li>[KEY TASK OR FINDING 2]</li>
+            <li>[Key process step or contribution 1]</li>
+            <li>[Key process step or contribution 2]</li>
           </ul>
           <div class="tagRow">
-            <span class="tag">[TAG 1]</span>
-            <span class="tag">[TAG 2]</span>
-            <span class="tag">[TAG 3]</span>
+            <span class="tag">[Tag A]</span>
+            <span class="tag">[Tag B]</span>
           </div>
         </div>
 
         <div class="card">
-          <h3>[PROJECT TITLE 4]</h3>
-          <div class="meta">[METHOD 1] • [METHOD 2] • [METHOD 3]</div>
-          <p>[PROJECT DESCRIPTION: Summarize the project goal, approach, and outcome in 2–3 sentences.]</p>
+          <h3>[Project Title 4]</h3>
+          <div class="meta">[Method] &bull; [Tool or Context] &bull; [Format]</div>
+          <p>[Two to three sentences describing purpose, approach, and outcome of this project.]</p>
           <ul class="bullets">
-            <li>[KEY TASK OR FINDING 1]</li>
-            <li>[KEY TASK OR FINDING 2]</li>
+            <li>[Key process step or contribution 1]</li>
+            <li>[Key process step or contribution 2]</li>
           </ul>
           <div class="tagRow">
-            <span class="tag">[TAG 1]</span>
-            <span class="tag">[TAG 2]</span>
-            <span class="tag">[TAG 3]</span>
+            <span class="tag">[Tag A]</span>
+            <span class="tag">[Tag B]</span>
           </div>
         </div>
+
       </div>
     </section>
 
-    <section id="writing" class="section">
-      <h2>[WRITING SECTION HEADING]</h2>
-      <p class="subhead">[WRITING SUBHEADING]</p>
+    <!-- WRITING — alternate dark band -->
+    <div class="sectionWrap">
+      <div class="altBand alt" id="writing">
+        <div class="inner">
+          <h2>Writing Samples</h2>
+          <p class="subhead">[One sentence inviting viewers to review linked documents.]</p>
 
-      <div class="writingList">
-        <div class="writing">
-          <div>
-            <strong>[WRITING SAMPLE TITLE 1]</strong><br/>
-            <small>[FORMAT OR DESCRIPTION OF SAMPLE 1]</small>
-          </div>
-          <a href="#" aria-label="Open writing sample">Open</a>
-        </div>
+          <div class="writingList">
 
-        <div class="writing">
-          <div>
-            <strong>[WRITING SAMPLE TITLE 2]</strong><br/>
-            <small>[FORMAT OR DESCRIPTION OF SAMPLE 2]</small>
-          </div>
-          <a href="#" aria-label="Open writing sample">Open</a>
-        </div>
+            <div class="writing">
+              <div>
+                <strong>[Writing Sample Title 1]</strong><br />
+                <small>[Format descriptor — e.g., length, style, audience]</small>
+              </div>
+              <a href="#" aria-label="Open writing sample 1">Open &rarr;</a>
+            </div>
 
-        <div class="writing">
-          <div>
-            <strong>[WRITING SAMPLE TITLE 3]</strong><br/>
-            <small>[FORMAT OR DESCRIPTION OF SAMPLE 3]</small>
-          </div>
-          <a href="#" aria-label="Open writing sample">Open</a>
-        </div>
+            <div class="writing">
+              <div>
+                <strong>[Writing Sample Title 2]</strong><br />
+                <small>[Format descriptor]</small>
+              </div>
+              <a href="#" aria-label="Open writing sample 2">Open &rarr;</a>
+            </div>
 
-        <div class="writing">
-          <div>
-            <strong>[WRITING SAMPLE TITLE 4]</strong><br/>
-            <small>[FORMAT OR DESCRIPTION OF SAMPLE 4]</small>
+            <div class="writing">
+              <div>
+                <strong>[Writing Sample Title 3]</strong><br />
+                <small>[Format descriptor]</small>
+              </div>
+              <a href="#" aria-label="Open writing sample 3">Open &rarr;</a>
+            </div>
+
+            <div class="writing">
+              <div>
+                <strong>[Writing Sample Title 4]</strong><br />
+                <small>[Format descriptor]</small>
+              </div>
+              <a href="#" aria-label="Open writing sample 4">Open &rarr;</a>
+            </div>
+
           </div>
-          <a href="#" aria-label="Open writing sample">Open</a>
         </div>
       </div>
-    </section>
+    </div>
 
+    <!-- LEADERSHIP & AWARDS -->
     <section id="awards" class="section">
-      <h2>[LEADERSHIP & AWARDS SECTION HEADING]</h2>
-      <p class="subhead">[LEADERSHIP & AWARDS SUBHEADING]</p>
+      <h2>Leadership &amp; Awards</h2>
+      <p class="subhead">[Optional sentence on why this section matters for your goals.]</p>
 
       <div class="grid2">
+
         <div class="card">
-          <h3>[LEADERSHIP CARD HEADING]</h3>
+          <h3>[Leadership Category]</h3>
           <ul class="bullets">
-            <li>[LEADERSHIP ROLE OR ACTIVITY 1]</li>
-            <li>[LEADERSHIP ROLE OR ACTIVITY 2]</li>
-            <li>[LEADERSHIP ROLE OR ACTIVITY 3]</li>
+            <li>[Leadership role or activity 1 with brief impact note]</li>
+            <li>[Leadership role or activity 2 with brief impact note]</li>
+            <li>[Leadership role or activity 3 with brief impact note]</li>
           </ul>
         </div>
+
         <div class="card">
-          <h3>[AWARDS CARD HEADING]</h3>
+          <h3>[Awards &amp; Honors Category]</h3>
           <ul class="bullets">
-            <li>[AWARD OR HONOR 1]</li>
-            <li>[AWARD OR HONOR 2]</li>
-            <li>[AWARD OR HONOR 3]</li>
+            <li>[Award or honor 1 — institution, year if relevant]</li>
+            <li>[Award or honor 2 — institution, year if relevant]</li>
+            <li>[Award or honor 3 — institution, year if relevant]</li>
           </ul>
         </div>
+
       </div>
     </section>
 
+    <!-- CONTACT -->
     <section id="contact" class="section">
-      <h2>[CONTACT SECTION HEADING]</h2>
-      <p class="subhead">[CONTACT SUBHEADING]</p>
+      <h2>Contact</h2>
+      <p class="subhead">[One sentence inviting recruiters or collaborators to reach out.]</p>
 
       <div class="contactWrap">
-        <!-- *** 3 -->
-        <img class="headshot" src="" alt="Headshot of [STUDENT NAME]" />
+
+        <img
+          class="headshot"
+          src="headshot.jpg"
+          alt="Headshot of [Your Name]"
+        />
 
         <div class="contactCard">
-          <h3>[STUDENT NAME]</h3>
-          <div class="meta">[MAJOR] • Graduation: [MONTH YEAR] • [AVAILABILITY STATUS]</div>
+          <h3>[Your Full Name]</h3>
+          <div class="meta">[Major] &bull; [Graduation Term] &bull; [Availability note]</div>
 
           <div class="contactRow">
-            <div><strong>[CONTACT LABEL 1]:</strong> <a href="#">[EMAIL ADDRESS]</a></div>
-            <div><strong>[CONTACT LABEL 2]:</strong> <a href="#" target="_blank" rel="noreferrer">[LINKEDIN URL]</a></div>
-            <div><strong>[CONTACT LABEL 3]:</strong> <a href="#" target="_blank" rel="noreferrer">[DOWNLOAD LABEL]</a></div>
-            <div><strong>[CONTACT LABEL 4]:</strong> [LOCATION / AVAILABILITY]</div>
+            <div><strong>Email:</strong> <a href="mailto:you@example.com">[your.email@example.com]</a></div>
+            <div><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer">[linkedin.com/in/yourhandle]</a></div>
+            <div><strong>Portfolio PDF:</strong> <a href="#" target="_blank" rel="noreferrer">Download</a></div>
+            <div><strong>[Additional Link Label]:</strong> <a href="#" target="_blank" rel="noreferrer">[URL or handle]</a></div>
+            <div><strong>Location:</strong> [City, State — note on remote / relocation openness]</div>
           </div>
 
-          <div class="tagRow" style="margin-top:16px">
-            <span class="tag">[SKILL TAG 1]</span>
-            <span class="tag">[SKILL TAG 2]</span>
-            <span class="tag">[SKILL TAG 3]</span>
-            <span class="tag">[SKILL TAG 4]</span>
-            <span class="tag">[SKILL TAG 5]</span>
+          <div class="tagRow" style="margin-top: 18px;">
+            <span class="tag">[Interest Tag 1]</span>
+            <span class="tag">[Interest Tag 2]</span>
+            <span class="tag">[Interest Tag 3]</span>
+            <span class="tag">[Interest Tag 4]</span>
+            <span class="tag">[Interest Tag 5]</span>
           </div>
         </div>
+
       </div>
     </section>
 
     <footer>
-      &copy; <span id="y"></span> [STUDENT NAME] • [FOOTER TAGLINE]
+      &copy; <span id="y"></span> [Your Name] &bull; [One short tagline about your work or values.]
     </footer>
+
   </main>
 
   <script>
     document.getElementById('y').textContent = new Date().getFullYear();
   </script>
+
 </body>
 </html>

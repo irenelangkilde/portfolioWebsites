@@ -11,7 +11,7 @@ import { resolve } from "path";
  *   specialization?: string,
  *   provider?: "claude" | "openai"   // default: "claude"
  * }
- * Returns the structured JSON from AnalyzeResume.md analysis.
+ * Returns the structured JSON from extractResumeProfile.md analysis.
  *
  * Uses raw fetch to avoid esbuild SDK bundling issues.
  */
@@ -54,13 +54,13 @@ export async function handler(event) {
     };
   }
 
-  // Load the AnalyzeResume.md prompt
+  // Load the extractResumeProfile.md prompt
   const cwd = process.cwd();
   let promptTemplate;
   for (const candidate of [
-    resolve(cwd, "src/netlify/functions/AnalyzeResume.md"),
-    resolve(cwd, "netlify/functions/AnalyzeResume.md"),
-    resolve(cwd, "AnalyzeResume.md"),
+    resolve(cwd, "src/netlify/functions/extractResumeProfile.md"),
+    resolve(cwd, "netlify/functions/extractResumeProfile.md"),
+    resolve(cwd, "extractResumeProfile.md"),
   ]) {
     try { promptTemplate = readFileSync(candidate, "utf-8"); break; } catch {}
   }
@@ -68,7 +68,7 @@ export async function handler(event) {
     return {
       statusCode: 500,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ error: "Could not load AnalyzeResume.md" })
+      body: JSON.stringify({ error: "Could not load extractResumeProfile.md" })
     };
   }
 

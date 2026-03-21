@@ -1,397 +1,834 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>[PORTFOLIO_OWNER_NAME] - [PORTFOLIO_TITLE]</title>
-        <link href="css/theme.css" rel="stylesheet" type="text/css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-        <style>
-            :root {
-                --color-primary: #10b981;
-                --color-primary-dark: #059669;
-                --color-secondary: #ec4899;
-                --color-secondary-dark: #db2777;
-                --color-accent: #f97316;
-                --color-accent-dark: #ea580c;
-                --color-dark: #1a1a1a;
-                --color-dark-mid: #2d3748;
-                --color-dark-deep: #1a202c;
-                --color-dark-deepest: #0f172a;
-                --color-purple: #7c3aed;
-                --color-purple-light: #a855f7;
-                --color-purple-dark: #6d28d9;
-                --color-light: #f8f9fa;
-                --color-light-mid: #f1f5f9;
-                --color-text: #333;
-                --color-text-muted: #555;
-                --color-text-light: #666;
-            }
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: 'Inter', sans-serif; background: var(--color-light); color: var(--color-text); }
-            .hero { position: relative; height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--color-dark); }
-            .accent-block { position: absolute; z-index: 1; }
-            .accent-green { width: 350px; height: 100%; background: var(--color-primary); left: 0; top: 0; }
-            .accent-orange { width: 100%; height: 200px; background: var(--color-accent); right: 0; top: 0; }
-            .accent-pink { width: 350px; height: 60%; background: var(--color-secondary); right: 0; bottom: 0; }
-            .accent-purple { width: 60%; height: 200px; background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-purple-light) 100%); left: 0; bottom: 0; }
-            .hero-content { position: relative; z-index: 2; width: 90%; max-width: 1200px; display: flex; align-items: center; justify-content: center; }
-            .hero-card { background: var(--color-dark-mid); border-radius: 40px; overflow: hidden; width: 100%; max-width: 1100px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); position: relative; min-height: 600px; display: flex; align-items: center; justify-content: center; }
-            .hero-image { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
-            .hero-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.5) 100%); z-index: 1; }
-            .hero-text { position: relative; z-index: 2; text-align: center; color: white; padding: 60px 40px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
-            .hero-photo { position: relative; width: 160px; height: 160px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(255,255,255,0.35); box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-            .hero-photo img { width: 100%; height: 100%; object-fit: cover; display: block; position: relative; z-index: 1; }
-            .hero-text h1 { font-size: 5rem; font-weight: 300; margin-bottom: 10px; letter-spacing: -2px; }
-            .hero-text p { font-size: 1.3rem; font-weight: 300; margin-bottom: 40px; color: rgba(255,255,255,0.9); max-width: 600px; margin-left: auto; margin-right: auto; line-height: 1.7; }
-            .hero-cta { display: inline-block; padding: 15px 40px; background: transparent; color: white; text-decoration: none; border: 2px solid white; border-radius: 50px; font-weight: 600; transition: all 0.3s; font-size: 1rem; }
-            .hero-cta:hover { background: white; color: var(--color-dark-mid); }
-            section { padding: 100px 20px; }
-            .container { max-width: 1200px; margin: 0 auto; }
-            section h2 { font-size: 3rem; margin-bottom: 20px; color: var(--color-dark); font-weight: 700; }
-            .section-subtitle { font-size: 1.2rem; color: var(--color-text-light); margin-bottom: 60px; }
-            .about { background: white; }
-            .about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-            .about-text { font-size: 1.1rem; line-height: 1.8; color: var(--color-text-muted); }
-            .about-text p { margin-bottom: 20px; }
-            .about-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
-            .stat-card { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); padding: 30px; border-radius: 15px; color: white; text-align: center; }
-            .stat-card:nth-child(2) { background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); }
-            .stat-card:nth-child(3) { background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%); }
-            .stat-card:nth-child(4) { background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-purple-dark) 100%); }
-            .stat-number { font-size: 2.5rem; font-weight: 700; margin-bottom: 10px; }
-            .stat-label { font-size: 1rem; opacity: 0.95; }
-            .skills { background: var(--color-light); }
-            .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-            .skill-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.05); transition: all 0.3s; }
-            .skill-card:hover { transform: translateY(-10px); box-shadow: 0 15px 40px rgba(0,0,0,0.1); }
-            .skill-card h3 { font-size: 1.5rem; margin-bottom: 20px; color: var(--color-dark); }
-            .skill-list { list-style: none; }
-            .skill-list li { padding: 12px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; color: var(--color-text-muted); }
-            .skill-list li:last-child { border-bottom: none; }
-            .skill-level { color: var(--color-primary); font-weight: 600; font-size: 0.9rem; }
-            .projects { background: white; }
-            .projects-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; }
-            .project-card { background: white; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.3s; }
-            .project-card:hover { transform: translateY(-15px); box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
-            .project-image { width: 100%; height: 250px; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; }
-            .project-image.type-1 { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%); }
-            .project-image.type-2 { background: linear-gradient(135deg, var(--color-secondary) 0%, var(--color-secondary-dark) 100%); }
-            .project-image.type-3 { background: linear-gradient(135deg, var(--color-purple) 0%, var(--color-purple-dark) 100%); }
-            .project-image.type-4 { background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-dark) 100%); }
-            .project-content { padding: 30px; }
-            .project-content h3 { font-size: 1.5rem; margin-bottom: 15px; color: var(--color-dark); }
-            .project-content p { color: var(--color-text-light); line-height: 1.7; margin-bottom: 20px; }
-            .project-tags { display: flex; flex-wrap: wrap; gap: 10px; }
-            .project-tag { background: var(--color-light-mid); padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; color: var(--color-text-muted); }
-            .contact { background: linear-gradient(135deg, var(--color-dark) 0%, var(--color-dark-mid) 100%); color: white; }
-            .contact h2, .contact .section-subtitle { color: white; }
-            .contact-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px; }
-            .contact-card { background: rgba(255,255,255,0.1); padding: 40px; border-radius: 20px; text-align: center; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-            .contact-card h3 { font-size: 1.3rem; margin-bottom: 15px; color: var(--color-primary); }
-            .contact-card a { color: white; text-decoration: none; transition: color 0.3s; }
-            .contact-card a:hover { color: var(--color-primary); }
-            footer { background: var(--color-dark-deepest); color: white; text-align: center; padding: 40px 20px; }
-            @media (max-width: 968px) {
-                .hero-text h1 { font-size: 3rem; }
-                .hero-text p { font-size: 1.1rem; }
-                .accent-green, .accent-pink { width: 200px; }
-                .about-content { grid-template-columns: 1fr; }
-                .about-stats { grid-template-columns: 1fr 1fr; }
-                section h2 { font-size: 2.2rem; }
-            }
-            @media (max-width: 640px) {
-                .hero-text h1 { font-size: 2rem; }
-                .about-stats { grid-template-columns: 1fr; }
-                .accent-green, .accent-pink, .accent-orange, .accent-purple { display: none; }
-            }
-        </style>
-    </head>
-    <body>
-        <section class="hero">
-            <div class="accent-block accent-green"></div>
-            <div class="accent-block accent-orange"></div>
-            <div class="accent-block accent-pink"></div>
-            <div class="accent-block accent-purple"></div>
-            <div class="hero-content">
-                <div class="hero-card">
-                    <!-- *** placeholder 1: hero background SVG or image -->
-                    <svg class="hero-image" viewBox="0 0 1100 600" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                            <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" style="stop-color:#2d3748;stop-opacity:1"/>
-                                <stop offset="100%" style="stop-color:#1a202c;stop-opacity:1"/>
-                            </linearGradient>
-                        </defs>
-                        <rect width="1100" height="600" fill="url(#heroGrad)"/>
-                        <ellipse cx="550" cy="200" rx="100" ry="120" fill="#1a1a1a" opacity="0.6"/>
-                        <rect x="480" y="320" width="140" height="280" fill="#1a1a1a" opacity="0.6" rx="10"/>
-                        <text x="550" y="550" font-size="120" fill="#2d3748" text-anchor="middle" font-weight="bold" opacity="0.3">[INITIALS]</text>
-                    </svg>
-                    <div class="hero-overlay"></div>
-                    <div class="hero-text">
-                        <div class="hero-photo">
-                            <!-- *** placeholder 2: profile portrait photo -->
-                            <img src="[PROFILE_PHOTO_URL]" alt="[PORTFOLIO_OWNER_NAME] portrait">
-                        </div>
-                        <h1>[PORTFOLIO_TITLE]</h1>
-                        <p>[HERO_TAGLINE_OR_BRIEF_INTRO]</p>
-                        <a href="#about" class="hero-cta">[CTA_BUTTON_TEXT]</a>
-                    </div>
-                </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>[PORTFOLIO_OWNER_NAME] - [FIELD] Portfolio</title>
+    <!--
+{
+  "visual_elements": {
+    "images": [
+      {
+        "src_file_name": "hero_portrait.jpg",
+        "selector": ".hero-photo img",
+        "type": "img",
+        "role": "Circular portrait photo of portfolio owner centered in hero card"
+      },
+      {
+        "src_file_name": "hero_background.svg",
+        "selector": ".hero-image",
+        "type": "svg",
+        "role": "Decorative dark gradient background with abstract silhouette motif inside the hero card"
+      }
+    ],
+    "animations": []
+  },
+  "exemplary_attributes": {
+    "pacing": "Generous vertical rhythm; each section breathes with 100px padding and ample internal spacing",
+    "mood": "Energetic yet academic; bold accent colors contrast with dark moody hero and clean white body sections",
+    "compositional_feel": "Central hero card framing with colorful edge bleed accent blocks, transitioning to grid-based content sections",
+    "section_density": "Moderate; about 4–6 content units per section, balanced whitespace throughout",
+    "visual_treatment": "Vivid flat color gradients for category coding, glassmorphism contact cards on dark background, subtle card hover lifts"
+  },
+  "default_color_scheme": {
+    "primary": "#10b981",
+    "secondary": "#ec4899",
+    "accent": "#f97316",
+    "dark": "#1a1a1a",
+    "light": "#f8f9fa"
+  },
+  "design_factors": {
+    "composition_option": "central",
+    "style_token": "clean-minimal",
+    "rendering_style": "clean editorial vector"
+  }
+}
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* ─── CSS Custom Properties ─────────────────────────────────────────── */
+      :root {
+        /* 5-color palette derived from hero accent blocks */
+        --clr-primary:   #10b981; /* emerald green */
+        --clr-secondary: #ec4899; /* vibrant pink   */
+        --clr-accent:    #f97316; /* warm orange    */
+        --clr-dark:      #1a1a1a; /* near-black     */
+        --clr-light:     #f8f9fa; /* off-white      */
+
+        /* Functional derivations */
+        --clr-primary-deep:   #059669;
+        --clr-secondary-deep: #db2777;
+        --clr-accent-deep:    #ea580c;
+        --clr-purple:         #7c3aed;
+        --clr-purple-deep:    #6d28d9;
+        --clr-hero-card:      #2d3748;
+        --clr-hero-card-dark: #1a202c;
+        --clr-body-text:      #333333;
+        --clr-muted:          #666666;
+        --clr-subtle:         #555555;
+        --clr-rule:           #eeeeee;
+        --clr-surface:        #ffffff;
+        --clr-surface-alt:    #f1f5f9;
+        --clr-footer:         #0f172a;
+
+        /* Alt palette (dark-inverted sections) */
+        --alt-bg:        linear-gradient(135deg, var(--clr-dark) 0%, var(--clr-hero-card) 100%);
+        --alt-text:      #ffffff;
+        --alt-muted:     rgba(255,255,255,0.75);
+        --alt-card-bg:   rgba(255,255,255,0.10);
+        --alt-card-bdr:  rgba(255,255,255,0.20);
+        --alt-heading:   var(--clr-primary);
+      }
+
+      /* ─── Reset ─────────────────────────────────────────────────────────── */
+      *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: var(--clr-light);
+        color: var(--clr-body-text);
+      }
+
+      /* ─── Hero ───────────────────────────────────────────────────────────── */
+      .hero {
+        position: relative;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: var(--clr-dark);
+      }
+
+      /* Colorful accent corner blocks */
+      .accent-block { position: absolute; z-index: 1; }
+
+      .accent-primary {
+        width: 350px;
+        height: 100%;
+        background: var(--clr-primary);
+        left: 0;
+        top: 0;
+      }
+
+      .accent-accent {
+        width: 100%;
+        height: 200px;
+        background: var(--clr-accent);
+        right: 0;
+        top: 0;
+      }
+
+      .accent-secondary {
+        width: 350px;
+        height: 60%;
+        background: var(--clr-secondary);
+        right: 0;
+        bottom: 0;
+      }
+
+      .accent-purple {
+        width: 60%;
+        height: 200px;
+        background: linear-gradient(135deg, var(--clr-purple) 0%, #a855f7 100%);
+        left: 0;
+        bottom: 0;
+      }
+
+      .hero-content {
+        position: relative;
+        z-index: 2;
+        width: 90%;
+        max-width: 1200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .hero-card {
+        background: var(--clr-hero-card);
+        border-radius: 40px;
+        overflow: hidden;
+        width: 100%;
+        max-width: 1100px;
+        box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        position: relative;
+        min-height: 600px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .hero-image {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: 0.85;
+      }
+
+      .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(0,0,0,0.30) 0%, rgba(0,0,0,0.50) 100%);
+        z-index: 1;
+      }
+
+      .hero-text {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: #ffffff;
+        padding: 60px 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .hero-photo {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid rgba(255,255,255,0.35);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.30);
+      }
+
+      .hero-photo img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .hero-text h1 {
+        font-size: 5rem;
+        font-weight: 300;
+        letter-spacing: -2px;
+      }
+
+      .hero-text p {
+        font-size: 1.3rem;
+        font-weight: 300;
+        color: rgba(255,255,255,0.90);
+        max-width: 600px;
+        line-height: 1.7;
+      }
+
+      .hero-cta {
+        display: inline-block;
+        padding: 15px 40px;
+        background: transparent;
+        color: #ffffff;
+        text-decoration: none;
+        border: 2px solid #ffffff;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s;
+        margin-top: 20px;
+      }
+
+      .hero-cta:hover {
+        background: #ffffff;
+        color: var(--clr-hero-card);
+      }
+
+      /* ─── Shared Section Styles ──────────────────────────────────────────── */
+      section { padding: 100px 20px; }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      section h2 {
+        font-size: 3rem;
+        margin-bottom: 20px;
+        font-weight: 700;
+        color: var(--clr-dark);
+      }
+
+      .section-subtitle {
+        font-size: 1.2rem;
+        color: var(--clr-muted);
+        margin-bottom: 60px;
+      }
+
+      /* ─── About (light palette) ──────────────────────────────────────────── */
+      .about { background: var(--clr-surface); }
+
+      .about-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 60px;
+        align-items: center;
+      }
+
+      .about-text {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: var(--clr-subtle);
+      }
+
+      .about-text p { margin-bottom: 20px; }
+
+      .about-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+      }
+
+      .stat-card {
+        padding: 30px;
+        border-radius: 15px;
+        color: #ffffff;
+        text-align: center;
+      }
+
+      /* Category-coded stat cards using palette variables */
+      .stat-card:nth-child(1) {
+        background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-primary-deep) 100%);
+      }
+      .stat-card:nth-child(2) {
+        background: linear-gradient(135deg, var(--clr-secondary) 0%, var(--clr-secondary-deep) 100%);
+      }
+      .stat-card:nth-child(3) {
+        background: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-deep) 100%);
+      }
+      .stat-card:nth-child(4) {
+        background: linear-gradient(135deg, var(--clr-purple) 0%, var(--clr-purple-deep) 100%);
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+
+      .stat-label {
+        font-size: 1rem;
+        opacity: 0.95;
+      }
+
+      /* ─── Skills (alt-light palette) ────────────────────────────────────── */
+      .skills { background: var(--clr-light); }
+
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+      }
+
+      .skill-card {
+        background: var(--clr-surface);
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        transition: all 0.3s;
+      }
+
+      .skill-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0,0,0,0.10);
+      }
+
+      .skill-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        color: var(--clr-dark);
+      }
+
+      .skill-list { list-style: none; }
+
+      .skill-list li {
+        padding: 12px 0;
+        border-bottom: 1px solid var(--clr-rule);
+        display: flex;
+        justify-content: space-between;
+        color: var(--clr-subtle);
+      }
+
+      .skill-list li:last-child { border-bottom: none; }
+
+      .skill-level {
+        color: var(--clr-primary);
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      /* ─── Projects (light palette) ──────────────────────────────────────── */
+      .projects { background: var(--clr-surface); }
+
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 40px;
+      }
+
+      .project-card {
+        background: var(--clr-surface);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.10);
+        transition: all 0.3s;
+      }
+
+      .project-card:hover {
+        transform: translateY(-15px);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+      }
+
+      .project-image {
+        width: 100%;
+        height: 250px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: #ffffff;
+      }
+
+      /* Category-coded project header bands */
+      .project-image.cat-1 {
+        background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-primary-deep) 100%);
+      }
+      .project-image.cat-2 {
+        background: linear-gradient(135deg, var(--clr-secondary) 0%, var(--clr-secondary-deep) 100%);
+      }
+      .project-image.cat-3 {
+        background: linear-gradient(135deg, var(--clr-purple) 0%, var(--clr-purple-deep) 100%);
+      }
+      .project-image.cat-4 {
+        background: linear-gradient(135deg, var(--clr-accent) 0%, var(--clr-accent-deep) 100%);
+      }
+
+      .project-content { padding: 30px; }
+
+      .project-content h3 {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: var(--clr-dark);
+      }
+
+      .project-content p {
+        color: var(--clr-muted);
+        line-height: 1.7;
+        margin-bottom: 20px;
+      }
+
+      .project-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .project-tag {
+        background: var(--clr-surface-alt);
+        padding: 6px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: var(--clr-subtle);
+      }
+
+      /* ─── Contact (dark / inverted palette) ─────────────────────────────── */
+      .contact {
+        background: var(--alt-bg);
+        color: var(--alt-text);
+      }
+
+      .contact h2 {
+        color: var(--alt-text);
+      }
+
+      .contact .section-subtitle {
+        color: var(--alt-muted);
+      }
+
+      .contact-content {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 40px;
+        margin-top: 60px;
+      }
+
+      .contact-card {
+        background: var(--alt-card-bg);
+        padding: 40px;
+        border-radius: 20px;
+        text-align: center;
+        backdrop-filter: blur(10px);
+        border: 1px solid var(--alt-card-bdr);
+      }
+
+      .contact-card h3 {
+        font-size: 1.3rem;
+        margin-bottom: 15px;
+        color: var(--alt-heading);
+      }
+
+      .contact-card a,
+      .contact-card p {
+        color: var(--alt-text);
+        text-decoration: none;
+        transition: color 0.3s;
+        line-height: 1.6;
+      }
+
+      .contact-card a:hover { color: var(--clr-primary); }
+
+      /* ─── Footer ─────────────────────────────────────────────────────────── */
+      footer {
+        background: var(--clr-footer);
+        color: #ffffff;
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      footer p + p {
+        margin-top: 10px;
+        opacity: 0.70;
+      }
+
+      /* ─── Responsive ─────────────────────────────────────────────────────── */
+      @media (max-width: 968px) {
+        .hero-text h1   { font-size: 3rem; }
+        .hero-text p    { font-size: 1.1rem; }
+        .accent-primary,
+        .accent-secondary { width: 200px; }
+        .about-content  { grid-template-columns: 1fr; }
+        .about-stats    { grid-template-columns: 1fr 1fr; }
+        section h2      { font-size: 2.2rem; }
+      }
+
+      @media (max-width: 640px) {
+        .hero-text h1 { font-size: 2rem; }
+        .about-stats  { grid-template-columns: 1fr; }
+        .accent-primary,
+        .accent-secondary,
+        .accent-accent,
+        .accent-purple { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+
+    <!-- ═══ HERO ═══════════════════════════════════════════════════════════ -->
+    <section class="hero">
+      <!-- Colorful corner accent blocks -->
+      <div class="accent-block accent-primary"></div>
+      <div class="accent-block accent-accent"></div>
+      <div class="accent-block accent-secondary"></div>
+      <div class="accent-block accent-purple"></div>
+
+      <div class="hero-content">
+        <div class="hero-card">
+
+          <!-- Hero background illustration / SVG placeholder -->
+          <svg
+            class="hero-image"
+            viewBox="0 0 1100 600"
+            xmlns="http://www.w3.org/2000/svg"
+            aria-hidden="true"
+          >
+            <defs>
+              <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%"   stop-color="#2d3748" />
+                <stop offset="100%" stop-color="#1a202c" />
+              </linearGradient>
+            </defs>
+            <rect width="1100" height="600" fill="url(#heroGrad)" />
+            <!-- Abstract decorative motif — replace with thematic illustration -->
+            <ellipse cx="550" cy="200" rx="110" ry="130" fill="#1a1a1a" opacity="0.5" />
+            <rect x="475" y="325" width="150" height="275" fill="#1a1a1a" opacity="0.5" rx="12" />
+            <text
+              x="550" y="555"
+              font-size="130"
+              fill="#2d3748"
+              text-anchor="middle"
+              font-weight="bold"
+              opacity="0.25"
+            >[INITIALS]</text>
+          </svg>
+
+          <div class="hero-overlay"></div>
+
+          <div class="hero-text">
+            <!-- Portrait photo -->
+            <div class="hero-photo">
+              <img src="hero_portrait.jpg" alt="[OWNER_NAME] portrait" />
             </div>
-        </section>
-        <section id="about" class="about">
-            <div class="container">
-                <h2>[ABOUT_HEADING]</h2>
-                <p class="section-subtitle">[ABOUT_SUBTITLE]</p>
-                <div class="about-content">
-                    <div class="about-text">
-                        <p>[ABOUT_PARAGRAPH_1]</p>
-                        <p>[ABOUT_PARAGRAPH_2]</p>
-                        <p>[ABOUT_PARAGRAPH_3]</p>
-                    </div>
-                    <div class="about-stats">
-                        <div class="stat-card">
-                            <div class="stat-number">[STAT_NUMBER_1]</div>
-                            <div class="stat-label">[STAT_LABEL_1]</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">[STAT_NUMBER_2]</div>
-                            <div class="stat-label">[STAT_LABEL_2]</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">[STAT_NUMBER_3]</div>
-                            <div class="stat-label">[STAT_LABEL_3]</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-number">[STAT_NUMBER_4]</div>
-                            <div class="stat-label">[STAT_LABEL_4]</div>
-                        </div>
-                    </div>
-                </div>
+
+            <h1>[PORTFOLIO_TITLE]</h1>
+            <p>[HERO_TAGLINE_OR_BRIEF_INTRO_SENTENCE]</p>
+            <a href="#about" class="hero-cta">[CTA_LABEL]</a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ ABOUT ══════════════════════════════════════════════════════════ -->
+    <section id="about" class="about">
+      <div class="container">
+        <h2>[ABOUT_HEADING]</h2>
+        <p class="section-subtitle">[ABOUT_SUBTITLE]</p>
+
+        <div class="about-content">
+          <!-- Narrative text -->
+          <div class="about-text">
+            <p>[ABOUT_PARAGRAPH_1]</p>
+            <p>[ABOUT_PARAGRAPH_2]</p>
+            <p>[ABOUT_PARAGRAPH_3]</p>
+          </div>
+
+          <!-- Key metric stat cards (repeat as needed) -->
+          <div class="about-stats">
+            <div class="stat-card">
+              <div class="stat-number">[STAT_VALUE_1]</div>
+              <div class="stat-label">[STAT_LABEL_1]</div>
             </div>
-        </section>
-        <section id="skills" class="skills">
-            <div class="container">
-                <h2>[SKILLS_HEADING]</h2>
-                <p class="section-subtitle">[SKILLS_SUBTITLE]</p>
-                <div class="skills-grid">
-                    <div class="skill-card">
-                        <!-- *** placeholder 3: skill category icon -->
-                        <h3>[SKILL_CATEGORY_1_TITLE]</h3>
-                        <ul class="skill-list">
-                            <li>
-                                <span>[SKILL_1_1]</span>
-                                <span class="skill-level">[SKILL_1_1_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_1_2]</span>
-                                <span class="skill-level">[SKILL_1_2_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_1_3]</span>
-                                <span class="skill-level">[SKILL_1_3_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_1_4]</span>
-                                <span class="skill-level">[SKILL_1_4_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_1_5]</span>
-                                <span class="skill-level">[SKILL_1_5_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_1_6]</span>
-                                <span class="skill-level">[SKILL_1_6_LEVEL]</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="skill-card">
-                        <!-- *** placeholder 4: skill category icon -->
-                        <h3>[SKILL_CATEGORY_2_TITLE]</h3>
-                        <ul class="skill-list">
-                            <li>
-                                <span>[SKILL_2_1]</span>
-                                <span class="skill-level">[SKILL_2_1_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_2_2]</span>
-                                <span class="skill-level">[SKILL_2_2_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_2_3]</span>
-                                <span class="skill-level">[SKILL_2_3_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_2_4]</span>
-                                <span class="skill-level">[SKILL_2_4_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_2_5]</span>
-                                <span class="skill-level">[SKILL_2_5_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_2_6]</span>
-                                <span class="skill-level">[SKILL_2_6_LEVEL]</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="skill-card">
-                        <!-- *** placeholder 5: skill category icon -->
-                        <h3>[SKILL_CATEGORY_3_TITLE]</h3>
-                        <ul class="skill-list">
-                            <li>
-                                <span>[SKILL_3_1]</span>
-                                <span class="skill-level">[SKILL_3_1_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_3_2]</span>
-                                <span class="skill-level">[SKILL_3_2_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_3_3]</span>
-                                <span class="skill-level">[SKILL_3_3_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_3_4]</span>
-                                <span class="skill-level">[SKILL_3_4_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_3_5]</span>
-                                <span class="skill-level">[SKILL_3_5_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_3_6]</span>
-                                <span class="skill-level">[SKILL_3_6_LEVEL]</span>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="skill-card">
-                        <!-- *** placeholder 6: skill category icon -->
-                        <h3>[SKILL_CATEGORY_4_TITLE]</h3>
-                        <ul class="skill-list">
-                            <li>
-                                <span>[SKILL_4_1]</span>
-                                <span class="skill-level">[SKILL_4_1_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_4_2]</span>
-                                <span class="skill-level">[SKILL_4_2_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_4_3]</span>
-                                <span class="skill-level">[SKILL_4_3_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_4_4]</span>
-                                <span class="skill-level">[SKILL_4_4_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_4_5]</span>
-                                <span class="skill-level">[SKILL_4_5_LEVEL]</span>
-                            </li>
-                            <li>
-                                <span>[SKILL_4_6]</span>
-                                <span class="skill-level">[SKILL_4_6_LEVEL]</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
+            <div class="stat-card">
+              <div class="stat-number">[STAT_VALUE_2]</div>
+              <div class="stat-label">[STAT_LABEL_2]</div>
             </div>
-        </section>
-        <section id="projects" class="projects">
-            <div class="container">
-                <h2>[PROJECTS_HEADING]</h2>
-                <p class="section-subtitle">[PROJECTS_SUBTITLE]</p>
-                <div class="projects-grid">
-                    <div class="project-card">
-                        <div class="project-image type-1">
-                            <!-- *** placeholder 7: project 1 icon or image -->
-                        </div>
-                        <div class="project-content">
-                            <h3>[PROJECT_1_TITLE]</h3>
-                            <p>[PROJECT_1_DESCRIPTION]</p>
-                            <div class="project-tags">
-                                <span class="project-tag">[PROJECT_1_TAG_1]</span>
-                                <span class="project-tag">[PROJECT_1_TAG_2]</span>
-                                <span class="project-tag">[PROJECT_1_TAG_3]</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-image type-2">
-                            <!-- *** placeholder 8: project 2 icon or image -->
-                        </div>
-                        <div class="project-content">
-                            <h3>[PROJECT_2_TITLE]</h3>
-                            <p>[PROJECT_2_DESCRIPTION]</p>
-                            <div class="project-tags">
-                                <span class="project-tag">[PROJECT_2_TAG_1]</span>
-                                <span class="project-tag">[PROJECT_2_TAG_2]</span>
-                                <span class="project-tag">[PROJECT_2_TAG_3]</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-image type-3">
-                            <!-- *** placeholder 9: project 3 icon or image -->
-                        </div>
-                        <div class="project-content">
-                            <h3>[PROJECT_3_TITLE]</h3>
-                            <p>[PROJECT_3_DESCRIPTION]</p>
-                            <div class="project-tags">
-                                <span class="project-tag">[PROJECT_3_TAG_1]</span>
-                                <span class="project-tag">[PROJECT_3_TAG_2]</span>
-                                <span class="project-tag">[PROJECT_3_TAG_3]</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="project-card">
-                        <div class="project-image type-4">
-                            <!-- *** placeholder 10: project 4 icon or image -->
-                        </div>
-                        <div class="project-content">
-                            <h3>[PROJECT_4_TITLE]</h3>
-                            <p>[PROJECT_4_DESCRIPTION]</p>
-                            <div class="project-tags">
-                                <span class="project-tag">[PROJECT_4_TAG_1]</span>
-                                <span class="project-tag">[PROJECT_4_TAG_2]</span>
-                                <span class="project-tag">[PROJECT_4_TAG_3]</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div class="stat-card">
+              <div class="stat-number">[STAT_VALUE_3]</div>
+              <div class="stat-label">[STAT_LABEL_3]</div>
             </div>
-        </section>
-        <section id="contact" class="contact">
-            <div class="container">
-                <h2>[CONTACT_HEADING]</h2>
-                <p class="section-subtitle">[CONTACT_SUBTITLE]</p>
-                <div class="contact-content">
-                    <div class="contact-card">
-                        <!-- *** placeholder 11: contact method 1 icon -->
-                        <h3>[CONTACT_METHOD_1_LABEL]</h3>
-                        <a href="[CONTACT_METHOD_1_HREF]">[CONTACT_METHOD_1_DISPLAY]</a>
-                    </div>
-                    <div class="contact-card">
-                        <!-- *** placeholder 12: contact method 2 icon -->
-                        <h3>[CONTACT_METHOD_2_LABEL]</h3>
-                        <a href="[CONTACT_METHOD_2_HREF]">[CONTACT_METHOD_2_DISPLAY]</a>
-                    </div>
-                    <div class="contact-card">
-                        <!-- *** placeholder 13: contact method 3 icon -->
-                        <h3>[CONTACT_METHOD_3_LABEL]</h3>
-                        <p>[CONTACT_METHOD_3_LINE_1]<br>[CONTACT_METHOD_3_LINE_2]</p>
-                    </div>
-                </div>
+            <div class="stat-card">
+              <div class="stat-number">[STAT_VALUE_4]</div>
+              <div class="stat-label">[STAT_LABEL_4]</div>
             </div>
-        </section>
-        <footer>
-            <div class="container">
-                <p>&copy; [FOOTER_YEAR] [PORTFOLIO_OWNER_NAME] | [PORTFOLIO_TITLE]</p>
-                <p style="margin-top: 10px; opacity: 0.7;">[FOOTER_QUOTE]</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ SKILLS ═════════════════════════════════════════════════════════ -->
+    <section id="skills" class="skills">
+      <div class="container">
+        <h2>[SKILLS_HEADING]</h2>
+        <p class="section-subtitle">[SKILLS_SUBTITLE]</p>
+
+        <div class="skills-grid">
+
+          <!-- Skill category card — repeat block for each category -->
+          <div class="skill-card">
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_1_TITLE]</h3>
+            <ul class="skill-list">
+              <!-- Repeat <li> for each skill item -->
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="skill-card">
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_2_TITLE]</h3>
+            <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="skill-card">
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_3_TITLE]</h3>
+            <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="skill-card">
+            <h3>[SKILL_CATEGORY_ICON] [SKILL_CATEGORY_4_TITLE]</h3>
+            <ul class="skill-list">
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+              <li>
+                <span>[SKILL_NAME]</span>
+                <span class="skill-level">[PROFICIENCY_LEVEL]</span>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ PROJECTS ═══════════════════════════════════════════════════════ -->
+    <section id="projects" class="projects">
+      <div class="container">
+        <h2>[PROJECTS_HEADING]</h2>
+        <p class="section-subtitle">[PROJECTS_SUBTITLE]</p>
+
+        <div class="projects-grid">
+
+          <!-- Project card — repeat block for each project -->
+          <div class="project-card">
+            <div class="project-image cat-1">[PROJECT_ICON_1]</div>
+            <div class="project-content">
+              <h3>[PROJECT_1_TITLE]</h3>
+              <p>[PROJECT_1_DESCRIPTION]</p>
+              <div class="project-tags">
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
+              </div>
             </div>
-        </footer>
-    </body>
+          </div>
+
+          <div class="project-card">
+            <div class="project-image cat-2">[PROJECT_ICON_2]</div>
+            <div class="project-content">
+              <h3>[PROJECT_2_TITLE]</h3>
+              <p>[PROJECT_2_DESCRIPTION]</p>
+              <div class="project-tags">
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-image cat-3">[PROJECT_ICON_3]</div>
+            <div class="project-content">
+              <h3>[PROJECT_3_TITLE]</h3>
+              <p>[PROJECT_3_DESCRIPTION]</p>
+              <div class="project-tags">
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="project-card">
+            <div class="project-image cat-4">[PROJECT_ICON_4]</div>
+            <div class="project-content">
+              <h3>[PROJECT_4_TITLE]</h3>
+              <p>[PROJECT_4_DESCRIPTION]</p>
+              <div class="project-tags">
+                <span class="project-tag">[TAG_A]</span>
+                <span class="project-tag">[TAG_B]</span>
+                <span class="project-tag">[TAG_C]</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ CONTACT (inverted / dark palette) ══════════════════════════════ -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <h2>[CONTACT_HEADING]</h2>
+        <p class="section-subtitle">[CONTACT_SUBTITLE]</p>
+
+        <div class="contact-content">
+
+          <!-- Contact card — repeat for each channel -->
+          <div class="contact-card">
+            <h3>[CONTACT_CHANNEL_1_ICON] [CONTACT_CHANNEL_1_LABEL]</h3>
+            <a href="[CONTACT_CHANNEL_1_HREF]">[CONTACT_CHANNEL_1_DISPLAY]</a>
+          </div>
+
+          <div class="contact-card">
+            <h3>[CONTACT_CHANNEL_2_ICON] [CONTACT_CHANNEL_2_LABEL]</h3>
+            <a href="[CONTACT_CHANNEL_2_HREF]">[CONTACT_CHANNEL_2_DISPLAY]</a>
+          </div>
+
+          <div class="contact-card">
+            <h3>[CONTACT_CHANNEL_3_ICON] [CONTACT_CHANNEL_3_LABEL]</h3>
+            <p>[CONTACT_CHANNEL_3_LINE_1]<br />[CONTACT_CHANNEL_3_LINE_2]</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ FOOTER ═════════════════════════════════════════════════════════ -->
+    <footer>
+      <div class="container">
+        <p>[FOOTER_COPYRIGHT_LINE]</p>
+        <p>[FOOTER_QUOTE_OR_TAGLINE]</p>
+      </div>
+    </footer>
+
+  </body>
 </html>

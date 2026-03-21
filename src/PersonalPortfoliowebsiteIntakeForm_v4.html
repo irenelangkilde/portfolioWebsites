@@ -319,6 +319,8 @@
     .dropzone-label strong { color: #4E70F1; }
     .resume-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
     .resume-filelist li::before { content: "📎 "; }
+    .artifact-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
+    .artifact-filelist li::before { content: "🖼 "; }
   </style>
 </head>
 <body>
@@ -355,13 +357,14 @@
     <section class="card" id="page0">
       <div class="sectionTitle">
         <h2>Page 0 — Overview</h2>
-        <!--p class="hint">You’ll generate a personalized demo on Page 2, then optionally refine on Pages 3–4.</p-->
       </div>
       <div class="note">
         <ol class="tipList">
-          <li><strong>Page 1:</strong> Basic information (major, specialization, resume, model website).</li>
-          <li><strong>Page 2:</strong> Choose colors. </li>li> <!--(JSON + HTML) you can download.</li-->
-          <li><strong>Page 3:</strong> Target job + job ad; submit to generate a more tailored result.</li>
+          <li><strong>Page 1:</strong> Major, specialization, and resume.</li>
+          <li><strong>Page 2:</strong> Artifacts — headshot, GitHub link, images, video links.</li>
+          <li><strong>Page 3:</strong> Portfolio template / model.</li>
+          <li><strong>Page 4:</strong> Color scheme.</li>
+          <li><strong>Page 5:</strong> Target job and job posting.</li>
         </ol>
       </div>
       <div class="btnRow">
@@ -369,10 +372,10 @@
       </div>
     </section>
 
-    <!-- PAGE 1: Basic Information -->
+    <!-- PAGE 1: Major & Resume -->
     <section class="card hidden" id="page1">
       <div class="sectionTitle">
-        <h2>Page 1 — Basic Information</h2>
+        <h2>Page 1 — Major &amp; Resume</h2>
         <p class="hint">Single column on mobile; max-width 480px.</p>
       </div>
 
@@ -380,19 +383,12 @@
         <div>
           <label for="major">Major <span class="error">*</span></label>
           <input id="major" type="text" placeholder="e.g., Psychology" required />
+          <span id="providerBadge" class="hidden" style="display:inline-block; margin-top:4px;"></span>
         </div>
 
         <div>
           <label for="specialization">Specialization <span class="error">*</span></label>
           <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
-        </div>
-
-        <div>
-          <label for="headshot">Headshot Photo <span class="hint">(optional)</span></label>
-          <input type="file" id="headshot" accept="image/*" />
-          <div id="headshotPreview" style="display:none; margin-top:8px;">
-            <img id="headshotImg" src="" alt="Headshot preview" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;" />
-          </div>
         </div>
 
         <div>
@@ -405,16 +401,150 @@
             </div>
           </div>
           <ul class="resume-filelist" id="resumeFileList"></ul>
+          <div id="resumeAnalysisStatus" style="font-size:12px; margin-top:4px; min-height:14px;"></div>
+          <p class="hint" style="margin:8px 0 0;">
+            Tip: Learn how to <a href="#" id="openLinkedInPdfHelp">download a PDF of your LinkedIn profile</a>.
+          </p>
+        </div>
+      </div>
+
+      <!-- Debug: resume analysis panel (hidden unless DEBUG mode) -->
+      <div id="resumeAnalysisPanel" class="hidden" style="margin-top:10px;">
+        <details>
+          <summary style="color:rgba(251,171,156,.85);">🐛 Resume analysis JSON</summary>
+          <div class="btnRow" style="justify-content:flex-start;">
+            <button class="btn mini" type="button" id="dlResumeAnalysis">Download</button>
+            <button class="btn mini ghost" type="button" id="cpResumeAnalysis">Copy</button>
+          </div>
+          <pre id="resumeAnalysisPre"></pre>
+        </details>
+      </div>
+
+      <div class="btnRow">
+        <button class="btn danger" type="button" id="reset1">Reset (double-click)</button>
+        <button class="btn primary" type="button" id="next1">Next</button>
+      </div>
+    </section>
+
+    <!-- PAGE 2: Artifacts -->
+    <section class="card hidden" id="page2">
+      <div class="sectionTitle">
+        <h2>Page 2 — Artifacts</h2>
+        <p class="hint">Add images, links, and other media that will enrich your portfolio. All fields optional.</p>
+      </div>
+
+      <div class="grid">
+
+        <!-- Headshot -->
+        <div>
+          <div class="sectionTitle" style="margin-bottom:8px;">
+            <h2 style="font-size:14.5px;">Headshot Photo</h2>
+          </div>
+          <div class="inlineRow2">
+            <div>
+              <label for="headshot">Upload <span class="hint">(optional)</span></label>
+              <input type="file" id="headshot" accept="image/*" />
+              <div id="headshotPreview" style="display:none; margin-top:8px;">
+                <img id="headshotImg" src="" alt="Headshot preview" style="max-width:120px; max-height:120px; border-radius:50%; object-fit:cover;" />
+              </div>
+            </div>
+            <div>
+              <label for="headshotDesc">How to use this photo</label>
+              <textarea id="headshotDesc" placeholder="e.g., Professional headshot from 2024 — use in the About / Hero section"></textarea>
+            </div>
+          </div>
         </div>
 
+        <div class="hr"></div>
+
+        <!-- GitHub / Portfolio Link -->
         <div>
-          <label>Portfolio template/model <span class="error">*</span></label>
+          <div class="sectionTitle" style="margin-bottom:8px;">
+            <h2 style="font-size:14.5px;">GitHub / Portfolio Link</h2>
+          </div>
+          <div class="inlineRow2">
+            <div>
+              <label for="githubLink">URL <span class="hint">(optional)</span></label>
+              <input type="url" id="githubLink" placeholder="https://github.com/yourname" />
+            </div>
+            <div>
+              <label for="githubDesc">What to highlight</label>
+              <textarea id="githubDesc" placeholder="e.g., Highlight ML projects; link GitHub profile from the navbar and Projects section"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <!-- Images / Graphs / Plots / Photos -->
+        <div>
+          <div class="sectionTitle" style="margin-bottom:8px;">
+            <h2 style="font-size:14.5px;">Images, Graphs &amp; Plots</h2>
+          </div>
+          <div class="inlineRow2">
+            <div>
+              <label for="artifactImages">Upload <span class="hint">(optional, multiple)</span></label>
+              <div class="fileBox">
+                <input type="file" id="artifactImages" accept="image/*" multiple />
+              </div>
+              <ul class="artifact-filelist" id="artifactImagesList"></ul>
+            </div>
+            <div>
+              <label for="artifactImagesDesc">Describe these images</label>
+              <textarea id="artifactImagesDesc" placeholder="e.g., fig1.png — climate model output from my thesis; associate with the 'Climate Research' project card. fig2.png — bar chart of survey results for the UX section."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="hr"></div>
+
+        <!-- YouTube / Video Links -->
+        <div>
+          <div class="sectionTitle" style="margin-bottom:8px;">
+            <h2 style="font-size:14.5px;">YouTube / Video Links</h2>
+          </div>
+          <div class="inlineRow2">
+            <div>
+              <label for="youtubeLinks">Video URLs <span class="hint">(optional, one per line)</span></label>
+              <textarea id="youtubeLinks" placeholder="https://youtube.com/watch?v=...&#10;https://youtu.be/..."></textarea>
+            </div>
+            <div>
+              <label for="youtubeDesc">Describe these videos</label>
+              <textarea id="youtubeDesc" placeholder="e.g., Capstone project demo — embed in the Projects section under 'Capstone 2024'. Second link is a conference presentation."></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="note" style="margin-top:4px;">
+          <label style="margin:0; font-weight:400; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+            <input id="artifactsCopyrightOk" type="checkbox" style="margin-top:2px; flex-shrink:0;" />
+            <span>I am the owner/author or I have written permission from the owner to use these materials. I only want to use them as inspiration — please generate something different enough to avoid copyright infringement.</span>
+          </label>
+        </div>
+
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back2">Back</button>
+          <button class="btn primary" type="button" id="next2">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE 3: Portfolio Template -->
+    <section class="card hidden" id="page3">
+      <div class="sectionTitle">
+        <h2>Page 3 — Portfolio Template</h2>
+        <p class="hint">Choose a model or design style for your portfolio.</p>
+      </div>
+
+      <div class="max480 grid">
+        <div>
+          <label>Portfolio template / model <span class="error">*</span></label>
           <div class="grid" style="gap:6px; margin-top:6px;">
 
             <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
               <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
               <div>
-                <strong style="font-size:13px;">Enter a name or URL</strong>
+                <strong style="font-size:13px;">Enter a name </strong>
                 <p class="hint" style="margin:2px 0 0; font-weight:400;">Link or keyword for a portfolio to use as inspiration.</p>
               </div>
             </label>
@@ -449,7 +579,7 @@
               <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
               <div>
                 <strong style="font-size:13px;">Design options</strong>
-                <p class="hint" style="margin:2px 0 0; font-weight:400;">Skip the template; describe your preferred design on the next page.</p>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Skip the template; describe your preferred design.</p>
               </div>
             </label>
           </div>
@@ -459,26 +589,44 @@
             <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
             <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
               <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-              <span>I own the copyright or have written permission from the owner</span>
+              <span>I am the owner/author or have written permission from the owner to use these materials.</span>
             </label>
             <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
               <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
               <span>Use it for inspiration only</span>
             </label>
           </div>
+
+          <!-- Template extract status -->
+          <div id="templateExtractStatus" style="font-size:12px; margin-top:6px; min-height:14px;"></div>
+        </div>
+
+        <!-- Design options panel (shown when templateSource = none) -->
+        <div id="designOptionsWrap" class="hidden"></div>
+
+        <!-- Debug: template extract panel (hidden unless DEBUG mode) -->
+        <div id="templateExtractPanel" class="hidden">
+          <details>
+            <summary style="color:rgba(251,171,156,.85);">🐛 Extracted template HTML</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button class="btn mini" type="button" id="dlTemplateExtract">Download</button>
+              <button class="btn mini ghost" type="button" id="cpTemplateExtract">Copy</button>
+            </div>
+            <pre id="templateExtractPre"></pre>
+          </details>
         </div>
       </div>
 
       <div class="btnRow">
-        <button class="btn danger" type="button" id="reset1">Reset (double-click)</button>
-        <button class="btn primary" type="button" id="next1">Next</button>
+        <button class="btn ghost" type="button" id="back3">Back</button>
+        <button class="btn primary" type="button" id="next3">Next</button>
       </div>
     </section>
 
-    <!-- PAGE 2: Color scheme + preview generation -->
-    <section class="card hidden" id="page2">
+    <!-- PAGE 4: Color Scheme -->
+    <section class="card hidden" id="page4">
       <div class="sectionTitle">
-        <h2>Page 2 — Choose Color Scheme</h2>
+        <h2>Page 4 — Choose Color Scheme</h2>
       </div>
 
       <div class="hr"></div>
@@ -502,30 +650,7 @@
   </div>
 </div>
 
-        <!--div class="grid2">
-          <div>
-            <label for="primary">1. Primary</label>
-            <input id="primary" type="text" placeholder="#4E70F1" />
-          </div>
-          <div>
-            <label for="secondary">2. Secondary</label>
-            <input id="secondary" type="text" placeholder="#FBAB9C" />
-          </div>
-          <div>
-            <label for="accent">3. Accent</label>
-            <input id="accent" type="text" placeholder="#8DE0FF" />
-          </div>
-          <div>
-            <label for="dark">4. Dark</label>
-            <input id="dark" type="text" placeholder="#0b1220" />
-          </div>
-          <div>
-            <label for="light">5. Light</label>
-            <input id="light" type="text" placeholder="#eaf0ff" />
-          </div>
-        </div-->
-
-        <!-- Preview box -->
+        <!-- Preview box (hidden until preview is generated) -->
         <div id="page2PreviewBox" class="hidden">
           <div class="note">
             <div id="page2Status" class="hint"></div>
@@ -552,105 +677,27 @@
           </details>
 
           <div class="btnRow" style="margin-top:12px;">
-            <button class="btn ghost" type="button" id="back2_from_preview">← Back</button>
-            <button class="btn primary" type="button" id="btnOpenEditor" style="margin-left:auto;">Edit in Visual Editor</button>
-            <button class="btn ghost" type="button" id="continueTo3">Next →</button>
+            <button class="btn ghost" type="button" id="back4_from_preview">← Back</button>
+            <button class="btn primary" type="button" id="btnOpenEditor" style="margin-left:auto;">Refine in visual editor</button>
+            <button class="btn ghost" type="button" id="continueTo5">Next →</button>
           </div>
         </div>
 
-        <!-- Bottom buttons (Back/Next) — hidden while preview box is active -->
-        <div class="btnRow" id="page2NavRow" style="margin-top:16px;">
-          <button class="btn ghost" type="button" id="back2_bottom">Back</button>
+        <!-- Bottom buttons -->
+        <div class="btnRow" id="page4NavRow" style="margin-top:16px;">
+          <button class="btn ghost" type="button" id="back4">Back</button>
           <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
             <p class="hint" style="margin:0;"><strong>Next</strong> generates a preview.</p>
-            <button class="btn primary" type="button" id="next2_bottom">Next</button>
+            <button class="btn primary" type="button" id="next4">Next</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PAGE 3: Optional resources -->
-    <section class="card hidden" id="page3">
+    <!-- PAGE 5: Target Job -->
+    <section class="card hidden" id="page5">
       <div class="sectionTitle">
-        <h2>Page 3 — Optional Portfolio Resources</h2>
-        <p class="hint">Upload or paste materials. Keep it quick; refine later.</p>
-      </div>
-
-      <div class="note">
-        <strong>Tips:</strong>
-        <ol class="tipList">
-          <li>Don’t aim for perfection on the first iteration. Draft fast, refine later.</li>
-          <li>Show, don’t just tell: add proof (projects, metrics, links, screenshots, outcomes).</li>
-          <li>Lead with a 1-line headline: target role + specialty + value.</li>
-          <li>Quantify impact wherever possible (%, $, time saved, volume, accuracy, ratings).</li>
-          <li>Write for skimmers: short sections, strong headings, bullets, whitespace.</li>
-          <li>Tailor to the job ad: mirror keywords (truthfully) and map evidence to requirements.</li>
-          <li>Make contact frictionless: email + LinkedIn visible, clear call-to-action.</li>
-        </ol>
-      </div>
-
-      <div class="hr"></div>
-
-      <div class="grid">
-        <div class="inlineRow2">
-          <div class="fileBox">
-            <label for="uploadFiles">Upload files (PDF, DOC/DOCX, images, videos, HTML, Markdown, text)</label>
-            <input id="uploadFiles" type="file" multiple />
-            <ul class="fileList" id="uploadedFileList"></ul>
-          </div>
-          <div>
-            <label for="uploadUse">How should we use these files?</label>
-            <textarea id="uploadUse" placeholder="e.g., Use content but not layout; treat as inspiration; extract experience/project bullets."></textarea>
-            <p class="hint" style="margin:8px 0 0;">
-              Tip: Learn how to <a href="#" id="openLinkedInPdfHelp">download a PDF of your LinkedIn profile</a>.
-            </p>
-          </div>
-        </div>
-
-        <div class="inlineRow2">
-          <div>
-            <label for="publicUrl">Website address (public URL only)</label>
-            <input id="publicUrl" type="url" placeholder="https://github.com/yourname/portfolio" />
-          </div>
-          <div>
-            <label for="publicUrlUse">How should we use this URL?</label>
-            <textarea id="publicUrlUse" placeholder="e.g., Use as project reference; extract tech stack; link from Projects section."></textarea>
-          </div>
-        </div>
-
-        <div>
-          <div class="sectionTitle">
-            <h2 style="font-size:14.5px;">Text entries</h2>
-            <p class="hint">Add any snippets (HTML/Markdown/raw) you want considered.</p>
-          </div>
-
-          <div id="textEntries"></div>
-
-          <div class="btnRow" style="justify-content:flex-start;">
-            <button class="btn mini" type="button" id="addTextEntry">+ Add text entry</button>
-          </div>
-        </div>
-
-        <div class="note">
-          <label style="margin:0 0 8px;">
-            <input id="copyrightOk" type="checkbox" />
-            <span style="margin-left:8px;">
-              I have the copyright or written permission to use these resources, or I only want to use it as inspiration—please generate something different enough to avoid copyright infringement.
-            </span>
-          </label>
-        </div>
-
-        <div class="btnRow">
-          <button class="btn ghost" type="button" id="back3">Back</button>
-          <button class="btn primary" type="button" id="next3">Next</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- PAGE 4: Job target -->
-    <section class="card hidden" id="page4">
-      <div class="sectionTitle">
-        <h2>Page 4 — Target Job</h2>
+        <h2>Page 5 — Target Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
       </div>
 
@@ -665,7 +712,7 @@
         </div>
 
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back4_top">Back</button>
+          <button class="btn ghost" type="button" id="back5_top">Back</button>
           <button class="btn primary" type="button" id="submit_top">Submit</button>
         </div>
 
@@ -681,7 +728,7 @@
             <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
 
             <details>
-              <summary>Form payload (pages 1–3 data sent to API)</summary>
+              <summary>Form payload (pages 1–5 data sent to API)</summary>
               <div class="btnRow" style="justify-content:flex-start;">
                 <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
                 <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
@@ -725,7 +772,7 @@
             <summary>Model response (JSON/HTML/advice) (click to expand)</summary>
             <div class="btnRow" style="justify-content:flex-start;">
               <button class="btn mini" type="button" id="dlFinalJson">Download JSON</button>
-              <button class="btn mini" type="button" id="dlFinalHtml">Download HTML</button>
+              <button class="btn mini" type="button" id="dlFinalHtml2">Download HTML</button>
               <button class="btn mini ghost" type="button" id="cpFinal">Copy response</button>
             </div>
             <pre id="finalPreview"></pre>
@@ -734,19 +781,19 @@
           <div style="margin-top:10px;" class="note">
             <strong>Also created:</strong> a downloadable summary HTML of your entire form submission.
             <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
-              <button class="btn mini" type="button" id="dlSummaryHtml">Download MyPersonalPortfolioWebsiteSummary.html</button>
+              <button class="btn mini" type="button" id="dlSummaryHtml2">Download MyPersonalPortfolioWebsiteSummary.html</button>
             </div>
           </div>
         </div>
 
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back4_bottom">Back</button>
+          <button class="btn ghost" type="button" id="back5">Back</button>
           <button class="btn primary" type="button" id="submit_bottom">Submit</button>
         </div>
       </div>
     </section>
 
-    <footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 3.0.0 • Updated 2026-02-27</footer>
+    <footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 4.0.0 • Updated 2026-03-19</footer>
   </div>
 
   <!-- LinkedIn PDF help modal -->
@@ -759,9 +806,9 @@
       <div class="modalContent" id="modalContent">
         <ol class="tipList">
           <li>Open your LinkedIn profile in a browser.</li>
-          <li>Click the <strong>More</strong> button (often near “Open to” / “Add profile section”).</li>
+          <li>Click the <strong>More</strong> button (often near "Open to" / "Add profile section").</li>
           <li>Select <strong>Save to PDF</strong>.</li>
-          <li>Upload the PDF here on Page 3.</li>
+          <li>Upload the PDF here on Page 1.</li>
         </ol>
         <p class="hint">Note: LinkedIn UI varies slightly by device/account type.</p>
       </div>
