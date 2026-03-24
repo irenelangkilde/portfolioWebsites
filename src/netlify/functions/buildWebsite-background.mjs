@@ -110,354 +110,19 @@ Your tasks:
    }
 5. Do NOT add, invent, or infer any content not present in the input JSON.
 6. Output the corrected JSON only — no markdown, no explanation.`;
-
-// ─── Stage 3: HTML Generation Prompt (long version — kept for reference) ──────
-// eslint-disable-next-line no-unused-vars
-const STAGE3_PROMPT = `You are building a personal portfolio website from structured resume data and a visual template.
-
-NON-NEGOTIABLE REQUIREMENTS:
-A. Output a SINGLE complete HTML file. Never stop mid-section.
-B. VISUAL FIDELITY: Mirror the template's visual design exactly — hero technique, card style, typography, spacing, layout patterns.
-C. SECTION STRUCTURE: Design the optimal section set for this person's specific major, specialization, and target job.
-D. MATCH TEMPLATE LENGTH: Total visual length should be roughly similar to the template.
-E. RESUME DOWNLOAD LINK: Include a prominent "Download Resume" button/link (href="resume.pdf") in both the navigation bar and the hero section.
-F. Reproduce the hero/banner background technique from the sample EXACTLY — gradient stops, orbs, blobs, layered backgrounds. Never flatten to white or a solid color.
-
-CONTENT SOURCE: Use ONLY the provided JSON for all personal information (name, contact, education, experience, projects, skills, etc). Do NOT invent facts, metrics, employers, or credentials.
-
-CONTENT ENHANCEMENT (within the bounds of the JSON):
-- Expand resume bullets into website-quality narratives (context, challenge, action, result)
-- Write a compelling About Me section from the summary and overall profile
-- Create visual skill cards with proficiency context
-- Detailed project showcases with problem statements, tech stack, and links
-- Mark any content garnished beyond what the JSON strictly states with *** and an incrementing index
-
-COLOR SCHEME:
-{{COLOR_INSTRUCTION}}
-
-TEMPLATE REFERENCE:
-{{TEMPLATE_SCREENSHOT}}
-
-STRUCTURAL INPUT:
-Major: {{MAJOR}}
-Specialization: {{SPECIALIZATION}}
-Headshot: {{HEADSHOT_PHOTO}}
-Target Job: {{JOB_INFO}}
-
-Sample website HTML:
-{{TEMPLATE_USAGE}}
-{{SAMPLE_WEBSITE_HTML}}
-
-RESUME CONTENT JSON:
-{{RESUME_JSON}}
-
-TECHNICAL REQUIREMENTS:
-- Self-contained HTML with embedded CSS
-- No external dependencies except Google Fonts (max 2) and Font Awesome CDN
-- Fully responsive (mobile, tablet, desktop)
-- Smooth scroll navigation, sticky nav bar
-- Footer: © {{YEAR}} [person's full name from JSON]. No other watermark.
-- Alternate light and dark sections
-- Sufficient text contrast for accessibility
-
-Output the complete HTML file only. No explanation, no markdown — just the file.`;
-
-// eslint-disable-next-line no-unused-vars -- kept for reference
-const PROMPT_TEMPLATE = `You are building a personal portfolio website for a job seeker.
-Use all the content of the input resume PDF (e.g., name, contact info, education, experience, projects, skills, etc) as the foundation for the new website.
-You have a mandate to make improvements in overall quality and impactfulness, such as garnishing narratives while being more concise, using active voice rather than passive voice, spelling out concretely the hows, whys, where, whens, etc.
-Do not fabricate achievements, metrics, employers, dates, or credentials.
-Mark with a triple asterisk (***) anything fabricated beyond the resume info.
-{{COLOR_INSTRUCTION}}
-{{TEMPLATE_USAGE}}
-If no example web page or image is provided, generate one suitable for the major specialization.
-Apply the input color scheme to ALL colored elements throughout the new page — body background, decorative card visuals, orbs, bubbles, brand mark, and any other gradient or background elements. Every element should use the new color scheme, rather than the sample's colors.
-CRITICAL: This includes every hardcoded hex (#rrggbb) and rgba() value inside gradient stops and background declarations — not just CSS custom properties. Convert the provided hex colors to rgba() as needed and use them for all gradient stops. Do NOT carry over any hardcoded color values from the sample's original gradients.
-Visual content should be adapted to match the themes of corresponding elements of the job seeker's resume, for example: a visual with red laser beams for an Electrical Engineering major with a specialization in lasers.
-Double-check that the text has enough contrast against the background so that it is easily visible.
-Output the complete, self-contained HTML file only (ready to save and open in a browser); no explanation, no markdown — just the file.`;
-
-// eslint-disable-next-line no-unused-vars -- kept for reference
-const PROMPT_TEMPLATE_LONG = `NON-NEGOTIABLE REQUIREMENTS (read before anything else):
-A. Output a SINGLE complete HTML file. Never stop mid-section. If content is long, be more concise per section rather than omitting sections.
-B. VISUAL FIDELITY — always: Mirror the template's visual design exactly — hero technique, card style, typography, spacing, layout patterns. This applies regardless of how different the majors are.
-C. SECTION STRUCTURE — use expert judgment:
-   Portfolio websites are not space-constrained like resumes. Design the OPTIMAL section set for this person's specific major, specialization, and target job — that often means MORE sections than the resume has.
-   • When the user's major is CLOSELY RELATED to the template's field: treat the template's section order and selection as a strong structural guide.
-   • When the user's major DIFFERS SIGNIFICANTLY from the template's: depart freely. Design sections that are standard and high-impact for their actual field (e.g. Lab Skills + Research for science; Case Studies + Process for design; System Architecture + APIs for software engineering).
-   • When a target job is provided: meaningfully shift which sections appear, their order, and their emphasis so the site speaks directly to that role. A different job target should produce a noticeably different site structure.
-   • Use your knowledge of what hiring managers in this field look for to decide which sections will make the strongest impression.
-D. MATCH TEMPLATE LENGTH: Total visual length of the generated site should be roughly similar to the template. Scale items within each section to fit the resume (one card per project, one entry per job) but do not let sections balloon.
-E. RESUME DOWNLOAD LINK: Include a prominent "Download Resume" button/link (href="resume.pdf") in both the navigation bar and the hero section.
-F. Reproduce the hero/banner background technique from the sample EXACTLY — gradient stops, orbs, blobs, layered backgrounds. Never flatten to white or a solid color.
-
-You are an expert portfolio website generator and career positioning strategist.
-I need you to create a full-fledged, production-ready portfolio website. You will receive:
-
-Major and specialization (e.g., "Data Science" with specialization in "Machine Learning")
-Resume PDF content (name, contact info, education, experience, skills, projects)
-Sample website HTML (use this as your style and layout template if provided; if not then improvise and follow best practices)
-Color scheme (hex codes for primary, secondary, accent colors)
-Job target (desired role, job posting)
-
-INTERNAL PLANNING STEP (DO NOT OUTPUT)
-
-Before generating the website, internally determine:
-
-1. the candidate’s primary professional identity
-2. the most important projects or experiences
-3. the strongest technical skills
-4. the logical section order for the website
-5. how the sample HTML layout should be adapted
-6. how to apply the provided color palette consistently
-7. what to highlight, emphasize, or prioritize in consideration of the target job
-
-Do not output this planning step.
-Use the strengths of a website:
-
-• clearer visual hierarchy
-• stronger narrative flow
-• scannable sections
-• featured projects
-• links to external work
-• calls to action
-• readable layout
-
-Instructions
-1. Structure & Layout
-
-Use the sample website HTML as your template for style, navigation structure, and overall layout.
-
-CRITICAL — Hero & background fidelity:
-• Reproduce the hero section's visual technique EXACTLY: if the sample uses a CSS gradient background, radial-gradient orbs, blobs, animated shapes, or layered background elements, copy that CSS technique faithfully and re-skin it with the provided color scheme. Do NOT flatten it to a solid or plain white background.
-• If the sample hero background is a multi-stop gradient (linear or radial), preserve every stop — map each distinct stop to a DIFFERENT provided color (primary, secondary, accent, light, dark) so the gradient remains visually rich and multi-colored. Never collapse all stops to the same color. Keep the same structure (directions, stop positions, blend, opacity).
-• If the sample has floating decorative elements (glowing orbs, soft blobs, glassmorphism cards), reproduce them with equivalent CSS using the provided colors — with the same size, position, blur, and opacity as the original.
-• Only deviate from the sample's background technique if no sample is provided.
-
-If it contains a foreground image besides a headshot, generate a new hero image that correlates with the input color scheme and the theme of the major + specialization.
-Maintain the responsive design patterns from the sample.
-Preserve any unique design elements (banners, gradients, grid layouts, card designs)
-If no headshot photo is provided, render a monogram instead.
-
-2. Color Scheme Integration
-
-{{COLOR_INSTRUCTION}}
-
-Alternate between light and dark sections
-
-Ensure sufficient contrast for accessibility (text must be readable)
-
-3. Content Transformation (CRITICAL)
-Do NOT just copy resume text to the website. Enhance and garnish it to leverage website advantages and to illustrate to the user their full potential; but avoid misrepresentations.  The goal is to WOW the potential employer and their recruiters by portraying the user at their best. 
-From Resume → To Website
-Education Section:
-
-Resume: "B.S. Computer Science, University Name, GPA 3.8"
-Website: Expand with relevant coursework, thesis/capstone details, academic honors with context, any notable professors or research groups
-
-
-
-Provide context and specialization
-Resume: limited explanation.
-Website: interpretive context. 
-
-Instruction
-Explain:
-  -areas of interest
-  -industries of focus
-  -methodological strengths
-  -preferred problem domains.
-
-Example:
-
-Interests
-• Predictive modeling for business analytics
-• Reproducible machine learning pipelines
-• Data storytelling for non-technical stakeholders
-
-
-Experience Section:
-
-Resume: Bullet points of responsibilities and/or isolated achievements
-Website: Transform into coherent narratives that tell the story of growth in each role. Describe:
-  -how skills developed over time
-  -themes across projects
-  -the candidate’s professional direction.
-
-Instruction
-Include:
-  Context: What was the company/project about?
-  Challenge: What problem were you solving?
-  Action: What did you specifically do?
-  Result: What was the measurable impact?
-  Technologies: Detailed tech stack (can be more extensive than resume)
-
-
-
-Projects Section:
-
-Resume: 1-2 lines per project
-Website: Create detailed project showcases with:
-
-Project title, icon and tagline
-Hero image (AI-generated or stock) or description (e.g., "Dashboard screenshot", "Mobile app mockup")
-Problem statement: What need did this address?
-Your role: What specifically did you do?
-Technical approach: Architecture, algorithms, methodologies
-Technologies used: Comprehensive list with brief explanations
-Key features: 3-5 main capabilities
-Results/Impact: Metrics, outcomes, learnings
-Links: GitHub repo, live demo, documentation (use placeholder URLs)
-Add “View Code”, “View Dashboard”, or “Read Analysis” links.
-Visuals: Suggest where screenshots, diagrams, or charts should go
-Use visual elements such as:
-  -charts or plots
-  -project thumbnails
-  -icons for technologies
-  -timeline components
-  -badges for tools or methods.
-Supply inline stock or AI-generated photos when possible; mark them with a triple asterisk (***) and an index number that counts the asterisk groups so far.
-
-
-
-Skills Section:
-
-Resume: Simple categorized lists
-Website: Create visual skill cards with:
-
-Skill categories as tabs or sections
-Proficiency indicators (e.g., "Advanced", "Intermediate", "Familiar")
-Context for each skill cluster (e.g., "Used extensively in 3 production projects")
-
-
-Additional Website-Only Content
-Add sections that wouldn't fit on a resume:
-About Me Section:
-
-Write a compelling 3-6 sentence narrative
-Include professional interests, career goals, what makes them unique
-Make it personable but professional
-Incorporate the major/specialization naturally
-
-Achievements/Highlights:
-
-Create visual callout boxes for:
-
-Awards and honors
-Certifications
-Publications or presentations
-Notable metrics (e.g., "Managed $X budget", "Improved performance by Y%")
-
-
-
-Process/Methodology Section (for relevant fields):
-
-Explain their approach to work (research process, design thinking, development workflow)
-Shows thought leadership beyond just listing accomplishments
-
-4. Technical Implementation
-Generate a single, self-contained HTML file with:
-
-Embedded CSS (in <style> tags)
-No external dependencies except:
-
-Google Fonts (max 2 font families)
-Font Awesome or similar icon CDN (if needed)
-
-
-Fully responsive (mobile, tablet, desktop)
-Semantic HTML5 structure
-Accessibility considerations (alt text, ARIA labels, proper heading hierarchy)
-
-5. Content Writing Style
-
-Professional but personable tone
-Active voice (avoid passive constructions)
-Specific and concrete (use numbers, metrics, names of technologies)
-Achievement-oriented (focus on impact and results)
-Keyword-rich for SEO (naturally incorporate major, skills, job titles)
-Scannable (use headings, short paragraphs, bullet points where appropriate)
-
-6. Navigation & User Experience
-
-Sticky navigation with smooth scroll to sections
-Include a "Download Resume" button/link (href="resume.pdf") in BOTH the nav bar and the hero section — style it prominently to match the site design
-Clear call-to-action buttons: "Contact Me", "See Projects"
-Footer with contact info and social links
-Smooth scroll behavior for anchor links
-Consider adding a "Back to Top" button for long pages
-
-7. SEO & Meta Tags
-Include proper meta tags:
-<title>[Name] | [Major] Graduate Portfolio</title>
-<meta name="description" content="Portfolio of [Name], [Major] graduate specializing in [Specialization]. View projects, experience, and skills.">
-
-8. Any augmentation, enhancement or garnishment not supported (directly or indirectly) by the resume should be marked with a triple asterisk (***) and an index number counting the number of asterisk groups in the page so far.
-
-9. Quality Checks
-Before finalizing, ensure:
-
- All colors from the color scheme are used consistently
- The hero section's background technique (gradient, orbs, blobs, shapes) matches the sample — NOT a flat/white background
- No Lorem ipsum or placeholder text
- Contact information is accurate and formatted correctly
- All sections from the resume are represented and expanded
- The layout matches the sample website's structure
- Code is clean, indented, and commented
- Mobile responsiveness is maintained
- No broken links or missing assets
-Include a footer copyright line using the person's name from the resume and the current year: © {{YEAR}} [Person's Full Name]. Do not add any other watermark.
-
-Output Format
-Provide the complete HTML file only (ready to save and deploy). No summary, no suggestions after the HTML — just the file.
-
-
-INPUT DATA
-
-Template screenshot: {{TEMPLATE_SCREENSHOT}}
-
-Headshot photo: {{HEADSHOT_PHOTO}} (placed in header, hero or footer as most suiting, if provided; otherwise add a monogram instead)
-
-Major: {{MAJOR}}
-Specialization: {{SPECIALIZATION}}
-
-Target Job:
-{{JOB_INFO}}
-
-Resume: (attached as PDF — extract name, email, phone, LinkedIn, GitHub, and all other content from it)
-
-Sample Website HTML:
-{{TEMPLATE_USAGE}}
-{{SAMPLE_WEBSITE_HTML}}
-
-Now generate the complete portfolio website following all the instructions above.
-
-Optional Enhancements (include if mentioned in inputs)
-If the resume includes any of these, give them special treatment:
-
-Publications: Create a dedicated section with proper citations and links
-Speaking/Presentations: Showcase with event names, dates, and topics
-Open Source Contributions: Highlight with repo stats if available
-Certifications: Display with issuing organization and dates
-Languages: If multilingual, showcase prominently
-Volunteer Work: Include if relevant to career narrative
-`;
 /**
  * Netlify Background Function: buildWebsite-background
  * Netlify returns 202 immediately; this function runs for up to 15 minutes.
  * Result is stored in a Netlify Blob keyed by jobId.
  * Poll /.netlify/functions/getPreviewResult?jobId=<id> for the result.
  *
- * Pipeline (GeneratePortfolioWebsite.md):
+ * Pipeline:
  *   Stage 1 (optional): Extract resume PDF → structured JSON (skipped if client sends resumeAnalysisJson)
- *   Stage 2: GeneratePortfolioWebsite.md → website_spec_json (strategy + visual + facts)
- *   Stage 3: Generate portfolio HTML from website_spec_json + template
+ *   Stage 2 (optional): buildContentStrategy.md → strategy JSON (skipped if strategyJson pre-computed)
+ *   Stage 3: Assemble visual_direction from designSpec + colorSpec
+ *   Stage 4: rendererPrompt.md → portfolio HTML
  */
 
-// eslint-disable-next-line no-unused-vars
-function fillTemplate(template, vars) {
-  return template.replace(/\{\{([A-Z_]+)\}\}/g, (_, key) => vars[key] ?? "");
-}
 
 async function fetchSampleHtml(url) {
   if (!url) return "";
@@ -531,11 +196,171 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
+// ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
+function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
+  const attrs   = designSpec?.exemplary_attributes || {};
+  const factors = designSpec?.design_factors || {};
+  const density            = designSpec?.density            || attrs.section_density || factors.density || "medium";
+  const useEmojiIcons      = designSpec?.use_emoji_icons      ?? true;
+  const alternateSections  = designSpec?.alternate_sections   ?? true;
+  const visualMotifs = motifs?.potential_visual_motifs || [];
+  const domain = motifs?.broad_primary_domain || "professional";
+
+  const heroConcept = visualMotifs.length > 0
+    ? `${visualMotifs[0]} — ${domain} field concept with ${(motifs?.symbolic_objects || [])[0] || "field-specific imagery"}`
+    : `Abstract representation of the ${domain} domain using layered gradients and symbolic shapes`;
+
+  const rendering = factors.rendering_style
+    || (Array.isArray(motifs?.rendering_style) ? motifs.rendering_style[0] : motifs?.rendering_style)
+    || "clean editorial vector";
+
+  const isUseSampleColors = colorSpec?.use_sample_colors;
+  const colorApp = isUseSampleColors
+    ? {
+        primary_use:   "Preserve template's primary color for headings and key UI elements",
+        secondary_use: "Preserve template's secondary color for subheadings and links",
+        accent_use:    "Preserve template's accent for hover states and CTAs",
+        dark_use:      "Preserve template's dark color for backgrounds and body text",
+        light_use:     "Preserve template's light color for cards and section backgrounds",
+        gradient_notes: "Use template's existing gradient patterns"
+      }
+    : {
+        primary_use:   `${colorSpec?.primary || "primary"} — headings, navbar brand, primary buttons`,
+        secondary_use: `${colorSpec?.secondary || "secondary"} — subheadings, links, secondary buttons`,
+        accent_use:    `${colorSpec?.accent || "accent"} — hover states, CTAs, highlights, icon accents`,
+        dark_use:      `${colorSpec?.dark || "dark"} — hero background, dark section backgrounds`,
+        light_use:     `${colorSpec?.light || "light"} — card backgrounds, alternating section fills`,
+        gradient_notes: `Hero: ${colorSpec?.dark || "dark"} → ${colorSpec?.primary || "primary"}. Cards: subtle ${colorSpec?.light || "light"} base. Diagonal breaks: ${colorSpec?.primary || "primary"} → ${colorSpec?.secondary || "secondary"}.`
+      };
+
+  const pace = (attrs.pacing || "").toLowerCase();
+  const animationGuidance = [];
+  if (pace.includes("fast") || pace.includes("dynamic") || pace.includes("energet")) {
+    animationGuidance.push("Fast scroll reveals: 0.3s fade-in with slight translateY(-10px)");
+    animationGuidance.push("Subtle parallax on hero background layers");
+  } else if (pace.includes("slow") || pace.includes("calm") || pace.includes("elegance") || pace.includes("minimal")) {
+    animationGuidance.push("Gentle fade-in on scroll: 0.6s ease-out, staggered by 100ms per card");
+    animationGuidance.push("Soft hover lift on cards: translateY(-3px) with deepened box-shadow");
+  } else {
+    animationGuidance.push("Fade-in on scroll via IntersectionObserver: 0.5s ease");
+    animationGuidance.push("Card hover: translateY(-3px) with box-shadow transition 0.25s");
+  }
+  animationGuidance.push("Sticky frosted-glass navbar: backdrop-filter blur(12px) with subtle border");
+  animationGuidance.push("CTA buttons: scale(1.03) on hover with 0.2s ease");
+
+  const visualPlacements = (visualsJson || []).map(a => {
+    const t = (a.type || "").toLowerCase();
+    const lbl = (a.label || a.name || "").toLowerCase();
+    let section = "about or projects";
+    let notes = "Linked with a descriptive anchor button";
+    if (t.includes("image") || t.includes("photo")) { section = "hero or about"; notes = "Displayed inline as a rounded portrait or project thumbnail"; }
+    else if (t.includes("video")) { section = "projects"; notes = "Embedded as autoplay muted loop or linked thumbnail"; }
+    else if (t.includes("pdf") || lbl.includes("resume")) { section = "hero"; notes = "Linked as a 'Download Resume' button"; }
+    else if (lbl.includes("project") || lbl.includes("demo")) { section = "projects"; notes = "Linked as 'View Project' button with short description"; }
+    return { visual_label: a.label || a.name || "visual", visual_type: a.type || "file", placement_section: section, presentation_notes: notes };
+  });
+
+  return {
+    visual_direction: {
+      mood:                     attrs.mood             || "professional, modern",
+      compositional_feel:       attrs.compositional_feel || "balanced, content-rich",
+      section_density:          density,
+      use_emoji_icons:          useEmojiIcons,
+      alternate_sections:       alternateSections,
+      visual_treatment:         attrs.visual_treatment || "clean with subtle depth and card layering",
+      composition_choice:       factors.composition_option || "split",
+      rendering_style:          rendering,
+      hero_concept:             heroConcept,
+      visual_motifs:            visualMotifs,
+      symbolic_objects:         motifs?.symbolic_objects || [],
+      animation_guidance:       animationGuidance,
+      template_inspiration_notes: `Style token: ${factors.style_token || "clean-minimal"}. Pacing: ${attrs.pacing || "moderate"}. Preserve this visual character throughout.`,
+      color_application:        colorApp,
+      visual_placements:        visualPlacements
+    }
+  };
+}
+
+// ─── Job analysis pipeline (stages 1-2 only) ─────────────────────────────────
+// Runs resume extraction and content strategy while the user fills Design/Colors.
+// Result is stored in the blob and consumed by the full pipeline to skip Stage 2.
+async function runJobAnalysisPipeline(client, store, jobId, {
+  page3, pdfBuffer, resumeAnalysisJson
+}) {
+  const jobAnalysis = {
+    desired_role: page3?.desired_role || "",
+    job_ad:       page3?.job_ad       || ""
+  };
+
+  // Stage 1 (optional): Extract resume PDF → JSON
+  let resumeJson = resumeAnalysisJson;
+  if (!resumeJson) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Extracting resume content (1/2)…"
+    }), { ttl: 3600 });
+
+    const uploadedFile = await client.files.create({
+      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
+      purpose: "user_data"
+    });
+
+    let stage1Json;
+    try {
+      const r1 = await client.responses.create({
+        model: "gpt-4o",
+        input: [{ role: "user", content: [
+          { type: "input_file", file_id: uploadedFile.id },
+          { type: "input_text", text: STAGE1_PROMPT }
+        ]}],
+        max_output_tokens: 8000
+      });
+      stage1Json = parseJsonResponse(r1.output_text);
+    } finally {
+      client.files.del(uploadedFile.id).catch(() => {});
+    }
+
+    const r2 = await client.responses.create({
+      model: "gpt-4o",
+      input: [{ role: "user", content: [{
+        type: "input_text",
+        text: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`
+      }]}],
+      max_output_tokens: 8000
+    });
+    resumeJson = parseJsonResponse(r2.output_text);
+  }
+
+  // Stage 2: Content strategy (resume + job)
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Building content strategy (2/2)…"
+  }), { ttl: 3600 });
+
+  const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
+  const contentPrompt = loadPromptFile("buildContentStrategy.md")
+    .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
+    .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+
+  const contentResponse = await client.responses.create({
+    model: "gpt-4o",
+    input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
+    max_output_tokens: 8000
+  });
+  const aiStrategy = parseJsonResponse(contentResponse.output_text);
+
+  await store.set(jobId, JSON.stringify({
+    status: "done",
+    strategy_json: aiStrategy,
+    resume_json:   resumeJson
+  }), { ttl: 3600 });
+}
+
 // ─── Main pipeline ───────────────────────────────────────────────────────────
 async function runPortfolioWebsitePipeline(client, store, jobId, {
   page1, page2, page3, pdfBuffer,
   sampleHtml, theme, headshotName,
-  resumeAnalysisJson, templateAnalysisJson, templateHtml
+  resumeAnalysisJson, templateAnalysisJson, templateHtml,
+  artifactsData = [],
+  strategyJson = null   // pre-computed by runJobAnalysisPipeline — skips Stage 2
 }) {
   const jobAnalysis = {
     desired_role: page3?.desired_role || "",
@@ -580,24 +405,29 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
     resumeJson = parseJsonResponse(r2.output_text);
   }
 
-  // ── Stage 2: GeneratePortfolioWebsite.md → core_content_json ────────────────
-  await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Building content strategy (2/4)…"
-  }), { ttl: 3600 });
-
-  // Strip color scheme data — not needed for content strategy
+  // ── Stage 2: buildContentStrategy.md → core_content_json ────────────────
+  // Skip if a pre-computed strategyJson was provided by runJobAnalysisPipeline.
   const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
 
-  const contentPrompt = loadPromptFile("GeneratePortfolioWebsite.md")
-    .replace("{{RESUME_JSON}}",      JSON.stringify(resumeForStrategy, null, 2))
-    .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+  let aiStrategy;
+  if (strategyJson) {
+    aiStrategy = strategyJson.strategy ?? strategyJson;
+  } else {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Building content strategy (2/4)…"
+    }), { ttl: 3600 });
 
-  const contentResponse = await client.responses.create({
-    model: "gpt-4o",
-    input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
-    max_output_tokens: 8000
-  });
-  const aiStrategy = parseJsonResponse(contentResponse.output_text);
+    const contentPrompt = loadPromptFile("buildContentStrategy.md")
+      .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
+      .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+
+    const contentResponse = await client.responses.create({
+      model: "gpt-4o",
+      input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
+      max_output_tokens: 8000
+    });
+    aiStrategy = parseJsonResponse(contentResponse.output_text);
+  }
 
   // Construct source_facts directly from resume_json — no AI re-extraction.
   // This prevents information loss from AI summarisation or schema mismatches.
@@ -609,54 +439,83 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
     }
   };
 
-  // ── Stage 3: blendWebsite.md → website_json ──────────────────────────────────
+  // ── Stage 3: code-level visual_direction assembly ────────────────────────────
   await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Blending design and content (3/4)…"
+    status: "pending", stage: "Assembling visual direction (3/4)…"
   }), { ttl: 3600 });
 
   const colorSpec = page2?.use_sample_colors
     ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
     : { ...theme, use_sample_colors: false };
 
-  const artifactsJson = page2?.artifacts || [];
+  // Enrich user-supplied artifacts with source and colorized fields.
+  const COLORIZABLE_TYPES = new Set(["image", "html", "text"]);
+  const userArtifacts = (artifactsData || []).map(a => ({
+    ...a,
+    source: "user",
+    colorized: COLORIZABLE_TYPES.has((a.type || "").toLowerCase())
+  }));
 
-  // Blender only needs strategy + motifs for design decisions — not source_facts.
-  const blendInput = {
-    strategy: coreContent.strategy,
-    motifs: resumeForStrategy.motifs ?? {}
+  // Stage 3: Build visual_direction using user artifacts only (for placement guidance).
+  // Merge page1 user preferences on top of templateAnalysisJson so they always win,
+  // regardless of which template source (option 1/2/3) was used.
+  const designSpec = {
+    ...(templateAnalysisJson || {}),
+    ...(page1.design_density     !== undefined && { density:           page1.design_density }),
+    ...(page1.use_emoji_icons    !== undefined && { use_emoji_icons:   page1.use_emoji_icons }),
+    ...(page1.alternate_sections !== undefined && { alternate_sections: page1.alternate_sections }),
   };
+  const blendResult = buildVisualDirection(
+    resumeForStrategy.motifs ?? {},
+    designSpec,
+    colorSpec,
+    userArtifacts
+  );
 
-  const blendPrompt = loadPromptFile("blendWebsite.md")
-    .replace("{{CORE_CONTENT_JSON}}", JSON.stringify(blendInput, null, 2))
-    .replace("{{DESIGN_SPEC_JSON}}",  JSON.stringify(templateAnalysisJson || {}, null, 2))
-    .replace("{{COLOR_SPEC_JSON}}",   JSON.stringify(colorSpec, null, 2))
-    .replace("{{ARTIFACTS_JSON}}",    JSON.stringify(artifactsJson.map(a => ({
-      label: a.label, type: a.type, description: a.description
-    })), null, 2));
+  // ── Stage 3.5: Merge template visual elements into artifact list ─────────────
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Merging artifacts (3/4)…"
+  }), { ttl: 3600 });
 
-  const blendResponse = await client.responses.create({
-    model: "gpt-4o",
-    input: [{ role: "user", content: [{ type: "input_text", text: blendPrompt }] }],
-    max_output_tokens: 8000
-  });
-  const blendResult = parseJsonResponse(blendResponse.output_text);
+  const templateVisuals = templateAnalysisJson?.visual_elements;
+  const templateImageArtifacts = (templateVisuals?.images || []).map(img => ({
+    type: "image",
+    label: img.src_file_name || img.role || "template image",
+    content: img.src_file_name || "",
+    tagline: img.role || "",
+    selector: img.selector || "",
+    source: "example website",
+    colorized: false
+  }));
+  const templateAnimationArtifacts = (templateVisuals?.animations || []).map(anim => ({
+    type: "animation",
+    label: anim.src_file_name || anim.name || "template animation",
+    content: anim.src_file_name || "",
+    tagline: anim.name || "",
+    selector: anim.selector || "",
+    source: "example website",
+    colorized: false
+  }));
+  const artifactsJson = [...userArtifacts, ...templateImageArtifacts, ...templateAnimationArtifacts];
 
-  // Assemble website_json in code — source_facts flows directly, never through the blender.
-  const websiteJson = {
-    strategy: coreContent.strategy,
-    visual_direction: blendResult.visual_direction ?? blendResult,
-    source_facts: coreContent.source_facts
-  };
-
-  // Attach headshot guidance into website_json so the renderer has it
+  // ── Assemble renderer inputs ─────────────────────────────────────────────────
   const candidateName = coreContent.source_facts?.identity?.name || "";
-  websiteJson._renderer_hints = {
-    candidate_name: candidateName || "UNKNOWN — check source_facts.identity.name",
-    headshot: headshotName
-      ? `provided — use <img src='${headshotName}' alt='${candidateName}'>`
-      : `not provided — render a CSS monogram using the initials of "${candidateName}"`,
-    template_usage: templateUsageInstruction(page1.template_copyright_mode),
-    year: new Date().getFullYear().toString()
+  const headshotHint  = headshotName
+    ? `provided — use <img src='${headshotName}' alt='${candidateName}'>`
+    : `not provided — render a CSS monogram using the initials of "${candidateName}"`;
+
+  // content_json: strategy + facts + rendering metadata
+  const contentJson = {
+    strategy:       coreContent.strategy,
+    source_facts:   coreContent.source_facts,
+    candidate_name: candidateName || "UNKNOWN — check source_facts.identity.name"
+  };
+
+  // Keep a combined blob for debug output only
+  const websiteJson = {
+    ...contentJson,
+    visual_direction: blendResult.visual_direction,
+    visuals: artifactsJson
   };
 
   // ── Stage 4: rendererPrompt.md → HTML ────────────────────────────────────────
@@ -669,33 +528,45 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
   const rendererSampleHtml = templateHtml || sampleHtml || "(No sample website provided)";
 
   const rendererPrompt = loadPromptFile("rendererPrompt.md")
-    .replace("{{WEBSITE_JSON}}", JSON.stringify(websiteJson, null, 2))
-    .replace("{{SAMPLE_HTML}}",  rendererSampleHtml)
-    .replace("{{YEAR}}",         new Date().getFullYear().toString());
-
-  const rendererContent = [{ type: "input_text", text: rendererPrompt }];
+    .replace("{{CONTENT_JSON}}",    JSON.stringify(contentJson, null, 2))
+    .replace("{{VISUAL_DIRECTION}}", JSON.stringify(blendResult.visual_direction, null, 2))
+    .replace("{{VISUALS_JSON}}",    JSON.stringify(artifactsJson, null, 2))
+    .replace("{{SAMPLE_HTML}}",     rendererSampleHtml)
+    .replace("{{HEADSHOT}}",        headshotHint)
+    .replace("{{TEMPLATE_USAGE}}",  templateUsageInstruction(page1.template_copyright_mode))
+    .replace("{{YEAR}}",            new Date().getFullYear().toString());
 
   const rendererResponse = await client.responses.create({
     model: "gpt-4o",
-    input: [{ role: "user", content: rendererContent }],
+    instructions: "You are an HTML code generator. Your sole task is to output a single complete HTML file. Do not explain, refuse, or add any commentary — output only the raw HTML, starting with <!DOCTYPE html>.",
+    input: [{ role: "user", content: [{ type: "input_text", text: rendererPrompt }] }],
     max_output_tokens: 32000
   });
 
   const siteHtml = cleanHtml(rendererResponse.output_text);
+  const truncatedByTokenLimit = rendererResponse.incomplete_details?.reason === "max_output_tokens";
 
   if (!/<[a-z]/i.test(siteHtml)) {
-    await store.set(jobId, JSON.stringify({
-      status: "error",
-      error: "The AI declined to generate the portfolio. Try adjusting your inputs or color scheme and resubmitting."
-    }), { ttl: 3600 });
+    let reason;
+    if (!rendererResponse.output_text?.trim()) {
+      reason = "The AI returned an empty response. This is usually a transient error — please resubmit.";
+    } else if (truncatedByTokenLimit) {
+      reason = "The AI's output was cut off before any HTML was produced (token limit reached). Try a shorter job description or fewer visuals, then resubmit.";
+    } else {
+      reason = `The AI did not return valid HTML. Raw output started with: "${rendererResponse.output_text?.slice(0, 120)}"`;
+    }
+    await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
     return;
   }
 
   await store.set(jobId, JSON.stringify({
     status: "done",
+    model: rendererResponse.model || "gpt-4o",
     site_html: siteHtml,
     resume_json: websiteJson,
-    truncated: rendererResponse.incomplete_details?.reason === "max_output_tokens"
+    strategy_json: coreContent.strategy,
+    visual_direction_json: blendResult.visual_direction,
+    truncated: truncatedByTokenLimit
   }), { ttl: 3600 });
 }
 
@@ -724,13 +595,23 @@ export async function handler(event) {
 
     const {
       page1 = {}, page2 = {}, page3 = {},
+      artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
-      resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null
+      resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null,
+      mode = "full",        // "full" | "analyzeJob"
+      strategyJson = null   // pre-computed strategy from analyzeJob mode
     } = body;
 
-    if (!resumePdfBase64) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
-      return { statusCode: 202 };
+    if (mode === "analyzeJob") {
+      if (!resumePdfBase64 && !resumeAnalysisJson) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+    } else {
+      if (!resumePdfBase64) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
     }
 
     if (!process.env.OPENAI_API_KEY_LOCAL && !process.env.OPENAI_API_KEY) {
@@ -741,6 +622,15 @@ export async function handler(event) {
     // OPENAI_API_KEY_LOCAL bypasses Netlify dev's AI gateway proxy.
     const apiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
     const client = new OpenAI({ apiKey, baseURL: "https://api.openai.com/v1" });
+
+    // analyzeJob mode: run stages 1-2 only (resume extraction + content strategy)
+    if (mode === "analyzeJob") {
+      const pdfBuf = resumePdfBase64 ? Buffer.from(resumePdfBase64, "base64") : null;
+      await runJobAnalysisPipeline(client, store, jobId, {
+        page3, pdfBuffer: pdfBuf, resumeAnalysisJson
+      });
+      return { statusCode: 202 };
+    }
 
     const theme = {
       primary:   page2?.theme?.primary   || "#4E70F1",
@@ -756,7 +646,9 @@ export async function handler(event) {
     await runPortfolioWebsitePipeline(client, store, jobId, {
       page1, page2, page3, pdfBuffer,
       sampleHtml, theme, headshotName,
-      resumeAnalysisJson, templateAnalysisJson, templateHtml
+      resumeAnalysisJson, templateAnalysisJson, templateHtml,
+      artifactsData,
+      strategyJson
     });
   } catch (err) {
     const msg = err?.message || "Unknown error";

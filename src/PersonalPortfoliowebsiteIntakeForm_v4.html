@@ -321,6 +321,7 @@
     .resume-filelist li::before { content: "📎 "; }
     .artifact-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
     .artifact-filelist li::before { content: "🖼 "; }
+    .artifactRow { display: grid; grid-template-columns: minmax(120px,auto) 1fr minmax(140px,180px) auto; gap: 6px; align-items: start; padding: 8px 10px; background: rgba(0,0,0,.18); border: 1px solid rgba(255,255,255,.08); border-radius: 9px; margin-bottom: 6px; }
   </style>
 </head>
 <body>
@@ -360,11 +361,11 @@
       </div>
       <div class="note">
         <ol class="tipList">
-          <li><strong>Page 1:</strong> Major, specialization, and resume.</li>
-          <li><strong>Page 2:</strong> Artifacts — headshot, GitHub link, images, video links.</li>
-          <li><strong>Page 3:</strong> Portfolio template / model.</li>
-          <li><strong>Page 4:</strong> Color scheme.</li>
-          <li><strong>Page 5:</strong> Target job and job posting.</li>
+          <li><strong>Page 1:</strong> Basic info — resume, major, and specialization.</li>
+          <li><strong>Page 2:</strong> Job — target job ad.</li>
+          <li><strong>Page 3:</strong> Design — website design spec.</li>
+          <li><strong>Page 4:</strong> Colors — color scheme.</li>
+          <li><strong>Page 5:</strong> Visuals — headshot, links, images, and video.</li>
         </ol>
       </div>
       <div class="btnRow">
@@ -381,17 +382,6 @@
 
       <div class="max480 grid">
         <div>
-          <label for="major">Major <span class="error">*</span></label>
-          <input id="major" type="text" placeholder="e.g., Psychology" required />
-          <span id="providerBadge" class="hidden" style="display:inline-block; margin-top:4px;"></span>
-        </div>
-
-        <div>
-          <label for="specialization">Specialization <span class="error">*</span></label>
-          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
-        </div>
-
-        <div>
           <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
           <div class="dropzone" id="resumeDropzone">
             <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
@@ -405,6 +395,17 @@
           <p class="hint" style="margin:8px 0 0;">
             Tip: Learn how to <a href="#" id="openLinkedInPdfHelp">download a PDF of your LinkedIn profile</a>.
           </p>
+        </div>
+
+        <div>
+          <label for="major">Major <span class="error">*</span></label>
+          <input id="major" type="text" placeholder="e.g., Psychology" required />
+          <span id="providerBadge" class="hidden" style="display:inline-block; margin-top:4px;"></span>
+        </div>
+
+        <div>
+          <label for="specialization">Specialization <span class="error">*</span></label>
+          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
         </div>
       </div>
 
@@ -426,14 +427,20 @@
       </div>
     </section>
 
-    <!-- PAGE 2: Artifacts -->
-    <section class="card hidden" id="page2">
+    <!-- PAGE 5: Artifacts -->
+    <section class="card hidden" id="page5">
       <div class="sectionTitle">
-        <h2>Page 2 — Artifacts</h2>
+        <h2>Page 5 — Visuals</h2>
         <p class="hint">Add images, links, and other media that will enrich your portfolio. All fields optional.</p>
       </div>
 
       <div class="grid">
+        <div id="generationStatus" style="display:none; font-size:13px; padding:8px 12px; border-radius:8px; background:rgba(78,112,241,.12); border:1px solid rgba(78,112,241,.3);"></div>
+
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back5_top">Back</button>
+          <button class="btn primary" type="button" id="submit_top" disabled style="opacity:0.45; cursor:not-allowed;">Apply &amp; Preview</button>
+        </div>
 
         <!-- Headshot -->
         <div>
@@ -515,6 +522,18 @@
           </div>
         </div>
 
+        <div class="hr"></div>
+
+        <!-- Dynamic artifact rows -->
+        <div>
+          <div class="sectionTitle" style="margin-bottom:8px;">
+            <h2 style="font-size:14.5px;">Additional Artifacts</h2>
+            <p class="hint">Images, HTML snippets, videos, or text that should appear in specific sections.</p>
+          </div>
+          <div id="artifactRows"></div>
+          <button class="btn ghost mini" type="button" id="addArtifact" style="margin-top:4px;">+ Add Artifact</button>
+        </div>
+
         <div class="note" style="margin-top:4px;">
           <label style="margin:0; font-weight:400; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
             <input id="artifactsCopyrightOk" type="checkbox" style="margin-top:2px; flex-shrink:0;" />
@@ -522,17 +541,105 @@
           </label>
         </div>
 
+        <div id="finalBox" class="hidden">
+          <div class="note">
+            <div id="finalStatus" class="hint"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <!-- Debug section — hidden until DEBUG is in Major AND generation completes -->
+          <div id="debugSection" class="hidden" style="margin-bottom: 12px;">
+            <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
+
+            <details>
+              <summary>Form payload (pages 1–5 data sent to API)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
+                <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+              </div>
+              <pre id="debugPayloadPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>Step 1 — Content strategy (GeneratePortfolioWebsite output)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlStrategyJson">Download strategy.json</button>
+                <button class="btn mini ghost" type="button" id="cpStrategyJson">Copy</button>
+              </div>
+              <pre id="debugStrategyJsonPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>Step 2 — Visual direction (code-assembled)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlVisualDirectionJson">Download visual-direction.json</button>
+                <button class="btn mini ghost" type="button" id="cpVisualDirectionJson">Copy</button>
+              </div>
+              <pre id="debugVisualDirectionJsonPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>Final website_json (strategy + visual direction + source facts)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini hidden" type="button" id="dlResumeJson">Download website-json.json</button>
+              </div>
+              <pre id="debugResumeJsonPre"></pre>
+            </details>
+
+            <details style="margin-top:8px;">
+              <summary>API response metadata (last poll)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
+              </div>
+              <pre id="debugApiResponsePre"></pre>
+            </details>
+
+            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
+              <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
+              <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
+            </div>
+            <div class="hr" style="margin-top:12px;"></div>
+          </div>
+
+          <details>
+            <summary>Autogenerated prompt (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button class="btn mini" type="button" id="dlPrompt">Download prompt (.txt)</button>
+              <button class="btn mini ghost" type="button" id="cpPrompt">Copy prompt</button>
+            </div>
+            <pre id="promptPreview"></pre>
+          </details>
+
+          <details style="margin-top:10px;">
+            <summary>Model response (JSON/HTML/advice) (click to expand)</summary>
+            <div class="btnRow" style="justify-content:flex-start;">
+              <button class="btn mini" type="button" id="dlFinalJson">Download JSON</button>
+              <button class="btn mini" type="button" id="dlFinalHtml2">Download HTML</button>
+              <button class="btn mini ghost" type="button" id="cpFinal">Copy response</button>
+            </div>
+            <pre id="finalPreview"></pre>
+          </details>
+
+          <div style="margin-top:10px;" class="note">
+            <strong>Also created:</strong> a downloadable summary HTML of your entire form submission.
+            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
+              <button class="btn mini" type="button" id="dlSummaryHtml2">Download MyPersonalPortfolioWebsiteSummary.html</button>
+            </div>
+          </div>
+        </div>
+
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back2">Back</button>
-          <button class="btn primary" type="button" id="next2">Next</button>
+          <button class="btn ghost" type="button" id="back5">Back</button>
+          <button class="btn primary" type="button" id="submit_bottom" disabled style="opacity:0.45; cursor:not-allowed;">Apply &amp; Preview</button>
         </div>
       </div>
     </section>
 
-    <!-- PAGE 3: Portfolio Template -->
-    <section class="card hidden" id="page3">
+    <!-- PAGE 2: Portfolio Template -->
+    <section class="card hidden" id="page2">
       <div class="sectionTitle">
-        <h2>Page 3 — Portfolio Template</h2>
+        <h2>Page 3 — Design</h2>
         <p class="hint">Choose a model or design style for your portfolio.</p>
       </div>
 
@@ -618,15 +725,15 @@
       </div>
 
       <div class="btnRow">
-        <button class="btn ghost" type="button" id="back3">Back</button>
-        <button class="btn primary" type="button" id="next3">Next</button>
+        <button class="btn ghost" type="button" id="back2">Back</button>
+        <button class="btn primary" type="button" id="next2">Next</button>
       </div>
     </section>
 
-    <!-- PAGE 4: Color Scheme -->
-    <section class="card hidden" id="page4">
+    <!-- PAGE 3: Color Scheme -->
+    <section class="card hidden" id="page3">
       <div class="sectionTitle">
-        <h2>Page 4 — Choose Color Scheme</h2>
+        <h2>Page 4 — Colors</h2>
       </div>
 
       <div class="hr"></div>
@@ -677,27 +784,27 @@
           </details>
 
           <div class="btnRow" style="margin-top:12px;">
-            <button class="btn ghost" type="button" id="back4_from_preview">← Back</button>
+            <button class="btn ghost" type="button" id="back3_from_preview">← Back</button>
             <button class="btn primary" type="button" id="btnOpenEditor" style="margin-left:auto;">Refine in visual editor</button>
-            <button class="btn ghost" type="button" id="continueTo5">Next →</button>
+            <button class="btn ghost" type="button" id="continueTo4">Next →</button>
           </div>
         </div>
 
         <!-- Bottom buttons -->
-        <div class="btnRow" id="page4NavRow" style="margin-top:16px;">
-          <button class="btn ghost" type="button" id="back4">Back</button>
+        <div class="btnRow" id="page3NavRow" style="margin-top:16px;">
+          <button class="btn ghost" type="button" id="back3">Back</button>
           <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
             <p class="hint" style="margin:0;"><strong>Next</strong> generates a preview.</p>
-            <button class="btn primary" type="button" id="next4">Next</button>
+            <button class="btn primary" type="button" id="next3">Next</button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- PAGE 5: Target Job -->
-    <section class="card hidden" id="page5">
+    <!-- PAGE 4: Target Job -->
+    <section class="card hidden" id="page4">
       <div class="sectionTitle">
-        <h2>Page 5 — Target Job</h2>
+        <h2>Page 2 — Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
       </div>
 
@@ -712,83 +819,13 @@
         </div>
 
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back5_top">Back</button>
-          <button class="btn primary" type="button" id="submit_top">Submit</button>
-        </div>
-
-        <div id="finalBox" class="hidden">
-          <div class="note">
-            <div id="finalStatus" class="hint"></div>
-          </div>
-
-          <div class="hr"></div>
-
-          <!-- Debug section — hidden until DEBUG is in Major AND generation completes -->
-          <div id="debugSection" class="hidden" style="margin-bottom: 12px;">
-            <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
-
-            <details>
-              <summary>Form payload (pages 1–5 data sent to API)</summary>
-              <div class="btnRow" style="justify-content:flex-start;">
-                <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
-                <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
-              </div>
-              <pre id="debugPayloadPre"></pre>
-            </details>
-
-            <details style="margin-top:8px;">
-              <summary>Extracted resume JSON (three-prompt stages 1→2)</summary>
-              <div class="btnRow" style="justify-content:flex-start;">
-                <button class="btn mini hidden" type="button" id="dlResumeJson">Download resume-extracted.json</button>
-              </div>
-              <pre id="debugResumeJsonPre"></pre>
-            </details>
-
-            <details style="margin-top:8px;">
-              <summary>API response metadata (last poll)</summary>
-              <div class="btnRow" style="justify-content:flex-start;">
-                <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
-              </div>
-              <pre id="debugApiResponsePre"></pre>
-            </details>
-
-            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
-              <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
-              <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
-            </div>
-            <div class="hr" style="margin-top:12px;"></div>
-          </div>
-
-          <details>
-            <summary>Autogenerated prompt (click to expand)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlPrompt">Download prompt (.txt)</button>
-              <button class="btn mini ghost" type="button" id="cpPrompt">Copy prompt</button>
-            </div>
-            <pre id="promptPreview"></pre>
-          </details>
-
-          <details style="margin-top:10px;">
-            <summary>Model response (JSON/HTML/advice) (click to expand)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlFinalJson">Download JSON</button>
-              <button class="btn mini" type="button" id="dlFinalHtml2">Download HTML</button>
-              <button class="btn mini ghost" type="button" id="cpFinal">Copy response</button>
-            </div>
-            <pre id="finalPreview"></pre>
-          </details>
-
-          <div style="margin-top:10px;" class="note">
-            <strong>Also created:</strong> a downloadable summary HTML of your entire form submission.
-            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
-              <button class="btn mini" type="button" id="dlSummaryHtml2">Download MyPersonalPortfolioWebsiteSummary.html</button>
-            </div>
-          </div>
+          <button class="btn ghost" type="button" id="back4_top">Back</button>
+          <button class="btn primary" type="button" id="next4_top">Next</button>
         </div>
 
         <div class="btnRow">
-          <button class="btn ghost" type="button" id="back5">Back</button>
-          <button class="btn primary" type="button" id="submit_bottom">Submit</button>
+          <button class="btn ghost" type="button" id="back4">Back</button>
+          <button class="btn primary" type="button" id="next4">Next</button>
         </div>
       </div>
     </section>

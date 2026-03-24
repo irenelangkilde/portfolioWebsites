@@ -64,35 +64,47 @@ export async function handler(event) {
       templateHtmlBase64,
       templateImageBase64,
       templateImageMime = "image/png",
+      templateJsonStr,
+      major = "",
+      specialization = "",
       provider = "claude"
     } = body;
 
-    if (!templateUrl && !templateHtmlBase64 && !templateImageBase64) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "One of templateUrl, templateHtmlBase64, or templateImageBase64 is required" }), { ttl: 3600 });
+    if (!templateUrl && !templateHtmlBase64 && !templateImageBase64 && !templateJsonStr) {
+      await store.set(jobId, JSON.stringify({ status: "error", error: "One of templateUrl, templateHtmlBase64, templateImageBase64, or templateJsonStr is required" }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
-    // Load prompt
+    // Load prompt — EEWT for HTML/URL, ConstructTemplate for image/JSON
+    const useConstructTemplate = !!(templateImageBase64 || templateJsonStr);
+    const promptFileName = useConstructTemplate ? "ConstructTemplate.md" : "ExtractExampleWebsiteTemplate.md";
     const cwd = process.cwd();
     let promptTemplate;
     for (const candidate of [
-      resolve(cwd, "src/netlify/functions/ExtractExampleWebsiteTemplate.md"),
-      resolve(cwd, "netlify/functions/ExtractExampleWebsiteTemplate.md"),
-      resolve(cwd, "ExtractExampleWebsiteTemplate.md"),
+      resolve(cwd, `src/netlify/functions/${promptFileName}`),
+      resolve(cwd, `netlify/functions/${promptFileName}`),
+      resolve(cwd, promptFileName),
     ]) {
       try { promptTemplate = readFileSync(candidate, "utf-8"); break; } catch {}
     }
     if (!promptTemplate) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "Could not load ExtractExampleWebsiteTemplate.md" }), { ttl: 3600 });
+      await store.set(jobId, JSON.stringify({ status: "error", error: `Could not load ${promptFileName}` }), { ttl: 3600 });
       return { statusCode: 202 };
     }
+
+    // Substitute {{MAJOR}} / {{SPECIALIZATION}} placeholders (used by ConstructTemplate.md)
+    promptTemplate = promptTemplate
+      .replace(/\{\{MAJOR\}\}/g, major)
+      .replace(/\{\{SPECIALIZATION\}\}/g, specialization);
 
     // Resolve input content
     let htmlText = null;
     let imageBase64 = null;
     let imageMime = null;
 
-    if (templateUrl) {
+    if (templateJsonStr) {
+      htmlText = templateJsonStr; // AI prompt handles "if the input is json"
+    } else if (templateUrl) {
       try {
         try {
           const controller = new AbortController();

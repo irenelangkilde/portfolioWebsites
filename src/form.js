@@ -16,6 +16,17 @@
     let resumeAnalysisPending = false; // true while request in flight
 
     // ----------------------------
+    // Generation state
+    // ----------------------------
+    let generationResult    = null;  // data object when done
+    let generationError     = null;  // error message on failure
+    let generationInProgress = false;
+
+    // Pre-computed job+resume strategy (triggered on Job Next, consumed by doGenerate)
+    let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
+    let jobAnalysisInProgress = false;
+
+    // ----------------------------
     // Per-field validation
     // ----------------------------
     const FIELD_VALIDATORS = {
@@ -182,25 +193,42 @@
     // Resume analysis (background)
     // ----------------------------
     function updateSubmitReadiness() {
-      const btn = document.getElementById("submit_bottom");
+      // Page 5 buttons are managed by setApplyBtnState(); just update the readiness message.
       const msg = document.getElementById("submitReadinessMsg");
-      if (!btn) return;
+      if (!msg) return;
       const resumePending  = !!resumeAnalysisPending;
       const extractPending = !!extractTemplatePending;
       const busy = resumePending || extractPending;
-      btn.disabled = busy;
-      btn.style.opacity = busy ? "0.45" : "";
-      btn.style.cursor  = busy ? "not-allowed" : "";
+      if (busy) {
+        const parts = [];
+        if (resumePending)  parts.push("resume analysis");
+        if (extractPending) parts.push("template extraction");
+        msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
+        msg.style.display = "block";
+      } else {
+        msg.style.display = "none";
+      }
+    }
+
+    function setApplyBtnState(enabled) {
+      ["submit_top", "next2_bottom"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = !enabled;
+        btn.style.opacity = enabled ? "" : "0.45";
+        btn.style.cursor  = enabled ? "" : "not-allowed";
+      });
+    }
+
+    function updateGenerationStatus(msg) {
+      const el = document.getElementById("generationStatus");
+      if (!el) return;
       if (msg) {
-        if (busy) {
-          const parts = [];
-          if (resumePending)  parts.push("resume analysis");
-          if (extractPending) parts.push("template extraction");
-          msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
-          msg.style.display = "block";
-        } else {
-          msg.style.display = "none";
-        }
+        el.textContent = msg;
+        el.style.color = "rgba(234,240,255,.7)";
+        el.style.display = "block";
+      } else {
+        el.style.display = "none";
       }
     }
 
@@ -210,6 +238,11 @@
         const el = document.getElementById(id);
         if (el) { el.textContent = text; el.style.color = color; }
       });
+    }
+
+    function setHeaderStatus(id, text, color = "rgba(234,240,255,.6)") {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; el.style.color = color; }
     }
 
     function populateResumeDebugPanel(json) {
@@ -227,12 +260,6 @@
 
       if (isDebugMode()) panel.classList.remove("hidden");
 
-      // Lift the "wait for analysis" block, then apply defaults
-      updateDesignOptionsReadiness();
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (source === "none" && !document.querySelector('input[name="designComposition"]:checked')) {
-        applyDesignDefaults(json);
-      }
       applyColorDefaults(json);
     }
 
@@ -409,12 +436,12 @@
     const PAGES = [
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Resume" },
-      { id: "page2", label: "2 Artifacts" },
-      { id: "page3", label: "3 Website spec" },
-      { id: "page4", label: "4 Color scheme" },
-      { id: "page5a", pageId: "page5", label: "5 Job Ad" },
-      { id: "page5b", pageId: "page5", label: "6 Edit" },
-      { id: "page5c", pageId: "page5", label: "7 Publish" }
+      { id: "page5", label: "2 Job" },
+      { id: "page3", label: "3 Design" },
+      { id: "page4", label: "4 Colors" },
+      { id: "page2",  label: "5 Visuals" },
+      { id: "page2b", pageId: "page2", label: "6 Edit" },
+      { id: "page2c", pageId: "page2", label: "7 Publish" },
     ];
     let currentStep = 0;
 
@@ -424,6 +451,8 @@
 
     function getPageId(entry){ return entry.pageId ?? entry.id; }
 
+    let pillNavUnlocked = false;
+
     function renderStepUI(){
       const activePageId = getPageId(PAGES[currentStep]);
       stepPills.innerHTML = "";
@@ -432,6 +461,10 @@
         const pill = document.createElement("div");
         pill.className = "pill" + (getPageId(p) === activePageId ? " active" : "");
         pill.textContent = p.label;
+        if (pillNavUnlocked) {
+          pill.style.cursor = "pointer";
+          pill.addEventListener("click", () => setStep(idx));
+        }
         stepPills.appendChild(pill);
       });
       stepLabel.textContent = currentStep > 0 ? `Step ${currentStep} of ${PAGES.length - 1}` : "";
@@ -565,16 +598,7 @@
     // ----------------------------
     // Page 1: resume file input
     // ----------------------------
-    const resumeUpload   = document.getElementById("resumeUpload");
-    const resumeFileList = document.getElementById("resumeFileList");
-    resumeUpload.addEventListener("change", () => {
-      resumeFileList.innerHTML = "";
-      Array.from(resumeUpload.files).forEach(f => {
-        const li = document.createElement("li");
-        li.textContent = f.name;
-        resumeFileList.appendChild(li);
-      });
-    });
+    const resumeUpload = document.getElementById("resumeUpload");
 
     // ----------------------------
     // Template list — populate datalist dynamically, cached in localStorage for 24h
@@ -645,21 +669,22 @@
     }
 
     function populateTemplateExtractPanel(result) {
-      const panel   = document.getElementById("templateExtractPanel");
-      const jsonPre = document.getElementById("templateExtractJsonPre");
-      const dlJson  = document.getElementById("dlTemplateJson");
-      const cpJson  = document.getElementById("cpTemplateJson");
-      const dlHtml  = document.getElementById("dlTemplateExtract");
+      const panel    = document.getElementById("templateExtractPanel");
+      const jsonPre  = document.getElementById("templateExtractJsonPre");
+      const htmlPre  = document.getElementById("templateExtractHtmlPre");
+      const dlJson   = document.getElementById("dlTemplateJson");
+      const cpJson   = document.getElementById("cpTemplateJson");
+      const dlHtml   = document.getElementById("dlTemplateExtract");
       if (!panel) return;
 
       const jsonStr = JSON.stringify(result.embeddedJson ?? {}, null, 2);
       if (jsonPre) jsonPre.textContent = jsonStr;
+      if (htmlPre) htmlPre.textContent = result.templateHtml || "(no HTML returned)";
       dlJson?.addEventListener("click", () => downloadText("spec.json", jsonStr, "application/json"));
       cpJson?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
       dlHtml?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
 
       if (isDebugMode()) panel.classList.remove("hidden");
-      document.getElementById("designSpecPanel")?.classList.add("hidden");
 
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
@@ -691,27 +716,26 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (!source) return;
 
-      if (source === "none") {
-        const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
-        extractedTemplateCache = {
-          templateHtml: null,
-          embeddedJson: {
-            source: "design_options",
-            composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
-            style: styleVal === "other"
-              ? (document.getElementById("designStyleOther")?.value?.trim() || "custom")
-              : styleVal,
-            render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
-          }
-        };
-        setTemplateExtractStatus("✓ Design options applied", "rgba(118,176,34,.9)");
-        return;
-      }
-
       let key = "";
       let requestBody = { provider: getAnalysisProvider() };
 
-      if (source === "url") {
+      if (source === "none") {
+        const styleVal = document.getElementById("designStyle")?.value || "";
+        const jsonSpec = {
+          source:             "design_options",
+          composition:        document.getElementById("designComposition")?.value  || "",
+          style:              styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "custom") : styleVal,
+          render_mode:        document.getElementById("designRenderMode")?.value   || "",
+          density:            document.getElementById("designDensity")?.value      || "medium",
+          use_emoji_icons:    document.getElementById("useEmojiIcons")?.value      === "yes",
+          alternate_sections: document.getElementById("alternateSections")?.value  !== "no"
+        };
+        const p1 = getPage1();
+        requestBody.templateJsonStr = JSON.stringify(jsonSpec, null, 2);
+        requestBody.major           = p1.major;
+        requestBody.specialization  = p1.specialization;
+        key = "design_options_" + JSON.stringify(jsonSpec);
+      } else if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val || looksLikeUrl(val)) return;
 
@@ -887,72 +911,34 @@
 
     function updateTemplateUI() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "url");
+      document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "keyword");
       document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
       const designWrap = document.getElementById("designOptionsWrap");
       if (designWrap) {
         if (source === "none") {
           designWrap.classList.remove("hidden");
-          updateDesignOptionsReadiness();
-          if (resumeAnalysisCache && !document.querySelector('input[name="designComposition"]:checked')) {
-            applyDesignDefaults(resumeAnalysisCache);
-          }
         } else {
           designWrap.classList.add("hidden");
         }
       }
       updateTemplateCopyrightVisibility();
 
-      // Show the appropriate spec panel immediately based on selection
+      // Show the spec panel in debug mode when cached result is available
       const extractPanel = document.getElementById("templateExtractPanel");
-      const designPanel  = document.getElementById("designSpecPanel");
-      if (source === "none") {
-        extractPanel?.classList.add("hidden");
-        if (designPanel && isDebugMode()) {
-          designPanel.classList.remove("hidden");
-          updateDesignSpecPanel();
-        }
-      } else if (source === "url" || source === "file") {
-        designPanel?.classList.add("hidden");
-        if (extractPanel && isDebugMode()) {
-          extractPanel.classList.remove("hidden");
-          if (extractedTemplateCache) {
-            populateTemplateExtractPanel(extractedTemplateCache);
-          } else {
-            const pre = document.getElementById("templateExtractJsonPre");
-            if (pre && !pre.textContent) pre.textContent = "Click Next → to extract the template spec.";
-          }
+      if (isDebugMode()) {
+        if (extractedTemplateCache) {
+          populateTemplateExtractPanel(extractedTemplateCache);
+        } else {
+          extractPanel?.classList.add("hidden");
+          const pre = document.getElementById("templateExtractJsonPre");
+          if (pre && !pre.textContent) pre.textContent = "Click Next → to extract the template spec.";
         }
       } else {
         extractPanel?.classList.add("hidden");
-        designPanel?.classList.add("hidden");
       }
     }
 
-    function updateDesignOptionsReadiness() {
-      const designWrap = document.getElementById("designOptionsWrap");
-      if (!designWrap) return;
-      const analysisReady = !!resumeAnalysisCache;
-      const inputs = designWrap.querySelectorAll("input");
-
-      // Ensure the wait-message element exists
-      let waitMsg = document.getElementById("_designOptionsWaitMsg");
-      if (!waitMsg) {
-        waitMsg = document.createElement("div");
-        waitMsg.id = "_designOptionsWaitMsg";
-        waitMsg.style.cssText = "font-size:12px; padding:6px 8px; border-radius:8px; background:rgba(251,171,156,.12); color:rgba(251,171,156,.9); margin-bottom:4px;";
-        waitMsg.textContent = "Please wait for resume analysis to finish.";
-        designWrap.insertBefore(waitMsg, designWrap.firstChild);
-      }
-
-      if (analysisReady) {
-        waitMsg.style.display = "none";
-        inputs.forEach(inp => { inp.disabled = false; inp.style.opacity = ""; });
-      } else {
-        waitMsg.style.display = "block";
-        inputs.forEach(inp => { inp.disabled = true; inp.style.opacity = "0.35"; });
-      }
-    }
+    function updateDesignOptionsReadiness() { /* no-op: option 3 is human-only */ }
 
     function applyDesignDefaults(resumeJson) {
       const renderingStyles = (resumeJson?.motifs?.rendering_style || []).join(" ").toLowerCase();
@@ -1021,34 +1007,9 @@
       });
     }
 
-    function updateDesignSpecPanel() {
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      const extractPanel = document.getElementById("templateExtractPanel");
-      const designPanel  = document.getElementById("designSpecPanel");
-      if (source === "none") {
-        extractPanel?.classList.add("hidden");
-        if (designPanel) {
-          const spec    = getPage3Template();
-          const jsonStr = JSON.stringify(spec, null, 2);
-          const pre     = document.getElementById("designSpecPre");
-          if (pre) pre.textContent = jsonStr;
-          const dlBtn = document.getElementById("dlDesignSpec");
-          const cpBtn = document.getElementById("cpDesignSpec");
-          dlBtn?.addEventListener("click", () => downloadText("design-spec.json", jsonStr, "application/json"));
-          cpBtn?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
-          if (isDebugMode()) designPanel.classList.remove("hidden");
-        }
-      } else {
-        designPanel?.classList.add("hidden");
-        // templateExtractPanel visibility is managed by populateTemplateExtractPanel after extraction
-      }
-    }
-
     document.querySelectorAll('input[name="templateSource"]').forEach(r =>
       r.addEventListener("change", () => {
         updateTemplateUI();
-        updateDesignSpecPanel();
-        // Fire extraction if switching to url (with existing value) or file (with existing file)
         extractTemplateInBackground();
       }));
     document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
@@ -1057,12 +1018,18 @@
     // Also trigger extraction when a file is selected while source=file
     templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
 
-    // Refresh design spec JSON live as design options change
-    document.querySelectorAll('input[name="designComposition"], input[name="designStyle"], input[name="designRenderMode"]')
-      .forEach(r => r.addEventListener("change", () => {
-        updateDesignSpecPanel();
+    // Re-extract when design option dropdowns change (option #3)
+    ["designComposition", "designStyle", "designRenderMode", "designDensity", "useEmojiIcons", "alternateSections"].forEach(id => {
+      document.getElementById(id)?.addEventListener("change", () => {
         extractTemplateInBackground();
-      }));
+      });
+    });
+
+    // Show/hide "Other" style text field
+    document.getElementById("designStyle")?.addEventListener("change", () => {
+      const other = document.getElementById("designStyleOther");
+      if (other) other.style.display = document.getElementById("designStyle").value === "other" ? "block" : "none";
+    });
 
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
@@ -1108,8 +1075,10 @@
     // Collectors
     // ----------------------------
     function getPage1(){
+      const rawMajor = document.getElementById("major").value.trim();
+      const major = rawMajor.replace(/\b(DEBUG|CHATGPT|OPENAI|CLAUDE)\b/gi, "").replace(/\s{2,}/g, " ").trim();
       return {
-        major: document.getElementById("major").value.trim(),
+        major,
         specialization: document.getElementById("specialization").value.trim()
       };
     }
@@ -1163,7 +1132,7 @@
       }
     }
 
-    function addArtifactRow(type = "", content = "", tagline = "") {
+    function addArtifactRow(type = "", content = "", placement = "") {
       const id = ++artifactRowCount;
       const row = document.createElement("div");
       row.id = `artifactRow_${id}`;
@@ -1183,8 +1152,8 @@
       const tag = document.createElement("input");
       tag.type = "text";
       tag.className = "artifactTagline";
-      tag.placeholder = "Tagline…";
-      tag.value = tagline;
+      tag.placeholder = "Placement position (e.g. hero, projects, about)…";
+      tag.value = placement;
 
       const del = document.createElement("button");
       del.type = "button";
@@ -1197,12 +1166,12 @@
       document.getElementById("artifactRows").appendChild(row);
     }
 
-    async function getPage2Artifacts(){
+    async function getPage5Artifacts(){
       const rows = [];
       for (const row of document.querySelectorAll("#artifactRows .artifactRow")) {
-        const type = row.querySelector("select")?.value || "";
-        const wrap = row.querySelector(".artifactContentWrap");
-        const tagline = row.querySelector(".artifactTagline")?.value?.trim() || "";
+        const type      = row.querySelector("select")?.value || "";
+        const wrap      = row.querySelector(".artifactContentWrap");
+        const placement = row.querySelector(".artifactTagline")?.value?.trim() || "";
 
         let content = "";
         if (type === "image") {
@@ -1214,25 +1183,28 @@
           content = wrap?.querySelector("input[type='text']")?.value?.trim() || "";
         }
 
-        rows.push({ type, content, tagline });
+        rows.push({ type, content, placement });
       }
       return { artifacts: rows };
     }
 
-    function getPage3Template(){
+    function getPage2Template(){
       const templateSource = document.querySelector('input[name="templateSource"]:checked')?.value || "";
-      const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
+      const styleVal = document.getElementById("designStyle")?.value || "";
       return {
         template_source: templateSource,
-        model_template: templateSource === "url" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
+        model_template: templateSource === "keyword" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
         template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || "",
-        design_composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
-        design_style: styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
-        design_render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
+        design_composition:  document.getElementById("designComposition")?.value  || "",
+        design_style:        styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
+        design_render_mode:  document.getElementById("designRenderMode")?.value   || "",
+        design_density:        document.getElementById("designDensity")?.value        || "medium",
+        use_emoji_icons:       document.getElementById("useEmojiIcons")?.value       === "yes",
+        alternate_sections:    document.getElementById("alternateSections")?.value   !== "no"
       };
     }
 
-    function getPage4Colors(){
+    function getPage3Colors(){
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -1246,7 +1218,7 @@
       };
     }
 
-    function getPage5Job(){
+    function getPage4Job(){
       return {
         desired_role: document.getElementById("desiredRole").value.trim(),
         job_ad: document.getElementById("jobAd").value
@@ -1267,6 +1239,263 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    // ----------------------------
+    // Artifact injection helpers
+    // ----------------------------
+    function injectArtifacts(htmlString, artifacts) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, "text/html");
+      const userArtifacts = (artifacts || []).filter(a => a.type && a.content);
+
+      for (const artifact of userArtifacts) {
+        const sectionHint = artifact.placement || null;
+
+        // Background image: override the --hero-bg-image CSS custom property
+        if (artifact.type === "image" && sectionHint === "background") {
+          const src = artifact.content.startsWith("data:") ? artifact.content : `data:image/jpeg;base64,${artifact.content}`;
+          const style = doc.createElement("style");
+          style.textContent = `:root { --hero-bg-image: url("${src}"); }`;
+          doc.head.appendChild(style);
+          continue;
+        }
+
+        // Find target container
+        let targetEl = null;
+        if (sectionHint) {
+          const allEls = doc.querySelectorAll("section, article, div[id], div[class]");
+          for (const el of allEls) {
+            const heading = el.querySelector("h1, h2, h3");
+            if (heading && heading.textContent.toLowerCase().includes(sectionHint.toLowerCase())) {
+              targetEl = el; break;
+            }
+            if ((el.id || el.className || "").toLowerCase().includes(sectionHint.toLowerCase())) {
+              targetEl = el; break;
+            }
+          }
+        }
+        if (!targetEl) targetEl = doc.body;
+
+        let newEl = null;
+        if (artifact.type === "image") {
+          const img = doc.createElement("img");
+          img.src = artifact.content.startsWith("data:") ? artifact.content : `data:image/jpeg;base64,${artifact.content}`;
+          img.alt = artifact.placement || "";
+          img.style.cssText = "max-width:100%; height:auto; display:block; border-radius:8px; margin:12px 0;";
+          if (artifact.colorized) img.classList.add("colorized-artifact");
+          newEl = img;
+        } else if (artifact.type === "youtube") {
+          const m = artifact.content.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+          const videoId = m ? m[1] : null;
+          if (videoId) {
+            const iframe = doc.createElement("iframe");
+            iframe.src = `https://www.youtube.com/embed/${videoId}`;
+            iframe.style.cssText = "width:100%; aspect-ratio:16/9; border:none; border-radius:8px; display:block; margin:12px 0;";
+            iframe.setAttribute("allowfullscreen", "");
+            iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+            newEl = iframe;
+          }
+        } else if (artifact.type === "text") {
+          const p = doc.createElement("p");
+          p.textContent = artifact.content;
+          p.style.cssText = "margin:12px 0;";
+          if (artifact.placement) p.setAttribute("title", artifact.placement);
+          newEl = p;
+        } else if (artifact.type === "html") {
+          const div = doc.createElement("div");
+          div.innerHTML = artifact.content;
+          div.style.cssText = "margin:12px 0;";
+          newEl = div;
+        }
+
+        if (newEl) targetEl.appendChild(newEl);
+      }
+
+      return doc.documentElement.outerHTML;
+    }
+
+    async function collectStructuredArtifacts() {
+      const result = [];
+
+      // Headshot — inject into hero section
+      const headshotFile = headshotInput?.files?.[0];
+      if (headshotFile) {
+        try {
+          const b64 = await readFileAsBase64(headshotFile);
+          result.push({ type: "image", content: `data:${headshotFile.type};base64,${b64}`, placement: "hero" });
+        } catch {}
+      }
+
+      // GitHub / Portfolio link — inject into contact section
+      const githubUrl = document.getElementById("githubLink")?.value?.trim() || "";
+      const githubDesc = document.getElementById("githubDesc")?.value?.trim() || "";
+      if (githubUrl) {
+        result.push({ type: "html", content: `<a href="${githubUrl}" target="_blank" rel="noopener">${githubDesc || githubUrl}</a>`, placement: "contact" });
+      }
+
+      // Uploaded images — inject into projects section
+      const imagesInput = document.getElementById("artifactImages");
+      if (imagesInput?.files?.length) {
+        for (const file of imagesInput.files) {
+          try {
+            const b64 = await readFileAsBase64(file);
+            result.push({ type: "image", content: `data:${file.type};base64,${b64}`, placement: "projects" });
+          } catch {}
+        }
+      }
+
+      // YouTube / Video links — inject into projects section
+      const ytRaw = document.getElementById("youtubeLinks")?.value?.trim() || "";
+      ytRaw.split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(url => {
+        result.push({ type: "youtube", content: url, placement: "projects" });
+      });
+
+      return result;
+    }
+
+    // ----------------------------
+    // Job analysis — triggered on page 2 (Job) Next
+    // Runs stages 1-2 (resume extraction + content strategy) in background
+    // while user fills Design and Colors.
+    // ----------------------------
+    async function doAnalyzeJob() {
+      if (!resumeUpload.files[0]) return; // nothing to do without a resume
+      jobAnalysisResult     = null;
+      jobAnalysisInProgress = true;
+      setHeaderStatus("jobAnalysisStatus", "Analyzing job…", "rgba(141,224,255,.75)");
+
+      const resumeFile = resumeUpload.files[0];
+      const p4  = getPage4Job();
+      const jobId = "job_" + crypto.randomUUID();
+
+      let resumePdfBase64 = "";
+      try { resumePdfBase64 = await readFileAsBase64(resumeFile); }
+      catch { jobAnalysisInProgress = false; return; }
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "analyzeJob",
+            jobId,
+            resumePdfBase64,
+            resumeAnalysisJson: lastAnalysisData || null,
+            page3: p4
+          })
+        });
+        if (!res.ok && res.status !== 202) { jobAnalysisInProgress = false; return; }
+
+        const startTime = Date.now();
+        const maxWaitMs = 300000; // 5 min
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, 3000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done")  { jobAnalysisResult = data; break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent — doGenerate will recompute if needed */ }
+
+      jobAnalysisInProgress = false;
+      if (jobAnalysisResult) {
+        setHeaderStatus("jobAnalysisStatus", "✓ Job analyzed", "rgba(118,176,34,.9)");
+      } else {
+        setHeaderStatus("jobAnalysisStatus", "Job analysis unavailable — will retry on generate", "rgba(251,171,156,.8)");
+      }
+    }
+
+    // ----------------------------
+    // Generation — called from doApplyAndPreview; visuals injected client-side after generation
+    // ----------------------------
+    async function doGenerate() {
+      generationResult    = null;
+      generationError     = null;
+      generationInProgress = true;
+      setApplyBtnState(false);
+      updateGenerationStatus("Generating portfolio… this may take 1–3 minutes.");
+
+      const resumeFile = resumeUpload.files[0];
+      if (!resumeFile) {
+        generationError = "Please upload your resume PDF before generating.";
+        generationInProgress = false;
+        updateGenerationStatus(null);
+        setApplyBtnState(true);
+        return;
+      }
+
+      let resumePdfBase64 = "";
+      try {
+        resumePdfBase64 = await readFileAsBase64(resumeFile);
+      } catch (e) {
+        generationError = "Could not read resume PDF: " + e.message;
+        generationInProgress = false;
+        updateGenerationStatus(null);
+        setApplyBtnState(true);
+        return;
+      }
+
+      const p1    = getPage1();
+      const p2    = getPage2Template();
+      const p3    = getPage3Colors();
+      const p4    = getPage4Job();
+      const page1 = { ...p1, ...p2 };
+      const page2 = p3;
+      const page3 = p4;
+      const headshotName = headshotInput?.files?.[0]?.name || "";
+      const jobId = crypto.randomUUID();
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            page1, page2, page3, artifactsData: [],
+            jobId, resumePdfBase64, headshotName,
+            resumeAnalysisJson:   jobAnalysisResult?.resume_json || lastAnalysisData || null,
+            templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
+            templateHtml:         extractedTemplateCache?.templateHtml || null,
+            strategyJson:         jobAnalysisResult?.strategy_json || null
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          const rawText = await res.text();
+          let errData = {};
+          try { errData = JSON.parse(rawText); } catch {}
+          throw new Error(errData?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
+        }
+
+        const startTime = Date.now();
+        const maxWaitMs = 720000;
+        const pollIntervalMs = 4000;
+
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, pollIntervalMs));
+          const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const data = await pollRes.json().catch(() => ({}));
+          const stageMsg = data.stage
+            ? `${data.stage} (${remaining}s remaining)`
+            : `Generating portfolio… ${remaining}s remaining`;
+          updateGenerationStatus(stageMsg);
+          if (data.status === "done") {
+            generationResult    = data;
+            generationInProgress = false;
+            updateGenerationStatus(null);
+            setApplyBtnState(true);
+            return;
+          }
+          if (data.status === "error") throw new Error(data.error || "Generation failed.");
+        }
+        throw new Error("Generation timed out after 12 minutes.");
+      } catch (e) {
+        generationError     = e.message;
+        generationInProgress = false;
+        const el = document.getElementById("generationStatus");
+        if (el) { el.textContent = "Generation failed: " + e.message; el.style.color = "rgba(251,171,156,.9)"; el.style.display = "block"; }
+        setApplyBtnState(true);
+      }
     }
 
     // ----------------------------
@@ -1303,151 +1532,135 @@
 </html>`;
     }
 
-    async function submitAll(){
-      const p1Err = validatePage1Lenient();
-      if (p1Err) throw new Error(p1Err);
-
-      const resumeFile = resumeUpload.files[0];
-      if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
-
-      if (!document.querySelector('input[name="templateSource"]:checked'))
-        throw new Error("Please select a portfolio template option on page 3.");
-
-      const copyrightWrap = document.getElementById("templateCopyrightWrap");
-      if (copyrightWrap?.style.display !== "none") {
-        if (!document.querySelector('input[name="templateCopyrightMode"]:checked'))
-          throw new Error("Please indicate how the external template may be used before submitting.");
+    async function doPreview() {
+      if (generationInProgress) {
+        const el = document.getElementById("generationStatus");
+        if (el) { el.textContent = "Still generating… please wait."; el.style.display = "block"; }
+        return;
       }
 
-      // Collect new page data and map to API-compatible structure
-      const p1 = getPage1();
-      const p2 = await getPage2Artifacts();
-      const p3 = getPage3Template();
-      const p4 = getPage4Colors();
-      const p5 = getPage5Job();
-      // Backend expects: page1 = basic+template, page2 = colors, page3 = job
-      const page1 = { ...p1, ...p3, artifacts: p2 };
-      const page2 = p4;
-      const page3 = p5;
-      const jobId = crypto.randomUUID();
+      if (!generationResult) {
+        if (generationError) {
+          const finalBox = document.getElementById("finalBox");
+          finalBox.classList.remove("hidden");
+          finalBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+          document.getElementById("finalStatus").innerHTML = `<span class="error">Generation failed:</span> ${generationError}`;
+          return;
+        }
+        // Fallback: generation wasn't triggered on Colors Next (e.g. direct navigation)
+        await doGenerate();
+        if (!generationResult) return;
+      }
+
+      // Collect all visuals — all injected client-side
+      const { artifacts: dynamicVisuals } = await getPage5Artifacts();
+      const structuredVisuals = await collectStructuredArtifacts();
+      const allVisuals = [...structuredVisuals, ...dynamicVisuals];
+
+      const data = generationResult;
+
+      let finalHtml = data.site_html;
+      if (allVisuals.length > 0) {
+        finalHtml = injectArtifacts(finalHtml, allVisuals);
+      }
+
+      localStorage.setItem("portfolio_preview_html", finalHtml);
 
       const finalBox = document.getElementById("finalBox");
       const finalStatus = document.getElementById("finalStatus");
       finalBox.classList.remove("hidden");
       finalBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      finalStatus.textContent = "Reading resume PDF…";
 
-      let resumePdfBase64 = "";
-      try {
-        resumePdfBase64 = await readFileAsBase64(resumeFile);
-      } catch (e) {
-        throw new Error("Could not read resume PDF: " + e.message);
+      const resumeData = getPage1();
+      const designData = getPage2Template();
+      const colorsData = getPage3Colors();
+      const jobData    = getPage4Job();
+
+      const dlHtml    = document.getElementById("dlFinalHtml");
+      const dlSummary = document.getElementById("dlSummaryHtml");
+      const dlJson    = document.getElementById("dlResumeJson");
+      if (dlHtml)    dlHtml.onclick    = () => downloadText("portfolio.html", finalHtml, "text/html");
+      const all = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
+      const summaryHtml = buildSummaryHtml(all);
+      if (dlSummary) dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
+      if (data.resume_json && dlJson) {
+        dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
+        dlJson.classList.remove("hidden");
+      }
+      if (resumeData.specialization === "Irene's Webworks" || isDebugMode()) {
+        dlHtml?.classList.remove("hidden");
+        dlSummary?.classList.remove("hidden");
       }
 
-      const headshotName = headshotInput?.files?.[0]?.name || "";
+      // ── Debug panel ──────────────────────────────────────────────────
+      if (isDebugMode()) {
+        const debugSection = document.getElementById("debugSection");
+        if (debugSection) debugSection.classList.remove("hidden");
 
-      finalStatus.textContent = "Submitting request…";
-
-      const res = await fetch("/.netlify/functions/buildWebsite-background", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, resumeAnalysisJson: lastAnalysisData || null, templateAnalysisJson: extractedTemplateCache?.embeddedJson || null, templateHtml: extractedTemplateCache?.templateHtml || null })
-      });
-
-      if (!res.ok && res.status !== 202) {
-        const rawText = await res.text();
-        let data = {};
-        try { data = JSON.parse(rawText); } catch {}
-        throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
-      }
-
-      // Poll for result (up to 12 minutes)
-      const startTime = Date.now();
-      const maxWaitMs = 720000;
-      const pollIntervalMs = 4000;
-
-      while (Date.now() - startTime < maxWaitMs) {
-        await new Promise(r => setTimeout(r, pollIntervalMs));
-        const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-
-        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
-        const data = await pollRes.json().catch(() => ({}));
-
-        // Show per-stage progress message if the three-prompt pipeline provides one
-        const stageMsg = data.stage ? `${data.stage} (${remaining}s remaining)` : `Generating your portfolio website… ${remaining}s remaining`;
-        finalStatus.textContent = stageMsg;
-
-        if (data.status === "done") {
-          localStorage.setItem("portfolio_preview_html", data.site_html);
-          // Wire download buttons and reveal them for admin users
-          const dlHtml = document.getElementById("dlFinalHtml");
-          const dlSummary = document.getElementById("dlSummaryHtml");
-          const dlJson = document.getElementById("dlResumeJson");
-          dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
-          const all = { page1, page2, page3, artifacts: p2 };
-          const summaryHtml = buildSummaryHtml(all);
-          dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
-          if (data.resume_json) {
-            dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
-            dlJson.classList.remove("hidden");
-          }
-          if (page1.specialization === "Irene's Webworks" || isDebugMode()) {
-            dlHtml.classList.remove("hidden");
-            dlSummary.classList.remove("hidden");
-          }
-
-          // ── Debug panel ──────────────────────────────────────────────────
-          if (isDebugMode()) {
-            const debugSection = document.getElementById("debugSection");
-            if (debugSection) debugSection.classList.remove("hidden");
-
-            // Form payload
-            const payload = { page1, page2, page3 };
-            const payloadStr = JSON.stringify(payload, null, 2);
-            const payloadPre = document.getElementById("debugPayloadPre");
-            if (payloadPre) payloadPre.textContent = payloadStr;
-            document.getElementById("dlDebugPayload")?.addEventListener("click", () =>
-              downloadText("payload.json", payloadStr, "application/json"));
-            document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
-              copyToClipboard(payloadStr, e.currentTarget));
-
-            // Resume JSON — prefer three-prompt resume_json, fall back to analyzeResume cache
-            const resumePre = document.getElementById("debugResumeJsonPre");
-            const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
-            if (resumeJsonToShow) {
-              const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
-              if (resumePre) resumePre.textContent = resumeStr;
-              const dlResume = document.getElementById("dlResumeJson");
-              if (dlResume) {
-                dlResume.onclick = () => downloadText("resume-extracted.json", resumeStr, "application/json");
-                dlResume.classList.remove("hidden");
-              }
-            } else {
-              if (resumePre) resumePre.textContent = "(not available — upload resume to trigger analysis)";
-            }
-
-            // API response metadata (omit large fields)
-            const { site_html: _html, ...metaData } = data;
-            const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html }, null, 2);
-            const apiResponsePre = document.getElementById("debugApiResponsePre");
-            if (apiResponsePre) apiResponsePre.textContent = metaStr;
-            document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
-              downloadText("api-response.json", metaStr, "application/json"));
-          }
-          finalStatus.innerHTML = data.truncated
-            ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
-            : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
-          const editorBtn = document.getElementById("btnOpenEditor");
-          if (editorBtn) { editorBtn.disabled = false; editorBtn.style.opacity = ""; editorBtn.style.cursor = ""; }
-          return;
+        if (data.model) {
+          const modelEl = document.getElementById("debugModelName");
+          if (modelEl) modelEl.textContent = `Model: ${data.model}`;
         }
-        if (data.status === "error") {
-          throw new Error(data.error || "Generation failed.");
+
+        const payload    = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
+        const payloadStr = JSON.stringify(payload, null, 2);
+        const payloadPre = document.getElementById("debugPayloadPre");
+        if (payloadPre) payloadPre.textContent = payloadStr;
+        document.getElementById("dlDebugPayload")?.addEventListener("click", () =>
+          downloadText("payload.json", payloadStr, "application/json"));
+        document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
+          copyToClipboard(payloadStr, e.currentTarget));
+
+        if (data.strategy_json) {
+          const strategyStr = JSON.stringify(data.strategy_json, null, 2);
+          const strategyPre = document.getElementById("debugStrategyJsonPre");
+          if (strategyPre) strategyPre.textContent = strategyStr;
+          document.getElementById("dlStrategyJson")?.addEventListener("click", () =>
+            downloadText("strategy.json", strategyStr, "application/json"));
+          document.getElementById("cpStrategyJson")?.addEventListener("click", e =>
+            copyToClipboard(strategyStr, e.currentTarget));
+        } else {
+          const pre = document.getElementById("debugStrategyJsonPre");
+          if (pre) pre.textContent = "(not returned by this run)";
         }
-        // still pending — keep polling
+
+        if (data.visual_direction_json) {
+          const vdStr = JSON.stringify(data.visual_direction_json, null, 2);
+          const vdPre = document.getElementById("debugVisualDirectionJsonPre");
+          if (vdPre) vdPre.textContent = vdStr;
+          document.getElementById("dlVisualDirectionJson")?.addEventListener("click", () =>
+            downloadText("visual-direction.json", vdStr, "application/json"));
+          document.getElementById("cpVisualDirectionJson")?.addEventListener("click", e =>
+            copyToClipboard(vdStr, e.currentTarget));
+        } else {
+          const pre = document.getElementById("debugVisualDirectionJsonPre");
+          if (pre) pre.textContent = "(not returned by this run)";
+        }
+
+        const resumePre = document.getElementById("debugResumeJsonPre");
+        const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
+        if (resumeJsonToShow) {
+          const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
+          if (resumePre) resumePre.textContent = resumeStr;
+        } else {
+          if (resumePre) resumePre.textContent = "(not available — upload resume to trigger analysis)";
+        }
+
+        const { site_html: _html, strategy_json: _s, visual_direction_json: _vd, resume_json: _rj, ...metaData } = data;
+        const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html, has_strategy_json: !!data.strategy_json, has_visual_direction_json: !!data.visual_direction_json }, null, 2);
+        const apiResponsePre = document.getElementById("debugApiResponsePre");
+        if (apiResponsePre) apiResponsePre.textContent = metaStr;
+        document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
+          downloadText("api-response.json", metaStr, "application/json"));
       }
 
-      throw new Error("Generation timed out after 12 minutes.");
+      finalStatus.innerHTML = data.truncated
+        ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
+        : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+      const editorBtn = document.getElementById("btnOpenEditor");
+      if (editorBtn) { editorBtn.disabled = false; editorBtn.style.opacity = ""; editorBtn.style.cursor = ""; }
+      pillNavUnlocked = true;
+      setStep(6);
     }
 
     // ----------------------------
@@ -1462,7 +1675,6 @@
         const el = document.getElementById(id); if (el) el.value = "";
       });
       if (resumeUpload) resumeUpload.value = "";
-      if (resumeFileList) resumeFileList.innerHTML = "";
       resumeAnalysisCache = null;
       lastAnalysisData = null;
       setResumeAnalysisStatus("");
@@ -1488,30 +1700,19 @@
       setStep(2);
     });
 
-    // Page 2 (Colors)
-    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(1));
-    document.getElementById("next2_bottom")?.addEventListener("click", () => {
-      const el = document.getElementById("stepConfirmStatus");
-      if (el) { el.textContent = "✓ Artifacts noted"; el.style.color = "rgba(118,176,34,.9)"; }
-      setStep(3);
-    });
+    // Page 3 (Design / Template)
+    document.getElementById("back2")?.addEventListener("click", () => setStep(2));
 
-    // Artifact rows — wire add button
-    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
-
-    // Page 3 (Website Spec / Template)
-    function onEnterPage3() {
+    function onEnterPage2() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (source === "none") {
-        updateDesignSpecPanel();
-      } else if (extractedTemplateCache) {
+      if (extractedTemplateCache) {
         populateTemplateExtractPanel(extractedTemplateCache);
+      } else if (source) {
+        extractTemplateInBackground();
       }
     }
 
-    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
-
-    document.getElementById("next3_bottom")?.addEventListener("click", async () => {
+    document.getElementById("next2")?.addEventListener("click", async () => {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
 
       // Helper to show an inline error near the radio group
@@ -1531,7 +1732,7 @@
       document.getElementById("_msg_templateSource") && (document.getElementById("_msg_templateSource").textContent = "");
 
       // Pre-validate inputs before touching the UI
-      if (source === "url") {
+      if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return; }
         if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return; }
@@ -1552,30 +1753,22 @@
         }
       }
 
-      if (source === "none") {
-        updateDesignSpecPanel();
-        if (isDebugMode()) document.getElementById("designSpecPanel")?.classList.remove("hidden");
-        setStep(4);
-        return;
-      }
-
-      // b) Fire extraction (or join in-flight), then proceed to page 4 immediately
+      // b) Fire extraction (or join in-flight), then proceed to page 4 (Color scheme) immediately
       extractTemplateInBackground().then(() => {
         if (isDebugMode() && extractedTemplateCache) {
           populateTemplateExtractPanel(extractedTemplateCache);
           document.getElementById("templateExtractPanel")?.classList.remove("hidden");
           document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
-          document.getElementById("designSpecPanel")?.querySelector("details")?.setAttribute("open", "");
         }
       });
 
       setStep(4);
     });
 
-    document.getElementById("next2_bottom")?.addEventListener("click", onEnterPage3);
-    document.getElementById("back4")?.addEventListener("click", onEnterPage3);
+    // back3 on Color scheme returns to Website spec (step 3), re-populating its panels
+    document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
 
-    // Page 4 (Colors)
+    // Page 3 (Colors)
     const PALETTE_SLOTS = ["primary", "secondary", "accent", "dark", "light"];
 
     function renderSuggestedPalettes(analysisData) {
@@ -1605,9 +1798,7 @@
           colors: { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light }
         }));
 
-      // Fixed layout: [template, ai1, ai2, ai3] — null for empty slots
-      const visible = [tplPalette, ...aiRows];
-      while (visible.length < 4) visible.push(null);
+      const visible = [...(tplPalette ? [tplPalette] : []), ...aiRows];
 
       const MAX = 4;
       const populated = visible.filter(Boolean).length;
@@ -1676,9 +1867,33 @@
     }
 
     renderSuggestedPalettes(); // render blank rows immediately
-    document.getElementById("next3_bottom")?.addEventListener("click", () => renderSuggestedPalettes());
-    document.getElementById("back4")?.addEventListener("click", () => setStep(3));
-    document.getElementById("next4")?.addEventListener("click", () => { setStep(5); updateSubmitReadiness(); });
+    // next2 on Website spec → enters Color scheme → refresh palettes
+    document.getElementById("next2")?.addEventListener("click", () => renderSuggestedPalettes());
+    document.getElementById("back3")?.addEventListener("click", () => setStep(3));
+    document.getElementById("next3")?.addEventListener("click", () => { setStep(5); });
+    document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
+
+    // Page 2 (Job) — Next starts background job+resume analysis and navigates to Design (step 3)
+    document.getElementById("back5")?.addEventListener("click",     () => setStep(1));
+    document.getElementById("submit_bottom")?.addEventListener("click", () => { onEnterPage2(); setStep(3); doAnalyzeJob(); });
+
+    // Page 3 (Design) — Back returns to Job; Next advances to Colors
+    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
+    document.getElementById("next3_bottom")?.addEventListener("click", () => setStep(4));
+
+    // Page 4 (Colors) — Back returns to Design; Next starts generation then advances to Visuals
+    document.getElementById("back4")?.addEventListener("click",     () => { onEnterPage2(); setStep(3); });
+    document.getElementById("next4")?.addEventListener("click",     () => {
+      setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
+      setStep(5);
+      doGenerate(); // fire-and-forget: runs while user fills Visuals
+    });
+
+    // Page 5 (Visuals) — Back returns to Colors; Preview injects visuals and opens editor
+    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(4));
+    document.getElementById("next2_bottom")?.addEventListener("click", doPreview);
+    // Artifact rows — wire add button
+    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
 
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
@@ -1695,52 +1910,10 @@
       if (el) el.value = msg.color;
     });
 
-    // Page 5 (Job / Submit)
-    document.getElementById("back5_top")?.addEventListener("click", () => setStep(4));
-    document.getElementById("back5")?.addEventListener("click",     () => setStep(4));
     document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
       window.open("editor.html", "_blank");
     });
-    async function doSubmit(){
-      if (!document.querySelector('input[name="templateSource"]:checked')) {
-        let msg = document.getElementById("_msg_templateSource");
-        if (!msg) {
-          msg = document.createElement("div");
-          msg.id = "_msg_templateSource";
-          msg.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
-          const anchor = document.querySelector('[name="templateSource"]')?.closest(".grid");
-          if (anchor) anchor.after(msg);
-        }
-        if (msg) { msg.textContent = "Please select a template option."; msg.style.color = "rgba(251,171,156,.9)"; }
-        return;
-      }
-      const copyrightWrap = document.getElementById("templateCopyrightWrap");
-      if (copyrightWrap?.style.display !== "none") {
-        if (!document.querySelector('input[name="templateCopyrightMode"]:checked')) {
-          let msg = document.getElementById("_msg_templateCopyright");
-          if (!msg) {
-            msg = document.createElement("div");
-            msg.id = "_msg_templateCopyright";
-            msg.style.cssText = "font-size:11.5px; margin-top:4px; color:rgba(251,171,156,.9);";
-            copyrightWrap.appendChild(msg);
-          }
-          msg.textContent = "Please indicate how the template may be used.";
-          return;
-        }
-      }
-      const btn = document.getElementById("submit_bottom");
-      btn.disabled = true;
-      try{
-        await submitAll();
-      } catch(e){
-        document.getElementById("finalBox").classList.remove("hidden");
-        document.getElementById("finalStatus").innerHTML = `<span class="error">Error:</span> ${e.message || "Submit failed"}`;
-      } finally{
-        btn.disabled = false;
-      }
-    }
-    document.getElementById("submit_top")?.addEventListener("click",    doSubmit);
-    document.getElementById("submit_bottom")?.addEventListener("click", doSubmit);
+    document.getElementById("submit_top")?.addEventListener("click", doPreview);
 
     // ----------------------------
     // Boot
