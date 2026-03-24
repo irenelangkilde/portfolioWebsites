@@ -281,10 +281,67 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   };
 }
 
+// ─── Provider-agnostic AI call helper ────────────────────────────────────────
+// creds: { openaiClient, claudeKey }
+// opts:  { system?, userText, pdfBuffer?, maxTokens? }
+// returns: { text, model, truncated }
+async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens = 8000 }) {
+  if (provider === "openai") {
+    const { openaiClient } = creds;
+    if (pdfBuffer) {
+      const uploadedFile = await openaiClient.files.create({
+        file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
+        purpose: "user_data"
+      });
+      try {
+        const r = await openaiClient.responses.create({
+          model: "gpt-4o",
+          ...(system ? { instructions: system } : {}),
+          input: [{ role: "user", content: [
+            { type: "input_file", file_id: uploadedFile.id },
+            { type: "input_text", text: userText }
+          ]}],
+          max_output_tokens: maxTokens
+        });
+        return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens" };
+      } finally {
+        openaiClient.files.del(uploadedFile.id).catch(() => {});
+      }
+    }
+    const r = await openaiClient.responses.create({
+      model: "gpt-4o",
+      ...(system ? { instructions: system } : {}),
+      input: [{ role: "user", content: [{ type: "input_text", text: userText }] }],
+      max_output_tokens: maxTokens
+    });
+    return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens" };
+  } else {
+    // Claude
+    const claudeModel = "claude-sonnet-4-6";
+    const userContent = pdfBuffer
+      ? [
+          { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBuffer.toString("base64") } },
+          { type: "text", text: userText }
+        ]
+      : [{ type: "text", text: userText }];
+    const reqBody = { model: claudeModel, max_tokens: maxTokens, messages: [{ role: "user", content: userContent }] };
+    if (system) reqBody.system = system;
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-api-key": creds.claudeKey, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify(reqBody)
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error("Claude API error: " + (json.error?.message || JSON.stringify(json).slice(0, 200)));
+    const text = (json.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    return { text, model: json.model || claudeModel, truncated: json.stop_reason === "max_tokens" };
+  }
+}
+
 // ─── Job analysis pipeline (stages 1-2 only) ─────────────────────────────────
 // Runs resume extraction and content strategy while the user fills Design/Colors.
 // Result is stored in the blob and consumed by the full pipeline to skip Stage 2.
-async function runJobAnalysisPipeline(client, store, jobId, {
+async function runJobAnalysisPipeline(provider, creds, store, jobId, {
   page3, pdfBuffer, resumeAnalysisJson
 }) {
   const jobAnalysis = {
@@ -299,35 +356,14 @@ async function runJobAnalysisPipeline(client, store, jobId, {
       status: "pending", stage: "Extracting resume content (1/2)…"
     }), { ttl: 3600 });
 
-    const uploadedFile = await client.files.create({
-      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
-      purpose: "user_data"
-    });
+    const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
+    const stage1Json = parseJsonResponse(r1.text);
 
-    let stage1Json;
-    try {
-      const r1 = await client.responses.create({
-        model: "gpt-4o",
-        input: [{ role: "user", content: [
-          { type: "input_file", file_id: uploadedFile.id },
-          { type: "input_text", text: STAGE1_PROMPT }
-        ]}],
-        max_output_tokens: 8000
-      });
-      stage1Json = parseJsonResponse(r1.output_text);
-    } finally {
-      client.files.del(uploadedFile.id).catch(() => {});
-    }
-
-    const r2 = await client.responses.create({
-      model: "gpt-4o",
-      input: [{ role: "user", content: [{
-        type: "input_text",
-        text: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`
-      }]}],
-      max_output_tokens: 8000
+    const r2 = await callAI(provider, creds, {
+      userText: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`,
+      maxTokens: 8000
     });
-    resumeJson = parseJsonResponse(r2.output_text);
+    resumeJson = parseJsonResponse(r2.text);
   }
 
   // Stage 2: Content strategy (resume + job)
@@ -340,12 +376,8 @@ async function runJobAnalysisPipeline(client, store, jobId, {
     .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
     .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
 
-  const contentResponse = await client.responses.create({
-    model: "gpt-4o",
-    input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
-    max_output_tokens: 8000
-  });
-  const aiStrategy = parseJsonResponse(contentResponse.output_text);
+  const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
+  const aiStrategy = parseJsonResponse(contentResponse.text);
 
   await store.set(jobId, JSON.stringify({
     status: "done",
@@ -355,7 +387,7 @@ async function runJobAnalysisPipeline(client, store, jobId, {
 }
 
 // ─── Main pipeline ───────────────────────────────────────────────────────────
-async function runPortfolioWebsitePipeline(client, store, jobId, {
+async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
   page1, page2, page3, pdfBuffer,
   sampleHtml, theme, headshotName,
   resumeAnalysisJson, templateAnalysisJson, templateHtml,
@@ -374,35 +406,14 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
       status: "pending", stage: "Extracting resume content (1/4)…"
     }), { ttl: 3600 });
 
-    const uploadedFile = await client.files.create({
-      file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
-      purpose: "user_data"
-    });
+    const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
+    const stage1Json = parseJsonResponse(r1.text);
 
-    let stage1Json;
-    try {
-      const r1 = await client.responses.create({
-        model: "gpt-4o",
-        input: [{ role: "user", content: [
-          { type: "input_file", file_id: uploadedFile.id },
-          { type: "input_text", text: STAGE1_PROMPT }
-        ]}],
-        max_output_tokens: 8000
-      });
-      stage1Json = parseJsonResponse(r1.output_text);
-    } finally {
-      client.files.del(uploadedFile.id).catch(() => {});
-    }
-
-    const r2 = await client.responses.create({
-      model: "gpt-4o",
-      input: [{ role: "user", content: [{
-        type: "input_text",
-        text: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`
-      }]}],
-      max_output_tokens: 8000
+    const r2 = await callAI(provider, creds, {
+      userText: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`,
+      maxTokens: 8000
     });
-    resumeJson = parseJsonResponse(r2.output_text);
+    resumeJson = parseJsonResponse(r2.text);
   }
 
   // ── Stage 2: buildContentStrategy.md → core_content_json ────────────────
@@ -421,12 +432,8 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
       .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
       .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
 
-    const contentResponse = await client.responses.create({
-      model: "gpt-4o",
-      input: [{ role: "user", content: [{ type: "input_text", text: contentPrompt }] }],
-      max_output_tokens: 8000
-    });
-    aiStrategy = parseJsonResponse(contentResponse.output_text);
+    const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
+    aiStrategy = parseJsonResponse(contentResponse.text);
   }
 
   // Construct source_facts directly from resume_json — no AI re-extraction.
@@ -536,24 +543,23 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
     .replace("{{TEMPLATE_USAGE}}",  templateUsageInstruction(page1.template_copyright_mode))
     .replace("{{YEAR}}",            new Date().getFullYear().toString());
 
-  const rendererResponse = await client.responses.create({
-    model: "gpt-4o",
-    instructions: "You are an HTML code generator. Your sole task is to output a single complete HTML file. Do not explain, refuse, or add any commentary — output only the raw HTML, starting with <!DOCTYPE html>.",
-    input: [{ role: "user", content: [{ type: "input_text", text: rendererPrompt }] }],
-    max_output_tokens: 32000
+  const rendererSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Your sole task is to output a single complete HTML file as requested. This is a standard web development task. Output only raw HTML starting with <!DOCTYPE html> — no explanations, no refusals, no markdown, no commentary of any kind.";
+  const rendererResponse = await callAI(provider, creds, {
+    system: rendererSystem,
+    userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
+    maxTokens: 16000
   });
 
-  const siteHtml = cleanHtml(rendererResponse.output_text);
-  const truncatedByTokenLimit = rendererResponse.incomplete_details?.reason === "max_output_tokens";
+  const siteHtml = cleanHtml(rendererResponse.text);
 
   if (!/<[a-z]/i.test(siteHtml)) {
     let reason;
-    if (!rendererResponse.output_text?.trim()) {
+    if (!rendererResponse.text?.trim()) {
       reason = "The AI returned an empty response. This is usually a transient error — please resubmit.";
-    } else if (truncatedByTokenLimit) {
+    } else if (rendererResponse.truncated) {
       reason = "The AI's output was cut off before any HTML was produced (token limit reached). Try a shorter job description or fewer visuals, then resubmit.";
     } else {
-      reason = `The AI did not return valid HTML. Raw output started with: "${rendererResponse.output_text?.slice(0, 120)}"`;
+      reason = `The AI did not return valid HTML. Raw output started with: "${rendererResponse.text?.slice(0, 120)}"`;
     }
     await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
     return;
@@ -561,12 +567,12 @@ async function runPortfolioWebsitePipeline(client, store, jobId, {
 
   await store.set(jobId, JSON.stringify({
     status: "done",
-    model: rendererResponse.model || "gpt-4o",
+    model: rendererResponse.model,
     site_html: siteHtml,
     resume_json: websiteJson,
     strategy_json: coreContent.strategy,
     visual_direction_json: blendResult.visual_direction,
-    truncated: truncatedByTokenLimit
+    truncated: rendererResponse.truncated
   }), { ttl: 3600 });
 }
 
@@ -598,8 +604,9 @@ export async function handler(event) {
       artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
       resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null,
-      mode = "full",        // "full" | "analyzeJob"
-      strategyJson = null   // pre-computed strategy from analyzeJob mode
+      mode = "full",          // "full" | "analyzeJob"
+      strategyJson = null,    // pre-computed strategy from analyzeJob mode
+      provider = "claude"     // "claude" (default) | "openai"
     } = body;
 
     if (mode === "analyzeJob") {
@@ -614,19 +621,28 @@ export async function handler(event) {
       }
     }
 
-    if (!process.env.OPENAI_API_KEY_LOCAL && !process.env.OPENAI_API_KEY) {
-      await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
-      return { statusCode: 202 };
+    // Build provider credentials
+    let creds;
+    if (provider === "openai") {
+      const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
+      if (!openaiKey) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+      creds = { openaiClient: new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" }) };
+    } else {
+      const claudeKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
+      if (!claudeKey) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "ANTHROPIC_API_KEY is not set." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+      creds = { claudeKey };
     }
-
-    // OPENAI_API_KEY_LOCAL bypasses Netlify dev's AI gateway proxy.
-    const apiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
-    const client = new OpenAI({ apiKey, baseURL: "https://api.openai.com/v1" });
 
     // analyzeJob mode: run stages 1-2 only (resume extraction + content strategy)
     if (mode === "analyzeJob") {
       const pdfBuf = resumePdfBase64 ? Buffer.from(resumePdfBase64, "base64") : null;
-      await runJobAnalysisPipeline(client, store, jobId, {
+      await runJobAnalysisPipeline(provider, creds, store, jobId, {
         page3, pdfBuffer: pdfBuf, resumeAnalysisJson
       });
       return { statusCode: 202 };
@@ -643,7 +659,7 @@ export async function handler(event) {
     const sampleHtml = await fetchSampleHtml(page1.model_template);
     const pdfBuffer  = Buffer.from(resumePdfBase64, "base64");
 
-    await runPortfolioWebsitePipeline(client, store, jobId, {
+    await runPortfolioWebsitePipeline(provider, creds, store, jobId, {
       page1, page2, page3, pdfBuffer,
       sampleHtml, theme, headshotName,
       resumeAnalysisJson, templateAnalysisJson, templateHtml,

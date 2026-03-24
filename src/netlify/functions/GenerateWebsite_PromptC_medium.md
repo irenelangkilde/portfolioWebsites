@@ -48,7 +48,7 @@ VISUAL REQUIREMENTS
 - Apply the full palette to gradients, accents, cards, decorative visuals, buttons, and backgrounds, etc.
 - From the following list of "style_tokens", 
 Design in the style of: "glassmorphism", "glass-dark", "brutalist", "dark terminal", "soft pastel editorial","Swiss grid", "neon-tech", and "clean-minimal"
-- If provided, use the "render_mode" (cinematic technical minimalism, soft scientific elegance, bold futuristic engineering)
+- If provided, use the "render_mode" (cinematic technical minimalism, soft scientific elegance, bold futuristic)
     (animated laser beam hero, glowing RF waveform effects, interactive project cards, animated circuit-style background)
 - Use strong hierarchy and elegant spacing
 - Use the sample site only inspirationally if copyright is not held (otherwise adopt the structure and layout as-is)

@@ -349,7 +349,7 @@
 
       // Poll getPreviewResult until done or timeout
       const POLL_INTERVAL_MS = 2500;
-      const POLL_TIMEOUT_MS  = 180000; // 3 minutes max
+      const POLL_TIMEOUT_MS  = 300000; // 5 minutes // 3 minutes max
       const pollStart = Date.now();
 
       const poll = async () => {
@@ -662,6 +662,7 @@
     let extractedTemplateCache = null;   // { templateHtml, embeddedJson }
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
+    let extractTicker = null;            // active countdown interval — cleared on each new extraction
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
       const el = document.getElementById("templateExtractStatus");
@@ -799,11 +800,12 @@
 
       const jobId = "extract_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      let seconds = 120;
-      setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
-      const ticker = setInterval(() => {
+      clearInterval(extractTicker); // cancel any previous countdown
+      let seconds = 300;
+      setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
+      extractTicker = setInterval(() => {
         seconds = Math.max(1, seconds - 1);
-        setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
+        setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
       }, 1000);
 
       // Submit to background function (returns 202 immediately)
@@ -814,25 +816,25 @@
           body: JSON.stringify({ jobId, ...requestBody })
         });
         if (!submitRes.ok) {
-          clearInterval(ticker);
+          clearInterval(extractTicker);
           setTemplateExtractStatus("Template extraction failed (could not start).", "rgba(251,171,156,.8)");
           return;
         }
       } catch (e) {
-        clearInterval(ticker);
+        clearInterval(extractTicker);
         setTemplateExtractStatus(`Template extraction failed: ${e?.message || e}`, "rgba(251,171,156,.8)");
         return;
       }
 
       // Poll for result
       const POLL_INTERVAL_MS = 2500;
-      const POLL_TIMEOUT_MS  = 180000;
+      const POLL_TIMEOUT_MS  = 300000; // 5 minutes
       const pollStart = Date.now();
 
       const pollExtract = async () => {
-        if (lastExtractedTemplate !== key) { clearInterval(ticker); return; } // superseded
+        if (lastExtractedTemplate !== key) { clearInterval(extractTicker); return; } // superseded
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
-          clearInterval(ticker);
+          clearInterval(extractTicker);
           setTemplateExtractStatus("Template extraction timed out — try a smaller page or upload the HTML file instead.", "rgba(251,171,156,.8)");
           return;
         }
@@ -852,7 +854,7 @@
           return;
         }
 
-        clearInterval(ticker);
+        clearInterval(extractTicker);
 
         if (result.status === "error") {
           const isNetworkErr = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed/i.test(result.error || "");
@@ -940,39 +942,37 @@
 
     function updateDesignOptionsReadiness() { /* no-op: option 3 is human-only */ }
 
-    function applyDesignDefaults(resumeJson) {
-      const renderingStyles = (resumeJson?.motifs?.rendering_style || []).join(" ").toLowerCase();
-      const motifs          = (resumeJson?.motifs?.potential_visual_motifs || []).join(" ").toLowerCase();
-      const editorialMotifs = (resumeJson?.editorial_direction?.suggested_visual_motifs || []).join(" ").toLowerCase();
-      const domain          = (resumeJson?.motifs?.broad_primary_domain || "").toLowerCase();
-      const allText         = renderingStyles + " " + motifs + " " + editorialMotifs + " " + domain;
+    function applyDesignDefaults() {
+      const { major, specialization } = getPage1();
+      const t = (major + " " + specialization).toLowerCase();
 
-      // ── Render mode ──────────────────────────────────────────────────────────
-      let renderVal = "cinematic technical minimalism";
-      if (/scientific|elegant|3d|soft/i.test(allText))                    renderVal = "3D scientific elegance";
-      else if (/futuristic|bold|engineering|schematic/i.test(allText))    renderVal = "bold futuristic engineering";
-      const renderRadio = document.querySelector(`input[name="designRenderMode"][value="${renderVal}"]`);
-      if (renderRadio) renderRadio.checked = true;
+      // ── Composition — only if unset ───────────────────────────────────────────
+      const comp = document.getElementById("designComposition");
+      if (comp && !comp.value) {
+        if      (/bio|chem|sci|ecolog|environ|nature|field|lab|pharma/i.test(t)) comp.value = "scene-based";
+        else if (/art|graphic|design|architect|creat|media|illustrat|film/i.test(t)) comp.value = "abstract_layered";
+        else if (/business|market|finance|account|econom|manage|admin|hr\b/i.test(t)) comp.value = "central";
+        else                                                                      comp.value = "split-left";
+      }
 
-      // ── Style ────────────────────────────────────────────────────────────────
-      let styleVal = "clean-minimal";
-      if (/dark|terminal|circuit|radar|cyber/i.test(allText))              styleVal = "dark terminal";
-      else if (/neon|tech|laser|glow|electric/i.test(allText))            styleVal = "neon-tech";
-      else if (/glass.*dark|dark.*glass/i.test(allText))                  styleVal = "glass-dark";
-      else if (/glass/i.test(allText))                                    styleVal = "glassmorphism";
-      else if (/pastel|soft|editorial|organic|bio/i.test(allText))        styleVal = "soft pastel editorial";
-      else if (/swiss|grid|structured|finance|account/i.test(allText))    styleVal = "Swiss grid";
-      else if (/brut/i.test(allText))                                     styleVal = "brutalist";
-      const styleRadio = document.querySelector(`input[name="designStyle"][value="${styleVal}"]`);
-      if (styleRadio) styleRadio.checked = true;
+      // ── Style — only if unset ─────────────────────────────────────────────────
+      const style = document.getElementById("designStyle");
+      if (style && !style.value) {
+        if      (/comput|software|\bcs\b|cyber|data.sci|\bml\b|\bai\b|machine/i.test(t)) style.value = "glassmorphism";
+        else if (/electr|mechanic|aerospace|civil|robot|structur/i.test(t))              style.value = "dark terminal";
+        else if (/bio|chem|neuro|psychol|nurs|health|pharma|ecology/i.test(t))          style.value = "soft pastel editorial";
+        else if (/business|finance|account|econom|manag|market/i.test(t))               style.value = "Swiss grid";
+        else if (/art|graphic|design|illustrat|media|film/i.test(t))                    style.value = "soft pastel editorial";
+        else                                                                              style.value = "clean-minimal";
+      }
 
-      // ── Composition ──────────────────────────────────────────────────────────
-      let compVal = "split-left";
-      if (/lab|workshop|field|scene|environment|desk/i.test(allText))           compVal = "scene-based";
-      else if (/abstract|layered|gradient|ring|grid|constellation/i.test(allText)) compVal = "abstract_layered";
-      else if (/central|symmetric|center/i.test(allText))                       compVal = "central";
-      const compRadio = document.querySelector(`input[name="designComposition"][value="${compVal}"]`);
-      if (compRadio) compRadio.checked = true;
+      // ── Render Mode — only if unset ───────────────────────────────────────────
+      const render = document.getElementById("designRenderMode");
+      if (render && !render.value) {
+        if      (/bio|chem|neuro|environ|ecolog|pharma|\bmed\b/i.test(t)) render.value = "3D scientific elegance";
+        else if (/comput|software|\bcs\b|electr|mechanic|aerospace|robot|data/i.test(t)) render.value = "bold futuristic";
+        else                                                                               render.value = "cinematic technical minimalism";
+      }
     }
 
     // Normalize any CSS color string to a 6-digit hex value using canvas
@@ -1407,7 +1407,63 @@
     }
 
     // ----------------------------
-    // Generation — called from doApplyAndPreview; visuals injected client-side after generation
+    // Populate generation debug outputs — called as soon as doGenerate() gets a result
+    // ----------------------------
+    function populateGenerationDebug(data) {
+      if (!isDebugMode()) return;
+      const debugSection = document.getElementById("debugSection");
+      if (debugSection) debugSection.classList.remove("hidden");
+
+      if (data.model) {
+        const modelEl = document.getElementById("debugModelName");
+        if (modelEl) modelEl.textContent = `Model: ${data.model}`;
+      }
+
+      if (data.strategy_json) {
+        const strategyStr = JSON.stringify(data.strategy_json, null, 2);
+        const strategyPre = document.getElementById("debugStrategyJsonPre");
+        if (strategyPre) strategyPre.textContent = strategyStr;
+        document.getElementById("dlStrategyJson")?.addEventListener("click", () =>
+          downloadText("strategy.json", strategyStr, "application/json"));
+        document.getElementById("cpStrategyJson")?.addEventListener("click", e =>
+          copyToClipboard(strategyStr, e.currentTarget));
+      } else {
+        const pre = document.getElementById("debugStrategyJsonPre");
+        if (pre) pre.textContent = "(not returned by this run)";
+      }
+
+      if (data.visual_direction_json) {
+        const vdStr = JSON.stringify(data.visual_direction_json, null, 2);
+        const vdPre = document.getElementById("debugVisualDirectionJsonPre");
+        if (vdPre) vdPre.textContent = vdStr;
+        document.getElementById("dlVisualDirectionJson")?.addEventListener("click", () =>
+          downloadText("visual-direction.json", vdStr, "application/json"));
+        document.getElementById("cpVisualDirectionJson")?.addEventListener("click", e =>
+          copyToClipboard(vdStr, e.currentTarget));
+      } else {
+        const pre = document.getElementById("debugVisualDirectionJsonPre");
+        if (pre) pre.textContent = "(not returned by this run)";
+      }
+
+      const resumePre = document.getElementById("debugResumeJsonPre");
+      const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
+      if (resumeJsonToShow) {
+        const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
+        if (resumePre) resumePre.textContent = resumeStr;
+      } else {
+        if (resumePre) resumePre.textContent = "(not available)";
+      }
+
+      const { site_html: _h, strategy_json: _s, visual_direction_json: _vd, resume_json: _rj, ...metaData } = data;
+      const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html, has_strategy_json: !!data.strategy_json, has_visual_direction_json: !!data.visual_direction_json }, null, 2);
+      const apiResponsePre = document.getElementById("debugApiResponsePre");
+      if (apiResponsePre) apiResponsePre.textContent = metaStr;
+      document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
+        downloadText("api-response.json", metaStr, "application/json"));
+    }
+
+    // ----------------------------
+    // Generation — called from page 4 Next (fire-and-forget); visuals injected client-side after generation
     // ----------------------------
     async function doGenerate() {
       generationResult    = null;
@@ -1456,7 +1512,8 @@
             resumeAnalysisJson:   jobAnalysisResult?.resume_json || lastAnalysisData || null,
             templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
             templateHtml:         extractedTemplateCache?.templateHtml || null,
-            strategyJson:         jobAnalysisResult?.strategy_json || null
+            strategyJson:         jobAnalysisResult?.strategy_json || null,
+            provider:             getAnalysisProvider()
           })
         });
         if (!res.ok && res.status !== 202) {
@@ -1484,6 +1541,7 @@
             generationInProgress = false;
             updateGenerationStatus(null);
             setApplyBtnState(true);
+            populateGenerationDebug(data);
             return;
           }
           if (data.status === "error") throw new Error(data.error || "Generation failed.");
@@ -1592,15 +1650,10 @@
         dlSummary?.classList.remove("hidden");
       }
 
-      // ── Debug panel ──────────────────────────────────────────────────
+      // ── Debug panel (payload + visuals — generation outputs populated by populateGenerationDebug) ──
       if (isDebugMode()) {
         const debugSection = document.getElementById("debugSection");
         if (debugSection) debugSection.classList.remove("hidden");
-
-        if (data.model) {
-          const modelEl = document.getElementById("debugModelName");
-          if (modelEl) modelEl.textContent = `Model: ${data.model}`;
-        }
 
         const payload    = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
         const payloadStr = JSON.stringify(payload, null, 2);
@@ -1610,48 +1663,6 @@
           downloadText("payload.json", payloadStr, "application/json"));
         document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
           copyToClipboard(payloadStr, e.currentTarget));
-
-        if (data.strategy_json) {
-          const strategyStr = JSON.stringify(data.strategy_json, null, 2);
-          const strategyPre = document.getElementById("debugStrategyJsonPre");
-          if (strategyPre) strategyPre.textContent = strategyStr;
-          document.getElementById("dlStrategyJson")?.addEventListener("click", () =>
-            downloadText("strategy.json", strategyStr, "application/json"));
-          document.getElementById("cpStrategyJson")?.addEventListener("click", e =>
-            copyToClipboard(strategyStr, e.currentTarget));
-        } else {
-          const pre = document.getElementById("debugStrategyJsonPre");
-          if (pre) pre.textContent = "(not returned by this run)";
-        }
-
-        if (data.visual_direction_json) {
-          const vdStr = JSON.stringify(data.visual_direction_json, null, 2);
-          const vdPre = document.getElementById("debugVisualDirectionJsonPre");
-          if (vdPre) vdPre.textContent = vdStr;
-          document.getElementById("dlVisualDirectionJson")?.addEventListener("click", () =>
-            downloadText("visual-direction.json", vdStr, "application/json"));
-          document.getElementById("cpVisualDirectionJson")?.addEventListener("click", e =>
-            copyToClipboard(vdStr, e.currentTarget));
-        } else {
-          const pre = document.getElementById("debugVisualDirectionJsonPre");
-          if (pre) pre.textContent = "(not returned by this run)";
-        }
-
-        const resumePre = document.getElementById("debugResumeJsonPre");
-        const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
-        if (resumeJsonToShow) {
-          const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
-          if (resumePre) resumePre.textContent = resumeStr;
-        } else {
-          if (resumePre) resumePre.textContent = "(not available — upload resume to trigger analysis)";
-        }
-
-        const { site_html: _html, strategy_json: _s, visual_direction_json: _vd, resume_json: _rj, ...metaData } = data;
-        const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html, has_strategy_json: !!data.strategy_json, has_visual_direction_json: !!data.visual_direction_json }, null, 2);
-        const apiResponsePre = document.getElementById("debugApiResponsePre");
-        if (apiResponsePre) apiResponsePre.textContent = metaStr;
-        document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
-          downloadText("api-response.json", metaStr, "application/json"));
       }
 
       finalStatus.innerHTML = data.truncated
@@ -1704,6 +1715,7 @@
     document.getElementById("back2")?.addEventListener("click", () => setStep(2));
 
     function onEnterPage2() {
+      applyDesignDefaults();
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (extractedTemplateCache) {
         populateTemplateExtractPanel(extractedTemplateCache);
