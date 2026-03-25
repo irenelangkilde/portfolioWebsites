@@ -147,6 +147,40 @@ function templateUsageInstruction(copyrightMode) {
   return "The sample website is provided for inspiration only — draw on its general mood, visual energy, and compositional feel, but do NOT copy its specific layout, sections, or unique structural elements. Create a clearly original design that only echoes the spirit of the sample.";
 }
 
+// ─── Strip GrapesJS-bloated duplicate style block from template HTML ─────────
+// GrapesJS saves CSS with every shorthand expanded into sub-properties
+// (e.g. `background` → 9 individual lines). When the template also contains
+// the original compact CSS in a second <style> block, the GrapesJS block is
+// redundant and ~3× larger. Remove it before sending to the renderer.
+//
+// Detection heuristic: a <style> block that contains the GrapesJS fingerprint
+// (bare property:initial pairs with no whitespace, e.g. "background-image:initial;")
+// is dropped. A block is only removed if at least one other <style> block remains.
+function stripGrapesJsCss(html) {
+  const styleRe = /(<style[^>]*>)([\s\S]*?)(<\/style>)/gi;
+  const blocks = [];
+  let m;
+  while ((m = styleRe.exec(html)) !== null) {
+    blocks.push({ full: m[0], open: m[1], body: m[2], close: m[3], index: m.index });
+  }
+  if (blocks.length < 2) return html; // nothing to strip
+
+  const isGrapesBlock = b =>
+    /\bbackground-image\s*:\s*initial\s*;/.test(b.body) &&
+    /\bpadding-top\s*:\s*0px\s*;/.test(b.body);
+
+  const toRemove = blocks.filter(isGrapesBlock);
+  const remaining = blocks.length - toRemove.length;
+  if (remaining < 1 || toRemove.length === 0) return html;
+
+  // Remove from end to start so indices stay valid
+  let result = html;
+  for (const b of [...toRemove].reverse()) {
+    result = result.slice(0, b.index) + result.slice(b.index + b.full.length);
+  }
+  return result;
+}
+
 // ─── HTML post-processing (shared by both pipelines) ────────────────────────
 function cleanHtml(rawHtml) {
   // Strip markdown fences if model wrapped the output
@@ -281,6 +315,150 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   };
 }
 
+// ─── Mustache template helpers ───────────────────────────────────────────────
+
+/**
+ * Returns true when the HTML string contains Mustache tokens from our schema.
+ * Used to detect whether the template should be filled programmatically.
+ */
+function isMustacheTemplate(html) {
+  return /\{\{(?:name|headline|#experience|#projects|#education|#skill_groups)\}\}/.test(html);
+}
+
+/**
+ * Minimal Mustache renderer (no external dependency).
+ * Supports: {{scalar}}, {{#section}}...{{/section}}, {{.}} in loops.
+ * Does NOT HTML-escape values (resume data is trusted).
+ */
+function renderMustache(template, data) {
+  // Process sections recursively — lazy match ensures correct pairing for sequential sections
+  let result = template.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, inner) => {
+    const val = data[key];
+    if (!val || (Array.isArray(val) && val.length === 0)) return "";
+    if (Array.isArray(val)) {
+      return val.map(item => {
+        if (typeof item !== "object" || item === null) {
+          // scalar array item — replace {{.}} with item value
+          return inner.replace(/\{\{\.\}\}/g, String(item));
+        }
+        return renderMustache(inner, { ...data, ...item });
+      }).join("");
+    }
+    // truthy scalar — render inner block once
+    return renderMustache(inner, data);
+  });
+
+  // Replace scalar tokens {{key}}
+  result = result.replace(/\{\{([^#\/!{][^}]*)\}\}/g, (_, key) => {
+    const trimmed = key.trim();
+    if (trimmed === ".") return data["."] != null ? String(data["."]) : "";
+    const val = data[trimmed];
+    return val != null ? String(val) : "";
+  });
+
+  return result;
+}
+
+/**
+ * Maps contentJson + resumeJson into a flat Mustache data object
+ * matching the schema in ExtractMustacheTemplate.md.
+ */
+function flattenToMustacheData(strategy, resumeJson) {
+  const personal = resumeJson?.personal || {};
+  const pos = strategy?.positioning || {};
+  const edu0 = (resumeJson?.education || [])[0] || {};
+
+  // Convert skills object → skill_groups array
+  const skills = resumeJson?.skills || {};
+  const skillGroupDefs = [
+    { group_name: "Programming Languages", arr: skills.programming_languages },
+    { group_name: "Technical Skills",      arr: skills.technical },
+    { group_name: "Tools",                 arr: skills.tools },
+    { group_name: "Soft Skills",           arr: skills.soft_skills },
+    { group_name: "Other",                 arr: skills.other }
+  ];
+  const skill_groups = skillGroupDefs
+    .filter(g => Array.isArray(g.arr) && g.arr.length)
+    .map(g => ({ group_name: g.group_name, skills: g.arr }));
+
+  // Combine volunteer + extracurricular into leadership
+  const leadership = [
+    ...(resumeJson?.volunteer      || []).map(v => ({ role: v.role, organization: v.organization, dates: v.dates, description: v.description })),
+    ...(resumeJson?.extracurricular|| []).map(e => ({ role: e.role, organization: e.organization, dates: e.dates, description: e.description }))
+  ];
+
+  return {
+    name:              personal.name     || "",
+    headline:          pos.headline      || "",
+    subheadline:       pos.subheadline   || "",
+    value_proposition: pos.value_proposition || "",
+    about:             resumeJson?.summary || "",
+    email:             personal.email    || "",
+    phone:             personal.phone    || "",
+    linkedin:          personal.linkedin || "",
+    github:            personal.github   || "",
+    website:           personal.website  || "",
+    location:          personal.location || "",
+    major:             edu0.major        || "",
+    specialization:    edu0.minor        || edu0.major || "",
+    current_year:      new Date().getFullYear(),
+
+    has_github:   !!(personal.github),
+    has_linkedin: !!(personal.linkedin),
+    has_website:  !!(personal.website),
+    has_phone:    !!(personal.phone),
+
+    experience: (resumeJson?.experience || []).map(e => ({
+      title:       e.title      || "",
+      company:     e.company    || "",
+      start_date:  e.start_date || "",
+      end_date:    e.end_date   || "Present",
+      location:    e.location   || "",
+      description: (e.bullets || [])[0] || "",
+      bullets:     e.bullets    || [],
+      technologies:e.technologies || []
+    })),
+
+    projects: (resumeJson?.projects || []).map(p => ({
+      name:        p.name        || "",
+      description: p.description || "",
+      role:        p.role        || "",
+      dates:       p.dates       || "",
+      bullets:     p.bullets     || [],
+      technologies:p.technologies || [],
+      github_link: p.links?.github || "",
+      demo_link:   p.links?.demo   || ""
+    })),
+
+    education: (resumeJson?.education || []).map(e => ({
+      institution:      e.institution      || "",
+      degree:           e.degree           || "",
+      major:            e.major            || "",
+      graduation_date:  e.graduation_date  || "",
+      gpa:              e.gpa              || "",
+      honors:           e.honors           || "",
+      activities:       e.activities       || []
+    })),
+
+    skill_groups,
+
+    certifications: (resumeJson?.certifications || []).map(c => ({
+      name:   c.name   || "",
+      issuer: c.issuer || "",
+      date:   c.date   || ""
+    })),
+
+    publications: (resumeJson?.publications || []).map(p => ({
+      title: p.title || "",
+      venue: p.venue || "",
+      date:  p.date  || "",
+      link:  p.link  || ""
+    })),
+
+    leadership
+  };
+}
+
 // ─── Provider-agnostic AI call helper ────────────────────────────────────────
 // creds: { openaiClient, claudeKey }
 // opts:  { system?, userText, pdfBuffer?, maxTokens? }
@@ -368,7 +546,7 @@ async function runJobAnalysisPipeline(provider, creds, store, jobId, {
 
   // Stage 2: Content strategy (resume + job)
   await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Building content strategy (2/2)…"
+    status: "pending", stage: "Content strategy (2/2)…"
   }), { ttl: 3600 });
 
   const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
@@ -425,7 +603,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     aiStrategy = strategyJson.strategy ?? strategyJson;
   } else {
     await store.set(jobId, JSON.stringify({
-      status: "pending", stage: "Building content strategy (2/4)…"
+      status: "pending", stage: "Content strategy (2/4)…"
     }), { ttl: 3600 });
 
     const contentPrompt = loadPromptFile("buildContentStrategy.md")
@@ -525,54 +703,70 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     visuals: artifactsJson
   };
 
-  // ── Stage 4: rendererPrompt.md → HTML ────────────────────────────────────────
+  // ── Stage 4: fill template → HTML ────────────────────────────────────────────
   await store.set(jobId, JSON.stringify({
     status: "pending", stage: "Generating portfolio website (4/4)…"
   }), { ttl: 3600 });
 
   // Use the template HTML sent by the client (from extractedTemplateCache.templateHtml).
   // Fall back to the separately-fetched sampleHtml for URL-based templates.
-  const rendererSampleHtml = templateHtml || sampleHtml || "(No sample website provided)";
+  const rendererSampleHtml = stripGrapesJsCss(templateHtml || sampleHtml || "(No sample website provided)");
 
-  const rendererPrompt = loadPromptFile("rendererPrompt.md")
-    .replace("{{CONTENT_JSON}}",    JSON.stringify(contentJson, null, 2))
-    .replace("{{VISUAL_DIRECTION}}", JSON.stringify(blendResult.visual_direction, null, 2))
-    .replace("{{VISUALS_JSON}}",    JSON.stringify(artifactsJson, null, 2))
-    .replace("{{SAMPLE_HTML}}",     rendererSampleHtml)
-    .replace("{{HEADSHOT}}",        headshotHint)
-    .replace("{{TEMPLATE_USAGE}}",  templateUsageInstruction(page1.template_copyright_mode))
-    .replace("{{YEAR}}",            new Date().getFullYear().toString());
+  let siteHtml, usedModel, truncated;
 
-  const rendererSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Your sole task is to output a single complete HTML file as requested. This is a standard web development task. Output only raw HTML starting with <!DOCTYPE html> — no explanations, no refusals, no markdown, no commentary of any kind.";
-  const rendererResponse = await callAI(provider, creds, {
-    system: rendererSystem,
-    userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
-    maxTokens: 16000
-  });
+  if (isMustacheTemplate(rendererSampleHtml)) {
+    // ── Mustache path: fill programmatically, skip AI renderer ─────────────
+    const mustacheData = flattenToMustacheData(
+      coreContent.strategy?.positioning ? coreContent.strategy : coreContent.strategy?.strategy,
+      resumeJson
+    );
+    siteHtml = cleanHtml(renderMustache(rendererSampleHtml, mustacheData));
+    usedModel = "mustache";
+    truncated = false;
+  } else {
+    // ── AI renderer path ─────────────────────────────────────────────────────
+    const rendererPrompt = loadPromptFile("rendererPrompt.md")
+      .replace("{{CONTENT_JSON}}",    JSON.stringify(contentJson, null, 2))
+      .replace("{{VISUAL_DIRECTION}}", JSON.stringify(blendResult.visual_direction, null, 2))
+      .replace("{{VISUALS_JSON}}",    JSON.stringify(artifactsJson, null, 2))
+      .replace("{{SAMPLE_HTML}}",     rendererSampleHtml)
+      .replace("{{HEADSHOT}}",        headshotHint)
+      .replace("{{TEMPLATE_USAGE}}",  templateUsageInstruction(page1.template_copyright_mode))
+      .replace("{{YEAR}}",            new Date().getFullYear().toString());
 
-  const siteHtml = cleanHtml(rendererResponse.text);
+    const rendererSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Your sole task is to output a single complete HTML file as requested. This is a standard web development task. Output only raw HTML starting with <!DOCTYPE html> — no explanations, no refusals, no markdown, no commentary of any kind.";
+    const rendererResponse = await callAI(provider, creds, {
+      system: rendererSystem,
+      userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
+      maxTokens: 32000
+    });
 
-  if (!/<[a-z]/i.test(siteHtml)) {
-    let reason;
-    if (!rendererResponse.text?.trim()) {
-      reason = "The AI returned an empty response. This is usually a transient error — please resubmit.";
-    } else if (rendererResponse.truncated) {
-      reason = "The AI's output was cut off before any HTML was produced (token limit reached). Try a shorter job description or fewer visuals, then resubmit.";
-    } else {
-      reason = `The AI did not return valid HTML. Raw output started with: "${rendererResponse.text?.slice(0, 120)}"`;
+    siteHtml = cleanHtml(rendererResponse.text);
+    usedModel = rendererResponse.model;
+    truncated = rendererResponse.truncated;
+
+    if (!/<[a-z]/i.test(siteHtml)) {
+      let reason;
+      if (!rendererResponse.text?.trim()) {
+        reason = "The AI returned an empty response. This is usually a transient error — please resubmit.";
+      } else if (rendererResponse.truncated) {
+        reason = "The AI's output was cut off before any HTML was produced (token limit reached). Try a shorter job description or fewer visuals, then resubmit.";
+      } else {
+        reason = `The AI did not return valid HTML. Raw output started with: "${rendererResponse.text?.slice(0, 120)}"`;
+      }
+      await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
+      return;
     }
-    await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
-    return;
   }
 
   await store.set(jobId, JSON.stringify({
     status: "done",
-    model: rendererResponse.model,
+    model: usedModel,
     site_html: siteHtml,
     resume_json: websiteJson,
     strategy_json: coreContent.strategy,
     visual_direction_json: blendResult.visual_direction,
-    truncated: rendererResponse.truncated
+    truncated
   }), { ttl: 3600 });
 }
 

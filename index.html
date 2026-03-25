@@ -393,10 +393,11 @@
           <p class="sub">Fill this out once. Get a draft site fast. er.</p>
         </div>
         <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; padding-top:3px; max-width:260px;">
-          <span id="resumeAnalysisStatus"  style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="jobAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="templateExtractStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="colorsChosenStatus"    style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="resumeAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="jobAnalysisStatus"        style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="templateExtractStatus"    style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="colorsChosenStatus"       style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          <span id="generatingWebsiteStatus"  style="font-size:11.5px; min-height:14px; text-align:right;"></span>
         </div>
       </div>
     </header>
@@ -462,7 +463,10 @@
               <span style="font-size:12px;">PDF or DOCX</span>
             </div>
           </div>
-          <div id="resumeAnalysisStatusInline" style="font-size:11.5px; margin-top:3px; min-height:14px;"></div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:3px; min-height:14px;">
+            <div id="resumeAnalysisStatusInline" style="font-size:11.5px; flex:1;"></div>
+            <button type="button" id="reanalyzeResume" title="Re-extract resume" style="display:none; background:none; border:none; cursor:pointer; font-size:14px; color:rgba(141,224,255,.7); padding:0; line-height:1;">↺</button>
+          </div>
           <!-- Debug panel — shown in debug mode once analysis completes -->
           <div id="resumeAnalysisPanel" class="hidden" style="margin-top:8px;">
             <details>
@@ -489,6 +493,9 @@
 
       </div>
 
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit1">Submit</button>
+      </div>
       <div class="btnRow">
         <button class="btn danger" type="button" id="reset1" style="margin-right:auto;">Reset (double-click)</button>
         <button class="btn primary" type="button" id="next1">Next</button>
@@ -517,56 +524,14 @@
         <button class="btn ghost mini" type="button" id="addArtifact">+ Add artifact</button>
       </div>
 
-      <div id="generationStatus" style="display:none; font-size:13px; margin-top:8px; padding:8px 12px; border-radius:8px; background:rgba(78,112,241,.12); border:1px solid rgba(78,112,241,.3);"></div>
-
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit5">Submit</button>
+      </div>
       <div class="btnRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back2_bottom">Back</button>
-        <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Preview</button>
+        <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Open Editor</button>
       </div>
 
-      <div id="finalBox" class="hidden">
-        <div class="note">
-          <div id="finalStatus" class="hint"></div>
-        </div>
-
-        <div class="hr"></div>
-
-        <div id="debugSection" class="hidden" style="margin-bottom: 12px;">
-          <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px;">🐛 Debug Outputs</div>
-          <div id="debugModelName" style="color:rgba(180,230,180,.85); font-size:12px; margin-bottom:8px;"></div>
-          <details>
-            <summary>Form payload — resume, job, design, colors, visuals</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
-              <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
-            </div>
-            <pre id="debugPayloadPre"></pre>
-          </details>
-          <details style="margin-top:8px;">
-            <summary>Extracted resume JSON (three-prompt stages 1→2)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini hidden" type="button" id="dlResumeJson">Download resume-extracted.json</button>
-            </div>
-            <pre id="debugResumeJsonPre"></pre>
-          </details>
-          <details style="margin-top:8px;">
-            <summary>API response metadata (last poll)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
-            </div>
-            <pre id="debugApiResponsePre"></pre>
-          </details>
-          <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
-            <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
-            <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
-          </div>
-          <div class="hr" style="margin-top:12px;"></div>
-        </div>
-
-        <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
-          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Preview</button>
-        </div>
-      </div>
     </section>
 
 
@@ -651,9 +616,56 @@
           <button class="btn primary" type="button" id="next2_top">Next</button>
         </div-->
 
+        <div id="finalBox" class="hidden" style="margin-top:14px;">
+          <div class="note">
+            <div id="finalStatus" class="hint"></div>
+          </div>
+
+          <div class="hr"></div>
+
+          <div id="debugSection" class="hidden" style="margin-bottom:12px;">
+            <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:4px;">🐛 Debug Outputs</div>
+            <div id="debugModelName" style="color:rgba(180,230,180,.85); font-size:12px; margin-bottom:8px;"></div>
+            <details>
+              <summary>Form payload — resume, job, design, colors, visuals</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
+                <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+              </div>
+              <pre id="debugPayloadPre"></pre>
+            </details>
+            <details style="margin-top:8px;">
+              <summary>Extracted resume JSON (three-prompt stages 1→2)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini hidden" type="button" id="dlResumeJson">Download resume-extracted.json</button>
+              </div>
+              <pre id="debugResumeJsonPre"></pre>
+            </details>
+            <details style="margin-top:8px;">
+              <summary>API response metadata (last poll)</summary>
+              <div class="btnRow" style="justify-content:flex-start;">
+                <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
+              </div>
+              <pre id="debugApiResponsePre"></pre>
+            </details>
+            <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
+              <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
+              <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
+            </div>
+            <div class="hr" style="margin-top:12px;"></div>
+          </div>
+
+          <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
+            <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Open Editor</button>
+          </div>
+        </div>
+
+        <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+          <button class="btn" type="button" id="dbgSubmit4">Submit</button>
+        </div>
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back4">Back</button>
-          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Next</button>
+          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Submit</button>
         </div>
     </section>
 
@@ -763,6 +775,7 @@
                 <option value="cinematic technical minimalism">Cinematic technical minimalism</option>
                 <option value="3D scientific elegance">3D scientific elegance</option>
                 <option value="bold futuristic">Bold futuristic</option>
+                <option value="technical schematic aesthetic">Technical schematic aesthetic</option>
               </select>
             </div>
 
@@ -806,6 +819,15 @@
         <div id="extractCounterLabel" style="font-size:12px; color:rgba(234,240,255,.55);">seconds remaining</div>
       </div>
 
+      <!-- DEBUG: template extraction mode selector (debug mode only) -->
+      <div id="templateModeRow" style="display:none; margin-top:10px; padding:8px 12px; background:rgba(78,112,241,.1); border:1px solid rgba(78,112,241,.28); border-radius:10px;">
+        <label for="extractTemplateMode" style="font-size:12px; font-weight:700; color:rgba(141,224,255,.85); display:block; margin-bottom:5px;">Extraction mode</label>
+        <select id="extractTemplateMode">
+          <option value="mustache" selected>mustache — convert to Mustache.js template</option>
+          <option value="analysis">analysis — extract design spec JSON</option>
+        </select>
+      </div>
+
       <!-- Spec panels (shown after extraction / for design options) -->
       <div id="templateExtractPanel" class="hidden" style="margin-top:12px;">
         <details open>
@@ -826,6 +848,9 @@
       </div>
 
       <!-- Navigation -->
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit3">Submit</button>
+      </div>
       <div class="btnRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back3_bottom">Back</button>
         <button class="btn primary" type="button" id="next3_bottom" style="margin-left:auto;">Next</button>
@@ -852,6 +877,9 @@
       </div>
 
       <p id="submitReadinessMsg" style="display:none; font-size:12px; color:rgba(141,224,255,.75); font-style:italic; text-align:right; margin:0 0 6px;"></p>
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit2">Submit</button>
+      </div>
       <div class="btnRow">
         <button class="btn ghost" type="button" id="back5">Back</button>
         <button class="btn primary" type="button" id="submit_bottom" style="margin-left:auto;">Next</button>

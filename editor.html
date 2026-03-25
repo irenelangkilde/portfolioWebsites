@@ -4,108 +4,166 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Portfolio — Irene's Webworks</title>
-  <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 48px; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
+    body.code-mode { padding-top: 48px; }
 
+    /* ── Main toolbar ─────────────────────────────────────────────── */
     #toolbar {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 16px;
-      background: #16213e;
-      color: white;
-      height: 48px;
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; background: #16213e; color: white; height: 48px;
       border-bottom: 1px solid rgba(255,255,255,.1);
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 9999;
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     }
-    #toolbar h1 { font-size: 15px; font-weight: 600; flex: 1; opacity: .9; }
+    #toolbar h1 { font-size: 14px; font-weight: 600; flex: 1; opacity: .9; }
     .tbtn {
-      padding: 6px 14px; border: none; border-radius: 6px;
-      font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      padding: 5px 12px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
     }
     .tbtn-ghost   { background: rgba(255,255,255,.12); color: #fff; }
     .tbtn-ghost:hover  { background: rgba(255,255,255,.22); }
     .tbtn-primary { background: #667eea; color: #fff; }
     .tbtn-primary:hover { background: #5568d4; }
-    .tbtn-green   { background: #3a9e6e; color: #fff; }
-    .tbtn-green:hover  { background: #2f8259; }
+    .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
 
-    /* Main layout: canvas + color panel side by side */
+    #viewToggle { display: flex; gap: 2px; background: rgba(0,0,0,.3); border-radius: 7px; padding: 2px; }
+    #viewToggle .tbtn { border-radius: 5px; padding: 4px 10px; }
+
+    /* ── Edit toolbar ─────────────────────────────────────────────── */
+    #editToolbar {
+      position: fixed; top: 48px; left: 0; right: 0; z-index: 9998;
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 14px; background: #1a2744;
+      border-bottom: 1px solid rgba(255,255,255,.07); height: 36px;
+    }
+    body.code-mode #editToolbar { display: none; }
+    #editToolbar button {
+      padding: 3px 9px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.1); color: #eaf0ff;
+      font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1.4;
+    }
+    #editToolbar button:hover { background: rgba(255,255,255,.2); }
+    #editToolbar .sep { width: 1px; height: 16px; background: rgba(255,255,255,.15); margin: 0 4px; flex-shrink: 0; }
+
+    /* ── Main layout ──────────────────────────────────────────────── */
     #editorLayout {
       display: flex;
-      height: calc(100vh - 48px);
+      height: calc(100vh - 84px);
     }
-    #gjs { flex: 1; min-width: 0; }
+    body.code-mode #editorLayout { height: calc(100vh - 48px); }
 
-    /* Color panel — hidden in preview mode */
+    /* Visual pane */
+    #visualPane { flex: 1; min-width: 0; overflow: hidden; }
+    body.code-mode #visualPane { display: none; }
+    #visualFrame { width: 100%; height: 100%; border: none; display: block; }
+
+    /* Resizable divider */
+    #divider {
+      width: 5px; flex-shrink: 0; background: rgba(255,255,255,.07); cursor: col-resize;
+      transition: background .15s;
+    }
+    #divider:hover, #divider.dragging { background: #667eea; }
+    body.visual-mode #divider { display: none; }
+    body.code-mode   #divider { display: none; }
+
+    /* Code pane */
+    #codePane { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+    body.visual-mode #codePane { display: none; }
+    #cmContainer { flex: 1; overflow: auto; height: 100%; }
+    .cm-editor { height: 100%; font-size: 12.5px; }
+    .cm-scroller { overflow: auto; }
+
+    /* ── Color panel ──────────────────────────────────────────────── */
     #colorPanel {
-      width: 180px;
-      flex-shrink: 0;
-      background: #16213e;
+      width: 180px; flex-shrink: 0; background: #16213e;
       border-left: 1px solid rgba(255,255,255,.1);
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
+      display: flex; flex-direction: column; overflow-y: auto;
       transition: width .2s, opacity .2s;
     }
     #colorPanel.hidden { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
-
+    body.code-mode   #colorPanel { display: none; }
+    body.split-mode  #colorPanel { display: none; }
     #colorPanel h2 {
       font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
       color: rgba(255,255,255,.45); padding: 14px 14px 8px;
     }
-    .color-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 5px 14px;
-    }
+    .color-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; }
     .color-row label { font-size: 12px; color: rgba(234,240,255,.7); flex: 1; }
     .color-row input[type="color"] {
       width: 32px; height: 24px; border: none; border-radius: 4px;
       cursor: pointer; padding: 1px; background: none;
     }
-    #colorPanel .divider {
-      border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px;
-    }
-    #colorPanel .hint {
-      font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px;
-      line-height: 1.5;
-    }
+    #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
+    #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
 
-    /* Force GrapesJS canvas iframe to fill full height */
-    .gjs-cv-canvas,
-    .gjs-frame-wrapper,
-    .gjs-frame { height: 100% !important; min-height: 100% !important; }
-
-    /* Hide all GrapesJS chrome — we use our own toolbar */
-    .gjs-pn-panels,
-    .gjs-devices-c,
-    .gjs-device-label,
-    .gjs-rte-toolbar { display: none !important; }
+    /* ── View HTML modal ──────────────────────────────────────────── */
+    #htmlModal {
+      display: none; position: fixed; inset: 0; z-index: 100000;
+      background: rgba(0,0,0,.75); align-items: center; justify-content: center;
+    }
+    #htmlModal.open { display: flex; }
+    #htmlModalBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.15); border-radius: 12px;
+      width: min(900px, 94vw); height: 80vh; display: flex; flex-direction: column; overflow: hidden;
+    }
+    #htmlModalHeader {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,.1); flex-shrink: 0;
+    }
+    #htmlModalHeader span { font-size: 13px; font-weight: 600; color: rgba(234,240,255,.8); flex: 1; }
+    #htmlModalBody { flex: 1; overflow: auto; }
+    #htmlModalBody textarea {
+      width: 100%; height: 100%; border: none; outline: none; resize: none;
+      background: #0f1929; color: #c9d1e3;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      font-size: 12.5px; line-height: 1.6; padding: 14px 18px;
+    }
 
     #no-preview {
-      display: none; position: fixed; inset: 0;
-      background: #1a1a2e; color: white;
-      align-items: center; justify-content: center;
-      flex-direction: column; gap: 16px; font-size: 16px;
+      display: none; position: fixed; inset: 0; background: #1a1a2e; color: white;
+      align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 16px;
     }
   </style>
 </head>
-<body>
+<body class="visual-mode">
 
   <div id="toolbar">
     <h1>Irene's Webworks — Visual Editor</h1>
-    <button class="tbtn tbtn-ghost"   id="btnBack">← Back to Form</button>
-    <button class="tbtn tbtn-green"   id="btnToggleEdit">✏️ Edit</button>
+    <button class="tbtn tbtn-ghost" id="btnBack">← Back to Form</button>
+    <div id="viewToggle">
+      <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
+      <button class="tbtn"             id="btnSplit">Split</button>
+      <button class="tbtn"             id="btnCode">Code</button>
+    </div>
+    <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
   </div>
 
-  <div id="editorLayout">
-    <div id="gjs"></div>
+  <div id="editToolbar">
+    <button id="etBold"      title="Bold (Ctrl+B)"><b>B</b></button>
+    <button id="etItalic"    title="Italic (Ctrl+I)"><i>I</i></button>
+    <button id="etUnderline" title="Underline (Ctrl+U)"><u>U</u></button>
+    <span class="sep"></span>
+    <button id="etLink"   title="Insert link">🔗 Link</button>
+    <button id="etUnlink" title="Remove link">✂ Unlink</button>
+    <span class="sep"></span>
+    <button id="etUl" title="Bullet list">• List</button>
+    <span class="sep"></span>
+    <button id="etUndo" title="Undo (Ctrl+Z)">↩ Undo</button>
+    <button id="etRedo" title="Redo (Ctrl+Y)">↪ Redo</button>
+    <span style="flex:1"></span>
+    <span id="editStatus" style="font-size:11px; color:rgba(234,240,255,.35); padding-right:4px;"></span>
+  </div>
 
+  <div id="editorLayout">
+    <div id="visualPane">
+      <iframe id="visualFrame"></iframe>
+    </div>
+    <div id="divider"></div>
+    <div id="codePane">
+      <div id="cmContainer"></div>
+    </div>
     <div id="colorPanel" class="hidden">
       <h2>Colors</h2>
       <div class="color-row"><label>Primary</label>  <input type="color" id="cp-primary"></div>
@@ -113,8 +171,21 @@
       <div class="color-row"><label>Accent</label>   <input type="color" id="cp-accent"></div>
       <div class="color-row"><label>Dark</label>     <input type="color" id="cp-dark"></div>
       <div class="color-row"><label>Light</label>    <input type="color" id="cp-light"></div>
-      <hr class="divider">
+      <hr>
       <p class="hint">Changes apply live. Download to save.</p>
+    </div>
+  </div>
+
+  <div id="htmlModal">
+    <div id="htmlModalBox">
+      <div id="htmlModalHeader">
+        <span>Generated HTML</span>
+        <button class="tbtn tbtn-ghost" id="btnCopyHtml">Copy</button>
+        <button class="tbtn tbtn-ghost" id="btnCloseHtml">✕</button>
+      </div>
+      <div id="htmlModalBody">
+        <textarea id="htmlModalText" spellcheck="false" readonly></textarea>
+      </div>
     </div>
   </div>
 
@@ -123,54 +194,44 @@
     <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
   </div>
 
-  <script src="https://unpkg.com/grapesjs@0.21.13/dist/grapes.min.js"></script>
-  <script>
+  <script type="importmap">
+  {
+    "imports": {
+      "codemirror": "https://esm.sh/codemirror@6",
+      "@codemirror/lang-html": "https://esm.sh/@codemirror/lang-html",
+      "@codemirror/theme-one-dark": "https://esm.sh/@codemirror/theme-one-dark"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import { EditorView, basicSetup } from "codemirror";
+    import { html as htmlLang } from "@codemirror/lang-html";
+    import { oneDark } from "@codemirror/theme-one-dark";
+
     const fullHtml = localStorage.getItem("portfolio_preview_html");
 
     if (!fullHtml) {
       document.getElementById("no-preview").style.display = "flex";
       document.getElementById("editorLayout").style.display = "none";
       document.getElementById("toolbar").style.display = "none";
+      document.getElementById("editToolbar").style.display = "none";
     } else {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(fullHtml, "text/html");
-      const bodyHtml = doc.body.innerHTML;
-      const css = Array.from(doc.querySelectorAll("style"))
-        .map(s => s.textContent)
-        .join("\n");
-      const headExtras = Array.from(doc.head.children)
-        .filter(el => el.tagName !== "STYLE")
-        .map(el => el.outerHTML)
-        .join("\n");
 
-      // ── Extract CSS custom property values from the stylesheet ────────────────
+      // ── CSS variable extraction ──────────────────────────────────────────────
       const CSS_VAR_NAMES = ["primary", "secondary", "accent", "dark", "light"];
-
-      // cssVarMap: logical name → actual CSS variable name used in the stylesheet
-      // e.g. { primary: "--primary-color", secondary: "--secondary-color", ... }
       const cssVarMap = {};
+      const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
+        .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
 
-      function extractCssVars(cssText) {
-        // Find all --xxx: value declarations anywhere in the CSS
+      function extractCssVars(text) {
         const allVars = {};
-        for (const [, name, val] of cssText.matchAll(/--([a-zA-Z0-9_-]+)\s*:\s*([^;}\n]+)/g)) {
+        for (const [, name, val] of text.matchAll(/--([a-zA-Z0-9_-]+)\s*:\s*([^;}\n]+)/g))
           allVars[name.trim().toLowerCase()] = val.trim().replace(/^['"]|['"]$/g, "");
-        }
-
         const vars = {};
         for (const name of CSS_VAR_NAMES) {
-          const candidates = [
-            name,
-            `${name}-color`, `color-${name}`,
-            `${name}-bg`, `bg-${name}`,
-            `clr-${name}`
-          ];
-          for (const c of candidates) {
-            if (allVars[c] !== undefined) {
-              vars[name] = allVars[c];
-              cssVarMap[name] = `--${c}`; // remember the actual variable name
-              break;
-            }
+          for (const c of [name, `${name}-color`, `color-${name}`, `${name}-bg`, `bg-${name}`, `clr-${name}`]) {
+            if (allVars[c] !== undefined) { vars[name] = allVars[c]; cssVarMap[name] = `--${c}`; break; }
           }
         }
         return vars;
@@ -180,129 +241,187 @@
         if (!val) return "#000000";
         const clean = val.trim().replace(/^['"]|['"]$/g, "");
         if (/^#[0-9a-f]{6}$/i.test(clean)) return clean;
-        if (/^#[0-9a-f]{3}$/i.test(clean))
-          return "#" + clean.slice(1).split("").map(c => c + c).join("");
+        if (/^#[0-9a-f]{3}$/i.test(clean)) return "#" + clean.slice(1).split("").map(c => c+c).join("");
         const el = document.createElement("div");
-        el.style.color = clean;
-        document.body.appendChild(el);
-        const computed = getComputedStyle(el).color;
-        document.body.removeChild(el);
+        el.style.color = clean; document.body.appendChild(el);
+        const computed = getComputedStyle(el).color; document.body.removeChild(el);
         const m = computed.match(/\d+/g);
         if (!m || m.length < 3) return "#000000";
-        return "#" + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, "0")).join("");
+        return "#" + m.slice(0,3).map(n => parseInt(n).toString(16).padStart(2,"0")).join("");
       }
 
-      // ── GrapesJS init ─────────────────────────────────────────────────────────
-      let editor = window._gjsEditor = grapesjs.init({
-        container: "#gjs",
-        height: "100%",
-        storageManager: false,
-        panels: { defaults: [] },
-        deviceManager: false,
-        components: bodyHtml,
-        style: css
+      // ── State ────────────────────────────────────────────────────────────────
+      const currentColors = {};
+      let viewMode = "visual";
+      let lastEdited = "visual"; // "visual" | "code"
+
+      // ── Visual iframe ────────────────────────────────────────────────────────
+      const frame = document.getElementById("visualFrame");
+
+      function loadIframe(html) {
+        const doc = frame.contentDocument;
+        doc.open(); doc.write(html); doc.close();
+        doc.designMode = "on";
+        setTimeout(applyColorOverrides, 80);
+      }
+
+      function applyColorOverrides() {
+        const body = frame.contentDocument?.body;
+        if (!body) return;
+        for (const [k, v] of Object.entries(currentColors))
+          body.style.setProperty(cssVarMap[k] || `--${k}`, v);
+      }
+
+      loadIframe(fullHtml);
+
+      // ── CodeMirror ───────────────────────────────────────────────────────────
+      const cmView = new EditorView({
+        doc: fullHtml,
+        extensions: [
+          basicSetup,
+          htmlLang(),
+          oneDark,
+          EditorView.updateListener.of(u => { if (u.docChanged) lastEdited = "code"; })
+        ],
+        parent: document.getElementById("cmContainer")
       });
 
-      let isPreviewing = false;
-      const currentColors = {}; // name → current hex value
-
-      function applyColorOverride() {
-        try {
-          const body = editor.Canvas.getBody();
-          if (!body) return;
-          for (const [k, v] of Object.entries(currentColors)) {
-            body.style.setProperty(cssVarMap[k] || `--${k}`, v);
-          }
-        } catch (e) { console.warn("applyColorOverride failed:", e); }
+      // ── Sync ─────────────────────────────────────────────────────────────────
+      function syncVisualToCode() {
+        const html = frame.contentDocument?.documentElement?.outerHTML || fullHtml;
+        cmView.dispatch({ changes: { from: 0, to: cmView.state.doc.length, insert: html } });
+        lastEdited = "visual";
       }
 
-      function initColorPickers() {
-        const extracted = extractCssVars(css);
-        for (const name of CSS_VAR_NAMES) {
-          const raw = extracted[name];
-          const hex = raw ? toHexColor(raw) : "#000000";
-          currentColors[name] = hex;
-          const input = document.getElementById(`cp-${name}`);
-          if (input) {
-            input.value = hex;
-            input.addEventListener("input", () => {
-              currentColors[name] = input.value;
-              applyColorOverride();
-            });
-          }
+      function syncCodeToVisual() {
+        loadIframe(cmView.state.doc.toString());
+        lastEdited = "visual";
+      }
+
+      // ── View mode ─────────────────────────────────────────────────────────────
+      function setViewMode(mode) {
+        if (mode !== "code"   && viewMode === "code")   syncCodeToVisual();
+        if (mode !== "visual" && viewMode === "visual") syncVisualToCode();
+
+        viewMode = mode;
+        document.body.className = mode + "-mode";
+
+        document.getElementById("btnVisual").className = "tbtn" + (mode === "visual" ? " tbtn-active" : "");
+        document.getElementById("btnSplit").className  = "tbtn" + (mode === "split"  ? " tbtn-active" : "");
+        document.getElementById("btnCode").className   = "tbtn" + (mode === "code"   ? " tbtn-active" : "");
+
+        // Color panel: show only in visual mode
+        document.getElementById("colorPanel").classList.toggle("hidden", mode !== "visual");
+      }
+
+      document.getElementById("btnVisual").onclick = () => setViewMode("visual");
+      document.getElementById("btnSplit").onclick  = () => setViewMode("split");
+      document.getElementById("btnCode").onclick   = () => setViewMode("code");
+
+      // ── execCommand toolbar ───────────────────────────────────────────────────
+      function exec(cmd, val = null) {
+        frame.contentDocument.execCommand(cmd, false, val);
+        frame.contentWindow.focus();
+        lastEdited = "visual";
+      }
+
+      document.getElementById("etBold").onclick      = () => exec("bold");
+      document.getElementById("etItalic").onclick    = () => exec("italic");
+      document.getElementById("etUnderline").onclick = () => exec("underline");
+      document.getElementById("etUndo").onclick      = () => exec("undo");
+      document.getElementById("etRedo").onclick      = () => exec("redo");
+      document.getElementById("etUl").onclick        = () => exec("insertUnorderedList");
+      document.getElementById("etLink").onclick      = () => {
+        const url = prompt("URL:", "https://");
+        if (url) exec("createLink", url);
+      };
+      document.getElementById("etUnlink").onclick    = () => exec("unlink");
+
+      // ── Color panel ───────────────────────────────────────────────────────────
+      const extracted = extractCssVars(cssText);
+      for (const name of CSS_VAR_NAMES) {
+        const hex = extracted[name] ? toHexColor(extracted[name]) : "#000000";
+        currentColors[name] = hex;
+        const input = document.getElementById(`cp-${name}`);
+        if (input) {
+          input.value = hex;
+          input.addEventListener("input", () => {
+            currentColors[name] = input.value;
+            applyColorOverrides();
+          });
         }
       }
 
-      editor.on("load", () => {
-        // Fix GrapesJS background shorthand mangling
-        try {
-          const iframeDoc = editor.Canvas.getBody()?.ownerDocument;
-          if (iframeDoc?.head) {
-            const fix = iframeDoc.createElement("style");
-            fix.textContent = css;
-            iframeDoc.head.appendChild(fix);
-          }
-        } catch (e) { console.warn("CSS fix injection failed:", e); }
+      // Show color panel on load
+      document.getElementById("colorPanel").classList.remove("hidden");
 
-        initColorPickers();
-
-        editor.runCommand("core:preview");
-        isPreviewing = true;
-        document.getElementById("btnToggleEdit").textContent = "✏️ Edit";
-        document.getElementById("btnToggleEdit").className = "tbtn tbtn-green";
+      // ── Resizable divider ─────────────────────────────────────────────────────
+      const dividerEl = document.getElementById("divider");
+      dividerEl.addEventListener("mousedown", e => {
+        e.preventDefault();
+        dividerEl.classList.add("dragging");
+        const startX = e.clientX;
+        const startW = document.getElementById("visualPane").offsetWidth;
+        const totalW = document.getElementById("editorLayout").offsetWidth;
+        const onMove = e => {
+          const w = Math.max(150, Math.min(totalW - 200, startW + e.clientX - startX));
+          document.getElementById("visualPane").style.flex = "none";
+          document.getElementById("visualPane").style.width = w + "px";
+        };
+        const onUp = () => {
+          dividerEl.classList.remove("dragging");
+          document.removeEventListener("mousemove", onMove);
+          document.removeEventListener("mouseup", onUp);
+        };
+        document.addEventListener("mousemove", onMove);
+        document.addEventListener("mouseup", onUp);
       });
 
-      // ── Toggle edit / preview ─────────────────────────────────────────────────
-      document.getElementById("btnToggleEdit").onclick = () => {
-        const btn = document.getElementById("btnToggleEdit");
-        const panel = document.getElementById("colorPanel");
-        if (isPreviewing) {
-          editor.stopCommand("core:preview");
-          btn.textContent = "👁 Preview";
-          btn.className = "tbtn tbtn-ghost";
-          panel.classList.remove("hidden");
-          // Re-inject overrides — canvas may have refreshed on mode switch
-          setTimeout(applyColorOverride, 50);
-        } else {
-          editor.runCommand("core:preview");
-          btn.textContent = "✏️ Edit";
-          btn.className = "tbtn tbtn-green";
-          panel.classList.add("hidden");
-        }
-        isPreviewing = !isPreviewing;
+      // ── Build final HTML string ───────────────────────────────────────────────
+      function buildHtmlString() {
+        let html = lastEdited === "code"
+          ? cmView.state.doc.toString()
+          : (frame.contentDocument?.documentElement?.outerHTML || fullHtml);
+        // Inject color overrides
+        const overrides = Object.entries(currentColors)
+          .map(([k, v]) => `${cssVarMap[k] || "--"+k}: ${v};`).join(" ");
+        if (overrides)
+          html = html.replace("</head>", `<style>:root { ${overrides} }</style>\n</head>`);
+        return html;
+      }
+
+      // ── View HTML modal ───────────────────────────────────────────────────────
+      document.getElementById("btnViewHtml").onclick = () => {
+        document.getElementById("htmlModalText").value = buildHtmlString();
+        document.getElementById("htmlModal").classList.add("open");
+      };
+      document.getElementById("btnCloseHtml").onclick = () =>
+        document.getElementById("htmlModal").classList.remove("open");
+      document.getElementById("htmlModal").addEventListener("click", e => {
+        if (e.target === document.getElementById("htmlModal"))
+          document.getElementById("htmlModal").classList.remove("open");
+      });
+      document.getElementById("btnCopyHtml").onclick = () => {
+        const btn = document.getElementById("btnCopyHtml");
+        navigator.clipboard.writeText(document.getElementById("htmlModalText").value).then(() => {
+          btn.textContent = "Copied!";
+          setTimeout(() => btn.textContent = "Copy", 1800);
+        });
       };
 
-      // ── Back / Download ───────────────────────────────────────────────────────
-      document.getElementById("btnBack").onclick = () => {
-        if (window.opener) window.opener.focus();
-        window.close();
-      };
-
+      // ── Download ──────────────────────────────────────────────────────────────
       document.getElementById("btnDownload").onclick = () => {
-        const editedBody = editor.getHtml();
-        const grapesCss  = editor.getCss();
-        // Build color override block from current picker values
-        const colorOverrideCss = Object.entries(currentColors).length
-          ? `:root { ${Object.entries(currentColors).map(([k,v]) => `${cssVarMap[k] || "--"+k}: ${v};`).join(" ")} }`
-          : "";
-        const combined = `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-${headExtras}
-<style>${grapesCss}</style>
-<style>/* original CSS — fixes GrapesJS background shorthand mangling */
-${css}</style>
-${colorOverrideCss ? `<style>/* color picker overrides */\n${colorOverrideCss}\n</style>` : ""}
-</head>
-<body>${editedBody}</body>
-</html>`;
         const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([combined], { type: "text/html;charset=utf-8" }));
+        a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
         a.download = "portfolio.html";
         a.click();
         URL.revokeObjectURL(a.href);
+      };
+
+      // ── Back ──────────────────────────────────────────────────────────────────
+      document.getElementById("btnBack").onclick = () => {
+        if (window.opener) window.opener.focus();
+        window.close();
       };
     }
   </script>

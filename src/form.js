@@ -22,7 +22,7 @@
     let generationError     = null;  // error message on failure
     let generationInProgress = false;
 
-    // Pre-computed job+resume strategy (triggered on Job Next, consumed by doGenerate)
+    // Pre-computed job+resume strategy (triggered on Job Next, consumed by strategizeContent)
     let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
     let jobAnalysisInProgress = false;
 
@@ -127,11 +127,22 @@
       // Reset cache and kick off analysis
       resumeAnalysisCache = null;
       lastAnalysisData = null;
+      document.getElementById("reanalyzeResume").style.display = hasFile ? "inline" : "none";
       if (hasFile) {
         analyzeResumeInBackground(input.files[0]);
       } else {
         setResumeAnalysisStatus("");
       }
+    });
+
+    document.getElementById("reanalyzeResume")?.addEventListener("click", () => {
+      const input = document.getElementById("resumeUpload");
+      if (!input?.files?.[0]) return;
+      const file = input.files[0];
+      try { localStorage.removeItem(resumeCacheKey(file)); } catch {}
+      resumeAnalysisCache = null;
+      lastAnalysisData = null;
+      analyzeResumeInBackground(file);
     });
 
     // ----------------------------
@@ -182,6 +193,13 @@
       } else if (!debug) {
         document.getElementById("templateExtractPanel")?.classList.add("hidden");
       }
+      // Show/hide debug Submit buttons on all pages
+      document.querySelectorAll(".dbg-submit-row").forEach(el => {
+        el.style.display = debug ? "flex" : "none";
+      });
+      // Show/hide debug-only rows (display:block)
+      const templateModeRow = document.getElementById("templateModeRow");
+      if (templateModeRow) templateModeRow.style.display = debug ? "" : "none";
     }
 
     document.getElementById("major")?.addEventListener("input", () => {
@@ -218,18 +236,6 @@
         btn.style.opacity = enabled ? "" : "0.45";
         btn.style.cursor  = enabled ? "" : "not-allowed";
       });
-    }
-
-    function updateGenerationStatus(msg) {
-      const el = document.getElementById("generationStatus");
-      if (!el) return;
-      if (msg) {
-        el.textContent = msg;
-        el.style.color = "rgba(234,240,255,.7)";
-        el.style.display = "block";
-      } else {
-        el.style.display = "none";
-      }
     }
 
     // ----------------------------
@@ -659,7 +665,7 @@
     // ----------------------------
     // Template extraction cache
     // ----------------------------
-    let extractedTemplateCache = null;   // { templateHtml, embeddedJson }
+    let extractedTemplateCache = null;   // { templateHtml, embeddedJson, templateMode }
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
@@ -717,8 +723,10 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (!source) return;
 
+      const extractMode = document.getElementById("extractTemplateMode")?.value || "analysis";
+
       let key = "";
-      let requestBody = { provider: getAnalysisProvider() };
+      let requestBody = { provider: getAnalysisProvider(), templateMode: extractMode };
 
       if (source === "none") {
         const styleVal = document.getElementById("designStyle")?.value || "";
@@ -740,21 +748,27 @@
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val || looksLikeUrl(val)) return;
 
-        // Keyword — try pre-compiled _template.html first, fall back to calling Claude
-        const srcPath      = templateLabelToPath(val);
-        const compiledPath = srcPath.replace(/\.html$/, "_template.html");
-        if (compiledPath === lastExtractedTemplate) return;
+        // Keyword — try pre-compiled file first, fall back to API
+        const srcPath = templateLabelToPath(val);
 
-        // Try pre-compiled version (no API call needed)
+        // Each mode has its own pre-compiled path:
+        //   analysis → *Grad_template.html
+        //   mustache → *Grad_mustache.html
+        const modeSuffix  = extractMode === "mustache" ? "_mustache" : "_template";
+        const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
+
+        if (compiledKey === lastExtractedTemplate) return;
+
+        // Try pre-compiled version (fast path, no API call)
         try {
-          const res = await fetch(compiledPath);
+          const res = await fetch(compiledKey);
           if (res.ok) {
             const templateHtml = await res.text();
             const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
-            lastExtractedTemplate = compiledPath;
-            extractedTemplateCache = { templateHtml, embeddedJson };
+            lastExtractedTemplate = compiledKey;
+            extractedTemplateCache = { templateHtml, embeddedJson, templateMode: extractMode };
             setTemplateExtractStatus("✓ Template loaded", "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
             renderSuggestedPalettes();
@@ -762,14 +776,15 @@
           }
         } catch {}
 
-        // No pre-compiled file — fetch source HTML and send to Claude
-        if (srcPath === lastExtractedTemplate) return;
+        // No pre-compiled file — fetch source HTML and send to AI
+        const apiKey = srcPath + "#" + extractMode;
+        if (apiKey === lastExtractedTemplate) return;
         try {
           const res = await fetch(srcPath);
           if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
           const html = await res.text();
           requestBody.templateHtmlBase64 = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
-          key = srcPath;
+          key = apiKey;
         } catch (e) {
           setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
           return;
@@ -777,7 +792,8 @@
       } else if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
         if (!file) return;
-        const fileKey = file.name + "_" + file.size;
+        // Files have no pre-compiled version — include mode in key so switching re-extracts
+        const fileKey = file.name + "_" + file.size + "#" + extractMode;
         if (fileKey === lastExtractedTemplate) return;
         key = fileKey;
         try {
@@ -865,7 +881,7 @@
           return;
         }
 
-        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson };
+        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson, templateMode: extractMode };
         extractedTemplateCache = data;
         setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
@@ -955,24 +971,6 @@
         else                                                                      comp.value = "split-left";
       }
 
-      // ── Style — only if unset ─────────────────────────────────────────────────
-      const style = document.getElementById("designStyle");
-      if (style && !style.value) {
-        if      (/comput|software|\bcs\b|cyber|data.sci|\bml\b|\bai\b|machine/i.test(t)) style.value = "glassmorphism";
-        else if (/electr|mechanic|aerospace|civil|robot|structur/i.test(t))              style.value = "dark terminal";
-        else if (/bio|chem|neuro|psychol|nurs|health|pharma|ecology/i.test(t))          style.value = "soft pastel editorial";
-        else if (/business|finance|account|econom|manag|market/i.test(t))               style.value = "Swiss grid";
-        else if (/art|graphic|design|illustrat|media|film/i.test(t))                    style.value = "soft pastel editorial";
-        else                                                                              style.value = "clean-minimal";
-      }
-
-      // ── Render Mode — only if unset ───────────────────────────────────────────
-      const render = document.getElementById("designRenderMode");
-      if (render && !render.value) {
-        if      (/bio|chem|neuro|environ|ecolog|pharma|\bmed\b/i.test(t)) render.value = "3D scientific elegance";
-        else if (/comput|software|\bcs\b|electr|mechanic|aerospace|robot|data/i.test(t)) render.value = "bold futuristic";
-        else                                                                               render.value = "cinematic technical minimalism";
-      }
     }
 
     // Normalize any CSS color string to a 6-digit hex value using canvas
@@ -1361,6 +1359,8 @@
     // ----------------------------
     async function doAnalyzeJob() {
       if (!resumeUpload.files[0]) return; // nothing to do without a resume
+      const p4check = getPage4Job();
+      if (!p4check.desired_role && !p4check.job_ad.trim()) return; // nothing to analyze without job fields
       jobAnalysisResult     = null;
       jobAnalysisInProgress = true;
       setHeaderStatus("jobAnalysisStatus", "Analyzing job…", "rgba(141,224,255,.75)");
@@ -1396,7 +1396,7 @@
           if (data.status === "done")  { jobAnalysisResult = data; break; }
           if (data.status === "error") { break; }
         }
-      } catch { /* silent — doGenerate will recompute if needed */ }
+      } catch { /* silent — strategizeContent will recompute if needed */ }
 
       jobAnalysisInProgress = false;
       if (jobAnalysisResult) {
@@ -1407,7 +1407,7 @@
     }
 
     // ----------------------------
-    // Populate generation debug outputs — called as soon as doGenerate() gets a result
+    // Populate generation debug outputs — called as soon as strategizeContent() gets a result
     // ----------------------------
     function populateGenerationDebug(data) {
       if (!isDebugMode()) return;
@@ -1465,18 +1465,18 @@
     // ----------------------------
     // Generation — called from page 4 Next (fire-and-forget); visuals injected client-side after generation
     // ----------------------------
-    async function doGenerate() {
+    async function strategizeContent() {
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
       setApplyBtnState(false);
-      updateGenerationStatus("Generating portfolio… this may take 1–3 minutes.");
+      setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
 
       const resumeFile = resumeUpload.files[0];
       if (!resumeFile) {
         generationError = "Please upload your resume PDF before generating.";
         generationInProgress = false;
-        updateGenerationStatus(null);
+        setHeaderStatus("generatingWebsiteStatus", "");
         setApplyBtnState(true);
         return;
       }
@@ -1487,7 +1487,7 @@
       } catch (e) {
         generationError = "Could not read resume PDF: " + e.message;
         generationInProgress = false;
-        updateGenerationStatus(null);
+        setHeaderStatus("generatingWebsiteStatus", "");
         setApplyBtnState(true);
         return;
       }
@@ -1535,11 +1535,11 @@
           const stageMsg = data.stage
             ? `${data.stage} (${remaining}s remaining)`
             : `Generating portfolio… ${remaining}s remaining`;
-          updateGenerationStatus(stageMsg);
+          setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
           if (data.status === "done") {
             generationResult    = data;
             generationInProgress = false;
-            updateGenerationStatus(null);
+            setHeaderStatus("generatingWebsiteStatus", "✓ Website generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             populateGenerationDebug(data);
             return;
@@ -1550,8 +1550,7 @@
       } catch (e) {
         generationError     = e.message;
         generationInProgress = false;
-        const el = document.getElementById("generationStatus");
-        if (el) { el.textContent = "Generation failed: " + e.message; el.style.color = "rgba(251,171,156,.9)"; el.style.display = "block"; }
+        setHeaderStatus("generatingWebsiteStatus", "Generation failed: " + e.message, "rgba(251,171,156,.9)");
         setApplyBtnState(true);
       }
     }
@@ -1592,8 +1591,7 @@
 
     async function doPreview() {
       if (generationInProgress) {
-        const el = document.getElementById("generationStatus");
-        if (el) { el.textContent = "Still generating… please wait."; el.style.display = "block"; }
+        setHeaderStatus("generatingWebsiteStatus", "Still generating… please wait.", "rgba(141,224,255,.75)");
         return;
       }
 
@@ -1606,7 +1604,7 @@
           return;
         }
         // Fallback: generation wasn't triggered on Colors Next (e.g. direct navigation)
-        await doGenerate();
+        await strategizeContent();
         if (!generationResult) return;
       }
 
@@ -1670,8 +1668,7 @@
         : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
       const editorBtn = document.getElementById("btnOpenEditor");
       if (editorBtn) { editorBtn.disabled = false; editorBtn.style.opacity = ""; editorBtn.style.cursor = ""; }
-      pillNavUnlocked = true;
-      setStep(6);
+      window.location.href = "editor.html";
     }
 
     // ----------------------------
@@ -1691,7 +1688,8 @@
       setResumeAnalysisStatus("");
     });
 
-    document.getElementById("next1")?.addEventListener("click", () => {
+    // ── Page action helpers (action = everything except setStep) ─────────────
+    function page1Action() {
       const errs = [];
       if (!validateField("major",          true)) errs.push("major");
       if (!validateField("specialization", true)) errs.push("specialization");
@@ -1707,9 +1705,14 @@
         msg.style.color = "rgba(251,171,156,.9)";
         errs.push("resume");
       }
-      if (errs.length) return;
+      return errs.length === 0; // returns true if valid
+    }
+
+    document.getElementById("next1")?.addEventListener("click", () => {
+      if (!page1Action()) return;
       setStep(2);
     });
+    document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
 
     // Page 3 (Design / Template)
     document.getElementById("back2")?.addEventListener("click", () => setStep(2));
@@ -1724,10 +1727,9 @@
       }
     }
 
-    document.getElementById("next2")?.addEventListener("click", async () => {
+    function page3Action() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
 
-      // Helper to show an inline error near the radio group
       function showSourceMsg(text) {
         let msg = document.getElementById("_msg_templateSource");
         if (!msg) {
@@ -1740,32 +1742,29 @@
         msg.textContent = text;
       }
 
-      if (!source) { showSourceMsg("Please select a template option."); return; }
+      if (!source) { showSourceMsg("Please select a template option."); return false; }
       document.getElementById("_msg_templateSource") && (document.getElementById("_msg_templateSource").textContent = "");
 
-      // Pre-validate inputs before touching the UI
       if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
-        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return; }
-        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return; }
+        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return false; }
+        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return false; }
       }
       if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
-        if (!file) { showSourceMsg("Please select a screenshot or HTML file."); return; }
+        if (!file) { showSourceMsg("Please select a screenshot or HTML file."); return false; }
       }
 
-      // c) Copyright question must be answered if the panel is visible
       const copyrightWrap = document.getElementById("templateCopyrightWrap");
       if (copyrightWrap && copyrightWrap.style.display !== "none") {
         const copyrightAnswered = !!document.querySelector('input[name="templateCopyrightMode"]:checked');
         if (!copyrightAnswered) {
           showSourceMsg("Please answer the website spec question before continuing.");
           copyrightWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          return;
+          return false;
         }
       }
 
-      // b) Fire extraction (or join in-flight), then proceed to page 4 (Color scheme) immediately
       extractTemplateInBackground().then(() => {
         if (isDebugMode() && extractedTemplateCache) {
           populateTemplateExtractPanel(extractedTemplateCache);
@@ -1773,9 +1772,14 @@
           document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
         }
       });
+      return true;
+    }
 
+    document.getElementById("next2")?.addEventListener("click", () => {
+      if (!page3Action()) return;
       setStep(4);
     });
+    document.getElementById("dbgSubmit3")?.addEventListener("click", () => { page3Action(); });
 
     // back3 on Color scheme returns to Website spec (step 3), re-populating its panels
     document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
@@ -1885,25 +1889,29 @@
     document.getElementById("next3")?.addEventListener("click", () => { setStep(5); });
     document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
 
-    // Page 2 (Job) — Next starts background job+resume analysis and navigates to Design (step 3)
-    document.getElementById("back5")?.addEventListener("click",     () => setStep(1));
-    document.getElementById("submit_bottom")?.addEventListener("click", () => { onEnterPage2(); setStep(3); doAnalyzeJob(); });
+    // Page 2 (Job)
+    function page2Action() { onEnterPage2(); doAnalyzeJob(); }
+    document.getElementById("back5")?.addEventListener("click", () => setStep(1));
+    document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
+    document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
 
     // Page 3 (Design) — Back returns to Job; Next advances to Colors
     document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
     document.getElementById("next3_bottom")?.addEventListener("click", () => setStep(4));
 
-    // Page 4 (Colors) — Back returns to Design; Next starts generation then advances to Visuals
-    document.getElementById("back4")?.addEventListener("click",     () => { onEnterPage2(); setStep(3); });
-    document.getElementById("next4")?.addEventListener("click",     () => {
+    // Page 4 (Colors)
+    function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
-      setStep(5);
-      doGenerate(); // fire-and-forget: runs while user fills Visuals
-    });
+      strategizeContent(); // fire-and-forget
+    }
+    document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
+    document.getElementById("next4")?.addEventListener("click", () => { page4Action(); setStep(5); });
+    document.getElementById("dbgSubmit4")?.addEventListener("click", page4Action);
 
-    // Page 5 (Visuals) — Back returns to Colors; Preview injects visuals and opens editor
+    // Page 5 (Visuals)
     document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(4));
     document.getElementById("next2_bottom")?.addEventListener("click", doPreview);
+    document.getElementById("dbgSubmit5")?.addEventListener("click", doPreview);
     // Artifact rows — wire add button
     document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
 
