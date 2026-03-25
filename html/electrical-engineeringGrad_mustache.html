@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Job‑ready portfolio for an electrical engineering student graduating next spring: projects, skills, resume, and contact." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title>{{name}} Electrical Engineering Portfolio</title>
+  <style>
+    :root{
+      --bg:#0f172a;
+      --panel:#0b1220;
+      --muted:#94a3b8;
+      --text:#e5e7eb;
+      --accent:#2563eb;
+      --accent-2:#22c55e;
+      --chip:#1f2937;
+      --ring: 0 0 0 3px rgba(37,99,235,.35);
+      --radius:18px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1329 55%, #0a0f1f);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:28px}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:rgba(10,15,31,.6);border-bottom:1px solid rgba(148,163,184,.15);z-index:10}
+    nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);box-shadow:0 6px 18px rgba(37,99,235,.45)}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
+    .links a{margin-left:18px;font-weight:600;color:#cbd5e1}
+    .links a:hover{color:#fff}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:0 8px 20px rgba(37,99,235,.35);cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
+    .btn.secondary{background:transparent;border:1px solid rgba(148,163,184,.35);color:#e2e8f0}
+    .section{padding:64px 0}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
+    .badge{display:inline-flex;align-items:center;gap:10px;background:rgba(34,197,94,.12);color:#bbf7d0;border:1px solid rgba(34,197,94,.35);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
+    h2{font-size:34px;margin:12px 0 6px}
+    p.lead{color:#cbd5e1;font-size:18px;line-height:1.65}
+    .hero-card{background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(2,6,23,.9));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .hero-photo {
+        display: block;
+        margin: 24px auto 12px;
+        max-width: 80px;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+      }
+      .ee-class {
+        color: #1ea472;
+        margin-top: 0;
+      }
+    .grid{display:grid;gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .card{background:linear-gradient(180deg, #0a1222, #070c17);border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card h3{margin-top:2px;margin-bottom:6px}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid rgba(148,163,184,.2);color:#cbd5e1;padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
+    .mono{font-family:"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;color:#a5b4fc}
+    .timeline{position:relative;margin-top:6px}
+    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:rgba(148,163,184,.25)}
+    .t-item{position:relative;margin-left:36px;padding:12px 0}
+    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:#38bdf8;border:2px solid #0b1220;border-radius:50%;box-shadow:0 0 0 3px rgba(56,189,248,.28)}
+    .resume{display:flex;gap:12px;flex-wrap:wrap}
+    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%, #0b1329 0%, #0a0f1f 60%);border-radius:12px;border:1px dashed rgba(148,163,184,.3);display:flex;align-items:center;justify-content:center;color:#93c5fd;font-weight:700}
+    footer{border-top:1px solid rgba(148,163,184,.17);padding:38px 0;color:#94a3b8}
+    @media (max-width: 960px){ .hero{grid-template-columns:1fr} .grid.cols-3{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">
+          <img
+            src="../assets/images/stockphoto_youngman.png"
+            alt="{{name}} — Electrical Engineering"
+            class="hero-photo"
+          />
+          <h1>{{name}}</h1>
+        </div>
+        <div class="links">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+          <a class="btn secondary" href="#resume">Resume</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="section">
+      <div class="container hero">
+        <div>
+          <span class="badge">{{major}} — Class of {{current_year}}</span>
+          <h2>{{headline}}</h2>
+          <p class="lead">I'm <strong>{{name}}</strong>, {{subheadline}} {{value_proposition}}</p>
+          <div class="resume" style="margin-top:14px">
+            <a class="btn" href="#contact">Hire Me</a>
+            <a class="btn secondary" href="#projects">See Projects</a>
+          </div>
+          <p style="margin-top:10px;color:var(--muted)">{{about}}</p>
+        </div>
+        <div class="hero-card" aria-label="At‑a‑glance">
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+            {{#skill_groups}}
+            <div class="card">
+              <div class="mono">{{group_name}}</div>
+              {{#skills}}<div class="chip">{{.}}</div>{{/skills}}
+            </div>
+            {{/skill_groups}}
+            <div class="card">
+              <div class="mono">Highlights</div>
+              <ul style="margin:.3rem 0 0 .5rem;line-height:1.4;font-size:14px;padding-left:0">
+                {{#experience}}
+                <li>{{description}}</li>
+                {{/experience}}
+              </ul>
+            </div>
+            <div class="card">
+              <div class="mono">Links</div>
+              <p style="margin:.3rem 0 0">
+                {{#has_linkedin}}<a href="{{linkedin}}" target="_blank" rel="noopener">LinkedIn</a>{{/has_linkedin}}
+                {{#has_github}} · <a href="{{github}}" target="_blank" rel="noopener">GitHub</a>{{/has_github}}
+                {{#has_website}} · <a href="{{website}}" target="_blank" rel="noopener">Website</a>{{/has_website}}
+                · <a href="#resume">Resume (PDF)</a>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section" aria-labelledby="projects-h">
+      <div class="container">
+        <h2 id="projects-h">Selected Projects</h2>
+        <div class="grid cols-3">
+          {{#projects}}
+          <article class="card" aria-label="{{name}}">
+            <div class="project-media" style="padding:0;overflow:hidden;"><img src="{{demo_link}}" alt="{{name}}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>
+            <h3>{{name}}</h3>
+            <p>{{description}}</p>
+            {{#technologies}}<div class="chip">{{.}}</div>{{/technologies}}
+          </article>
+          {{/projects}}
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section" aria-labelledby="skills-h">
+      <div class="container">
+        <h2 id="skills-h">Skills</h2>
+        <div class="card">
+          <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+            {{#skill_groups}}
+            <div>
+              <h3>{{group_name}}</h3>
+              <ul>
+                {{#skills}}<li>{{.}}</li>{{/skills}}
+              </ul>
+            </div>
+            {{/skill_groups}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE / TIMELINE -->
+    <section id="experience" class="section" aria-labelledby="exp-h">
+      <div class="container">
+        <h2 id="exp-h">Experience</h2>
+        <div class="card timeline">
+          {{#experience}}
+          <div class="t-item">
+            <h3>{{title}} — {{company}}</h3>
+            <p class="mono">{{start_date}}–{{end_date}} · {{location}}</p>
+            <ul>
+              {{#bullets}}<li>{{.}}</li>{{/bullets}}
+            </ul>
+          </div>
+          {{/experience}}
+        </div>
+      </div>
+    </section>
+
+    <!-- RESUME CTA -->
+    <section id="resume" class="section" aria-labelledby="resume-h">
+      <div class="container">
+        <h2 id="resume-h">Resume</h2>
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <p>Download a one‑page PDF with coursework, projects, and experience. <span class="mono">GPA, graduation: {{current_year}}.</span></p>
+          <a class="btn" href="#" download>Download PDF</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section" aria-labelledby="contact-h">
+      <div class="container">
+        <h2 id="contact-h">Contact</h2>
+        <div class="card">
+          <form style="display:grid;gap:12px;grid-template-columns:1fr 1fr" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply shortly.');">
+            <label style="grid-column:span 1">Name
+              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb" />
+            </label>
+            <label style="grid-column:span 1">Email
+              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb" />
+            </label>
+            <label style="grid-column:1 / -1">Message
+              <textarea required rows="4" placeholder="Hi — we'd love to chat about our Embedded New‑Grad role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb"></textarea>
+            </label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn" type="submit">Send</button>
+              <a class="btn secondary" href="mailto:{{email}}">Email Me</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    {{#certifications}}
+    <section id="certifications" class="section" aria-labelledby="cert-h">
+      <div class="container">
+        <h2 id="cert-h">Certifications</h2>
+        <div class="card timeline">
+          {{#certifications}}
+          <div class="t-item">
+            <h3>{{name}}</h3>
+            <p class="mono">{{issuer}} · {{date}}</p>
+          </div>
+          {{/certifications}}
+        </div>
+      </div>
+    </section>
+    {{/certifications}}
+
+    {{#publications}}
+    <section id="publications" class="section" aria-labelledby="pub-h">
+      <div class="container">
+        <h2 id="pub-h">Publications</h2>
+        <div class="card timeline">
+          {{#publications}}
+          <div class="t-item">
+            <h3><a href="{{link}}" target="_blank" rel="noopener">{{title}}</a></h3>
+            <p class="mono">{{venue}} · {{date}}</p>
+          </div>
+          {{/publications}}
+        </div>
+      </div>
+    </section>
+    {{/publications}}
+
+    {{#leadership}}
+    <section id="leadership" class="section" aria-labelledby="lead-h">
+      <div class="container">
+        <h2 id="lead-h">Leadership &amp; Volunteer</h2>
+        <div class="card timeline">
+          {{#leadership}}
+          <div class="t-item">
+            <h3>{{role}} — {{organization}}</h3>
+            <p class="mono">{{dates}}</p>
+            <p>{{description}}</p>
+          </div>
+          {{/leadership}}
+        </div>
+      </div>
+    </section>
+    {{/leadership}}
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span>© <span id="year"></span> {{name}}. All rights reserved.</span>
+        <span style="color:#a3e635">Ready for interviews · Available for relocation</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

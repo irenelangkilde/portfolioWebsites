@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{name}} — Portfolio</title>
+  <meta name="description" content="Portfolio website for {{name}}: projects, skills, resume, and contact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.10);
+      --text: rgba(255,255,255,.92);
+      --muted: rgba(255,255,255,.70);
+      --brand: #4E70F1;      /* blue */
+      --accent: #F28B86;     /* coral */
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 650px at 10% 10%, rgba(78,112,241,.30), transparent 55%),
+        radial-gradient(900px 650px at 90% 20%, rgba(242,139,134,.22), transparent 55%),
+        linear-gradient(180deg, var(--bg), #090a12);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a{color:inherit; text-decoration:none}
+    img{max-width:100%; display:block}
+
+    /* Header */
+    header{
+      position: sticky;
+      top:0;
+      z-index:50;
+      backdrop-filter: blur(10px);
+      background: rgba(11,16,32,.62);
+      border-bottom: 1px solid var(--stroke);
+    }
+    .nav{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-weight: 700;
+      letter-spacing:.02em;
+      font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+    }
+    .mark{
+      width:34px; height:34px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255,255,255,.60), transparent 55%),
+        linear-gradient(135deg, var(--brand), rgba(242,139,134,.95));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 16px 40px rgba(78,112,241,.18);
+    }
+    nav ul{
+      list-style:none; margin:0; padding:0;
+      display:flex; gap:20px; align-items:center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav a:hover{color: var(--text)}
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform .15s ease, opacity .15s ease, box-shadow .15s ease;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); opacity:.98}
+    .btn.primary{
+      border: none;
+      background: linear-gradient(135deg, var(--brand), rgba(78,112,241,.65));
+      box-shadow: 0 18px 50px rgba(78,112,241,.20);
+    }
+
+    /* Layout helpers */
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    main{flex:1}
+    .container{max-width: var(--max); margin:0 auto; padding: 0 20px}
+    .section{padding: 56px 0}
+    .section h2{
+      margin: 0 0 10px;
+      font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+      letter-spacing: -.01em;
+      font-size: 28px;
+    }
+    .hint{margin:0; color: var(--muted); max-width: 70ch}
+
+    /* Hero */
+    .hero{
+      padding: 34px 0 20px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 28px;
+      align-items:center;
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(135deg, var(--brand), var(--accent));
+      box-shadow: 0 14px 32px rgba(242,139,134,.18);
+    }
+    h1{
+      margin: 14px 0 10px;
+      font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+      font-size: 54px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .subhead{
+      margin: 0 0 18px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 60ch;
+    }
+    .cta-row{display:flex; gap:12px; flex-wrap:wrap; margin-top: 14px}
+    .micro{
+      margin-top: 14px;
+      display:flex; gap:10px; flex-wrap:wrap;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .pill{
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+    }
+
+    /* Hero image card */
+    .hero-card{
+      position:relative;
+      border-radius: 34px;
+      overflow:hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.04);
+      box-shadow: var(--shadow);
+    }
+    .hero-card::before{
+      content:"";
+      position:absolute; inset:-40%;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(78,112,241,.25), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(242,139,134,.18), transparent 48%),
+        radial-gradient(circle at 50% 20%, rgba(255,255,255,.10), transparent 40%);
+      filter: blur(1px);
+      opacity: .9;
+      pointer-events:none;
+    }
+    .hero-card img{
+      position: relative;
+      width:100%;
+      height:auto;
+      display:block;
+    }
+    .hero-card .caption{
+      position:absolute;
+      left: 14px;
+      right: 14px;
+      bottom: 14px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(11,16,32,.55);
+      backdrop-filter: blur(10px);
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+    }
+
+    /* Cards & grids */
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 18px;
+    }
+    .card{
+      grid-column: span 4;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 18px;
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
+    }
+    .card h3{
+      margin: 0 0 8px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+      font-family: "Space Grotesk", Inter, system-ui, sans-serif;
+    }
+    .card p{margin:0; color: var(--muted); font-size: 14px}
+    .meta{
+      margin-top: 10px;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      color: rgba(255,255,255,.80);
+      font-size: 12px;
+    }
+    .tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+    }
+    .span-6{grid-column: span 6}
+    .span-12{grid-column: span 12}
+
+    /* Skills list */
+    .skills{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 12px;
+    }
+    .skill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.04);
+      color: rgba(255,255,255,.86);
+      font-size: 13px;
+    }
+
+    /* Contact */
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 18px;
+      align-items: stretch;
+    }
+    .contact-card{
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255,255,255,.12);
+      background:
+        radial-gradient(900px 600px at 20% 20%, rgba(78,112,241,.22), transparent 55%),
+        radial-gradient(700px 500px at 80% 40%, rgba(242,139,134,.18), transparent 55%),
+        rgba(255,255,255,.05);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .contact-card h3{margin:0 0 8px; font-family:"Space Grotesk", Inter, sans-serif}
+    .contact-card p{margin:0 0 12px; color: var(--muted); font-size: 14px}
+    .contact-card a{ text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+    form{
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 18px;
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
+      display:grid;
+      gap: 12px;
+    }
+    label{
+      display:block;
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, textarea{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 14px;
+      outline:none;
+    }
+    textarea{min-height: 110px; resize: vertical}
+    input:focus, textarea:focus{
+      border-color: rgba(78,112,241,.55);
+      background: rgba(255,255,255,.08);
+    }
+
+    footer{
+      border-top: 1px solid rgba(255,255,255,.10);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .foot a:hover{color: var(--text)}
+
+    /* Responsive */
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns: 1fr}
+      h1{font-size: 44px}
+      .card{grid-column: span 12}
+      .span-6{grid-column: span 12}
+      .contact{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size: 38px}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="nav">
+        <div class="brand">
+          <div class="mark" aria-hidden="true"></div>
+          <span>{{name}}</span>
+        </div>
+
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#resume">Resume</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div style="display:flex; gap:10px; align-items:center;">
+          <a class="btn" href="#projects">View Work</a>
+          <a class="btn primary" href="#contact">Hire / Connect</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <div>
+              <span class="kicker"><span class="dot" aria-hidden="true"></span> {{major}} • Graduating {{current_year}}</span>
+              <h1>{{headline}}</h1>
+              <p class="subhead">{{subheadline}}</p>
+
+              <div class="cta-row">
+                <a class="btn primary" href="#projects">Explore Projects</a>
+                <a class="btn" href="#resume">Download Resume</a>
+              </div>
+
+              <div class="micro" aria-label="Highlights">
+                {{#skill_groups}}
+                <span class="pill">{{group_name}}: {{#skills}}{{.}} {{/skills}}</span>
+                {{/skill_groups}}
+              </div>
+            </div>
+
+            <aside class="hero-card" aria-label="Hero image">
+              <img src="../assets/images/data-science-b-hero.png" alt="Data science portfolio hero illustration" />
+              <div class="caption">
+                {{value_proposition}}
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="section" id="projects">
+        <div class="container">
+          <h2>Featured Projects</h2>
+          <p class="hint">{{about}}</p>
+
+          <div class="grid">
+            {{#projects}}
+            <article class="card">
+              <h3>{{name}}</h3>
+              <p>{{description}}</p>
+              <div class="meta">
+                {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+              </div>
+              {{#bullets}}
+              <p style="margin-top:10px; color:rgba(255,255,255,.86); font-size:13px;">{{.}}</p>
+              {{/bullets}}
+            </article>
+            {{/projects}}
+          </div>
+        </div>
+      </section>
+
+      <!-- SKILLS -->
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>Skills</h2>
+          <p class="hint">Keep this aligned with the roles you're applying for. Be specific about tools and methods.</p>
+
+          <div class="grid">
+            <div class="card span-12">
+              <div class="skills" aria-label="Skill chips">
+                {{#skill_groups}}
+                {{#skills}}<span class="skill">{{.}}</span>{{/skills}}
+                {{/skill_groups}}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ABOUT / EDUCATION -->
+      <section class="section" id="resume">
+        <div class="container">
+          <h2>Resume Snapshot</h2>
+          <p class="hint">Add your school, graduation date, and 2–3 bullet highlights per role. Link your resume PDF here.</p>
+
+          <div class="grid">
+            {{#education}}
+            <div class="card span-6">
+              <h3>Education</h3>
+              <p><strong>{{degree}} {{major}}</strong> — {{institution}}</p>
+              <p style="margin-top:8px;">Graduating: {{graduation_date}}{{#gpa}} • GPA: {{gpa}}{{/gpa}}</p>
+              {{#activities}}
+              <p style="margin-top:10px;">{{.}}</p>
+              {{/activities}}
+            </div>
+            {{/education}}
+
+            {{#experience}}
+            <div class="card span-6">
+              <h3>Experience</h3>
+              <p><strong>{{title}}</strong> — {{company}} ({{start_date}}–{{end_date}})</p>
+              <p style="margin-top:10px;">{{description}}</p>
+              <div class="meta">
+                {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+              </div>
+            </div>
+            {{/experience}}
+
+            <div class="card span-12">
+              <h3>Resume &amp; Links</h3>
+              <p>
+                <a class="btn primary" href="#" onclick="alert('Replace this link with your resume PDF URL.'); return false;">Download Resume (PDF)</a>
+                {{#has_github}}<a class="btn" href="{{github}}">GitHub</a>{{/has_github}}
+                {{#has_linkedin}}<a class="btn" href="{{linkedin}}">LinkedIn</a>{{/has_linkedin}}
+                {{#has_website}}<a class="btn" href="{{website}}">Website</a>{{/has_website}}
+              </p>
+              <p style="margin-top:10px; color: var(--muted); font-size: 13px;">
+                Tip: Host your PDF on Google Drive, Dropbox, or your site's /assets folder and link it here.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>Contact</h2>
+          <p class="hint">Simple and professional. Add your real email, location, and preferred roles.</p>
+
+          <div class="contact">
+            <div class="contact-card">
+              <h3>Let's connect</h3>
+              <p>{{value_proposition}}</p>
+              <p style="margin:0;">
+                <strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a><br/>
+                <strong>Location:</strong> {{location}}<br/>
+                {{#has_linkedin}}<strong>LinkedIn:</strong> <a href="{{linkedin}}">{{linkedin}}</a><br/>{{/has_linkedin}}
+                {{#has_phone}}<strong>Phone:</strong> <a href="tel:{{phone}}">{{phone}}</a><br/>{{/has_phone}}
+              </p>
+            </div>
+
+            <form action="#" method="post">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Your name" />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Tell me about the role, team, and what success looks like."></textarea>
+              </div>
+              <button class="btn primary" type="submit">Send Message</button>
+              <p style="margin:0; color: var(--muted); font-size: 12px;">
+                Note: This demo form doesn't send anywhere until you connect it to a backend or form service.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      {{#certifications}}
+      <section class="section" id="certifications">
+        <div class="container">
+          <h2>Certifications</h2>
+          <div class="grid">
+            {{#certifications}}
+            <div class="card">
+              <h3>{{name}}</h3>
+              <p>{{issuer}}</p>
+              <div class="meta"><span class="tag">{{date}}</span></div>
+            </div>
+            {{/certifications}}
+          </div>
+        </div>
+      </section>
+      {{/certifications}}
+
+      {{#publications}}
+      <section class="section" id="publications">
+        <div class="container">
+          <h2>Publications</h2>
+          <div class="grid">
+            {{#publications}}
+            <div class="card span-6">
+              <h3>{{title}}</h3>
+              <p>{{venue}}</p>
+              <div class="meta"><span class="tag">{{date}}</span></div>
+              {{#link}}<p style="margin-top:10px;"><a href="{{link}}" style="text-decoration:underline; text-underline-offset:3px;">View Publication</a></p>{{/link}}
+            </div>
+            {{/publications}}
+          </div>
+        </div>
+      </section>
+      {{/publications}}
+
+      {{#leadership}}
+      <section class="section" id="leadership">
+        <div class="container">
+          <h2>Leadership &amp; Volunteer</h2>
+          <div class="grid">
+            {{#leadership}}
+            <div class="card span-6">
+              <h3>{{role}}</h3>
+              <p><strong>{{organization}}</strong> • {{dates}}</p>
+              <p style="margin-top:10px;">{{description}}</p>
+            </div>
+            {{/leadership}}
+          </div>
+        </div>
+      </section>
+      {{/leadership}}
+
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="foot">
+          <span>© {{current_year}} {{name}} • Portfolio</span>
+          <span style="display:flex; gap:14px;">
+            <a href="#projects">Projects</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
