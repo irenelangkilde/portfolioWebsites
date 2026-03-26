@@ -26,6 +26,11 @@
     let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
     let jobAnalysisInProgress = false;
 
+
+    // Job Ad Extraction (triggered on page 2 Next, parallel with resume analysis wait)
+    let jobAdResult      = null;   // {job_ad: {...}} when done
+    let jobAdInProgress  = false;
+
     // Bridge Profile & Design (triggered on Colors Next)
     let bridgeResult      = null;   // {bridge_json, model} when done
     let bridgeInProgress  = false;
@@ -752,11 +757,12 @@
           use_emoji_icons:    document.getElementById("useEmojiIcons")?.value      === "yes",
           alternate_sections: document.getElementById("alternateSections")?.value  !== "no"
         };
+        key = "design_options_" + JSON.stringify(jsonSpec);
+        if (key === lastExtractedTemplate) return;
         const p1 = getPage1();
         requestBody.templateJsonStr = JSON.stringify(jsonSpec, null, 2);
         requestBody.major           = p1.major;
         requestBody.specialization  = p1.specialization;
-        key = "design_options_" + JSON.stringify(jsonSpec);
       } else if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val || looksLikeUrl(val)) return;
@@ -1366,26 +1372,57 @@
     }
 
     // ----------------------------
-    // Job analysis — triggered on page 2 (Job) Next
-    // Runs stages 1-2 (resume extraction + content strategy) in background
-    // while user fills Design and Colors.
+    // Job ad extraction — fires on page 2 Next, parallel with resume analysis wait
     // ----------------------------
-    async function doAnalyzeJob() {
-      if (!resumeUpload.files[0]) return; // nothing to do without a resume
-      const p4check = getPage4Job();
-      if (!p4check.desired_role && !p4check.job_ad.trim()) return; // nothing to analyze without job fields
+    async function doExtractJobAd() {
+      const p4 = getPage4Job();
+      const rawText = [p4.desired_role, p4.job_ad].filter(Boolean).join("\n\n").trim();
+      if (!rawText) return;
+
+      jobAdResult     = null;
+      jobAdInProgress = true;
+
+      const jobId = "jobad_" + crypto.randomUUID();
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "extractJobAd",
+            jobId,
+            jobAdText: rawText,
+            provider: getAnalysisProvider()
+          })
+        });
+        if (!res.ok && res.status !== 202) { jobAdInProgress = false; return; }
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 120000) {
+          await new Promise(r => setTimeout(r, 2500));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done") { jobAdResult = data; break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent */ }
+
+      jobAdInProgress = false;
+    }
+
+    // ----------------------------
+    // Stage 2: Content strategy — triggered by doAnalyzeAndExtractJobAd after both
+    // resume analysis (Stage 1) and job ad extraction are complete.
+    // ----------------------------
+    async function doUnifyResumeAndJobAnalyses() {
+      const p4 = getPage4Job();
+      if (!p4.desired_role && !p4.job_ad.trim()) return;
+      if (!lastAnalysisData) return; // resume must be pre-computed by Stage 1
+
       jobAnalysisResult     = null;
       jobAnalysisInProgress = true;
-      setHeaderStatus("jobAnalysisStatus", "Analyzing job…", "rgba(141,224,255,.75)");
+      setHeaderStatus("jobAnalysisStatus", "Building content strategy…", "rgba(141,224,255,.75)");
 
-      const resumeFile = resumeUpload.files[0];
-      const p4  = getPage4Job();
       const jobId = "job_" + crypto.randomUUID();
-
-      let resumePdfBase64 = "";
-      try { resumePdfBase64 = await readFileAsBase64(resumeFile); }
-      catch { jobAnalysisInProgress = false; return; }
-
       try {
         const res = await fetch("/.netlify/functions/buildWebsite-background", {
           method: "POST",
@@ -1393,16 +1430,16 @@
           body: JSON.stringify({
             mode: "analyzeJob",
             jobId,
-            resumePdfBase64,
-            resumeAnalysisJson: lastAnalysisData || null,
-            page3: p4
+            resumeAnalysisJson: lastAnalysisData,
+            jobAdJson: jobAdResult,
+            page3: p4,
+            provider: getAnalysisProvider()
           })
         });
         if (!res.ok && res.status !== 202) { jobAnalysisInProgress = false; return; }
 
         const startTime = Date.now();
-        const maxWaitMs = 300000; // 5 min
-        while (Date.now() - startTime < maxWaitMs) {
+        while (Date.now() - startTime < 300000) {
           await new Promise(r => setTimeout(r, 3000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const data = await pollRes.json().catch(() => ({}));
@@ -1413,20 +1450,45 @@
 
       jobAnalysisInProgress = false;
       if (jobAnalysisResult) {
-        setHeaderStatus("jobAnalysisStatus", "✓ Job analyzed", "rgba(118,176,34,.9)");
+        setHeaderStatus("jobAnalysisStatus", "✓ Content strategy ready", "rgba(118,176,34,.9)");
       } else {
-        setHeaderStatus("jobAnalysisStatus", "Job analysis unavailable — will retry on generate", "rgba(251,171,156,.8)");
+        setHeaderStatus("jobAnalysisStatus", "Content strategy unavailable — will retry on generate", "rgba(251,171,156,.8)");
       }
     }
 
     // ----------------------------
-    // Bridge Profile & Design — triggered on page 4 (Colors) Next
-    // Runs bridgeProfileAndDesign.md with the extracted template HTML
+    // Orchestrator — triggered on page 2 (Job) Next
+    // Fires job ad extraction in parallel, blocks until resume analysis is done, then unifies.
     // ----------------------------
-    async function doBridgeProfileAndDesign() {
+    async function doAnalyzeAndExtractJobAd() {
+      doExtractJobAd(); // fire-and-forget — runs in parallel
+
+      // Block until Stage 1 (resume analysis) is finished
+      while (resumeAnalysisPending) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      // Block until job ad extraction is finished
+      while (jobAdInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      await doUnifyResumeAndJobAnalyses();
+    }
+
+    // ----------------------------
+    // Bridge Content & Design — triggered on page 4 (Colors) Next
+    // Waits for Stage 2 (content strategy) if still in flight, then runs bridgeContentAndDesign.md
+    // ----------------------------
+    async function doBridgeContentAndDesign() {
       bridgeResult     = null;
       bridgeInProgress = true;
       setHeaderStatus("bridgeStatus", "Planning design…", "rgba(141,224,255,.75)");
+
+      // Block until Stage 2 (content strategy) is finished
+      while (jobAnalysisInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
 
       const jobId = "bridge_" + crypto.randomUUID();
 
@@ -1435,10 +1497,12 @@
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            mode: "bridgeProfileAndDesign",
+            mode: "bridgeContentAndDesign",
             jobId,
             templateHtml: extractedTemplateCache?.templateHtml || null,
-            provider: getAnalysisProvider()
+            contentJson:  jobAnalysisResult?.strategy_json || null,
+            colorSpec:    getPage3Colors().theme,
+            provider:     getAnalysisProvider()
           })
         });
         if (!res.ok && res.status !== 202) { bridgeInProgress = false; return; }
@@ -1555,6 +1619,7 @@
             templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
             templateHtml:         extractedTemplateCache?.templateHtml || null,
             strategyJson:         jobAnalysisResult?.strategy_json || null,
+            bridgeJson:           bridgeResult?.bridge_json || null,
             provider:             getAnalysisProvider()
           })
         });
@@ -1738,6 +1803,7 @@
 
     document.getElementById("next1")?.addEventListener("click", () => {
       if (!page1Action()) return;
+      if (resumeUpload.files?.[0]) analyzeResumeInBackground(resumeUpload.files[0]);
       setStep(2);
     });
     document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
@@ -1918,7 +1984,7 @@
     document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
 
     // Page 2 (Job)
-    function page2Action() { onEnterPage2(); doAnalyzeJob(); }
+    function page2Action() { onEnterPage2(); doAnalyzeAndExtractJobAd(); }
     document.getElementById("back5")?.addEventListener("click", () => setStep(1));
     document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
     document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
@@ -1930,7 +1996,7 @@
     // Page 4 (Colors)
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
-      doBridgeProfileAndDesign(); // fire-and-forget
+      doBridgeContentAndDesign(); // fire-and-forget
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
     document.getElementById("next4")?.addEventListener("click", () => { page4Action(); setStep(5); });

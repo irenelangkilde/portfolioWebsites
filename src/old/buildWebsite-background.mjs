@@ -516,18 +516,19 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
   }
 }
 
-// ─── Job analysis pipeline (stages 1-2 only) ─────────────────────────────────
-// Runs resume extraction and content strategy while the user fills Design/Colors.
+// ─── Unify resume + job analyses (stage 2 only) ──────────────────────────────
+// Receives pre-extracted resume JSON and structured job ad, runs content strategy.
 // Result is stored in the blob and consumed by the full pipeline to skip Stage 2.
-async function runJobAnalysisPipeline(provider, creds, store, jobId, {
-  page3, pdfBuffer, resumeAnalysisJson
+async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
+  page3, pdfBuffer, resumeAnalysisJson, jobAdJson = null
 }) {
-  const jobAnalysis = {
+  // Use pre-extracted structured job ad if available, otherwise fall back to raw text
+  const jobAnalysis = jobAdJson?.job_ad ?? {
     desired_role: page3?.desired_role || "",
     job_ad:       page3?.job_ad       || ""
   };
 
-  // Stage 1 (optional): Extract resume PDF → JSON
+  // Stage 1 (optional): Extract resume PDF → JSON — skipped when resumeAnalysisJson is pre-computed
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
     await store.set(jobId, JSON.stringify({
@@ -570,7 +571,8 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
   sampleHtml, theme, headshotName,
   resumeAnalysisJson, templateAnalysisJson, templateHtml,
   artifactsData = [],
-  strategyJson = null   // pre-computed by runJobAnalysisPipeline — skips Stage 2
+  strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
+  bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
 }) {
   const jobAnalysis = {
     desired_role: page3?.desired_role || "",
@@ -650,12 +652,11 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     ...(page1.use_emoji_icons    !== undefined && { use_emoji_icons:   page1.use_emoji_icons }),
     ...(page1.alternate_sections !== undefined && { alternate_sections: page1.alternate_sections }),
   };
-  const blendResult = buildVisualDirection(
-    resumeForStrategy.motifs ?? {},
-    designSpec,
-    colorSpec,
-    userArtifacts
-  );
+  // If a pre-computed bridge_json was supplied by the bridgeContentAndDesign stage, use its
+  // visual_direction directly and skip the code-level buildVisualDirection() call.
+  const blendResult = (bridgeJson?.visual_direction)
+    ? { visual_direction: bridgeJson.visual_direction }
+    : buildVisualDirection(resumeForStrategy.motifs ?? {}, designSpec, colorSpec, userArtifacts);
 
   // ── Stage 3.5: Merge template visual elements into artifact list ─────────────
   await store.set(jobId, JSON.stringify({
@@ -798,8 +799,9 @@ export async function handler(event) {
       artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
       resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null,
-      mode = "full",          // "full" | "analyzeJob"
+      mode = "full",          // "full" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
       strategyJson = null,    // pre-computed strategy from analyzeJob mode
+      bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
       provider = "claude"     // "claude" (default) | "openai"
     } = body;
 
@@ -808,7 +810,7 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-    } else if (mode !== "bridgeProfileAndDesign") {
+    } else if (mode !== "bridgeContentAndDesign" && mode !== "extractJobAd") {
       if (!resumePdfBase64) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
         return { statusCode: 202 };
@@ -833,23 +835,42 @@ export async function handler(event) {
       creds = { claudeKey };
     }
 
-    // bridgeProfileAndDesign mode: run bridgeProfileAndDesign.md with template HTML
-    if (mode === "bridgeProfileAndDesign") {
+    // extractJobAd mode: extract structured job ad info from raw posting text
+    if (mode === "extractJobAd") {
+      const rawJobAd = body.jobAdText || "";
+      if (!rawJobAd.trim()) {
+        await store.set(jobId, JSON.stringify({ status: "done", job_ad: null }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+      const prompt = loadPromptFile("extractJobAdInfo.md").replace("{{JOB_AD}}", rawJobAd);
+      const r = await callAI(provider, creds, { userText: prompt, maxTokens: 3000 });
+      let job_ad = null;
+      try { job_ad = parseJsonResponse(r.text); } catch {}
+      await store.set(jobId, JSON.stringify({ status: "done", ...(job_ad || {}), model: r.model }), { ttl: 3600 });
+      return { statusCode: 202 };
+    }
+
+    // bridgeContentAndDesign mode: merge profile + design → visual_direction + page_concept
+    if (mode === "bridgeContentAndDesign") {
       const templateHtmlInput = body.templateHtml || "";
-      const bridgePrompt = loadPromptFile("bridgeProfileAndDesign.md")
+      const contentJson       = body.contentJson  || body.strategyJson || null;
+      const colorSpec         = body.colorSpec    || {};
+      const bridgePrompt = loadPromptFile("bridgeContentAndDesign.md")
+        .replace("{{CONTENT_JSON}}",   JSON.stringify(contentJson, null, 2))
+        .replace("{{COLOR_SPEC_JSON}}", JSON.stringify(colorSpec, null, 2))
         .replace("{{EXAMPLE_WEBSITE}}", templateHtmlInput);
-      const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 4000 });
+      const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 6000 });
       let bridge_json = null;
       try { bridge_json = parseJsonResponse(r.text); } catch {}
       await store.set(jobId, JSON.stringify({ status: "done", bridge_json, model: r.model }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
-    // analyzeJob mode: run stages 1-2 only (resume extraction + content strategy)
+    // analyzeJob mode: stage 2 (content strategy using pre-computed resume + job ad JSONs)
     if (mode === "analyzeJob") {
       const pdfBuf = resumePdfBase64 ? Buffer.from(resumePdfBase64, "base64") : null;
-      await runJobAnalysisPipeline(provider, creds, store, jobId, {
-        page3, pdfBuffer: pdfBuf, resumeAnalysisJson
+      await unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
+        page3, pdfBuffer: pdfBuf, resumeAnalysisJson, jobAdJson: body.jobAdJson || null
       });
       return { statusCode: 202 };
     }
@@ -870,7 +891,8 @@ export async function handler(event) {
       sampleHtml, theme, headshotName,
       resumeAnalysisJson, templateAnalysisJson, templateHtml,
       artifactsData,
-      strategyJson
+      strategyJson,
+      bridgeJson
     });
   } catch (err) {
     const msg = err?.message || "Unknown error";

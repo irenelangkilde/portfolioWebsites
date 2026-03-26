@@ -5,7 +5,7 @@ Your task is to read the input resume and produce a structured brief that will f
 IMPORTANT RULES
 - Surmise only facts supported by the provided inputs.
 - Do not invent employers, projects, dates, metrics, awards, publications, certifications, links, or credentials.
-- You may rewrite, summarize, and augument to improve clarity, impact, and flow.
+- You may rewrite, summarize, and augment to improve clarity, impact, and flow.
 
 OUTPUT FORMAT
 Return valid JSON only.
@@ -13,7 +13,7 @@ No markdown.
 No explanation.
 No comments.
 
-OUTPUT JSON SHAPE (TWO STRUCTURES)
+OUTPUT JSON SHAPE
 
 {
   "identity": {
@@ -29,33 +29,91 @@ OUTPUT JSON SHAPE (TWO STRUCTURES)
   },
   "factual_profile": {
     "about": "",
-    "education": [],
-    "experience": [],
-    "projects": [],
+    "education": [
+      {
+        "institution": "",
+        "degree": "",
+        "major": "",
+        "minor": "",
+        "graduation_date": "",
+        "gpa": "",
+        "honors": "",
+        "relevant_coursework": [],
+        "thesis": "",
+        "activities": []
+      }
+    ],
+    "experience": [
+      {
+        "company": "",
+        "title": "",
+        "start_date": "",
+        "end_date": "",
+        "location": "",
+        "bullets": [],
+        "technologies": []
+      }
+    ],
+    "projects": [
+      {
+        "name": "",
+        "description": "",
+        "role": "",
+        "dates": "",
+        "technologies": [],
+        "links": { "github": "", "demo": "", "other": "" },
+        "bullets": []
+      }
+    ],
     "skills": {
-      "languages": [],
+      "technical": [],
+      "programming_languages": [],
       "tools": [],
       "domains": [],
+      "soft_skills": [],
       "other": []
     },
-    "publications": [],
-    "leadership": [],
-    "career break": [],
-    "featured": [],
-    "licenses": [],
-    "certifications": [],
-    "projects": [],
+    "publications": [
+      { "title": "", "venue": "", "date": "", "authors": [], "link": "" }
+    ],
+    "certifications": [
+      { "name": "", "issuer": "", "date": "", "credential_id": "" }
+    ],
+    "licenses": [
+      { "name": "", "issuer": "", "date": "" }
+    ],
+    "patents": [
+      { "title": "", "date": "", "co_inventors": [], "number": "" }
+    ],
+    "honors_and_awards": [
+      { "title": "", "issuer": "", "date": "", "description": "" }
+    ],
+    "leadership": [
+      { "organization": "", "role": "", "dates": "", "description": "" }
+    ],
+    "volunteer_experience": [
+      { "organization": "", "role": "", "dates": "", "description": "" }
+    ],
+    "organizations": [
+      { "name": "", "role": "", "dates": "" }
+    ],
+    "career break": [
+      "start_date": "",
+      "end_date": "",
+      "bullets": [],
+    ]
     "courses": [],
-    "recommendations": [],
-    "volunteer experience": [],
-    "publications": [],
-    "patents": [],
-    "honors and awards": [],
-    "test scores": [],
-    "languages": [],
-    "organizations": [],
+    "test_scores": [
+      { "name": "", "score": "", "date": "" }
+    ],
+    "languages": [
+      { "language": "", "proficiency": "" }
+    ],
+    "recommendations": [
+      { "from": "", "relationship": "", "excerpt": "" }
+    ],
     "causes": [],
-    "hobbies/interests": [],
+    "hobbies_interests": [],
     "additional_background": []
   },
   "motifs": {
@@ -101,24 +159,21 @@ OUTPUT JSON SHAPE (TWO STRUCTURES)
 GUIDELINES
 
 1. IDENTITY
-Fill in the candidate identity and contact fields from the input.  The Major and Specialization entries should be populated from the form inputs.
+Fill in the candidate identity and contact fields from the input. The Major and Specialization entries should be populated from the form inputs.
 
 2. FACTUAL PROFILE
-Extract the factual content cleanly:
-- broad primary domain: eg. life_science, physical_science, engineering, computing, business,     creative, social_science, education, health, etc.
-- education
-- work/research/teaching experience
-- projects
-- skills
-- publications
-- leadership
-- other relevant background
+Extract the factual content cleanly. Omit sections absent from the resume — never fabricate.
+- education: institution, degree, GPA, coursework, thesis, activities
+- experience: company, title, dates, location, bullet points, technologies used
+- projects: name, description, role, dates, technologies, links, bullet points
+- skills: categorized into technical, programming languages, tools, domains, soft skills
+- publications, certifications, licenses, patents if present
+- leadership, volunteer, organizations, courses, test scores, languages if present
 
-Keep this factual and non-creative.
-
+Keep this section factual and non-creative.
 
 3. MOTIFS
-  Considering the given major and specialization, determine the broad primary domain and extract the most pertinent keywords from the resume.  Using these terms and concepts, choose 2-3 core visual metaphors, as illustrated in the Example Motif Table below.  Add 2-4 symbolic objects tied to the field to make the image readable.  See examples of this in the Symbolic Objects Table below. The key rule is to choose one primary symbol and up to three supporting symbols in order to avoid clutter. The render style is most often one of stylized scientific illustration, cinematic concept art, clean editorial vector, gradient 3D illustration, technical schematic aesthetic.
+Considering the given major and specialization, determine the broad primary domain and extract the most pertinent keywords from the resume. Using these terms and concepts, choose 2-3 core visual metaphors, as illustrated in the Example Motif Table below. Add 2-4 symbolic objects tied to the field to make the image readable. See examples of this in the Symbolic Objects Table below. The key rule is to choose one primary symbol and up to three supporting symbols in order to avoid clutter. The render style is most often one of stylized scientific illustration, cinematic concept art, clean editorial vector, gradient 3D illustration, technical schematic aesthetic.
 
 Example Motif Table
 _Life science_
@@ -157,7 +212,7 @@ _Education / social science_
 
 Symbolic Objects Table
 Biology example: microscope, petri dish, leaf or plant specimen, DNA strand
-Electrical engineering: optical lens, laser beam,circuit traces, waveform display
+Electrical engineering: optical lens, laser beam, circuit traces, waveform display
 Data science: laptop, charts, node graph, scatter plot / dashboard
 
 4. EDITORIAL DIRECTION
@@ -179,7 +234,7 @@ Write several strong website-ready options for:
 
 These should be grounded in the actual input and should sound more compelling than resume text.
 
-5. SUBJECT-INSPIRED COLOR STRATEGY
+6. SUBJECT-INSPIRED COLOR STRATEGY
 Conjure five main colors inspired by the subject matter of the resume to use as a default palette in portfolio website generation later. Describe how the inferred palette is to be used emotionally and visually across the new site.
 
 Example palette assignment rules:
@@ -197,4 +252,3 @@ specialization:
 
 resume:
 {{RESUME}}
-
