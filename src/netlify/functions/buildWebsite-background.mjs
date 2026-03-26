@@ -808,7 +808,7 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-    } else {
+    } else if (mode !== "bridgeProfileAndDesign") {
       if (!resumePdfBase64) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
         return { statusCode: 202 };
@@ -831,6 +831,18 @@ export async function handler(event) {
         return { statusCode: 202 };
       }
       creds = { claudeKey };
+    }
+
+    // bridgeProfileAndDesign mode: run bridgeProfileAndDesign.md with template HTML
+    if (mode === "bridgeProfileAndDesign") {
+      const templateHtmlInput = body.templateHtml || "";
+      const bridgePrompt = loadPromptFile("bridgeProfileAndDesign.md")
+        .replace("{{EXAMPLE_WEBSITE}}", templateHtmlInput);
+      const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 4000 });
+      let bridge_json = null;
+      try { bridge_json = parseJsonResponse(r.text); } catch {}
+      await store.set(jobId, JSON.stringify({ status: "done", bridge_json, model: r.model }), { ttl: 3600 });
+      return { statusCode: 202 };
     }
 
     // analyzeJob mode: run stages 1-2 only (resume extraction + content strategy)

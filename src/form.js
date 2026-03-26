@@ -26,6 +26,10 @@
     let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
     let jobAnalysisInProgress = false;
 
+    // Bridge Profile & Design (triggered on Colors Next)
+    let bridgeResult      = null;   // {bridge_json, model} when done
+    let bridgeInProgress  = false;
+
     // ----------------------------
     // Per-field validation
     // ----------------------------
@@ -200,6 +204,8 @@
       // Show/hide debug-only rows (display:block)
       const templateModeRow = document.getElementById("templateModeRow");
       if (templateModeRow) templateModeRow.style.display = debug ? "" : "none";
+      // Show/hide consolidated stage debug section on page 5
+      document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug);
     }
 
     document.getElementById("major")?.addEventListener("input", () => {
@@ -263,6 +269,12 @@
 
       dlBtn?.addEventListener("click", () => downloadText("resume-analysis.json", str, "application/json"));
       cpBtn?.addEventListener("click", e => copyToClipboard(str, e.currentTarget));
+
+      // Stage 1 buttons on page 5 debug section
+      const dl1 = document.getElementById("dlStage1");
+      const cp1 = document.getElementById("cpStage1");
+      if (dl1) dl1.onclick = () => downloadText("resume-analysis.json", str, "application/json");
+      if (cp1) cp1.onclick = e => copyToClipboard(str, e.currentTarget);
 
       if (isDebugMode()) panel.classList.remove("hidden");
 
@@ -690,6 +702,7 @@
       dlJson?.addEventListener("click", () => downloadText("spec.json", jsonStr, "application/json"));
       cpJson?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
       dlHtml?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
+
 
       if (isDebugMode()) panel.classList.remove("hidden");
 
@@ -1407,59 +1420,88 @@
     }
 
     // ----------------------------
+    // Bridge Profile & Design — triggered on page 4 (Colors) Next
+    // Runs bridgeProfileAndDesign.md with the extracted template HTML
+    // ----------------------------
+    async function doBridgeProfileAndDesign() {
+      bridgeResult     = null;
+      bridgeInProgress = true;
+      setHeaderStatus("bridgeStatus", "Planning design…", "rgba(141,224,255,.75)");
+
+      const jobId = "bridge_" + crypto.randomUUID();
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "bridgeProfileAndDesign",
+            jobId,
+            templateHtml: extractedTemplateCache?.templateHtml || null,
+            provider: getAnalysisProvider()
+          })
+        });
+        if (!res.ok && res.status !== 202) { bridgeInProgress = false; return; }
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 300000) {
+          await new Promise(r => setTimeout(r, 3000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done") { bridgeResult = data; break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent */ }
+
+      bridgeInProgress = false;
+      if (bridgeResult) {
+        setHeaderStatus("bridgeStatus", "✓ Design plan ready", "rgba(118,176,34,.9)");
+        populateBridgeDebug(bridgeResult);
+      } else {
+        setHeaderStatus("bridgeStatus", "Design plan unavailable", "rgba(251,171,156,.8)");
+      }
+    }
+
+    function populateBridgeDebug(data) {
+      if (!data?.bridge_json) return;
+      const str = JSON.stringify(data.bridge_json, null, 2);
+      const dl = document.getElementById("dlStage4");
+      const cp = document.getElementById("cpStage4");
+      if (dl) dl.onclick = () => downloadText("bridge.json", str, "application/json");
+      if (cp) cp.onclick = e => copyToClipboard(str, e.currentTarget);
+    }
+
+    // ----------------------------
     // Populate generation debug outputs — called as soon as strategizeContent() gets a result
     // ----------------------------
     function populateGenerationDebug(data) {
       if (!isDebugMode()) return;
-      const debugSection = document.getElementById("debugSection");
-      if (debugSection) debugSection.classList.remove("hidden");
+      const stagesSection = document.getElementById("stagesDebugSection");
+      if (stagesSection) stagesSection.classList.remove("hidden");
 
       if (data.model) {
         const modelEl = document.getElementById("debugModelName");
         if (modelEl) modelEl.textContent = `Model: ${data.model}`;
       }
 
+      // Stage 2: Content Strategy
       if (data.strategy_json) {
-        const strategyStr = JSON.stringify(data.strategy_json, null, 2);
-        const strategyPre = document.getElementById("debugStrategyJsonPre");
-        if (strategyPre) strategyPre.textContent = strategyStr;
-        document.getElementById("dlStrategyJson")?.addEventListener("click", () =>
-          downloadText("strategy.json", strategyStr, "application/json"));
-        document.getElementById("cpStrategyJson")?.addEventListener("click", e =>
-          copyToClipboard(strategyStr, e.currentTarget));
-      } else {
-        const pre = document.getElementById("debugStrategyJsonPre");
-        if (pre) pre.textContent = "(not returned by this run)";
+        const str = JSON.stringify(data.strategy_json, null, 2);
+        const dl = document.getElementById("dlStage2");
+        const cp = document.getElementById("cpStage2");
+        if (dl) dl.onclick = () => downloadText("strategy.json", str, "application/json");
+        if (cp) cp.onclick = e => copyToClipboard(str, e.currentTarget);
       }
 
-      if (data.visual_direction_json) {
-        const vdStr = JSON.stringify(data.visual_direction_json, null, 2);
-        const vdPre = document.getElementById("debugVisualDirectionJsonPre");
-        if (vdPre) vdPre.textContent = vdStr;
-        document.getElementById("dlVisualDirectionJson")?.addEventListener("click", () =>
-          downloadText("visual-direction.json", vdStr, "application/json"));
-        document.getElementById("cpVisualDirectionJson")?.addEventListener("click", e =>
-          copyToClipboard(vdStr, e.currentTarget));
-      } else {
-        const pre = document.getElementById("debugVisualDirectionJsonPre");
-        if (pre) pre.textContent = "(not returned by this run)";
-      }
-
-      const resumePre = document.getElementById("debugResumeJsonPre");
+      // Stage 1: Resume Analysis
       const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
       if (resumeJsonToShow) {
-        const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
-        if (resumePre) resumePre.textContent = resumeStr;
-      } else {
-        if (resumePre) resumePre.textContent = "(not available)";
+        const str = JSON.stringify(resumeJsonToShow, null, 2);
+        const dl = document.getElementById("dlStage1");
+        const cp = document.getElementById("cpStage1");
+        if (dl) dl.onclick = () => downloadText("resume-analysis.json", str, "application/json");
+        if (cp) cp.onclick = e => copyToClipboard(str, e.currentTarget);
       }
-
-      const { site_html: _h, strategy_json: _s, visual_direction_json: _vd, resume_json: _rj, ...metaData } = data;
-      const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html, has_strategy_json: !!data.strategy_json, has_visual_direction_json: !!data.visual_direction_json }, null, 2);
-      const apiResponsePre = document.getElementById("debugApiResponsePre");
-      if (apiResponsePre) apiResponsePre.textContent = metaStr;
-      document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
-        downloadText("api-response.json", metaStr, "application/json"));
     }
 
     // ----------------------------
@@ -1632,35 +1674,21 @@
       const colorsData = getPage3Colors();
       const jobData    = getPage4Job();
 
-      const dlHtml    = document.getElementById("dlFinalHtml");
-      const dlSummary = document.getElementById("dlSummaryHtml");
-      const dlJson    = document.getElementById("dlResumeJson");
-      if (dlHtml)    dlHtml.onclick    = () => downloadText("portfolio.html", finalHtml, "text/html");
       const all = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
       const summaryHtml = buildSummaryHtml(all);
-      if (dlSummary) dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
-      if (data.resume_json && dlJson) {
-        dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
-        dlJson.classList.remove("hidden");
-      }
-      if (resumeData.specialization === "Irene's Webworks" || isDebugMode()) {
-        dlHtml?.classList.remove("hidden");
-        dlSummary?.classList.remove("hidden");
-      }
+      const dlFinalHtml = document.getElementById("dlFinalHtml");
+      const dlSummary   = document.getElementById("dlSummaryHtml");
+      if (dlFinalHtml) dlFinalHtml.onclick = () => downloadText("portfolio.html", finalHtml, "text/html");
+      if (dlSummary)   dlSummary.onclick   = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
 
-      // ── Debug panel (payload + visuals — generation outputs populated by populateGenerationDebug) ──
+      // ── Debug panel — wire payload download buttons on page 5 ──
       if (isDebugMode()) {
-        const debugSection = document.getElementById("debugSection");
-        if (debugSection) debugSection.classList.remove("hidden");
-
         const payload    = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
         const payloadStr = JSON.stringify(payload, null, 2);
-        const payloadPre = document.getElementById("debugPayloadPre");
-        if (payloadPre) payloadPre.textContent = payloadStr;
-        document.getElementById("dlDebugPayload")?.addEventListener("click", () =>
-          downloadText("payload.json", payloadStr, "application/json"));
-        document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
-          copyToClipboard(payloadStr, e.currentTarget));
+        const dlPayload  = document.getElementById("dlDebugPayload");
+        const cpPayload  = document.getElementById("cpDebugPayload");
+        if (dlPayload) dlPayload.onclick = () => downloadText("payload.json", payloadStr, "application/json");
+        if (cpPayload) cpPayload.onclick = e => copyToClipboard(payloadStr, e.currentTarget);
       }
 
       finalStatus.innerHTML = data.truncated
@@ -1902,7 +1930,7 @@
     // Page 4 (Colors)
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
-      strategizeContent(); // fire-and-forget
+      doBridgeProfileAndDesign(); // fire-and-forget
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
     document.getElementById("next4")?.addEventListener("click", () => { page4Action(); setStep(5); });

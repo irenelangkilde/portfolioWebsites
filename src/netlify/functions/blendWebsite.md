@@ -51,7 +51,21 @@ SCHEMA
         "placement_section": "",
         "presentation_notes": ""
       }
+    ],
+    "page_concepts": [
+      {
+        "layout_pattern": "split-hero, project-forward body",
+        "section_arc": ["hero", "featured_project", "experience", "skills", "contact"],
+        "visual_anchors": {
+          "hero": "right-side SVG illustration, left text",
+          "projects": "thumbnail-left cards in 2-col grid"
+        },
+        "density_rhythm": "dense hero → medium projects → compact skills → airy contact",
+        "narrative_thread": "academic foundation → applied work → industry readiness"
+      }
     ]
+  }
+
   }
 }
 
@@ -63,6 +77,7 @@ Use design_spec_json signals to define:
 - composition style and section rhythm
 - rendering style (flat, illustrated, photographic, glassmorphism, etc.)
 - domain-specific visual motifs appropriate to the candidate's field
+- for each section of each page, apply the page_concepts to merge
 
 COLOR APPLICATION
 Map color_spec_json onto the visual direction:
