@@ -1500,6 +1500,7 @@
             mode: "bridgeContentAndDesign",
             jobId,
             templateHtml: extractedTemplateCache?.templateHtml || null,
+            templateMode: extractedTemplateCache?.templateMode || "none",
             contentJson:  jobAnalysisResult?.strategy_json || null,
             colorSpec:    getPage3Colors().theme,
             provider:     getAnalysisProvider()

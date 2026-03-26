@@ -520,14 +520,8 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
 // Receives pre-extracted resume JSON and structured job ad, runs content strategy.
 // Result is stored in the blob and consumed by the full pipeline to skip Stage 2.
 async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
-  page3, pdfBuffer, resumeAnalysisJson, jobAdJson = null
+  pdfBuffer, resumeAnalysisJson, jobAdJson = null
 }) {
-  // Use pre-extracted structured job ad if available, otherwise fall back to raw text
-  const jobAnalysis = jobAdJson?.job_ad ?? {
-    desired_role: page3?.desired_role || "",
-    job_ad:       page3?.job_ad       || ""
-  };
-
   // Stage 1 (optional): Extract resume PDF → JSON — skipped when resumeAnalysisJson is pre-computed
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
@@ -545,40 +539,39 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
     resumeJson = parseJsonResponse(r2.text);
   }
 
-  // Stage 2: Content strategy (resume + job)
+  // Stage 2: Content strategy — pass strategy slices + facts reference
   await store.set(jobId, JSON.stringify({
     status: "pending", stage: "Content strategy (2/2)…"
   }), { ttl: 3600 });
 
-  const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
+  const resumeFacts    = resumeJson?.resume_facts    ?? resumeJson;   // fallback: old flat schema
+  const resumeStrategy = resumeJson?.resume_strategy ?? null;
+  const jobStrategy    = jobAdJson?.job_strategy     ?? null;
+
   const contentPrompt = loadPromptFile("buildContentStrategy.md")
-    .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
-    .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+    .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
+    .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(jobStrategy, null, 2))
+    .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
   const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
   const aiStrategy = parseJsonResponse(contentResponse.text);
 
   await store.set(jobId, JSON.stringify({
     status: "done",
-    strategy_json: aiStrategy,
-    resume_json:   resumeJson
+    strategy_json: aiStrategy,  // contains unified_strategy
+    resume_json:   resumeJson   // full object with resume_facts + resume_strategy
   }), { ttl: 3600 });
 }
 
 // ─── Main pipeline ───────────────────────────────────────────────────────────
 async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
-  page1, page2, page3, pdfBuffer,
+  page1, page2, pdfBuffer,
   sampleHtml, theme, headshotName,
   resumeAnalysisJson, templateAnalysisJson, templateHtml,
   artifactsData = [],
   strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
   bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
 }) {
-  const jobAnalysis = {
-    desired_role: page3?.desired_role || "",
-    job_ad:       page3?.job_ad       || ""
-  };
-
   // ── Stage 1 (optional): Extract resume PDF → JSON ───────────────────────────
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
@@ -596,33 +589,34 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     resumeJson = parseJsonResponse(r2.text);
   }
 
-  // ── Stage 2: buildContentStrategy.md → core_content_json ────────────────
-  // Skip if a pre-computed strategyJson was provided by runJobAnalysisPipeline.
-  const { compatible_color_schemes, ...resumeForStrategy } = resumeJson;
+  // ── Stage 2: buildContentStrategy.md → unified_strategy ─────────────────
+  // Skip if a pre-computed strategyJson was provided by unifyResumeAndJobAnalyses.
+  const resumeFacts    = resumeJson?.resume_facts    ?? resumeJson;   // fallback: old flat schema
+  const resumeStrategy = resumeJson?.resume_strategy ?? null;
 
   let aiStrategy;
   if (strategyJson) {
-    aiStrategy = strategyJson.strategy ?? strategyJson;
+    aiStrategy = strategyJson.unified_strategy ?? strategyJson.strategy ?? strategyJson;
   } else {
     await store.set(jobId, JSON.stringify({
       status: "pending", stage: "Content strategy (2/4)…"
     }), { ttl: 3600 });
 
     const contentPrompt = loadPromptFile("buildContentStrategy.md")
-      .replace("{{RESUME_JSON}}",       JSON.stringify(resumeForStrategy, null, 2))
-      .replace("{{JOB_ANALYSIS_JSON}}", JSON.stringify(jobAnalysis, null, 2));
+      .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
+      .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(null, null, 2))  // not available in full pipeline fallback
+      .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
     const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
     aiStrategy = parseJsonResponse(contentResponse.text);
   }
 
-  // Construct source_facts directly from resume_json — no AI re-extraction.
-  // This prevents information loss from AI summarisation or schema mismatches.
+  // Construct source_facts from resume_facts — no AI re-extraction.
   const coreContent = {
-    strategy: aiStrategy.strategy ?? aiStrategy,
+    strategy: aiStrategy.unified_strategy ?? aiStrategy.strategy ?? aiStrategy,
     source_facts: {
-      identity: resumeForStrategy.identity ?? {},
-      ...(resumeForStrategy.factual_profile ?? {})
+      identity: resumeFacts.identity ?? {},
+      ...(resumeFacts.factual_profile ?? {})
     }
   };
 
@@ -656,7 +650,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
   // visual_direction directly and skip the code-level buildVisualDirection() call.
   const blendResult = (bridgeJson?.visual_direction)
     ? { visual_direction: bridgeJson.visual_direction }
-    : buildVisualDirection(resumeForStrategy.motifs ?? {}, designSpec, colorSpec, userArtifacts);
+    : buildVisualDirection(resumeStrategy?.motifs ?? {}, designSpec, colorSpec, userArtifacts);
 
   // ── Stage 3.5: Merge template visual elements into artifact list ─────────────
   await store.set(jobId, JSON.stringify({
@@ -855,9 +849,11 @@ export async function handler(event) {
       const templateHtmlInput = body.templateHtml || "";
       const contentJson       = body.contentJson  || body.strategyJson || null;
       const colorSpec         = body.colorSpec    || {};
+      const templateMode      = body.templateMode || "none";
       const bridgePrompt = loadPromptFile("bridgeContentAndDesign.md")
         .replace("{{CONTENT_JSON}}",   JSON.stringify(contentJson, null, 2))
         .replace("{{COLOR_SPEC_JSON}}", JSON.stringify(colorSpec, null, 2))
+        .replace("{{TEMPLATE_MODE}}",  templateMode)
         .replace("{{EXAMPLE_WEBSITE}}", templateHtmlInput);
       const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 6000 });
       let bridge_json = null;
@@ -870,7 +866,7 @@ export async function handler(event) {
     if (mode === "analyzeJob") {
       const pdfBuf = resumePdfBase64 ? Buffer.from(resumePdfBase64, "base64") : null;
       await unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
-        page3, pdfBuffer: pdfBuf, resumeAnalysisJson, jobAdJson: body.jobAdJson || null
+        pdfBuffer: pdfBuf, resumeAnalysisJson, jobAdJson: body.jobAdJson || null
       });
       return { statusCode: 202 };
     }
