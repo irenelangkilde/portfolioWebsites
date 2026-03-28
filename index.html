@@ -468,17 +468,6 @@
             <div id="resumeAnalysisStatusInline" style="font-size:11.5px; flex:1;"></div>
             <button type="button" id="reanalyzeResume" title="Re-extract resume" style="display:none; background:none; border:none; cursor:pointer; font-size:14px; color:rgba(141,224,255,.7); padding:0; line-height:1;">↺</button>
           </div>
-          <!-- Debug panel — shown in debug mode once analysis completes -->
-          <div id="resumeAnalysisPanel" class="hidden" style="margin-top:8px;">
-            <details>
-              <summary style="font-size:12px; color:rgba(251,171,156,.85);">🐛 Resume analysis (extractResumeProfile.md)</summary>
-              <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-                <button class="btn mini" type="button" id="dlResumeAnalysis">Download analysis.json</button>
-                <button class="btn mini ghost" type="button" id="cpResumeAnalysis">Copy</button>
-              </div>
-              <pre id="resumeAnalysisPre" style="margin-top:6px; max-height:320px;"></pre>
-            </details>
-          </div>
         </div>
 
         <div>
@@ -532,45 +521,86 @@
         <div style="display:grid; gap:6px;">
 
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Analysis</span>
-            <button class="btn mini" type="button" id="dlStage1">↓ resume-analysis.json</button>
-            <button class="btn mini ghost" type="button" id="cpStage1">Copy</button>
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Facts</span>
+            <button class="btn mini" type="button" id="dlResumeFacts">↓ resume-facts.json</button>
+            <button class="btn mini ghost" type="button" id="cpResumeFacts">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwResumeFacts">View</button>
           </div>
 
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Content Strategy</span>
-            <button class="btn mini" type="button" id="dlStage2">↓ strategy.json</button>
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Strategy</span>
+            <button class="btn mini" type="button" id="dlResumeStrategy">↓ resume-strategy.json</button>
+            <button class="btn mini ghost" type="button" id="cpResumeStrategy">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwResumeStrategy">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Facts</span>
+            <button class="btn mini" type="button" id="dlJobFacts">↓ job-facts.json</button>
+            <button class="btn mini ghost" type="button" id="cpJobFacts">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwJobFacts">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Strategy</span>
+            <button class="btn mini" type="button" id="dlJobStrategy">↓ job-strategy.json</button>
+            <button class="btn mini ghost" type="button" id="cpJobStrategy">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwJobStrategy">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Unified Strategy</span>
+            <button class="btn mini" type="button" id="dlStage2">↓ unified-strategy.json</button>
             <button class="btn mini ghost" type="button" id="cpStage2">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwStage2">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · Spec JSON</span>
+            <button class="btn mini" type="button" id="dlTemplateJson">↓ spec.json</button>
+            <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwTemplateJson">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · HTML</span>
+            <button class="btn mini" type="button" id="dlTemplateHtml">↓ template.html</button>
+            <button class="btn mini ghost" type="button" id="vwTemplateHtml">View</button>
           </div>
 
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">4 · Bridge Profile &amp; Design</span>
             <button class="btn mini" type="button" id="dlStage4">↓ bridge.json</button>
             <button class="btn mini ghost" type="button" id="cpStage4">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwStage4">View</button>
+            <button class="btn mini ghost" type="button" id="recomputeStage4">↺ Recompute</button>
           </div>
 
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
             <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">5 · Renderer</span>
             <button class="btn mini" type="button" id="dlFinalHtml">↓ portfolio.html</button>
+            <button class="btn mini ghost" type="button" id="cpFinalHtml">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwFinalHtml">View</button>
             <button class="btn mini ghost" type="button" id="dlSummaryHtml">↓ summary.html</button>
+            <button class="btn mini ghost" type="button" id="cpSummaryHtml">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwSummaryHtml">View</button>
+            <button class="btn mini ghost" type="button" id="recomputeStage5">↺ Recompute</button>
           </div>
 
           <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,.08);">
             <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">Form Payload</span>
             <button class="btn mini ghost" type="button" id="dlDebugPayload">↓ payload.json</button>
             <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwDebugPayload">View</button>
           </div>
 
         </div>
       </div>
 
-      <!-- Status + Open Editor (shown once generation completes or errors) -->
+      <!-- Status (shown once generation completes or errors) -->
       <div id="finalBox" class="hidden" style="margin-top:10px;">
         <div class="note">
           <div id="finalStatus" class="hint"></div>
-        </div>
-        <div class="btnRow" style="margin-top:8px; flex-wrap:wrap; gap:8px;">
-          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Open Editor</button>
         </div>
       </div>
 
@@ -579,7 +609,7 @@
       </div>
       <div class="btnRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back2_bottom">Back</button>
-        <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Open Editor</button>
+        <button class="btn primary" type="button" id="next2_bottom" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Open Editor</button>
       </div>
 
     </section>
@@ -616,11 +646,11 @@
   <div class="themeLeft">
     <p style="font-size:11px; color:rgba(234,240,255,.4); margin:0 0 6px; font-style:italic;">Click to activate, then click a swatch to paste a color. Double-click to see color dialog.</p>
     <div style="display:flex; flex-direction:column; gap:5px;">
-      <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="primary"   type="color" value="#000000" /><span>1. Primary</span></label>
-      <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="secondary" type="color" value="#000000" /><span>2. Secondary</span></label>
-      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent"    type="color" value="#000000" /><span>3. Accent</span></label>
-      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="dark"      type="color" value="#000000" /><span>4. Dark</span></label>
-      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="light"     type="color" value="#000000" /><span>5. Light</span></label>
+      <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="primary"   type="color" value="#000000" /><span id="primary-label">1. Primary</span></label>
+      <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="secondary" type="color" value="#000000" /><span id="secondary-label">2. Secondary</span></label>
+      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent"    type="color" value="#000000" /><span id="accent-label">3. Accent</span></label>
+      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="dark"      type="color" value="#000000" /><span id="dark-label">4. Dark</span></label>
+      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="light"     type="color" value="#000000" /><span id="light-label">5. Light</span></label>
     </div>
     <div class="field" style="margin-top:14px;">
       <label for="paletteUsageNote">Palette usage notes (optional)</label>
@@ -696,6 +726,7 @@
           <div style="display:flex; gap:6px; align-items:center;">
             <input id="modelTemplate" type="text" placeholder="e.g., Biology, Civil Engineering, Data Science…" list="templateKeywords" autocomplete="off" style="flex:1;" />
             <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Refresh template list" style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
+            <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear selection" style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
           </div>
           <datalist id="templateKeywords">
             <!-- populated dynamically by listTemplates Netlify function -->
@@ -834,24 +865,6 @@
         </select>
       </div>
 
-      <!-- Spec panels (shown after extraction / for design options) -->
-      <div id="templateExtractPanel" class="hidden" style="margin-top:12px;">
-        <details open>
-          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Website spec JSON</summary>
-          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-            <button class="btn mini" type="button" id="dlTemplateJson">Download spec.json</button>
-            <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy JSON</button>
-          </div>
-          <pre id="templateExtractJsonPre" style="margin-top:6px; max-height:240px;"></pre>
-        </details>
-        <details style="margin-top:8px;">
-          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Generated template HTML</summary>
-          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-            <button class="btn mini ghost" type="button" id="dlTemplateExtract">Download template.html</button>
-          </div>
-          <pre id="templateExtractHtmlPre" style="margin-top:6px; max-height:320px;"></pre>
-        </details>
-      </div>
 
       <!-- Navigation -->
       <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">

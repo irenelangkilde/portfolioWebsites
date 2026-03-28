@@ -19,7 +19,6 @@ CRITICAL RULES
 - Incorporate color_spec_json (primary, secondary, accent, dark, light) as the authoritative palette.
 - Pull visual motifs from content_strategy_json to ensure domain relevance.
 - Plan thumbnail concepts for each project and the top two experiences if they exist — keep them small (roughly 1–3 inches square in presentation).
-- For any section where the example_website HTML is available, attempt extraction before falling back to description.
 
 OUTPUT
 Return valid JSON only.
@@ -67,23 +66,6 @@ SCHEMA
       "density_rhythm": "",
       "narrative_thread": ""
     },
-    "wireframes": [
-      {
-        "section": "",
-        "pattern": "",
-        "dominant_side": "",
-        "text_blocks": [],
-        "visual_block": "",
-        "notes": "",
-        "extraction": {
-          "fidelity": "",
-          "html_snippet": "",
-          "scoped_css": "",
-          "content_slots": [],
-          "extraction_notes": ""
-        }
-      }
-    ]
   }
 }
 
@@ -109,33 +91,6 @@ Describe the structural intent at an intermediate level — more concrete than m
 - visual_anchors: where dominant visual weight lands — hero and projects are the most common
 - density_rhythm: e.g. "dense hero → medium projects → compact skills → airy contact"
 - narrative_thread: the through-line that connects sections (e.g. "academic foundation → applied project work → industry readiness")
-
-WIREFRAMES
-Produce one entry per section in section_arc order. For each:
-- section: the section name (hero, about, featured_project, experience, skills, contact, etc.)
-- pattern: layout pattern — "split", "central", "scene-based", "card-grid", "timeline", "full-width-text", "stacked", etc.
-- dominant_side: where the visual weight lands — "left", "right", "center", "top", "none"
-- text_blocks: ordered list of text content types present in this section (e.g. ["headline", "subheadline", "cta"], ["project_title", "tech_tags", "description", "link"])
-- visual_block: the primary visual element in this section, if any (e.g. "hero_image", "project_thumbnail", "icon_row", "background_gradient", "none")
-- notes: one sentence of creative intent or constraint that the renderer should respect
-
-Keep wireframes directive but not prescriptive — they should narrow the renderer's choices without micromanaging layout details.
-
-EXTRACTION
-For each wireframe section, attempt to extract the corresponding structure directly from example_website HTML if available. The goal is to give the renderer something it can use verbatim (or near-verbatim) rather than regenerate from a description.
-
-- fidelity levels:
-  - "exact" — HTML and CSS extracted cleanly; self-contained; renderer should use as-is and substitute content slots
-  - "adapted" — extracted but required cleanup (removed external dependencies, inlined variables, simplified selectors); renderer should use with care
-  - "inspired" — example_website present but extraction wasn't feasible (image input, obfuscated code, heavy framework dependencies); renderer should treat as style reference only
-  - "none" — no example_website provided; omit the extraction object entirely
-
-- html_snippet: the extracted HTML for this section, with placeholder tokens for dynamic content (e.g. {{candidate_name}}, {{headline}}, {{cta_text}})
-- scoped_css: all CSS needed to render this snippet correctly, self-contained — inline custom properties, avoid external class dependencies
-- content_slots: list of placeholder tokens present in html_snippet that the renderer must fill (e.g. ["{{candidate_name}}", "{{headline}}", "{{project_title}}"])
-- extraction_notes: one sentence on what was simplified, removed, or approximated — empty string if fidelity is exact
-
-Omit the extraction object for sections where example_website provides no useful reference.
 
 COMPOSITION STYLES
 "split" (left vs right halves), "central" (radial/symmetric around a center), "scene-based" (lab, desk, workshop, field — symbolic objects embedded in scene), "abstract_layered" (glowing lines, rings, grids, gradients instead of literal objects), or other.

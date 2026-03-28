@@ -23,6 +23,7 @@ Return valid JSON only. No markdown. No explanation.
 
 {
   "unified_strategy": {
+    "desired_roles": [],
     "target_role": {
       "role_title": "",
       "company": "",
@@ -68,11 +69,14 @@ Return valid JSON only. No markdown. No explanation.
 
 GUIDELINES
 
+DESIRED ROLES
+Copy desired_roles verbatim from resume_strategy.desired_roles. If job_strategy provides a more specific target role title, prepend it as the first entry.
+
 TARGET ROLE
 Synthesize role identity from job_strategy.editorial_direction and job_facts (via context). Distill the keywords the site should echo naturally.
 
 POSITIONING
-Reconcile resume_strategy.editorial_direction.core_story with job_strategy.editorial_direction.positioning_angle into a single coherent professional identity. Draw headline and subheadline candidates from both strategy objects' website_copy_seed fields, selecting the strongest fit.
+Reconcile resume_strategy.editorial_direction.core_story with job_strategy.editorial_direction.positioning_angle into a single coherent professional identity. Draw headline and subheadline candidates from both strategy objects' website_copy_seed fields, selecting the strongest fit. For value_proposition, start from resume_strategy.website_copy_seed.value_propositions[0] and sharpen it toward the target role — keep it as a single concrete sentence.
 
 CONTENT STRATEGY
 - must_feature and feature_early: drive from job_strategy.content_priorities.must_demonstrate

@@ -20,6 +20,7 @@ CRITICAL RULES
 - Use only facts from content_json.source_facts.
 - Do NOT invent employers, projects, metrics, or credentials.
 - Use content_json.strategy to determine emphasis, order, and messaging.
+- For any value proposition section, use content_json.value_propositions[0] as the text. If absent, fall back to content_json.strategy.positioning.value_proposition.
 - Use visual_direction (especially section_density, compositional_feel, visual_treatment) to determine design, layout, and aesthetics.
 - Do NOT rigidly follow a fixed section order — adapt intelligently.
 - Avoid generic layouts and repeated patterns.
@@ -117,6 +118,8 @@ TECHNICAL OUTPUT
 - Footer: © {{YEAR}} [person's full name]. No other watermark.
 - Template usage: {{TEMPLATE_USAGE}}
 - No explanations or markdown — just the HTML file
+- Do NOT use Mustache syntax ({{tokens}}, {{#sections}}, {{/sections}}) — output static HTML only with all content already substituted
+- Each section heading (e.g. "Leadership & Volunteer") must appear exactly once in the output
 
 INPUT
 

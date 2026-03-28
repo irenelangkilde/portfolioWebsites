@@ -230,6 +230,33 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
+// ─── Post-render CSS color injection for Mustache templates ──────────────────
+// Replaces --color-* hex values in the rendered HTML using the user's colorSpec
+// and the template's embedded default_color_scheme metadata comment.
+function injectCssColors(html, colorSpec, templateHtml) {
+  if (!colorSpec || colorSpec.use_sample_colors) return html;
+  // Parse --color-* variable declarations with role index from their /* N. Role — ... */ comments.
+  // The client assigns picker slots in the same order (role 1 → primary, role 2 → secondary, …),
+  // so we map CSS var name → slot name by matching on comment index.
+  const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
+  if (!rootMatch) return html;
+  const slots = ["primary", "secondary", "accent", "dark", "light"];
+  const colorVars = [];
+  const re = /(--color-[\w-]+)\s*:\s*#[0-9a-fA-F]{3,8}[^;]*;\s*\/\*\s*(\d+)\./g;
+  let m;
+  while ((m = re.exec(rootMatch[1])) !== null) {
+    colorVars.push({ varName: m[1], index: parseInt(m[2]) });
+  }
+  colorVars.sort((a, b) => a.index - b.index);
+  const varToSlot = {};
+  colorVars.forEach((cv, i) => { if (i < slots.length) varToSlot[cv.varName] = slots[i]; });
+  if (!Object.keys(varToSlot).length) return html;
+  return html.replace(/(--color-[\w-]+)(\s*:\s*)#[0-9a-fA-F]{3,8}/g, (match, varName, colon) => {
+    const slot = varToSlot[varName];
+    return (slot && colorSpec[slot]) ? varName + colon + colorSpec[slot] : match;
+  });
+}
+
 // ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
 function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const attrs   = designSpec?.exemplary_attributes || {};
@@ -315,6 +342,35 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   };
 }
 
+// ─── Mojibake fixer ──────────────────────────────────────────────────────────
+// PDF text extraction sometimes yields UTF-8 bytes decoded as Latin-1, producing
+// sequences like â\u0080\u0094 for an em dash. Detect and restore them.
+function fixMojibake(str) {
+  if (typeof str !== "string") return str;
+  return str
+    .replace(/\u00e2\u0080\u0094/g, "\u2014")  // — em dash
+    .replace(/\u00e2\u0080\u0093/g, "\u2013")  // – en dash
+    .replace(/\u00e2\u0080\u0099/g, "\u2019")  // ' right single quote
+    .replace(/\u00e2\u0080\u009c/g, "\u201c")  // " left double quote
+    .replace(/\u00e2\u0080\u009d/g, "\u201d")  // " right double quote
+    .replace(/\u00e2\u0080\u00a6/g, "\u2026")  // … ellipsis
+    .replace(/\u00c2\u00b7/g,       "\u00b7")  // · middle dot
+    .replace(/\u00c2\u00a9/g,       "\u00a9")  // © copyright
+    .replace(/\u00c2\u00ae/g,       "\u00ae")  // ® registered trademark
+    .replace(/\u00c2\u00a0/g,       " ");      // non-breaking space → regular space
+}
+
+function fixMojibakeDeep(val) {
+  if (typeof val === "string") return fixMojibake(val);
+  if (Array.isArray(val))      return val.map(fixMojibakeDeep);
+  if (val && typeof val === "object") {
+    const out = {};
+    for (const [k, v] of Object.entries(val)) out[k] = fixMojibakeDeep(v);
+    return out;
+  }
+  return val;
+}
+
 // ─── Mustache template helpers ───────────────────────────────────────────────
 
 /**
@@ -331,22 +387,29 @@ function isMustacheTemplate(html) {
  * Does NOT HTML-escape values (resume data is trusted).
  */
 function renderMustache(template, data) {
-  // Process sections recursively — lazy match ensures correct pairing for sequential sections
-  let result = template.replace(/\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g, (_, key, inner) => {
-    const val = data[key];
-    if (!val || (Array.isArray(val) && val.length === 0)) return "";
-    if (Array.isArray(val)) {
-      return val.map(item => {
-        if (typeof item !== "object" || item === null) {
-          // scalar array item — replace {{.}} with item value
-          return inner.replace(/\{\{\.\}\}/g, String(item));
-        }
-        return renderMustache(inner, { ...data, ...item });
-      }).join("");
-    }
-    // truthy scalar — render inner block once
-    return renderMustache(inner, data);
-  });
+  // Process sections in passes until stable — inner same-name sections render first,
+  // then outer wrappers (e.g. {{#certs}}<section>{{#certs}}<item>{{/certs}}</section>{{/certs}})
+  // are picked up on the next pass without conflicting with the inner closing tag.
+  const sectionRe = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+  let result = template;
+  let prev;
+  do {
+    prev = result;
+    result = result.replace(sectionRe, (_, key, inner) => {
+      const val = data[key];
+      if (!val || (Array.isArray(val) && val.length === 0)) return "";
+      if (Array.isArray(val)) {
+        return val.map(item => {
+          if (typeof item !== "object" || item === null) {
+            return inner.replace(/\{\{\.\}\}/g, String(item));
+          }
+          return renderMustache(inner, { ...data, ...item });
+        }).join("");
+      }
+      // truthy scalar — render inner block once
+      return renderMustache(inner, data);
+    });
+  } while (result !== prev);
 
   // Replace scalar tokens {{key}}
   result = result.replace(/\{\{([^#\/!{][^}]*)\}\}/g, (_, key) => {
@@ -360,12 +423,61 @@ function renderMustache(template, data) {
 }
 
 /**
+ * Normalizes either the new split schema (resume_facts with identity/factual_profile)
+ * or the old flat schema (personal, education, etc. at top level) to the flat format
+ * that flattenToMustacheData expects.
+ */
+function toFlatResumeSchema(f) {
+  if (!f) return {};
+  // Already flat schema (STAGE1_PROMPT output or old cache)
+  if (f.personal !== undefined || f.education !== undefined) return f;
+  // New split schema: identity + factual_profile
+  const identity = f.identity || {};
+  const profile  = f.factual_profile || {};
+  const contact  = identity.contact || {};
+  const links    = contact.other_links || [];
+  const findLink = (pred) => links.find(l => pred(typeof l === "string" ? l : (l.url || l.href || ""))) || "";
+  return {
+    personal: {
+      name:     identity.name     || "",
+      email:    contact.email     || "",
+      phone:    contact.phone     || "",
+      linkedin: contact.linkedin  || "",
+      github:   findLink(u => /github/i.test(u)),
+      website:  findLink(u => u && !/github|linkedin/i.test(u)),
+      location: contact.location  || ""
+    },
+    summary:         profile.about          || "",
+    education:       profile.education      || [],
+    experience:      profile.experience     || [],
+    projects:        profile.projects       || [],
+    skills:          profile.skills         || {},
+    certifications:  profile.certifications || [],
+    publications:    profile.publications   || [],
+    volunteer:       profile.volunteer_experience || [],
+    extracurricular: [...(profile.leadership || []), ...(profile.organizations || [])],
+    desired_roles:   profile.desired_roles || []
+  };
+}
+
+/**
  * Maps contentJson + resumeJson into a flat Mustache data object
  * matching the schema in ExtractMustacheTemplate.md.
+ * colorSpec: { primary, secondary, accent, dark, light } — user's palette choice
  */
-function flattenToMustacheData(strategy, resumeJson) {
+function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null) {
   const personal = resumeJson?.personal || {};
-  const pos = strategy?.positioning || {};
+  // unified_strategy has strategy.positioning.{headline,subheadline,value_proposition}
+  // resume_strategy (no job analysis) has strategy.website_copy_seed.{hero_headline_options, hero_subheadline_options, value_propositions}
+  const _coreStory = strategy?.editorial_direction?.core_story || "";
+  const _firstSentence = _coreStory.match(/^[^.!?]*[.!?]/)?.[0]?.trim() || _coreStory;
+  const pos = strategy?.positioning || {
+    headline:          strategy?.website_copy_seed?.hero_headline_options?.[0]    || "",
+    subheadline:       strategy?.website_copy_seed?.hero_subheadline_options?.[0] || "",
+    value_proposition: strategy?.website_copy_seed?.value_propositions?.[0]
+                       || strategy?.website_copy_seed?.about_angle
+                       || _firstSentence || ""
+  };
   const edu0 = (resumeJson?.education || [])[0] || {};
 
   // Convert skills object → skill_groups array
@@ -381,18 +493,50 @@ function flattenToMustacheData(strategy, resumeJson) {
     .filter(g => Array.isArray(g.arr) && g.arr.length)
     .map(g => ({ group_name: g.group_name, skills: g.arr }));
 
-  // Combine volunteer + extracurricular into leadership
+  // Build hero_cards: all at-a-glance cards sorted by total character count so that
+  // similarly-sized cards end up in the same row of the 2-column grid.
+  const charCount = arr => arr.reduce((n, s) => n + String(s).length, 0);
+
+  const highlightBullets = (resumeJson?.experience || [])
+    .map(e => (e.bullets || [])[0]).filter(Boolean).slice(0, 3);  // max 3 bullets
+
+  const HERO_CARD_MAX = 4;   // max skills shown inside one card
+  const HERO_SKILL_GROUPS = 2; // fixed cards (Highlights + Links = 2) fill the other half of a 2-col grid
+  const hero_cards = [
+    ...skill_groups
+      .map(g => {
+        const skills = g.skills.slice(0, HERO_CARD_MAX);
+        return { ...g, skills, _size: charCount(skills) };
+      })
+      .sort((a, b) => b._size - a._size)
+      .slice(0, HERO_SKILL_GROUPS),
+    { group_name: "Highlights", skills: [], highlights: highlightBullets,
+      is_highlights: true, _size: charCount(highlightBullets) },
+    { group_name: "Links",      skills: [], is_links: true, _size: 30 }
+  ].sort((a, b) => b._size - a._size);
+
+  // Combine volunteer + extracurricular into leadership, dropping blank entries
   const leadership = [
     ...(resumeJson?.volunteer      || []).map(v => ({ role: v.role, organization: v.organization, dates: v.dates, description: v.description })),
     ...(resumeJson?.extracurricular|| []).map(e => ({ role: e.role, organization: e.organization, dates: e.dates, description: e.description }))
-  ];
+  ].filter(l => (l.role && l.organization) || l.description);
+
+  // Theme color variables for Mustache templates that expose CSS custom properties
+  const tp = colorSpec?.primary   || "#2563eb";
+  const ts = colorSpec?.secondary || "#22c55e";
+  const td = colorSpec?.dark      || "#0f172a";
 
   return {
+    // ── Theme colors ──
+    theme_primary:   tp,
+    theme_secondary: ts,
+    theme_dark:      td,
+
     name:              personal.name     || "",
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             resumeJson?.summary || "",
+    about:             resumeJson?.summary || _coreStory || "",
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",
@@ -402,6 +546,10 @@ function flattenToMustacheData(strategy, resumeJson) {
     major:             edu0.major        || "",
     specialization:    edu0.minor        || edu0.major || "",
     current_year:      new Date().getFullYear(),
+    desired_roles:     (resumeJson?.desired_roles?.length ? resumeJson.desired_roles
+                     : strategy?.desired_roles?.length   ? strategy.desired_roles
+                     : (resumeStrategy?.desired_roles || [])).slice(0, 3),
+    desired_role:      resumeJson?.desired_roles?.[0] || strategy?.desired_roles?.[0] || resumeStrategy?.desired_roles?.[0] || "",
 
     has_github:   !!(personal.github),
     has_linkedin: !!(personal.linkedin),
@@ -441,6 +589,11 @@ function flattenToMustacheData(strategy, resumeJson) {
     })),
 
     skill_groups,
+    hero_cards,
+
+    has_certifications: (resumeJson?.certifications || []).length > 0,
+    has_publications:   (resumeJson?.publications  || []).length > 0,
+    has_leadership:     leadership.length > 0,
 
     certifications: (resumeJson?.certifications || []).map(c => ({
       name:   c.name   || "",
@@ -686,16 +839,10 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
 
   // content_json: strategy + facts + rendering metadata
   const contentJson = {
-    strategy:       coreContent.strategy,
-    source_facts:   coreContent.source_facts,
-    candidate_name: candidateName || "UNKNOWN — check source_facts.identity.name"
-  };
-
-  // Keep a combined blob for debug output only
-  const websiteJson = {
-    ...contentJson,
-    visual_direction: blendResult.visual_direction,
-    visuals: artifactsJson
+    strategy:          coreContent.strategy,
+    source_facts:      coreContent.source_facts,
+    value_propositions: resumeStrategy?.website_copy_seed?.value_propositions || [],
+    candidate_name:    candidateName || "UNKNOWN — check source_facts.identity.name"
   };
 
   // ── Stage 4: fill template → HTML ────────────────────────────────────────────
@@ -712,10 +859,13 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
   if (isMustacheTemplate(rendererSampleHtml)) {
     // ── Mustache path: fill programmatically, skip AI renderer ─────────────
     const mustacheData = flattenToMustacheData(
-      coreContent.strategy?.positioning ? coreContent.strategy : coreContent.strategy?.strategy,
-      resumeJson
+      coreContent.strategy?.positioning ? coreContent.strategy : (coreContent.strategy?.strategy || coreContent.strategy),
+      toFlatResumeSchema(resumeFacts),
+      colorSpec,
+      resumeStrategy
     );
-    siteHtml = cleanHtml(renderMustache(rendererSampleHtml, mustacheData));
+    siteHtml = cleanHtml(renderMustache(rendererSampleHtml, fixMojibakeDeep(mustacheData)));
+    siteHtml = injectCssColors(siteHtml, colorSpec, rendererSampleHtml);
     usedModel = "mustache";
     truncated = false;
   } else {
@@ -758,7 +908,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     status: "done",
     model: usedModel,
     site_html: siteHtml,
-    resume_json: websiteJson,
+    resume_json: resumeJson,
     strategy_json: coreContent.strategy,
     visual_direction_json: blendResult.visual_direction,
     truncated
@@ -855,10 +1005,14 @@ export async function handler(event) {
         .replace("{{COLOR_SPEC_JSON}}", JSON.stringify(colorSpec, null, 2))
         .replace("{{TEMPLATE_MODE}}",  templateMode)
         .replace("{{EXAMPLE_WEBSITE}}", templateHtmlInput);
-      const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 6000 });
+      const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 20000 });
       let bridge_json = null;
-      try { bridge_json = parseJsonResponse(r.text); } catch {}
-      await store.set(jobId, JSON.stringify({ status: "done", bridge_json, model: r.model }), { ttl: 3600 });
+      let bridge_parse_error = null;
+      try { bridge_json = parseJsonResponse(r.text); } catch (e) { bridge_parse_error = e?.message || "parse failed"; }
+      await store.set(jobId, JSON.stringify({
+        status: "done", bridge_json, model: r.model,
+        ...(bridge_json ? {} : { bridge_raw: r.text?.slice(0, 2000), bridge_parse_error })
+      }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 

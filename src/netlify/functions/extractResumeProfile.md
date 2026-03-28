@@ -113,10 +113,12 @@ OUTPUT JSON SHAPE
       ],
       "causes": [],
       "hobbies_interests": [],
-      "additional_background": []
+      "additional_background": [],
+      "desired_roles": []
     }
   },
   "resume_strategy": {
+    "desired_roles": [],
     "motifs": {
       "broad_primary_domain": "",
       "resume_keywords": [],
@@ -141,17 +143,14 @@ OUTPUT JSON SHAPE
     "website_copy_seed": {
       "hero_headline_options": [],
       "hero_subheadline_options": [],
+      "value_propositions": [],
       "cta_options": [],
       "project_framing_notes": [],
       "about_angle": ""
     },
     "compatible_color_schemes": [
       {
-        "primary": "",
-        "secondary": "",
-        "accent": "",
-        "dark": "",
-        "light": "",
+        "colors": ["", "", "", "", ""],
         "how_used": ""
       }
     ]
@@ -171,6 +170,9 @@ Extract verbatim, structured content. Omit sections absent from the resume — n
 - skills: technical, programming languages, tools, domains, soft skills
 - publications, certifications, licenses, patents if present
 - leadership, volunteer, organizations, career breaks, courses, test scores, languages if present
+- desired_roles: populate only if the resume explicitly states target roles (e.g. objective statement, "seeking", "open to"). Leave empty if not stated — resume_strategy.desired_roles handles inferred targets.
+
+about field: copy the resume summary as closely as possible, but convert any third-person phrasing to first person ("Joel is a…" → "I am a…", "He has…" → "I have…"). Do not add, invent, or embellish — only change the grammatical person.
 
 Keep this section factual and non-creative. It is the ground truth all downstream stages rely on.
 
@@ -232,13 +234,22 @@ Ground every claim in resume_facts. This section guides downstream creative stag
 5. WEBSITE COPY SEED
 Write several strong website-ready options for hero headline, subheadline, and calls to action. Ground these in actual resume content — they should sound more compelling than resume text, not generic.
 
-6. SUBJECT-INSPIRED COLOR STRATEGY
-Conjure five colors inspired by the candidate's field and subject matter. Describe how each will be used emotionally and visually across the site.
+Voice rules:
+- Always write in first person ("I build…", "My work spans…") — never third person.
+- Confident but not boastful. Avoid superlatives like "world-class", "exceptional", "top-tier", "passionate", "driven", or "highly skilled". Let concrete facts carry the weight instead.
+- about_angle: one or two grounded sentences the candidate would say out loud to a recruiter — specific, honest, and human-sounding.
+- value_propositions: two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. The best one will be used as the hero sub-value pitch on the portfolio site.
 
-Example palette assignment:
-Primary → Headings, buttons, key branding
-Secondary → Subheadings, links, secondary buttons
-Accent → Highlights, hover states, calls to action
+6. SUBJECT-INSPIRED COLOR STRATEGY
+Conjure five colors inspired by the candidate's field and subject matter. Output them as an ordered array in `colors` — the order matters and must follow this convention:
+
+  colors[0] — Canvas: the dominant background/surface color (often deep or richly saturated)
+  colors[1] — Interactive: the primary action color (CTAs, links, key highlights)
+  colors[2] — Vibrant: a secondary accent (badges, supporting highlights, hover states)
+  colors[3] — OnCanvas: the text color (readable on the canvas color — often near-white or near-black)
+  colors[4] — Subtle: muted secondary text, borders, dividers
+
+In `how_used`, describe the overall palette mood and field connection in one sentence.
 
 INPUTS
 
