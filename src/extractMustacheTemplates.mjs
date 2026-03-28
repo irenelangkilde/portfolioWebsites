@@ -87,6 +87,7 @@ async function processFile(client, promptTemplate, filePath) {
     .trim();
 
   fs.writeFileSync(outPath, outputHtml, "utf8");
+  fs.chmodSync(outPath, 0o444);
   console.log(`  ✅ saved → ${path.basename(outPath)}`);
 }
 

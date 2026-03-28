@@ -92,7 +92,23 @@ CONTENT REQUIREMENTS
 - Use bullet points where helpful
 - Emphasize measurable or concrete impact where available
 - Echo job-relevant keywords naturally
-- Each project and experience card MUST include an inline SVG thumbnail that is thematically specific to that item's subject matter. Do NOT use stock photo URLs (picsum, unsplash, etc.) — generate the SVG directly in the HTML. The SVG should use 2–3 colors from the palette and contain symbolic shapes, icons, or abstract graphics that represent the project's domain (e.g. a circuit schematic for an EE project, a bar chart for a data analysis project, a molecular structure for a biology project, interconnected nodes for a networking project). Size: width="80" height="80" viewBox="0 0 80 80" style="flex-shrink:0; border-radius:8px;". Float or flex it to the left of the card text. Keep each SVG under 20 elements — simple icon-style, not photorealistic.
+- Each project card MUST display a large centered emoji (font-size: 3.5rem–5rem) that is thematically specific to that project's subject matter. Every project must use a DIFFERENT emoji — never repeat the same one. Choose from the domain table below based on the project's technologies and description. Do NOT use stock photo URLs (picsum, unsplash, etc.).
+
+  Domain → suggested emoji (pick the single most fitting one per project):
+  Software / web app → 💻 🖥️ 🛠️ 🔧
+  Data / analytics / ML → 📊 📈 🤖 🧠
+  Electrical / circuits / RF / hardware → ⚡ 📡 🔌 🔋
+  Physics / optics / lasers → 🔬 💡 🌊 🔭
+  Mechanical / manufacturing → ⚙️ 🏗️ 🔩
+  Biology / chemistry / lab → 🧬 ⚗️ 🌿 🦠
+  Finance / accounting → 💰 📉 🏦
+  Education / research / writing → 📚 🎓 📝
+  Design / art / media → 🎨 🖼️ 🎬
+  Networks / security / systems → 🔐 🌐 🖧
+  Environment / civil / geo → 🌍 🏔️ 🌱
+  Game / simulation → 🎮 🕹️ 🎲
+  Space / aerospace → 🚀 🛸 🌌
+  General / other → 🔭 💡 🧩
 
 STRUCTURE
 

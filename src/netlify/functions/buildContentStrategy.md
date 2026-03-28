@@ -18,6 +18,12 @@ CRITICAL RULES
 - Where the two strategies conflict, job_strategy wins on emphasis; resume_strategy wins on tone and identity.
 - Avoid generic resume-like structure.
 
+VOICE
+- All candidate-facing copy must be written in first person ("I build…", "My work spans…", "I bring…").
+- Never use third person ("She leads…", "He has experience in…", "The candidate…").
+- Applies to: headline, subheadline, value_proposition, professional_identity, core_story, fit_strategy, and narrative_style.
+- Confident but grounded. No superlatives ("world-class", "exceptional", "top-tier", "passionate", "driven").
+
 OUTPUT
 Return valid JSON only. No markdown. No explanation.
 

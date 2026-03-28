@@ -631,15 +631,6 @@
       </label>
       <button type="button" id="resetToSampleColors" class="btn ghost" style="font-size:12px; padding:5px 12px; white-space:nowrap;">↺ Reset to sample colors</button>
     </div>
-<!-- Suggested palettes: template + AI-suggested from resume analysis -->
-<div id="suggestedPalettes" style="margin-bottom:16px;">
-  <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
-    <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
-    <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;">(Thinking…)</span>
-  </div>
-  <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
-</div>
-
 <div class="themeLayout" style="position:relative;">
   <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
 
@@ -658,14 +649,23 @@
     </div>
   </div>
 
-  <div class="themeRight">
-    <div class="hint">Theme Gallery</div>
-    <iframe
-      id="colorThemesFrame"
-      src="src/color-themes.html"
-      style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"
-      onload="(function(f){ setTimeout(function(){ try{ var h=f.contentDocument.body.scrollHeight; if(h>50) f.style.height=h+'px'; }catch(e){} },200); })(this)"></iframe>
+  <!-- Suggested palettes — right column, alongside color pickers -->
+  <div id="suggestedPalettes" class="themeRight">
+    <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
+      <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
+      <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;">(Thinking…)</span>
+    </div>
+    <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
   </div>
+</div>
+
+<!-- Theme Gallery — full width below the pickers + suggested palettes row -->
+<div style="margin-top:16px;">
+  <div class="hint">Theme Gallery</div>
+  <iframe
+    id="colorThemesFrame"
+    src="src/color-themes.html"
+    style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"></iframe>
 </div>
         <!--div class="grid2">
           <div>

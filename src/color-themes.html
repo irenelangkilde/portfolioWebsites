@@ -298,6 +298,15 @@
             themeCard.appendChild(cardBody);
             themeGrid.appendChild(themeCard);
         });
+
+        // Tell the parent iframe exactly how tall the content is, and re-report on any reflow.
+        function reportHeight() {
+            try { window.parent.postMessage({ type: 'colorThemesHeight', height: document.body.scrollHeight }, '*'); } catch(e) {}
+        }
+        reportHeight();
+        if (typeof ResizeObserver !== 'undefined') {
+            new ResizeObserver(reportHeight).observe(document.body);
+        }
     </script>
 </body>
 </html>

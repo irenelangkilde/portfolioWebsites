@@ -2,58 +2,59 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- { "default_color_scheme": { "primary": "#22c55e", "secondary": "#2563eb", "accent": "#fbbf24", "dark": "#0f172a", "light": "#1f2937" } } -->
+  <!-- { "default_color_scheme": { "primary": "#22c55e", "secondary": "#2563eb", "tertiary": "#fde047", "dark": "#0f172a", "light": "#1f2937" }, "about_word_count": 47, "hero_card_types": ["snapshot", "highlights"], "hero_card_skill_groups": 0 } -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{name}} {{major}} Portfolio</title>
-  <meta name="description" content="Job-ready portfolio for a {{major}} major: language skills, cultural experience, projects, resume, and contact." />
+  <title>{{name}} Portfolio</title>
+  <meta name="description" content="Job-ready portfolio for {{name}}: skills, experience, projects, resume, and contact." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
+    :root {
       /* Five main theme colors */
-      --color-canvas:      #fde047;   /* 1. Canvas      — yellow-300 hero gradient start   */
-      --color-brand:       #2563eb;   /* 2. Brand       — blue-600 vibrant mid gradient     */
-      --color-interactive: #22c55e;   /* 3. Interactive — green CTA buttons & accent        */
-      --color-surface:     #0f172a;   /* 4. Panel       — deep navy card / panel surface    */
-      --color-muted:       #1f2937;   /* 5. Subtle      — dark chip / input background      */
+      --color-canvas:      #0f172a;   /* 1. Canvas      — deep navy page background         */
+      --color-accent:      #22c55e;   /* 2. Interactive  — green CTAs, highlights, chips     */
+      --color-brand:       #2563eb;   /* 3. Brand        — vibrant blue hero gradient stop   */
+      --color-pop:         #fde047;   /* 4. Pop          — yellow hero gradient stop         */
+      --color-surface:     #1f2937;   /* 5. Panel        — dark card / chip surface          */
 
       /* Theme-independent hard-coded neutrals */
       --white:   #ffffff;
       --black:   #000000;
-      --text:    #f9fafb;
       --muted-text: #e5e7eb;
+      --body-text:  #f9fafb;
+      --link-color: #bfdbfe;
 
       /* Derived tokens */
-      --bg-gradient-end: color-mix(in srgb, var(--color-surface) 70%, var(--black));
-      --panel:           color-mix(in srgb, var(--color-surface) 96%, transparent);
-      --panel-border:    rgba(248,250,252,.18);
-      --chip:            var(--color-muted);
-      --shadow:          0 14px 35px color-mix(in srgb, var(--color-surface) 60%, transparent);
-      --header-bg:       color-mix(in srgb, var(--color-surface) 90%, transparent);
-      --input-bg:        color-mix(in srgb, var(--color-surface) 99%, var(--black));
-      --btn-primary-text: color-mix(in srgb, var(--color-interactive) 10%, var(--black));
-      --footer-bg:       color-mix(in srgb, var(--color-surface) 90%, transparent);
-      --tint-interactive: color-mix(in srgb, var(--color-interactive) 16%, transparent);
-      --on-interactive:  color-mix(in srgb, var(--color-interactive) 70%, var(--white));
-      --badge-tag-text:  color-mix(in srgb, var(--color-canvas) 90%, var(--white));
-      --link-color:      color-mix(in srgb, var(--color-brand) 60%, var(--white));
-      --radius:18px;
+      --panel:          color-mix(in srgb, var(--color-canvas) 96%, var(--white) 4%);
+      --panel-border:   color-mix(in srgb, var(--muted-text) 45%, transparent);
+      --chip-bg:        var(--color-surface);
+      --chip-border:    color-mix(in srgb, #94a3b8 45%, transparent);
+      --hero-badge-bg:  color-mix(in srgb, var(--white) 12%, transparent);
+      --hero-badge-border: color-mix(in srgb, var(--white) 40%, transparent);
+      --accent-chip-bg: color-mix(in srgb, var(--color-accent) 16%, transparent);
+      --accent-chip-text: #bbf7d0;
+      --header-bg:      color-mix(in srgb, var(--color-canvas) 90%, transparent);
+      --header-border:  color-mix(in srgb, var(--white) 18%, transparent);
+      --footer-bg:      color-mix(in srgb, var(--color-canvas) 90%, transparent);
+      --input-bg:       #020617;
+      --shadow:         0 14px 35px rgba(15,23,42,.6);
+      --radius:         18px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
-      color:var(--text);
-      background:linear-gradient(135deg,var(--color-canvas) 0%, var(--color-brand) 55%, var(--bg-gradient-end) 100%);
+      color:var(--body-text);
+      background:linear-gradient(135deg, var(--color-pop) 0%, var(--color-brand) 55%, var(--color-canvas) 100%);
     }
     a{color:var(--link-color);text-decoration:none}
     a:hover{text-decoration:underline}
     .container{max-width:1100px;margin:0 auto;padding:24px 22px 64px}
     header{
       position:sticky;top:0;z-index:10;
-      background:linear-gradient(135deg,rgba(248,250,252,.18),var(--header-bg));
+      background:linear-gradient(135deg,color-mix(in srgb, var(--white) 18%, transparent), var(--header-bg));
       backdrop-filter:blur(10px);
-      border-bottom:1px solid var(--panel-border);
+      border-bottom:1px solid var(--header-border);
     }
     nav{
       display:flex;align-items:center;justify-content:space-between;
@@ -63,8 +64,8 @@
     .brand{display:flex;align-items:center;gap:10px}
     .badge-logo{
       width:34px;height:34px;border-radius:999px;
-      background:conic-gradient(from 210deg,var(--color-canvas),#f97316,var(--color-brand),var(--color-canvas));
-      box-shadow:0 6px 18px color-mix(in srgb, var(--color-surface) 50%, transparent);
+      background:conic-gradient(from 210deg, var(--color-pop), #f97316, var(--color-brand), var(--color-pop));
+      box-shadow:0 6px 18px color-mix(in srgb, var(--color-canvas) 50%, transparent);
     }
     .brand h1{margin:0;font-size:19px;font-weight:700}
     .nav-links{display:flex;flex-wrap:wrap;gap:14px;font-weight:600}
@@ -74,10 +75,10 @@
       display:inline-flex;align-items:center;justify-content:center;
       padding:11px 16px;border-radius:999px;
       font-weight:700;border:none;cursor:pointer;
-      box-shadow:0 10px 24px color-mix(in srgb, var(--color-surface) 65%, transparent);
+      box-shadow:0 10px 24px color-mix(in srgb, var(--color-canvas) 65%, transparent);
     }
-    .btn-primary{background:var(--color-interactive);color:var(--btn-primary-text)}
-    .btn-secondary{background:transparent;color:var(--text);border:1px solid rgba(249,250,251,.4)}
+    .btn-primary{background:var(--color-accent);color:#052e16}
+    .btn-secondary{background:transparent;color:var(--body-text);border:1px solid color-mix(in srgb, var(--body-text) 40%, transparent)}
     .section{padding-top:60px}
     /* HERO */
     .hero{
@@ -87,20 +88,20 @@
     .hero-left{max-width:640px}
     .hero-photo{
       width:150px;height:150px;border-radius:20px;
-      object-fit:cover;border:3px solid rgba(248,250,252,.8);
+      object-fit:cover;border:3px solid color-mix(in srgb, var(--white) 80%, transparent);
       box-shadow:var(--shadow);margin-bottom:18px;
     }
     .hero-badge{
       display:inline-flex;align-items:center;gap:10px;
       padding:7px 12px;border-radius:999px;
-      background:rgba(248,250,252,.12);
-      border:1px solid rgba(248,250,252,.4);
-      font-size:13px;font-weight:700;color:var(--badge-tag-text);
+      background:var(--hero-badge-bg);
+      border:1px solid var(--hero-badge-border);
+      font-size:13px;font-weight:700;color:#fef9c3;
       text-transform:uppercase;letter-spacing:.12em;
     }
     .hero-badge span.tag{
       padding:4px 8px;border-radius:999px;
-      background:var(--tint-interactive);color:var(--on-interactive);
+      background:var(--accent-chip-bg);color:var(--accent-chip-text);
     }
     h2.hero-title{font-size:32px;margin:14px 0 6px}
     .hero-sub{color:var(--muted-text);font-size:18px;line-height:1.7}
@@ -111,15 +112,15 @@
       border-radius:var(--radius);
       padding:22px;
       box-shadow:var(--shadow);
-      border:1px solid var(--panel-border);
+      border:1px solid var(--header-border);
     }
     .hero-card h3{margin:0 0 8px;font-size:16px}
     .chip{
       display:inline-flex;align-items:center;
       padding:6px 11px;border-radius:999px;
-      background:var(--chip);color:var(--muted-text);
+      background:var(--chip-bg);color:var(--muted-text);
       font-size:12px;margin:4px 4px 0 0;
-      border:1px solid rgba(148,163,184,.45);
+      border:1px solid var(--chip-border);
     }
 
     /* GENERAL CARDS / GRID */
@@ -128,7 +129,7 @@
       background:var(--panel);
       border-radius:var(--radius);
       padding:18px;
-      border:1px solid rgba(148,163,184,.4);
+      border:1px solid var(--panel-border);
       box-shadow:var(--shadow);
     }
     .grid{display:grid;gap:18px}
@@ -146,19 +147,27 @@
     input,textarea{
       width:100%;margin-top:5px;
       padding:11px 12px;border-radius:12px;
-      border:1px solid rgba(148,163,184,.65);
-      background:var(--input-bg);color:var(--text);
+      border:1px solid color-mix(in srgb, #94a3b8 65%, transparent);
+      background:var(--input-bg);color:var(--body-text);
       font:inherit;
     }
     textarea{resize:vertical;min-height:110px}
 
     footer{
-      border-top:1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
+      border-top:1px solid color-mix(in srgb, var(--color-canvas) 50%, transparent);
       padding:30px 0;
       text-align:center;
-      color:var(--text);
+      color:var(--body-text);
       font-size:14px;
       background:var(--footer-bg);
+    }
+
+    /* Project icon */
+    .project-icon{
+      display:block;
+      text-align:center;
+      font-size:4rem;
+      margin-bottom:0.5rem;
     }
 
     /* RESPONSIVE */
@@ -194,42 +203,41 @@
   <section class="section">
     <div class="container hero">
       <div class="hero-left">
-        <!-- STOCK HERO IMAGE -->
-        <img src="assets/images/hero-spanish.jpg" alt="Student studying {{major}} with books and laptop" class="hero-photo">
+        <img src="assets/images/hero-{{major}}.jpg" alt="{{name}} hero photo" class="hero-photo">
 
         <div class="hero-badge">
-          <span>{{major}} Major</span>
+          <span>{{major}}</span>
           <span class="tag">Class of {{current_year}}</span>
         </div>
 
         <h2 class="hero-title">{{headline}}</h2>
         <p class="hero-sub">
-          I'm <strong>{{name}}</strong>, {{about}}
+          I'm <strong>{{name}}</strong>. {{about}}
         </p>
 
         <div class="hero-actions">
           <a href="#contact" class="btn btn-primary">Invite Me to Interview</a>
           <a href="#projects" class="btn btn-secondary">View Writing &amp; Projects</a>
         </div>
+        {{#has_professional_interests}}
         <p class="hero-note">
-          {{subheadline}}
+          Interests: {{#professional_interests}}{{.}} · {{/professional_interests}}
         </p>
+        {{/has_professional_interests}}
       </div>
 
-      <aside class="hero-card" aria-label="{{major}} profile highlights">
+      <aside class="hero-card" aria-label="Profile highlights">
         {{#hero_cards}}
-          {{#is_highlights}}
-          <h3>Quick Highlights</h3>
-          <ul style="margin-top:6px;font-size:14px">
-            {{#highlights}}<li>{{.}}</li>{{/highlights}}
-          </ul>
-          {{/is_highlights}}
-          {{^is_highlights}}
-          {{^is_links}}
-          <h3>{{group_name}}</h3>
-          {{#skills}}<div class="chip">{{.}}</div>{{/skills}}
-          {{/is_links}}
-          {{/is_highlights}}
+        {{#is_snapshot}}
+        <h3>{{card_label}}</h3>
+        {{#snapshot}}<div class="chip">{{.}}</div>{{/snapshot}}
+        {{/is_snapshot}}
+        {{#is_highlights}}
+        <h3 style="margin-top:16px;font-size:15px">{{card_label}}</h3>
+        <ul style="margin-top:6px;font-size:14px">
+          {{#highlights}}<li>{{.}}</li>{{/highlights}}
+        </ul>
+        {{/is_highlights}}
         {{/hero_cards}}
       </aside>
     </div>
@@ -242,6 +250,7 @@
       <div class="grid grid-3">
         {{#projects}}
         <article class="card">
+          <span class="project-icon">{{project_icon}}</span>
           <h3>{{name}}</h3>
           <p>{{description}}</p>
           {{#bullets}}<p style="font-size:14px;color:var(--muted-text)">{{.}}</p>{{/bullets}}
@@ -275,64 +284,17 @@
   <section id="experience" class="section">
     <div class="container">
       <h2 class="section-title">Experience</h2>
-      <div class="card">
-        {{#experience}}
+      {{#experience}}
+      <div class="card" style="margin-bottom:14px">
         <h3>{{title}} — {{company}}</h3>
         <p style="font-size:14px;color:var(--muted-text)">{{start_date}}–{{end_date}} · {{location}}</p>
         <ul>
           {{#bullets}}<li>{{.}}</li>{{/bullets}}
         </ul>
-        {{/experience}}
       </div>
+      {{/experience}}
     </div>
   </section>
-
-  {{#certifications}}
-  <!-- CERTIFICATIONS -->
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title">Certifications</h2>
-      <div class="card">
-        {{#certifications}}
-        <h3>{{name}}</h3>
-        <p style="font-size:14px;color:var(--muted-text)">{{issuer}} · {{date}}</p>
-        {{/certifications}}
-      </div>
-    </div>
-  </section>
-  {{/certifications}}
-
-  {{#publications}}
-  <!-- PUBLICATIONS -->
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title">Publications</h2>
-      <div class="card">
-        {{#publications}}
-        <h3>{{title}}</h3>
-        <p style="font-size:14px;color:var(--muted-text)">{{venue}} · {{date}}</p>
-        {{#link}}<a href="{{link}}">View Publication</a>{{/link}}
-        {{/publications}}
-      </div>
-    </div>
-  </section>
-  {{/publications}}
-
-  {{#leadership}}
-  <!-- LEADERSHIP -->
-  <section class="section">
-    <div class="container">
-      <h2 class="section-title">Leadership &amp; Volunteer</h2>
-      <div class="card">
-        {{#leadership}}
-        <h3>{{role}} — {{organization}}</h3>
-        <p style="font-size:14px;color:var(--muted-text)">{{dates}}</p>
-        <p>{{description}}</p>
-        {{/leadership}}
-      </div>
-    </div>
-  </section>
-  {{/leadership}}
 
   <!-- RESUME -->
   <section class="section">
@@ -347,6 +309,55 @@
     </div>
   </section>
 
+  <!-- CERTIFICATIONS -->
+  {{#has_certifications}}
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Certifications</h2>
+      <div class="grid grid-3">
+        {{#certifications}}
+        <div class="card" style="margin-bottom:14px">
+          <h3>{{name}}</h3>
+          <p style="font-size:14px;color:var(--muted-text)">{{issuer}} · {{date}}</p>
+        </div>
+        {{/certifications}}
+      </div>
+    </div>
+  </section>
+  {{/has_certifications}}
+
+  <!-- PUBLICATIONS -->
+  {{#has_publications}}
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Publications</h2>
+      {{#publications}}
+      <div class="card" style="margin-bottom:14px">
+        <h3>{{title}}</h3>
+        <p style="font-size:14px;color:var(--muted-text)">{{venue}} · {{date}}</p>
+        {{#link}}<a href="{{link}}" class="chip">View Publication</a>{{/link}}
+      </div>
+      {{/publications}}
+    </div>
+  </section>
+  {{/has_publications}}
+
+  <!-- LEADERSHIP -->
+  {{#has_leadership}}
+  <section class="section">
+    <div class="container">
+      <h2 class="section-title">Leadership &amp; Involvement</h2>
+      {{#leadership}}
+      <div class="card" style="margin-bottom:14px">
+        <h3>{{role}} — {{organization}}</h3>
+        <p style="font-size:14px;color:var(--muted-text)">{{dates}}</p>
+        <p>{{description}}</p>
+      </div>
+      {{/leadership}}
+    </div>
+  </section>
+  {{/has_leadership}}
+
   <!-- CONTACT -->
   <section id="contact" class="section">
     <div class="container">
@@ -360,7 +371,7 @@
             <input type="email" required placeholder="you@example.com">
           </label>
           <label style="grid-column:1 / -1">Message
-            <textarea required placeholder="Hello, we'd like to talk with you about..."></textarea>
+            <textarea required placeholder="Hi, I'd like to talk with you about..."></textarea>
           </label>
           <div style="grid-column:1 / -1;margin-top:4px">
             <button type="submit" class="btn btn-primary">Send Message</button>
@@ -373,7 +384,7 @@
 </main>
 
 <footer>
-  &copy; <span id="year"></span> {{name}} &middot; {{major}} Major &middot; {{value_proposition}}
+  &copy; <span id="year"></span> {{name}} · {{major}} · {{subheadline}}
 </footer>
 
 <script>

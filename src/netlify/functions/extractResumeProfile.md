@@ -112,6 +112,7 @@ OUTPUT JSON SHAPE
         { "from": "", "relationship": "", "excerpt": "" }
       ],
       "causes": [],
+      "professional_interests": [],
       "hobbies_interests": [],
       "additional_background": [],
       "desired_roles": []
@@ -170,6 +171,7 @@ Extract verbatim, structured content. Omit sections absent from the resume — n
 - skills: technical, programming languages, tools, domains, soft skills
 - publications, certifications, licenses, patents if present
 - leadership, volunteer, organizations, career breaks, courses, test scores, languages if present
+- professional_interests: extract any stated areas of professional curiosity, research interests, industry focus areas, or stated "interested in" phrases from the resume (e.g. "interested in embedded systems", "passionate about ML infrastructure"). Do not infer — only include what is explicitly stated.
 - desired_roles: populate only if the resume explicitly states target roles (e.g. objective statement, "seeking", "open to"). Leave empty if not stated — resume_strategy.desired_roles handles inferred targets.
 
 about field: copy the resume summary as closely as possible, but convert any third-person phrasing to first person ("Joel is a…" → "I am a…", "He has…" → "I have…"). Do not add, invent, or embellish — only change the grammatical person.
@@ -178,6 +180,8 @@ Keep this section factual and non-creative. It is the ground truth all downstrea
 
 3. MOTIFS
 Considering the given major and specialization, determine the broad primary domain and extract the most pertinent keywords from the resume. Choose 2-3 core visual metaphors and 2-4 symbolic objects. The key rule: one primary symbol, up to three supporting — avoid clutter.
+
+Use `professional_interests` to filter and prioritize motifs: if the candidate has stated interests that point to a specific sub-domain (e.g. "interested in photonics" within an EE major), prefer motifs from that sub-domain over the generic domain defaults. Professional interests are a strong signal for which row of the Example Motif Table is most relevant.
 
 Example Motif Table
 _Life science_
@@ -221,6 +225,10 @@ Data science: laptop, charts, node graph, scatter plot / dashboard
 
 Rendering styles: stylized scientific illustration, cinematic concept art, clean editorial vector, gradient 3D illustration, technical schematic aesthetic.
 
+VOICE RULES (apply to sections 4 and 5)
+- Always write in first person ("I build…", "My work spans…", "I bring…") — never third person ("She leads…", "The candidate has…").
+- Confident but not boastful. Avoid superlatives like "world-class", "exceptional", "top-tier", "passionate", "driven", or "highly skilled". Let concrete facts carry the weight instead.
+
 4. EDITORIAL DIRECTION
 This is the most important part. Infer:
 - what kind of professional identity the candidate has
@@ -229,16 +237,13 @@ This is the most important part. Infer:
 - what kind of visual language fits the specialization
 - what a website can do better than the resume
 
-Ground every claim in resume_facts. This section guides downstream creative stages without locking them into a fixed structure.
+Ground every claim in resume_facts. Write core_story in first person. This section guides downstream creative stages without locking them into a fixed structure.
 
 5. WEBSITE COPY SEED
 Write several strong website-ready options for hero headline, subheadline, and calls to action. Ground these in actual resume content — they should sound more compelling than resume text, not generic.
 
-Voice rules:
-- Always write in first person ("I build…", "My work spans…") — never third person.
-- Confident but not boastful. Avoid superlatives like "world-class", "exceptional", "top-tier", "passionate", "driven", or "highly skilled". Let concrete facts carry the weight instead.
-- about_angle: one or two grounded sentences the candidate would say out loud to a recruiter — specific, honest, and human-sounding.
-- value_propositions: two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. The best one will be used as the hero sub-value pitch on the portfolio site.
+- about_angle: one or two grounded sentences the candidate would say out loud to a recruiter — specific, honest, and human-sounding. First person.
+- value_propositions: two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. First person. The best one will be used as the hero sub-value pitch on the portfolio site.
 
 6. SUBJECT-INSPIRED COLOR STRATEGY
 Conjure five colors inspired by the candidate's field and subject matter. Output them as an ordered array in `colors` — the order matters and must follow this convention:

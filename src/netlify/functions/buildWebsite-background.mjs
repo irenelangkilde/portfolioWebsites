@@ -257,6 +257,14 @@ function injectCssColors(html, colorSpec, templateHtml) {
   });
 }
 
+// ─── Template metadata comment parser ────────────────────────────────────────
+// Extracts the JSON payload from <!-- { ... } --> embedded in <head>.
+function parseTemplateMetadata(html) {
+  const m = (html || "").match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
+  if (!m) return {};
+  try { return JSON.parse(m[1]); } catch { return {}; }
+}
+
 // ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
 function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const attrs   = designSpec?.exemplary_attributes || {};
@@ -378,7 +386,7 @@ function fixMojibakeDeep(val) {
  * Used to detect whether the template should be filled programmatically.
  */
 function isMustacheTemplate(html) {
-  return /\{\{(?:name|headline|#experience|#projects|#education|#skill_groups)\}\}/.test(html);
+  return /\{\{#\w+\}\}/.test(html);
 }
 
 /**
@@ -419,6 +427,10 @@ function renderMustache(template, data) {
     return val != null ? String(val) : "";
   });
 
+  // Strip any orphaned closing or opening tags left after processing
+  // (e.g. {{/is_links}}, {{#tag}} whose section had no matching close)
+  result = result.replace(/\{\{[#\/][^}]*\}\}/g, "");
+
   return result;
 }
 
@@ -452,12 +464,59 @@ function toFlatResumeSchema(f) {
     experience:      profile.experience     || [],
     projects:        profile.projects       || [],
     skills:          profile.skills         || {},
-    certifications:  profile.certifications || [],
-    publications:    profile.publications   || [],
-    volunteer:       profile.volunteer_experience || [],
-    extracurricular: [...(profile.leadership || []), ...(profile.organizations || [])],
-    desired_roles:   profile.desired_roles || []
+    certifications:         profile.certifications        || [],
+    publications:           profile.publications           || [],
+    volunteer:              profile.volunteer_experience   || [],
+    extracurricular:        [...(profile.leadership || []), ...(profile.organizations || [])],
+    desired_roles:          profile.desired_roles          || [],
+    professional_interests: profile.professional_interests || []
   };
+}
+
+// Domain keyword → emoji candidates (ordered by specificity)
+const EMOJI_DOMAIN_MAP = [
+  { keywords: ["space","aerospace","rocket","satellite","orbital"],          emoji: ["🚀","🛸","🌌"] },
+  { keywords: ["game","simulation","unity","unreal","godot","pygame"],       emoji: ["🎮","🕹️","🎲"] },
+  { keywords: ["biology","genomics","bioinformatics","dna","rna","protein","cell","organism","ecology"], emoji: ["🧬","🌿","🦠"] },
+  { keywords: ["chemistry","chemical","synthesis","reaction","molecule","polymer"], emoji: ["⚗️","🧪","🔬"] },
+  { keywords: ["physics","optics","laser","photon","quantum","wave","acoustic"], emoji: ["🔬","💡","🌊","🔭"] },
+  { keywords: ["electrical","circuit","rf","antenna","pcb","embedded","fpga","microcontroller","arduino","esp32"], emoji: ["⚡","📡","🔌","🔋"] },
+  { keywords: ["mechanical","manufacturing","cad","solidworks","autocad","3d print","cnc","robotics"], emoji: ["⚙️","🏗️","🔩"] },
+  { keywords: ["environment","civil","geospatial","gis","hydrology","climate","geology","surveying"], emoji: ["🌍","🏔️","🌱"] },
+  { keywords: ["finance","accounting","trading","portfolio","stock","investment","banking","audit","tax"], emoji: ["💰","📉","🏦"] },
+  { keywords: ["data","analytics","machine learning","ml","deep learning","nlp","ai","statistics","tableau","power bi","pandas","numpy"], emoji: ["📊","📈","🤖","🧠"] },
+  { keywords: ["design","art","illustration","animation","figma","photoshop","ux","ui","media","film","video"], emoji: ["🎨","🖼️","🎬"] },
+  { keywords: ["network","security","cybersecurity","firewall","penetration","siem","soc","cryptography"], emoji: ["🔐","🌐","🖧"] },
+  { keywords: ["education","research","teaching","curriculum","pedagogy","writing","linguistics","language"], emoji: ["📚","🎓","📝"] },
+  { keywords: ["web","app","frontend","backend","api","react","vue","angular","node","django","flask","software"], emoji: ["💻","🖥️","🛠️","🔧"] },
+];
+
+const FALLBACK_EMOJI = ["🔭","💡","🧩","📌","🗂️","🧮","📐","🔎"];
+
+/**
+ * Pick a domain-appropriate, per-project unique emoji.
+ * Uses project name + description + technologies for keyword matching.
+ * idx ensures uniqueness across projects even when domains overlap.
+ */
+function pickProjectEmoji(project, idx) {
+  const hay = [
+    project.name        || "",
+    project.description || "",
+    ...(project.technologies || []),
+    ...(project.bullets || [])
+  ].join(" ").toLowerCase();
+
+  // Collect all matched emoji across all matching domains
+  const matched = [];
+  for (const domain of EMOJI_DOMAIN_MAP) {
+    if (domain.keywords.some(k => hay.includes(k))) {
+      matched.push(...domain.emoji);
+    }
+  }
+
+  const pool = matched.length ? matched : FALLBACK_EMOJI;
+  // Use modulo so adjacent projects in the same domain still differ
+  return pool[idx % pool.length];
 }
 
 /**
@@ -465,7 +524,26 @@ function toFlatResumeSchema(f) {
  * matching the schema in ExtractMustacheTemplate.md.
  * colorSpec: { primary, secondary, accent, dark, light } — user's palette choice
  */
-function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null) {
+function trimAboutToLength(text, targetWords) {
+  if (!targetWords || targetWords <= 0) return text;
+  const words = text.trim().split(/\s+/);
+  if (words.length <= targetWords * 1.3) return text;  // within 30% — keep as-is
+
+  // Split into sentences, accumulate until we reach the target word count
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  let result = "";
+  let count = 0;
+  for (const s of sentences) {
+    const sw = s.trim().split(/\s+/).length;
+    if (count > 0 && count + sw > targetWords * 1.35) break;
+    result += (result ? " " : "") + s.trim();
+    count += sw;
+    if (count >= targetWords * 0.85) break;
+  }
+  return result || text;
+}
+
+function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null) {
   const personal = resumeJson?.personal || {};
   // unified_strategy has strategy.positioning.{headline,subheadline,value_proposition}
   // resume_strategy (no job analysis) has strategy.website_copy_seed.{hero_headline_options, hero_subheadline_options, value_propositions}
@@ -501,19 +579,45 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     .map(e => (e.bullets || [])[0]).filter(Boolean).slice(0, 3);  // max 3 bullets
 
   const HERO_CARD_MAX = 4;   // max skills shown inside one card
-  const HERO_SKILL_GROUPS = 2; // fixed cards (Highlights + Links = 2) fill the other half of a 2-col grid
-  const hero_cards = [
-    ...skill_groups
-      .map(g => {
-        const skills = g.skills.slice(0, HERO_CARD_MAX);
-        return { ...g, skills, _size: charCount(skills) };
-      })
-      .sort((a, b) => b._size - a._size)
-      .slice(0, HERO_SKILL_GROUPS),
-    { group_name: "Highlights", skills: [], highlights: highlightBullets,
-      is_highlights: true, _size: charCount(highlightBullets) },
-    { group_name: "Links",      skills: [], is_links: true, _size: 30 }
-  ].sort((a, b) => b._size - a._size);
+  const strengths = (strategy?.editorial_direction?.strengths_to_emphasize || []).slice(0, 4);
+
+  // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
+  // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
+  // in ExtractMustacheTemplate.md — keep both in sync when adding new card types.
+  // Falls back to a default three-card set for old templates without hero_card_map.
+  let hero_cards;
+  if (heroCardMap && heroCardMap.length) {
+    let skillGroupIdx = 0;
+    hero_cards = heroCardMap.map(entry => {
+      const label = entry.display_label || entry.original_label || "";
+      switch (entry.type) {
+        case "highlights":
+          return { group_name: label, card_label: label, skills: [],
+            highlights: highlightBullets, is_highlights: true, _size: charCount(highlightBullets) };
+        case "snapshot":
+          return { group_name: label, card_label: label, skills: [],
+            snapshot: strengths, is_snapshot: true, _size: charCount(strengths) };
+        case "links":
+          return { group_name: label, card_label: label, skills: [], is_links: true, _size: 30 };
+        case "skill_group": {
+          const g = skill_groups[skillGroupIdx++];
+          if (!g) return null;
+          const skills = g.skills.slice(0, HERO_CARD_MAX);
+          return { ...g, card_label: label || g.group_name, skills, _size: charCount(skills) };
+        }
+        default: return null;
+      }
+    }).filter(Boolean);
+  } else {
+    // Legacy fallback: highlights + snapshot (if data available) + links
+    hero_cards = [
+      { group_name: "Highlights", card_label: "Highlights", skills: [],
+        highlights: highlightBullets, is_highlights: true, _size: charCount(highlightBullets) },
+      ...(strengths.length ? [{ group_name: "Strengths Snapshot", card_label: "Strengths Snapshot", skills: [],
+        snapshot: strengths, is_snapshot: true, _size: charCount(strengths) }] : []),
+      { group_name: "Links", card_label: "Links", skills: [], is_links: true, _size: 30 }
+    ];
+  }
 
   // Combine volunteer + extracurricular into leadership, dropping blank entries
   const leadership = [
@@ -533,10 +637,12 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     theme_dark:      td,
 
     name:              personal.name     || "",
+    first_name:        (personal.name || "").split(" ")[0] || "",
+    last_name:         (personal.name || "").split(" ").slice(1).join(" ") || "",
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             resumeJson?.summary || _coreStory || "",
+    about:             trimAboutToLength(resumeJson?.summary || _coreStory || "", aboutWordCount),
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",
@@ -567,7 +673,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       technologies:e.technologies || []
     })),
 
-    projects: (resumeJson?.projects || []).map(p => ({
+    projects: (resumeJson?.projects || []).map((p, idx) => ({
       name:        p.name        || "",
       description: p.description || "",
       role:        p.role        || "",
@@ -575,7 +681,8 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       bullets:     p.bullets     || [],
       technologies:p.technologies || [],
       github_link: p.links?.github || "",
-      demo_link:   p.links?.demo   || ""
+      demo_link:   p.links?.demo   || "",
+      project_icon: pickProjectEmoji(p, idx)
     })),
 
     education: (resumeJson?.education || []).map(e => ({
@@ -591,9 +698,16 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     skill_groups,
     hero_cards,
 
-    has_certifications: (resumeJson?.certifications || []).length > 0,
-    has_publications:   (resumeJson?.publications  || []).length > 0,
-    has_leadership:     leadership.length > 0,
+    has_certifications:          (resumeJson?.certifications        || []).length > 0,
+    has_publications:            (resumeJson?.publications           || []).length > 0,
+    has_leadership:              leadership.length > 0,
+    // Fall back to motifs.resume_keywords (already sorted by pertinence) when no explicit interests listed.
+    professional_interests: (resumeJson?.professional_interests?.length
+      ? resumeJson.professional_interests
+      : (resumeStrategy?.motifs?.resume_keywords || []).slice(0, 6)),
+
+    has_professional_interests: !!(resumeJson?.professional_interests?.length
+      || (resumeStrategy?.motifs?.resume_keywords || []).length),
 
     certifications: (resumeJson?.certifications || []).map(c => ({
       name:   c.name   || "",
@@ -858,11 +972,34 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
 
   if (isMustacheTemplate(rendererSampleHtml)) {
     // ── Mustache path: fill programmatically, skip AI renderer ─────────────
+    const templateMeta   = parseTemplateMetadata(rendererSampleHtml);
+    const aboutWordCount = templateMeta.about_word_count || 0;
+    // HERO CARD CLASSIFICATION & FIELD MAPPING (mirrors table in ExtractMustacheTemplate.md)
+    //   type          unified JSON field read by renderer              default display_label
+    //   highlights  → resumeJson.experience[*].bullets[0] (max 3)  → "Highlights"
+    //   snapshot    → strategy.editorial_direction                  → "Strengths Snapshot"
+    //                   .strengths_to_emphasize (max 4)
+    //   links       → resumeJson.{email,phone,linkedin,github,       → "Links"
+    //                   website}
+    //   skill_group → resumeJson.skills.{programming_languages,     → "" (use group_name from data)
+    //                   technical, tools, soft_skills, other}
+    let heroCardMap = templateMeta.hero_card_map || null;
+    // Backward-compat: convert legacy hero_card_types array to hero_card_map format
+    if (!heroCardMap && Array.isArray(templateMeta.hero_card_types)) {
+      const DEFAULT_LABELS = { highlights: "Highlights", snapshot: "Strengths Snapshot", links: "Links" };
+      heroCardMap = templateMeta.hero_card_types.map(type => ({
+        original_label: type,
+        type,
+        display_label: DEFAULT_LABELS[type] || ""
+      }));
+    }
     const mustacheData = flattenToMustacheData(
       coreContent.strategy?.positioning ? coreContent.strategy : (coreContent.strategy?.strategy || coreContent.strategy),
       toFlatResumeSchema(resumeFacts),
       colorSpec,
-      resumeStrategy
+      resumeStrategy,
+      aboutWordCount,
+      heroCardMap
     );
     siteHtml = cleanHtml(renderMustache(rendererSampleHtml, fixMojibakeDeep(mustacheData)));
     siteHtml = injectCssColors(siteHtml, colorSpec, rendererSampleHtml);

@@ -9,6 +9,8 @@ MUSTACHE DATA SCHEMA
 
 Top-level scalars
   {{name}}                Full candidate name
+  {{first_name}}          First name only  (for typographic split layouts)
+  {{last_name}}           Last name only   (for typographic split layouts)
   {{headline}}            Role-focused hero headline  (from strategy)
   {{subheadline}}         Supporting tagline           (from strategy)
   {{value_proposition}}   One-sentence value pitch     (from strategy)
@@ -25,10 +27,22 @@ Top-level scalars
   {{desired_role}}        Primary target role (first entry from desired_roles)
 
 Conditional blocks (omit the section entirely when the array is empty)
-  {{#has_github}}  …  {{/has_github}}
-  {{#has_linkedin}}…  {{/has_linkedin}}
-  {{#has_website}} …  {{/has_website}}
-  {{#has_phone}}   …  {{/has_phone}}
+  {{#has_github}}                  …  {{/has_github}}
+  {{#has_linkedin}}                …  {{/has_linkedin}}
+  {{#has_website}}                 …  {{/has_website}}
+  {{#has_phone}}                   …  {{/has_phone}}
+  {{#has_leadership}}              …  {{/has_leadership}}
+  {{#has_certifications}}          …  {{/has_certifications}}
+  {{#has_publications}}            …  {{/has_publications}}
+  {{#has_professional_interests}}  …  {{/has_professional_interests}}
+
+Professional interests  (candidate's stated areas of professional curiosity — keep as its own labeled section or tag cluster)
+  {{#has_professional_interests}}
+  {{#professional_interests}}{{.}}{{/professional_interests}}
+  {{/has_professional_interests}}
+  IMPORTANT: Do NOT map professional_interests content to {{subheadline}}, {{about}}, or any other scalar token.
+             If the template has an "Interests" line or tag row, replace it with this block.
+             If the template has no dedicated interests area, omit this block entirely.
 
 Experience  (one block per job, most-recent first)
   {{#experience}}
@@ -52,6 +66,7 @@ Projects
     {{#technologies}}{{.}}{{/technologies}}
     {{github_link}}
     {{demo_link}}
+    {{project_icon}}    A domain-appropriate emoji (e.g. 💻 📊 ⚡ 🧬) — use as the project card's visual icon
   {{/projects}}
 
 Education
@@ -71,27 +86,65 @@ Skill groups  (standalone skills section — full list, one group per row)
     {{#skills}}{{.}}{{/skills}}
   {{/skill_groups}}
 
-Hero cards  (at-a-glance sidebar grid — skill groups + Highlights + Links merged and sorted by content size)
-  Use this instead of skill_groups when the template has a compact hero sidebar showing skills,
-  bullet highlights, and social links as small cards in a 2-column grid.
-  The renderer must count the fixed cards (Highlights = 1, Links = 1) and limit skill-group cards
-  so the total fits the grid: a 2-column grid with 2 fixed cards should receive at most 2 skill-group
-  cards (4 total), a 3-column grid at most 4, etc. Select the highest-density groups first.
+Hero cards  (at-a-glance sidebar grid — only the card types present in the original template)
+  Use this instead of skill_groups when the template has a compact hero sidebar showing highlights,
+  a strengths snapshot, social links, and/or skill chips as small cards in a 2–3-column grid.
+
+  HERO CARD CLASSIFICATION & FIELD MAPPING TABLE
+  This table is the shared contract between the extractor (you) and the renderer.
+  The extractor uses columns 1→2 to classify each card.
+  The renderer uses columns 2→3 to populate data.
+  Column 4 is the fallback/alias label — used as display_label only when the source HTML has no readable title text.
+
+  ┌──────────────┬────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┬──────────────────────┐
+  │ Title signal │ type (shared key)                                  │ Renderer reads from (unified JSON)                              │ Fallback/alias label │
+  ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
+  │ "Highlights",│ highlights                                         │ resumeJson.experience[*].bullets[0]                             │ "Highlights"         │
+  │ "Quick       │                                                    │ (first bullet per role, max 3)                                  │                      │
+  │ Highlights", │                                                    │                                                                 │                      │
+  │ "At a Glance"│                                                    │                                                                 │                      │
+  ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
+  │ ANY title    │ snapshot                                           │ strategy.editorial_direction.strengths_to_emphasize             │ "Strengths Snapshot" │
+  │ containing   │ ← CRITICAL: "Snapshot" in the title is the        │ (max 4 items)                                                   │                      │
+  │ "Snapshot"   │   deciding signal regardless of visual format      │                                                                 │                      │
+  │ or "Strength"│   (chips, bullets, list — all → snapshot)          │                                                                 │                      │
+  ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
+  │ "Links",     │ links                                              │ resumeJson.{email, phone, linkedin, github, website}            │ "Links"              │
+  │ "Connect",   │                                                    │                                                                 │                      │
+  │ "Social"     │                                                    │                                                                 │                      │
+  ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
+  │ Any plain    │ skill_group                                        │ resumeJson.skills.{programming_languages, technical,            │ "" (use group_name   │
+  │ skill        │ Only if NO "Snapshot" in title.                    │ tools, soft_skills, other}                                      │ from data)           │
+  │ category:    │ One entry per skill_group card in the original.    │ Renderer consumes skill_groups in declaration order.            │                      │
+  │ "Tools",     │                                                    │                                                                 │                      │
+  │ "Languages", │                                                    │                                                                 │                      │
+  │ "Technical   │                                                    │                                                                 │                      │
+  │ Skills", etc.│                                                    │                                                                 │                      │
+  └──────────────┴────────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────┴──────────────────────┘
+
+  Only declare card types that appear in the original template. Do NOT add card types that are absent.
 
   {{#hero_cards}}
-    {{group_name}}
+    {{card_label}}   ← display title token — always use this, never hardcode section names.
+                       Preserve the original label from the HTML exactly — do NOT shorten, generalize, or simplify it.
+                       (e.g. keep "Language Snapshot", "Key Highlights", "Social Links" verbatim.)
+                       Use the fallback/alias label from the table only if the original HTML has no readable title text.
 
-    {{#is_highlights}}          ← truthy only on the Highlights card
+    {{#is_highlights}}          ← truthy only on the highlights card
     {{#highlights}}{{.}}{{/highlights}}
     {{/is_highlights}}
 
-    {{#is_links}}               ← truthy only on the Links card
+    {{#is_snapshot}}            ← truthy only on the snapshot card
+    {{#snapshot}}{{.}}{{/snapshot}}
+    {{/is_snapshot}}
+
+    {{#is_links}}               ← truthy only on the links card
     {{#has_linkedin}}<a href="{{linkedin}}">LinkedIn</a>{{/has_linkedin}}
     {{#has_github}}<a href="{{github}}">GitHub</a>{{/has_github}}
     {{#has_website}}<a href="{{website}}">Website</a>{{/has_website}}
     {{/is_links}}
 
-    {{#skills}}{{.}}{{/skills}}   ← skill chip list (empty for Highlights and Links cards)
+    {{#skills}}{{.}}{{/skills}}   ← skill chips (empty for highlights, snapshot, and links cards)
   {{/hero_cards}}
 
 Certifications  (omit section if empty)
@@ -128,11 +181,23 @@ CONVERSION RULES
 
 1a. HERO SPLIT LAYOUT: If the template hero uses a CSS grid with two columns ensure they end up approximately the same height. Use top-alignment to keep the text anchored near the top where users read first.
 
-1b. HERO SIDEBAR CARD GRID: If the template contains an at-a-glance / hero sidebar that shows skill chips, experience highlights, and social links as small cards arranged in a 2-column grid, convert it to use `{{#hero_cards}}` instead of separate hardcoded sections:
-    - Replace any hardcoded "Highlights" card (with static bullet list) with `{{#is_highlights}}{{#highlights}}{{.}}{{/highlights}}{{/is_highlights}}` inside the loop.
-    - Replace any hardcoded "Links" / social card with `{{#is_links}}…{{/is_links}}` inside the loop.
-    - Replace any inline `{{#skill_groups}}` loop inside the hero card grid with `{{#hero_cards}}` — the renderer merges skills, highlights, and links and sorts them by content density automatically.
+1b. HERO SIDEBAR CARD GRID: If the template contains an at-a-glance / hero sidebar that shows highlights, snapshot strengths, social links, and/or skill chips as small cards in a 2–3-column grid, convert it to use `{{#hero_cards}}` instead of separate hardcoded sections:
+    - Identify each card in the original sidebar and classify it using the HERO CARD TYPE → DATA SOURCE MAPPING table above.
+    - Replace every hardcoded card title / section heading with `{{card_label}}`. Never hardcode names.
+    - Preserve the original title text verbatim as the display_label — do NOT generalize or shorten it.
+    - Replace the body of each card type with the corresponding Mustache block:
+        highlights  → {{#is_highlights}}{{#highlights}}{{.}}{{/highlights}}{{/is_highlights}}
+        snapshot    → {{#is_snapshot}}{{#snapshot}}{{.}}{{/snapshot}}{{/is_snapshot}}
+        links       → {{#is_links}}…{{/is_links}}
+        skill_group → {{#skills}}{{.}}{{/skills}}
+    - Record each card in `hero_card_map` in the metadata comment (ordered as they appear in the sidebar), with its original_label, type, and display_label. The renderer builds hero_cards solely from this map — it will NOT inject any card not listed here.
     - Preserve all CSS classes and card markup exactly; only change the Mustache wrapping.
+
+1d. SINGLE WRAPPER CONTAINING MULTIPLE ITEMS: If the template has one container element (e.g. a single `.card` or `.panel` div) that contains multiple hardcoded items of the same type (e.g. two or three experience entries, project entries, etc.), move the container element INSIDE the loop so each iteration gets its own card. Add a small bottom margin (e.g. `style="margin-bottom:14px"`) to the repeated container to preserve visual separation.
+   Before: <div class="card"> [item 1] [item 2] </div>
+   After:  {{#experience}}<div class="card" style="margin-bottom:14px"> … </div>{{/experience}}
+
+1c. TYPOGRAPHIC NAME SPLIT: If the template hero displays the candidate's name across two separate elements (e.g., `<span class="first-line">LUCY</span><span class="second-line">ROSS</span>`), use `{{first_name}}` and `{{last_name}}` — NOT `{{headline}}` and `{{subheadline}}`. Reserve headline/subheadline for role-focused copy only.
 
 2. REPLACE every piece of candidate-specific text with the matching token. This includes:
    - Names, job titles, company names, school names
@@ -152,7 +217,12 @@ CONVERSION RULES
    - All <script> blocks
    - Semantic structure (nav, header, section, footer)
 
-4. OPTIONAL SECTIONS: wrap any section whose data array may be empty in a Mustache conditional so it disappears cleanly when the data is absent. Certifications, publications, and leadership sections are typically optional.
+3a. PROJECT CARD ICONS: If each project card contains a thumbnail image, SVG icon, or placeholder visual element (e.g. `<img>`, `<svg>`, or a styled `<div>` acting as a visual), replace it with a centered `<span>` displaying `{{project_icon}}` at font-size 3.5rem–5rem. Apply `display:block; text-align:center; font-size:4rem; margin-bottom:0.5rem` inline or via a class. This ensures each project gets a distinct domain-appropriate emoji at render time.
+
+4. OPTIONAL SECTIONS: wrap any section whose data array may be empty using the corresponding `has_*` boolean token — NOT the array name itself. Using the array name as both the outer guard and the inner loop causes Mustache to iterate instead of branch, duplicating the section once per item.
+   Correct:   {{#has_leadership}}<section>{{#leadership}}…{{/leadership}}</section>{{/has_leadership}}
+   Incorrect: {{#leadership}}<section>{{#leadership}}…{{/leadership}}</section>{{/leadership}}
+   Apply this pattern to: has_leadership, has_certifications, has_publications, and any other optional array section.
 
 5. NAVIGATION LINKS: keep href="#section-id" anchors intact. Replace only the visible link label text if it is candidate-specific.
 
@@ -161,14 +231,33 @@ CONVERSION RULES
 7. OUTPUT a single complete HTML file. No markdown. No explanation.
 
 8. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
-   <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "accent": "<hex>", "dark": "<hex>", "light": "<hex>" } } -->
-   Populate it with the original hardcoded hex values from the template's CSS :root block, mapping:
-   - primary   → the main accent / button color (e.g. --accent)
-   - secondary → the secondary accent color (e.g. --accent-2)
-   - accent    → a highlight or hover color if present, else same as primary
-   - dark      → the background color (e.g. --bg)
-   - light     → the lightest surface color (e.g. --light, --panel, --chip) if present, else omit
-   This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
+   <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "dark": "<hex>", "light": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
+   Populate it with:
+   - default_color_scheme: the original hardcoded hex values from the template's CSS :root block, mapping:
+     - primary   → the main accent / button color (e.g. --accent)
+     - secondary → the secondary accent color (e.g. --accent-2)
+     - accent    → a highlight or hover color if present, else same as primary
+     - dark      → the background color (e.g. --bg)
+     - light     → the lightest surface color (e.g. --light, --panel, --chip) if present, else omit
+     This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
+   - about_word_count: the exact word count of the original about/summary text that you replaced with {{about}}.
+     Count words by splitting the original text on whitespace. This is used at render time to trim the
+     candidate's about paragraph to approximately the same length as the template's about section.
+   - hero_card_map: ordered array, one entry per hero sidebar card in the original template.
+     Each entry has three fields:
+       "original_label"  — the exact title/heading text from the source HTML (e.g. "Language Snapshot")
+       "type"            — the data-source type: "highlights", "snapshot", "links", or "skill_group"
+                           (see HERO CARD TYPE → DATA SOURCE MAPPING table above for classification rules)
+       "display_label"   — the label rendered via {{card_label}} at fill time.
+                           Copy the original label verbatim to preserve the richness of the source copy.
+                           Do NOT shorten or generalize (e.g. keep "Language Snapshot", not "Strengths Snapshot";
+                           keep "Key Highlights", not "Highlights"; keep "Social Links", not "Links").
+                           Use the fallback/alias label from the HERO CARD CLASSIFICATION table only when the
+                           source HTML has no readable title text for the card.
+     The renderer builds hero_cards in this exact order, binding each card to its declared data source.
+     Omit the field entirely if the template has no hero sidebar.
+     Example: [ { "original_label": "Language Snapshot", "type": "snapshot", "display_label": "Language Snapshot" },
+                { "original_label": "Key Highlights",    "type": "highlights", "display_label": "Key Highlights" } ]
 
 ──────────────────────────────────────────────
 COLOR MAPPING
@@ -180,7 +269,7 @@ Structure the `:root` block in three groups:
 
   1. Five main theme colors — one declaration per row, original hex value, plus a role comment in the format:
        /* N. RoleName — brief phrase */
-     where N is 1–5 and RoleName is a word from the COLOR_ROLE_NAMING_CONVENTIONS table below.
+     where N is 1–5 and RoleName is a word from the COLOR_ROLE_NAMING_CONVENTIONS table below that describes the main way the color is used. Make sure the five core color assignments are organized to provide sufficient contrast for all the text in various sections of the webpage to be easily viewed by humans.
 
   2. Theme-independent hard-coded neutrals — pure white, pure black, and any truly fixed utility colors (e.g. --white, --black, --success, --warning) that are not part of the palette and must never change with a theme swap.
 

@@ -699,6 +699,8 @@
       if (input) input.value = "";
       extractedTemplateCache  = null;
       lastExtractedTemplate   = "";
+      templatePaletteRendered = false;
+      userHasSelectedPalette  = false;
       setTemplateExtractStatus("");
       renderSuggestedPalettes();
       updateSubmitReadiness();
@@ -721,6 +723,8 @@
     // Template extraction cache
     // ----------------------------
     let extractedTemplateCache = null;   // { templateHtml, embeddedJson, templateMode }
+    let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
+    let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
@@ -1796,8 +1800,8 @@
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const data = await pollRes.json().catch(() => ({}));
           const stageMsg = data.stage
-            ? `${data.stage} (${remaining}s remaining)`
-            : `Generating portfolio… ${remaining}s remaining`;
+            ? `${data.stage} (${remaining}s)`
+            : `Generating portfolio… ${remaining}s`;
           setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
           if (data.status === "done") {
             clearInterval(renderCountdown);
@@ -2131,7 +2135,7 @@
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
         cb.addEventListener("change", () => {
-          if (cb.checked) applyColors(palette.colors);
+          if (cb.checked) { userHasSelectedPalette = true; applyColors(palette.colors); }
         });
 
         const swatches = document.createElement("div");
@@ -2167,6 +2171,14 @@
         row.append(topRow, lbl);
         rows.appendChild(row);
       });
+
+      // Auto-select Template Palette the first time it arrives, but only if the user
+      // hasn't already made an active palette or theme choice.
+      if (tplPalette && !templatePaletteRendered && !userHasSelectedPalette) {
+        templatePaletteRendered = true;
+        const firstRadio = rows.querySelector('input[name="suggestedPalette"]');
+        if (firstRadio) { firstRadio.checked = true; applyColors(tplPalette.colors); }
+      }
     }
 
     renderSuggestedPalettes(); // render blank rows immediately
@@ -2235,10 +2247,18 @@
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
     });
 
+    // Resize color-themes iframe to its exact content height (posted by ResizeObserver inside)
+    window.addEventListener("message", e => {
+      if (!e.data || e.data.type !== "colorThemesHeight") return;
+      const f = document.getElementById("colorThemesFrame");
+      if (f) f.style.height = e.data.height + "px";
+    });
+
     // Single color pick from iframe — fills whichever field is active
     window.addEventListener("message", e => {
       const msg = e.data;
       if (!msg || msg.type !== "colorPick") return;
+      userHasSelectedPalette = true;
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
     });
@@ -2257,28 +2277,15 @@
       document.getElementById("light").value = "#eaf0ff";
     }
 
-    applyDefaults();
     updateDebugBanner();
     updateProviderBadge();
     renderStepUI();
     setStep(0);
     window.addEventListener("message", (event) => {
-
-      if (!event.data || event.data.type !== "colorThemeSelected") return;
-
-      const theme = event.data.theme;
-
-      document.getElementById("primary").value   = theme.primary || "";
-      document.getElementById("secondary").value = theme.secondary || "";
-      document.getElementById("accent").value    = theme.accent || "";
-      document.getElementById("dark").value      = theme.dark || "";
-      document.getElementById("light").value     = theme.light || "";
-
-    });
-    window.addEventListener("message", (event) => {
         const msg = event.data;
         if (!msg || msg.type !== "colorThemeSelected") return;
 
+        userHasSelectedPalette = true;
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
 

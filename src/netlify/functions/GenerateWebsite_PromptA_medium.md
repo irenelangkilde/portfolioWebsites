@@ -7,9 +7,15 @@ The website should be grounded in the candidate’s actual resume and supplied i
 IMPORTANT RULES
 - Use only facts supported by the provided inputs.
 - Do not invent employers, projects, dates, metrics, awards, publications, certifications, links, or credentials.
-- You may rewrite, summarize, and augument to improve clarity, impact, and flow.
+- You may rewrite, summarize, and augment to improve clarity, impact, and flow.
 - The sample website is inspiration only. Do not copy its text or unique branding.
 - The color scheme should influence the final visual direction.
+
+VOICE
+- All candidate-facing copy must be written in first person ("I build…", "My work spans…", "I bring…").
+- Never use third person ("She leads…", "He has experience in…", "The candidate…").
+- Applies to: core_story, hero_headline_options, hero_subheadline_options, and about_angle.
+- Confident but grounded. No superlatives ("world-class", "exceptional", "top-tier", "passionate", "driven").
 
 OUTPUT FORMAT
 Return valid JSON only.

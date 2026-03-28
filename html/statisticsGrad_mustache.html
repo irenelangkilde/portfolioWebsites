@@ -9,34 +9,37 @@
     <style>
         :root {
             /* Five main theme colors */
-            --color-primary:   #3498db;   /* 1. Interactive  — bright blue, CTAs & accents       */
-            --color-secondary: #9b59b6;   /* 2. Signature    — purple, hero gradient accent       */
-            --color-accent:    #f39c12;   /* 3. Vibrant      — golden amber, warm highlight       */
-            --color-dark:      #2c3e50;   /* 4. Canvas       — deep navy, headings & dark text    */
-            --color-light:     #f9f9f9;   /* 5. Panel        — off-white, section backgrounds     */
+            --color-primary:   #3498db;   /* 1. Interactive  — blue, links & accents       */
+            --color-secondary: #9b59b6;   /* 2. Signature    — purple, hero gradient stop  */
+            --color-accent:    #f39c12;   /* 3. Vibrant      — amber, hero gradient stop   */
+            --color-dark:      #2c3e50;   /* 4. Canvas       — deep slate, headings & text */
+            --color-light:     #f9f9f9;   /* 5. Panel        — off-white section surface   */
 
             /* Theme-independent hard-coded neutrals */
-            --white:   #ffffff;
-            --black:   #000000;
+            --white:           #ffffff;
+            --black:           #000000;
+            --red-hero:        #e74c3c;
+            --green-hero:      #27ae60;
+            --teal-hero:       #1abc9c;
+            --orange-hero:     #e67e22;
+            --crimson-badge:   #c0392b;
 
             /* Derived tokens */
-            --body-text:        color-mix(in srgb, var(--color-dark) 60%, var(--white));
-            --muted-text:       color-mix(in srgb, var(--color-dark) 45%, var(--white));
-            --light-text:       color-mix(in srgb, var(--color-dark) 30%, var(--white));
-            --card-surface:     var(--color-light);
-            --card-surface-alt: var(--white);
-            --skills-bg:        color-mix(in srgb, var(--color-light) 70%, var(--color-dark) 5%);
-            --border-accent:    var(--color-primary);
-            --tag-bg:           var(--color-primary);
-            --dot-border:       rgba(255, 255, 255, 0.6);
-            --shadow-sm:        rgba(0, 0, 0, 0.05);
-            --shadow-md:        rgba(0, 0, 0, 0.08);
-            --shadow-lg:        rgba(0, 0, 0, 0.1);
-            --shadow-xl:        rgba(0, 0, 0, 0.2);
-            --badge-bg:         #f4e8d8;
-            --badge-text:       #c0392b;
-            --hero-text-shadow: rgba(0, 0, 0, 0.1);
-            --contact-btn-text: var(--color-dark);
+            --text-body:       color-mix(in srgb, var(--color-dark) 70%, var(--white));
+            --text-muted:      color-mix(in srgb, var(--color-dark) 40%, var(--white));
+            --text-subtle:     color-mix(in srgb, var(--color-dark) 30%, var(--white));
+            --card-bg:         var(--white);
+            --section-alt:     color-mix(in srgb, var(--color-dark) 8%, var(--white));
+            --border-primary:  var(--color-primary);
+            --shadow-sm:       rgba(0, 0, 0, 0.05);
+            --shadow-md:       rgba(0, 0, 0, 0.08);
+            --shadow-lg:       rgba(0, 0, 0, 0.1);
+            --shadow-xl:       rgba(0, 0, 0, 0.2);
+            --badge-bg:        #f4e8d8;
+            --skill-border:    color-mix(in srgb, var(--color-primary) 100%, transparent);
+            --bullet-color:    var(--color-primary);
+            --tag-bg:          var(--color-primary);
+            --contact-btn-fg:  var(--color-dark);
         }
 
         * {
@@ -55,13 +58,13 @@
             min-height: 100vh;
             position: relative;
             background:
-                radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--color-primary) 60%, transparent) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-secondary) 50%, transparent) 0%, transparent 45%),
-                radial-gradient(circle at 40% 70%, color-mix(in srgb, var(--color-accent) 60%, transparent) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, color-mix(in srgb, #e67e22 70%, transparent) 0%, transparent 55%),
-                radial-gradient(circle at 10% 80%, color-mix(in srgb, #e74c3c 60%, transparent) 0%, transparent 45%),
-                radial-gradient(circle at 90% 85%, color-mix(in srgb, #c0392b 50%, transparent) 0%, transparent 50%),
-                linear-gradient(135deg, var(--color-accent) 0%, #e74c3c 25%, var(--color-secondary) 50%, var(--color-primary) 75%, #27ae60 100%);
+                radial-gradient(circle at 20% 30%, rgba(52, 152, 219, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(155, 89, 182, 0.5) 0%, transparent 45%),
+                radial-gradient(circle at 40% 70%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, rgba(230, 126, 34, 0.7) 0%, transparent 55%),
+                radial-gradient(circle at 10% 80%, rgba(231, 76, 60, 0.6) 0%, transparent 45%),
+                radial-gradient(circle at 90% 85%, rgba(192, 57, 43, 0.5) 0%, transparent 50%),
+                linear-gradient(135deg, #f39c12 0%, #e74c3c 25%, #9b59b6 50%, #3498db 75%, #27ae60 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -97,7 +100,7 @@
         }
 
         .major-badge span {
-            color: var(--badge-text);
+            color: var(--crimson-badge);
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
@@ -118,7 +121,7 @@
             line-height: 0.9;
             letter-spacing: 0.02em;
             margin-bottom: 0;
-            text-shadow: 0 2px 20px var(--hero-text-shadow);
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
             font-family: 'Cinzel', serif;
         }
 
@@ -157,7 +160,7 @@
             height: 14px;
             border-radius: 50%;
             background: transparent;
-            border: 2px solid var(--dot-border);
+            border: 2px solid rgba(255, 255, 255, 0.6);
             cursor: pointer;
             transition: all 0.3s ease;
         }
@@ -174,7 +177,7 @@
         /* About section */
         .about-section {
             padding: 100px 40px;
-            background: var(--card-surface);
+            background: var(--color-light);
         }
 
         .section-content {
@@ -200,12 +203,12 @@
             font-size: clamp(16px, 2vw, 18px);
             line-height: 1.8;
             margin-bottom: 20px;
-            color: var(--body-text);
+            color: var(--text-body);
             font-family: 'Cormorant Garamond', serif;
         }
 
         .stats-box {
-            background: var(--card-surface-alt);
+            background: var(--card-bg);
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px var(--shadow-md);
@@ -223,7 +226,7 @@
         }
 
         .stat-item p {
-            color: var(--muted-text);
+            color: var(--text-muted);
             font-size: 15px;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -231,7 +234,7 @@
         /* Education & Experience */
         .experience-section {
             padding: 100px 40px;
-            background: var(--card-surface-alt);
+            background: var(--card-bg);
         }
 
         .exp-grid {
@@ -242,10 +245,10 @@
         }
 
         .exp-card {
-            background: var(--card-surface);
+            background: var(--color-light);
             padding: 35px;
             border-radius: 15px;
-            border-left: 5px solid var(--border-accent);
+            border-left: 5px solid var(--color-primary);
         }
 
         .exp-card h3 {
@@ -255,7 +258,7 @@
         }
 
         .exp-card .meta {
-            color: var(--muted-text);
+            color: var(--text-muted);
             font-size: 14px;
             margin-bottom: 15px;
             text-transform: uppercase;
@@ -263,7 +266,7 @@
         }
 
         .exp-card p {
-            color: var(--body-text);
+            color: var(--text-body);
             line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -271,7 +274,7 @@
         /* Skills section */
         .skills-section {
             padding: 100px 40px;
-            background: var(--skills-bg);
+            background: var(--section-alt);
         }
 
         .skills-grid {
@@ -282,7 +285,7 @@
         }
 
         .skill-category {
-            background: var(--card-surface-alt);
+            background: var(--card-bg);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 20px var(--shadow-sm);
@@ -292,7 +295,7 @@
             font-size: 20px;
             color: var(--color-dark);
             margin-bottom: 20px;
-            border-bottom: 2px solid var(--color-primary);
+            border-bottom: 2px solid var(--skill-border);
             padding-bottom: 10px;
         }
 
@@ -302,14 +305,14 @@
 
         .skill-list li {
             padding: 8px 0;
-            color: var(--body-text);
+            color: var(--text-body);
             font-family: 'Cormorant Garamond', serif;
             font-size: 16px;
         }
 
         .skill-list li:before {
             content: "▪";
-            color: var(--color-primary);
+            color: var(--bullet-color);
             font-weight: bold;
             display: inline-block;
             width: 1em;
@@ -319,7 +322,7 @@
         /* Projects section */
         .projects-section {
             padding: 100px 40px;
-            background: var(--card-surface-alt);
+            background: var(--card-bg);
         }
 
         .projects-grid {
@@ -330,7 +333,7 @@
         }
 
         .project-card {
-            background: var(--card-surface);
+            background: var(--color-light);
             padding: 35px;
             border-radius: 15px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -358,7 +361,7 @@
         }
 
         .project-card p {
-            color: var(--body-text);
+            color: var(--text-body);
             line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -367,10 +370,10 @@
         .contact-section {
             padding: 100px 40px;
             background:
-                radial-gradient(circle at 30% 40%, color-mix(in srgb, #2ecc71 60%, transparent) 0%, transparent 50%),
-                radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--color-secondary) 50%, transparent) 0%, transparent 50%),
-                radial-gradient(circle at 50% 80%, color-mix(in srgb, var(--color-accent) 60%, transparent) 0%, transparent 50%),
-                linear-gradient(135deg, #1abc9c 0%, var(--color-primary) 25%, var(--color-secondary) 50%, #e74c3c 100%);
+                radial-gradient(circle at 30% 40%, rgba(46, 204, 113, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, rgba(155, 89, 182, 0.5) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
+                linear-gradient(135deg, #1abc9c 0%, #3498db 25%, #9b59b6 50%, #e74c3c 100%);
             text-align: center;
             color: var(--white);
         }
@@ -395,7 +398,7 @@
 
         .contact-btn {
             background: var(--white);
-            color: var(--contact-btn-text);
+            color: var(--contact-btn-fg);
             padding: 15px 35px;
             border-radius: 50px;
             text-decoration: none;
@@ -437,8 +440,8 @@
 
         <div class="main-text">
             <h1>
-                <span class="first-line">{{headline}}</span>
-                <span class="second-line">{{subheadline}}</span>
+                <span class="first-line">{{first_name}}</span>
+                <span class="second-line">{{last_name}}</span>
             </h1>
             <div class="subtitle">
                 Graduate in {{major}} {{current_year}}
@@ -479,7 +482,7 @@
                         <p>{{location}}</p>
                     </div>
                     <div class="stat-item">
-                        <h3>Desired Role</h3>
+                        <h3>Target Role</h3>
                         <p>{{desired_role}}</p>
                     </div>
                 </div>
@@ -500,13 +503,6 @@
                     <p>{{description}}</p>
                 </div>
                 {{/experience}}
-                {{#education}}
-                <div class="exp-card">
-                    <h3>{{institution}}</h3>
-                    <p class="meta">{{degree}} in {{major}} • {{graduation_date}}</p>
-                    <p>{{#honors}}{{honors}}{{/honors}}{{#activities}}{{.}} {{/activities}}</p>
-                </div>
-                {{/education}}
             </div>
         </div>
     </section>
@@ -539,7 +535,9 @@
             <div class="projects-grid">
                 {{#projects}}
                 <div class="project-card">
-                    {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+                    {{#technologies}}
+                    <span class="tag">{{.}}</span>
+                    {{/technologies}}
                     <h3>{{name}}</h3>
                     <p>{{description}}</p>
                 </div>
@@ -551,7 +549,7 @@
     <!-- Contact Section -->
     <section class="contact-section">
         <h2>Let's Connect</h2>
-        <p>Interested in collaborating or discussing opportunities? I'd love to hear from you!</p>
+        <p>{{subheadline}}</p>
         <div class="contact-links">
             <a href="mailto:{{email}}" class="contact-btn">Email Me</a>
             {{#has_linkedin}}
