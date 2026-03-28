@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <!-- { "default_color_scheme": { "primary": "#6b55ff", "secondary": "#4E70F1", "accent": "#ff7bbd", "dark": "#15141a", "light": "#fbfaf8" } } -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{name}} — {{major}} Graduate Portfolio</title>
+  <meta name="description" content="Portfolio for {{name}}: projects, writing, skills, and contact." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* Five main theme colors */
+      --color-bg:      #fbfaf8;   /* 1. Canvas      — warm off-white page background  */
+      --color-surface: #ffffff;   /* 2. Panel        — pure white card / paper surface */
+      --color-ink:     #15141a;   /* 3. OnCanvas     — near-black body text            */
+      --color-accent:  #6b55ff;   /* 4. Interactive  — violet, CTAs & links            */
+      --color-pop:     #ff7bbd;   /* 5. Pop          — pink highlight / gradient pair  */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+      --blue:    #4E70F1;
+
+      /* Derived tokens */
+      --muted:   color-mix(in srgb, var(--color-ink) 42%, var(--color-bg));
+      --soft:    color-mix(in srgb, var(--color-bg) 72%, var(--color-ink));
+      --soft2:   color-mix(in srgb, var(--color-bg) 85%, var(--color-ink));
+      --border:  color-mix(in srgb, var(--color-ink) 10%, transparent);
+      --shadow:  0 18px 55px color-mix(in srgb, var(--color-ink) 10%, transparent);
+
+      --tag-bg:      color-mix(in srgb, var(--color-accent) 8%, transparent);
+      --tag-border:  color-mix(in srgb, var(--color-accent) 14%, transparent);
+      --kicker-bg:   color-mix(in srgb, var(--color-accent) 8%, transparent);
+      --kicker-border: color-mix(in srgb, var(--color-accent) 14%, transparent);
+      --dot-gradient: linear-gradient(135deg, var(--color-accent), var(--color-pop));
+      --monogram-gradient: linear-gradient(135deg, var(--color-accent), var(--color-pop));
+      --btn-primary-bg: linear-gradient(135deg, var(--blue), var(--color-accent));
+      --card-glow: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 45%),
+                   radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--color-pop) 10%, transparent), transparent 45%);
+      --tick-bg:   linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 18%, transparent), color-mix(in srgb, var(--color-pop) 18%, transparent));
+      --tick-border: color-mix(in srgb, var(--color-accent) 14%, transparent);
+      --contact-card-bg: linear-gradient(135deg, color-mix(in srgb, var(--blue) 10%, transparent), color-mix(in srgb, var(--color-pop) 8%, transparent));
+      --card-surface: color-mix(in srgb, var(--color-surface) 75%, transparent);
+      --hero-copy-bg: color-mix(in srgb, var(--color-surface) 70%, transparent);
+      --skill-bg:  color-mix(in srgb, var(--color-surface) 85%, transparent);
+      --nav-hover: color-mix(in srgb, var(--color-accent) 8%, transparent);
+      --input-bg:  color-mix(in srgb, var(--color-surface) 92%, transparent);
+      --input-focus-border: color-mix(in srgb, var(--color-accent) 35%, transparent);
+      --header-bg: color-mix(in srgb, var(--color-bg) 78%, transparent);
+      --body-bg-1: color-mix(in srgb, var(--color-accent) 10%, transparent);
+      --body-bg-2: color-mix(in srgb, var(--color-pop) 10%, transparent);
+      --body-bg-3: color-mix(in srgb, var(--color-bg) 100%, #f7f6f3);
+      --poster-cap-bg: color-mix(in srgb, var(--color-bg) 90%, transparent);
+
+      --radius-xl: 26px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:
+        radial-gradient(1000px 600px at 12% 0%, var(--body-bg-1), transparent 55%),
+        radial-gradient(900px 560px at 88% 12%, var(--body-bg-2), transparent 55%),
+        linear-gradient(180deg, var(--color-bg), var(--body-bg-3));
+      color: var(--color-ink);
+      font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+    a{color:inherit}
+    img{max-width:100%; display:block}
+
+    header{
+      position: sticky;
+      top:0;
+      z-index: 50;
+      background: var(--header-bg);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+    }
+    .topbar{
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 14px 20px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 16px;
+    }
+    .id{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 220px;
+    }
+    .monogram{
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight: 700;
+      letter-spacing: .02em;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--white) 60%, transparent), transparent 55%),
+        var(--monogram-gradient);
+      box-shadow: 0 16px 36px color-mix(in srgb, var(--color-accent) 16%, transparent);
+    }
+    .id strong{display:block; font-family: "Playfair Display", Georgia, serif; letter-spacing:-.01em}
+    .id span{display:block; color: var(--muted); font-size: 12px; margin-top: 2px}
+
+    nav ul{
+      list-style:none; margin:0; padding:0;
+      display:flex; gap: 18px; align-items:center;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    nav a{text-decoration:none; padding: 8px 10px; border-radius: 999px}
+    nav a:hover{background: var(--nav-hover); color: var(--color-ink)}
+    .actions{display:flex; gap:10px; align-items:center}
+
+    .btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: var(--color-surface);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor:pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      white-space:nowrap;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-ink) 10%, transparent)}
+    .btn.primary{
+      border: none;
+      color: var(--white);
+      background: var(--btn-primary-bg);
+    }
+
+    .wrap{min-height:100%; display:flex; flex-direction:column}
+    main{flex:1}
+    .container{max-width: var(--max); margin:0 auto; padding: 0 20px}
+
+    .hero{
+      padding: 28px 0 14px;
+    }
+    .hero-grid{
+      display:grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+      align-items: start;
+    }
+    .poster{
+      border-radius: 28px;
+      overflow:hidden;
+      background: var(--color-surface);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 84px;
+    }
+    .poster img{width:100%; height:auto}
+    .poster .cap{
+      padding: 14px 16px 16px;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--color-surface), var(--poster-cap-bg));
+    }
+    .cap strong{display:block; font-size: 14px}
+    .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
+
+    .hero-copy{
+      background: var(--hero-copy-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 22px;
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+    }
+    .kicker{
+      display:inline-flex;
+      align-items:center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--kicker-bg);
+      color: var(--color-ink);
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      border: 1px solid var(--kicker-border);
+    }
+    .dot{
+      width: 10px; height: 10px; border-radius: 999px;
+      background: var(--dot-gradient);
+    }
+    h1{
+      margin: 12px 0 10px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 52px;
+      line-height: 1.05;
+      letter-spacing: -.02em;
+    }
+    .lead{
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 70ch;
+    }
+    .bullets{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px 14px;
+      margin: 14px 0 0;
+      padding: 0;
+      list-style:none;
+      color: var(--color-ink);
+      font-size: 14px;
+    }
+    .bullets li{
+      display:flex;
+      gap: 10px;
+      align-items:flex-start;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+      border: 1px solid var(--border);
+    }
+    .tick{
+      width: 20px; height: 20px;
+      border-radius: 999px;
+      background: var(--tick-bg);
+      display:flex; align-items:center; justify-content:center;
+      border: 1px solid var(--tick-border);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+    .cta{
+      display:flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+      align-items:center;
+    }
+
+    .section{padding: 42px 0}
+    .section h2{
+      margin: 0 0 8px;
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 28px;
+      letter-spacing: -.01em;
+    }
+    .hint{margin:0; color: var(--muted); max-width: 75ch}
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .card{
+      grid-column: span 6;
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 18px;
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      position: relative;
+      overflow:hidden;
+    }
+    .card::before{
+      content:"";
+      position:absolute;
+      inset:-40%;
+      background: var(--card-glow);
+      opacity:.9;
+      pointer-events:none;
+      transform: rotate(8deg);
+    }
+    .card > *{position: relative}
+    .card h3{
+      margin: 0 0 6px;
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+    .card p{margin:0; color: var(--muted); font-size: 14px}
+    .meta{
+      display:flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      color: var(--color-ink);
+      font-size: 12px;
+    }
+    .tag{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: var(--tag-bg);
+      border: 1px solid var(--tag-border);
+    }
+    .span-12{grid-column: span 12}
+
+    .post{
+      grid-column: span 4;
+      border-radius: var(--radius-xl);
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+    }
+    .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
+    .post h3{margin: 8px 0 8px; font-size: 16px}
+    .post p{margin:0; color: var(--muted); font-size: 14px}
+
+    .skills{
+      display:flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .skill{
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--skill-bg);
+      border: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--color-ink);
+    }
+
+    .contact{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+    }
+    .contact-card{
+      border-radius: var(--radius-xl);
+      background: var(--contact-card-bg), var(--card-surface);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .contact-card h3{margin:0 0 8px}
+    .contact-card p{margin:0 0 12px; color: var(--muted); font-size: 14px}
+    .contact-card a{ text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+    form{
+      border-radius: var(--radius-xl);
+      background: var(--card-surface);
+      border: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      display:grid;
+      gap: 12px;
+    }
+    label{
+      font-size: 12px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      display:block;
+      margin-bottom: 6px;
+    }
+    input, textarea{
+      width: 100%;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+    }
+    textarea{min-height: 110px; resize: vertical}
+    input:focus, textarea:focus{border-color: var(--input-focus-border)}
+
+    footer{
+      border-top: 1px solid var(--border);
+      padding: 26px 0 40px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .foot{
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .foot a{color: var(--muted); text-decoration:none}
+    .foot a:hover{color: var(--color-ink)}
+
+    @media (max-width: 980px){
+      .hero-grid{grid-template-columns: 1fr}
+      .poster{position: relative; top: 0}
+      h1{font-size: 44px}
+      .card{grid-column: span 12}
+      .post{grid-column: span 12}
+      .contact{grid-template-columns: 1fr}
+      .bullets{grid-template-columns: 1fr}
+    }
+    @media (max-width: 560px){
+      nav ul li:nth-child(-n+2){display:none}
+      h1{font-size: 38px}
+      .id{min-width: auto}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div class="topbar">
+        <div class="id">
+          <div class="monogram" aria-hidden="true">{{name}}</div>
+          <div>
+            <strong>{{name}}</strong>
+            <span>{{major}} • Graduating {{current_year}}</span>
+          </div>
+        </div>
+
+        <nav aria-label="Primary">
+          <ul>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#writing">Writing</a></li>
+            <li><a href="#skills">Skills</a></li>
+            <li><a href="#contact">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="actions">
+          <a class="btn" href="#projects">View Work</a>
+          <a class="btn primary" href="#contact">Interview</a>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <!-- HERO -->
+      <section class="hero">
+        <div class="container">
+          <div class="hero-grid">
+            <aside class="poster" aria-label="Hero image poster">
+              <img src="../assets/images/data-science-hero.png" alt="{{major}} portfolio hero graphic" />
+              <div class="cap">
+                <strong>Projects • Analysis • Insights</strong>
+                <span>Portfolio poster (use as a homepage hero or cover image)</span>
+              </div>
+            </aside>
+
+            <div class="hero-copy">
+              <span class="kicker"><span class="dot" aria-hidden="true"></span> {{major}} Portfolio</span>
+              <h1>{{headline}}</h1>
+              <p class="lead">{{subheadline}}</p>
+
+              <div class="cta">
+                <a class="btn primary" href="#projects">See Projects</a>
+                <a class="btn" href="#" onclick="alert('Replace this with a link to your resume PDF.'); return false;">Resume (PDF)</a>
+                {{#has_github}}<a class="btn" href="{{github}}">GitHub</a>{{/has_github}}
+              </div>
+
+              <ul class="bullets" aria-label="Highlights">
+                {{#hero_cards}}
+                {{#is_highlights}}
+                {{#highlights}}
+                <li><span class="tick" aria-hidden="true">✓</span><span>{{.}}</span></li>
+                {{/highlights}}
+                {{/is_highlights}}
+                {{/hero_cards}}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- PROJECTS -->
+      <section class="section" id="projects">
+        <div class="container">
+          <h2>Projects</h2>
+          <p class="hint">{{value_proposition}}</p>
+
+          <div class="grid">
+            {{#projects}}
+            <article class="card">
+              <h3>{{name}}</h3>
+              <p>{{description}}</p>
+              <div class="meta">
+                {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+              </div>
+            </article>
+            {{/projects}}
+          </div>
+        </div>
+      </section>
+
+      <!-- WRITING -->
+      {{#publications}}
+      <section class="section" id="writing">
+        <div class="container">
+          <h2>Writing</h2>
+          <p class="hint">Posts and articles that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
+
+          <div class="grid">
+            {{#publications}}
+            <article class="post">
+              <div class="date">{{venue}}</div>
+              <h3>{{title}}</h3>
+              <p>{{date}}</p>
+            </article>
+            {{/publications}}
+          </div>
+        </div>
+      </section>
+      {{/publications}}
+
+      <!-- SKILLS -->
+      <section class="section" id="skills">
+        <div class="container">
+          <h2>Skills</h2>
+          <p class="hint">Keep this aligned with the roles you want. Be specific and credible.</p>
+
+          <div class="grid">
+            {{#skill_groups}}
+            <div class="card span-12">
+              <h3>{{group_name}}</h3>
+              <div class="skills" aria-label="Skill chips">
+                {{#skills}}<span class="skill">{{.}}</span>{{/skills}}
+              </div>
+            </div>
+            {{/skill_groups}}
+          </div>
+        </div>
+      </section>
+
+      <!-- CONTACT -->
+      <section class="section" id="contact">
+        <div class="container">
+          <h2>Contact</h2>
+          <p class="hint">Open to new opportunities. Reach out to connect.</p>
+
+          <div class="contact">
+            <div class="contact-card">
+              <h3>Let's connect</h3>
+              <p>{{about}}</p>
+              <p style="margin:0;">
+                <strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a><br/>
+                {{#has_linkedin}}<strong>LinkedIn:</strong> <a href="{{linkedin}}">{{linkedin}}</a><br/>{{/has_linkedin}}
+                {{#has_github}}<strong>GitHub:</strong> <a href="{{github}}">{{github}}</a><br/>{{/has_github}}
+                {{#has_website}}<strong>Website:</strong> <a href="{{website}}">{{website}}</a><br/>{{/has_website}}
+                {{#has_phone}}<strong>Phone:</strong> <a href="tel:{{phone}}">{{phone}}</a><br/>{{/has_phone}}
+                <strong>Location:</strong> {{location}}
+              </p>
+            </div>
+
+            <form action="#" method="post">
+              <div>
+                <label for="name">Name</label>
+                <input id="name" name="name" type="text" placeholder="Your name" />
+              </div>
+              <div>
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" placeholder="you@example.com" />
+              </div>
+              <div>
+                <label for="message">Message</label>
+                <textarea id="message" name="message" placeholder="Tell me about the role, team, and timeline."></textarea>
+              </div>
+              <button class="btn primary" type="submit">Send Message</button>
+              <p style="margin:0; color: var(--muted); font-size: 12px;">
+                Tip: Connect this form to Formspree/Netlify Forms, or replace with a mailto link.
+              </p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="foot">
+          <span>© {{current_year}} {{name}} • {{major}} Portfolio</span>
+          <span style="display:flex; gap:14px;">
+            <a href="#projects">Projects</a>
+            <a href="#writing">Writing</a>
+            <a href="#skills">Skills</a>
+            <a href="#contact">Contact</a>
+          </span>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

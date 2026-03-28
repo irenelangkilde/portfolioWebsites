@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- { "default_color_scheme": { "primary": "#3498db", "secondary": "#9b59b6", "accent": "#f39c12", "dark": "#2c3e50", "light": "#f9f9f9" } } -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{name}} - {{major}} Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Five main theme colors */
+            --color-primary:   #3498db;   /* 1. Interactive  — bright blue, CTAs & accents       */
+            --color-secondary: #9b59b6;   /* 2. Signature    — purple, hero gradient accent       */
+            --color-accent:    #f39c12;   /* 3. Vibrant      — golden amber, warm highlight       */
+            --color-dark:      #2c3e50;   /* 4. Canvas       — deep navy, headings & dark text    */
+            --color-light:     #f9f9f9;   /* 5. Panel        — off-white, section backgrounds     */
+
+            /* Theme-independent hard-coded neutrals */
+            --white:   #ffffff;
+            --black:   #000000;
+
+            /* Derived tokens */
+            --body-text:        color-mix(in srgb, var(--color-dark) 60%, var(--white));
+            --muted-text:       color-mix(in srgb, var(--color-dark) 45%, var(--white));
+            --light-text:       color-mix(in srgb, var(--color-dark) 30%, var(--white));
+            --card-surface:     var(--color-light);
+            --card-surface-alt: var(--white);
+            --skills-bg:        color-mix(in srgb, var(--color-light) 70%, var(--color-dark) 5%);
+            --border-accent:    var(--color-primary);
+            --tag-bg:           var(--color-primary);
+            --dot-border:       rgba(255, 255, 255, 0.6);
+            --shadow-sm:        rgba(0, 0, 0, 0.05);
+            --shadow-md:        rgba(0, 0, 0, 0.08);
+            --shadow-lg:        rgba(0, 0, 0, 0.1);
+            --shadow-xl:        rgba(0, 0, 0, 0.2);
+            --badge-bg:         #f4e8d8;
+            --badge-text:       #c0392b;
+            --hero-text-shadow: rgba(0, 0, 0, 0.1);
+            --contact-btn-text: var(--color-dark);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', serif;
+            overflow-x: hidden;
+        }
+
+        /* Colorful gradient background */
+        .hero {
+            min-height: 100vh;
+            position: relative;
+            background:
+                radial-gradient(circle at 20% 30%, color-mix(in srgb, var(--color-primary) 60%, transparent) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, color-mix(in srgb, var(--color-secondary) 50%, transparent) 0%, transparent 45%),
+                radial-gradient(circle at 40% 70%, color-mix(in srgb, var(--color-accent) 60%, transparent) 0%, transparent 50%),
+                radial-gradient(circle at 70% 60%, color-mix(in srgb, #e67e22 70%, transparent) 0%, transparent 55%),
+                radial-gradient(circle at 10% 80%, color-mix(in srgb, #e74c3c 60%, transparent) 0%, transparent 45%),
+                radial-gradient(circle at 90% 85%, color-mix(in srgb, #c0392b 50%, transparent) 0%, transparent 50%),
+                linear-gradient(135deg, var(--color-accent) 0%, #e74c3c 25%, var(--color-secondary) 50%, var(--color-primary) 75%, #27ae60 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Grainy texture overlay */
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.15;
+            mix-blend-mode: overlay;
+            pointer-events: none;
+        }
+
+        /* Major badge */
+        .major-badge {
+            position: absolute;
+            top: 40px;
+            right: 40px;
+            background: var(--badge-bg);
+            padding: 12px 24px;
+            border-radius: 50px;
+            transform: rotate(5deg);
+            box-shadow: 0 4px 15px var(--shadow-lg);
+        }
+
+        .major-badge span {
+            color: var(--badge-text);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Main typography */
+        .main-text {
+            text-align: center;
+            color: var(--white);
+            z-index: 1;
+            padding: 0 20px;
+        }
+
+        .main-text h1 {
+            font-size: clamp(80px, 15vw, 220px);
+            font-weight: 400;
+            line-height: 0.9;
+            letter-spacing: 0.02em;
+            margin-bottom: 0;
+            text-shadow: 0 2px 20px var(--hero-text-shadow);
+            font-family: 'Cinzel', serif;
+        }
+
+        .main-text .first-line {
+            display: block;
+        }
+
+        .main-text .second-line {
+            display: block;
+            margin-top: -10px;
+        }
+
+        /* Subtitle */
+        .subtitle {
+            margin-top: 40px;
+            color: var(--white);
+            font-size: clamp(22px, 2.5vw, 32px);
+            font-weight: 300;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 0.05em;
+        }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: transparent;
+            border: 2px solid var(--dot-border);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: var(--white);
+            transform: scale(1.2);
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* About section */
+        .about-section {
+            padding: 100px 40px;
+            background: var(--card-surface);
+        }
+
+        .section-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .about-section h2 {
+            font-size: clamp(40px, 6vw, 70px);
+            margin-bottom: 30px;
+            color: var(--color-dark);
+            text-align: center;
+        }
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            margin-top: 50px;
+        }
+
+        .about-text p {
+            font-size: clamp(16px, 2vw, 18px);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            color: var(--body-text);
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .stats-box {
+            background: var(--card-surface-alt);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px var(--shadow-md);
+        }
+
+        .stat-item {
+            margin-bottom: 25px;
+        }
+
+        .stat-item h3 {
+            font-size: 18px;
+            color: var(--color-dark);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .stat-item p {
+            color: var(--muted-text);
+            font-size: 15px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Education & Experience */
+        .experience-section {
+            padding: 100px 40px;
+            background: var(--card-surface-alt);
+        }
+
+        .exp-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .exp-card {
+            background: var(--card-surface);
+            padding: 35px;
+            border-radius: 15px;
+            border-left: 5px solid var(--border-accent);
+        }
+
+        .exp-card h3 {
+            font-size: 22px;
+            color: var(--color-dark);
+            margin-bottom: 8px;
+        }
+
+        .exp-card .meta {
+            color: var(--muted-text);
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .exp-card p {
+            color: var(--body-text);
+            line-height: 1.7;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Skills section */
+        .skills-section {
+            padding: 100px 40px;
+            background: var(--skills-bg);
+        }
+
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .skill-category {
+            background: var(--card-surface-alt);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px var(--shadow-sm);
+        }
+
+        .skill-category h3 {
+            font-size: 20px;
+            color: var(--color-dark);
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 8px 0;
+            color: var(--body-text);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 16px;
+        }
+
+        .skill-list li:before {
+            content: "▪";
+            color: var(--color-primary);
+            font-weight: bold;
+            display: inline-block;
+            width: 1em;
+            margin-left: -1em;
+        }
+
+        /* Projects section */
+        .projects-section {
+            padding: 100px 40px;
+            background: var(--card-surface-alt);
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .project-card {
+            background: var(--card-surface);
+            padding: 35px;
+            border-radius: 15px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px var(--shadow-lg);
+        }
+
+        .project-card h3 {
+            font-size: 24px;
+            color: var(--color-dark);
+            margin-bottom: 10px;
+        }
+
+        .project-card .tag {
+            display: inline-block;
+            background: var(--tag-bg);
+            color: var(--white);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .project-card p {
+            color: var(--body-text);
+            line-height: 1.7;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        /* Contact section */
+        .contact-section {
+            padding: 100px 40px;
+            background:
+                radial-gradient(circle at 30% 40%, color-mix(in srgb, #2ecc71 60%, transparent) 0%, transparent 50%),
+                radial-gradient(circle at 70% 30%, color-mix(in srgb, var(--color-secondary) 50%, transparent) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, color-mix(in srgb, var(--color-accent) 60%, transparent) 0%, transparent 50%),
+                linear-gradient(135deg, #1abc9c 0%, var(--color-primary) 25%, var(--color-secondary) 50%, #e74c3c 100%);
+            text-align: center;
+            color: var(--white);
+        }
+
+        .contact-section h2 {
+            font-size: clamp(40px, 6vw, 70px);
+            margin-bottom: 30px;
+        }
+
+        .contact-section p {
+            font-size: clamp(18px, 2vw, 22px);
+            margin-bottom: 40px;
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .contact-btn {
+            background: var(--white);
+            color: var(--contact-btn-text);
+            padding: 15px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px var(--shadow-xl);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .about-grid,
+            .exp-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .major-badge {
+                top: 20px;
+                right: 20px;
+                padding: 8px 16px;
+            }
+
+            .major-badge span {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="major-badge">
+            <span>{{major}} Major</span>
+        </div>
+
+        <div class="main-text">
+            <h1>
+                <span class="first-line">{{headline}}</span>
+                <span class="second-line">{{subheadline}}</span>
+            </h1>
+            <div class="subtitle">
+                Graduate in {{major}} {{current_year}}
+            </div>
+        </div>
+
+        <div class="nav-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section">
+        <div class="section-content">
+            <h2>About Me</h2>
+            <div class="about-grid">
+                <div class="about-text">
+                    <p>{{about}}</p>
+                    <p>{{value_proposition}}</p>
+                </div>
+                <div class="stats-box">
+                    {{#education}}
+                    <div class="stat-item">
+                        <h3>Expected Graduation</h3>
+                        <p>{{graduation_date}}{{#gpa}} • GPA: {{gpa}}{{/gpa}}</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Major</h3>
+                        <p>{{degree}} in {{major}}</p>
+                    </div>
+                    {{/education}}
+                    <div class="stat-item">
+                        <h3>Location</h3>
+                        <p>{{location}}</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>Desired Role</h3>
+                        <p>{{desired_role}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Experience Section -->
+    <section class="experience-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark); margin-bottom: 20px;">Education &amp; Experience</h2>
+
+            <div class="exp-grid">
+                {{#experience}}
+                <div class="exp-card">
+                    <h3>{{title}}</h3>
+                    <p class="meta">{{company}} • {{start_date}} - {{end_date}}</p>
+                    <p>{{description}}</p>
+                </div>
+                {{/experience}}
+                {{#education}}
+                <div class="exp-card">
+                    <h3>{{institution}}</h3>
+                    <p class="meta">{{degree}} in {{major}} • {{graduation_date}}</p>
+                    <p>{{#honors}}{{honors}}{{/honors}}{{#activities}}{{.}} {{/activities}}</p>
+                </div>
+                {{/education}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section class="skills-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark);">Technical Skills</h2>
+
+            <div class="skills-grid">
+                {{#skill_groups}}
+                <div class="skill-category">
+                    <h3>{{group_name}}</h3>
+                    <ul class="skill-list">
+                        {{#skills}}
+                        <li>{{.}}</li>
+                        {{/skills}}
+                    </ul>
+                </div>
+                {{/skill_groups}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="projects-section">
+        <div class="section-content">
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--color-dark);">Featured Projects</h2>
+
+            <div class="projects-grid">
+                {{#projects}}
+                <div class="project-card">
+                    {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+                    <h3>{{name}}</h3>
+                    <p>{{description}}</p>
+                </div>
+                {{/projects}}
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="contact-section">
+        <h2>Let's Connect</h2>
+        <p>Interested in collaborating or discussing opportunities? I'd love to hear from you!</p>
+        <div class="contact-links">
+            <a href="mailto:{{email}}" class="contact-btn">Email Me</a>
+            {{#has_linkedin}}
+            <a href="{{linkedin}}" class="contact-btn">LinkedIn</a>
+            {{/has_linkedin}}
+            {{#has_github}}
+            <a href="{{github}}" class="contact-btn">GitHub</a>
+            {{/has_github}}
+            {{#has_website}}
+            <a href="{{website}}" class="contact-btn">Website</a>
+            {{/has_website}}
+        </div>
+    </section>
+
+    <script>
+        // Dot navigation
+        const dots = document.querySelectorAll('.dot');
+        const sections = document.querySelectorAll('section');
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => {
+                dots.forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                sections[index].scrollIntoView({ behavior: 'smooth' });
+            });
+        });
+
+        // Update active dot on scroll
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach((section, index) => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 200) {
+                    current = index;
+                }
+            });
+
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active');
+                if (index === current) {
+                    dot.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

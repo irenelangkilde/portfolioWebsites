@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- { "default_color_scheme": { "primary": "#4E70F1", "secondary": "#F28B86", "accent": "#8FD4C1", "dark": "#1f2328", "light": "#f7f9fb" } } -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{name}} | {{major}}</title>
+  <meta name="description" content="Resume & portfolio website for a {{major}} major." />
+
+  <style>
+    :root{
+      /* Five main theme colors */
+      --color-ink:     #1f2328;   /* 1. Canvas     — deep charcoal page text / base dark  */
+      --color-muted:   #5b6672;   /* 2. Subtle     — secondary text, meta labels          */
+      --color-paper:   #f7f9fb;   /* 3. Panel      — lightest surface, page background    */
+      --color-accent:  #4E70F1;   /* 4. Interactive — confident blue, CTAs & headings     */
+      --color-accent2: #F28B86;   /* 5. Signature  — warm coral, primary CTA highlight    */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+      --accent3: #8FD4C1;         /* gentle mint — decorative only, not swapped by theme  */
+
+      /* Derived tokens */
+      --card:         color-mix(in srgb, var(--white) 88%, transparent);
+      --stroke:       color-mix(in srgb, var(--black) 10%, transparent);
+      --shadow:       0 18px 55px color-mix(in srgb, var(--black) 12%, transparent);
+      --shadowSoft:   0 10px 28px color-mix(in srgb, var(--black) 10%, transparent);
+
+      --tag-bg:       color-mix(in srgb, var(--color-accent) 12%, transparent);
+      --tag-border:   color-mix(in srgb, var(--color-accent) 18%, transparent);
+      --tag-text:     color-mix(in srgb, var(--color-accent) 80%, var(--black));
+
+      --hero-bg-a:    color-mix(in srgb, var(--color-accent) 92%, transparent);
+      --hero-bg-b:    color-mix(in srgb, var(--color-accent) 70%, transparent);
+      --hero-tint2:   color-mix(in srgb, var(--color-accent2) 22%, transparent);
+      --hero-tint3:   color-mix(in srgb, var(--accent3) 22%, transparent);
+
+      --body-radial1: color-mix(in srgb, var(--color-accent) 14%, transparent);
+      --body-radial2: color-mix(in srgb, var(--color-accent2) 14%, transparent);
+      --body-radial3: color-mix(in srgb, var(--accent3) 12%, transparent);
+
+      --item-bg:      color-mix(in srgb, var(--white) 74%, transparent);
+      --contact-bg:   color-mix(in srgb, var(--white) 82%, transparent);
+
+      --radius: 22px;
+      --max: 1120px;
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--color-ink);
+      background:
+        radial-gradient(1000px 520px at 12% 8%, var(--body-radial1) 0%, transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, var(--body-radial2) 0%, transparent 58%),
+        radial-gradient(900px 520px at 55% 25%, var(--body-radial3) 0%, transparent 58%),
+        var(--color-paper);
+      overflow-x:hidden;
+    }
+
+    a{ color:inherit; }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 22px 74px; }
+
+    /* Header */
+    header{
+      color:var(--white);
+      background:
+        radial-gradient(900px 420px at 20% 30%, var(--hero-tint2), transparent 60%),
+        radial-gradient(900px 420px at 80% 20%, var(--hero-tint3), transparent 60%),
+        linear-gradient(120deg, var(--hero-bg-a), var(--hero-bg-b));
+      position:relative;
+      overflow:hidden;
+    }
+    header::after{
+      content:"";
+      position:absolute; inset:-40px -80px -80px -80px;
+      background:
+        radial-gradient(circle at 15% 30%, rgba(255,255,255,.18) 0 22%, transparent 23%),
+        radial-gradient(circle at 45% 20%, rgba(255,255,255,.12) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 40%, rgba(255,255,255,.12) 0 20%, transparent 21%),
+        radial-gradient(circle at 85% 15%, rgba(255,255,255,.10) 0 14%, transparent 15%);
+      filter: blur(1px);
+      opacity:.85;
+      pointer-events:none;
+    }
+
+    .topbar{
+      position:relative;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      z-index:1;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 260px;
+    }
+    .mark{
+      width:36px;height:36px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
+      border:1px solid rgba(255,255,255,.24);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+    }
+    .brandText{ display:flex; flex-direction:column; line-height:1.1; }
+    .brandText strong{ font-size:16px; letter-spacing:.02em; }
+    .brandText span{ font-size:12.5px; opacity:.92; }
+
+    nav{
+      display:flex; gap:14px; flex-wrap:wrap; justify-content:flex-end;
+      z-index:1;
+    }
+    nav a{
+      text-decoration:none;
+      font-weight:750;
+      font-size:13.5px;
+      padding:10px 12px;
+      border-radius:999px;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      backdrop-filter: blur(10px);
+      transition: transform .15s ease, background .15s ease;
+    }
+    nav a:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+
+    /* Hero */
+    .hero{
+      position:relative;
+      max-width:var(--max);
+      margin:0 auto;
+      padding:64px 22px 74px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:26px;
+      align-items:end;
+      z-index:1;
+    }
+    @media (max-width: 920px){
+      .hero{ grid-template-columns:1fr; padding:52px 22px 62px; }
+      .brand{ min-width:auto; }
+    }
+
+    .hero h1{
+      margin:0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height:1.12;
+      letter-spacing:-0.02em;
+      font-weight:850;
+    }
+    .hero p{
+      margin:14px 0 0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.96;
+      max-width: 64ch;
+    }
+
+    .heroCard{
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .pillRow{ display:flex; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+    .pill{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.14);
+      border:1px solid rgba(255,255,255,.18);
+      font-size:12.5px;
+      font-weight:850;
+      letter-spacing:.02em;
+    }
+    .heroCard ul{
+      margin:10px 0 0;
+      padding-left:18px;
+      line-height:1.55;
+      font-size: 14.5px;
+      opacity:.96;
+    }
+    .ctaRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,.22);
+      background: rgba(255,255,255,.14);
+      color:var(--white);
+      text-decoration:none;
+      font-weight:850;
+      font-size:13.5px;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+    .btn.primary{
+      background: var(--hero-tint2);
+      border-color: color-mix(in srgb, var(--color-accent2) 28%, transparent);
+    }
+
+    /* Sections */
+    .section{ padding:66px 0 0; }
+    .section h2{
+      margin:0 0 12px;
+      font-size: 28px;
+      letter-spacing:-0.02em;
+      color: var(--color-accent);
+    }
+    .subhead{ margin:0 0 22px; color:var(--color-muted); max-width: 85ch; }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){ .grid2{ grid-template-columns:1fr; } }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadowSoft);
+      padding:20px;
+      backdrop-filter: blur(8px);
+    }
+    .card h3{ margin:0 0 8px; font-size:18px; }
+    .meta{ color:var(--color-muted); font-size:13.5px; margin-bottom:10px; }
+    .bullets{ margin:12px 0 0; padding-left:18px; }
+    .bullets li{ margin:6px 0; }
+
+    .tagRow{ display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+    .tag{
+      font-size:12.5px;
+      font-weight:850;
+      padding:7px 10px;
+      border-radius:999px;
+      background: var(--tag-bg);
+      border:1px solid var(--tag-border);
+      color:var(--tag-text);
+    }
+
+    .timeline{ display:grid; gap:14px; }
+    .item{
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: var(--item-bg);
+      box-shadow: 0 10px 22px color-mix(in srgb, var(--black) 6%, transparent);
+      backdrop-filter: blur(8px);
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:baseline;
+      margin-bottom:6px;
+    }
+    .itemTop strong{ font-size:16px; }
+    .itemTop span{ color:var(--color-muted); font-size:13.5px; }
+
+    /* Headshot contact section */
+    .contactWrap{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){ .contactWrap{ grid-template-columns:1fr; } }
+    .headshot{
+      width:100%;
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background:color-mix(in srgb, var(--color-muted) 30%, var(--white));
+    }
+    .contactCard{
+      padding:22px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: var(--contact-bg);
+      box-shadow: var(--shadowSoft);
+      backdrop-filter: blur(8px);
+    }
+    .contactCard h3{ margin:0 0 8px; }
+    .contactRow{ display:grid; gap:10px; margin-top:14px; }
+    .contactRow a{ color: var(--color-accent); font-weight:850; text-decoration:none; }
+
+    footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      color:var(--color-muted);
+      font-size:13.5px;
+      text-align:center;
+    }
+
+    html{ scroll-behavior:smooth; }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="topbar">
+      <div class="brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="brandText">
+          <strong>{{name}}</strong>
+          <span>{{major}} • Graduation: {{graduation_date}}</span>
+        </div>
+      </div>
+
+      <nav aria-label="Site navigation">
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#experience">Experience</a>
+        <a href="#portfolio">Portfolio</a>
+        <a href="#philosophy">Philosophy</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>{{headline}}</h1>
+        <p>{{subheadline}}</p>
+      </div>
+
+      <aside class="heroCard" aria-label="Quick highlights">
+        <div class="pillRow">
+          {{#skill_groups}}
+          {{#skills}}
+          <span class="pill">{{.}}</span>
+          {{/skills}}
+          {{/skill_groups}}
+        </div>
+        <ul>
+          {{#hero_cards}}
+          {{#is_highlights}}
+          {{#highlights}}
+          <li>{{.}}</li>
+          {{/highlights}}
+          {{/is_highlights}}
+          {{/hero_cards}}
+        </ul>
+        <div class="ctaRow">
+          <a class="btn primary" href="#portfolio">See Portfolio</a>
+          <a class="btn" href="#contact">Reach Out</a>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <h2>About</h2>
+      <p class="subhead">{{about}}</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Strengths</h3>
+          <ul class="bullets">
+            {{#skill_groups}}
+            {{#skills}}
+            <li>{{.}}</li>
+            {{/skills}}
+            {{/skill_groups}}
+          </ul>
+          <div class="tagRow">
+            {{#skill_groups}}
+            {{#skills}}
+            <span class="tag">{{.}}</span>
+            {{/skills}}
+            {{/skill_groups}}
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>What I'm Seeking</h3>
+          <p class="meta">{{value_proposition}}</p>
+          <ul class="bullets">
+            {{#hero_cards}}
+            {{#is_highlights}}
+            {{#highlights}}
+            <li>{{.}}</li>
+            {{/highlights}}
+            {{/is_highlights}}
+            {{/hero_cards}}
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="section">
+      <h2>Education</h2>
+      <p class="subhead">Academic background and coursework.</p>
+
+      <div class="timeline">
+        {{#education}}
+        <div class="item">
+          <div class="itemTop">
+            <strong>{{degree}} in {{major}}</strong>
+            <span>Expected {{graduation_date}}</span>
+          </div>
+          <div class="meta">{{institution}} • {{location}} • GPA: {{gpa}}</div>
+          <ul class="bullets">
+            {{#activities}}
+            <li>{{.}}</li>
+            {{/activities}}
+          </ul>
+        </div>
+        {{/education}}
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="section">
+      <h2>Experience</h2>
+      <p class="subhead">{{desired_role}} roles, practicums, and related experience.</p>
+
+      <div class="timeline">
+        {{#experience}}
+        <div class="item">
+          <div class="itemTop">
+            <strong>{{title}}, {{company}}</strong>
+            <span>{{start_date}} – {{end_date}}</span>
+          </div>
+          <div class="meta">{{company}} • {{location}}</div>
+          <ul class="bullets">
+            {{#bullets}}
+            <li>{{.}}</li>
+            {{/bullets}}
+          </ul>
+        </div>
+        {{/experience}}
+      </div>
+    </section>
+
+    <!-- PORTFOLIO -->
+    <section id="portfolio" class="section">
+      <h2>Portfolio</h2>
+      <p class="subhead">Selected projects, lesson plans, and professional artifacts.</p>
+
+      <div class="grid2">
+        {{#projects}}
+        <div class="card">
+          <h3>{{name}}</h3>
+          <div class="meta">{{description}}</div>
+          <ul class="bullets">
+            {{#bullets}}
+            <li>{{.}}</li>
+            {{/bullets}}
+          </ul>
+          <div class="tagRow">
+            {{#technologies}}
+            <span class="tag">{{.}}</span>
+            {{/technologies}}
+          </div>
+        </div>
+        {{/projects}}
+      </div>
+    </section>
+
+    <!-- TEACHING PHILOSOPHY -->
+    <section id="philosophy" class="section">
+      <h2>Teaching Philosophy</h2>
+      <p class="subhead">A statement tailored for applications and interviews.</p>
+
+      <div class="card">
+        <h3>My Approach</h3>
+        <p style="margin:0; color:color-mix(in srgb, var(--color-ink) 85%, var(--white)); line-height:1.7;">
+          {{value_proposition}}
+        </p>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section">
+      <h2>Contact</h2>
+      <p class="subhead">Get in touch for opportunities and collaborations.</p>
+
+      <div class="contactWrap">
+        <img class="headshot" src="headshot.jpg" alt="Headshot of {{name}}" />
+
+        <div class="contactCard">
+          <h3>{{name}}</h3>
+          <div class="meta">{{major}} • Graduation: {{graduation_date}} • Open to {{desired_role}} roles</div>
+
+          <div class="contactRow">
+            <div><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>
+            {{#has_phone}}
+            <div><strong>Phone:</strong> <a href="tel:{{phone}}">{{phone}}</a></div>
+            {{/has_phone}}
+            {{#has_linkedin}}
+            <div><strong>LinkedIn:</strong> <a href="{{linkedin}}" target="_blank" rel="noreferrer">{{linkedin}}</a></div>
+            {{/has_linkedin}}
+            {{#has_github}}
+            <div><strong>GitHub:</strong> <a href="{{github}}" target="_blank" rel="noreferrer">{{github}}</a></div>
+            {{/has_github}}
+            {{#has_website}}
+            <div><strong>Website:</strong> <a href="{{website}}" target="_blank" rel="noreferrer">{{website}}</a></div>
+            {{/has_website}}
+            <div><strong>Location:</strong> {{location}}</div>
+          </div>
+
+          <div class="tagRow" style="margin-top:16px">
+            {{#skill_groups}}
+            {{#skills}}
+            <span class="tag">{{.}}</span>
+            {{/skills}}
+            {{/skill_groups}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {{#certifications}}
+    <section id="certifications" class="section">
+      <h2>Certifications</h2>
+      <div class="timeline">
+        {{#certifications}}
+        <div class="item">
+          <div class="itemTop">
+            <strong>{{name}}</strong>
+            <span>{{date}}</span>
+          </div>
+          <div class="meta">{{issuer}}</div>
+        </div>
+        {{/certifications}}
+      </div>
+    </section>
+    {{/certifications}}
+
+    {{#publications}}
+    <section id="publications" class="section">
+      <h2>Publications</h2>
+      <div class="timeline">
+        {{#publications}}
+        <div class="item">
+          <div class="itemTop">
+            <strong>{{title}}</strong>
+            <span>{{date}}</span>
+          </div>
+          <div class="meta">{{venue}}</div>
+          <div><a href="{{link}}" target="_blank" rel="noreferrer">{{link}}</a></div>
+        </div>
+        {{/publications}}
+      </div>
+    </section>
+    {{/publications}}
+
+    {{#leadership}}
+    <section id="leadership" class="section">
+      <h2>Leadership &amp; Volunteer</h2>
+      <div class="timeline">
+        {{#leadership}}
+        <div class="item">
+          <div class="itemTop">
+            <strong>{{role}}</strong>
+            <span>{{dates}}</span>
+          </div>
+          <div class="meta">{{organization}}</div>
+          <p style="margin:8px 0 0;">{{description}}</p>
+        </div>
+        {{/leadership}}
+      </div>
+    </section>
+    {{/leadership}}
+
+    <footer>
+      © <span id="y"></span> {{name}} • {{major}} Portfolio
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
