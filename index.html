@@ -382,8 +382,61 @@
       text-transform: uppercase;
       letter-spacing: .06em;
     }
+
+    /* ── Auth modal ─────────────────────────────────── */
+    #authBtn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 13px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.12);
+      color: var(--text); font-weight: 700; font-size: 13px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    #authBtn:hover { background: rgba(78,112,241,.26); }
+    #authBtn .avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--primary); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+    .authTabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .authTab {
+      flex: 1; padding: 8px; border-radius: 10px; border: 1px solid transparent;
+      background: rgba(255,255,255,.06); color: var(--muted);
+      font-weight: 700; font-size: 13px; cursor: pointer; text-align: center;
+    }
+    .authTab.active {
+      background: rgba(78,112,241,.22);
+      border-color: rgba(78,112,241,.5); color: var(--text);
+    }
+    .authForm { display: flex; flex-direction: column; gap: 12px; }
+    .authForm input {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5); background: rgba(78,112,241,.07);
+      color: var(--text); outline: none; font-size: 14px;
+    }
+    .authForm input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(141,224,255,.14); }
+    .authSubmit {
+      width: 100%; padding: 11px; border-radius: 10px;
+      background: color-mix(in oklab, var(--primary) 55%, rgba(255,255,255,.08));
+      border: 1px solid color-mix(in oklab, var(--primary) 75%, rgba(255,255,255,.14));
+      color: #fff; font-weight: 900; font-size: 14px; cursor: pointer;
+    }
+    .authSubmit:hover { background: color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.08)); }
+    .authMsg { font-size: 13px; min-height: 18px; text-align: center; }
+    .authMsg.ok  { color: var(--ok); }
+    .authMsg.err { color: var(--danger); }
+    .tierBadge {
+      font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 999px;
+      background: rgba(141,224,255,.15); color: var(--accent); letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .tierBadge.basic    { background: rgba(118,176,34,.18); color: #76b022; }
+    .tierBadge.premium { background: rgba(251,171,156,.18); color: #fbab9c; }
+    .quotaBar { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
   </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <body>
   <div class="wrap">
     <header>
@@ -392,16 +445,64 @@
           <h1>Personal Portfolio Website Intake</h1>
           <p class="sub">Fill this out once. Get a draft site fast. er.</p>
         </div>
-        <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; padding-top:3px; max-width:260px;">
-          <span id="resumeAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="jobAnalysisStatus"        style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="templateExtractStatus"    style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="colorsChosenStatus"       style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="bridgeStatus"             style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="generatingWebsiteStatus"  style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+          <button id="authBtn" onclick="openAuthModal()">
+            <span class="avatar" id="authAvatar">?</span>
+            <span id="authBtnLabel">Sign in</span>
+          </button>
+          <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; padding-top:3px; max-width:260px;">
+            <span id="resumeAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="jobAnalysisStatus"        style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="templateExtractStatus"    style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="colorsChosenStatus"       style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="bridgeStatus"             style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="generatingWebsiteStatus"  style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- ── Auth modal ───────────────────────────────────────────────────── -->
+    <div class="modalBackdrop" id="authModal" style="display:none;" onclick="if(event.target===this)closeAuthModal()">
+      <div class="modal" style="max-width:400px;">
+        <div class="modalTop">
+          <strong id="authModalTitle">Account</strong>
+          <span class="modalClose" onclick="closeAuthModal()">✕</span>
+        </div>
+
+        <!-- Logged-out view -->
+        <div id="authLoggedOut">
+          <div class="authTabs">
+            <div class="authTab active" id="tabLogin"  onclick="switchAuthTab('login')">Sign in</div>
+            <div class="authTab"        id="tabSignup" onclick="switchAuthTab('signup')">Create account</div>
+          </div>
+          <div class="authForm">
+            <input type="email"    id="authEmail"    placeholder="Email" autocomplete="email" />
+            <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
+            <div id="authPasswordConfirmWrap" class="hidden">
+              <input type="password" id="authPasswordConfirm" placeholder="Confirm password" autocomplete="new-password" style="width:100%;" />
+            </div>
+            <button class="authSubmit" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign in</button>
+            <div class="authMsg" id="authMsg"></div>
+          </div>
+        </div>
+
+        <!-- Logged-in view -->
+        <div id="authLoggedIn" class="hidden">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div class="avatar" style="width:36px;height:36px;font-size:16px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:900;" id="authAvatarLarge">?</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;" id="authUserEmail"></div>
+              <span class="tierBadge" id="authTierBadge">free</span>
+            </div>
+          </div>
+          <div class="quotaBar" id="authQuotaBar"></div>
+          <div style="margin-top:16px;">
+            <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="progressCard">
       <div class="stepsRow">
@@ -594,6 +695,31 @@
             <button class="btn mini ghost" type="button" id="vwDebugPayload">View</button>
           </div>
 
+        </div>
+      </div>
+
+      <!-- Quota / upgrade prompt (shown when user hits credit limit) -->
+      <div id="upgradePrompt" class="hidden" style="margin-top:10px;">
+        <div class="note" style="border-color:rgba(251,171,156,.4); background:rgba(251,171,156,.07);">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px; color:var(--danger);">Credit limit reached</div>
+          <div id="upgradePromptMsg" class="hint" style="margin-bottom:10px;"></div>
+          <!-- Unit picker — only shown when upgrading to premium (quantity matters for graduated pricing) -->
+          <div id="unitPickerWrap" class="hidden" style="margin-bottom:12px;">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">
+              How many units?
+              <span class="hint" style="font-weight:400;"> — 1 unit = 5 credits + 1 download</span>
+            </label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="number" id="unitQty" min="1" max="20" value="1"
+                     style="width:64px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-size:14px;"
+                     oninput="updateUnitPrice()" />
+              <span id="unitPriceDisplay" class="hint" style="font-size:13px;"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn primary" onclick="openAuthModal()" style="font-size:13px;">View my account</button>
+            <a class="btn" href="#" id="upgradeLink" style="font-size:13px; text-decoration:none;">Upgrade →</a>
+          </div>
         </div>
       </div>
 
@@ -856,7 +982,7 @@
         <div id="extractCounterLabel" style="font-size:12px; color:rgba(234,240,255,.55);">seconds remaining</div>
       </div>
 
-      <!-- DEBUG: template extraction mode selector (debug mode only) -->
+      <!-- Extraction mode selector — visible only when "keyword" source is selected -->
       <div id="templateModeRow" style="display:none; margin-top:10px; padding:8px 12px; background:rgba(78,112,241,.1); border:1px solid rgba(78,112,241,.28); border-radius:10px;">
         <label for="extractTemplateMode" style="font-size:12px; font-weight:700; color:rgba(141,224,255,.85); display:block; margin-bottom:5px;">Extraction mode</label>
         <select id="extractTemplateMode">
@@ -910,6 +1036,130 @@
   </div>
 
 
-<script src="src/form.js" defer>  </script>
+<script src="src/form.js" defer></script>
+<script>
+  // ── Supabase auth ─────────────────────────────────────────────────────────
+  // SUPABASE_URL and SUPABASE_ANON_KEY are safe to expose in browser JS.
+  const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Exposed for form.js to read
+  window.getSupabaseUser = () => _currentUser;
+  window.getSupabaseMembership = () => _membership;
+
+  let _currentUser   = null;
+  let _membership    = null;
+  let _authTab       = "login";
+
+  // ── Session bootstrap ────────────────────────────────────────────────────
+  _supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) onSignIn(session.user);
+  });
+
+  _supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) onSignIn(session.user);
+    else               onSignOut();
+  });
+
+  async function onSignIn(user) {
+    _currentUser = user;
+    const { data } = await _supabase
+      .from("memberships")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status")
+      .eq("user_id", user.id)
+      .single();
+    _membership = data;
+    updateAuthUI();
+  }
+
+  function onSignOut() {
+    _currentUser = null;
+    _membership  = null;
+    updateAuthUI();
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────
+  function updateAuthUI() {
+    const loggedIn  = !!_currentUser;
+    const email     = _currentUser?.email || "";
+    const initial   = email ? email[0].toUpperCase() : "?";
+    const tier      = _membership?.tier || "free";
+
+    document.getElementById("authAvatar").textContent    = loggedIn ? initial : "?";
+    document.getElementById("authBtnLabel").textContent  = loggedIn ? email.split("@")[0] : "Sign in";
+
+    document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
+    document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
+
+    if (loggedIn) {
+      document.getElementById("authUserEmail").textContent   = email;
+      document.getElementById("authAvatarLarge").textContent = initial;
+      const badge = document.getElementById("authTierBadge");
+      badge.textContent = tier;
+      badge.className   = "tierBadge " + (tier !== "free" ? tier : "");
+
+      const m = _membership;
+      if (m) {
+        const cUnlimited = m.credits_limit   === -1;
+        const dUnlimited = m.downloads_limit === -1;
+        const cStr = cUnlimited ? "∞" : `${m.credits_used}/${m.credits_limit}`;
+        const dStr = dUnlimited ? "∞" : `${m.downloads_used}/${m.downloads_limit}`;
+        document.getElementById("authQuotaBar").textContent =
+          `Credits: ${cStr}  ·  Downloads: ${dStr}`;
+      }
+    }
+
+    // Let form.js react to auth state changes (gates buttons, passes userId)
+    if (typeof window.onAuthStateUpdated === "function") window.onAuthStateUpdated();
+  }
+
+  function switchAuthTab(tab) {
+    _authTab = tab;
+    document.getElementById("tabLogin").classList.toggle("active",  tab === "login");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("authSubmitBtn").textContent = tab === "login" ? "Sign in" : "Create account";
+    document.getElementById("authPasswordConfirmWrap").classList.toggle("hidden", tab === "login");
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  function openAuthModal() {
+    const modal = document.getElementById("authModal");
+    modal.style.display = "flex";
+  }
+
+  function closeAuthModal() {
+    document.getElementById("authModal").style.display = "none";
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  async function handleAuthSubmit() {
+    const email    = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const confirm  = document.getElementById("authPasswordConfirm").value;
+    const msgEl    = document.getElementById("authMsg");
+    msgEl.className = "authMsg";
+    msgEl.textContent = "";
+
+    if (!email || !password) { msgEl.className = "authMsg err"; msgEl.textContent = "Email and password required."; return; }
+
+    if (_authTab === "signup") {
+      if (password !== confirm) { msgEl.className = "authMsg err"; msgEl.textContent = "Passwords don't match."; return; }
+      const { error } = await _supabase.auth.signUp({ email, password });
+      if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
+      else        { msgEl.className = "authMsg ok";  msgEl.textContent = "Check your email to confirm your account."; }
+    } else {
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
+      else        { closeAuthModal(); }
+    }
+  }
+
+  async function handleSignOut() {
+    await _supabase.auth.signOut();
+    closeAuthModal();
+  }
+</script>
 </body>
 </html>

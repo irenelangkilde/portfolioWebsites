@@ -36,6 +36,129 @@
     let bridgeInProgress  = false;
 
     // ----------------------------
+    // Auth / tier helpers
+    // ----------------------------
+    function currentUserId() { return window.getSupabaseUser?.()?.id || null; }
+    function isPaidUser() {
+      const tier = window.getSupabaseMembership?.()?.tier;
+      return tier === "basic" || tier === "premium";
+    }
+
+    // Called by the auth script in index.html whenever login state changes
+    window.onAuthStateUpdated = function() {
+      updateSubmitReadiness();
+      applyTierGating();
+    };
+
+    // Maps the user's CURRENT tier → which Stripe tier to upgrade them to
+    const UPGRADE_TIER_KEY = {
+      free:    "basic",
+      basic:   "premium_monthly_new",
+    };
+
+    // Graduated unit prices for premium_monthly_new: index 0 = unit 1, index 4 = unit 5, 6+ = $2.95
+    const PREMIUM_UNIT_PRICES = [19, 11, 7, 5, 4];
+    const PREMIUM_UNIT_PRICE_EXTRA = 2.95;
+
+    function calcPremiumTotal(qty) {
+      let total = 0;
+      for (let i = 0; i < qty; i++) {
+        total += i < PREMIUM_UNIT_PRICES.length ? PREMIUM_UNIT_PRICES[i] : PREMIUM_UNIT_PRICE_EXTRA;
+      }
+      return total;
+    }
+
+    window.updateUnitPrice = function() {
+      const qty = Math.max(1, parseInt(document.getElementById("unitQty")?.value || "1", 10));
+      const total = calcPremiumTotal(qty);
+      const display = document.getElementById("unitPriceDisplay");
+      if (display) display.textContent = `= $${total.toFixed(2)} total`;
+    };
+
+    function showUpgradePrompt(data) {
+      clearInterval(typeof renderCountdown !== "undefined" ? renderCountdown : null);
+      generationInProgress = false;
+      setApplyBtnState(true);
+      setHeaderStatus("generatingWebsiteStatus", "Credit limit reached.", "rgba(251,171,156,.9)");
+
+      const tier = data.tier || window.getSupabaseMembership?.()?.tier || "free";
+      const used  = data.used  ?? "?";
+      const limit = data.limit ?? "?";
+
+      const nextTier = tier === "free" ? "basic" : "premium_monthly_new";
+      const tierLabels = { basic: "Basic ($7)", premium_monthly_new: "Premium (from $19/unit)" };
+
+      const prompt      = document.getElementById("upgradePrompt");
+      const msgEl       = document.getElementById("upgradePromptMsg");
+      const linkEl      = document.getElementById("upgradeLink");
+      const pickerWrap  = document.getElementById("unitPickerWrap");
+      const qtyInput    = document.getElementById("unitQty");
+
+      if (msgEl) msgEl.textContent =
+        `You've used ${used} of ${limit} credits on the ${tier} plan. Upgrade to ${tierLabels[nextTier] || nextTier} for more.`;
+
+      // Show unit picker only for premium (graduated pricing requires a quantity)
+      const isPremiumUpgrade = nextTier === "premium_monthly_new";
+      if (pickerWrap) pickerWrap.classList.toggle("hidden", !isPremiumUpgrade);
+      if (isPremiumUpgrade) {
+        if (qtyInput) qtyInput.value = "1";
+        window.updateUnitPrice();
+      }
+
+      // Wire upgrade button to create a Stripe Checkout session
+      if (linkEl) {
+        linkEl.href = "#";
+        linkEl.onclick = async (e) => {
+          e.preventDefault();
+          const user = window.getSupabaseUser?.();
+          if (!user) { if (typeof openAuthModal === "function") openAuthModal(); return; }
+          const quantity = isPremiumUpgrade
+            ? Math.max(1, parseInt(qtyInput?.value || "1", 10))
+            : 1;
+          linkEl.textContent = "Redirecting…";
+          linkEl.style.opacity = "0.6";
+          try {
+            const res = await fetch("/.netlify/functions/createCheckoutSession", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                tier:       UPGRADE_TIER_KEY[tier] || "basic",
+                userId:     user.id,
+                userEmail:  user.email,
+                returnUrl:  location.origin + location.pathname,
+                quantity
+              })
+            });
+            const data = await res.json();
+            if (data.url) { location.href = data.url; }
+            else { linkEl.textContent = "Upgrade →"; linkEl.style.opacity = ""; alert(data.error || "Could not start checkout."); }
+          } catch (err) {
+            linkEl.textContent = "Upgrade →";
+            linkEl.style.opacity = "";
+            alert("Checkout error: " + err.message);
+          }
+        };
+      }
+
+      if (prompt) prompt.classList.remove("hidden");
+    }
+
+    function applyTierGating() {
+      const paid = isPaidUser();
+      // Gate dl/cp/vw buttons — only enable for paid when output exists
+      const hasHtml = !!generationResult?.site_html;
+      ["dlFinalHtml", "cpFinalHtml", "vwFinalHtml", "dlSummaryHtml", "cpSummaryHtml", "vwSummaryHtml"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const allow = paid && hasHtml;
+        btn.disabled      = !allow;
+        btn.style.opacity = allow ? "" : "0.35";
+        btn.style.cursor  = allow ? "" : "not-allowed";
+        btn.title         = !paid ? "Upgrade to access downloads" : (!hasHtml ? "Generate a site first" : "");
+      });
+    }
+
+    // ----------------------------
     // Per-field validation
     // ----------------------------
     const FIELD_VALIDATORS = {
@@ -196,9 +319,8 @@
       document.querySelectorAll(".dbg-submit-row").forEach(el => {
         el.style.display = debug ? "flex" : "none";
       });
-      // Show/hide debug-only rows (display:block)
-      const templateModeRow = document.getElementById("templateModeRow");
-      if (templateModeRow) templateModeRow.style.display = debug ? "" : "none";
+      // templateModeRow requires both debug mode AND keyword source — re-evaluate now
+      updateTemplateUI();
       // Show/hide consolidated stage debug section on page 5
       document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug);
       if (debug) populateJobAdDebug(jobAdResult);
@@ -273,12 +395,16 @@
     }
 
     function greyRendererButtons(grey) {
+      // Preview/editor button is always available regardless of tier
+      // Download/copy/view buttons additionally require a paid tier
       ["dlFinalHtml", "cpFinalHtml", "vwFinalHtml", "dlSummaryHtml", "cpSummaryHtml", "vwSummaryHtml"].forEach(id => {
         const btn = document.getElementById(id);
         if (!btn) return;
-        btn.disabled      = grey;
-        btn.style.opacity = grey ? "0.35" : "";
-        btn.style.cursor  = grey ? "not-allowed" : "";
+        const allow = !grey && isPaidUser();
+        btn.disabled      = !allow;
+        btn.style.opacity = allow ? "" : "0.35";
+        btn.style.cursor  = allow ? "" : "not-allowed";
+        btn.title         = !isPaidUser() ? "Upgrade to access downloads" : (grey ? "Generate a site first" : "");
       });
     }
 
@@ -1025,6 +1151,8 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "keyword");
       document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
+      const modeRow = document.getElementById("templateModeRow");
+      if (modeRow) modeRow.style.display = (isDebugMode() && source === "keyword") ? "" : "none";
       const designWrap = document.getElementById("designOptionsWrap");
       if (designWrap) {
         if (source === "none") {
@@ -1735,6 +1863,7 @@
       generationInProgress = true;
       setApplyBtnState(false);
       setOpenEditorReady(false);
+      document.getElementById("upgradePrompt")?.classList.add("hidden");
 
       const resumeFile = resumeUpload.files[0];
       if (!resumeFile) {
@@ -1780,7 +1909,8 @@
             templateHtml:         extractedTemplateCache?.templateHtml || null,
             strategyJson:         jobAnalysisResult?.strategy_json || lastAnalysisData?.resume_strategy || null,
             bridgeJson:           bridgeResult?.bridge_json || null,
-            provider:             getAnalysisProvider()
+            provider:             getAnalysisProvider(),
+            userId:               currentUserId()
           })
         });
         if (!res.ok && res.status !== 202) {
@@ -1812,7 +1942,10 @@
             populateGenerationDebug(data);
             return;
           }
-          if (data.status === "error") throw new Error(data.error || "Generation failed.");
+          if (data.status === "error") {
+            if (data.quota) { showUpgradePrompt(data); return; }
+            throw new Error(data.error || "Generation failed.");
+          }
         }
         throw new Error("Generation timed out after 12 minutes.");
       } catch (e) {
@@ -1859,6 +1992,11 @@
     }
 
     async function doPreview() {
+      if (!currentUserId()) {
+        setHeaderStatus("generatingWebsiteStatus", "Sign in to generate your portfolio.", "rgba(251,171,156,.9)");
+        if (typeof openAuthModal === "function") openAuthModal();
+        return;
+      }
       if (generationInProgress) {
         setHeaderStatus("generatingWebsiteStatus", "Still generating… please wait.", "rgba(141,224,255,.75)");
         return;

@@ -2,6 +2,54 @@ import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { getStore } from "@netlify/blobs";
+import { createClient } from "@supabase/supabase-js";
+
+// ─── Supabase quota helpers ───────────────────────────────────────────────────
+
+function getSupabaseAdmin() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
+// Returns { allowed: true } or { allowed: false, reason, tier, used, limit }
+async function checkAndIncrementRendering(userId) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return { allowed: true }; // graceful degradation if not configured
+
+  const { data: m, error } = await supabase
+    .from("memberships")
+    .select("tier, status, credits_used, credits_limit")
+    .eq("user_id", userId)
+    .single();
+
+  if (error || !m) return { allowed: true }; // no membership row — let it through (shouldn't happen)
+
+  const unlimited = m.credits_limit === -1;
+  if (!unlimited && m.credits_used >= m.credits_limit) {
+    return {
+      allowed: false,
+      reason: `Credit limit reached (${m.credits_used}/${m.credits_limit}) for tier "${m.tier}".`,
+      tier: m.tier,
+      used: m.credits_used,
+      limit: m.credits_limit
+    };
+  }
+
+  await supabase
+    .from("memberships")
+    .update({ credits_used: m.credits_used + 1 })
+    .eq("user_id", userId);
+
+  return { allowed: true };
+}
+
+async function logUsageEvent(userId, fields) {
+  const supabase = getSupabaseAdmin();
+  if (!supabase || !userId) return;
+  await supabase.from("usage_events").insert({ user_id: userId, ...fields });
+}
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
 // Extracts all resume content into a structured JSON object.
@@ -1050,6 +1098,13 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     visual_direction_json: blendResult.visual_direction,
     truncated
   }), { ttl: 3600 });
+
+  await logUsageEvent(opts.userId, {
+    event_type: "generation",
+    provider: opts.provider || "claude",
+    model: usedModel,
+    success: true
+  });
 }
 
 export async function handler(event) {
@@ -1083,8 +1138,22 @@ export async function handler(event) {
       mode = "full",          // "full" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
       strategyJson = null,    // pre-computed strategy from analyzeJob mode
       bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
-      provider = "claude"     // "claude" (default) | "openai"
+      provider = "claude",    // "claude" (default) | "openai"
+      userId = null           // Supabase user UUID — sent by client when logged in
     } = body;
+
+    // ── Quota check (full mode only — this is the billable generation step) ──
+    if (mode === "full") {
+      if (!userId) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "Login required to generate a portfolio.", quota: true }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+      const quota = await checkAndIncrementRendering(userId);
+      if (!quota.allowed) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+    }
 
     if (mode === "analyzeJob") {
       if (!resumePdfBase64 && !resumeAnalysisJson) {
@@ -1179,7 +1248,9 @@ export async function handler(event) {
       resumeAnalysisJson, templateAnalysisJson, templateHtml,
       artifactsData,
       strategyJson,
-      bridgeJson
+      bridgeJson,
+      userId,
+      provider
     });
   } catch (err) {
     const msg = err?.message || "Unknown error";
