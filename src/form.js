@@ -805,14 +805,14 @@
 
       if (btn) { btn.textContent = "…"; btn.disabled = true; }
       try {
-        const res = await fetch("/.netlify/functions/listTemplates");
+        const res = await fetch("/html/templates.json");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (Array.isArray(data.templates) && data.templates.length > 0) {
           applyTemplatesToDatalist(data.templates);
           localStorage.setItem(TEMPLATE_CACHE_KEY, JSON.stringify({ templates: data.templates, timestamp: Date.now() }));
         }
-      } catch { /* silently skip if function is unavailable */ }
+      } catch { /* silently skip */ }
       finally {
         if (btn) { btn.textContent = "↻"; btn.disabled = false; }
       }
@@ -1720,6 +1720,10 @@
     async function doBridgeContentAndDesign() {
       bridgeResult     = null;
       bridgeInProgress = true;
+      // Clear token report here — this is the start of a new render cycle
+      Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
+      const reportEl = document.getElementById("tokenReport");
+      if (reportEl) reportEl.style.display = "none";
 
       // Block until Stage 2 (content strategy) is finished
       while (jobAnalysisInProgress) {
@@ -1794,15 +1798,47 @@
       wireDebugRow("DebugPayload", JSON.stringify(payload, null, 2), "payload.json");
     }
 
+    // Accumulated token rows from all stages — keyed by stage name so later updates overwrite earlier ones
+    const _tokenReportRows = {};
+
+    function mergeTokenReport(rows) {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(r => { if (r?.stage) _tokenReportRows[r.stage] = r; });
+      renderTokenReport();
+    }
+
+    function renderTokenReport() {
+      const reportEl = document.getElementById("tokenReport");
+      if (!reportEl) return;
+      const rows = Object.values(_tokenReportRows);
+      if (!rows.length) { reportEl.style.display = "none"; return; }
+      // Sort by stage name so they appear in pipeline order
+      rows.sort((a, b) => a.stage.localeCompare(b.stage));
+      const lines = rows.map(r => {
+        const inp = r.input  != null ? String(r.input).padStart(6)  : "     ?";
+        const out = r.output != null ? String(r.output).padStart(6) : "     ?";
+        const tot = (r.input != null && r.output != null) ? String(r.input + r.output).padStart(7) : "      ?";
+        return `${r.stage.padEnd(28)}  in ${inp}  out ${out}  total ${tot}`;
+      });
+      const totIn  = rows.reduce((s, r) => s + (r.input  ?? 0), 0);
+      const totOut = rows.reduce((s, r) => s + (r.output ?? 0), 0);
+      lines.push("─".repeat(68));
+      lines.push(`${"TOTAL".padEnd(28)}  in ${String(totIn).padStart(6)}  out ${String(totOut).padStart(6)}  total ${String(totIn + totOut).padStart(7)}`);
+      reportEl.textContent = lines.join("\n");
+      reportEl.style.display = "block";
+    }
+
     function populateBridgeDebug(data) {
       const content = data?.bridge_json
         ?? (data?.bridge_raw ? { _parse_error: data.bridge_parse_error, _raw_preview: data.bridge_raw } : null);
       wireDebugRow("Stage4", JSON.stringify(content, null, 2), "bridge.json");
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
     }
 
     function populateJobAdDebug(data) {
       wireDebugRow("JobFacts",    JSON.stringify(data?.job_facts    ?? null, null, 2), "job-facts.json");
       wireDebugRow("JobStrategy", JSON.stringify(data?.job_strategy ?? null, null, 2), "job-strategy.json");
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
     }
 
     // ----------------------------
@@ -1822,6 +1858,8 @@
         const modelEl = document.getElementById("debugModelName");
         if (modelEl) modelEl.textContent = `Model: ${data.model}`;
       }
+
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
 
       wireStage2Debug(data);
 
@@ -1861,6 +1899,12 @@
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
+      // In mustache mode the bridge is skipped, so clear the token report here instead
+      if (isMustacheMode()) {
+        Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
+        const reportEl = document.getElementById("tokenReport");
+        if (reportEl) reportEl.style.display = "none";
+      }
       setApplyBtnState(false);
       setOpenEditorReady(false);
       document.getElementById("upgradePrompt")?.classList.add("hidden");
@@ -2170,10 +2214,6 @@
       return true;
     }
 
-    document.getElementById("next2")?.addEventListener("click", () => {
-      if (!page3Action()) return;
-      setStep(4);
-    });
     document.getElementById("dbgSubmit3")?.addEventListener("click", () => { page3Action(); });
 
     // back3 on Color scheme returns to Website spec (step 3), re-populating its panels
@@ -2320,10 +2360,6 @@
     }
 
     renderSuggestedPalettes(); // render blank rows immediately
-    // next2 on Website spec → enters Color scheme → refresh palettes
-    document.getElementById("next2")?.addEventListener("click", () => renderSuggestedPalettes());
-    document.getElementById("back3")?.addEventListener("click", () => setStep(3));
-    document.getElementById("next3")?.addEventListener("click", () => { setStep(5); });
     document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
 
     // Page 2 (Job)
@@ -2332,9 +2368,12 @@
     document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
     document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
 
-    // Page 3 (Design) — Back returns to Job; Next advances to Colors
+    // Page 3 (Design) — Back returns to Job; Next validates then advances to Colors
     document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
-    document.getElementById("next3_bottom")?.addEventListener("click", () => setStep(4));
+    document.getElementById("next3_bottom")?.addEventListener("click", () => {
+      if (!page3Action()) return;
+      setStep(4);
+    });
 
     // Page 4 (Colors)
     function isMustacheMode() { return extractedTemplateCache?.templateMode === "mustache"; }

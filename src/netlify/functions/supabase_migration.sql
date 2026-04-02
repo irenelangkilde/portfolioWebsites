@@ -9,7 +9,7 @@
 -- 1 unit = 5 credits + 1 download/deploy
 
 -- Tier limits:
---   free                 — 3 credits, 0 downloads  (preview; no purchase)
+--   free                 — 5 credits, 0 downloads  (preview; no purchase)
 --   basic                — 5 credits, 1 download   ($7 one-time; 1 unit)
 --   premium              — N×5 credits, N downloads (N units purchased)
 --     premium_monthly_new: graduated $19/11/7/5/4/2.95 per unit; no auto-renewal
@@ -24,7 +24,7 @@ create table if not exists public.memberships (
   status               text not null default 'active'
                          check (status in ('active', 'cancelled', 'expired')),
   credits_used         integer not null default 0,
-  credits_limit        integer not null default 3,      -- -1 = unlimited; overridden on upgrade
+  credits_limit        integer not null default 5,      -- -1 = unlimited; overridden on upgrade
   downloads_used       integer not null default 0,
   downloads_limit      integer not null default 0,      -- 0 = none (free); -1 = unlimited
   stripe_customer_id      text,
@@ -41,7 +41,7 @@ create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
   insert into public.memberships (user_id, tier, credits_limit, downloads_limit)
-  values (new.id, 'free', 3, 0)
+  values (new.id, 'free', 5, 0)
   on conflict (user_id) do nothing;
   return new;
 end;

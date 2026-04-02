@@ -796,7 +796,8 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
           ]}],
           max_output_tokens: maxTokens
         });
-        return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens" };
+        const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
+      return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
       } finally {
         openaiClient.files.del(uploadedFile.id).catch(() => {});
       }
@@ -807,7 +808,8 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
       input: [{ role: "user", content: [{ type: "input_text", text: userText }] }],
       max_output_tokens: maxTokens
     });
-    return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens" };
+    const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
+    return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
   } else {
     // Claude
     const claudeModel = "claude-sonnet-4-6";
@@ -827,7 +829,8 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
     const json = await res.json();
     if (!res.ok) throw new Error("Claude API error: " + (json.error?.message || JSON.stringify(json).slice(0, 200)));
     const text = (json.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-    return { text, model: json.model || claudeModel, truncated: json.stop_reason === "max_tokens" };
+    const usage = { input: json.usage?.input_tokens ?? null, output: json.usage?.output_tokens ?? null };
+    return { text, model: json.model || claudeModel, truncated: json.stop_reason === "max_tokens", usage };
   }
 }
 
@@ -837,6 +840,7 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
 async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
   pdfBuffer, resumeAnalysisJson, jobAdJson = null
 }) {
+  const tokenReport = [];
   // Stage 1 (optional): Extract resume PDF → JSON — skipped when resumeAnalysisJson is pre-computed
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
@@ -845,12 +849,14 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
     }), { ttl: 3600 });
 
     const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
+    tokenReport.push({ stage: "1a · Resume extract", model: r1.model, ...r1.usage });
     const stage1Json = parseJsonResponse(r1.text);
 
     const r2 = await callAI(provider, creds, {
       userText: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`,
       maxTokens: 8000
     });
+    tokenReport.push({ stage: "1b · Resume validate", model: r2.model, ...r2.usage });
     resumeJson = parseJsonResponse(r2.text);
   }
 
@@ -869,24 +875,28 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
     .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
   const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
+  tokenReport.push({ stage: "2 · Content strategy", model: contentResponse.model, ...contentResponse.usage });
   const aiStrategy = parseJsonResponse(contentResponse.text);
 
   await store.set(jobId, JSON.stringify({
     status: "done",
     strategy_json: aiStrategy,  // contains unified_strategy
-    resume_json:   resumeJson   // full object with resume_facts + resume_strategy
+    resume_json:   resumeJson,  // full object with resume_facts + resume_strategy
+    token_report:  tokenReport
   }), { ttl: 3600 });
 }
 
 // ─── Main pipeline ───────────────────────────────────────────────────────────
-async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
-  page1, page2, pdfBuffer,
-  sampleHtml, theme, headshotName,
-  resumeAnalysisJson, templateAnalysisJson, templateHtml,
-  artifactsData = [],
-  strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
-  bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
-}) {
+async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) {
+  const {
+    page1, page2, pdfBuffer,
+    sampleHtml, theme, headshotName,
+    resumeAnalysisJson, templateAnalysisJson, templateHtml,
+    artifactsData = [],
+    strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
+    bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
+  } = opts;
+  const tokenReport = [];
   // ── Stage 1 (optional): Extract resume PDF → JSON ───────────────────────────
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
@@ -895,12 +905,14 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     }), { ttl: 3600 });
 
     const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
+    tokenReport.push({ stage: "1a · Resume extract", model: r1.model, ...r1.usage });
     const stage1Json = parseJsonResponse(r1.text);
 
     const r2 = await callAI(provider, creds, {
       userText: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`,
       maxTokens: 8000
     });
+    tokenReport.push({ stage: "1b · Resume validate", model: r2.model, ...r2.usage });
     resumeJson = parseJsonResponse(r2.text);
   }
 
@@ -923,6 +935,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
       .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
     const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
+    tokenReport.push({ stage: "2 · Content strategy", model: contentResponse.model, ...contentResponse.usage });
     aiStrategy = parseJsonResponse(contentResponse.text);
   }
 
@@ -1070,6 +1083,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
       userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
       maxTokens: 32000
     });
+    tokenReport.push({ stage: "5 · Renderer", model: rendererResponse.model, ...rendererResponse.usage });
 
     siteHtml = cleanHtml(rendererResponse.text);
     usedModel = rendererResponse.model;
@@ -1096,7 +1110,8 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, {
     resume_json: resumeJson,
     strategy_json: coreContent.strategy,
     visual_direction_json: blendResult.visual_direction,
-    truncated
+    truncated,
+    token_report: tokenReport
   }), { ttl: 3600 });
 
   await logUsageEvent(opts.userId, {
@@ -1196,7 +1211,10 @@ export async function handler(event) {
       const r = await callAI(provider, creds, { userText: prompt, maxTokens: 3000 });
       let job_ad = null;
       try { job_ad = parseJsonResponse(r.text); } catch {}
-      await store.set(jobId, JSON.stringify({ status: "done", ...(job_ad || {}), model: r.model }), { ttl: 3600 });
+      await store.set(jobId, JSON.stringify({
+        status: "done", ...(job_ad || {}), model: r.model,
+        token_report: [{ stage: "2a · Job ad extract", model: r.model, ...r.usage }]
+      }), { ttl: 3600 });
       return { statusCode: 202 };
     }
 
@@ -1217,6 +1235,7 @@ export async function handler(event) {
       try { bridge_json = parseJsonResponse(r.text); } catch (e) { bridge_parse_error = e?.message || "parse failed"; }
       await store.set(jobId, JSON.stringify({
         status: "done", bridge_json, model: r.model,
+        token_report: [{ stage: "4 · Bridge", model: r.model, ...r.usage }],
         ...(bridge_json ? {} : { bridge_raw: r.text?.slice(0, 2000), bridge_parse_error })
       }), { ttl: 3600 });
       return { statusCode: 202 };
