@@ -1624,12 +1624,16 @@
         }
 
         const startTime = Date.now();
+        let lastPollData = null;
         while (Date.now() - startTime < 120000) {
           await new Promise(r => setTimeout(r, 2500));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          const data = await pollRes.json().catch(() => ({}));
-          if (data.status === "done") { jobAdResult = data; populateJobAdDebug(data); break; }
-          if (data.status === "error") { populateJobAdDebug(data); break; }
+          lastPollData = await pollRes.json().catch(() => ({ _http: pollRes.status }));
+          if (lastPollData.status === "done") { jobAdResult = lastPollData; populateJobAdDebug(lastPollData); break; }
+          if (lastPollData.status === "error") { populateJobAdDebug(lastPollData); break; }
+        }
+        if (!jobAdResult && isDebugMode()) {
+          wireDebugRow("JobError", "Poll timed out. Last blob response:\n" + JSON.stringify(lastPollData, null, 2), "job-error.txt");
         }
       } catch (err) {
         if (isDebugMode()) wireDebugRow("JobError", "Client exception: " + (err?.message || String(err)), "job-error.txt");
