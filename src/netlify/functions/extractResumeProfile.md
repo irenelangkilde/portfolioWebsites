@@ -134,9 +134,18 @@ OUTPUT JSON SHAPE
       "strengths_to_emphasize": [],
       "content_to_feature_prominently": [],
       "content_to_keep_secondary": [],
+      "strong_signals": [
+        { "item": "", "why": "" }
+      ],
+      "weak_signals": [
+        { "item": "", "why": "" }
+      ],
       "recommended_tone": [],
       "suggested_visual_motifs": [],
       "suggested_section_possibilities": [],
+      "section_by_section_notes": [
+        { "section": "", "note": "" }
+      ],
       "website_advantages_to_leverage": [],
       "sample_inspiration_notes": "",
       "color_strategy": ""
@@ -146,8 +155,17 @@ OUTPUT JSON SHAPE
       "hero_subheadline_options": [],
       "value_propositions": [],
       "cta_options": [],
-      "project_framing_notes": [],
-      "about_angle": ""
+      "about_angle": "",
+      "project_framing_notes": [
+        { "project_name": "", "framing": "" }
+      ],
+      "highlights": [],
+      "strengths_snapshot": [],
+      "open_to": "",
+      "status_badges": [],
+      "skills_subcategory_labels": [
+        { "group": "", "label": "" }
+      ]
     },
     "compatible_color_schemes": [
       {
@@ -225,7 +243,7 @@ Data science: laptop, charts, node graph, scatter plot / dashboard
 
 Rendering styles: stylized scientific illustration, cinematic concept art, clean editorial vector, gradient 3D illustration, technical schematic aesthetic.
 
-VOICE RULES (apply to sections 4 and 5)
+VOICE RULES (apply to sections 4, 5, and 6)
 - Always write in first person ("I build…", "My work spans…", "I bring…") — never third person ("She leads…", "The candidate has…").
 - Confident but not boastful. Avoid superlatives like "world-class", "exceptional", "top-tier", "passionate", "driven", or "highly skilled". Let concrete facts carry the weight instead.
 
@@ -239,11 +257,45 @@ This is the most important part. Infer:
 
 Ground every claim in resume_facts. Write core_story in first person. This section guides downstream creative stages without locking them into a fixed structure.
 
+STRONG AND WEAK SIGNALS
+- strong_signals: 3-6 specific resume items that should definitely appear on the website, each paired with a concise `why`. Name the actual item (e.g. "Thesis: X", "Internship at Y", "Project Z"). Be specific — not "research experience" but the actual project or role. These are the candidate's clearest proof points.
+- weak_signals: 2-4 resume items that exist but shouldn't lead or may undercut fit for the candidate's target roles. Name the item, explain briefly. Examples: unrelated early jobs, redundant listings, credentials that date the candidate, or items that signal a different career direction.
+
+SECTION BY SECTION NOTES
+Write one concrete, actionable sentence for each section of the website that is appropriate for this candidate. Typical sections: Hero, About, Projects/Work, Experience, Skills, Education, Contact. Skip sections that aren't relevant. Each note should say what that section needs to accomplish — not just list what goes in it. Example: "Projects — lead with the thesis project and frame it around the data pipeline, not the subject matter."
+
+SUGGESTED SECTION POSSIBILITIES
+List section types that would work well for this candidate beyond the standard set, e.g. "Research", "Publications", "Teaching", "Open Source", "Leadership", "Gallery", "Writing Samples".
+
 5. WEBSITE COPY SEED
 Write several strong website-ready options for hero headline, subheadline, and calls to action. Ground these in actual resume content — they should sound more compelling than resume text, not generic.
 
-- about_angle: one or two grounded sentences the candidate would say out loud to a recruiter — specific, honest, and human-sounding. First person.
-- value_propositions: two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. First person. The best one will be used as the hero sub-value pitch on the portfolio site.
+ABOUT ANGLE
+One or two grounded sentences the candidate would say out loud to a recruiter — specific, honest, and human-sounding. First person. This is the opening line of the About section, not a general biography. It should lead with what makes the candidate interesting or distinctive, not with their major or graduation year.
+
+VALUE PROPOSITIONS
+Two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. First person. The best one will be used as the hero sub-value pitch.
+
+PROJECT FRAMING NOTES
+For every project in resume_facts.factual_profile.projects, write one sentence reframing that project for a portfolio website audience. The framing should emphasize what problem it solved, what skill it demonstrates, or what outcome it produced — not just what it is. Use the exact project name from resume_facts.
+
+HIGHLIGHTS
+Write 3-4 short, punchy bullet strings for the hero "Highlights" card. These are quick-scan facts: concrete achievements, key skills, notable credentials, or defining characteristics. Each should be 5-10 words. Examples: "Thesis on X published in Y", "Fluent in Python and R", "Dean's List 3 semesters", "Built X used by Y people". No soft claims.
+
+STRENGTHS SNAPSHOT
+Write 3-4 short phrases (3-6 words each) for the hero "Snapshot" card — these are the candidate's clearest professional strengths, stated as compact identity markers. Examples: "Systems-level thinker", "Data to decision pipelines", "Lab bench to publication". These should feel distinct from the highlights — more about identity, less about credentials.
+
+OPEN TO
+Write a single concise string for the "Open to:" or "What I'm looking for:" badge. State the role types and/or work arrangements the candidate is targeting. Examples: "Full-time roles in data engineering or ML", "Entry-level positions in civil or structural engineering, open to relocation". Derive from resume_facts.desired_roles if present; infer from major and experience otherwise. First person implied but no "I am" — start with the noun.
+
+STATUS BADGES
+Write 2-4 short badge label strings appropriate for this candidate's hero section. These appear as small chips or pills. Examples: "Class of 2026", "Available June 2026", "Open to Relocation", "B.S. Electrical Engineering", "GPA 3.8". Pull from facts only — graduation date, degree, GPA (if strong), notable honors, availability signal. Keep each under 5 words.
+
+SKILLS SUBCATEGORY LABELS
+For each non-empty skill group in resume_facts.factual_profile.skills, provide a human-readable display label. The group names are: programming_languages, technical, tools, domains, soft_skills, other. Write a label that makes sense to a non-technical visitor (e.g. "programming_languages" → "Languages & Frameworks", "technical" → "Technical Skills", "tools" → "Tools & Platforms", "domains" → "Areas of Expertise", "soft_skills" → "Competencies"). Only include groups that have content.
+
+CTA OPTIONS
+Write 2-3 specific calls to action appropriate for this candidate's career stage and field. Avoid generic "Get in Touch" — make them action-specific and honest. Examples: "See my research", "View my projects", "Download my resume", "Let's talk about your team's needs". Pair with context: what page action or link they point to.
 
 6. SUBJECT-INSPIRED COLOR STRATEGY
 Conjure five colors inspired by the candidate's field and subject matter. Output them as an ordered array in `colors` — the order matters and must follow this convention:

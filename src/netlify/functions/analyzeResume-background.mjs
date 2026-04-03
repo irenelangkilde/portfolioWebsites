@@ -89,7 +89,7 @@ export async function handler(event) {
             { type: "input_file", filename: "resume.pdf", file_data: `data:application/pdf;base64,${resumePdfBase64}` },
             { type: "input_text", text: filledPrompt + "\n\nAnalyze this resume according to the instructions above. Return valid JSON only." }
           ]}],
-          max_output_tokens: 8000
+          max_output_tokens: 12000
         })
       });
       const text = await res.text();
@@ -111,7 +111,7 @@ export async function handler(event) {
         headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 8000,
+          max_tokens: 12000,
           system: filledPrompt,
           messages: [{
             role: "user",

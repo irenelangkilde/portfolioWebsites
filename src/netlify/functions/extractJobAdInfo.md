@@ -82,9 +82,18 @@ OUTPUT JSON SHAPE
       "strengths_to_emphasize": [],
       "content_to_feature_prominently": [],
       "content_to_keep_secondary": [],
+      "strong_signals": [
+        { "item": "", "why": "" }
+      ],
+      "weak_signals": [
+        { "item": "", "why": "" }
+      ],
       "recommended_tone": [],
       "suggested_visual_motifs": [],
       "suggested_section_possibilities": [],
+      "section_by_section_notes": [
+        { "section": "", "note": "" }
+      ],
       "website_advantages_to_leverage": [],
       "sample_inspiration_notes": "",
       "color_strategy": ""
@@ -94,8 +103,17 @@ OUTPUT JSON SHAPE
       "hero_subheadline_options": [],
       "value_propositions": [],
       "cta_options": [],
-      "project_framing_notes": [],
-      "about_angle": ""
+      "about_angle": "",
+      "project_framing_notes": [
+        { "project_name": "", "framing": "" }
+      ],
+      "highlights": [],
+      "strengths_snapshot": [],
+      "open_to": "",
+      "status_badges": [],
+      "skills_subcategory_labels": [
+        { "group": "", "label": "" }
+      ]
     },
     "compatible_color_schemes": [
       {
@@ -137,14 +155,27 @@ Rewrite every field to be job-specific:
 - sample_inspiration_notes: describe the visual and tonal feel appropriate for this employer
 - color_strategy: shift resume_strategy's color strategy toward the company's brand aesthetic while staying coherent
 
+STRONG AND WEAK SIGNALS
+Rewrite resume_strategy's signals through the lens of this job:
+- strong_signals: 3-6 resume items (from resume_strategy) that directly address what this job needs. Name the actual item. Explain in `why` how it maps to the job's requirements.
+- weak_signals: 2-4 resume items that exist in resume_strategy but are unlikely to move the needle for this employer, or could undercut fit. Name the item. Explain briefly in `why`.
+
+SECTION BY SECTION NOTES
+Write one concrete, actionable sentence for each section of the website that is appropriate for this candidate targeting this role. Say what that section needs to accomplish for this employer specifically — not just what goes in it.
+
 WEBSITE COPY SEED
 Rewrite all copy to target this employer specifically. Pull the best raw material from resume_strategy.website_copy_seed, then sharpen toward the role:
 - hero_headline_options: 2-3 headlines that would resonate with a hiring manager at this company. They should feel like resume_strategy headlines that got a job-specific edit, not generic placeholders.
 - hero_subheadline_options: supporting lines that name the employer's domain or problem space
 - value_propositions: start from resume_strategy.website_copy_seed.value_propositions, rewrite each to be directly responsive to job_facts.requirements.must_have. Each should be a complete first-person sentence. Keep only the 2-3 most directly relevant.
 - cta_options: calls to action appropriate for a job application context at this company
-- project_framing_notes: for each project in resume_strategy that is relevant to this role, write a one-sentence reframing of that project through the lens of what this job needs. Include the project name.
 - about_angle: rewrite resume_strategy.website_copy_seed.about_angle as a specific, honest first-person statement a recruiter from this company would find immediately relevant.
+- project_framing_notes: for each project in resume_strategy that is relevant to this role, rewrite the framing through the lens of what this job needs. Use the exact project_name from resume_strategy.website_copy_seed.project_framing_notes.
+- highlights: rewrite resume_strategy.website_copy_seed.highlights, reordering so the items most relevant to this job come first. Drop items that don't speak to this role; add a job-specific one if there's a clear gap.
+- strengths_snapshot: rewrite resume_strategy.website_copy_seed.strengths_snapshot with phrases calibrated for this employer's culture and role requirements.
+- open_to: rewrite resume_strategy.website_copy_seed.open_to to name this role type and company type specifically.
+- status_badges: rewrite resume_strategy.website_copy_seed.status_badges, keeping factual ones and adding any role-relevant badge (e.g. "Seeking [role type]" if appropriate).
+- skills_subcategory_labels: reuse resume_strategy.website_copy_seed.skills_subcategory_labels as-is unless the role suggests a more targeted label (e.g. a data role might prefer "Data Stack" over "Tools & Platforms").
 
 COMPATIBLE COLOR SCHEMES
 Produce one scheme inspired by the company's brand aesthetic (use culture_keywords, industry, and any color signals from the posting or company profile). Keep it coherent with the candidate's field.
