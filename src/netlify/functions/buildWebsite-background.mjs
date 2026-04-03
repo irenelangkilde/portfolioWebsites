@@ -259,14 +259,16 @@ function cleanHtml(rawHtml) {
 // ─── Prompt loaders ──────────────────────────────────────────────────────────
 function loadPromptFile(filename) {
   const cwd = process.cwd();
+  const here = new URL(".", import.meta.url).pathname;
   for (const candidate of [
+    resolve(here, filename),
     resolve(cwd, `src/netlify/functions/${filename}`),
     resolve(cwd, `netlify/functions/${filename}`),
     resolve(cwd, filename),
   ]) {
     try { return readFileSync(candidate, "utf-8"); } catch {}
   }
-  throw new Error(`Could not load ${filename}`);
+  throw new Error(`Could not load ${filename} (cwd=${cwd}, here=${here})`);
 }
 
 function parseJsonResponse(raw) {
