@@ -25,6 +25,8 @@ Top-level scalars
   {{specialization}}
   {{current_year}}        e.g. 2026
   {{desired_role}}        Primary target role (first entry from desired_roles)
+  {{open_to}}             "Open to / Seeking / Available for" text — a single prose string
+                          (e.g. "Full-time roles in embedded systems, open to relocation")
 
 Conditional blocks (omit the section entirely when the array is empty)
   {{#has_github}}                  …  {{/has_github}}
@@ -35,6 +37,13 @@ Conditional blocks (omit the section entirely when the array is empty)
   {{#has_certifications}}          …  {{/has_certifications}}
   {{#has_publications}}            …  {{/has_publications}}
   {{#has_professional_interests}}  …  {{/has_professional_interests}}
+  {{#has_open_to}}                 …  {{/has_open_to}}
+  {{#has_status_badges}}           …  {{/has_status_badges}}
+
+Status badges  (short hero chips: graduation date, availability, degree, honors, etc.)
+  {{#has_status_badges}}
+  {{#status_badges}}<span class="badge">{{label}}</span>{{/status_badges}}
+  {{/has_status_badges}}
 
 Professional interests  (candidate's stated areas of professional curiosity — keep as its own labeled section or tag cluster)
   {{#has_professional_interests}}
@@ -99,13 +108,13 @@ Hero cards  (at-a-glance sidebar grid — only the card types present in the ori
   ┌──────────────┬────────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────┬──────────────────────┐
   │ Title signal │ type (shared key)                                  │ Renderer reads from (unified JSON)                              │ Fallback/alias label │
   ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
-  │ "Highlights",│ highlights                                         │ resumeJson.experience[*].bullets[0]                             │ "Highlights"         │
-  │ "Quick       │                                                    │ (first bullet per role, max 3)                                  │                      │
+  │ "Highlights",│ highlights                                         │ copySeed.highlights (AI-written bullets, max 4);                │ "Highlights"         │
+  │ "Quick       │                                                    │ fallback: resumeJson.experience[*].bullets[0] (max 3)           │                      │
   │ Highlights", │                                                    │                                                                 │                      │
   │ "At a Glance"│                                                    │                                                                 │                      │
   ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
-  │ ANY title    │ snapshot                                           │ strategy.editorial_direction.strengths_to_emphasize             │ "Strengths Snapshot" │
-  │ containing   │ ← CRITICAL: "Snapshot" in the title is the        │ (max 4 items)                                                   │                      │
+  │ ANY title    │ snapshot                                           │ copySeed.strengths_snapshot (AI-written phrases, max 4);        │ "Strengths Snapshot" │
+  │ containing   │ ← CRITICAL: "Snapshot" in the title is the        │ fallback: strategy.editorial_direction.strengths_to_emphasize   │                      │
   │ "Snapshot"   │   deciding signal regardless of visual format      │                                                                 │                      │
   │ or "Strength"│   (chips, bullets, list — all → snapshot)          │                                                                 │                      │
   ├──────────────┼────────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────┼──────────────────────┤
@@ -224,13 +233,17 @@ CONVERSION RULES
    Incorrect: {{#leadership}}<section>{{#leadership}}…{{/leadership}}</section>{{/leadership}}
    Apply this pattern to: has_leadership, has_certifications, has_publications, and any other optional array section.
 
-5. NAVIGATION LINKS: keep href="#section-id" anchors intact. Replace only the visible link label text if it is candidate-specific.
+5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}`. This includes hero sub-badges, footer taglines, and any inline paragraph with this content. Do NOT use `{{#desired_roles}}` for this — `desired_roles` is for explicit role lists only. Do NOT hardcode availability text.
 
-6. DO NOT add, remove, or restructure any HTML elements beyond what is required for the token substitution and section wrapping.
+5a. STATUS BADGES: Any short badge/chip/pill in the hero that shows graduation date, class year, degree label, availability, or honors (e.g. "Class of 2026", "B.S. Electrical Engineering", "Available June 2026") should be replaced with `{{#has_status_badges}}{{#status_badges}}<span class="[original-badge-class]">{{label}}</span>{{/status_badges}}{{/has_status_badges}}`. Preserve the original badge CSS class exactly.
 
-7. OUTPUT a single complete HTML file. No markdown. No explanation.
+7. NAVIGATION LINKS: keep href="#section-id" anchors intact. Replace only the visible link label text if it is candidate-specific.
 
-8. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
+8. DO NOT add, remove, or restructure any HTML elements beyond what is required for the token substitution and section wrapping.
+
+9. OUTPUT a single complete HTML file. No markdown. No explanation.
+
+10. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
    <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "dark": "<hex>", "light": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
    Populate it with:
    - default_color_scheme: the original hardcoded hex values from the template's CSS :root block, mapping:
