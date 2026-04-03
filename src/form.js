@@ -1620,7 +1620,7 @@
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const data = await pollRes.json().catch(() => ({}));
           if (data.status === "done") { jobAdResult = data; populateJobAdDebug(data); break; }
-          if (data.status === "error") { break; }
+          if (data.status === "error") { populateJobAdDebug(data); break; }
         }
       } catch { /* silent */ }
 
@@ -1770,6 +1770,7 @@
     }
 
     function populateJobAdDebug(data) {
+      if (data?.error) wireDebugRow("JobError", data.error, "job-error.txt");
       wireDebugRow("JobResolved", JSON.stringify(data?.job_resolved ?? null, null, 2), "job-resolved.json");
       if (isDebugMode()) mergeTokenReport(data?.token_report);
     }

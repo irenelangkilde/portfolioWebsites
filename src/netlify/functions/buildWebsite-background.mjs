@@ -1224,13 +1224,20 @@ export async function handler(event) {
         .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
         .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts, null, 2))
         .replace("{{JOB_AD}}", rawJobAd);
-      const r = await callAI(provider, creds, { userText: prompt, maxTokens: 5000 });
+      let r;
+      try {
+        r = await callAI(provider, creds, { userText: prompt, maxTokens: 8000 });
+      } catch (aiErr) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "Job extraction AI error: " + (aiErr?.message || String(aiErr)) }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
       let parsed = null;
       try { parsed = parseJsonResponse(r.text); } catch {}
       const jobResolved = parsed?.job_resolved ?? parsed ?? null;
       await store.set(jobId, JSON.stringify({
-        status:       "done",
+        status:       jobResolved ? "done" : "error",
         job_resolved: jobResolved,
+        error:        jobResolved ? undefined : "Job extraction returned no valid JSON. Raw: " + (r.text || "").slice(0, 300),
         model:        r.model,
         token_report: [{ stage: "2a · Job ad extract", model: r.model, ...r.usage }]
       }), { ttl: 3600 });
