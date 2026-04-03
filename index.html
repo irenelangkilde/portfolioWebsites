@@ -382,8 +382,61 @@
       text-transform: uppercase;
       letter-spacing: .06em;
     }
+
+    /* ── Auth modal ─────────────────────────────────── */
+    #authBtn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 13px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.12);
+      color: var(--text); font-weight: 700; font-size: 13px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    #authBtn:hover { background: rgba(78,112,241,.26); }
+    #authBtn .avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--primary); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+    .authTabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .authTab {
+      flex: 1; padding: 8px; border-radius: 10px; border: 1px solid transparent;
+      background: rgba(255,255,255,.06); color: var(--muted);
+      font-weight: 700; font-size: 13px; cursor: pointer; text-align: center;
+    }
+    .authTab.active {
+      background: rgba(78,112,241,.22);
+      border-color: rgba(78,112,241,.5); color: var(--text);
+    }
+    .authForm { display: flex; flex-direction: column; gap: 12px; }
+    .authForm input {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5); background: rgba(78,112,241,.07);
+      color: var(--text); outline: none; font-size: 14px;
+    }
+    .authForm input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(141,224,255,.14); }
+    .authSubmit {
+      width: 100%; padding: 11px; border-radius: 10px;
+      background: color-mix(in oklab, var(--primary) 55%, rgba(255,255,255,.08));
+      border: 1px solid color-mix(in oklab, var(--primary) 75%, rgba(255,255,255,.14));
+      color: #fff; font-weight: 900; font-size: 14px; cursor: pointer;
+    }
+    .authSubmit:hover { background: color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.08)); }
+    .authMsg { font-size: 13px; min-height: 18px; text-align: center; }
+    .authMsg.ok  { color: var(--ok); }
+    .authMsg.err { color: var(--danger); }
+    .tierBadge {
+      font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 999px;
+      background: rgba(141,224,255,.15); color: var(--accent); letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .tierBadge.basic    { background: rgba(118,176,34,.18); color: #76b022; }
+    .tierBadge.premium { background: rgba(251,171,156,.18); color: #fbab9c; }
+    .quotaBar { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
   </style>
 </head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <body>
   <div class="wrap">
     <header>
@@ -392,13 +445,64 @@
           <h1>Personal Portfolio Website Intake</h1>
           <p class="sub">Fill this out once. Get a draft site fast. er.</p>
         </div>
-        <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; flex-shrink:0; padding-top:3px; max-width:260px;">
-          <span id="resumeAnalysisStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="stepConfirmStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
-          <span id="templateExtractStatus" style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0;">
+          <button id="authBtn" onclick="openAuthModal()">
+            <span class="avatar" id="authAvatar">?</span>
+            <span id="authBtnLabel">Sign in</span>
+          </button>
+          <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; padding-top:3px; max-width:260px;">
+            <span id="resumeAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="jobAnalysisStatus"        style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="templateExtractStatus"    style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="colorsChosenStatus"       style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="bridgeStatus"             style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+            <span id="generatingWebsiteStatus"  style="font-size:11.5px; min-height:14px; text-align:right;"></span>
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- ── Auth modal ───────────────────────────────────────────────────── -->
+    <div class="modalBackdrop" id="authModal" style="display:none;" onclick="if(event.target===this)closeAuthModal()">
+      <div class="modal" style="max-width:400px;">
+        <div class="modalTop">
+          <strong id="authModalTitle">Account</strong>
+          <span class="modalClose" onclick="closeAuthModal()">✕</span>
+        </div>
+
+        <!-- Logged-out view -->
+        <div id="authLoggedOut">
+          <div class="authTabs">
+            <div class="authTab active" id="tabLogin"  onclick="switchAuthTab('login')">Sign in</div>
+            <div class="authTab"        id="tabSignup" onclick="switchAuthTab('signup')">Create account</div>
+          </div>
+          <div class="authForm">
+            <input type="email"    id="authEmail"    placeholder="Email" autocomplete="email" />
+            <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
+            <div id="authPasswordConfirmWrap" class="hidden">
+              <input type="password" id="authPasswordConfirm" placeholder="Confirm password" autocomplete="new-password" style="width:100%;" />
+            </div>
+            <button class="authSubmit" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign in</button>
+            <div class="authMsg" id="authMsg"></div>
+          </div>
+        </div>
+
+        <!-- Logged-in view -->
+        <div id="authLoggedIn" class="hidden">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div class="avatar" style="width:36px;height:36px;font-size:16px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:900;" id="authAvatarLarge">?</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;" id="authUserEmail"></div>
+              <span class="tierBadge" id="authTierBadge">free</span>
+            </div>
+          </div>
+          <div class="quotaBar" id="authQuotaBar"></div>
+          <div style="margin-top:16px;">
+            <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="progressCard">
       <div class="stepsRow">
@@ -427,15 +531,17 @@
     <section class="card" id="page0">
       <div class="sectionTitle">
         <h2>Overview</h2>
-        <p class="hint">You’ll generate a preview at the end of Page 5, which you can then optionally refine.</p>
+        <p class="hint">You’ll generate a preview at the end of Stage 5, which you can then optionally refine.</p>
       </div>
       <div class="note">
         <ol class="tipList">
-          <li><strong>Page 1: Basic information (major, specialization, resume).</strong></li>
-          <li><strong>Page 2: List of artifacts (headshot image, project results, Github portfolio, etc). </strong></li>
-          <li><strong>Page 3: New website spec.</strong></li>
-          <li><strong>Page 4: Color scheme.</li>
-          <li><strong>Page 5: Target job ad; submit for a tailored result; refine in visual editor.</li>
+          <li><strong>Page 1:</strong> Basic info — resume, major, and specialization.</li>
+          <li><strong>Page 2:</strong> Job — target job ad.</li>
+          <li><strong>Page 3:</strong> Design — website design spec.</li>
+          <li><strong>Page 4:</strong> Colors — color scheme.</li>
+          <li><strong>Page 5:</strong> Visuals — headshot, links, images, and video.</li>
+          <li><strong>Page 6:</strong> Edit — refine your generated portfolio.</li>
+          <li><strong>Page 7:</strong> Publish — download or deploy your site.</li>
         </ol>
       </div>
       <div class="btnRow">
@@ -451,6 +557,21 @@
 
       <div class="max480 grid">
         <div>
+          <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
+          <div class="dropzone" id="resumeDropzone">
+            <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
+            <div class="dropzone-label">
+              <strong>Choose file</strong> or drag it here<br>
+              <span style="font-size:12px;">PDF or DOCX</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:3px; min-height:14px;">
+            <div id="resumeAnalysisStatusInline" style="font-size:11.5px; flex:1;"></div>
+            <button type="button" id="reanalyzeResume" title="Re-extract resume" style="display:none; background:none; border:none; cursor:pointer; font-size:14px; color:rgba(141,224,255,.7); padding:0; line-height:1;">↺</button>
+          </div>
+        </div>
+
+        <div>
           <label for="major">Major <span class="error">*</span></label>
           <input id="major" type="text" placeholder="e.g., Data Science" required />
           <div id="providerBadge" class="hidden" style="margin-top:4px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:5px;"></div>
@@ -461,32 +582,11 @@
           <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
         </div>
 
-        <div>
-          <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
-          <div class="dropzone" id="resumeDropzone">
-            <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
-            <div class="dropzone-label">
-              <strong>Choose file</strong> or drag it here<br>
-              <span style="font-size:12px;">PDF or DOCX</span>
-            </div>
-          </div>
-          <ul class="resume-filelist" id="resumeFileList"></ul>
-          <div id="resumeAnalysisStatusInline" style="font-size:11.5px; margin-top:3px; min-height:14px;"></div>
-          <!-- Debug panel — shown in debug mode once analysis completes -->
-          <div id="resumeAnalysisPanel" class="hidden" style="margin-top:8px;">
-            <details>
-              <summary style="font-size:12px; color:rgba(251,171,156,.85);">🐛 Resume analysis (extractResumeProfile.md)</summary>
-              <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-                <button class="btn mini" type="button" id="dlResumeAnalysis">Download analysis.json</button>
-                <button class="btn mini ghost" type="button" id="cpResumeAnalysis">Copy</button>
-              </div>
-              <pre id="resumeAnalysisPre" style="margin-top:6px; max-height:320px;"></pre>
-            </details>
-          </div>
-        </div>
-
       </div>
 
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit1">Submit</button>
+      </div>
       <div class="btnRow">
         <button class="btn danger" type="button" id="reset1" style="margin-right:auto;">Reset (double-click)</button>
         <button class="btn primary" type="button" id="next1">Next</button>
@@ -496,7 +596,7 @@
     <!-- PAGE 2: Artifacts -->
     <section class="card hidden" id="page2">
       <div class="sectionTitle">
-        <h2>Page 2 — Artifacts</h2>
+        <h2>Page 5 — Visuals</h2>
         <p class="hint">Optional supplementary materials to enrich your portfolio.</p>
       </div>
 
@@ -504,7 +604,7 @@
       <div class="artifactRow" style="margin-bottom:2px;">
         <span class="artifactColHead">Type</span>
         <span class="artifactColHead">File / Link / Content</span>
-        <span class="artifactColHead">Tagline</span>
+        <span class="artifactColHead">Positioning</span>
         <span></span>
       </div>
 
@@ -515,17 +615,137 @@
         <button class="btn ghost mini" type="button" id="addArtifact">+ Add artifact</button>
       </div>
 
+      <!-- Debug: consolidated pipeline stage outputs (debug mode only) -->
+      <div id="stagesDebugSection" class="hidden" style="margin-top:14px; padding:10px 12px; border-radius:10px; border:1px solid rgba(251,171,156,.3); background:rgba(251,171,156,.05);">
+        <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;">🐛 Pipeline Stage Outputs</div>
+        <div id="debugModelName" style="color:rgba(180,230,180,.85); font-size:12px; margin-bottom:4px;"></div>
+        <div id="tokenReport" style="display:none; font-size:11.5px; font-family:monospace; color:rgba(234,240,255,.7); background:rgba(0,0,0,.25); border-radius:6px; padding:6px 10px; margin-bottom:8px; white-space:pre;"></div>
+        <div style="display:grid; gap:6px;">
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Facts</span>
+            <button class="btn mini" type="button" id="dlResumeFacts">↓ resume-facts.json</button>
+            <button class="btn mini ghost" type="button" id="cpResumeFacts">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwResumeFacts">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Strategy</span>
+            <button class="btn mini" type="button" id="dlResumeStrategy">↓ resume-strategy.json</button>
+            <button class="btn mini ghost" type="button" id="cpResumeStrategy">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwResumeStrategy">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Facts</span>
+            <button class="btn mini" type="button" id="dlJobFacts">↓ job-facts.json</button>
+            <button class="btn mini ghost" type="button" id="cpJobFacts">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwJobFacts">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Strategy</span>
+            <button class="btn mini" type="button" id="dlJobStrategy">↓ job-strategy.json</button>
+            <button class="btn mini ghost" type="button" id="cpJobStrategy">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwJobStrategy">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Unified Strategy</span>
+            <button class="btn mini" type="button" id="dlStage2">↓ unified-strategy.json</button>
+            <button class="btn mini ghost" type="button" id="cpStage2">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwStage2">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · Spec JSON</span>
+            <button class="btn mini" type="button" id="dlTemplateJson">↓ spec.json</button>
+            <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwTemplateJson">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · HTML</span>
+            <button class="btn mini" type="button" id="dlTemplateHtml">↓ template.html</button>
+            <button class="btn mini ghost" type="button" id="vwTemplateHtml">View</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">4 · Bridge Profile &amp; Design</span>
+            <button class="btn mini" type="button" id="dlStage4">↓ bridge.json</button>
+            <button class="btn mini ghost" type="button" id="cpStage4">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwStage4">View</button>
+            <button class="btn mini ghost" type="button" id="recomputeStage4">↺ Recompute</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">5 · Renderer</span>
+            <button class="btn mini" type="button" id="dlFinalHtml">↓ portfolio.html</button>
+            <button class="btn mini ghost" type="button" id="cpFinalHtml">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwFinalHtml">View</button>
+            <button class="btn mini ghost" type="button" id="dlSummaryHtml">↓ summary.html</button>
+            <button class="btn mini ghost" type="button" id="cpSummaryHtml">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwSummaryHtml">View</button>
+            <button class="btn mini ghost" type="button" id="recomputeStage5">↺ Recompute</button>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,.08);">
+            <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">Form Payload</span>
+            <button class="btn mini ghost" type="button" id="dlDebugPayload">↓ payload.json</button>
+            <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+            <button class="btn mini ghost" type="button" id="vwDebugPayload">View</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Quota / upgrade prompt (shown when user hits credit limit) -->
+      <div id="upgradePrompt" class="hidden" style="margin-top:10px;">
+        <div class="note" style="border-color:rgba(251,171,156,.4); background:rgba(251,171,156,.07);">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px; color:var(--danger);">Credit limit reached</div>
+          <div id="upgradePromptMsg" class="hint" style="margin-bottom:10px;"></div>
+          <!-- Unit picker — only shown when upgrading to premium (quantity matters for graduated pricing) -->
+          <div id="unitPickerWrap" class="hidden" style="margin-bottom:12px;">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">
+              How many units?
+              <span class="hint" style="font-weight:400;"> — 1 unit = 5 credits + 1 download</span>
+            </label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="number" id="unitQty" min="1" max="20" value="1"
+                     style="width:64px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-size:14px;"
+                     oninput="updateUnitPrice()" />
+              <span id="unitPriceDisplay" class="hint" style="font-size:13px;"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn primary" onclick="openAuthModal()" style="font-size:13px;">View my account</button>
+            <a class="btn" href="#" id="upgradeLink" style="font-size:13px; text-decoration:none;">Upgrade →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status (shown once generation completes or errors) -->
+      <div id="finalBox" class="hidden" style="margin-top:10px;">
+        <div class="note">
+          <div id="finalStatus" class="hint"></div>
+        </div>
+      </div>
+
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit5">Submit</button>
+      </div>
       <div class="btnRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back2_bottom">Back</button>
-        <button class="btn primary" type="button" id="next2_bottom" style="margin-left:auto;">Next</button>
+        <button class="btn primary" type="button" id="next2_bottom" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Open Editor</button>
       </div>
+
     </section>
 
 
     <!-- PAGE 4: Color scheme -->
     <section class="card hidden" id="page4">
       <div class="sectionTitle">
-        <h2>Page 4 — Color Scheme</h2>
+        <h2>Page 4 — Colors</h2>
       </div>
 
       <div class="hr"></div>
@@ -538,26 +758,17 @@
       </label>
       <button type="button" id="resetToSampleColors" class="btn ghost" style="font-size:12px; padding:5px 12px; white-space:nowrap;">↺ Reset to sample colors</button>
     </div>
-<!-- Suggested palettes: template + AI-suggested from resume analysis -->
-<div id="suggestedPalettes" style="margin-bottom:16px;">
-  <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
-    <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
-    <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;">(Thinking…)</span>
-  </div>
-  <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
-</div>
-
 <div class="themeLayout" style="position:relative;">
   <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
 
   <div class="themeLeft">
     <p style="font-size:11px; color:rgba(234,240,255,.4); margin:0 0 6px; font-style:italic;">Click to activate, then click a swatch to paste a color. Double-click to see color dialog.</p>
     <div style="display:flex; flex-direction:column; gap:5px;">
-      <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="primary"   type="color" value="#000000" /><span>1. Primary</span></label>
-      <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="secondary" type="color" value="#000000" /><span>2. Secondary</span></label>
-      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent"    type="color" value="#000000" /><span>3. Accent</span></label>
-      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="dark"      type="color" value="#000000" /><span>4. Dark</span></label>
-      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="light"     type="color" value="#000000" /><span>5. Light</span></label>
+      <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="primary"   type="color" value="#000000" /><span id="primary-label">1. Primary</span></label>
+      <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="secondary" type="color" value="#000000" /><span id="secondary-label">2. Secondary</span></label>
+      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent"    type="color" value="#000000" /><span id="accent-label">3. Accent</span></label>
+      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="dark"      type="color" value="#000000" /><span id="dark-label">4. Dark</span></label>
+      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="light"     type="color" value="#000000" /><span id="light-label">5. Light</span></label>
     </div>
     <div class="field" style="margin-top:14px;">
       <label for="paletteUsageNote">Palette usage notes (optional)</label>
@@ -565,14 +776,23 @@
     </div>
   </div>
 
-  <div class="themeRight">
-    <div class="hint">Theme Gallery</div>
-    <iframe
-      id="colorThemesFrame"
-      src="src/color-themes.html"
-      style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"
-      onload="(function(f){ setTimeout(function(){ try{ var h=f.contentDocument.body.scrollHeight; if(h>50) f.style.height=h+'px'; }catch(e){} },200); })(this)"></iframe>
+  <!-- Suggested palettes — right column, alongside color pickers -->
+  <div id="suggestedPalettes" class="themeRight">
+    <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
+      <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
+      <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;">(Thinking…)</span>
+    </div>
+    <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
   </div>
+</div>
+
+<!-- Theme Gallery — full width below the pickers + suggested palettes row -->
+<div style="margin-top:16px;">
+  <div class="hint">Theme Gallery</div>
+  <iframe
+    id="colorThemesFrame"
+    src="src/color-themes.html"
+    style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"></iframe>
 </div>
         <!--div class="grid2">
           <div>
@@ -603,9 +823,12 @@
           <button class="btn primary" type="button" id="next2_top">Next</button>
         </div-->
 
+        <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+          <button class="btn" type="button" id="dbgSubmit4">Submit</button>
+        </div>
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back4">Back</button>
-          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Next</button>
+          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Submit</button>
         </div>
     </section>
 
@@ -613,14 +836,14 @@
     <!-- PAGE 3: Template + Job target -->
     <section class="card hidden" id="page3">
       <div class="sectionTitle">
-        <h2>Page 3 — Website Spec</h2>
+        <h2>Page 3 — Design</h2>
       </div>
 
       <div class="grid" style="gap:6px; margin-bottom:14px;">
         <label style="font-weight:900; font-size:13px; margin-bottom:0;">Model or template <span class="error">*</span></label>
 
         <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-          <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <input type="radio" name="templateSource" id="tplUrl" value="keyword" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
           <div>
             <strong style="font-size:13px;">Choose by name</strong>
             <p class="hint" style="margin:2px 0 0; font-weight:400;">Enter a keyword to choose a <a href="https://irenes-ventures.shop/collections/all-portfolio-websites" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> (e.g. Biology, Civil Engineering).</p>
@@ -630,6 +853,7 @@
           <div style="display:flex; gap:6px; align-items:center;">
             <input id="modelTemplate" type="text" placeholder="e.g., Biology, Civil Engineering, Data Science…" list="templateKeywords" autocomplete="off" style="flex:1;" />
             <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Refresh template list" style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
+            <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear selection" style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
           </div>
           <datalist id="templateKeywords">
             <!-- populated dynamically by listTemplates Netlify function -->
@@ -673,49 +897,81 @@
         </label>
 
         <!-- Design options sub-panel — shown when "Design options" is selected -->
-        <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px; display:flex; flex-direction:column; gap:16px;">
+        <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
 
-          <!-- Composition -->
-          <div>
-            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Composition</p>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitLeft"  value="split-left"       style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split left</strong> — content left, visual right</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compSplitRight" value="split-right"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Split right</strong> — visual left, content right</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compCentral"    value="central"          style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Central</strong> — symmetric centered hero</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compScene"      value="scene-based"      style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Scene-based</strong> — lab, desk, workshop, or field with symbolic elements</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designComposition" id="compAbstract"   value="abstract_layered" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span><strong>Abstract layered</strong> — motifs as glowing lines, rings, grids, gradients</span></label>
+            <!-- Composition -->
+            <div>
+              <label for="designComposition">Composition</label>
+              <select id="designComposition" name="designComposition">
+                <option value="">— choose —</option>
+                <option value="split-left">Split left — content left, visual right</option>
+                <option value="split-right">Split right — visual left, content right</option>
+                <option value="central">Central — symmetric centered hero</option>
+                <option value="scene-based">Scene-based — lab, desk, workshop, field</option>
+                <option value="abstract_layered">Abstract layered — motifs, rings, grids</option>
+              </select>
             </div>
-          </div>
 
-          <!-- Style -->
-          <div>
-            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Style</p>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlass"     value="glassmorphism"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glassmorphism</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleGlassDark" value="glass-dark"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Glass dark</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleBrutalist"  value="brutalist"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Brutalist</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleDarkTerm"   value="dark terminal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Dark terminal</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="stylePastel"     value="soft pastel editorial" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Soft pastel editorial</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleSwiss"      value="Swiss grid"            style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Swiss grid</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleNeon"       value="neon-tech"             style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Neon tech</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designStyle" id="styleClean"      value="clean-minimal"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Clean minimal</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;">
-                <input type="radio" name="designStyle" id="styleOther" value="other" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" />
-                <span>Other: <input type="text" id="designStyleOther" placeholder="describe your style…" style="margin-left:6px; background:rgba(255,255,255,.07); border:1px solid rgba(255,255,255,.18); border-radius:6px; color:#fff; font-size:12px; padding:2px 8px; width:180px;" /></span>
-              </label>
+            <!-- Style -->
+            <div>
+              <label for="designStyle">Style</label>
+              <select id="designStyle" name="designStyle">
+                <option value="">— choose —</option>
+                <option value="clean-minimal">Clean minimal</option>
+                <option value="glassmorphism">Glassmorphism</option>
+                <option value="glass-dark">Glass dark</option>
+                <option value="brutalist">Brutalist</option>
+                <option value="dark terminal">Dark terminal</option>
+                <option value="soft pastel editorial">Soft pastel editorial</option>
+                <option value="Swiss grid">Swiss grid</option>
+                <option value="neon-tech">Neon tech</option>
+                <option value="other">Other…</option>
+              </select>
+              <input type="text" id="designStyleOther" placeholder="Describe your style…" style="display:none; margin-top:6px;" />
             </div>
-          </div>
 
-          <!-- Render mode -->
-          <div>
-            <p style="font-size:11px; font-weight:700; margin:0 0 7px; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Render Mode</p>
-            <div style="display:flex; flex-direction:column; gap:5px;">
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderCinematic"  value="cinematic technical minimalism" style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Cinematic technical minimalism</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="render3D"         value="3D scientific elegance"         style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>3D scientific elegance</span></label>
-              <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:13px; font-weight:400;"><input type="radio" name="designRenderMode" id="renderFuturistic" value="bold futuristic engineering"     style="margin-top:2px; flex-shrink:0; accent-color:var(--primary);" /><span>Bold futuristic engineering</span></label>
+            <!-- Render mode -->
+            <div>
+              <label for="designRenderMode">Render Mode</label>
+              <select id="designRenderMode" name="designRenderMode">
+                <option value="">— choose —</option>
+                <option value="cinematic technical minimalism">Cinematic technical minimalism</option>
+                <option value="3D scientific elegance">3D scientific elegance</option>
+                <option value="bold futuristic">Bold futuristic</option>
+                <option value="technical schematic aesthetic">Technical schematic aesthetic</option>
+              </select>
             </div>
-          </div>
 
+            <!-- Density -->
+            <div>
+              <label for="designDensity">Density</label>
+              <select id="designDensity" name="designDensity">
+                <option value="compact" selected>Compact — tight padding, 3-col grids</option>
+                <option value="medium">Medium — balanced spacing</option>
+                <option value="spacious">Spacious — generous whitespace</option>
+              </select>
+            </div>
+
+            <!-- Use icons -->
+            <div>
+              <label for="useEmojiIcons">Use icons</label>
+              <select id="useEmojiIcons" name="useEmojiIcons">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            <!-- Alternate sections -->
+            <div>
+              <label for="alternateSections">Alternate light &amp; dark sections</label>
+              <select id="alternateSections" name="alternateSections">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+          </div>
         </div>
 
       </div>
@@ -727,31 +983,20 @@
         <div id="extractCounterLabel" style="font-size:12px; color:rgba(234,240,255,.55);">seconds remaining</div>
       </div>
 
-      <!-- Spec panels (shown after extraction / for design options) -->
-      <div id="templateExtractPanel" class="hidden" style="margin-top:12px;">
-        <details open>
-          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Website spec JSON (ExtractExampleWebsiteTemplate.md)</summary>
-          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-            <button class="btn mini" type="button" id="dlTemplateJson">Download spec.json</button>
-            <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy JSON</button>
-            <button class="btn mini ghost" type="button" id="dlTemplateExtract">Download template.html</button>
-          </div>
-          <pre id="templateExtractJsonPre" style="margin-top:6px; max-height:320px;"></pre>
-        </details>
+      <!-- Extraction mode selector — visible only when "keyword" source is selected -->
+      <div id="templateModeRow" style="display:none; margin-top:10px; padding:8px 12px; background:rgba(78,112,241,.1); border:1px solid rgba(78,112,241,.28); border-radius:10px;">
+        <label for="extractTemplateMode" style="font-size:12px; font-weight:700; color:rgba(141,224,255,.85); display:block; margin-bottom:5px;">Extraction mode</label>
+        <select id="extractTemplateMode">
+          <option value="mustache" selected>mustache — convert to Mustache.js template</option>
+          <option value="analysis">analysis — extract design spec JSON</option>
+        </select>
       </div>
 
-      <div id="designSpecPanel" class="hidden" style="margin-top:12px;">
-        <details open>
-          <summary style="font-size:12px; color:rgba(141,224,255,.85);">Website spec JSON (Design options)</summary>
-          <div class="btnRow" style="justify-content:flex-start; margin-top:6px;">
-            <button class="btn mini" type="button" id="dlDesignSpec">Download design-spec.json</button>
-            <button class="btn mini ghost" type="button" id="cpDesignSpec">Copy JSON</button>
-          </div>
-          <pre id="designSpecPre" style="margin-top:6px; max-height:320px;"></pre>
-        </details>
-      </div>
 
       <!-- Navigation -->
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit3">Submit</button>
+      </div>
       <div class="btnRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back3_bottom">Back</button>
         <button class="btn primary" type="button" id="next3_bottom" style="margin-left:auto;">Next</button>
@@ -762,7 +1007,7 @@
     <!-- PAGE 5: Job Ad + Submit -->
     <section class="card hidden" id="page5">
       <div class="sectionTitle">
-        <h2>Page 5 — Target Job</h2>
+        <h2>Page 2 — Job</h2>
         <p class="hint">Optional but strongly improves relevance.</p>
       </div>
 
@@ -778,64 +1023,171 @@
       </div>
 
       <p id="submitReadinessMsg" style="display:none; font-size:12px; color:rgba(141,224,255,.75); font-style:italic; text-align:right; margin:0 0 6px;"></p>
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit2">Submit</button>
+      </div>
       <div class="btnRow">
         <button class="btn ghost" type="button" id="back5">Back</button>
-        <button class="btn primary" type="button" id="submit_bottom" style="margin-left:auto;">Submit</button>
+        <button class="btn primary" type="button" id="submit_bottom" style="margin-left:auto;">Next</button>
       </div>
 
-      <div id="finalBox" class="hidden">
-        <div class="note">
-          <div id="finalStatus" class="hint"></div>
-        </div>
-
-        <div class="hr"></div>
-
-        <!-- Debug section — hidden until DEBUG is in Major AND generation completes -->
-        <div id="debugSection" class="hidden" style="margin-bottom: 12px;">
-          <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px;">🐛 Debug Outputs</div>
-
-          <details>
-            <summary>Form payload (pages 1–5 data sent to API)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlDebugPayload">Download payload.json</button>
-              <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
-            </div>
-            <pre id="debugPayloadPre"></pre>
-          </details>
-
-          <details style="margin-top:8px;">
-            <summary>Extracted resume JSON (three-prompt stages 1→2)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini hidden" type="button" id="dlResumeJson">Download resume-extracted.json</button>
-            </div>
-            <pre id="debugResumeJsonPre"></pre>
-          </details>
-
-          <details style="margin-top:8px;">
-            <summary>API response metadata (last poll)</summary>
-            <div class="btnRow" style="justify-content:flex-start;">
-              <button class="btn mini" type="button" id="dlDebugApiResponse">Download api-response.json</button>
-            </div>
-            <pre id="debugApiResponsePre"></pre>
-          </details>
-
-          <div class="btnRow" style="justify-content:flex-start; margin-top:10px;">
-            <button class="btn mini" type="button" id="dlFinalHtml">Download portfolio.html</button>
-            <button class="btn mini ghost" type="button" id="dlSummaryHtml">Download summary.html</button>
-          </div>
-          <div class="hr" style="margin-top:12px;"></div>
-        </div>
-
-        <div class="btnRow" style="margin-top:12px; flex-wrap:wrap; gap:8px;">
-          <button class="btn primary" type="button" id="btnOpenEditor" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Preview</button>
-        </div>
-      </div>
     </section>
 
     <!--footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 3.0.0 • Updated 2026-02-27</footer-->
   </div>
 
 
-<script src="src/form.js" defer>  </script>
+<script src="src/form.js" defer></script>
+<script>
+  // ── Supabase auth ─────────────────────────────────────────────────────────
+  // SUPABASE_URL and SUPABASE_ANON_KEY are safe to expose in browser JS.
+  const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Exposed for form.js to read
+  window.getSupabaseUser = () => _currentUser;
+  window.getSupabaseMembership = () => _membership;
+
+  let _currentUser   = null;
+  let _membership    = null;
+  let _authTab       = "login";
+
+  // ── Session bootstrap ────────────────────────────────────────────────────
+  _supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) onSignIn(session.user);
+  });
+
+  _supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) onSignIn(session.user);
+    else               onSignOut();
+  });
+
+  async function onSignIn(user) {
+    _currentUser = user;
+    const { data } = await _supabase
+      .from("memberships")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status")
+      .eq("user_id", user.id)
+      .single();
+    _membership = data;
+    updateAuthUI();
+  }
+
+  function onSignOut() {
+    _currentUser = null;
+    _membership  = null;
+    updateAuthUI();
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────
+  function updateAuthUI() {
+    const loggedIn  = !!_currentUser;
+    const email     = _currentUser?.email || "";
+    const initial   = email ? email[0].toUpperCase() : "?";
+    const tier      = _membership?.tier || "free";
+
+    document.getElementById("authAvatar").textContent    = loggedIn ? initial : "?";
+    document.getElementById("authBtnLabel").textContent  = loggedIn ? email.split("@")[0] : "Sign in";
+
+    document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
+    document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
+
+    if (loggedIn) {
+      document.getElementById("authUserEmail").textContent   = email;
+      document.getElementById("authAvatarLarge").textContent = initial;
+      const badge = document.getElementById("authTierBadge");
+      badge.textContent = tier;
+      badge.className   = "tierBadge " + (tier !== "free" ? tier : "");
+
+      const m = _membership;
+      if (m) {
+        const cUnlimited = m.credits_limit   === -1;
+        const dUnlimited = m.downloads_limit === -1;
+        const cStr = cUnlimited ? "∞" : `${m.credits_used}/${m.credits_limit}`;
+        const dStr = dUnlimited ? "∞" : `${m.downloads_used}/${m.downloads_limit}`;
+        document.getElementById("authQuotaBar").textContent =
+          `Credits: ${cStr}  ·  Downloads: ${dStr}`;
+      }
+    }
+
+    // Let form.js react to auth state changes (gates buttons, passes userId)
+    if (typeof window.onAuthStateUpdated === "function") window.onAuthStateUpdated();
+  }
+
+  function switchAuthTab(tab) {
+    _authTab = tab;
+    document.getElementById("tabLogin").classList.toggle("active",  tab === "login");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("authSubmitBtn").textContent = tab === "login" ? "Sign in" : "Create account";
+    document.getElementById("authPasswordConfirmWrap").classList.toggle("hidden", tab === "login");
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  function openAuthModal() {
+    const modal = document.getElementById("authModal");
+    modal.style.display = "flex";
+  }
+
+  function closeAuthModal() {
+    document.getElementById("authModal").style.display = "none";
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  function getEmailRedirectUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  function formatAuthError(error) {
+    if (!error) return "Unknown authentication error.";
+
+    if (error.message === "Error sending confirmation email") {
+      return "Supabase could not send the confirmation email. Check Supabase Auth email settings, SMTP configuration, and allowed redirect URLs.";
+    }
+
+    return error.message || "Authentication failed.";
+  }
+
+  async function handleAuthSubmit() {
+    const email    = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const confirm  = document.getElementById("authPasswordConfirm").value;
+    const msgEl    = document.getElementById("authMsg");
+    msgEl.className = "authMsg";
+    msgEl.textContent = "";
+
+    if (!email || !password) { msgEl.className = "authMsg err"; msgEl.textContent = "Email and password required."; return; }
+
+    if (_authTab === "signup") {
+      if (password !== confirm) { msgEl.className = "authMsg err"; msgEl.textContent = "Passwords don't match."; return; }
+      const { error } = await _supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: getEmailRedirectUrl() }
+      });
+      if (error) {
+        console.error("Supabase signUp error:", {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          name: error.name
+        });
+        msgEl.className = "authMsg err";
+        msgEl.textContent = formatAuthError(error);
+      }
+      else        { msgEl.className = "authMsg ok";  msgEl.textContent = "Check your email to confirm your account."; }
+    } else {
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
+      else        { closeAuthModal(); }
+    }
+  }
+
+  async function handleSignOut() {
+    await _supabase.auth.signOut();
+    closeAuthModal();
+  }
+</script>
 </body>
 </html>

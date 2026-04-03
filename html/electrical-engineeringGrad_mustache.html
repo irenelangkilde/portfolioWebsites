@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- { "default_color_scheme": { "primary": "#2563eb", "secondary": "#22c55e", "accent": "#38bdf8", "dark": "#0f172a", "light": "#1f2937" }, "hero_card_types": ["highlights", "links"], "hero_card_skill_groups": 0 } -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Job-ready portfolio for {{name}}: projects, skills, resume, and contact." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title>{{name}} Portfolio</title>
+  <style>
+    :root{
+      /* Five main theme colors */
+      --color-bg:      #0f172a;   /* 1. Canvas      — deep slate page background      */
+      --color-panel:   #0b1220;   /* 2. Panel        — deeper slate card surface       */
+      --color-muted:   #94a3b8;   /* 3. Subtle       — slate-400 secondary text        */
+      --color-accent:  #2563eb;   /* 4. Interactive  — blue-600, CTAs & links          */
+      --color-accent2: #22c55e;   /* 5. Vibrant      — green-500, badge & highlights   */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+      --chip-base: #1f2937;
+
+      /* Derived tokens */
+      --text:        color-mix(in srgb, var(--white) 90%, var(--color-bg));
+      --muted:       var(--color-muted);
+      --accent:      var(--color-accent);
+      --accent-2:    var(--color-accent2);
+      --chip:        var(--chip-base);
+      --bg-gradient-mid:  color-mix(in srgb, var(--color-bg) 80%, var(--color-panel));
+      --bg-gradient-end:  color-mix(in srgb, var(--color-panel) 60%, var(--black));
+      --card-top:    color-mix(in srgb, var(--color-bg) 85%, var(--color-panel));
+      --card-btm:    color-mix(in srgb, var(--color-panel) 60%, var(--black));
+      --hero-card-top: color-mix(in srgb, var(--color-bg) 92%, var(--white));
+      --hero-card-btm: color-mix(in srgb, var(--black) 90%, var(--color-panel));
+      --border-subtle: rgba(148,163,184,.15);
+      --border-card:   rgba(148,163,184,.18);
+      --border-chip:   rgba(148,163,184,.2);
+      --border-form:   rgba(148,163,184,.35);
+      --badge-bg:      color-mix(in srgb, var(--color-accent2) 12%, transparent);
+      --badge-border:  color-mix(in srgb, var(--color-accent2) 35%, transparent);
+      --badge-text:    color-mix(in srgb, var(--color-accent2) 70%, var(--white));
+      --ring:          0 0 0 3px color-mix(in srgb, var(--color-accent) 35%, transparent);
+      --shadow:        0 10px 30px rgba(0,0,0,.35);
+      --btn-shadow:    0 8px 20px color-mix(in srgb, var(--color-accent) 35%, transparent);
+      --logo-from:     color-mix(in srgb, var(--color-accent) 70%, var(--white));
+      --logo-to:       color-mix(in srgb, var(--color-accent) 40%, var(--black));
+      --logo-shadow:   0 6px 18px color-mix(in srgb, var(--color-accent) 45%, transparent);
+      --timeline-dot:  color-mix(in srgb, var(--color-accent) 60%, var(--white));
+      --timeline-ring: color-mix(in srgb, var(--timeline-dot) 28%, transparent);
+      --nav-bg:        color-mix(in srgb, var(--color-panel) 60%, transparent);
+      --link-dim:      color-mix(in srgb, var(--color-muted) 80%, var(--white));
+      --mono-color:    color-mix(in srgb, var(--color-accent) 60%, var(--white));
+      --project-from:  color-mix(in srgb, var(--color-bg) 80%, var(--color-panel));
+      --project-to:    color-mix(in srgb, var(--color-panel) 70%, var(--black));
+      --input-bg:      color-mix(in srgb, var(--color-bg) 95%, var(--color-panel));
+      --footer-ready:  color-mix(in srgb, var(--color-accent2) 80%, var(--white));
+      --radius:18px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--color-bg),var(--bg-gradient-mid) 55%,var(--bg-gradient-end));color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:28px}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:var(--nav-bg);border-bottom:1px solid var(--border-subtle);z-index:10}
+    nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%,var(--logo-from),var(--logo-to));box-shadow:var(--logo-shadow)}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
+    .links a{margin-left:18px;font-weight:600;color:var(--link-dim)}
+    .links a:hover{color:var(--white)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--white);border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:var(--btn-shadow);cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
+    .btn.secondary{background:transparent;border:1px solid var(--border-form);color:color-mix(in srgb, var(--text) 90%, var(--white))}
+    .section{padding:64px 0}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start}
+    .badge{display:inline-flex;align-items:center;gap:10px;background:var(--badge-bg);color:var(--badge-text);border:1px solid var(--badge-border);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
+    h2{font-size:34px;margin:12px 0 6px}
+    p.lead{color:var(--link-dim);font-size:18px;line-height:1.65}
+    .hero-card{background:linear-gradient(180deg,var(--hero-card-top),var(--hero-card-btm));border:1px solid var(--border-subtle);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .hero-photo{display:block;margin:24px auto 12px;max-width:80px;width:100%;height:auto;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.12);}
+    .ee-class{color:var(--accent-2);margin-top:0;}
+    .grid{display:grid;gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .card{background:linear-gradient(180deg,var(--card-top),var(--card-btm));border:1px solid var(--border-card);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card h3{margin-top:2px;margin-bottom:6px}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid var(--border-chip);color:var(--link-dim);padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
+    .mono{font-family:"Fira Code",ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;color:var(--mono-color)}
+    .timeline{position:relative;margin-top:6px}
+    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:color-mix(in srgb, var(--color-muted) 25%, transparent)}
+    .t-item{position:relative;margin-left:36px;padding:12px 0}
+    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:var(--timeline-dot);border:2px solid var(--color-panel);border-radius:50%;box-shadow:0 0 0 3px var(--timeline-ring)}
+    .resume{display:flex;gap:12px;flex-wrap:wrap}
+    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%,var(--project-from) 0%,var(--project-to) 60%);border-radius:12px;border:1px dashed var(--border-form);display:flex;align-items:center;justify-content:center;color:var(--mono-color);font-weight:700}
+    footer{border-top:1px solid rgba(148,163,184,.17);padding:38px 0;color:var(--color-muted)}
+    @media (max-width:960px){.hero{grid-template-columns:1fr}.grid.cols-3{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">
+          <img
+            src="../assets/images/stockphoto_youngman.png"
+            alt="{{name}} — {{major}}"
+            class="hero-photo"
+          />
+          <h1>{{name}}</h1>
+        </div>
+        <div class="links">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+          <a class="btn secondary" href="#resume">Resume</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="section">
+      <div class="container hero">
+        <div>
+          <span class="badge">{{major}} — Class of {{current_year}}</span>
+          <h2>{{headline}}</h2>
+          <p class="lead">I'm <strong>{{name}}</strong>, {{subheadline}} {{value_proposition}}</p>
+          <div class="resume" style="margin-top:14px">
+            <a class="btn" href="#contact">Hire Me</a>
+            <a class="btn secondary" href="#projects">See Projects</a>
+          </div>
+          <p style="margin-top:10px;color:var(--muted)">Open to: {{#desired_roles}}{{.}} · {{/desired_roles}}</p>
+        </div>
+        <div class="hero-card" aria-label="At-a-glance">
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+            {{#hero_cards}}
+            <div class="card">
+              <div class="mono">{{group_name}}</div>
+              {{#is_highlights}}
+              <ul style="margin:.3rem 0 0 .5rem;line-height:1.4;font-size:14px;padding-left:0">
+                {{#highlights}}<li>{{.}}</li>{{/highlights}}
+              </ul>
+              {{/is_highlights}}
+              {{#is_links}}
+              <p style="margin:.3rem 0 0">
+                {{#has_linkedin}}<a href="{{linkedin}}" target="_blank" rel="noopener">LinkedIn</a>{{/has_linkedin}}
+                {{#has_github}} · <a href="{{github}}" target="_blank" rel="noopener">GitHub</a>{{/has_github}}
+                {{#has_website}} · <a href="{{website}}" target="_blank" rel="noopener">Website</a>{{/has_website}}
+                · <a href="#resume">Resume (PDF)</a>
+              </p>
+              {{/is_links}}
+              {{#skills}}<div class="chip">{{.}}</div>{{/skills}}
+            </div>
+            {{/hero_cards}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section" aria-labelledby="projects-h">
+      <div class="container">
+        <h2 id="projects-h">Selected Projects</h2>
+        <div class="grid cols-3">
+          {{#projects}}
+          <article class="card" aria-label="{{name}}">
+            <div class="project-media" style="padding:0;overflow:hidden;">
+              <img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&h=450&fit=crop" alt="{{name}}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">
+            </div>
+            <h3>{{name}}</h3>
+            <p>{{description}}</p>
+            {{#technologies}}<div class="chip">{{.}}</div>{{/technologies}}
+          </article>
+          {{/projects}}
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section" aria-labelledby="skills-h">
+      <div class="container">
+        <h2 id="skills-h">Skills</h2>
+        <div class="card">
+          <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+            {{#skill_groups}}
+            <div>
+              <h3>{{group_name}}</h3>
+              <ul>
+                {{#skills}}<li>{{.}}</li>{{/skills}}
+              </ul>
+            </div>
+            {{/skill_groups}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE / TIMELINE -->
+    <section id="experience" class="section" aria-labelledby="exp-h">
+      <div class="container">
+        <h2 id="exp-h">Experience</h2>
+        <div class="card timeline">
+          {{#experience}}
+          <div class="t-item">
+            <h3>{{title}} — {{company}}</h3>
+            <p class="mono">{{start_date}}–{{end_date}} · {{location}}</p>
+            <ul>
+              {{#bullets}}<li>{{.}}</li>{{/bullets}}
+            </ul>
+          </div>
+          {{/experience}}
+        </div>
+      </div>
+    </section>
+
+    {{#certifications}}
+    <!-- CERTIFICATIONS -->
+    <section id="certifications" class="section" aria-labelledby="cert-h">
+      <div class="container">
+        <h2 id="cert-h">Certifications</h2>
+        <div class="card">
+          <ul>
+            {{#certifications}}
+            <li><strong>{{name}}</strong> — {{issuer}} <span class="mono">({{date}})</span></li>
+            {{/certifications}}
+          </ul>
+        </div>
+      </div>
+    </section>
+    {{/certifications}}
+
+    {{#publications}}
+    <!-- PUBLICATIONS -->
+    <section id="publications" class="section" aria-labelledby="pub-h">
+      <div class="container">
+        <h2 id="pub-h">Publications</h2>
+        <div class="card">
+          <ul>
+            {{#publications}}
+            <li><strong>{{title}}</strong> — {{venue}} <span class="mono">({{date}})</span>{{#link}} · <a href="{{link}}" target="_blank" rel="noopener">View</a>{{/link}}</li>
+            {{/publications}}
+          </ul>
+        </div>
+      </div>
+    </section>
+    {{/publications}}
+
+    {{#leadership}}
+    <!-- LEADERSHIP -->
+    <section id="leadership" class="section" aria-labelledby="lead-h">
+      <div class="container">
+        <h2 id="lead-h">Leadership &amp; Volunteer</h2>
+        <div class="card timeline">
+          {{#leadership}}
+          <div class="t-item">
+            <h3>{{role}} — {{organization}}</h3>
+            <p class="mono">{{dates}}</p>
+            <p>{{description}}</p>
+          </div>
+          {{/leadership}}
+        </div>
+      </div>
+    </section>
+    {{/leadership}}
+
+    <!-- RESUME CTA -->
+    <section id="resume" class="section" aria-labelledby="resume-h">
+      <div class="container">
+        <h2 id="resume-h">Resume</h2>
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <p>Download a one-page PDF with coursework, projects, and experience.
+            {{#education}}<span class="mono">GPA {{gpa}}, graduation: {{graduation_date}}.</span>{{/education}}
+          </p>
+          <a class="btn" href="#" download>Download PDF</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section" aria-labelledby="contact-h">
+      <div class="container">
+        <h2 id="contact-h">Contact</h2>
+        <div class="card">
+          <form style="display:grid;gap:12px;grid-template-columns:1fr 1fr" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply shortly.');">
+            <label style="grid-column:span 1">Name
+              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-form);background:var(--input-bg);color:var(--text)" />
+            </label>
+            <label style="grid-column:span 1">Email
+              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-form);background:var(--input-bg);color:var(--text)" />
+            </label>
+            <label style="grid-column:1 / -1">Message
+              <textarea required rows="4" placeholder="Hi — we'd love to chat about our role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-form);background:var(--input-bg);color:var(--text)"></textarea>
+            </label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn" type="submit">Send</button>
+              <a class="btn secondary" href="mailto:{{email}}">Email Me</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span>© <span id="year"></span> {{name}}. All rights reserved.</span>
+        <span style="color:var(--footer-ready)">Ready for interviews · Available for relocation</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

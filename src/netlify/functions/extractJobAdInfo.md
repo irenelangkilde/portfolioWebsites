@@ -1,14 +1,19 @@
-Input:
-html_or_image
-{{DESIGN_INSPIRATION}}
+You are a job posting analyst and portfolio content strategist.
 
+Produce two clearly separated outputs from the job posting below:
+1. job_facts — verbatim structured content from the posting. Factual only, no interpretation.
+2. job_strategy — inferred strategic guidance for tailoring a portfolio website to this role.
 
-OUTPUT:
+Use only what is stated or clearly implied — do not invent requirements or company details.
+
+OUTPUT
+Return valid JSON only. No markdown. No explanation.
+
 {
-  "job_ad": {
+  "job_facts": {
     "source": {
-      "location": "",
       "role_title": "",
+      "company": "",
       "url": "",
       "date_scraped": ""
     },
@@ -47,5 +52,64 @@ OUTPUT:
       "likely_interview_topics": [],
       "portfolio_pieces_that_would_resonate": []
     }
+  },
+  "job_strategy": {
+    "content_priorities": {
+      "must_demonstrate": [],
+      "proof_types_that_land": [],
+      "quick_wins": [],
+      "story_angles": []
+    },
+    "motifs": {
+      "company_aesthetic_signals": [],
+      "industry_visual_vocabulary": [],
+      "role_identity_symbols": []
+    },
+    "editorial_direction": {
+      "positioning_angle": "",
+      "tone_for_this_employer": "",
+      "what_to_lead_with": "",
+      "what_to_minimize": [],
+      "differentiation_opportunity": ""
+    },
+    "website_copy_seed": {
+      "hero_headline_options": [],
+      "value_proposition_options": [],
+      "cta_options": []
+    }
   }
 }
+
+GUIDELINES
+
+FACTUAL EXTRACTION (job_facts)
+Extract requirements, company profile, language patterns, and signals faithfully from the posting. Do not invent or infer beyond what is stated. This is ground truth.
+
+CONTENT PRIORITIES (job_strategy)
+Based on what the role demands:
+- must_demonstrate: the 3–5 capabilities this employer needs to see proof of
+- proof_types_that_land: what kinds of evidence resonate here (e.g. shipped products, research publications, client outcomes, open source contributions)
+- quick_wins: surface-level matches most candidates with this background would have
+- story_angles: how to frame a candidate's experience as a narrative fit for this role
+
+MOTIFS (job_strategy)
+Infer the visual and thematic language appropriate for this target:
+- company_aesthetic_signals: what the company's brand, industry, and culture imply about visual tone (e.g. clinical precision, startup energy, civic gravity)
+- industry_visual_vocabulary: imagery and metaphors commonly associated with this field
+- role_identity_symbols: objects or concepts that represent this type of work to an outsider
+
+EDITORIAL DIRECTION (job_strategy)
+- positioning_angle: the single most compelling framing for a candidate targeting this role (one sentence)
+- tone_for_this_employer: how to calibrate formality, warmth, and ambition for this company specifically
+- what_to_lead_with: what a visitor from this company needs to see above the fold
+- what_to_minimize: experience types or signals that would distract or undercut fit
+- differentiation_opportunity: what most applicants won't have that a strong candidate could leverage
+
+WEBSITE COPY SEED (job_strategy)
+Write role-targeted options for:
+- hero_headline_options: 2–3 headlines that would resonate with a hiring manager at this company
+- value_proposition_options: one-liners positioning the candidate as the answer to this job's core problem
+- cta_options: calls to action appropriate for this application context
+
+job_posting:
+{{JOB_AD}}

@@ -16,6 +16,149 @@
     let resumeAnalysisPending = false; // true while request in flight
 
     // ----------------------------
+    // Generation state
+    // ----------------------------
+    let generationResult    = null;  // data object when done
+    let generationError     = null;  // error message on failure
+    let generationInProgress = false;
+
+    // Pre-computed job+resume strategy (triggered on Job Next, consumed by doGenerateWebsite)
+    let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
+    let jobAnalysisInProgress = false;
+
+
+    // Job Ad Extraction (triggered on page 2 Next, parallel with resume analysis wait)
+    let jobAdResult      = null;   // {job_ad: {...}} when done
+    let jobAdInProgress  = false;
+
+    // Bridge Profile & Design (triggered on Colors Next)
+    let bridgeResult      = null;   // {bridge_json, model} when done
+    let bridgeInProgress  = false;
+
+    // ----------------------------
+    // Auth / tier helpers
+    // ----------------------------
+    function currentUserId() { return window.getSupabaseUser?.()?.id || null; }
+    function isPaidUser() {
+      const tier = window.getSupabaseMembership?.()?.tier;
+      return tier === "basic" || tier === "premium";
+    }
+
+    // Called by the auth script in index.html whenever login state changes
+    window.onAuthStateUpdated = function() {
+      updateSubmitReadiness();
+      applyTierGating();
+    };
+
+    // Maps the user's CURRENT tier → which Stripe tier to upgrade them to
+    const UPGRADE_TIER_KEY = {
+      free:    "basic",
+      basic:   "premium_monthly_new",
+    };
+
+    // Graduated unit prices for premium_monthly_new: index 0 = unit 1, index 4 = unit 5, 6+ = $2.95
+    const PREMIUM_UNIT_PRICES = [19, 11, 7, 5, 4];
+    const PREMIUM_UNIT_PRICE_EXTRA = 2.95;
+
+    function calcPremiumTotal(qty) {
+      let total = 0;
+      for (let i = 0; i < qty; i++) {
+        total += i < PREMIUM_UNIT_PRICES.length ? PREMIUM_UNIT_PRICES[i] : PREMIUM_UNIT_PRICE_EXTRA;
+      }
+      return total;
+    }
+
+    window.updateUnitPrice = function() {
+      const qty = Math.max(1, parseInt(document.getElementById("unitQty")?.value || "1", 10));
+      const total = calcPremiumTotal(qty);
+      const display = document.getElementById("unitPriceDisplay");
+      if (display) display.textContent = `= $${total.toFixed(2)} total`;
+    };
+
+    function showUpgradePrompt(data) {
+      clearInterval(typeof renderCountdown !== "undefined" ? renderCountdown : null);
+      generationInProgress = false;
+      setApplyBtnState(true);
+      setHeaderStatus("generatingWebsiteStatus", "Credit limit reached.", "rgba(251,171,156,.9)");
+
+      const tier = data.tier || window.getSupabaseMembership?.()?.tier || "free";
+      const used  = data.used  ?? "?";
+      const limit = data.limit ?? "?";
+
+      const nextTier = tier === "free" ? "basic" : "premium_monthly_new";
+      const tierLabels = { basic: "Basic ($7)", premium_monthly_new: "Premium (from $19/unit)" };
+
+      const prompt      = document.getElementById("upgradePrompt");
+      const msgEl       = document.getElementById("upgradePromptMsg");
+      const linkEl      = document.getElementById("upgradeLink");
+      const pickerWrap  = document.getElementById("unitPickerWrap");
+      const qtyInput    = document.getElementById("unitQty");
+
+      if (msgEl) msgEl.textContent =
+        `You've used ${used} of ${limit} credits on the ${tier} plan. Upgrade to ${tierLabels[nextTier] || nextTier} for more.`;
+
+      // Show unit picker only for premium (graduated pricing requires a quantity)
+      const isPremiumUpgrade = nextTier === "premium_monthly_new";
+      if (pickerWrap) pickerWrap.classList.toggle("hidden", !isPremiumUpgrade);
+      if (isPremiumUpgrade) {
+        if (qtyInput) qtyInput.value = "1";
+        window.updateUnitPrice();
+      }
+
+      // Wire upgrade button to create a Stripe Checkout session
+      if (linkEl) {
+        linkEl.href = "#";
+        linkEl.onclick = async (e) => {
+          e.preventDefault();
+          const user = window.getSupabaseUser?.();
+          if (!user) { if (typeof openAuthModal === "function") openAuthModal(); return; }
+          const quantity = isPremiumUpgrade
+            ? Math.max(1, parseInt(qtyInput?.value || "1", 10))
+            : 1;
+          linkEl.textContent = "Redirecting…";
+          linkEl.style.opacity = "0.6";
+          try {
+            const res = await fetch("/.netlify/functions/createCheckoutSession", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                tier:       UPGRADE_TIER_KEY[tier] || "basic",
+                userId:     user.id,
+                userEmail:  user.email,
+                returnUrl:  location.origin + location.pathname,
+                quantity
+              })
+            });
+            const data = await res.json();
+            if (data.url) { location.href = data.url; }
+            else { linkEl.textContent = "Upgrade →"; linkEl.style.opacity = ""; alert(data.error || "Could not start checkout."); }
+          } catch (err) {
+            linkEl.textContent = "Upgrade →";
+            linkEl.style.opacity = "";
+            alert("Checkout error: " + err.message);
+          }
+        };
+      }
+
+      if (prompt) prompt.classList.remove("hidden");
+    }
+
+    function applyTierGating() {
+      const paid = isPaidUser();
+      // Gate dl/cp/vw buttons — only enable for paid when output exists
+      const hasHtml = !!generationResult?.site_html;
+      ["dlFinalHtml", "cpFinalHtml", "vwFinalHtml", "dlSummaryHtml", "cpSummaryHtml", "vwSummaryHtml"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const allow = paid && hasHtml;
+        btn.disabled      = !allow;
+        btn.style.opacity = allow ? "" : "0.35";
+        btn.style.cursor  = allow ? "" : "not-allowed";
+        btn.title         = !paid ? "Upgrade to access downloads" : (!hasHtml ? "Generate a site first" : "");
+      });
+    }
+
+    // ----------------------------
     // Per-field validation
     // ----------------------------
     const FIELD_VALIDATORS = {
@@ -116,11 +259,22 @@
       // Reset cache and kick off analysis
       resumeAnalysisCache = null;
       lastAnalysisData = null;
+      document.getElementById("reanalyzeResume").style.display = hasFile ? "inline" : "none";
       if (hasFile) {
         analyzeResumeInBackground(input.files[0]);
       } else {
         setResumeAnalysisStatus("");
       }
+    });
+
+    document.getElementById("reanalyzeResume")?.addEventListener("click", () => {
+      const input = document.getElementById("resumeUpload");
+      if (!input?.files?.[0]) return;
+      const file = input.files[0];
+      try { localStorage.removeItem(resumeCacheKey(file)); } catch {}
+      resumeAnalysisCache = null;
+      lastAnalysisData = null;
+      analyzeResumeInBackground(file);
     });
 
     // ----------------------------
@@ -161,16 +315,20 @@
           banner.textContent = `🐛 DEBUG MODE [${label}] — intermediate results and raw outputs will be available after generation`;
         }
       }
-      if (debug && resumeAnalysisCache) {
-        document.getElementById("resumeAnalysisPanel")?.classList.remove("hidden");
-      } else if (!debug) {
-        document.getElementById("resumeAnalysisPanel")?.classList.add("hidden");
-      }
-      if (debug && extractedTemplateCache) {
-        document.getElementById("templateExtractPanel")?.classList.remove("hidden");
-      } else if (!debug) {
-        document.getElementById("templateExtractPanel")?.classList.add("hidden");
-      }
+      // Show/hide debug Submit buttons on all pages
+      document.querySelectorAll(".dbg-submit-row").forEach(el => {
+        el.style.display = debug ? "flex" : "none";
+      });
+      // templateModeRow requires both debug mode AND keyword source — re-evaluate now
+      updateTemplateUI();
+      // Show/hide consolidated stage debug section on page 5
+      document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug);
+      if (debug) populateJobAdDebug(jobAdResult);
+      if (debug) wireStage2Debug(jobAnalysisResult);
+      if (debug) populateBridgeDebug(bridgeResult);
+      if (debug) populateTemplateExtractPanel(extractedTemplateCache ?? {});
+      if (debug) greyRendererButtons(!generationResult);
+      if (debug) wirePayloadDebug();
     }
 
     document.getElementById("major")?.addEventListener("input", () => {
@@ -182,26 +340,31 @@
     // Resume analysis (background)
     // ----------------------------
     function updateSubmitReadiness() {
-      const btn = document.getElementById("submit_bottom");
+      // Page 5 buttons are managed by setApplyBtnState(); just update the readiness message.
       const msg = document.getElementById("submitReadinessMsg");
-      if (!btn) return;
+      if (!msg) return;
       const resumePending  = !!resumeAnalysisPending;
       const extractPending = !!extractTemplatePending;
       const busy = resumePending || extractPending;
-      btn.disabled = busy;
-      btn.style.opacity = busy ? "0.45" : "";
-      btn.style.cursor  = busy ? "not-allowed" : "";
-      if (msg) {
-        if (busy) {
-          const parts = [];
-          if (resumePending)  parts.push("resume analysis");
-          if (extractPending) parts.push("template extraction");
-          msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
-          msg.style.display = "block";
-        } else {
-          msg.style.display = "none";
-        }
+      if (busy) {
+        const parts = [];
+        if (resumePending)  parts.push("resume analysis");
+        if (extractPending) parts.push("template extraction");
+        msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
+        msg.style.display = "block";
+      } else {
+        msg.style.display = "none";
       }
+    }
+
+    function setApplyBtnState(enabled) {
+      ["submit_top", "next2_bottom"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.disabled = !enabled;
+        btn.style.opacity = enabled ? "" : "0.45";
+        btn.style.cursor  = enabled ? "" : "not-allowed";
+      });
     }
 
     // ----------------------------
@@ -212,46 +375,86 @@
       });
     }
 
+    function setHeaderStatus(id, text, color = "rgba(234,240,255,.6)") {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = text; el.style.color = color; }
+    }
+
+    function viewJson(str) {
+      const blob = new Blob([str], { type: "application/json" });
+      const url  = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+    }
+
+    function setOpenEditorReady(ready) {
+      const btn = document.getElementById("next2_bottom");
+      if (!btn) return;
+      btn.disabled      = !ready;
+      btn.style.opacity = ready ? "" : ".4";
+      btn.style.cursor  = ready ? "" : "not-allowed";
+    }
+
+    function greyRendererButtons(grey) {
+      // Preview/editor button is always available regardless of tier
+      // Download/copy/view buttons additionally require a paid tier
+      ["dlFinalHtml", "cpFinalHtml", "vwFinalHtml", "dlSummaryHtml", "cpSummaryHtml", "vwSummaryHtml"].forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        const allow = !grey && isPaidUser();
+        btn.disabled      = !allow;
+        btn.style.opacity = allow ? "" : "0.35";
+        btn.style.cursor  = allow ? "" : "not-allowed";
+        btn.title         = !isPaidUser() ? "Upgrade to access downloads" : (grey ? "Generate a site first" : "");
+      });
+    }
+
+    function wireDebugRow(prefix, str, filename) {
+      const dl = document.getElementById(`dl${prefix}`);
+      const cp = document.getElementById(`cp${prefix}`);
+      const vw = document.getElementById(`vw${prefix}`);
+      const hasData = str !== "null" && str !== null && str !== undefined;
+      [dl, cp, vw].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !hasData;
+        btn.style.opacity = hasData ? "" : "0.35";
+        btn.style.cursor  = hasData ? "" : "not-allowed";
+      });
+      if (!hasData) return;
+      if (dl) dl.onclick = () => downloadText(filename, str, "application/json");
+      if (cp) cp.onclick = e => copyToClipboard(str, e.currentTarget);
+      if (vw) vw.onclick = () => viewJson(str);
+    }
+
     function populateResumeDebugPanel(json) {
-      const panel  = document.getElementById("resumeAnalysisPanel");
-      const pre    = document.getElementById("resumeAnalysisPre");
-      const dlBtn  = document.getElementById("dlResumeAnalysis");
-      const cpBtn  = document.getElementById("cpResumeAnalysis");
-      if (!panel || !pre) return;
+      const facts    = json?.resume_facts    ?? json;
+      const strategy = json?.resume_strategy ?? null;
 
-      const str = JSON.stringify(json, null, 2);
-      pre.textContent = str;
+      wireDebugRow("ResumeFacts",    JSON.stringify(facts,    null, 2), "resume-facts.json");
+      wireDebugRow("ResumeStrategy", JSON.stringify(strategy, null, 2), "resume-strategy.json");
 
-      dlBtn?.addEventListener("click", () => downloadText("resume-analysis.json", str, "application/json"));
-      cpBtn?.addEventListener("click", e => copyToClipboard(str, e.currentTarget));
-
-      if (isDebugMode()) panel.classList.remove("hidden");
-
-      // Lift the "wait for analysis" block, then apply defaults
-      updateDesignOptionsReadiness();
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (source === "none" && !document.querySelector('input[name="designComposition"]:checked')) {
-        applyDesignDefaults(json);
-      }
       applyColorDefaults(json);
     }
 
-    function startAnalysisCountdown(timeoutSec) {
+    function startCountdown(statusId, label, timeoutSec, color = "rgba(141,224,255,.75)") {
       let remaining = timeoutSec;
-      setResumeAnalysisStatus(`Analyzing resume… ${remaining}s`, "rgba(141,224,255,.75)");
+      const setter = statusId === "resumeAnalysisStatus"
+        ? t => setResumeAnalysisStatus(t, color)
+        : t => setHeaderStatus(statusId, t, color);
+      setter(`${label} ${remaining}s`);
       const timer = setInterval(() => {
         remaining--;
-        if (remaining <= 0) {
-          clearInterval(timer);
-        } else {
-          setResumeAnalysisStatus(`Analyzing resume… ${remaining}s`, "rgba(141,224,255,.75)");
-        }
+        if (remaining <= 0) { clearInterval(timer); setter(label); }
+        else { setter(`${label} ${remaining}s`); }
       }, 1000);
       return timer;
     }
 
+    function startAnalysisCountdown(timeoutSec) {
+      return startCountdown("resumeAnalysisStatus", "Analyzing resume…", timeoutSec);
+    }
+
     function resumeCacheKey(file) {
-      return `resumeAnalysis_v3:${file.name}:${file.size}:${file.lastModified}`;
+      return `resumeAnalysis_v4:${file.name}:${file.size}:${file.lastModified}`;
     }
 
     async function analyzeResumeInBackground(file) {
@@ -322,7 +525,7 @@
 
       // Poll getPreviewResult until done or timeout
       const POLL_INTERVAL_MS = 2500;
-      const POLL_TIMEOUT_MS  = 180000; // 3 minutes max
+      const POLL_TIMEOUT_MS  = 300000; // 5 minutes // 3 minutes max
       const pollStart = Date.now();
 
       const poll = async () => {
@@ -369,9 +572,10 @@
         }
 
         // Ensure form-supplied values win over AI inferences
-        if (data.identity) {
-          if (major)          data.identity.major          = major;
-          if (specialization) data.identity.specialization = specialization;
+        const identity = data.resume_facts?.identity ?? data.identity;
+        if (identity) {
+          if (major)          identity.major          = major;
+          if (specialization) identity.specialization = specialization;
         }
 
         // Persist to localStorage for reuse after refresh
@@ -409,12 +613,12 @@
     const PAGES = [
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Resume" },
-      { id: "page2", label: "2 Artifacts" },
-      { id: "page3", label: "3 Website spec" },
-      { id: "page4", label: "4 Color scheme" },
-      { id: "page5a", pageId: "page5", label: "5 Job Ad" },
-      { id: "page5b", pageId: "page5", label: "6 Edit" },
-      { id: "page5c", pageId: "page5", label: "7 Publish" }
+      { id: "page5", label: "2 Job" },
+      { id: "page3", label: "3 Design" },
+      { id: "page4", label: "4 Colors" },
+      { id: "page2",  label: "5 Visuals" },
+      { id: "page2b", pageId: "page2", label: "6 Edit" },
+      { id: "page2c", pageId: "page2", label: "7 Publish" },
     ];
     let currentStep = 0;
 
@@ -424,6 +628,8 @@
 
     function getPageId(entry){ return entry.pageId ?? entry.id; }
 
+    let pillNavUnlocked = false;
+
     function renderStepUI(){
       const activePageId = getPageId(PAGES[currentStep]);
       stepPills.innerHTML = "";
@@ -432,6 +638,10 @@
         const pill = document.createElement("div");
         pill.className = "pill" + (getPageId(p) === activePageId ? " active" : "");
         pill.textContent = p.label;
+        if (pillNavUnlocked) {
+          pill.style.cursor = "pointer";
+          pill.addEventListener("click", () => setStep(idx));
+        }
         stepPills.appendChild(pill);
       });
       stepLabel.textContent = currentStep > 0 ? `Step ${currentStep} of ${PAGES.length - 1}` : "";
@@ -452,6 +662,7 @@
       });
       renderStepUI();
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (currentStep === 3) updateTemplateUI();
       if (currentStep === 4) renderSuggestedPalettes();
     }
 
@@ -565,16 +776,7 @@
     // ----------------------------
     // Page 1: resume file input
     // ----------------------------
-    const resumeUpload   = document.getElementById("resumeUpload");
-    const resumeFileList = document.getElementById("resumeFileList");
-    resumeUpload.addEventListener("change", () => {
-      resumeFileList.innerHTML = "";
-      Array.from(resumeUpload.files).forEach(f => {
-        const li = document.createElement("li");
-        li.textContent = f.name;
-        resumeFileList.appendChild(li);
-      });
-    });
+    const resumeUpload = document.getElementById("resumeUpload");
 
     // ----------------------------
     // Template list — populate datalist dynamically, cached in localStorage for 24h
@@ -603,14 +805,14 @@
 
       if (btn) { btn.textContent = "…"; btn.disabled = true; }
       try {
-        const res = await fetch("/.netlify/functions/listTemplates");
+        const res = await fetch("/html/templates.json");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (Array.isArray(data.templates) && data.templates.length > 0) {
           applyTemplatesToDatalist(data.templates);
           localStorage.setItem(TEMPLATE_CACHE_KEY, JSON.stringify({ templates: data.templates, timestamp: Date.now() }));
         }
-      } catch { /* silently skip if function is unavailable */ }
+      } catch { /* silently skip */ }
       finally {
         if (btn) { btn.textContent = "↻"; btn.disabled = false; }
       }
@@ -618,6 +820,17 @@
 
     loadTemplateSuggestions();
     document.getElementById("refreshTemplateList")?.addEventListener("click", () => loadTemplateSuggestions({ force: true }));
+    document.getElementById("resetTemplateKeyword")?.addEventListener("click", () => {
+      const input = document.getElementById("modelTemplate");
+      if (input) input.value = "";
+      extractedTemplateCache  = null;
+      lastExtractedTemplate   = "";
+      templatePaletteRendered = false;
+      userHasSelectedPalette  = false;
+      setTemplateExtractStatus("");
+      renderSuggestedPalettes();
+      updateSubmitReadiness();
+    });
 
     // Convert a user-entered label → local file path
     // Handles both "Biology" → html/biologyGrad.html
@@ -635,9 +848,12 @@
     // ----------------------------
     // Template extraction cache
     // ----------------------------
-    let extractedTemplateCache = null;   // { templateHtml, embeddedJson }
+    let extractedTemplateCache = null;   // { templateHtml, embeddedJson, templateMode }
+    let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
+    let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
+    let extractTicker = null;            // active countdown interval — cleared on each new extraction
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
       const el = document.getElementById("templateExtractStatus");
@@ -645,21 +861,29 @@
     }
 
     function populateTemplateExtractPanel(result) {
-      const panel   = document.getElementById("templateExtractPanel");
-      const jsonPre = document.getElementById("templateExtractJsonPre");
-      const dlJson  = document.getElementById("dlTemplateJson");
-      const cpJson  = document.getElementById("cpTemplateJson");
-      const dlHtml  = document.getElementById("dlTemplateExtract");
-      if (!panel) return;
+      const jsonStr  = result?.embeddedJson ? JSON.stringify(result.embeddedJson, null, 2) : null;
+      const htmlStr  = result?.templateHtml || null;
 
-      const jsonStr = JSON.stringify(result.embeddedJson ?? {}, null, 2);
-      if (jsonPre) jsonPre.textContent = jsonStr;
-      dlJson?.addEventListener("click", () => downloadText("spec.json", jsonStr, "application/json"));
-      cpJson?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
-      dlHtml?.addEventListener("click", () => downloadText("template.html", result.templateHtml || "", "text/html"));
+      // Activate spec.json buttons whenever the template has loaded (same caching as template.html).
+      // If there's no embedded JSON (e.g. mustache templates), show a placeholder object.
+      const specStr  = htmlStr ? (jsonStr ?? JSON.stringify({ note: "mustache template — no embedded spec" }, null, 2)) : null;
+      wireDebugRow("TemplateJson", specStr, "spec.json");
 
-      if (isDebugMode()) panel.classList.remove("hidden");
-      document.getElementById("designSpecPanel")?.classList.add("hidden");
+      const dlHtml = document.getElementById("dlTemplateHtml");
+      const vwHtml = document.getElementById("vwTemplateHtml");
+      [dlHtml, vwHtml].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !htmlStr;
+        btn.style.opacity = htmlStr ? "" : "0.35";
+        btn.style.cursor  = htmlStr ? "" : "not-allowed";
+      });
+      if (htmlStr) {
+        if (dlHtml) dlHtml.onclick = () => downloadText("template.html", htmlStr, "text/html");
+        if (vwHtml) vwHtml.onclick = () => {
+          const blob = new Blob([htmlStr], { type: "text/html" });
+          window.open(URL.createObjectURL(blob), "_blank");
+        };
+      }
 
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
@@ -691,60 +915,69 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (!source) return;
 
-      if (source === "none") {
-        const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
-        extractedTemplateCache = {
-          templateHtml: null,
-          embeddedJson: {
-            source: "design_options",
-            composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
-            style: styleVal === "other"
-              ? (document.getElementById("designStyleOther")?.value?.trim() || "custom")
-              : styleVal,
-            render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
-          }
-        };
-        setTemplateExtractStatus("✓ Design options applied", "rgba(118,176,34,.9)");
-        return;
-      }
+      const extractMode = document.getElementById("extractTemplateMode")?.value || "analysis";
 
       let key = "";
-      let requestBody = { provider: getAnalysisProvider() };
+      let requestBody = { provider: getAnalysisProvider(), templateMode: extractMode };
 
-      if (source === "url") {
+      if (source === "none") {
+        const styleVal = document.getElementById("designStyle")?.value || "";
+        const jsonSpec = {
+          source:             "design_options",
+          composition:        document.getElementById("designComposition")?.value  || "",
+          style:              styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "custom") : styleVal,
+          render_mode:        document.getElementById("designRenderMode")?.value   || "",
+          density:            document.getElementById("designDensity")?.value      || "medium",
+          use_emoji_icons:    document.getElementById("useEmojiIcons")?.value      === "yes",
+          alternate_sections: document.getElementById("alternateSections")?.value  !== "no"
+        };
+        key = "design_options_" + JSON.stringify(jsonSpec);
+        if (key === lastExtractedTemplate) return;
+        const p1 = getPage1();
+        requestBody.templateJsonStr = JSON.stringify(jsonSpec, null, 2);
+        requestBody.major           = p1.major;
+        requestBody.specialization  = p1.specialization;
+      } else if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val || looksLikeUrl(val)) return;
 
-        // Keyword — try pre-compiled _template.html first, fall back to calling Claude
-        const srcPath      = templateLabelToPath(val);
-        const compiledPath = srcPath.replace(/\.html$/, "_template.html");
-        if (compiledPath === lastExtractedTemplate) return;
+        // Keyword — try pre-compiled file first, fall back to API
+        const srcPath = templateLabelToPath(val);
 
-        // Try pre-compiled version (no API call needed)
+        // Each mode has its own pre-compiled path:
+        //   analysis → *Grad_template.html
+        //   mustache → *Grad_mustache.html
+        const modeSuffix  = extractMode === "mustache" ? "_mustache" : "_template";
+        const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
+
+        if (compiledKey === lastExtractedTemplate) return;
+
+        // Try pre-compiled version (fast path, no API call)
         try {
-          const res = await fetch(compiledPath);
+          const res = await fetch(compiledKey);
           if (res.ok) {
             const templateHtml = await res.text();
             const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
-            lastExtractedTemplate = compiledPath;
-            extractedTemplateCache = { templateHtml, embeddedJson };
-            setTemplateExtractStatus("✓ Template loaded", "rgba(118,176,34,.9)");
+            lastExtractedTemplate = compiledKey;
+            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: extractMode };
+            setTemplateExtractStatus("✓ Template loaded (pre-compiled)", "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
             renderSuggestedPalettes();
             return;
           }
         } catch {}
 
-        // No pre-compiled file — fetch source HTML and send to Claude
-        if (srcPath === lastExtractedTemplate) return;
+        // No pre-compiled file — fetch source HTML and send to AI
+        const apiKey = srcPath + "#" + extractMode;
+        if (apiKey === lastExtractedTemplate) return;
         try {
           const res = await fetch(srcPath);
           if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
           const html = await res.text();
           requestBody.templateHtmlBase64 = btoa(encodeURIComponent(html).replace(/%([0-9A-F]{2})/g, (_, p) => String.fromCharCode(parseInt(p, 16))));
-          key = srcPath;
+          key = apiKey;
         } catch (e) {
           setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
           return;
@@ -752,7 +985,8 @@
       } else if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
         if (!file) return;
-        const fileKey = file.name + "_" + file.size;
+        // Files have no pre-compiled version — include mode in key so switching re-extracts
+        const fileKey = file.name + "_" + file.size + "#" + extractMode;
         if (fileKey === lastExtractedTemplate) return;
         key = fileKey;
         try {
@@ -775,11 +1009,12 @@
 
       const jobId = "extract_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      let seconds = 120;
-      setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
-      const ticker = setInterval(() => {
+      clearInterval(extractTicker); // cancel any previous countdown
+      let seconds = 300;
+      setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
+      extractTicker = setInterval(() => {
         seconds = Math.max(1, seconds - 1);
-        setTemplateExtractStatus(`Extracting template… ${seconds}s`, "rgba(141,224,255,.75)");
+        setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
       }, 1000);
 
       // Submit to background function (returns 202 immediately)
@@ -790,25 +1025,25 @@
           body: JSON.stringify({ jobId, ...requestBody })
         });
         if (!submitRes.ok) {
-          clearInterval(ticker);
+          clearInterval(extractTicker);
           setTemplateExtractStatus("Template extraction failed (could not start).", "rgba(251,171,156,.8)");
           return;
         }
       } catch (e) {
-        clearInterval(ticker);
+        clearInterval(extractTicker);
         setTemplateExtractStatus(`Template extraction failed: ${e?.message || e}`, "rgba(251,171,156,.8)");
         return;
       }
 
       // Poll for result
       const POLL_INTERVAL_MS = 2500;
-      const POLL_TIMEOUT_MS  = 180000;
+      const POLL_TIMEOUT_MS  = 300000; // 5 minutes
       const pollStart = Date.now();
 
       const pollExtract = async () => {
-        if (lastExtractedTemplate !== key) { clearInterval(ticker); return; } // superseded
+        if (lastExtractedTemplate !== key) { clearInterval(extractTicker); return; } // superseded
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
-          clearInterval(ticker);
+          clearInterval(extractTicker);
           setTemplateExtractStatus("Template extraction timed out — try a smaller page or upload the HTML file instead.", "rgba(251,171,156,.8)");
           return;
         }
@@ -828,7 +1063,7 @@
           return;
         }
 
-        clearInterval(ticker);
+        clearInterval(extractTicker);
 
         if (result.status === "error") {
           const isNetworkErr = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed/i.test(result.error || "");
@@ -839,7 +1074,7 @@
           return;
         }
 
-        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson };
+        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode };
         extractedTemplateCache = data;
         setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
@@ -855,6 +1090,23 @@
     let sampleColors = null;
     let lastExtractedUrl = "";
 
+    // Parse --color-* CSS variable role comments from a template's :root block.
+    // Returns [{index, label, hex}] sorted by index, e.g. [{index:1, label:"1. Canvas — deep slate…", hex:"#0f172a"}, …]
+    function parseColorRoles(html) {
+      if (!html) return [];
+      const rootMatch = html.match(/:root\s*\{([\s\S]*?)\}/);
+      if (!rootMatch) return [];
+      const roles = [];
+      const re = /--color-[\w-]+\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*([^*]+)\*\//g;
+      let m;
+      while ((m = re.exec(rootMatch[1])) !== null) {
+        const label = m[2].replace(/\s+/g, ' ').trim().split(/\s*[—–-]{1,2}\s*/)[0].trim();
+        const numMatch = label.match(/^(\d+)\./);
+        if (numMatch) roles.push({ index: parseInt(numMatch[1]), label, hex: m[1] });
+      }
+      return roles.sort((a, b) => a.index - b.index);
+    }
+
     function applyColors(colors) {
       if (!colors) return;
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
@@ -863,6 +1115,16 @@
       set("accent",    colors.accent);
       set("dark",      colors.dark);
       set("light",     colors.light);
+      // Update picker label text from --color-* role comments in the loaded template.
+      // Labels are assigned positionally: role 1 → primary picker, role 2 → secondary, etc.
+      // This matches the role-ordered colors built in renderSuggestedPalettes.
+      const pickerIds = ["primary", "secondary", "accent", "dark", "light"];
+      const roles = extractedTemplateCache?.colorRoles || parseColorRoles(extractedTemplateCache?.templateHtml);
+      pickerIds.forEach((slot, i) => {
+        const role = roles[i];
+        const el = document.getElementById(slot + "-label");
+        if (el) el.textContent = role ? role.label : (slot.charAt(0).toUpperCase() + slot.slice(1));
+      });
     }
 
     function isOwnLibraryUrl(url) {
@@ -887,106 +1149,50 @@
 
     function updateTemplateUI() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "url");
+      document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "keyword");
       document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
+      const modeRow = document.getElementById("templateModeRow");
+      if (modeRow) modeRow.style.display = (isDebugMode() && source === "keyword") ? "" : "none";
       const designWrap = document.getElementById("designOptionsWrap");
       if (designWrap) {
         if (source === "none") {
           designWrap.classList.remove("hidden");
-          updateDesignOptionsReadiness();
-          if (resumeAnalysisCache && !document.querySelector('input[name="designComposition"]:checked')) {
-            applyDesignDefaults(resumeAnalysisCache);
-          }
         } else {
           designWrap.classList.add("hidden");
         }
       }
       updateTemplateCopyrightVisibility();
 
-      // Show the appropriate spec panel immediately based on selection
+      // Show the spec panel in debug mode when cached result is available
       const extractPanel = document.getElementById("templateExtractPanel");
-      const designPanel  = document.getElementById("designSpecPanel");
-      if (source === "none") {
-        extractPanel?.classList.add("hidden");
-        if (designPanel && isDebugMode()) {
-          designPanel.classList.remove("hidden");
-          updateDesignSpecPanel();
-        }
-      } else if (source === "url" || source === "file") {
-        designPanel?.classList.add("hidden");
-        if (extractPanel && isDebugMode()) {
-          extractPanel.classList.remove("hidden");
-          if (extractedTemplateCache) {
-            populateTemplateExtractPanel(extractedTemplateCache);
-          } else {
-            const pre = document.getElementById("templateExtractJsonPre");
-            if (pre && !pre.textContent) pre.textContent = "Click Next → to extract the template spec.";
-          }
+      if (isDebugMode()) {
+        if (extractedTemplateCache) {
+          populateTemplateExtractPanel(extractedTemplateCache);
+        } else {
+          extractPanel?.classList.add("hidden");
+          const pre = document.getElementById("templateExtractJsonPre");
+          if (pre && !pre.textContent) pre.textContent = "Click Next → to extract the template spec.";
         }
       } else {
         extractPanel?.classList.add("hidden");
-        designPanel?.classList.add("hidden");
       }
     }
 
-    function updateDesignOptionsReadiness() {
-      const designWrap = document.getElementById("designOptionsWrap");
-      if (!designWrap) return;
-      const analysisReady = !!resumeAnalysisCache;
-      const inputs = designWrap.querySelectorAll("input");
+    function updateDesignOptionsReadiness() { /* no-op: option 3 is human-only */ }
 
-      // Ensure the wait-message element exists
-      let waitMsg = document.getElementById("_designOptionsWaitMsg");
-      if (!waitMsg) {
-        waitMsg = document.createElement("div");
-        waitMsg.id = "_designOptionsWaitMsg";
-        waitMsg.style.cssText = "font-size:12px; padding:6px 8px; border-radius:8px; background:rgba(251,171,156,.12); color:rgba(251,171,156,.9); margin-bottom:4px;";
-        waitMsg.textContent = "Please wait for resume analysis to finish.";
-        designWrap.insertBefore(waitMsg, designWrap.firstChild);
+    function applyDesignDefaults() {
+      const { major, specialization } = getPage1();
+      const t = (major + " " + specialization).toLowerCase();
+
+      // ── Composition — only if unset ───────────────────────────────────────────
+      const comp = document.getElementById("designComposition");
+      if (comp && !comp.value) {
+        if      (/bio|chem|sci|ecolog|environ|nature|field|lab|pharma/i.test(t)) comp.value = "scene-based";
+        else if (/art|graphic|design|architect|creat|media|illustrat|film/i.test(t)) comp.value = "abstract_layered";
+        else if (/business|market|finance|account|econom|manage|admin|hr\b/i.test(t)) comp.value = "central";
+        else                                                                      comp.value = "split-left";
       }
 
-      if (analysisReady) {
-        waitMsg.style.display = "none";
-        inputs.forEach(inp => { inp.disabled = false; inp.style.opacity = ""; });
-      } else {
-        waitMsg.style.display = "block";
-        inputs.forEach(inp => { inp.disabled = true; inp.style.opacity = "0.35"; });
-      }
-    }
-
-    function applyDesignDefaults(resumeJson) {
-      const renderingStyles = (resumeJson?.motifs?.rendering_style || []).join(" ").toLowerCase();
-      const motifs          = (resumeJson?.motifs?.potential_visual_motifs || []).join(" ").toLowerCase();
-      const editorialMotifs = (resumeJson?.editorial_direction?.suggested_visual_motifs || []).join(" ").toLowerCase();
-      const domain          = (resumeJson?.motifs?.broad_primary_domain || "").toLowerCase();
-      const allText         = renderingStyles + " " + motifs + " " + editorialMotifs + " " + domain;
-
-      // ── Render mode ──────────────────────────────────────────────────────────
-      let renderVal = "cinematic technical minimalism";
-      if (/scientific|elegant|3d|soft/i.test(allText))                    renderVal = "3D scientific elegance";
-      else if (/futuristic|bold|engineering|schematic/i.test(allText))    renderVal = "bold futuristic engineering";
-      const renderRadio = document.querySelector(`input[name="designRenderMode"][value="${renderVal}"]`);
-      if (renderRadio) renderRadio.checked = true;
-
-      // ── Style ────────────────────────────────────────────────────────────────
-      let styleVal = "clean-minimal";
-      if (/dark|terminal|circuit|radar|cyber/i.test(allText))              styleVal = "dark terminal";
-      else if (/neon|tech|laser|glow|electric/i.test(allText))            styleVal = "neon-tech";
-      else if (/glass.*dark|dark.*glass/i.test(allText))                  styleVal = "glass-dark";
-      else if (/glass/i.test(allText))                                    styleVal = "glassmorphism";
-      else if (/pastel|soft|editorial|organic|bio/i.test(allText))        styleVal = "soft pastel editorial";
-      else if (/swiss|grid|structured|finance|account/i.test(allText))    styleVal = "Swiss grid";
-      else if (/brut/i.test(allText))                                     styleVal = "brutalist";
-      const styleRadio = document.querySelector(`input[name="designStyle"][value="${styleVal}"]`);
-      if (styleRadio) styleRadio.checked = true;
-
-      // ── Composition ──────────────────────────────────────────────────────────
-      let compVal = "split-left";
-      if (/lab|workshop|field|scene|environment|desk/i.test(allText))           compVal = "scene-based";
-      else if (/abstract|layered|gradient|ring|grid|constellation/i.test(allText)) compVal = "abstract_layered";
-      else if (/central|symmetric|center/i.test(allText))                       compVal = "central";
-      const compRadio = document.querySelector(`input[name="designComposition"][value="${compVal}"]`);
-      if (compRadio) compRadio.checked = true;
     }
 
     // Normalize any CSS color string to a 6-digit hex value using canvas
@@ -1010,45 +1216,27 @@
     function applyColorDefaults(resumeJson) {
       // Template colors take priority — skip if already extracted from a template
       if (sampleColors) return;
-      const colors = resumeJson?.compatible_color_scheme?.five_key_colors;
-      if (!Array.isArray(colors) || colors.length === 0) return;
       const slots = ["primary", "secondary", "accent", "dark", "light"];
-      slots.forEach((id, i) => {
-        const hex = normalizeToHex(colors[i]);
-        if (!hex) return;
-        const input = document.getElementById(id);
-        if (input && input.type === "color") input.value = hex;
-      });
-    }
-
-    function updateDesignSpecPanel() {
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      const extractPanel = document.getElementById("templateExtractPanel");
-      const designPanel  = document.getElementById("designSpecPanel");
-      if (source === "none") {
-        extractPanel?.classList.add("hidden");
-        if (designPanel) {
-          const spec    = getPage3Template();
-          const jsonStr = JSON.stringify(spec, null, 2);
-          const pre     = document.getElementById("designSpecPre");
-          if (pre) pre.textContent = jsonStr;
-          const dlBtn = document.getElementById("dlDesignSpec");
-          const cpBtn = document.getElementById("cpDesignSpec");
-          dlBtn?.addEventListener("click", () => downloadText("design-spec.json", jsonStr, "application/json"));
-          cpBtn?.addEventListener("click", e => copyToClipboard(jsonStr, e.currentTarget));
-          if (isDebugMode()) designPanel.classList.remove("hidden");
-        }
+      const firstScheme = resumeJson?.resume_strategy?.compatible_color_schemes?.[0];
+      let colors = null;
+      if (Array.isArray(firstScheme?.colors) && firstScheme.colors.length) {
+        // New schema: ordered array [Canvas, Interactive, Vibrant, OnCanvas, Subtle]
+        colors = Object.fromEntries(slots.map((s, i) => [s, normalizeToHex(firstScheme.colors[i]) || null]));
+      } else if (firstScheme?.primary) {
+        // Legacy named-slot schema
+        colors = Object.fromEntries(slots.map(s => [s, normalizeToHex(firstScheme[s]) || null]));
       } else {
-        designPanel?.classList.add("hidden");
-        // templateExtractPanel visibility is managed by populateTemplateExtractPanel after extraction
+        // Oldest legacy: compatible_color_scheme.five_key_colors array
+        const arr = resumeJson?.compatible_color_scheme?.five_key_colors;
+        if (Array.isArray(arr) && arr.length)
+          colors = Object.fromEntries(slots.map((s, i) => [s, normalizeToHex(arr[i]) || null]));
       }
+      if (colors) applyColors(colors);
     }
 
     document.querySelectorAll('input[name="templateSource"]').forEach(r =>
       r.addEventListener("change", () => {
         updateTemplateUI();
-        updateDesignSpecPanel();
-        // Fire extraction if switching to url (with existing value) or file (with existing file)
         extractTemplateInBackground();
       }));
     document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
@@ -1057,12 +1245,18 @@
     // Also trigger extraction when a file is selected while source=file
     templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
 
-    // Refresh design spec JSON live as design options change
-    document.querySelectorAll('input[name="designComposition"], input[name="designStyle"], input[name="designRenderMode"]')
-      .forEach(r => r.addEventListener("change", () => {
-        updateDesignSpecPanel();
+    // Re-extract when design option dropdowns change (option #3)
+    ["designComposition", "designStyle", "designRenderMode", "designDensity", "useEmojiIcons", "alternateSections"].forEach(id => {
+      document.getElementById(id)?.addEventListener("change", () => {
         extractTemplateInBackground();
-      }));
+      });
+    });
+
+    // Show/hide "Other" style text field
+    document.getElementById("designStyle")?.addEventListener("change", () => {
+      const other = document.getElementById("designStyleOther");
+      if (other) other.style.display = document.getElementById("designStyle").value === "other" ? "block" : "none";
+    });
 
     async function fetchSampleColors(templateUrl) {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
@@ -1108,8 +1302,10 @@
     // Collectors
     // ----------------------------
     function getPage1(){
+      const rawMajor = document.getElementById("major").value.trim();
+      const major = rawMajor.replace(/\b(DEBUG|CHATGPT|OPENAI|CLAUDE)\b/gi, "").replace(/\s{2,}/g, " ").trim();
       return {
-        major: document.getElementById("major").value.trim(),
+        major,
         specialization: document.getElementById("specialization").value.trim()
       };
     }
@@ -1163,7 +1359,7 @@
       }
     }
 
-    function addArtifactRow(type = "", content = "", tagline = "") {
+    function addArtifactRow(type = "", content = "", placement = "") {
       const id = ++artifactRowCount;
       const row = document.createElement("div");
       row.id = `artifactRow_${id}`;
@@ -1183,8 +1379,8 @@
       const tag = document.createElement("input");
       tag.type = "text";
       tag.className = "artifactTagline";
-      tag.placeholder = "Tagline…";
-      tag.value = tagline;
+      tag.placeholder = "Placement position (e.g. hero, projects, about)…";
+      tag.value = placement;
 
       const del = document.createElement("button");
       del.type = "button";
@@ -1197,12 +1393,12 @@
       document.getElementById("artifactRows").appendChild(row);
     }
 
-    async function getPage2Artifacts(){
+    async function getPage5Artifacts(){
       const rows = [];
       for (const row of document.querySelectorAll("#artifactRows .artifactRow")) {
-        const type = row.querySelector("select")?.value || "";
-        const wrap = row.querySelector(".artifactContentWrap");
-        const tagline = row.querySelector(".artifactTagline")?.value?.trim() || "";
+        const type      = row.querySelector("select")?.value || "";
+        const wrap      = row.querySelector(".artifactContentWrap");
+        const placement = row.querySelector(".artifactTagline")?.value?.trim() || "";
 
         let content = "";
         if (type === "image") {
@@ -1214,25 +1410,28 @@
           content = wrap?.querySelector("input[type='text']")?.value?.trim() || "";
         }
 
-        rows.push({ type, content, tagline });
+        rows.push({ type, content, placement });
       }
       return { artifacts: rows };
     }
 
-    function getPage3Template(){
+    function getPage2Template(){
       const templateSource = document.querySelector('input[name="templateSource"]:checked')?.value || "";
-      const styleVal = document.querySelector('input[name="designStyle"]:checked')?.value || "";
+      const styleVal = document.getElementById("designStyle")?.value || "";
       return {
         template_source: templateSource,
-        model_template: templateSource === "url" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
+        model_template: templateSource === "keyword" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
         template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || "",
-        design_composition: document.querySelector('input[name="designComposition"]:checked')?.value || "",
-        design_style: styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
-        design_render_mode: document.querySelector('input[name="designRenderMode"]:checked')?.value || ""
+        design_composition:  document.getElementById("designComposition")?.value  || "",
+        design_style:        styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
+        design_render_mode:  document.getElementById("designRenderMode")?.value   || "",
+        design_density:        document.getElementById("designDensity")?.value        || "medium",
+        use_emoji_icons:       document.getElementById("useEmojiIcons")?.value       === "yes",
+        alternate_sections:    document.getElementById("alternateSections")?.value   !== "no"
       };
     }
 
-    function getPage4Colors(){
+    function getPage3Colors(){
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -1246,7 +1445,7 @@
       };
     }
 
-    function getPage5Job(){
+    function getPage4Job(){
       return {
         desired_role: document.getElementById("desiredRole").value.trim(),
         job_ad: document.getElementById("jobAd").value
@@ -1267,6 +1466,539 @@
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    // ----------------------------
+    // Artifact injection helpers
+    // ----------------------------
+    function injectArtifacts(htmlString, artifacts) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlString, "text/html");
+      const userArtifacts = (artifacts || []).filter(a => a.type && a.content);
+
+      for (const artifact of userArtifacts) {
+        const sectionHint = artifact.placement || null;
+
+        // Background image: override the --hero-bg-image CSS custom property
+        if (artifact.type === "image" && sectionHint === "background") {
+          const src = artifact.content.startsWith("data:") ? artifact.content : `data:image/jpeg;base64,${artifact.content}`;
+          const style = doc.createElement("style");
+          style.textContent = `:root { --hero-bg-image: url("${src}"); }`;
+          doc.head.appendChild(style);
+          continue;
+        }
+
+        // Find target container
+        let targetEl = null;
+        if (sectionHint) {
+          const allEls = doc.querySelectorAll("section, article, div[id], div[class]");
+          for (const el of allEls) {
+            const heading = el.querySelector("h1, h2, h3");
+            if (heading && heading.textContent.toLowerCase().includes(sectionHint.toLowerCase())) {
+              targetEl = el; break;
+            }
+            if ((el.id || el.className || "").toLowerCase().includes(sectionHint.toLowerCase())) {
+              targetEl = el; break;
+            }
+          }
+        }
+        if (!targetEl) targetEl = doc.body;
+
+        let newEl = null;
+        if (artifact.type === "image") {
+          const img = doc.createElement("img");
+          img.src = artifact.content.startsWith("data:") ? artifact.content : `data:image/jpeg;base64,${artifact.content}`;
+          img.alt = artifact.placement || "";
+          img.style.cssText = "max-width:100%; height:auto; display:block; border-radius:8px; margin:12px 0;";
+          if (artifact.colorized) img.classList.add("colorized-artifact");
+          newEl = img;
+        } else if (artifact.type === "youtube") {
+          const m = artifact.content.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/);
+          const videoId = m ? m[1] : null;
+          if (videoId) {
+            const iframe = doc.createElement("iframe");
+            iframe.src = `https://www.youtube.com/embed/${videoId}`;
+            iframe.style.cssText = "width:100%; aspect-ratio:16/9; border:none; border-radius:8px; display:block; margin:12px 0;";
+            iframe.setAttribute("allowfullscreen", "");
+            iframe.setAttribute("allow", "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture");
+            newEl = iframe;
+          }
+        } else if (artifact.type === "text") {
+          const p = doc.createElement("p");
+          p.textContent = artifact.content;
+          p.style.cssText = "margin:12px 0;";
+          if (artifact.placement) p.setAttribute("title", artifact.placement);
+          newEl = p;
+        } else if (artifact.type === "html") {
+          const div = doc.createElement("div");
+          div.innerHTML = artifact.content;
+          div.style.cssText = "margin:12px 0;";
+          newEl = div;
+        }
+
+        if (newEl) targetEl.appendChild(newEl);
+      }
+
+      return doc.documentElement.outerHTML;
+    }
+
+    async function collectStructuredArtifacts() {
+      const result = [];
+
+      // Headshot — inject into hero section
+      const headshotFile = headshotInput?.files?.[0];
+      if (headshotFile) {
+        try {
+          const b64 = await readFileAsBase64(headshotFile);
+          result.push({ type: "image", content: `data:${headshotFile.type};base64,${b64}`, placement: "hero" });
+        } catch {}
+      }
+
+      // GitHub / Portfolio link — inject into contact section
+      const githubUrl = document.getElementById("githubLink")?.value?.trim() || "";
+      const githubDesc = document.getElementById("githubDesc")?.value?.trim() || "";
+      if (githubUrl) {
+        result.push({ type: "html", content: `<a href="${githubUrl}" target="_blank" rel="noopener">${githubDesc || githubUrl}</a>`, placement: "contact" });
+      }
+
+      // Uploaded images — inject into projects section
+      const imagesInput = document.getElementById("artifactImages");
+      if (imagesInput?.files?.length) {
+        for (const file of imagesInput.files) {
+          try {
+            const b64 = await readFileAsBase64(file);
+            result.push({ type: "image", content: `data:${file.type};base64,${b64}`, placement: "projects" });
+          } catch {}
+        }
+      }
+
+      // YouTube / Video links — inject into projects section
+      const ytRaw = document.getElementById("youtubeLinks")?.value?.trim() || "";
+      ytRaw.split(/\n+/).map(s => s.trim()).filter(Boolean).forEach(url => {
+        result.push({ type: "youtube", content: url, placement: "projects" });
+      });
+
+      return result;
+    }
+
+    // ----------------------------
+    // Job ad extraction — fires on page 2 Next, parallel with resume analysis wait
+    // ----------------------------
+    async function doExtractJobAd() {
+      const p4 = getPage4Job();
+      const rawText = [p4.desired_role, p4.job_ad].filter(Boolean).join("\n\n").trim();
+      if (!rawText) {
+        setHeaderStatus("jobAnalysisStatus", "✓ Job skipped", "rgba(234,240,255,.4)");
+        return;
+      }
+
+      jobAdResult     = null;
+      jobAdInProgress = true;
+      const jobAdCountdown = startCountdown("jobAnalysisStatus", "Analyzing job info…", 120);
+
+      const jobId = "jobad_" + crypto.randomUUID();
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "extractJobAd",
+            jobId,
+            jobAdText: rawText,
+            provider: getAnalysisProvider()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          clearInterval(jobAdCountdown);
+          setHeaderStatus("jobAnalysisStatus", "Job info extraction failed", "rgba(251,171,156,.8)");
+          jobAdInProgress = false;
+          return;
+        }
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 120000) {
+          await new Promise(r => setTimeout(r, 2500));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done") { jobAdResult = data; populateJobAdDebug(data); break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent */ }
+
+      clearInterval(jobAdCountdown);
+      jobAdInProgress = false;
+      if (jobAdResult) {
+        setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted", "rgba(118,176,34,.9)");
+      } else {
+        setHeaderStatus("jobAnalysisStatus", "Job extraction failed", "rgba(251,171,156,.8)");
+      }
+    }
+
+    // ----------------------------
+    // Stage 2: Content strategy — triggered by doAnalyzeAndExtractJobAd after both
+    // resume analysis (Stage 1) and job ad extraction are complete.
+    // ----------------------------
+    async function doUnifyResumeAndJobAnalyses() {
+      const p4 = getPage4Job();
+      if (!p4.desired_role && !p4.job_ad.trim()) return;
+
+      setHeaderStatus("jobAnalysisStatus", "Building content strategy…", "rgba(141,224,255,.75)");
+
+      if (!lastAnalysisData) {
+        setHeaderStatus("jobAnalysisStatus", "Skipping — resume not yet analyzed", "rgba(251,171,156,.6)");
+        return;
+      }
+
+      jobAnalysisResult     = null;
+      jobAnalysisInProgress = true;
+      const unifyCountdown = startCountdown("jobAnalysisStatus", "Building content strategy…", 300);
+
+      const jobId = "job_" + crypto.randomUUID();
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "analyzeJob",
+            jobId,
+            resumeAnalysisJson: lastAnalysisData,
+            jobAdJson: jobAdResult,
+            page3: p4,
+            provider: getAnalysisProvider()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          clearInterval(unifyCountdown);
+          jobAnalysisInProgress = false;
+          return;
+        }
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 300000) {
+          await new Promise(r => setTimeout(r, 3000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done")  { jobAnalysisResult = data; break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent — doGenerateWebsite will recompute if needed */ }
+
+      clearInterval(unifyCountdown);
+      jobAnalysisInProgress = false;
+      if (jobAnalysisResult) {
+        setHeaderStatus("jobAnalysisStatus", "✓ Content strategy ready", "rgba(118,176,34,.9)");
+        wireStage2Debug(jobAnalysisResult);
+      } else {
+        setHeaderStatus("jobAnalysisStatus", "Content strategy unavailable — will retry on generate", "rgba(251,171,156,.8)");
+      }
+    }
+
+    // ----------------------------
+    // Orchestrator — triggered on page 2 (Job) Next
+    // Fires job ad extraction in parallel, blocks until resume analysis is done, then unifies.
+    // ----------------------------
+    async function doAnalyzeAndExtractJobAd() {
+      doExtractJobAd(); // fire-and-forget — runs in parallel
+
+      // Block until Stage 1 (resume analysis) is finished
+      while (resumeAnalysisPending) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      // Block until job ad extraction is finished
+      while (jobAdInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      await doUnifyResumeAndJobAnalyses();
+    }
+
+    // ----------------------------
+    // Bridge Content & Design — triggered on page 4 (Colors) Next
+    // Waits for Stage 2 (content strategy) if still in flight, then runs bridgeContentAndDesign.md
+    // ----------------------------
+    async function doBridgeContentAndDesign() {
+      bridgeResult     = null;
+      bridgeInProgress = true;
+      // Clear token report here — this is the start of a new render cycle
+      Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
+      const reportEl = document.getElementById("tokenReport");
+      if (reportEl) reportEl.style.display = "none";
+
+      // Block until Stage 2 (content strategy) is finished
+      while (jobAnalysisInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      const bridgeCountdown = startCountdown("bridgeStatus", "Planning design…", 300);
+      const jobId = "bridge_" + crypto.randomUUID();
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "bridgeContentAndDesign",
+            jobId,
+            templateHtml: extractedTemplateCache?.templateHtml || null,
+            templateMode: extractedTemplateCache?.templateMode || "none",
+            contentJson:  jobAnalysisResult?.strategy_json || lastAnalysisData?.resume_strategy || null,
+            colorSpec:    getPage3Colors().theme,
+            provider:     getAnalysisProvider()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          clearInterval(bridgeCountdown);
+          bridgeInProgress = false;
+          return;
+        }
+
+        const startTime = Date.now();
+        while (Date.now() - startTime < 300000) {
+          await new Promise(r => setTimeout(r, 3000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = await pollRes.json().catch(() => ({}));
+          if (data.status === "done") { bridgeResult = data; break; }
+          if (data.status === "error") { break; }
+        }
+      } catch { /* silent */ }
+
+      clearInterval(bridgeCountdown);
+      bridgeInProgress = false;
+      if (bridgeResult?.bridge_json) {
+        setHeaderStatus("bridgeStatus", "✓ Design plan ready", "rgba(118,176,34,.9)");
+      } else {
+        const detail = bridgeResult?.bridge_parse_error ? ` (${bridgeResult.bridge_parse_error})` : "";
+        setHeaderStatus("bridgeStatus", `Design plan unavailable${detail}`, "rgba(251,171,156,.8)");
+      }
+      populateBridgeDebug(bridgeResult);
+
+      // Auto-start renderer now that bridge is done (fire-and-forget)
+      if (!generationResult && !generationInProgress) {
+        doGenerateWebsite();
+      }
+    }
+
+    function wirePayloadDebug() {
+      const resumeFile = resumeUpload?.files?.[0];
+      const payload = {
+        page1:               getPage1(),
+        page2:               getPage4Job(),
+        page3:               getPage2Template(),
+        page4:               getPage3Colors(),
+        resumePdf:           resumeFile ? `${resumeFile.name} (${Math.round(resumeFile.size / 1024)} KB)` : null,
+        resumeAnalysisJson:  jobAnalysisResult?.resume_json || lastAnalysisData || null,
+        templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
+        templateHtml:        extractedTemplateCache?.templateHtml ? `(${extractedTemplateCache.templateHtml.length} chars)` : null,
+        strategyJson:        jobAnalysisResult?.strategy_json
+                               ? jobAnalysisResult.strategy_json
+                               : "(same as resumeAnalysisJson.resume_strategy)",
+        bridgeJson:          bridgeResult?.bridge_json || null,
+      };
+      wireDebugRow("DebugPayload", JSON.stringify(payload, null, 2), "payload.json");
+    }
+
+    // Accumulated token rows from all stages — keyed by stage name so later updates overwrite earlier ones
+    const _tokenReportRows = {};
+
+    function mergeTokenReport(rows) {
+      if (!Array.isArray(rows)) return;
+      rows.forEach(r => { if (r?.stage) _tokenReportRows[r.stage] = r; });
+      renderTokenReport();
+    }
+
+    function renderTokenReport() {
+      const reportEl = document.getElementById("tokenReport");
+      if (!reportEl) return;
+      const rows = Object.values(_tokenReportRows);
+      if (!rows.length) { reportEl.style.display = "none"; return; }
+      // Sort by stage name so they appear in pipeline order
+      rows.sort((a, b) => a.stage.localeCompare(b.stage));
+      const lines = rows.map(r => {
+        const inp = r.input  != null ? String(r.input).padStart(6)  : "     ?";
+        const out = r.output != null ? String(r.output).padStart(6) : "     ?";
+        const tot = (r.input != null && r.output != null) ? String(r.input + r.output).padStart(7) : "      ?";
+        return `${r.stage.padEnd(28)}  in ${inp}  out ${out}  total ${tot}`;
+      });
+      const totIn  = rows.reduce((s, r) => s + (r.input  ?? 0), 0);
+      const totOut = rows.reduce((s, r) => s + (r.output ?? 0), 0);
+      lines.push("─".repeat(68));
+      lines.push(`${"TOTAL".padEnd(28)}  in ${String(totIn).padStart(6)}  out ${String(totOut).padStart(6)}  total ${String(totIn + totOut).padStart(7)}`);
+      reportEl.textContent = lines.join("\n");
+      reportEl.style.display = "block";
+    }
+
+    function populateBridgeDebug(data) {
+      const content = data?.bridge_json
+        ?? (data?.bridge_raw ? { _parse_error: data.bridge_parse_error, _raw_preview: data.bridge_raw } : null);
+      wireDebugRow("Stage4", JSON.stringify(content, null, 2), "bridge.json");
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
+    }
+
+    function populateJobAdDebug(data) {
+      wireDebugRow("JobFacts",    JSON.stringify(data?.job_facts    ?? null, null, 2), "job-facts.json");
+      wireDebugRow("JobStrategy", JSON.stringify(data?.job_strategy ?? null, null, 2), "job-strategy.json");
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
+    }
+
+    // ----------------------------
+    // Wire Stage 2 (Unified Strategy) debug buttons — called from doUnifyResumeAndJobAnalyses
+    // AND from populateGenerationDebug so both paths keep buttons live.
+    // ----------------------------
+    function wireStage2Debug(data) {
+      const strategyJson = data?.strategy_json ?? data ?? lastAnalysisData?.resume_strategy ?? null;
+      wireDebugRow("Stage2", JSON.stringify(strategyJson, null, 2), "unified-strategy.json");
+    }
+
+    // ----------------------------
+    // Populate generation debug outputs — called as soon as doGenerateWebsite() gets a result
+    // ----------------------------
+    function populateGenerationDebug(data) {
+      if (data.model) {
+        const modelEl = document.getElementById("debugModelName");
+        if (modelEl) modelEl.textContent = `Model: ${data.model}`;
+      }
+
+      if (isDebugMode()) mergeTokenReport(data?.token_report);
+
+      wireStage2Debug(data);
+
+      // Stage 1: Resume Facts + Strategy (re-wire in case page 5 loaded before page 1)
+      const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
+      if (resumeJsonToShow) populateResumeDebugPanel(resumeJsonToShow);
+
+      // Enable download buttons and Open Editor once we have real HTML output
+      const siteHtml = generationResult?.site_html;
+      if (siteHtml) {
+        const resumeData = getPage1();
+        const designData = getPage2Template();
+        const colorsData = getPage3Colors();
+        const jobData    = getPage4Job();
+        const summaryHtml = buildSummaryHtml({ resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: [] });
+        const dlFinalHtml = document.getElementById("dlFinalHtml");
+        const dlSummary   = document.getElementById("dlSummaryHtml");
+        greyRendererButtons(false);
+        if (dlFinalHtml) dlFinalHtml.onclick = () => downloadText("portfolio.html", siteHtml, "text/html");
+        const cpFinalHtml = document.getElementById("cpFinalHtml");
+        if (cpFinalHtml) cpFinalHtml.onclick = e => copyToClipboard(siteHtml, e.currentTarget);
+        const vwFinalHtml = document.getElementById("vwFinalHtml");
+        if (vwFinalHtml) vwFinalHtml.onclick = () => { const u = URL.createObjectURL(new Blob([siteHtml], {type:"text/html"})); window.open(u, "_blank"); };
+        if (dlSummary)   dlSummary.onclick   = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
+        const cpSummaryHtml = document.getElementById("cpSummaryHtml");
+        if (cpSummaryHtml) cpSummaryHtml.onclick = e => copyToClipboard(summaryHtml, e.currentTarget);
+        const vwSummaryHtml = document.getElementById("vwSummaryHtml");
+        if (vwSummaryHtml) vwSummaryHtml.onclick = () => { const u = URL.createObjectURL(new Blob([summaryHtml], {type:"text/html"})); window.open(u, "_blank"); };
+        setOpenEditorReady(true);
+      }
+    }
+
+    // ----------------------------
+    // Generation — called from page 4 Next (fire-and-forget); visuals injected client-side after generation
+    // ----------------------------
+    async function doGenerateWebsite() {
+      generationResult    = null;
+      generationError     = null;
+      generationInProgress = true;
+      // In mustache mode the bridge is skipped, so clear the token report here instead
+      if (isMustacheMode()) {
+        Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
+        const reportEl = document.getElementById("tokenReport");
+        if (reportEl) reportEl.style.display = "none";
+      }
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+      document.getElementById("upgradePrompt")?.classList.add("hidden");
+
+      const resumeFile = resumeUpload.files[0];
+      if (!resumeFile) {
+        generationError = "Resume PDF not found — please re-upload your resume.";
+        generationInProgress = false;
+        setHeaderStatus("generatingWebsiteStatus", "⚠ " + generationError, "rgba(251,171,156,.9)");
+        setApplyBtnState(true);
+        return;
+      }
+
+      const renderCountdown = startCountdown("generatingWebsiteStatus", "Generating portfolio…", 720);
+
+      let resumePdfBase64 = "";
+      try {
+        resumePdfBase64 = await readFileAsBase64(resumeFile);
+      } catch (e) {
+        generationError = "Could not read resume PDF: " + e.message;
+        generationInProgress = false;
+        setHeaderStatus("generatingWebsiteStatus", "");
+        setApplyBtnState(true);
+        return;
+      }
+
+      const p1    = getPage1();
+      const p2    = getPage2Template();
+      const p3    = getPage3Colors();
+      const p4    = getPage4Job();
+      const page1 = { ...p1, ...p2 };
+      const page2 = p3;
+      const page3 = p4;
+      const headshotName = headshotInput?.files?.[0]?.name || "";
+      const jobId = crypto.randomUUID();
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            page1, page2, page3, artifactsData: [],
+            jobId, resumePdfBase64, headshotName,
+            resumeAnalysisJson:   jobAnalysisResult?.resume_json || lastAnalysisData || null,
+            templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
+            templateHtml:         extractedTemplateCache?.templateHtml || null,
+            strategyJson:         jobAnalysisResult?.strategy_json || lastAnalysisData?.resume_strategy || null,
+            bridgeJson:           bridgeResult?.bridge_json || null,
+            provider:             getAnalysisProvider(),
+            userId:               currentUserId()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          const rawText = await res.text();
+          let errData = {};
+          try { errData = JSON.parse(rawText); } catch {}
+          throw new Error(errData?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
+        }
+
+        const startTime = Date.now();
+        const maxWaitMs = 720000;
+        const pollIntervalMs = 4000;
+
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, pollIntervalMs));
+          const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const data = await pollRes.json().catch(() => ({}));
+          const stageMsg = data.stage
+            ? `${data.stage} (${remaining}s)`
+            : `Generating portfolio… ${remaining}s`;
+          setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
+          if (data.status === "done") {
+            clearInterval(renderCountdown);
+            generationResult    = data;
+            generationInProgress = false;
+            setHeaderStatus("generatingWebsiteStatus", "✓ Website generated", "rgba(118,176,34,.9)");
+            setApplyBtnState(true);
+            populateGenerationDebug(data);
+            return;
+          }
+          if (data.status === "error") {
+            if (data.quota) { showUpgradePrompt(data); return; }
+            throw new Error(data.error || "Generation failed.");
+          }
+        }
+        throw new Error("Generation timed out after 12 minutes.");
+      } catch (e) {
+        clearInterval(renderCountdown);
+        generationError     = e.message;
+        generationInProgress = false;
+        setHeaderStatus("generatingWebsiteStatus", "Generation failed: " + e.message, "rgba(251,171,156,.9)");
+        setApplyBtnState(true);
+      }
     }
 
     // ----------------------------
@@ -1303,151 +2035,77 @@
 </html>`;
     }
 
-    async function submitAll(){
-      const p1Err = validatePage1Lenient();
-      if (p1Err) throw new Error(p1Err);
-
-      const resumeFile = resumeUpload.files[0];
-      if (!resumeFile) throw new Error("Please upload your resume PDF before submitting.");
-
-      if (!document.querySelector('input[name="templateSource"]:checked'))
-        throw new Error("Please select a portfolio template option on page 3.");
-
-      const copyrightWrap = document.getElementById("templateCopyrightWrap");
-      if (copyrightWrap?.style.display !== "none") {
-        if (!document.querySelector('input[name="templateCopyrightMode"]:checked'))
-          throw new Error("Please indicate how the external template may be used before submitting.");
+    async function doPreview() {
+      if (!currentUserId()) {
+        setHeaderStatus("generatingWebsiteStatus", "Sign in to generate your portfolio.", "rgba(251,171,156,.9)");
+        if (typeof openAuthModal === "function") openAuthModal();
+        return;
+      }
+      if (generationInProgress) {
+        setHeaderStatus("generatingWebsiteStatus", "Still generating… please wait.", "rgba(141,224,255,.75)");
+        return;
       }
 
-      // Collect new page data and map to API-compatible structure
-      const p1 = getPage1();
-      const p2 = await getPage2Artifacts();
-      const p3 = getPage3Template();
-      const p4 = getPage4Colors();
-      const p5 = getPage5Job();
-      // Backend expects: page1 = basic+template, page2 = colors, page3 = job
-      const page1 = { ...p1, ...p3, artifacts: p2 };
-      const page2 = p4;
-      const page3 = p5;
-      const jobId = crypto.randomUUID();
+      if (!generationResult) {
+        // Fallback: generation wasn't triggered automatically — run it now
+        generationError = null;
+        await doGenerateWebsite();
+        if (!generationResult) return;
+      }
+
+      // Set localStorage with the base HTML *before* opening the window so the
+      // editor never reads an empty slot. The popup-blocker rule only fires on
+      // window.open(), not on localStorage writes.
+      localStorage.setItem("portfolio_preview_html", generationResult.site_html);
+      const editorWin = window.open("editor.html", "_blank");
+
+      // Collect visuals and inject them (client-side, may be instant or async).
+      const { artifacts: dynamicVisuals } = await getPage5Artifacts();
+      const structuredVisuals = await collectStructuredArtifacts();
+      const allVisuals = [...structuredVisuals, ...dynamicVisuals];
+
+      const data = generationResult;
+
+      let finalHtml = data.site_html;
+      if (allVisuals.length > 0) {
+        finalHtml = injectArtifacts(finalHtml, allVisuals);
+        // Update localStorage with artifact-injected version and push it to the
+        // already-open editor window via postMessage (no reload needed).
+        localStorage.setItem("portfolio_preview_html", finalHtml);
+        if (editorWin && !editorWin.closed) {
+          try { editorWin.postMessage({ type: "portfolio_html", html: finalHtml }, location.origin); } catch {}
+        }
+      }
 
       const finalBox = document.getElementById("finalBox");
       const finalStatus = document.getElementById("finalStatus");
       finalBox.classList.remove("hidden");
       finalBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      finalStatus.textContent = "Reading resume PDF…";
 
-      let resumePdfBase64 = "";
-      try {
-        resumePdfBase64 = await readFileAsBase64(resumeFile);
-      } catch (e) {
-        throw new Error("Could not read resume PDF: " + e.message);
+      const resumeData = getPage1();
+      const designData = getPage2Template();
+      const colorsData = getPage3Colors();
+      const jobData    = getPage4Job();
+
+      const all = { resume: resumeData, job: jobData, design: designData, colors: colorsData, visuals: allVisuals };
+      const summaryHtml = buildSummaryHtml(all);
+      const dlFinalHtml = document.getElementById("dlFinalHtml");
+      const dlSummary   = document.getElementById("dlSummaryHtml");
+      greyRendererButtons(false);
+      if (dlFinalHtml) dlFinalHtml.onclick = () => downloadText("portfolio.html", finalHtml, "text/html");
+      if (dlSummary)   dlSummary.onclick   = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
+
+      // ── Debug panel — re-wire payload with visuals included now that generation ran ──
+      if (isDebugMode()) wirePayloadDebug();
+
+      finalStatus.innerHTML = data.truncated
+        ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
+        : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+
+      // If the popup was blocked, editorWin is null — open now that localStorage is set.
+      if (!editorWin || editorWin.closed) {
+        window.open("editor.html", "_blank");
       }
-
-      const headshotName = headshotInput?.files?.[0]?.name || "";
-
-      finalStatus.textContent = "Submitting request…";
-
-      const res = await fetch("/.netlify/functions/buildWebsite-background", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ page1, page2, page3, jobId, resumePdfBase64, headshotName, resumeAnalysisJson: lastAnalysisData || null, templateAnalysisJson: extractedTemplateCache?.embeddedJson || null, templateHtml: extractedTemplateCache?.templateHtml || null })
-      });
-
-      if (!res.ok && res.status !== 202) {
-        const rawText = await res.text();
-        let data = {};
-        try { data = JSON.parse(rawText); } catch {}
-        throw new Error(data?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
-      }
-
-      // Poll for result (up to 12 minutes)
-      const startTime = Date.now();
-      const maxWaitMs = 720000;
-      const pollIntervalMs = 4000;
-
-      while (Date.now() - startTime < maxWaitMs) {
-        await new Promise(r => setTimeout(r, pollIntervalMs));
-        const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
-
-        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
-        const data = await pollRes.json().catch(() => ({}));
-
-        // Show per-stage progress message if the three-prompt pipeline provides one
-        const stageMsg = data.stage ? `${data.stage} (${remaining}s remaining)` : `Generating your portfolio website… ${remaining}s remaining`;
-        finalStatus.textContent = stageMsg;
-
-        if (data.status === "done") {
-          localStorage.setItem("portfolio_preview_html", data.site_html);
-          // Wire download buttons and reveal them for admin users
-          const dlHtml = document.getElementById("dlFinalHtml");
-          const dlSummary = document.getElementById("dlSummaryHtml");
-          const dlJson = document.getElementById("dlResumeJson");
-          dlHtml.onclick = () => downloadText("portfolio.html", data.site_html, "text/html");
-          const all = { page1, page2, page3, artifacts: p2 };
-          const summaryHtml = buildSummaryHtml(all);
-          dlSummary.onclick = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
-          if (data.resume_json) {
-            dlJson.onclick = () => downloadText("resume-extracted.json", JSON.stringify(data.resume_json, null, 2), "application/json");
-            dlJson.classList.remove("hidden");
-          }
-          if (page1.specialization === "Irene's Webworks" || isDebugMode()) {
-            dlHtml.classList.remove("hidden");
-            dlSummary.classList.remove("hidden");
-          }
-
-          // ── Debug panel ──────────────────────────────────────────────────
-          if (isDebugMode()) {
-            const debugSection = document.getElementById("debugSection");
-            if (debugSection) debugSection.classList.remove("hidden");
-
-            // Form payload
-            const payload = { page1, page2, page3 };
-            const payloadStr = JSON.stringify(payload, null, 2);
-            const payloadPre = document.getElementById("debugPayloadPre");
-            if (payloadPre) payloadPre.textContent = payloadStr;
-            document.getElementById("dlDebugPayload")?.addEventListener("click", () =>
-              downloadText("payload.json", payloadStr, "application/json"));
-            document.getElementById("cpDebugPayload")?.addEventListener("click", e =>
-              copyToClipboard(payloadStr, e.currentTarget));
-
-            // Resume JSON — prefer three-prompt resume_json, fall back to analyzeResume cache
-            const resumePre = document.getElementById("debugResumeJsonPre");
-            const resumeJsonToShow = data.resume_json || resumeAnalysisCache;
-            if (resumeJsonToShow) {
-              const resumeStr = JSON.stringify(resumeJsonToShow, null, 2);
-              if (resumePre) resumePre.textContent = resumeStr;
-              const dlResume = document.getElementById("dlResumeJson");
-              if (dlResume) {
-                dlResume.onclick = () => downloadText("resume-extracted.json", resumeStr, "application/json");
-                dlResume.classList.remove("hidden");
-              }
-            } else {
-              if (resumePre) resumePre.textContent = "(not available — upload resume to trigger analysis)";
-            }
-
-            // API response metadata (omit large fields)
-            const { site_html: _html, ...metaData } = data;
-            const metaStr = JSON.stringify({ ...metaData, has_site_html: !!data.site_html }, null, 2);
-            const apiResponsePre = document.getElementById("debugApiResponsePre");
-            if (apiResponsePre) apiResponsePre.textContent = metaStr;
-            document.getElementById("dlDebugApiResponse")?.addEventListener("click", () =>
-              downloadText("api-response.json", metaStr, "application/json"));
-          }
-          finalStatus.innerHTML = data.truncated
-            ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
-            : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
-          const editorBtn = document.getElementById("btnOpenEditor");
-          if (editorBtn) { editorBtn.disabled = false; editorBtn.style.opacity = ""; editorBtn.style.cursor = ""; }
-          return;
-        }
-        if (data.status === "error") {
-          throw new Error(data.error || "Generation failed.");
-        }
-        // still pending — keep polling
-      }
-
-      throw new Error("Generation timed out after 12 minutes.");
     }
 
     // ----------------------------
@@ -1462,13 +2120,13 @@
         const el = document.getElementById(id); if (el) el.value = "";
       });
       if (resumeUpload) resumeUpload.value = "";
-      if (resumeFileList) resumeFileList.innerHTML = "";
       resumeAnalysisCache = null;
       lastAnalysisData = null;
       setResumeAnalysisStatus("");
     });
 
-    document.getElementById("next1")?.addEventListener("click", () => {
+    // ── Page action helpers (action = everything except setStep) ─────────────
+    function page1Action() {
       const errs = [];
       if (!validateField("major",          true)) errs.push("major");
       if (!validateField("specialization", true)) errs.push("specialization");
@@ -1484,37 +2142,33 @@
         msg.style.color = "rgba(251,171,156,.9)";
         errs.push("resume");
       }
-      if (errs.length) return;
+      return errs.length === 0; // returns true if valid
+    }
+
+    document.getElementById("next1")?.addEventListener("click", () => {
+      if (!page1Action()) return;
+      if (resumeUpload.files?.[0]) analyzeResumeInBackground(resumeUpload.files[0]);
       setStep(2);
     });
+    document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
 
-    // Page 2 (Colors)
-    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(1));
-    document.getElementById("next2_bottom")?.addEventListener("click", () => {
-      const el = document.getElementById("stepConfirmStatus");
-      if (el) { el.textContent = "✓ Artifacts noted"; el.style.color = "rgba(118,176,34,.9)"; }
-      setStep(3);
-    });
+    // Page 3 (Design / Template)
+    document.getElementById("back2")?.addEventListener("click", () => setStep(2));
 
-    // Artifact rows — wire add button
-    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
-
-    // Page 3 (Website Spec / Template)
-    function onEnterPage3() {
+    function onEnterPage2() {
+      applyDesignDefaults();
+      updateTemplateUI();
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
-      if (source === "none") {
-        updateDesignSpecPanel();
-      } else if (extractedTemplateCache) {
+      if (extractedTemplateCache) {
         populateTemplateExtractPanel(extractedTemplateCache);
+      } else if (source) {
+        extractTemplateInBackground();
       }
     }
 
-    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
-
-    document.getElementById("next3_bottom")?.addEventListener("click", async () => {
+    function page3Action() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
 
-      // Helper to show an inline error near the radio group
       function showSourceMsg(text) {
         let msg = document.getElementById("_msg_templateSource");
         if (!msg) {
@@ -1527,55 +2181,45 @@
         msg.textContent = text;
       }
 
-      if (!source) { showSourceMsg("Please select a template option."); return; }
+      if (!source) { showSourceMsg("Please select a template option."); return false; }
       document.getElementById("_msg_templateSource") && (document.getElementById("_msg_templateSource").textContent = "");
 
-      // Pre-validate inputs before touching the UI
-      if (source === "url") {
+      if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
-        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return; }
-        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return; }
+        if (!val) { showSourceMsg("Please enter a name or keyword (e.g. Biology, Psychology)."); return false; }
+        if (looksLikeUrl(val)) { showSourceMsg("Please enter a name or keyword, not a URL."); return false; }
       }
       if (source === "file") {
         const file = templateScreenshotInput?.files?.[0];
-        if (!file) { showSourceMsg("Please select a screenshot or HTML file."); return; }
+        if (!file) { showSourceMsg("Please select a screenshot or HTML file."); return false; }
       }
 
-      // c) Copyright question must be answered if the panel is visible
       const copyrightWrap = document.getElementById("templateCopyrightWrap");
       if (copyrightWrap && copyrightWrap.style.display !== "none") {
         const copyrightAnswered = !!document.querySelector('input[name="templateCopyrightMode"]:checked');
         if (!copyrightAnswered) {
           showSourceMsg("Please answer the website spec question before continuing.");
           copyrightWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-          return;
+          return false;
         }
       }
 
-      if (source === "none") {
-        updateDesignSpecPanel();
-        if (isDebugMode()) document.getElementById("designSpecPanel")?.classList.remove("hidden");
-        setStep(4);
-        return;
-      }
-
-      // b) Fire extraction (or join in-flight), then proceed to page 4 immediately
       extractTemplateInBackground().then(() => {
         if (isDebugMode() && extractedTemplateCache) {
           populateTemplateExtractPanel(extractedTemplateCache);
           document.getElementById("templateExtractPanel")?.classList.remove("hidden");
           document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
-          document.getElementById("designSpecPanel")?.querySelector("details")?.setAttribute("open", "");
         }
       });
+      return true;
+    }
 
-      setStep(4);
-    });
+    document.getElementById("dbgSubmit3")?.addEventListener("click", () => { page3Action(); });
 
-    document.getElementById("next2_bottom")?.addEventListener("click", onEnterPage3);
-    document.getElementById("back4")?.addEventListener("click", onEnterPage3);
+    // back3 on Color scheme returns to Website spec (step 3), re-populating its panels
+    document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
 
-    // Page 4 (Colors)
+    // Page 3 (Colors)
     const PALETTE_SLOTS = ["primary", "secondary", "accent", "dark", "light"];
 
     function renderSuggestedPalettes(analysisData) {
@@ -1584,30 +2228,62 @@
       const rows      = document.getElementById("suggestedPalettesRows");
       if (!container || !rows) return;
 
-      // Slot 0: template palette (null if unavailable)
-      const tplColors = extractedTemplateCache?.embeddedJson?.default_color_scheme;
+      // Slot 0: template palette — prefer colorRoles order (1=most dominant) over slot names
       let tplPalette = null;
-      if (tplColors && !Array.isArray(tplColors) && typeof tplColors === "object") {
-        const { primary, secondary, accent, dark, light } = tplColors;
-        if (primary || secondary || accent) {
-          tplPalette = { label: "Template palette", colors: { primary, secondary, accent, dark, light } };
+      const tplColorRoles = extractedTemplateCache?.colorRoles;
+      if (tplColorRoles?.length) {
+        const slots = ["primary", "secondary", "accent", "dark", "light"];
+        const colors = {};
+        tplColorRoles.forEach((r, i) => { if (i < slots.length) colors[slots[i]] = r.hex; });
+        if (Object.values(colors).some(Boolean)) {
+          tplPalette = { label: "Template palette", colors };
+        }
+      }
+      if (!tplPalette) {
+        // Fallback: embedded default_color_scheme (templates without --color-* role comments)
+        const tplColors = extractedTemplateCache?.embeddedJson?.default_color_scheme;
+        if (tplColors && !Array.isArray(tplColors) && typeof tplColors === "object") {
+          const { primary, secondary, accent, dark, light } = tplColors;
+          if (primary || secondary || accent) {
+            tplPalette = { label: "Template palette", colors: { primary, secondary, accent, dark, light } };
+          }
+        }
+      }
+      if (!tplPalette && extractedTemplateCache?.templateHtml) {
+        // Legacy fallback: old CSS var names (pre-color-role-comment templates)
+        const rootMatch = extractedTemplateCache.templateHtml.match(/:root\s*\{([^}]+)\}/);
+        if (rootMatch) {
+          const css = rootMatch[1];
+          const cssVar = name => css.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{3,8})`))?.[ 1] || null;
+          const primary   = cssVar("accent");
+          const secondary = cssVar("accent-2");
+          const dark      = cssVar("bg");
+          const light     = cssVar("light") || cssVar("panel");
+          if (primary || secondary) {
+            tplPalette = { label: "Template palette", colors: { primary, secondary, dark, light, accent: null } };
+          }
         }
       }
 
       // Slots 1-3: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
-      const aiPalettes = resolvedData?.compatible_color_schemes ?? [];
+      const aiPalettes = resolvedData?.resume_strategy?.compatible_color_schemes
+                      ?? resolvedData?.compatible_color_schemes
+                      ?? [];
+      const slots = ["primary", "secondary", "accent", "dark", "light"];
       const aiRows = aiPalettes
-        .filter(p => p.primary || p.secondary || p.accent)
+        .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.accent)
         .slice(0, 3)
-        .map((p, i) => ({
-          label: p.how_used || `AI palette ${i + 1}`,
-          colors: { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light }
-        }));
+        .map((p, i) => {
+          // New format: ordered array matching role positions 1-5
+          // Legacy format: named slots (primary/secondary/accent/dark/light)
+          const colors = Array.isArray(p.colors)
+            ? Object.fromEntries(slots.map((s, j) => [s, p.colors[j] || null]))
+            : { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light };
+          return { label: p.how_used || `AI palette ${i + 1}`, colors };
+        });
 
-      // Fixed layout: [template, ai1, ai2, ai3] — null for empty slots
-      const visible = [tplPalette, ...aiRows];
-      while (visible.length < 4) visible.push(null);
+      const visible = [...(tplPalette ? [tplPalette] : []), ...aiRows];
 
       const MAX = 4;
       const populated = visible.filter(Boolean).length;
@@ -1637,7 +2313,7 @@
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
         cb.addEventListener("change", () => {
-          if (cb.checked) applyColors(palette.colors);
+          if (cb.checked) { userHasSelectedPalette = true; applyColors(palette.colors); }
         });
 
         const swatches = document.createElement("div");
@@ -1673,12 +2349,73 @@
         row.append(topRow, lbl);
         rows.appendChild(row);
       });
+
+      // Auto-select Template Palette the first time it arrives, but only if the user
+      // hasn't already made an active palette or theme choice.
+      if (tplPalette && !templatePaletteRendered && !userHasSelectedPalette) {
+        templatePaletteRendered = true;
+        const firstRadio = rows.querySelector('input[name="suggestedPalette"]');
+        if (firstRadio) { firstRadio.checked = true; applyColors(tplPalette.colors); }
+      }
     }
 
     renderSuggestedPalettes(); // render blank rows immediately
-    document.getElementById("next3_bottom")?.addEventListener("click", () => renderSuggestedPalettes());
-    document.getElementById("back4")?.addEventListener("click", () => setStep(3));
-    document.getElementById("next4")?.addEventListener("click", () => { setStep(5); updateSubmitReadiness(); });
+    document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
+
+    // Page 2 (Job)
+    function page2Action() { onEnterPage2(); doAnalyzeAndExtractJobAd(); }
+    document.getElementById("back5")?.addEventListener("click", () => setStep(1));
+    document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
+    document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
+
+    // Page 3 (Design) — Back returns to Job; Next validates then advances to Colors
+    document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
+    document.getElementById("next3_bottom")?.addEventListener("click", () => {
+      if (!page3Action()) return;
+      setStep(4);
+    });
+
+    // Page 4 (Colors)
+    function isMustacheMode() { return extractedTemplateCache?.templateMode === "mustache"; }
+    function page4Action() {
+      setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
+      if (isMustacheMode()) {
+        doGenerateWebsite(); // bridge unused for mustache — skip straight to renderer
+      } else {
+        doBridgeContentAndDesign(); // fire-and-forget, auto-chains into doGenerateWebsite
+      }
+    }
+    document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
+    document.getElementById("next4")?.addEventListener("click", () => { page4Action(); setStep(5); });
+    document.getElementById("dbgSubmit4")?.addEventListener("click", page4Action);
+
+    // Page 5 (Visuals)
+    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(4));
+    document.getElementById("next2_bottom")?.addEventListener("click", doPreview);
+    document.getElementById("dbgSubmit5")?.addEventListener("click", doPreview);
+
+    // Debug recompute buttons
+    document.getElementById("recomputeStage4")?.addEventListener("click", () => {
+      if (bridgeInProgress || generationInProgress) return;
+      bridgeResult     = null;
+      generationResult = null;
+      greyRendererButtons(true);
+      setApplyBtnState(false);
+      if (isMustacheMode()) {
+        doGenerateWebsite();
+      } else {
+        doBridgeContentAndDesign(); // auto-chains into doGenerateWebsite() on completion
+      }
+    });
+    document.getElementById("recomputeStage5")?.addEventListener("click", () => {
+      if (generationInProgress) return;
+      generationResult = null;
+      greyRendererButtons(true);
+      setApplyBtnState(false);
+      doGenerateWebsite();
+    });
+    // Artifact rows — wire add button
+    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
 
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
@@ -1687,60 +2424,23 @@
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
     });
 
+    // Resize color-themes iframe to its exact content height (posted by ResizeObserver inside)
+    window.addEventListener("message", e => {
+      if (!e.data || e.data.type !== "colorThemesHeight") return;
+      const f = document.getElementById("colorThemesFrame");
+      if (f) f.style.height = e.data.height + "px";
+    });
+
     // Single color pick from iframe — fills whichever field is active
     window.addEventListener("message", e => {
       const msg = e.data;
       if (!msg || msg.type !== "colorPick") return;
+      userHasSelectedPalette = true;
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
     });
 
-    // Page 5 (Job / Submit)
-    document.getElementById("back5_top")?.addEventListener("click", () => setStep(4));
-    document.getElementById("back5")?.addEventListener("click",     () => setStep(4));
-    document.getElementById("btnOpenEditor")?.addEventListener("click", () => {
-      window.open("editor.html", "_blank");
-    });
-    async function doSubmit(){
-      if (!document.querySelector('input[name="templateSource"]:checked')) {
-        let msg = document.getElementById("_msg_templateSource");
-        if (!msg) {
-          msg = document.createElement("div");
-          msg.id = "_msg_templateSource";
-          msg.style.cssText = "font-size:11.5px; margin-top:4px; min-height:14px; color:rgba(251,171,156,.9);";
-          const anchor = document.querySelector('[name="templateSource"]')?.closest(".grid");
-          if (anchor) anchor.after(msg);
-        }
-        if (msg) { msg.textContent = "Please select a template option."; msg.style.color = "rgba(251,171,156,.9)"; }
-        return;
-      }
-      const copyrightWrap = document.getElementById("templateCopyrightWrap");
-      if (copyrightWrap?.style.display !== "none") {
-        if (!document.querySelector('input[name="templateCopyrightMode"]:checked')) {
-          let msg = document.getElementById("_msg_templateCopyright");
-          if (!msg) {
-            msg = document.createElement("div");
-            msg.id = "_msg_templateCopyright";
-            msg.style.cssText = "font-size:11.5px; margin-top:4px; color:rgba(251,171,156,.9);";
-            copyrightWrap.appendChild(msg);
-          }
-          msg.textContent = "Please indicate how the template may be used.";
-          return;
-        }
-      }
-      const btn = document.getElementById("submit_bottom");
-      btn.disabled = true;
-      try{
-        await submitAll();
-      } catch(e){
-        document.getElementById("finalBox").classList.remove("hidden");
-        document.getElementById("finalStatus").innerHTML = `<span class="error">Error:</span> ${e.message || "Submit failed"}`;
-      } finally{
-        btn.disabled = false;
-      }
-    }
-    document.getElementById("submit_top")?.addEventListener("click",    doSubmit);
-    document.getElementById("submit_bottom")?.addEventListener("click", doSubmit);
+    document.getElementById("submit_top")?.addEventListener("click", doPreview);
 
     // ----------------------------
     // Boot
@@ -1754,28 +2454,15 @@
       document.getElementById("light").value = "#eaf0ff";
     }
 
-    applyDefaults();
     updateDebugBanner();
     updateProviderBadge();
     renderStepUI();
     setStep(0);
     window.addEventListener("message", (event) => {
-
-      if (!event.data || event.data.type !== "colorThemeSelected") return;
-
-      const theme = event.data.theme;
-
-      document.getElementById("primary").value   = theme.primary || "";
-      document.getElementById("secondary").value = theme.secondary || "";
-      document.getElementById("accent").value    = theme.accent || "";
-      document.getElementById("dark").value      = theme.dark || "";
-      document.getElementById("light").value     = theme.light || "";
-
-    });
-    window.addEventListener("message", (event) => {
         const msg = event.data;
         if (!msg || msg.type !== "colorThemeSelected") return;
 
+        userHasSelectedPalette = true;
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
 

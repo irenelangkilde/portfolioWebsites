@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <!-- { "default_color_scheme": { "primary": "#171515", "secondary": "#e3c0af", "accent": "#9b8579", "dark": "#f3e5d8", "light": "#f7eee4" } } -->
+        <title>{{name}} – {{major}} Graduate Portfolio</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link href="css/theme.css" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                /* Five main theme colors */
+                --color-canvas:      #f3e5d8;   /* 1. Canvas      — warm parchment page background   */
+                --color-panel:       #f7eee4;   /* 2. Panel        — lighter card / section surface  */
+                --color-signature:   #e3c0af;   /* 3. Signature    — dusty rose brand accent         */
+                --color-dark:        #171515;   /* 4. Interactive  — near-black for buttons & type   */
+                --color-subtle:      #9b8579;   /* 5. Subtle       — muted warm-gray, secondary text */
+
+                /* Theme-independent hard-coded neutrals */
+                --white:   #ffffff;
+                --black:   #000000;
+
+                /* Derived tokens */
+                --bg-main:       var(--color-canvas);
+                --bg-card:       var(--color-panel);
+                --accent-soft:   var(--color-signature);
+                --accent-dark:   var(--color-dark);
+                --text-muted:    var(--color-subtle);
+                --text-main:     color-mix(in srgb, var(--color-dark) 85%, var(--color-canvas));
+                --button-dark:   var(--black);
+                --button-light:  color-mix(in srgb, var(--white) 99%, var(--color-canvas));
+                --card-surface:  color-mix(in srgb, var(--white) 50%, transparent);
+                --card-border:   color-mix(in srgb, var(--white) 65%, transparent);
+                --card-shadow:   color-mix(in srgb, var(--color-dark) 8%, transparent);
+                --hero-text-color: color-mix(in srgb, var(--color-subtle) 80%, var(--color-dark));
+                --btn-ghost-color: color-mix(in srgb, var(--color-dark) 60%, var(--color-signature));
+                --btn-ghost-border: color-mix(in srgb, var(--black) 22%, transparent);
+                --btn-ghost-hover: color-mix(in srgb, var(--white) 50%, transparent);
+                --list-text:     color-mix(in srgb, var(--color-dark) 70%, var(--color-signature));
+                --contact-label-text: color-mix(in srgb, var(--color-signature) 60%, var(--white));
+                --field-border:  color-mix(in srgb, var(--black) 8%, transparent);
+                --field-bg:      color-mix(in srgb, var(--white) 70%, transparent);
+                --field-focus-border: color-mix(in srgb, var(--black) 40%, transparent);
+                --field-focus-bg: color-mix(in srgb, var(--white) 95%, transparent);
+                --skill-pill-bg: color-mix(in srgb, var(--white) 70%, transparent);
+                --skill-pill-border: color-mix(in srgb, var(--black) 4%, transparent);
+                --bubble-g1-start: color-mix(in srgb, var(--color-signature) 30%, var(--white));
+                --bubble-g1-end:   var(--color-signature);
+                --bubble-g2-start: color-mix(in srgb, var(--color-panel) 80%, var(--color-signature));
+                --bubble-g2-end:   color-mix(in srgb, var(--color-signature) 70%, var(--color-dark));
+                --bubble-g3-start: color-mix(in srgb, var(--white) 80%, var(--color-signature));
+                --bubble-g3-end:   color-mix(in srgb, var(--color-signature) 60%, var(--color-dark));
+                --bubble-s1:       color-mix(in srgb, var(--color-signature) 50%, var(--white));
+                --bubble-s2:       color-mix(in srgb, var(--color-signature) 70%, var(--color-dark));
+                --bubble-s4:       color-mix(in srgb, var(--color-signature) 80%, var(--color-dark));
+                --ball-1-start:    color-mix(in srgb, var(--white) 60%, var(--color-signature));
+                --ball-1-end:      var(--color-signature);
+                --ball-2-start:    color-mix(in srgb, var(--color-panel) 60%, var(--color-signature));
+                --ball-2-end:      color-mix(in srgb, var(--color-signature) 75%, var(--color-dark));
+                --ball-3-start:    color-mix(in srgb, var(--white) 70%, var(--color-signature));
+                --ball-3-end:      color-mix(in srgb, var(--color-signature) 85%, var(--color-dark));
+                --ball-4-start:    color-mix(in srgb, var(--color-panel) 65%, var(--color-signature));
+                --ball-4-end:      color-mix(in srgb, var(--color-signature) 65%, var(--color-dark));
+                --ball-5-start:    color-mix(in srgb, var(--white) 85%, var(--color-signature));
+                --ball-5-end:      color-mix(in srgb, var(--color-signature) 40%, var(--color-dark));
+                --shape-rect-bg:   var(--color-signature);
+                --shape-circle-bg: color-mix(in srgb, var(--color-signature) 70%, var(--color-dark));
+                --shape-block-bg:  color-mix(in srgb, var(--color-signature) 75%, var(--white));
+                --section-subtitle-color: color-mix(in srgb, var(--color-subtle) 80%, var(--color-dark));
+                --bg-texture-a: color-mix(in srgb, var(--white) 3%, transparent);
+                --bg-texture-b: color-mix(in srgb, var(--color-dark) 2%, transparent);
+
+                --max-width: 1120px;
+                --radius-lg: 32px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: var(--bg-main);
+                font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                color: var(--text-main);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                position: relative;
+            }
+
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background-image:
+                    repeating-linear-gradient(45deg, transparent, transparent 10px, var(--bg-texture-a) 10px, var(--bg-texture-a) 20px),
+                    repeating-linear-gradient(-45deg, transparent, transparent 10px, var(--bg-texture-b) 10px, var(--bg-texture-b) 20px);
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .page-wrapper {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                z-index: 1;
+            }
+
+            header {
+                padding: 24px 32px 0;
+            }
+
+            .nav {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 600;
+                font-size: 18px;
+            }
+
+            .brand-mark {
+                width: 24px;
+                height: 24px;
+                border-radius: 999px;
+                background: radial-gradient(circle at 25% 25%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 75% 25%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 25% 75%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 75% 75%, var(--black) 35%, transparent 36%);
+            }
+
+            nav ul {
+                display: flex;
+                align-items: center;
+                gap: 32px;
+                list-style: none;
+                font-size: 14px;
+            }
+
+            nav a {
+                opacity: 0.85;
+            }
+
+            nav a:hover {
+                opacity: 1;
+            }
+
+            .nav-cta {
+                padding: 8px 20px;
+                border-radius: 999px;
+                background: var(--button-dark);
+                color: var(--white);
+                font-size: 14px;
+                border: none;
+                cursor: pointer;
+            }
+
+            .nav-cta:hover {
+                opacity: 0.9;
+            }
+
+            /* Hero */
+            .hero {
+                max-width: var(--max-width);
+                margin: 40px auto 80px;
+                padding: 40px 32px 0;
+                display: grid;
+                grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+                gap: 48px;
+                align-items: center;
+            }
+
+            .hero-media {
+                position: relative;
+                background: var(--bg-card);
+                border-radius: 32px;
+                padding: 20px 24px 12px;
+                max-width: 440px;
+                margin-inline: auto;
+                overflow: visible;
+            }
+
+            .hero-media-inner {
+                position: relative;
+                height: 100%;
+                min-height: 320px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+            }
+
+            .hero-circle {
+                position: absolute;
+                width: 320px;
+                height: 320px;
+                border-radius: 50%;
+                background: var(--accent-soft);
+                left: -8%;
+                top: 12%;
+                opacity: 0.85;
+            }
+
+            .hero-figure {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            .hero-photo-card {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-photo-card img {
+                width: 170px;
+                height: 220px;
+                border-radius: 15px;
+                object-fit: cover;
+                margin-bottom: 16px;
+                position: relative;
+                z-index: 2;
+                box-shadow: 0 8px 20px color-mix(in srgb, var(--black) 15%, transparent);
+            }
+
+            .hero-figure {
+                position: relative;
+                width: 160px;
+                height: 210px;
+                border-radius: 18px;
+                background: linear-gradient(160deg, #2a3c55 10%, #0d1a27 90%);
+                overflow: hidden;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                padding: 14px;
+                color: #f6f6f6;
+            }
+
+            .hero-figure::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--white) 35%, transparent), transparent 60%),
+                    radial-gradient(circle at 80% 90%, color-mix(in srgb, var(--white) 10%, transparent), transparent 55%);
+                mix-blend-mode: screen;
+            }
+
+            .hero-figure-content {
+                position: relative;
+                text-align: center;
+                z-index: 2;
+            }
+
+            .hero-figure-name {
+                font-weight: 600;
+                margin-bottom: 6px;
+                letter-spacing: 0.02em;
+            }
+
+            .hero-figure-tag {
+                font-size: 12px;
+                opacity: 0.9;
+            }
+
+            .hero-figure-line {
+                margin-top: 16px;
+                height: 1px;
+                width: 60%;
+                background: color-mix(in srgb, var(--white) 30%, transparent);
+            }
+
+            .hero-shapes {
+                position: absolute;
+                right: -60px;
+                bottom: -22px;
+                display: flex;
+                align-items: flex-end;
+                gap: 12px;
+            }
+
+            .hero-balls {
+                position: absolute;
+                bottom: -32px;
+                left: 6%;
+                right: 10%;
+                display: flex;
+                justify-content: space-between;
+                pointer-events: none;
+            }
+
+            .hero-ball {
+                display: block;
+                border-radius: 50%;
+                opacity: 0.75;
+                box-shadow: 0 10px 25px color-mix(in srgb, var(--color-dark) 12%, transparent);
+            }
+
+            .hero-bubbles {
+                position: absolute;
+                inset: -72px;
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            .hero-bubble {
+                position: absolute;
+                border-radius: 50%;
+                box-shadow: 0 10px 30px color-mix(in srgb, var(--color-dark) 14%, transparent);
+            }
+
+            .bubble-g1 {
+                width: 54px;
+                height: 54px;
+                background: radial-gradient(circle at 30% 30%, var(--bubble-g1-start) 0%, var(--bubble-g1-end) 70%);
+                top: -6px;
+                left: 22%;
+            }
+
+            .bubble-g2 {
+                width: 42px;
+                height: 42px;
+                background: radial-gradient(circle at 40% 25%, var(--bubble-g2-start) 0%, var(--bubble-g2-end) 75%);
+                top: -18px;
+                right: 26%;
+            }
+
+            .bubble-g3 {
+                width: 38px;
+                height: 38px;
+                background: radial-gradient(circle at 50% 45%, var(--bubble-g3-start) 0%, var(--bubble-g3-end) 80%);
+                bottom: 2px;
+                left: 12%;
+            }
+
+            .bubble-s1 {
+                width: 24px;
+                height: 24px;
+                background: var(--bubble-s1);
+                top: 32%;
+                left: -10px;
+                opacity: 0.8;
+            }
+
+            .bubble-s2 {
+                width: 30px;
+                height: 30px;
+                background: var(--bubble-s2);
+                bottom: -8px;
+                right: 12%;
+                opacity: 0.72;
+            }
+
+            .bubble-s4 {
+                width: 26px;
+                height: 26px;
+                background: var(--bubble-s4);
+                bottom: 8%;
+                left: 46%;
+                opacity: 0.7;
+            }
+
+            .ball-1 {
+                width: 58px;
+                height: 58px;
+                background: radial-gradient(circle at 35% 35%, var(--ball-1-start) 0%, var(--ball-1-end) 70%);
+                transform: translateY(12px);
+            }
+
+            .ball-2 {
+                width: 42px;
+                height: 42px;
+                background: radial-gradient(circle at 40% 30%, var(--ball-2-start) 0%, var(--ball-2-end) 70%);
+                transform: translateY(4px);
+            }
+
+            .ball-3 {
+                width: 30px;
+                height: 30px;
+                background: radial-gradient(circle at 45% 40%, var(--ball-3-start) 0%, var(--ball-3-end) 75%);
+                transform: translateY(-2px);
+            }
+
+            .ball-4 {
+                width: 52px;
+                height: 52px;
+                background: radial-gradient(circle at 40% 45%, var(--ball-4-start) 0%, var(--ball-4-end) 70%);
+                transform: translateY(-4px);
+            }
+
+            .ball-5 {
+                width: 22px;
+                height: 22px;
+                background: radial-gradient(circle at 50% 50%, var(--ball-5-start) 0%, var(--ball-5-end) 75%);
+                transform: translateY(10px);
+            }
+
+            .shape-rect {
+                width: 80px;
+                height: 70px;
+                border-radius: 999px;
+                background: var(--shape-rect-bg);
+            }
+
+            .shape-rect-tall {
+                height: 110px;
+            }
+
+            .shape-circle {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                background: var(--shape-circle-bg);
+                transform: translateY(-18px);
+            }
+
+            .shape-block {
+                width: 50px;
+                height: 32px;
+                border-radius: 16px;
+                background: var(--shape-block-bg);
+                transform: translateY(8px);
+            }
+
+            .hero-copy {
+                padding-top: 32px;
+                max-width: 460px;
+                justify-self: flex-start;
+            }
+
+            .kicker {
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.16em;
+                color: var(--text-muted);
+                margin-bottom: 10px;
+            }
+
+            h1 {
+                font-family: "Playfair Display", "Times New Roman", serif;
+                font-size: 46px;
+                line-height: 1.1;
+                margin-bottom: 18px;
+            }
+
+            .hero-text {
+                font-size: 15px;
+                color: var(--hero-text-color);
+                margin-bottom: 26px;
+                max-width: 34rem;
+            }
+
+            .hero-actions {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .btn-primary {
+                background: var(--button-dark);
+                color: var(--white);
+                border-radius: 999px;
+                padding: 12px 28px;
+                border: none;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+
+            .btn-primary:hover {
+                opacity: 0.9;
+            }
+
+            .btn-ghost {
+                background: transparent;
+                border: 1px solid var(--btn-ghost-border);
+                border-radius: 999px;
+                padding: 10px 20px;
+                font-size: 13px;
+                cursor: pointer;
+                color: var(--btn-ghost-color);
+            }
+
+            .btn-ghost:hover {
+                background: var(--btn-ghost-hover);
+            }
+
+            /* Sections */
+            main {
+                flex: 1;
+            }
+
+            section {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                padding: 56px 32px 72px;
+            }
+
+            .section-header {
+                max-width: 620px;
+                margin-bottom: 28px;
+            }
+
+            .section-title {
+                font-family: "Playfair Display", serif;
+                font-size: 28px;
+                margin-bottom: 8px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+                color: var(--section-subtitle-color);
+            }
+
+            .two-col {
+                display: grid;
+                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+                gap: 40px;
+            }
+
+            .card {
+                background: var(--card-surface);
+                border-radius: var(--radius-lg);
+                padding: 24px 26px;
+                border: 1px solid var(--card-border);
+                box-shadow: 0 14px 45px var(--card-shadow);
+            }
+
+            .meta-label {
+                text-transform: uppercase;
+                letter-spacing: 0.18em;
+                font-size: 11px;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+            }
+
+            .list {
+                list-style: none;
+                display: grid;
+                gap: 18px;
+                font-size: 14px;
+                color: var(--list-text);
+            }
+
+            .list-item-title {
+                font-weight: 600;
+            }
+
+            .list-item-meta {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: var(--text-muted);
+                margin-top: 4px;
+            }
+
+            .skills-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                font-size: 13px;
+            }
+
+            .skill-pill {
+                padding: 8px 12px;
+                border-radius: 999px;
+                background: var(--skill-pill-bg);
+                border: 1px solid var(--skill-pill-border);
+                text-align: center;
+            }
+
+            /* Contact */
+            .contact-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+                gap: 36px;
+            }
+
+            .contact-card {
+                border-radius: var(--radius-lg);
+                padding: 26px 26px 24px;
+                background: var(--black);
+                color: color-mix(in srgb, var(--color-canvas) 85%, var(--color-signature));
+            }
+
+            .contact-card h3 {
+                font-family: "Playfair Display", serif;
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+
+            .contact-card p {
+                font-size: 14px;
+                color: var(--contact-label-text);
+                margin-bottom: 20px;
+            }
+
+            .contact-meta {
+                font-size: 14px;
+                display: grid;
+                gap: 6px;
+            }
+
+            .contact-meta span {
+                opacity: 0.9;
+            }
+
+            .contact-meta a {
+                color: color-mix(in srgb, var(--color-canvas) 85%, var(--color-signature));
+                text-decoration: underline;
+                text-decoration-thickness: 1px;
+            }
+
+            .contact-form {
+                display: grid;
+                gap: 16px;
+                font-size: 14px;
+            }
+
+            .field label {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.14em;
+                color: var(--text-muted);
+                margin-bottom: 4px;
+                display: block;
+            }
+
+            .field input,
+            .field textarea {
+                width: 100%;
+                border-radius: 999px;
+                border: 1px solid var(--field-border);
+                background: var(--field-bg);
+                padding: 10px 14px;
+                font-family: inherit;
+                font-size: 14px;
+                outline: none;
+            }
+
+            .field textarea {
+                border-radius: 18px;
+                min-height: 96px;
+                resize: vertical;
+                padding: 12px 14px;
+            }
+
+            .field input:focus,
+            .field textarea:focus {
+                border-color: var(--field-focus-border);
+                background: var(--field-focus-bg);
+            }
+
+            footer {
+                padding: 24px 32px 40px;
+                font-size: 12px;
+                color: var(--text-muted);
+            }
+
+            .footer-inner {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+
+            .footer-links {
+                display: flex;
+                gap: 14px;
+            }
+
+            /* Responsive */
+            @media (max-width: 960px) {
+                .hero {
+                    grid-template-columns: minmax(0, 1fr);
+                    margin-top: 20px;
+                }
+
+                .hero-copy {
+                    order: -1;
+                    padding-top: 10px;
+                }
+
+                .hero-media-inner {
+                    min-height: 300px;
+                }
+
+                .two-col,
+                .contact-layout {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+
+                header {
+                    padding-inline: 20px;
+                }
+
+                section {
+                    padding-inline: 20px;
+                }
+            }
+
+            @media (max-width: 700px) {
+                nav ul {
+                    gap: 18px;
+                    font-size: 13px;
+                }
+
+                .hero {
+                    padding-inline: 20px;
+                }
+
+                h1 {
+                    font-size: 36px;
+                }
+            }
+
+            @media (max-width: 520px) {
+                nav ul li:not(:last-child) {
+                    display: none;
+                }
+
+                .hero-media {
+                    padding-inline: 20px;
+                }
+
+                .hero-figure {
+                    width: 220px;
+                    height: 300px;
+                }
+
+                .hero-photo-card {
+                    height: 150px;
+                    width: auto;
+                    object-fit: contain;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-wrapper">
+            <header id="top">
+                <div class="nav">
+                    <div class="brand">
+                        <div class="brand-mark" aria-hidden="true"></div><span>Bygone</span>
+                    </div>
+                    <nav aria-label="Primary">
+                        <ul>
+                            <li>
+                                <a href="#about">About</a>
+                            </li>
+                            <li>
+                                <a href="#experience">Experience</a>
+                            </li>
+                            <li>
+                                <a href="#projects">Projects</a>
+                            </li>
+                            <li>
+                                <a href="#contact">Contact</a>
+                            </li>
+                            <li><a href="#contact"> <button class="nav-cta">Hire Me</button> </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+            <main>
+                <!-- Hero -->
+                <section class="hero" aria-labelledby="hero-heading">
+                    <div class="hero-media" aria-hidden="true">
+                        <div class="hero-media-inner">
+                            <div class="hero-photo-card">
+                                <div class="hero-bubbles" aria-hidden="true">
+                                    <span class="hero-bubble bubble-g1"></span>
+                                    <span class="hero-bubble bubble-g2"></span>
+                                    <span class="hero-bubble bubble-g3"></span>
+                                    <span class="hero-bubble bubble-s1"></span>
+                                    <span class="hero-bubble bubble-s2"></span>
+                                    <span class="hero-bubble bubble-s4"></span>
+                                </div>
+                                <img src="https://images.pexels.com/photos/1181695/pexels-photo-1181695.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Student headshot">
+                                <div class="hero-figure-content">
+                                    <div class="hero-figure-name">{{name}}</div>
+                                    <div class="hero-figure-tag">{{major}} Major &bull; Class of {{current_year}}</div>
+                                    <div class="hero-figure-line"></div>
+                                </div>
+                            </div>
+                            <div class="hero-shapes">
+                                <div class="shape-rect shape-rect-tall"></div>
+                                <div class="shape-circle"></div>
+                                <div class="shape-rect"></div>
+                                <div class="shape-block"></div>
+                            </div>
+                            <div class="hero-balls" aria-hidden="true">
+                                <span class="hero-ball ball-1"></span>
+                                <span class="hero-ball ball-2"></span>
+                                <span class="hero-ball ball-3"></span>
+                                <span class="hero-ball ball-4"></span>
+                                <span class="hero-ball ball-5"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-copy">
+                        <p class="kicker">A student's portfolio</p>
+                        <h1 id="hero-heading">{{headline}}</h1>
+                        <p class="hero-text">{{subheadline}}</p>
+                        <div class="hero-actions"><a href="#contact"> <button class="btn-primary">Apply to Work With Me</button> </a><a href="#projects"> <button class="btn-ghost">View Selected Projects</button> </a>
+                        </div>
+                    </div>
+                </section>
+                <!-- About -->
+                <section id="about">
+                    <div class="section-header">
+                        <h2 class="section-title">About Me</h2>
+                        <p class="section-subtitle">{{value_proposition}}</p>
+                    </div>
+                    <div class="two-col">
+                        <div>
+                            <p>{{about}}</p>
+                        </div>
+                        <div class="card">
+                            <p class="meta-label">Snapshot</p>
+                            <ul class="list">
+                                {{#education}}
+                                <li>
+                                    <div class="list-item-title">{{degree}} in {{major}}</div>
+                                    <div class="list-item-meta">Expected Graduation &bull; {{graduation_date}}</div>
+                                </li>
+                                {{/education}}
+                                {{#has_specialization}}
+                                <li>
+                                    <div class="list-item-title">Focus Areas</div>
+                                    <div class="list-item-meta">{{specialization}}</div>
+                                </li>
+                                {{/has_specialization}}
+                                <li>
+                                    <div class="list-item-title">Location</div>
+                                    <div class="list-item-meta">{{location}}</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <!-- Experience -->
+                <section id="experience">
+                    <div class="section-header">
+                        <h2 class="section-title">Experience</h2>
+                        <p class="section-subtitle">Research, teaching support, and public-facing work that bring your field to life.</p>
+                    </div>
+                    <div class="two-col">
+                        <div class="card">
+                            <p class="meta-label">Academic &amp; Campus Roles</p>
+                            <ul class="list">
+                                {{#experience}}
+                                <li>
+                                    <div class="list-item-title">{{title}}, {{company}}</div>
+                                    <div class="list-item-meta">{{start_date}} &ndash; {{end_date}}</div>
+                                    <p>{{description}}</p>
+                                </li>
+                                {{/experience}}
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <p class="meta-label">Related Experience</p>
+                            <ul class="list">
+                                {{#projects}}
+                                <li>
+                                    <div class="list-item-title">{{name}}</div>
+                                    <div class="list-item-meta">{{dates}}</div>
+                                    <p>{{description}}</p>
+                                </li>
+                                {{/projects}}
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <!-- Projects -->
+                <section id="projects">
+                    <div class="section-header">
+                        <h2 class="section-title">Selected Projects</h2>
+                        <p class="section-subtitle">A few examples of how I research, interpret, and present ideas for different audiences.</p>
+                    </div>
+                    <div class="two-col">
+                        {{#skill_groups}}
+                        <div class="card">
+                            <p class="meta-label">{{group_name}}</p>
+                            <ul class="list">
+                                {{#skills}}
+                                <li>
+                                    <div class="list-item-title">{{.}}</div>
+                                </li>
+                                {{/skills}}
+                            </ul>
+                        </div>
+                        {{/skill_groups}}
+                    </div>
+                </section>
+                <!-- Skills -->
+                <section id="skills">
+                    <div class="section-header">
+                        <h2 class="section-title">Skills &amp; Tools</h2>
+                        <p class="section-subtitle">Combining analytical thinking with clear communication and modern tools.</p>
+                    </div>
+                    <div class="card">
+                        <div class="skills-grid">
+                            {{#skill_groups}}
+                            {{#skills}}
+                            <div class="skill-pill">{{.}}</div>
+                            {{/skills}}
+                            {{/skill_groups}}
+                        </div>
+                    </div>
+                </section>
+                <!-- Contact -->
+                <section id="contact">
+                    <div class="section-header">
+                        <h2 class="section-title">Let's Work Together</h2>
+                        <p class="section-subtitle">I'm currently looking for full-time roles and internships starting in {{current_year}}.</p>
+                    </div>
+                    <div class="contact-layout">
+                        <div class="contact-card">
+                            <h3>Hire a {{desired_role}}</h3>
+                            <p>{{value_proposition}}</p>
+                            <div class="contact-meta">
+                                <span><strong>Email</strong> &mdash; <a href="mailto:{{email}}">{{email}}</a></span>
+                                {{#has_linkedin}}
+                                <span><strong>LinkedIn</strong> &mdash; <a href="{{linkedin}}">{{linkedin}}</a></span>
+                                {{/has_linkedin}}
+                                {{#has_github}}
+                                <span><strong>GitHub</strong> &mdash; <a href="{{github}}">{{github}}</a></span>
+                                {{/has_github}}
+                                {{#has_website}}
+                                <span><strong>Website</strong> &mdash; <a href="{{website}}">{{website}}</a></span>
+                                {{/has_website}}
+                                {{#has_phone}}
+                                <span><strong>Phone</strong> &mdash; <a href="tel:{{phone}}">{{phone}}</a></span>
+                                {{/has_phone}}
+                            </div>
+                        </div>
+                        <form class="contact-form" action="#" method="post">
+                            <div class="field">
+                                <label for="name">Name</label>
+                                <input id="name" name="name" type="text" placeholder="Your name"/>
+                            </div>
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input id="email" name="email" type="email" placeholder="you@example.com"/>
+                            </div>
+                            <div class="field">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" placeholder="Tell me about the role, project, or opportunity."></textarea>
+                            </div>
+                            <button class="btn-primary" type="submit">Send Message</button>
+                        </form>
+                    </div>
+                </section>
+                <!-- Certifications (optional) -->
+                {{#certifications}}
+                <section id="certifications">
+                    <div class="section-header">
+                        <h2 class="section-title">Certifications</h2>
+                    </div>
+                    <div class="card">
+                        <ul class="list">
+                            {{#certifications}}
+                            <li>
+                                <div class="list-item-title">{{name}}</div>
+                                <div class="list-item-meta">{{issuer}} &bull; {{date}}</div>
+                            </li>
+                            {{/certifications}}
+                        </ul>
+                    </div>
+                </section>
+                {{/certifications}}
+                <!-- Publications (optional) -->
+                {{#publications}}
+                <section id="publications">
+                    <div class="section-header">
+                        <h2 class="section-title">Publications</h2>
+                    </div>
+                    <div class="card">
+                        <ul class="list">
+                            {{#publications}}
+                            <li>
+                                <div class="list-item-title">{{title}}</div>
+                                <div class="list-item-meta">{{venue}} &bull; {{date}}</div>
+                            </li>
+                            {{/publications}}
+                        </ul>
+                    </div>
+                </section>
+                {{/publications}}
+                <!-- Leadership (optional) -->
+                {{#leadership}}
+                <section id="leadership">
+                    <div class="section-header">
+                        <h2 class="section-title">Leadership &amp; Involvement</h2>
+                    </div>
+                    <div class="card">
+                        <ul class="list">
+                            {{#leadership}}
+                            <li>
+                                <div class="list-item-title">{{role}}, {{organization}}</div>
+                                <div class="list-item-meta">{{dates}}</div>
+                                <p>{{description}}</p>
+                            </li>
+                            {{/leadership}}
+                        </ul>
+                    </div>
+                </section>
+                {{/leadership}}
+            </main>
+            <footer>
+                <div class="footer-inner"><span>&copy; {{current_year}} {{name}}. All rights reserved.</span>
+                    <div class="footer-links"><a href="#top">Back to top</a><a href="#projects">Projects</a><a href="#contact">Contact</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </body>
+</html>
