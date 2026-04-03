@@ -39,6 +39,12 @@
       const tier = window.getSupabaseMembership?.()?.tier;
       return tier === "basic" || tier === "premium";
     }
+    function hasCreditsRemaining() {
+      const m = window.getSupabaseMembership?.();
+      if (!m) return true; // not loaded yet — don't block
+      if (m.credits_limit === -1) return true; // unlimited
+      return (m.credits_used ?? 0) < (m.credits_limit ?? 0);
+    }
 
     // Called by the auth script in index.html whenever login state changes
     window.onAuthStateUpdated = function() {
@@ -257,13 +263,21 @@
       lastAnalysisData = null;
       document.getElementById("reanalyzeResume").style.display = hasFile ? "inline" : "none";
       if (hasFile) {
-        analyzeResumeInBackground(input.files[0]);
+        if (!hasCreditsRemaining()) {
+          setResumeAnalysisStatus("No credits remaining — upgrade to analyze your resume.", "rgba(251,171,156,.8)");
+        } else {
+          analyzeResumeInBackground(input.files[0]);
+        }
       } else {
         setResumeAnalysisStatus("");
       }
     });
 
     document.getElementById("reanalyzeResume")?.addEventListener("click", () => {
+      if (!hasCreditsRemaining()) {
+        setResumeAnalysisStatus("No credits remaining — upgrade to re-analyze.", "rgba(251,171,156,.8)");
+        return;
+      }
       const input = document.getElementById("resumeUpload");
       if (!input?.files?.[0]) return;
       const file = input.files[0];
@@ -2099,7 +2113,7 @@
 
     document.getElementById("next1")?.addEventListener("click", () => {
       if (!page1Action()) return;
-      if (resumeUpload.files?.[0]) analyzeResumeInBackground(resumeUpload.files[0]);
+      if (resumeUpload.files?.[0] && hasCreditsRemaining()) analyzeResumeInBackground(resumeUpload.files[0]);
       setStep(2);
     });
     document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
