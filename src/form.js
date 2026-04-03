@@ -1615,8 +1615,10 @@
           })
         });
         if (!res.ok && res.status !== 202) {
+          const errBody = await res.text().catch(() => "");
           clearInterval(jobAdCountdown);
-          setHeaderStatus("jobAnalysisStatus", "Job info extraction failed", "rgba(251,171,156,.8)");
+          setHeaderStatus("jobAnalysisStatus", `Job extraction failed (HTTP ${res.status}): ${errBody.slice(0, 120)}`, "rgba(251,171,156,.8)");
+          if (isDebugMode()) wireDebugRow("JobError", `HTTP ${res.status}\n${errBody}`, "job-error.txt");
           jobAdInProgress = false;
           return;
         }
@@ -1629,14 +1631,16 @@
           if (data.status === "done") { jobAdResult = data; populateJobAdDebug(data); break; }
           if (data.status === "error") { populateJobAdDebug(data); break; }
         }
-      } catch { /* silent */ }
+      } catch (err) {
+        if (isDebugMode()) wireDebugRow("JobError", "Client exception: " + (err?.message || String(err)), "job-error.txt");
+      }
 
       clearInterval(jobAdCountdown);
       jobAdInProgress = false;
       if (jobAdResult) {
         setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted", "rgba(118,176,34,.9)");
       } else {
-        setHeaderStatus("jobAnalysisStatus", "Job extraction failed", "rgba(251,171,156,.8)");
+        setHeaderStatus("jobAnalysisStatus", "Job extraction failed — see JobError in debug panel", "rgba(251,171,156,.8)");
       }
     }
 
