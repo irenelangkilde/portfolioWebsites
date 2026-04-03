@@ -1069,6 +1069,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     siteHtml = injectCssColors(siteHtml, colorSpec, rendererSampleHtml);
     usedModel = "mustache";
     truncated = false;
+    tokenReport.push({ stage: "5 · Renderer", model: "mustache (no AI call)", input: 0, output: 0 });
   } else {
     // ── AI renderer path ─────────────────────────────────────────────────────
     const rendererPrompt = loadPromptFile("rendererPrompt.md")

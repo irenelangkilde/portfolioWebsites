@@ -1899,12 +1899,8 @@
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
-      // In mustache mode the bridge is skipped, so clear the token report here instead
-      if (isMustacheMode()) {
-        Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
-        const reportEl = document.getElementById("tokenReport");
-        if (reportEl) reportEl.style.display = "none";
-      }
+      // In mustache mode the bridge is skipped — don't clear accumulated job-ad tokens here;
+      // mergeTokenReport overwrites by stage key so re-renders stay clean.
       setApplyBtnState(false);
       setOpenEditorReady(false);
       document.getElementById("upgradePrompt")?.classList.add("hidden");
