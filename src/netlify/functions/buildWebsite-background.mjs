@@ -824,7 +824,8 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "content-type": "application/json", "x-api-key": creds.claudeKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify(reqBody)
+      body: JSON.stringify(reqBody),
+      signal: AbortSignal.timeout(600000) // 10 minutes max per AI call
     });
     const json = await res.json();
     if (!res.ok) throw new Error("Claude API error: " + (json.error?.message || JSON.stringify(json).slice(0, 200)));
