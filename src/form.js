@@ -1661,9 +1661,12 @@
       const reportEl = document.getElementById("tokenReport");
       if (reportEl) reportEl.style.display = "none";
 
-      // Block until job ad extraction is finished (job_resolved is produced there)
-      while (jobAdInProgress) {
-        await new Promise(r => setTimeout(r, 500));
+      // Block until job ad extraction is finished (bridge needs job_resolved)
+      if (jobAdInProgress) {
+        setHeaderStatus("bridgeStatus", "Waiting for job analysis…", "rgba(141,224,255,.6)");
+        while (jobAdInProgress) {
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
 
       const bridgeCountdown = startCountdown("bridgeStatus", "Planning design…", 300);
