@@ -1211,8 +1211,11 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "done", job_ad: null }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-      const prompt = loadPromptFile("extractJobAdInfo.md").replace("{{JOB_AD}}", rawJobAd);
-      const r = await callAI(provider, creds, { userText: prompt, maxTokens: 3000 });
+      const resumeStrategy = body.resumeStrategy || null;
+      const prompt = loadPromptFile("extractJobAdInfo.md")
+        .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
+        .replace("{{JOB_AD}}", rawJobAd);
+      const r = await callAI(provider, creds, { userText: prompt, maxTokens: 5000 });
       let job_ad = null;
       try { job_ad = parseJsonResponse(r.text); } catch {}
       await store.set(jobId, JSON.stringify({

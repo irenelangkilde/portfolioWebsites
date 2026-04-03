@@ -1605,6 +1605,7 @@
             mode: "extractJobAd",
             jobId,
             jobAdText: rawText,
+            resumeStrategy: lastAnalysisData?.resume_strategy || null,
             provider: getAnalysisProvider()
           })
         });
@@ -1695,15 +1696,16 @@
 
     // ----------------------------
     // Orchestrator — triggered on page 2 (Job) Next
-    // Fires job ad extraction in parallel, blocks until resume analysis is done, then unifies.
+    // Waits for resume analysis (job extraction needs resume_strategy), then fires job ad
+    // extraction, then unifies.
     // ----------------------------
     async function doAnalyzeAndExtractJobAd() {
-      doExtractJobAd(); // fire-and-forget — runs in parallel
-
-      // Block until Stage 1 (resume analysis) is finished
+      // Block until Stage 1 (resume analysis) is finished — extractJobAd needs resume_strategy
       while (resumeAnalysisPending) {
         await new Promise(r => setTimeout(r, 500));
       }
+
+      doExtractJobAd(); // fire after resume analysis so resume_strategy is available
 
       // Block until job ad extraction is finished
       while (jobAdInProgress) {
