@@ -180,6 +180,53 @@ Rewrite all copy to target this employer specifically. Pull the best raw materia
 COMPATIBLE COLOR SCHEMES
 Produce one scheme inspired by the company's brand aesthetic (use culture_keywords, industry, and any color signals from the posting or company profile). Keep it coherent with the candidate's field.
 
+EXAMPLE OUTPUT (new and structured fields only — use as format reference, not as content defaults)
+These examples are for a hardware engineer targeting an embedded firmware role at a robotics startup.
+
+"strong_signals": [
+  { "item": "Embedded Engineering Intern at ACME Robotics — SPI/DMA driver, 38% CPU reduction", "why": "directly maps to the job's requirement for low-level driver development with measurable performance outcomes" },
+  { "item": "BLE Wearable Sensor — end-to-end prototype", "why": "shows the shipped-product proof type this employer values; robotics startup wants to see hardware that works" }
+]
+
+"weak_signals": [
+  { "item": "MATLAB/Simulink listed in skills", "why": "simulation tools are less relevant to this firmware-focused role; move to secondary or omit" },
+  { "item": "Lab assistant role", "why": "support experience that doesn't demonstrate the independent design ownership this employer is hiring for" }
+]
+
+"section_by_section_notes": [
+  { "section": "Hero", "note": "Open with the RTOS/driver angle and name the specific microcontroller families — this recruiter will scan for STM32/ARM." },
+  { "section": "Projects", "note": "Lead with the motor driver project; frame it around the firmware and gate driver control, not the PCB aesthetics." },
+  { "section": "Experience", "note": "The ACME internship should open with the quantified outcome — 38% CPU reduction is the kind of number this team responds to." },
+  { "section": "Skills", "note": "Put 'Embedded C/C++' and 'FreeRTOS' above the fold in the skills section — they are the primary match signals for this role." }
+]
+
+"project_framing_notes": [
+  { "project_name": "BLDC Motor Driver (4-layer PCB)", "framing": "Directly relevant: gate driver design, current sensing, and C firmware on STM32 — the exact stack this role uses." },
+  { "project_name": "BLE Wearable Sensor", "framing": "Shows shipped hardware with BLE stack integration and power optimization — proof of full-product ownership." }
+]
+
+"skills_subcategory_labels": [
+  { "group": "programming_languages", "label": "Embedded Languages" },
+  { "group": "technical", "label": "Hardware & Electronics" },
+  { "group": "tools", "label": "Dev Tools & Platforms" }
+]
+
+"open_to": "Embedded firmware or hardware engineering roles at robotics and automation companies"
+
+"highlights": [
+  "SPI/DMA driver at ACME Robotics — 38% CPU reduction",
+  "STM32 BLE wearable shipped end-to-end (PCB, firmware, app)",
+  "Senior design: 48V buck converter at 95% efficiency",
+  "FreeRTOS, low-power embedded, BLE stack integration"
+]
+
+"strengths_snapshot": [
+  "Driver-level embedded C/C++",
+  "RTOS and low-power design",
+  "Hardware-to-firmware ownership",
+  "Shipped prototypes, not just coursework"
+]
+
 INPUTS
 
 resume_strategy:

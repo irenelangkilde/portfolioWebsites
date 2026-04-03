@@ -308,6 +308,58 @@ Conjure five colors inspired by the candidate's field and subject matter. Output
 
 In `how_used`, describe the overall palette mood and field connection in one sentence.
 
+EXAMPLE OUTPUT (new and structured fields only — use as format reference, not as content defaults)
+
+"strong_signals": [
+  { "item": "Senior thesis: 48V synchronous buck converter at 95% peak efficiency", "why": "demonstrates end-to-end hardware design with a measurable, publication-worthy result" },
+  { "item": "Embedded Engineering Intern at ACME Robotics (Summer 2024)", "why": "named employer, directly relevant role, with a quantified impact bullet (38% CPU reduction)" },
+  { "item": "BLE Wearable Sensor — end-to-end prototype (PCB, firmware, desktop app)", "why": "shows full-stack hardware ownership across three disciplines in one project" }
+]
+
+"weak_signals": [
+  { "item": "Electronics Lab Assistant (2023–2024)", "why": "support role that doesn't demonstrate independent design — lead with the internship instead" },
+  { "item": "Python / NumPy listed under skills", "why": "common qualifier that adds noise without evidence; only surface if tied to a specific project outcome" }
+]
+
+"section_by_section_notes": [
+  { "section": "Hero", "note": "Lead with a hardware-specific achievement (the buck converter result), not the major name — recruiters already know the major from context." },
+  { "section": "Projects", "note": "Put the senior thesis project first; frame each project around what problem it solved, not what tools it used." },
+  { "section": "Skills", "note": "Separate hardware and software skill groups visually — EE recruiters scan for specific tool names, not general categories." },
+  { "section": "Experience", "note": "Open the ACME internship entry with the quantified outcome bullet; the lab assistant role should appear last or be omitted." },
+  { "section": "Contact", "note": "Include a direct 'Download Resume' CTA alongside the contact form — hiring managers rarely fill out forms." }
+]
+
+"project_framing_notes": [
+  { "project_name": "BLDC Motor Driver (4-layer PCB)", "framing": "Shows end-to-end hardware ownership: schematic, layout, assembly, and firmware on a single shipped board." },
+  { "project_name": "BLE Wearable Sensor", "framing": "Demonstrates full product thinking across PCB design, Nordic BLE firmware, and a companion desktop app." },
+  { "project_name": "48V → 5V Synchronous Buck", "framing": "Quantified power electronics result (95% efficiency) with simulation, implementation, and thermal analysis." }
+]
+
+"skills_subcategory_labels": [
+  { "group": "programming_languages", "label": "Languages & Frameworks" },
+  { "group": "technical", "label": "Hardware & Electronics" },
+  { "group": "tools", "label": "Tools & Platforms" },
+  { "group": "soft_skills", "label": "Competencies" }
+]
+
+"open_to": "Entry-level embedded or hardware engineering roles; open to relocation"
+
+"status_badges": ["Class of 2026", "B.S. Electrical Engineering", "Available June 2026"]
+
+"highlights": [
+  "Senior design: 48V→5V synchronous buck at 95% peak efficiency",
+  "STM32 BLE wearable — coin-cell life extended to 9+ months",
+  "Embedded intern at ACME Robotics: 38% CPU reduction via SPI/DMA driver",
+  "Dean's List, 3 semesters"
+]
+
+"strengths_snapshot": [
+  "Hardware-to-firmware ownership",
+  "Power electronics & PCB layout",
+  "Low-power embedded systems",
+  "Simulation to bench validation"
+]
+
 INPUTS
 
 major:
