@@ -1770,7 +1770,6 @@
     }
 
     function populateJobAdDebug(data) {
-      wireDebugRow("JobFacts",    JSON.stringify(data?.job_facts    ?? null, null, 2), "job-facts.json");
       wireDebugRow("JobResolved", JSON.stringify(data?.job_resolved ?? null, null, 2), "job-resolved.json");
       if (isDebugMode()) mergeTokenReport(data?.token_report);
     }

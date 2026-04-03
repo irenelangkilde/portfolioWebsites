@@ -1227,11 +1227,11 @@ export async function handler(event) {
       const r = await callAI(provider, creds, { userText: prompt, maxTokens: 5000 });
       let parsed = null;
       try { parsed = parseJsonResponse(r.text); } catch {}
+      const jobResolved = parsed?.job_resolved ?? parsed ?? null;
       await store.set(jobId, JSON.stringify({
-        status:      "done",
-        job_facts:   parsed?.job_facts   || null,
-        job_resolved: parsed?.job_resolved || null,
-        model:       r.model,
+        status:       "done",
+        job_resolved: jobResolved,
+        model:        r.model,
         token_report: [{ stage: "2a · Job ad extract", model: r.model, ...r.usage }]
       }), { ttl: 3600 });
       return { statusCode: 202 };

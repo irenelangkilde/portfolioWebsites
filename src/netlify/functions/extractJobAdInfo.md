@@ -5,12 +5,10 @@ You receive three inputs:
 2. The candidate's resume_strategy — analysis material (signals, options, seeds) derived from their resume
 3. The candidate's resume_facts — verbatim structured content from their resume
 
-Your task is to produce two clearly separated outputs:
-1. job_facts — verbatim structured content from the posting. Factual only, no interpretation.
-2. job_resolved — the resolved, job-targeted strategy ready for downstream rendering. Rewritten and reprioritized from resume_strategy to maximize resonance with this specific role and employer.
+Your task is to produce one output:
+job_resolved — the resolved, job-targeted strategy ready for downstream rendering. Rewritten and reprioritized from resume_strategy to maximize resonance with this specific role and employer.
 
 CRITICAL RULES
-- job_facts: extract only what is stated or clearly implied by the posting. Never invent requirements or company details.
 - job_resolved: start from resume_strategy as raw material. Rewrite, reorder, and reprioritize through the lens of what this job demands. Do not invent skills, projects, or credentials not present in resume_facts.
 - Every claim in job_resolved must be verifiable in resume_facts. You may reframe and emphasize differently — you may not fabricate.
 
@@ -24,49 +22,6 @@ Return valid JSON only. No markdown. No explanation. No comments.
 OUTPUT JSON SHAPE
 
 {
-  "job_facts": {
-    "source": {
-      "role_title": "",
-      "company": "",
-      "url": "",
-      "date_scraped": ""
-    },
-    "requirements": {
-      "must_have": [],
-      "nice_to_have": [],
-      "years_experience": "",
-      "education_requirements": [],
-      "domain_knowledge": [],
-      "credentials": [],
-      "technical_skills": [],
-      "soft_skills": []
-    },
-    "company_profile": {
-      "name": "",
-      "industry": "",
-      "company_size": "",
-      "mission_statement": "",
-      "culture_keywords": [],
-      "values_stated": []
-    },
-    "language_analysis": {
-      "repeated_keywords": [],
-      "power_verbs_used": [],
-      "tone": "",
-      "jargon_or_domain_terms": []
-    },
-    "signals": {
-      "what_problem_are_they_solving": "",
-      "what_kind_of_person_succeeds_here": "",
-      "red_flags": [],
-      "green_flags": []
-    },
-    "match_surface": {
-      "sections_candidate_can_speak_to": [],
-      "likely_interview_topics": [],
-      "portfolio_pieces_that_would_resonate": []
-    }
-  },
   "job_resolved": {
     "target_role": {
       "role_title": "",
@@ -124,9 +79,6 @@ OUTPUT JSON SHAPE
 }
 
 GUIDELINES
-
-JOB_FACTS (verbatim extraction)
-Extract requirements, company profile, language patterns, and signals faithfully from the posting. Do not invent or infer beyond what is stated.
 
 JOB_RESOLVED — general
 job_resolved contains the resolved, job-targeted decisions ready for downstream rendering. It has six sections: target_role, positioning, content_strategy, site_strategy, visual_language, and website_copy_seed (selected copy picks). Use resume_strategy as working material and resume_facts as ground truth — all named items must exist in resume_facts verbatim.
