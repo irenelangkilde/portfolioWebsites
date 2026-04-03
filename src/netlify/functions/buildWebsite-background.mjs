@@ -608,14 +608,20 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   };
   const edu0 = (resumeJson?.education || [])[0] || {};
 
-  // Convert skills object → skill_groups array
+  // Merged copy seed: prefer unified_strategy fields when present, fall back to resume_strategy
+  const copySeed = strategy?.website_copy_seed || resumeStrategy?.website_copy_seed || {};
+
+  // Convert skills object → skill_groups array, applying AI-generated subcategory labels
   const skills = resumeJson?.skills || {};
+  const labelMap = Object.fromEntries(
+    (copySeed.skills_subcategory_labels || []).map(({ group, label }) => [group, label])
+  );
   const skillGroupDefs = [
-    { group_name: "Programming Languages", arr: skills.programming_languages },
-    { group_name: "Technical Skills",      arr: skills.technical },
-    { group_name: "Tools",                 arr: skills.tools },
-    { group_name: "Soft Skills",           arr: skills.soft_skills },
-    { group_name: "Other",                 arr: skills.other }
+    { group_name: labelMap.programming_languages || "Programming Languages", arr: skills.programming_languages },
+    { group_name: labelMap.technical             || "Technical Skills",      arr: skills.technical },
+    { group_name: labelMap.tools                 || "Tools",                 arr: skills.tools },
+    { group_name: labelMap.soft_skills           || "Soft Skills",           arr: skills.soft_skills },
+    { group_name: labelMap.other                 || "Other",                 arr: skills.other }
   ];
   const skill_groups = skillGroupDefs
     .filter(g => Array.isArray(g.arr) && g.arr.length)
@@ -625,11 +631,16 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   // similarly-sized cards end up in the same row of the 2-column grid.
   const charCount = arr => arr.reduce((n, s) => n + String(s).length, 0);
 
-  const highlightBullets = (resumeJson?.experience || [])
-    .map(e => (e.bullets || [])[0]).filter(Boolean).slice(0, 3);  // max 3 bullets
+  // Highlights: prefer AI-generated copy seed bullets; fall back to first bullet of each job
+  const highlightBullets = copySeed.highlights?.length
+    ? copySeed.highlights.slice(0, 4)
+    : (resumeJson?.experience || []).map(e => (e.bullets || [])[0]).filter(Boolean).slice(0, 3);
 
+  // Strengths snapshot: prefer AI-generated phrases; fall back to strengths_to_emphasize
   const HERO_CARD_MAX = 4;   // max skills shown inside one card
-  const strengths = (strategy?.editorial_direction?.strengths_to_emphasize || []).slice(0, 4);
+  const strengths = (copySeed.strengths_snapshot?.length
+    ? copySeed.strengths_snapshot
+    : (strategy?.editorial_direction?.strengths_to_emphasize || [])).slice(0, 4);
 
   // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
   // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
@@ -706,6 +717,11 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
                      : strategy?.desired_roles?.length   ? strategy.desired_roles
                      : (resumeStrategy?.desired_roles || [])).slice(0, 3),
     desired_role:      resumeJson?.desired_roles?.[0] || strategy?.desired_roles?.[0] || resumeStrategy?.desired_roles?.[0] || "",
+
+    open_to:          copySeed.open_to || "",
+    has_open_to:      !!(copySeed.open_to),
+    status_badges:    (copySeed.status_badges || []).map(b => ({ label: b })),
+    has_status_badges:!!(copySeed.status_badges?.length),
 
     has_github:   !!(personal.github),
     has_linkedin: !!(personal.linkedin),
