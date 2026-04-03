@@ -450,6 +450,7 @@
             <span class="avatar" id="authAvatar">?</span>
             <span id="authBtnLabel">Sign in</span>
           </button>
+          <span id="creditsDisplay" style="display:none; font-size:11px; color:var(--muted); text-align:right;"></span>
           <div id="headerStatusPanel" style="display:flex; flex-direction:column; align-items:flex-end; gap:3px; padding-top:3px; max-width:260px;">
             <span id="resumeAnalysisStatus"     style="font-size:11.5px; min-height:14px; text-align:right;"></span>
             <span id="jobAnalysisStatus"        style="font-size:11.5px; min-height:14px; text-align:right;"></span>
@@ -973,17 +974,17 @@
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Facts</span>
-          <button class="btn mini" type="button" id="dlJobFacts">↓ job-facts.json</button>
-          <button class="btn mini ghost" type="button" id="cpJobFacts">Copy</button>
-          <button class="btn mini ghost" type="button" id="vwJobFacts">View</button>
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Resolved Strategy</span>
+          <button class="btn mini" type="button" id="dlJobResolved">↓ job-resolved.json</button>
+          <button class="btn mini ghost" type="button" id="cpJobResolved">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwJobResolved">View</button>
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
-          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Job Strategy</span>
-          <button class="btn mini" type="button" id="dlJobStrategy">↓ job-strategy.json</button>
-          <button class="btn mini ghost" type="button" id="cpJobStrategy">Copy</button>
-          <button class="btn mini ghost" type="button" id="vwJobStrategy">View</button>
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Error</span>
+          <button class="btn mini" type="button" id="dlJobError">↓ job-error.txt</button>
+          <button class="btn mini ghost" type="button" id="cpJobError">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwJobError">View</button>
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
@@ -1094,6 +1095,7 @@
 
     document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
     document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
+    if (!loggedIn) document.getElementById("creditsDisplay").style.display = "none";
 
     if (loggedIn) {
       document.getElementById("authUserEmail").textContent   = email;
@@ -1110,6 +1112,17 @@
         const dStr = dUnlimited ? "∞" : `${m.downloads_used}/${m.downloads_limit}`;
         document.getElementById("authQuotaBar").textContent =
           `Credits: ${cStr}  ·  Downloads: ${dStr}`;
+
+        const creditsEl = document.getElementById("creditsDisplay");
+        if (creditsEl) {
+          if (cUnlimited) {
+            creditsEl.textContent = "unlimited credits";
+          } else {
+            const remaining = (m.credits_limit ?? 0) - (m.credits_used ?? 0);
+            creditsEl.textContent = `${remaining} credit${remaining === 1 ? "" : "s"} remaining`;
+          }
+          creditsEl.style.display = "";
+        }
       }
     }
 

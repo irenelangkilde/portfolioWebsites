@@ -1,4 +1,4 @@
-import { getStore } from "@netlify/blobs";
+import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
 
 /**
  * Netlify Function: getPreviewResult
@@ -18,11 +18,14 @@ export async function handler(event) {
   }
 
   try {
-    const store = getStore({
-      name: "preview-results",
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_AUTH_TOKEN
-    });
+    const { store, configError } = getPreviewResultsStore();
+    if (!store) {
+      return {
+        statusCode: 500,
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ status: "error", error: configError })
+      };
+    }
     const result = await store.get(jobId);
 
     if (!result) {
@@ -43,7 +46,7 @@ export async function handler(event) {
     return {
       statusCode: 500,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ error: err?.message || "Unknown error" })
+      body: JSON.stringify({ error: explainBlobStoreError(err) })
     };
   }
 }

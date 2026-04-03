@@ -1,8 +1,8 @@
 import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { getStore } from "@netlify/blobs";
 import { createClient } from "@supabase/supabase-js";
+import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
 
 // ─── Supabase quota helpers ───────────────────────────────────────────────────
 
@@ -49,6 +49,20 @@ async function logUsageEvent(userId, fields) {
   const supabase = getSupabaseAdmin();
   if (!supabase || !userId) return;
   await supabase.from("usage_events").insert({ user_id: userId, ...fields });
+}
+
+async function logAnonUsage() {
+  const supabase = getSupabaseAdmin();
+  if (!supabase) return;
+  // Increment the single aggregate counter row (id=1) using a raw increment
+  await supabase.rpc("increment_anon_usage").catch(() => {
+    // Fallback if RPC not available: read then write
+    supabase.from("anon_usage").select("credits_used").eq("id", 1).single()
+      .then(({ data }) => {
+        if (data) supabase.from("anon_usage")
+          .update({ credits_used: data.credits_used + 1 }).eq("id", 1);
+      });
+  });
 }
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
@@ -1147,11 +1161,11 @@ export async function handler(event) {
   }
 
   try {
-    store = getStore({
-      name: "preview-results",
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_AUTH_TOKEN
-    });
+    const { store: previewStore, configError } = getPreviewResultsStore();
+    if (!previewStore) {
+      return { statusCode: 500, body: JSON.stringify({ error: configError }) };
+    }
+    store = previewStore;
 
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
@@ -1171,13 +1185,15 @@ export async function handler(event) {
     // ── Quota check (full mode only — this is the billable generation step) ──
     if (mode === "full") {
       if (!userId) {
-        await store.set(jobId, JSON.stringify({ status: "error", error: "Login required to generate a portfolio.", quota: true }), { ttl: 3600 });
-        return { statusCode: 202 };
-      }
-      const quota = await checkAndIncrementRendering(userId);
-      if (!quota.allowed) {
-        await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
-        return { statusCode: 202 };
+        // Anonymous user — soft limit enforced client-side via localStorage.
+        // Log to aggregate counter so usage can be monitored.
+        await logAnonUsage();
+      } else {
+        const quota = await checkAndIncrementRendering(userId);
+        if (!quota.allowed) {
+          await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
+          return { statusCode: 202 };
+        }
       }
     }
 
@@ -1298,7 +1314,7 @@ export async function handler(event) {
       provider
     });
   } catch (err) {
-    const msg = err?.message || "Unknown error";
+    const msg = explainBlobStoreError(err);
     console.error("buildWebsite-background error:", msg, err?.stack);
     if (store) {
       try {

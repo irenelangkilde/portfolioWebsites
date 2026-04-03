@@ -26,6 +26,8 @@
     // Job Ad Extraction (triggered on page 2 Next, parallel with resume analysis wait)
     let jobAdResult      = null;   // {job_ad: {...}} when done
     let jobAdInProgress  = false;
+    let jobAdErrorDetail = null;
+    let page2Submitted   = false;  // set true when user presses Next on page 2
 
     // Bridge Profile & Design (triggered on Colors Next)
     let bridgeResult      = null;   // {bridge_json, model} when done
@@ -39,7 +41,20 @@
       const tier = window.getSupabaseMembership?.()?.tier;
       return tier === "basic" || tier === "premium";
     }
+    const ANON_CREDIT_LIMIT = 5;
+    const ANON_CREDITS_KEY  = "anon_credits_used";
+
+    function getAnonCreditsUsed() {
+      return parseInt(localStorage.getItem(ANON_CREDITS_KEY) || "0", 10);
+    }
+    function incrementAnonCredits() {
+      localStorage.setItem(ANON_CREDITS_KEY, String(getAnonCreditsUsed() + 1));
+    }
+
     function hasCreditsRemaining() {
+      if (!currentUserId()) {
+        return getAnonCreditsUsed() < ANON_CREDIT_LIMIT;
+      }
       const m = window.getSupabaseMembership?.();
       if (!m) return true; // not loaded yet — don't block
       if (m.credits_limit === -1) return true; // unlimited
@@ -424,10 +439,28 @@
         btn.style.opacity = hasData ? "" : "0.35";
         btn.style.cursor  = hasData ? "" : "not-allowed";
       });
-      if (!hasData) return;
+      if (!hasData) {
+        if (dl) dl.onclick = null;
+        if (cp) cp.onclick = null;
+        if (vw) vw.onclick = null;
+        return;
+      }
       if (dl) dl.onclick = () => downloadText(filename, str, "application/json");
       if (cp) cp.onclick = e => copyToClipboard(str, e.currentTarget);
       if (vw) vw.onclick = () => viewJson(str);
+    }
+
+    function toDebugText(value) {
+      if (value == null) return null;
+      if (typeof value === "string") return value;
+      try { return JSON.stringify(value, null, 2); }
+      catch { return String(value); }
+    }
+
+    function summarizeDebugText(value, maxLen = 140) {
+      const text = (toDebugText(value) || "").replace(/\s+/g, " ").trim();
+      if (!text) return "";
+      return text.length > maxLen ? text.slice(0, maxLen - 1) + "…" : text;
     }
 
     function populateResumeDebugPanel(json) {
@@ -1616,6 +1649,7 @@
 
       jobAdResult     = null;
       jobAdInProgress = true;
+      jobAdErrorDetail = null;
       const jobAdCountdown = startCountdown("jobAnalysisStatus", "Analyzing job info…", 120);
 
       const jobId = "jobad_" + crypto.randomUUID();
@@ -1634,9 +1668,10 @@
         });
         if (!res.ok && res.status !== 202) {
           const errBody = await res.text().catch(() => "");
+          jobAdErrorDetail = { stage: "request", status: res.status, body: errBody };
           clearInterval(jobAdCountdown);
           setHeaderStatus("jobAnalysisStatus", `Job extraction failed (HTTP ${res.status}): ${errBody.slice(0, 120)}`, "rgba(251,171,156,.8)");
-          if (isDebugMode()) wireDebugRow("JobError", `HTTP ${res.status}\n${errBody}`, "job-error.txt");
+          if (isDebugMode()) wireDebugRow("JobError", toDebugText(jobAdErrorDetail), "job-error.txt");
           jobAdInProgress = false;
           return;
         }
@@ -1646,15 +1681,38 @@
         while (Date.now() - startTime < 120000) {
           await new Promise(r => setTimeout(r, 2500));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          lastPollData = await pollRes.json().catch(() => ({ _http: pollRes.status }));
+          lastPollData = await pollRes.json().catch(async () => ({
+            status: pollRes.ok ? "pending" : "error",
+            poll_status: pollRes.status,
+            raw_body: await pollRes.text().catch(() => "")
+          }));
+          if (!pollRes.ok) {
+            jobAdErrorDetail = lastPollData?.error
+              ? lastPollData
+              : { stage: "poll", status: pollRes.status, details: lastPollData };
+            populateJobAdDebug({ error: jobAdErrorDetail, job_resolved: null });
+            break;
+          }
           if (lastPollData.status === "done") { jobAdResult = lastPollData; populateJobAdDebug(lastPollData); break; }
-          if (lastPollData.status === "error") { populateJobAdDebug(lastPollData); break; }
+          if (lastPollData.status === "error") {
+            jobAdErrorDetail = lastPollData?.error ?? lastPollData;
+            populateJobAdDebug(lastPollData);
+            break;
+          }
         }
         if (!jobAdResult && isDebugMode()) {
-          wireDebugRow("JobError", "Poll timed out. Last blob response:\n" + JSON.stringify(lastPollData, null, 2), "job-error.txt");
+          if (!jobAdErrorDetail) {
+            jobAdErrorDetail = {
+              stage: "poll-timeout",
+              message: "Poll timed out waiting for job extraction result.",
+              last_blob_response: lastPollData
+            };
+          }
+          wireDebugRow("JobError", toDebugText(jobAdErrorDetail), "job-error.txt");
         }
       } catch (err) {
-        if (isDebugMode()) wireDebugRow("JobError", "Client exception: " + (err?.message || String(err)), "job-error.txt");
+        jobAdErrorDetail = { stage: "client", message: err?.message || String(err) };
+        if (isDebugMode()) wireDebugRow("JobError", toDebugText(jobAdErrorDetail), "job-error.txt");
       }
 
       clearInterval(jobAdCountdown);
@@ -1662,7 +1720,8 @@
       if (jobAdResult) {
         setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted", "rgba(118,176,34,.9)");
       } else {
-        setHeaderStatus("jobAnalysisStatus", "Job extraction failed — see JobError in debug panel", "rgba(251,171,156,.8)");
+        const detail = summarizeDebugText(jobAdErrorDetail || "see JobError in debug panel", 110);
+        setHeaderStatus("jobAnalysisStatus", `Job extraction failed — ${detail || "see JobError in debug panel"}`, "rgba(251,171,156,.8)");
       }
     }
 
@@ -1806,7 +1865,7 @@
     }
 
     function populateJobAdDebug(data) {
-      if (data?.error) wireDebugRow("JobError", data.error, "job-error.txt");
+      wireDebugRow("JobError", toDebugText(data?.error ?? jobAdErrorDetail), "job-error.txt");
       wireDebugRow("JobResolved", JSON.stringify(data?.job_resolved ?? null, null, 2), "job-resolved.json");
       if (isDebugMode()) mergeTokenReport(data?.token_report);
     }
@@ -1884,7 +1943,30 @@
         return;
       }
 
-      const renderCountdown = startCountdown("generatingWebsiteStatus", "Generating portfolio…", 720);
+      setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+
+      // If the job ad field has content but page 2 hasn't been submitted yet, wait silently
+      const jobAdFieldText = [
+        document.getElementById("desiredRole")?.value?.trim(),
+        document.getElementById("jobAd")?.value?.trim()
+      ].filter(Boolean).join("").trim();
+      if (jobAdFieldText && !page2Submitted) {
+        setHeaderStatus("generatingWebsiteStatus", "Waiting for job ad step…", "rgba(141,224,255,.6)");
+        while (!page2Submitted) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+      }
+
+      // If job extraction is still running, wait for it
+      if (jobAdInProgress) {
+        setHeaderStatus("generatingWebsiteStatus", "Waiting for job analysis…", "rgba(141,224,255,.6)");
+        while (jobAdInProgress) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+      }
+      const renderCountdown = null;
 
       let resumePdfBase64 = "";
       try {
@@ -1947,6 +2029,7 @@
             clearInterval(renderCountdown);
             generationResult    = data;
             generationInProgress = false;
+            if (!currentUserId()) incrementAnonCredits();
             setHeaderStatus("generatingWebsiteStatus", "✓ Website generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             populateGenerationDebug(data);
@@ -2002,9 +2085,8 @@
     }
 
     async function doPreview() {
-      if (!currentUserId()) {
-        setHeaderStatus("generatingWebsiteStatus", "Sign in to generate your portfolio.", "rgba(251,171,156,.9)");
-        if (typeof openAuthModal === "function") openAuthModal();
+      if (!currentUserId() && !hasCreditsRemaining()) {
+        showUpgradePrompt({ tier: "free", used: ANON_CREDIT_LIMIT, limit: ANON_CREDIT_LIMIT, anon: true });
         return;
       }
       if (generationInProgress) {
@@ -2329,7 +2411,7 @@
     document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
 
     // Page 2 (Job)
-    function page2Action() { onEnterPage2(); doAnalyzeAndExtractJobAd(); }
+    function page2Action() { page2Submitted = true; onEnterPage2(); doAnalyzeAndExtractJobAd(); }
     document.getElementById("back5")?.addEventListener("click", () => setStep(1));
     document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
     document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);

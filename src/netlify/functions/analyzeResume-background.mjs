@@ -1,6 +1,6 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
-import { getStore } from "@netlify/blobs";
+import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
 
 /**
  * Netlify Background Function: analyzeResume-background
@@ -23,11 +23,11 @@ export async function handler(event) {
   }
 
   try {
-    store = getStore({
-      name: "preview-results",
-      siteID: process.env.NETLIFY_SITE_ID,
-      token: process.env.NETLIFY_AUTH_TOKEN
-    });
+    const { store: previewStore, configError } = getPreviewResultsStore();
+    if (!previewStore) {
+      return { statusCode: 500, body: JSON.stringify({ error: configError }) };
+    }
+    store = previewStore;
 
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
 
@@ -89,7 +89,7 @@ export async function handler(event) {
             { type: "input_file", filename: "resume.pdf", file_data: `data:application/pdf;base64,${resumePdfBase64}` },
             { type: "input_text", text: filledPrompt + "\n\nAnalyze this resume according to the instructions above. Return valid JSON only." }
           ]}],
-          max_output_tokens: 12000
+          max_output_tokens: 16000
         })
       });
       const text = await res.text();
@@ -111,7 +111,7 @@ export async function handler(event) {
         headers: { "content-type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
         body: JSON.stringify({
           model: "claude-sonnet-4-6",
-          max_tokens: 12000,
+          max_tokens: 16000,
           system: filledPrompt,
           messages: [{
             role: "user",
@@ -152,7 +152,7 @@ export async function handler(event) {
 
     await store.set(jobId, JSON.stringify({ status: "done", ...analysisJson }), { ttl: 3600 });
   } catch (err) {
-    const msg = err?.message || "Unknown error";
+    const msg = explainBlobStoreError(err);
     console.error("analyzeResume-background error:", msg);
     if (store) {
       try {
