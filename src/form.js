@@ -22,11 +22,6 @@
     let generationError     = null;  // error message on failure
     let generationInProgress = false;
 
-    // Pre-computed job+resume strategy (triggered on Job Next, consumed by doGenerateWebsite)
-    let jobAnalysisResult     = null;   // {strategy_json, resume_json} when done
-    let jobAnalysisInProgress = false;
-
-
     // Job Ad Extraction (triggered on page 2 Next, parallel with resume analysis wait)
     let jobAdResult      = null;   // {job_ad: {...}} when done
     let jobAdInProgress  = false;
@@ -324,7 +319,7 @@
       // Show/hide consolidated stage debug section on page 5
       document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug);
       if (debug) populateJobAdDebug(jobAdResult);
-      if (debug) wireStage2Debug(jobAnalysisResult);
+      if (debug) wireStage2Debug();
       if (debug) populateBridgeDebug(bridgeResult);
       if (debug) populateTemplateExtractPanel(extractedTemplateCache ?? {});
       if (debug) greyRendererButtons(!generationResult);
@@ -428,9 +423,11 @@
     function populateResumeDebugPanel(json) {
       const facts    = json?.resume_facts    ?? json;
       const strategy = json?.resume_strategy ?? null;
+      const resolved = json?.resume_resolved ?? null;
 
       wireDebugRow("ResumeFacts",    JSON.stringify(facts,    null, 2), "resume-facts.json");
       wireDebugRow("ResumeStrategy", JSON.stringify(strategy, null, 2), "resume-strategy.json");
+      wireDebugRow("ResumeResolved", JSON.stringify(resolved, null, 2), "resume-resolved.json");
 
       applyColorDefaults(json);
     }
@@ -1606,6 +1603,7 @@
             jobId,
             jobAdText: rawText,
             resumeStrategy: lastAnalysisData?.resume_strategy || null,
+            resumeFacts:    lastAnalysisData?.resume_facts    || null,
             provider: getAnalysisProvider()
           })
         });
@@ -1636,83 +1634,19 @@
     }
 
     // ----------------------------
-    // Stage 2: Content strategy — triggered by doAnalyzeAndExtractJobAd after both
-    // resume analysis (Stage 1) and job ad extraction are complete.
-    // ----------------------------
-    async function doUnifyResumeAndJobAnalyses() {
-      const p4 = getPage4Job();
-      if (!p4.desired_role && !p4.job_ad.trim()) return;
-
-      setHeaderStatus("jobAnalysisStatus", "Building content strategy…", "rgba(141,224,255,.75)");
-
-      if (!lastAnalysisData) {
-        setHeaderStatus("jobAnalysisStatus", "Skipping — resume not yet analyzed", "rgba(251,171,156,.6)");
-        return;
-      }
-
-      jobAnalysisResult     = null;
-      jobAnalysisInProgress = true;
-      const unifyCountdown = startCountdown("jobAnalysisStatus", "Building content strategy…", 300);
-
-      const jobId = "job_" + crypto.randomUUID();
-      try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            mode: "analyzeJob",
-            jobId,
-            resumeAnalysisJson: lastAnalysisData,
-            jobAdJson: jobAdResult,
-            page3: p4,
-            provider: getAnalysisProvider()
-          })
-        });
-        if (!res.ok && res.status !== 202) {
-          clearInterval(unifyCountdown);
-          jobAnalysisInProgress = false;
-          return;
-        }
-
-        const startTime = Date.now();
-        while (Date.now() - startTime < 300000) {
-          await new Promise(r => setTimeout(r, 3000));
-          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          const data = await pollRes.json().catch(() => ({}));
-          if (data.status === "done")  { jobAnalysisResult = data; break; }
-          if (data.status === "error") { break; }
-        }
-      } catch { /* silent — doGenerateWebsite will recompute if needed */ }
-
-      clearInterval(unifyCountdown);
-      jobAnalysisInProgress = false;
-      if (jobAnalysisResult) {
-        setHeaderStatus("jobAnalysisStatus", "✓ Content strategy ready", "rgba(118,176,34,.9)");
-        wireStage2Debug(jobAnalysisResult);
-      } else {
-        setHeaderStatus("jobAnalysisStatus", "Content strategy unavailable — will retry on generate", "rgba(251,171,156,.8)");
-      }
-    }
-
-    // ----------------------------
     // Orchestrator — triggered on page 2 (Job) Next
-    // Waits for resume analysis (job extraction needs resume_strategy), then fires job ad
-    // extraction, then unifies.
+    // Waits for resume analysis (extractJobAd needs resume_strategy + resume_facts), then fires
+    // job ad extraction. job_resolved from extractJobAd IS the resolved strategy — no separate
+    // unification step needed.
     // ----------------------------
     async function doAnalyzeAndExtractJobAd() {
-      // Block until Stage 1 (resume analysis) is finished — extractJobAd needs resume_strategy
+      // Block until Stage 1 (resume analysis) is finished
       while (resumeAnalysisPending) {
         await new Promise(r => setTimeout(r, 500));
       }
 
-      doExtractJobAd(); // fire after resume analysis so resume_strategy is available
-
-      // Block until job ad extraction is finished
-      while (jobAdInProgress) {
-        await new Promise(r => setTimeout(r, 500));
-      }
-
-      await doUnifyResumeAndJobAnalyses();
+      await doExtractJobAd();
+      if (jobAdResult) wireStage2Debug();
     }
 
     // ----------------------------
@@ -1727,8 +1661,8 @@
       const reportEl = document.getElementById("tokenReport");
       if (reportEl) reportEl.style.display = "none";
 
-      // Block until Stage 2 (content strategy) is finished
-      while (jobAnalysisInProgress) {
+      // Block until job ad extraction is finished (job_resolved is produced there)
+      while (jobAdInProgress) {
         await new Promise(r => setTimeout(r, 500));
       }
 
@@ -1744,7 +1678,7 @@
             jobId,
             templateHtml: extractedTemplateCache?.templateHtml || null,
             templateMode: extractedTemplateCache?.templateMode || "none",
-            contentJson:  jobAnalysisResult?.strategy_json || lastAnalysisData?.resume_strategy || null,
+            contentJson:  jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null,
             colorSpec:    getPage3Colors().theme,
             provider:     getAnalysisProvider()
           })
@@ -1789,12 +1723,10 @@
         page3:               getPage2Template(),
         page4:               getPage3Colors(),
         resumePdf:           resumeFile ? `${resumeFile.name} (${Math.round(resumeFile.size / 1024)} KB)` : null,
-        resumeAnalysisJson:  jobAnalysisResult?.resume_json || lastAnalysisData || null,
+        resumeAnalysisJson:  lastAnalysisData || null,
         templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
         templateHtml:        extractedTemplateCache?.templateHtml ? `(${extractedTemplateCache.templateHtml.length} chars)` : null,
-        strategyJson:        jobAnalysisResult?.strategy_json
-                               ? jobAnalysisResult.strategy_json
-                               : "(same as resumeAnalysisJson.resume_strategy)",
+        resolvedStrategy:    jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null,
         bridgeJson:          bridgeResult?.bridge_json || null,
       };
       wireDebugRow("DebugPayload", JSON.stringify(payload, null, 2), "payload.json");
@@ -1839,7 +1771,7 @@
 
     function populateJobAdDebug(data) {
       wireDebugRow("JobFacts",    JSON.stringify(data?.job_facts    ?? null, null, 2), "job-facts.json");
-      wireDebugRow("JobStrategy", JSON.stringify(data?.job_strategy ?? null, null, 2), "job-strategy.json");
+      wireDebugRow("JobResolved", JSON.stringify(data?.job_resolved ?? null, null, 2), "job-resolved.json");
       if (isDebugMode()) mergeTokenReport(data?.token_report);
     }
 
@@ -1847,9 +1779,9 @@
     // Wire Stage 2 (Unified Strategy) debug buttons — called from doUnifyResumeAndJobAnalyses
     // AND from populateGenerationDebug so both paths keep buttons live.
     // ----------------------------
-    function wireStage2Debug(data) {
-      const strategyJson = data?.strategy_json ?? data ?? lastAnalysisData?.resume_strategy ?? null;
-      wireDebugRow("Stage2", JSON.stringify(strategyJson, null, 2), "unified-strategy.json");
+    function wireStage2Debug() {
+      const resolved = jobAdResult?.job_resolved ?? lastAnalysisData?.resume_resolved ?? null;
+      wireDebugRow("Stage2", JSON.stringify(resolved, null, 2), "resolved-strategy.json");
     }
 
     // ----------------------------
@@ -1946,10 +1878,10 @@
           body: JSON.stringify({
             page1, page2, page3, artifactsData: [],
             jobId, resumePdfBase64, headshotName,
-            resumeAnalysisJson:   jobAnalysisResult?.resume_json || lastAnalysisData || null,
+            resumeAnalysisJson:   lastAnalysisData || null,
             templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
             templateHtml:         extractedTemplateCache?.templateHtml || null,
-            strategyJson:         jobAnalysisResult?.strategy_json || lastAnalysisData?.resume_strategy || null,
+            strategyJson:         jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null,
             bridgeJson:           bridgeResult?.bridge_json || null,
             provider:             getAnalysisProvider(),
             userId:               currentUserId()

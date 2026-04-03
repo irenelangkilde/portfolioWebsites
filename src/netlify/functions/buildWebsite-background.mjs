@@ -595,8 +595,7 @@ function trimAboutToLength(text, targetWords) {
 
 function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null) {
   const personal = resumeJson?.personal || {};
-  // unified_strategy has strategy.positioning.{headline,subheadline,value_proposition}
-  // resume_strategy (no job analysis) has strategy.website_copy_seed.{hero_headline_options, hero_subheadline_options, value_propositions}
+  // resolved strategy (job_resolved or resume_resolved) has strategy.positioning.{headline,subheadline,value_proposition}
   const _coreStory = strategy?.editorial_direction?.core_story || "";
   const _firstSentence = _coreStory.match(/^[^.!?]*[.!?]/)?.[0]?.trim() || _coreStory;
   const pos = strategy?.positioning || {
@@ -608,7 +607,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   };
   const edu0 = (resumeJson?.education || [])[0] || {};
 
-  // Merged copy seed: prefer unified_strategy fields when present, fall back to resume_strategy
+  // Merged copy seed: prefer resolved strategy (job_resolved/resume_resolved) copy seed; fall back to resume_strategy options
   const copySeed = strategy?.website_copy_seed || resumeStrategy?.website_copy_seed || {};
 
   // Convert skills object → skill_groups array, applying AI-generated subcategory labels
@@ -879,28 +878,13 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
     resumeJson = parseJsonResponse(r2.text);
   }
 
-  // Stage 2: Content strategy — pass strategy slices + facts reference
-  await store.set(jobId, JSON.stringify({
-    status: "pending", stage: "Content strategy (2/2)…"
-  }), { ttl: 3600 });
-
-  const resumeFacts    = resumeJson?.resume_facts    ?? resumeJson;   // fallback: old flat schema
-  const resumeStrategy = resumeJson?.resume_strategy ?? null;
-  const jobStrategy    = jobAdJson?.job_strategy     ?? null;
-
-  const contentPrompt = loadPromptFile("buildContentStrategy.md")
-    .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
-    .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(jobStrategy, null, 2))
-    .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
-
-  const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
-  tokenReport.push({ stage: "2 · Content strategy", model: contentResponse.model, ...contentResponse.usage });
-  const aiStrategy = parseJsonResponse(contentResponse.text);
+  // Stage 2: job_resolved is already the resolved strategy — no separate unification step needed
+  const jobResolved = jobAdJson?.job_resolved ?? null;
 
   await store.set(jobId, JSON.stringify({
-    status: "done",
-    strategy_json: aiStrategy,  // contains unified_strategy
-    resume_json:   resumeJson,  // full object with resume_facts + resume_strategy
+    status:        "done",
+    strategy_json: jobResolved,  // job_resolved IS the resolved strategy
+    resume_json:   resumeJson,   // full object with resume_facts + resume_strategy + resume_resolved
     token_report:  tokenReport
   }), { ttl: 3600 });
 }
@@ -935,32 +919,39 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     resumeJson = parseJsonResponse(r2.text);
   }
 
-  // ── Stage 2: buildContentStrategy.md → unified_strategy ─────────────────
-  // Skip if a pre-computed strategyJson was provided by unifyResumeAndJobAnalyses.
+  // ── Stage 2: resolve strategy ────────────────────────────────────────────────
+  // strategyJson is job_resolved (job path) or resume_resolved (no-job path) — use directly.
+  // Falls back to resume_resolved embedded in resumeJson, then to buildContentStrategy.md legacy path.
   const resumeFacts    = resumeJson?.resume_facts    ?? resumeJson;   // fallback: old flat schema
   const resumeStrategy = resumeJson?.resume_strategy ?? null;
 
   let aiStrategy;
   if (strategyJson) {
-    aiStrategy = strategyJson.unified_strategy ?? strategyJson.strategy ?? strategyJson;
+    // New split schema: strategyJson IS the resolved strategy (job_resolved or resume_resolved)
+    aiStrategy = strategyJson;
+  } else if (resumeJson?.resume_resolved) {
+    // No job — use resume_resolved embedded in the resume analysis
+    aiStrategy = resumeJson.resume_resolved;
   } else {
+    // Legacy fallback: run buildContentStrategy.md for old analyses without resume_resolved
     await store.set(jobId, JSON.stringify({
       status: "pending", stage: "Content strategy (2/4)…"
     }), { ttl: 3600 });
 
     const contentPrompt = loadPromptFile("buildContentStrategy.md")
       .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
-      .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(null, null, 2))  // not available in full pipeline fallback
+      .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(null, null, 2))
       .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
     const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
-    tokenReport.push({ stage: "2 · Content strategy", model: contentResponse.model, ...contentResponse.usage });
-    aiStrategy = parseJsonResponse(contentResponse.text);
+    tokenReport.push({ stage: "2 · Content strategy (legacy)", model: contentResponse.model, ...contentResponse.usage });
+    const legacyResult = parseJsonResponse(contentResponse.text);
+    aiStrategy = legacyResult.unified_strategy ?? legacyResult.strategy ?? legacyResult;
   }
 
   // Construct source_facts from resume_facts — no AI re-extraction.
   const coreContent = {
-    strategy: aiStrategy.unified_strategy ?? aiStrategy.strategy ?? aiStrategy,
+    strategy: aiStrategy,
     source_facts: {
       identity: resumeFacts.identity ?? {},
       ...(resumeFacts.factual_profile ?? {})
@@ -1074,7 +1065,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       }));
     }
     const mustacheData = flattenToMustacheData(
-      coreContent.strategy?.positioning ? coreContent.strategy : (coreContent.strategy?.strategy || coreContent.strategy),
+      coreContent.strategy,
       toFlatResumeSchema(resumeFacts),
       colorSpec,
       resumeStrategy,
@@ -1228,14 +1219,19 @@ export async function handler(event) {
         return { statusCode: 202 };
       }
       const resumeStrategy = body.resumeStrategy || null;
+      const resumeFacts    = body.resumeFacts    || null;
       const prompt = loadPromptFile("extractJobAdInfo.md")
         .replace("{{RESUME_STRATEGY_JSON}}", JSON.stringify(resumeStrategy, null, 2))
+        .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts, null, 2))
         .replace("{{JOB_AD}}", rawJobAd);
       const r = await callAI(provider, creds, { userText: prompt, maxTokens: 5000 });
-      let job_ad = null;
-      try { job_ad = parseJsonResponse(r.text); } catch {}
+      let parsed = null;
+      try { parsed = parseJsonResponse(r.text); } catch {}
       await store.set(jobId, JSON.stringify({
-        status: "done", ...(job_ad || {}), model: r.model,
+        status:      "done",
+        job_facts:   parsed?.job_facts   || null,
+        job_resolved: parsed?.job_resolved || null,
+        model:       r.model,
         token_report: [{ stage: "2a · Job ad extract", model: r.model, ...r.usage }]
       }), { ttl: 3600 });
       return { statusCode: 202 };
