@@ -317,8 +317,8 @@
       });
       // templateModeRow requires both debug mode AND keyword source — re-evaluate now
       updateTemplateUI();
-      // Show/hide consolidated stage debug section on page 5
-      document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug);
+      // Show debug panel if debug enabled and we're on page 2+ (step 2+)
+      document.getElementById("stagesDebugSection")?.classList.toggle("hidden", !debug || currentStep < 2);
       if (debug) populateJobAdDebug(jobAdResult);
       if (debug) wireStage2Debug();
       if (debug) populateBridgeDebug(bridgeResult);
@@ -664,6 +664,10 @@
         const el = document.getElementById(pageId);
         if (el) el.classList.toggle("hidden", pageId !== activePageId);
       });
+      // Show debug panel on pages 2-5 (steps 2+), hide on overview/resume
+      if (isDebugMode()) {
+        document.getElementById("stagesDebugSection")?.classList.toggle("hidden", currentStep < 2);
+      }
       renderStepUI();
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (currentStep === 3) updateTemplateUI();
