@@ -336,20 +336,15 @@
     // Resume analysis (background)
     // ----------------------------
     function updateSubmitReadiness() {
-      // Page 5 buttons are managed by setApplyBtnState(); just update the readiness message.
-      const msg = document.getElementById("submitReadinessMsg");
-      if (!msg) return;
-      const resumePending  = !!resumeAnalysisPending;
-      const extractPending = !!extractTemplatePending;
-      const busy = resumePending || extractPending;
-      if (busy) {
-        const parts = [];
-        if (resumePending)  parts.push("resume analysis");
-        if (extractPending) parts.push("template extraction");
-        msg.textContent = `Waiting for ${parts.join(" and ")} to complete…`;
-        msg.style.display = "block";
-      } else {
-        msg.style.display = "none";
+      // Show/hide the resume-pending notice near the Colors Next button
+      const notice = document.getElementById("resumePendingNotice");
+      if (notice) notice.style.display = resumeAnalysisPending ? "block" : "none";
+
+      // Update suggested palettes status message
+      const palMsg = document.getElementById("suggestedPalettesMsg");
+      if (palMsg && resumeAnalysisPending) {
+        palMsg.textContent = "Analyzing resume…";
+        palMsg.style.color = "rgba(141,224,255,.7)";
       }
     }
 
@@ -477,6 +472,8 @@
         setResumeAnalysisStatus("✓ Resume analyzed (cached)", "rgba(118,176,34,.9)");
         populateResumeDebugPanel(cachedData);
         renderSuggestedPalettes(cachedData);
+        const notice = document.getElementById("resumePendingNotice");
+        if (notice) notice.style.display = "none";
         return;
       }
 
@@ -590,6 +587,11 @@
         setResumeAnalysisStatus("✓ Resume analyzed", "rgba(118,176,34,.9)");
         populateResumeDebugPanel(data);
         renderSuggestedPalettes(data);
+        // Clear the pending notices now that analysis is done
+        const notice = document.getElementById("resumePendingNotice");
+        if (notice) notice.style.display = "none";
+        const palMsg = document.getElementById("suggestedPalettesMsg");
+        if (palMsg && palMsg.textContent === "Analyzing resume…") palMsg.textContent = "";
       };
 
       setTimeout(poll, POLL_INTERVAL_MS);
