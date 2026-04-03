@@ -14,6 +14,7 @@
     let resumeAnalysisCache = null;   // parsed JSON from analyzeResume (debug mode only)
     let lastAnalysisData    = null;   // always set after analysis — used for palette rendering
     let resumeAnalysisPending = false; // true while request in flight
+    let _resumeAnalysisRunId  = 0;    // incremented on each new call; polling loop checks for staleness
 
     // ----------------------------
     // Generation state
@@ -461,6 +462,9 @@
         return;
       }
 
+      // Bump run ID — any in-flight poll loop will see its ID is stale and exit
+      const myRunId = ++_resumeAnalysisRunId;
+
       // Check localStorage cache before hitting the API
       let cachedData = null;
       try {
@@ -526,6 +530,7 @@
       const pollStart = Date.now();
 
       const poll = async () => {
+        if (myRunId !== _resumeAnalysisRunId) { clearInterval(countdownTimer); return; } // superseded by newer call
         if (!resumeAnalysisPending) return; // cancelled externally (e.g. new file uploaded)
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
           clearInterval(countdownTimer);
