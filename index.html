@@ -1135,6 +1135,20 @@
     document.getElementById("authMsg").textContent = "";
   }
 
+  function getEmailRedirectUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  function formatAuthError(error) {
+    if (!error) return "Unknown authentication error.";
+
+    if (error.message === "Error sending confirmation email") {
+      return "Supabase could not send the confirmation email. Check Supabase Auth email settings, SMTP configuration, and allowed redirect URLs.";
+    }
+
+    return error.message || "Authentication failed.";
+  }
+
   async function handleAuthSubmit() {
     const email    = document.getElementById("authEmail").value.trim();
     const password = document.getElementById("authPassword").value;
@@ -1147,8 +1161,21 @@
 
     if (_authTab === "signup") {
       if (password !== confirm) { msgEl.className = "authMsg err"; msgEl.textContent = "Passwords don't match."; return; }
-      const { error } = await _supabase.auth.signUp({ email, password });
-      if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
+      const { error } = await _supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: getEmailRedirectUrl() }
+      });
+      if (error) {
+        console.error("Supabase signUp error:", {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          name: error.name
+        });
+        msgEl.className = "authMsg err";
+        msgEl.textContent = formatAuthError(error);
+      }
       else        { msgEl.className = "authMsg ok";  msgEl.textContent = "Check your email to confirm your account."; }
     } else {
       const { error } = await _supabase.auth.signInWithPassword({ email, password });
