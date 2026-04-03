@@ -617,12 +617,12 @@
     const PAGES = [
       { id: "page0", label: "0 Overview" },
       { id: "page1", label: "1 Resume" },
-      { id: "page5", label: "2 Job" },
+      { id: "page2", label: "2 Job" },
       { id: "page3", label: "3 Design" },
       { id: "page4", label: "4 Colors" },
-      { id: "page2",  label: "5 Visuals" },
-      { id: "page2b", pageId: "page2", label: "6 Edit" },
-      { id: "page2c", pageId: "page2", label: "7 Publish" },
+      { id: "page5",  label: "5 Visuals" },
+      { id: "page5b", pageId: "page5", label: "6 Edit" },
+      { id: "page5c", pageId: "page5", label: "7 Publish" },
     ];
     let currentStep = 0;
 
