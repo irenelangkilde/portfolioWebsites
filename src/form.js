@@ -111,6 +111,20 @@
       const pickerWrap  = document.getElementById("unitPickerWrap");
       const qtyInput    = document.getElementById("unitQty");
 
+      // Anonymous user: prompt sign-in rather than upgrade
+      if (data.anon) {
+        if (msgEl) msgEl.textContent =
+          `You've used ${used} of ${limit} free previews. Sign in to keep going.`;
+        if (pickerWrap) pickerWrap.classList.add("hidden");
+        if (linkEl) {
+          linkEl.textContent = "Sign in";
+          linkEl.href = "#";
+          linkEl.onclick = e => { e.preventDefault(); if (typeof openAuthModal === "function") openAuthModal(); };
+        }
+        if (prompt) prompt.classList.remove("hidden");
+        return;
+      }
+
       if (msgEl) msgEl.textContent =
         `You've used ${used} of ${limit} credits on the ${tier} plan. Upgrade to ${tierLabels[nextTier] || nextTier} for more.`;
 

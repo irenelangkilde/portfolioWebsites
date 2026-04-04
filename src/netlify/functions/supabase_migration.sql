@@ -153,3 +153,32 @@ create policy "users update own sessions"
 create policy "users delete own sessions"
   on public.saved_sessions for delete
   using (auth.uid() = user_id);
+
+
+-- ── 5. Anonymous usage aggregate ────────────────────────────
+-- Single-row counter for unauthenticated (anonymous) generations.
+-- credits_used increments on each anonymous generation so aggregate
+-- usage can be monitored and rate-limit strategy revisited later.
+-- No FK to auth.users — this is a global counter, not a per-user row.
+
+create table if not exists public.anon_usage (
+  id           integer primary key default 1,
+  credits_used integer not null default 0,
+  updated_at   timestamptz not null default now(),
+  constraint single_row check (id = 1)
+);
+
+insert into public.anon_usage (id, credits_used) values (1, 0)
+  on conflict (id) do nothing;
+
+create trigger anon_usage_updated_at
+  before update on public.anon_usage
+  for each row execute procedure public.set_updated_at();
+
+-- Service role can read/write; no RLS needed (no user data here).
+
+-- Atomic increment function used by Netlify functions
+create or replace function public.increment_anon_usage()
+returns void language sql security definer as $$
+  update public.anon_usage set credits_used = credits_used + 1 where id = 1;
+$$;
