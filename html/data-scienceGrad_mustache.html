@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- { "default_color_scheme": { "primary": "#6b55ff", "secondary": "#4E70F1", "accent": "#ff7bbd", "dark": "#15141a", "light": "#fbfaf8" }, "hero_card_types": ["highlights"], "hero_card_skill_groups": 0 } -->
+  <!-- { "default_color_scheme": { "primary": "#6b55ff", "secondary": "#4E70F1", "tertiary": "#ff7bbd", "dark": "#15141a", "light": "#fbfaf8" }, "about_word_count": 40, "hero_card_map": [] } -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} — {{major}} Graduate Portfolio</title>
   <meta name="description" content="Portfolio for {{name}}: projects, writing, skills, and contact." />
@@ -12,11 +12,11 @@
   <style>
     :root{
       /* Five main theme colors */
-      --color-bg:      #fbfaf8;   /* 1. Canvas      — warm off-white page background  */
-      --color-surface: #ffffff;   /* 2. Panel        — pure white card / paper surface */
-      --color-ink:     #15141a;   /* 3. OnCanvas     — near-black body text            */
-      --color-accent:  #6b55ff;   /* 4. Interactive  — violet, CTAs & links            */
-      --color-pop:     #ff7bbd;   /* 5. Pop          — pink highlight / gradient pair  */
+      --color-bg:      #fbfaf8;   /* 1. Canvas      — warm off-white page background   */
+      --color-surface: #ffffff;   /* 2. Panel        — pure white card / section surface */
+      --color-accent:  #6b55ff;   /* 3. Interactive  — violet, CTAs & links             */
+      --color-accent2: #ff7bbd;   /* 4. Pop          — pink, gradient partner & accents */
+      --color-ink:     #15141a;   /* 5. OnCanvas     — near-black body text             */
 
       /* Theme-independent hard-coded neutrals */
       --white:   #ffffff;
@@ -24,35 +24,25 @@
       --blue:    #4E70F1;
 
       /* Derived tokens */
-      --muted:   color-mix(in srgb, var(--color-ink) 42%, var(--color-bg));
-      --soft:    color-mix(in srgb, var(--color-bg) 72%, var(--color-ink));
-      --soft2:   color-mix(in srgb, var(--color-bg) 85%, var(--color-ink));
+      --muted:   color-mix(in srgb, var(--color-ink) 40%, var(--color-bg));
+      --soft:    color-mix(in srgb, var(--color-bg) 85%, var(--color-ink));
+      --soft2:   color-mix(in srgb, var(--color-bg) 92%, var(--color-ink));
       --border:  color-mix(in srgb, var(--color-ink) 10%, transparent);
-      --shadow:  0 18px 55px color-mix(in srgb, var(--color-ink) 10%, transparent);
-
-      --tag-bg:      color-mix(in srgb, var(--color-accent) 8%, transparent);
-      --tag-border:  color-mix(in srgb, var(--color-accent) 14%, transparent);
-      --kicker-bg:   color-mix(in srgb, var(--color-accent) 8%, transparent);
-      --kicker-border: color-mix(in srgb, var(--color-accent) 14%, transparent);
-      --dot-gradient: linear-gradient(135deg, var(--color-accent), var(--color-pop));
-      --monogram-gradient: linear-gradient(135deg, var(--color-accent), var(--color-pop));
-      --btn-primary-bg: linear-gradient(135deg, var(--blue), var(--color-accent));
-      --card-glow: radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 45%),
-                   radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--color-pop) 10%, transparent), transparent 45%);
-      --tick-bg:   linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 18%, transparent), color-mix(in srgb, var(--color-pop) 18%, transparent));
-      --tick-border: color-mix(in srgb, var(--color-accent) 14%, transparent);
-      --contact-card-bg: linear-gradient(135deg, color-mix(in srgb, var(--blue) 10%, transparent), color-mix(in srgb, var(--color-pop) 8%, transparent));
-      --card-surface: color-mix(in srgb, var(--color-surface) 75%, transparent);
-      --hero-copy-bg: color-mix(in srgb, var(--color-surface) 70%, transparent);
-      --skill-bg:  color-mix(in srgb, var(--color-surface) 85%, transparent);
-      --nav-hover: color-mix(in srgb, var(--color-accent) 8%, transparent);
-      --input-bg:  color-mix(in srgb, var(--color-surface) 92%, transparent);
-      --input-focus-border: color-mix(in srgb, var(--color-accent) 35%, transparent);
-      --header-bg: color-mix(in srgb, var(--color-bg) 78%, transparent);
-      --body-bg-1: color-mix(in srgb, var(--color-accent) 10%, transparent);
-      --body-bg-2: color-mix(in srgb, var(--color-pop) 10%, transparent);
-      --body-bg-3: color-mix(in srgb, var(--color-bg) 100%, #f7f6f3);
-      --poster-cap-bg: color-mix(in srgb, var(--color-bg) 90%, transparent);
+      --shadow:  0 18px 55px color-mix(in srgb, var(--black) 10%, transparent);
+      --tint-accent:   color-mix(in srgb, var(--color-accent) 8%, transparent);
+      --tint-accent14: color-mix(in srgb, var(--color-accent) 14%, transparent);
+      --tint-accent18: color-mix(in srgb, var(--color-accent) 18%, transparent);
+      --tint-accent35: color-mix(in srgb, var(--color-accent) 35%, transparent);
+      --tint-pink8:    color-mix(in srgb, var(--color-accent2) 8%, transparent);
+      --tint-pink10:   color-mix(in srgb, var(--color-accent2) 10%, transparent);
+      --tint-pink18:   color-mix(in srgb, var(--color-accent2) 18%, transparent);
+      --tint-blue10:   color-mix(in srgb, var(--blue) 10%, transparent);
+      --card-surface:  color-mix(in srgb, var(--color-surface) 75%, transparent);
+      --card-surface78: color-mix(in srgb, var(--color-surface) 78%, transparent);
+      --card-surface85: color-mix(in srgb, var(--color-surface) 85%, transparent);
+      --card-surface92: color-mix(in srgb, var(--color-surface) 92%, transparent);
+      --hero-copy-bg:  color-mix(in srgb, var(--color-surface) 70%, transparent);
+      --ink-sub:       color-mix(in srgb, var(--color-ink) 18%, var(--color-bg));
 
       --radius-xl: 26px;
       --radius-lg: 20px;
@@ -65,9 +55,9 @@
     body{
       margin:0;
       background:
-        radial-gradient(1000px 600px at 12% 0%, var(--body-bg-1), transparent 55%),
-        radial-gradient(900px 560px at 88% 12%, var(--body-bg-2), transparent 55%),
-        linear-gradient(180deg, var(--color-bg), var(--body-bg-3));
+        radial-gradient(1000px 600px at 12% 0%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 55%),
+        radial-gradient(900px 560px at 88% 12%, color-mix(in srgb, var(--color-accent2) 10%, transparent), transparent 55%),
+        linear-gradient(180deg, var(--color-bg), color-mix(in srgb, var(--color-bg) 96%, var(--color-ink)));
       color: var(--color-ink);
       font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height: 1.65;
@@ -80,7 +70,7 @@
       position: sticky;
       top:0;
       z-index: 50;
-      background: var(--header-bg);
+      background: color-mix(in srgb, var(--color-bg) 78%, transparent);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
     }
@@ -111,7 +101,7 @@
       color: var(--white);
       background:
         radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--white) 60%, transparent), transparent 55%),
-        var(--monogram-gradient);
+        linear-gradient(135deg, var(--color-accent), var(--color-accent2));
       box-shadow: 0 16px 36px color-mix(in srgb, var(--color-accent) 16%, transparent);
     }
     .id strong{display:block; font-family: "Playfair Display", Georgia, serif; letter-spacing:-.01em}
@@ -124,7 +114,7 @@
       font-size: 14px;
     }
     nav a{text-decoration:none; padding: 8px 10px; border-radius: 999px}
-    nav a:hover{background: var(--nav-hover); color: var(--color-ink)}
+    nav a:hover{background: color-mix(in srgb, var(--color-accent) 8%, transparent); color: var(--color-ink)}
     .actions{display:flex; gap:10px; align-items:center}
 
     .btn{
@@ -143,11 +133,11 @@
       gap:10px;
       white-space:nowrap;
     }
-    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px color-mix(in srgb, var(--color-ink) 10%, transparent)}
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px color-mix(in srgb, var(--black) 10%, transparent)}
     .btn.primary{
       border: none;
       color: var(--white);
-      background: var(--btn-primary-bg);
+      background: linear-gradient(135deg, var(--blue), var(--color-accent));
     }
 
     .wrap{min-height:100%; display:flex; flex-direction:column}
@@ -176,7 +166,7 @@
     .poster .cap{
       padding: 14px 16px 16px;
       border-top: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--color-surface), var(--poster-cap-bg));
+      background: linear-gradient(180deg, var(--color-surface), color-mix(in srgb, var(--color-bg) 90%, transparent));
     }
     .cap strong{display:block; font-size: 14px}
     .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
@@ -186,7 +176,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 22px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--black) 6%, transparent);
     }
     .kicker{
       display:inline-flex;
@@ -194,16 +184,16 @@
       gap: 10px;
       padding: 8px 12px;
       border-radius: 999px;
-      background: var(--kicker-bg);
-      color: var(--color-ink);
+      background: var(--tint-accent);
+      color: color-mix(in srgb, var(--color-ink) 86%, var(--color-accent));
       font-size: 12px;
       letter-spacing: .14em;
       text-transform: uppercase;
-      border: 1px solid var(--kicker-border);
+      border: 1px solid var(--tint-accent14);
     }
     .dot{
       width: 10px; height: 10px; border-radius: 999px;
-      background: var(--dot-gradient);
+      background: linear-gradient(135deg, var(--color-accent), var(--color-accent2));
     }
     h1{
       margin: 12px 0 10px;
@@ -225,7 +215,7 @@
       margin: 14px 0 0;
       padding: 0;
       list-style:none;
-      color: var(--color-ink);
+      color: color-mix(in srgb, var(--color-ink) 82%, var(--color-accent));
       font-size: 14px;
     }
     .bullets li{
@@ -234,15 +224,15 @@
       align-items:flex-start;
       padding: 10px 12px;
       border-radius: 16px;
-      background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+      background: var(--card-surface78);
       border: 1px solid var(--border);
     }
     .tick{
       width: 20px; height: 20px;
       border-radius: 999px;
-      background: var(--tick-bg);
+      background: linear-gradient(135deg, var(--tint-accent18), var(--tint-pink18));
       display:flex; align-items:center; justify-content:center;
-      border: 1px solid var(--tick-border);
+      border: 1px solid var(--tint-accent14);
       flex: 0 0 auto;
       margin-top: 2px;
     }
@@ -275,7 +265,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--black) 6%, transparent);
       position: relative;
       overflow:hidden;
     }
@@ -283,7 +273,9 @@
       content:"";
       position:absolute;
       inset:-40%;
-      background: var(--card-glow);
+      background:
+        radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-accent) 10%, transparent), transparent 45%),
+        radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--color-accent2) 10%, transparent), transparent 45%);
       opacity:.9;
       pointer-events:none;
       transform: rotate(8deg);
@@ -300,14 +292,14 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 10px;
-      color: var(--color-ink);
+      color: color-mix(in srgb, var(--color-ink) 82%, var(--color-accent));
       font-size: 12px;
     }
     .tag{
       padding: 6px 10px;
       border-radius: 999px;
-      background: var(--tag-bg);
-      border: 1px solid var(--tag-border);
+      background: var(--tint-accent);
+      border: 1px solid var(--tint-accent14);
     }
     .span-12{grid-column: span 12}
 
@@ -317,7 +309,7 @@
       background: var(--card-surface);
       border: 1px solid var(--border);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--black) 6%, transparent);
     }
     .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
     .post h3{margin: 8px 0 8px; font-size: 16px}
@@ -332,10 +324,10 @@
     .skill{
       padding: 9px 12px;
       border-radius: 999px;
-      background: var(--skill-bg);
+      background: var(--card-surface85);
       border: 1px solid var(--border);
       font-size: 13px;
-      color: var(--color-ink);
+      color: color-mix(in srgb, var(--color-ink) 82%, var(--color-accent));
     }
 
     .contact{
@@ -346,7 +338,7 @@
     }
     .contact-card{
       border-radius: var(--radius-xl);
-      background: var(--contact-card-bg), var(--card-surface);
+      background: linear-gradient(135deg, var(--tint-blue10), var(--tint-pink8)), var(--card-surface);
       border: 1px solid var(--border);
       padding: 18px;
       box-shadow: var(--shadow);
@@ -360,7 +352,7 @@
       background: var(--card-surface);
       border: 1px solid var(--border);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--color-ink) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--black) 6%, transparent);
       display:grid;
       gap: 12px;
     }
@@ -377,13 +369,13 @@
       padding: 12px 12px;
       border-radius: 14px;
       border: 1px solid var(--border);
-      background: var(--input-bg);
+      background: var(--card-surface92);
       font-family: inherit;
       font-size: 14px;
       outline: none;
     }
     textarea{min-height: 110px; resize: vertical}
-    input:focus, textarea:focus{border-color: var(--input-focus-border)}
+    input:focus, textarea:focus{border-color: var(--tint-accent35)}
 
     footer{
       border-top: 1px solid var(--border);
@@ -423,7 +415,7 @@
     <header>
       <div class="topbar">
         <div class="id">
-          <div class="monogram" aria-hidden="true">{{name}}</div>
+          <div class="monogram" aria-hidden="true">{{first_name}}</div>
           <div>
             <strong>{{name}}</strong>
             <span>{{major}} • Graduating {{current_year}}</span>
@@ -462,7 +454,7 @@
             <div class="hero-copy">
               <span class="kicker"><span class="dot" aria-hidden="true"></span> {{major}} Portfolio</span>
               <h1>{{headline}}</h1>
-              <p class="lead">{{subheadline}}</p>
+              <p class="lead">{{about}}</p>
 
               <div class="cta">
                 <a class="btn primary" href="#projects">See Projects</a>
@@ -471,13 +463,11 @@
               </div>
 
               <ul class="bullets" aria-label="Highlights">
-                {{#hero_cards}}
-                {{#is_highlights}}
-                {{#highlights}}
+                {{#experience}}
+                {{#bullets}}
                 <li><span class="tick" aria-hidden="true">✓</span><span>{{.}}</span></li>
-                {{/highlights}}
-                {{/is_highlights}}
-                {{/hero_cards}}
+                {{/bullets}}
+                {{/experience}}
               </ul>
             </div>
           </div>
@@ -488,11 +478,12 @@
       <section class="section" id="projects">
         <div class="container">
           <h2>Projects</h2>
-          <p class="hint">{{value_proposition}}</p>
+          <p class="hint">{{subheadline}}</p>
 
           <div class="grid">
             {{#projects}}
-            <article class="card">
+            <article class="card" style="margin-bottom:0">
+              <span style="display:block; text-align:center; font-size:4rem; margin-bottom:0.5rem">{{project_icon}}</span>
               <h3>{{name}}</h3>
               <p>{{description}}</p>
               <div class="meta">
@@ -505,11 +496,11 @@
       </section>
 
       <!-- WRITING -->
-      {{#publications}}
+      {{#has_publications}}
       <section class="section" id="writing">
         <div class="container">
           <h2>Writing</h2>
-          <p class="hint">Posts and articles that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
+          <p class="hint">Short posts that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
 
           <div class="grid">
             {{#publications}}
@@ -522,13 +513,13 @@
           </div>
         </div>
       </section>
-      {{/publications}}
+      {{/has_publications}}
 
       <!-- SKILLS -->
       <section class="section" id="skills">
         <div class="container">
           <h2>Skills</h2>
-          <p class="hint">Keep this aligned with the roles you want. Be specific and credible.</p>
+          <p class="hint">{{value_proposition}}</p>
 
           <div class="grid">
             {{#skill_groups}}
@@ -547,18 +538,15 @@
       <section class="section" id="contact">
         <div class="container">
           <h2>Contact</h2>
-          <p class="hint">Open to new opportunities. Reach out to connect.</p>
+          <p class="hint">Reach out to discuss roles, projects, or collaboration.</p>
 
           <div class="contact">
             <div class="contact-card">
               <h3>Let's connect</h3>
-              <p>{{about}}</p>
+              <p>{{#has_open_to}}{{open_to}}{{/has_open_to}}</p>
               <p style="margin:0;">
                 <strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a><br/>
                 {{#has_linkedin}}<strong>LinkedIn:</strong> <a href="{{linkedin}}">{{linkedin}}</a><br/>{{/has_linkedin}}
-                {{#has_github}}<strong>GitHub:</strong> <a href="{{github}}">{{github}}</a><br/>{{/has_github}}
-                {{#has_website}}<strong>Website:</strong> <a href="{{website}}">{{website}}</a><br/>{{/has_website}}
-                {{#has_phone}}<strong>Phone:</strong> <a href="tel:{{phone}}">{{phone}}</a><br/>{{/has_phone}}
                 <strong>Location:</strong> {{location}}
               </p>
             </div>

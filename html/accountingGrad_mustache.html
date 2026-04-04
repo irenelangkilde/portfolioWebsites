@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- { "default_color_scheme": { "primary": "#39ff14", "secondary": "#ff10f0", "accent": "#00d9ff", "dark": "#000000", "light": "#1a1a1a" } } -->
+    <!-- { "default_color_scheme": { "primary": "#39ff14", "secondary": "#ff10f0", "tertiary": "#bc13fe", "dark": "#000000", "light": "#1a1a1a" }, "about_word_count": 118, "hero_card_map": [] } -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{name}} - {{major}} Portfolio</title>
+    <title>{{name}} - {{headline}}</title>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         * {
@@ -15,40 +15,35 @@
 
         :root {
             /* Five main theme colors */
-            --color-primary:   #39ff14;   /* 1. Hero        — neon green, primary brand glow    */
-            --color-secondary: #ff10f0;   /* 2. Signature   — neon pink, section headers        */
-            --color-accent:    #00d9ff;   /* 3. Interactive — neon blue, links & highlights     */
-            --color-pop:       #bc13fe;   /* 4. Pop         — neon purple, skill cards          */
-            --color-vibrant:   #ff6b35;   /* 5. Vibrant     — neon orange, experience accents   */
+            --color-primary:   #39ff14;   /* 1. Hero         — neon green, brand accent, glows & CTAs   */
+            --color-secondary: #ff10f0;   /* 2. Signature    — neon pink, section headings & socials     */
+            --color-tertiary:  #bc13fe;   /* 3. Pop          — neon purple, skill cards & borders        */
+            --color-canvas:    #000000;   /* 4. Canvas       — true black, page background               */
+            --color-panel:     #1a1a1a;   /* 5. Panel        — dark gray, nav & card surfaces            */
 
             /* Theme-independent hard-coded neutrals */
-            --black:      #000000;
-            --dark-gray:  #1a1a1a;
-            --medium-gray:#2a2a2a;
-            --white:      #ffffff;
+            --white:       #ffffff;
+            --black:       #000000;
+            --neon-blue:   #00d9ff;
+            --neon-orange: #ff6b35;
 
             /* Derived tokens */
-            --neon-green:  var(--color-primary);
-            --neon-pink:   var(--color-secondary);
-            --neon-blue:   var(--color-accent);
-            --neon-purple: var(--color-pop);
-            --neon-orange: var(--color-vibrant);
-
-            --primary-glow:    color-mix(in srgb, var(--color-primary)   35%, transparent);
-            --secondary-glow:  color-mix(in srgb, var(--color-secondary) 30%, transparent);
-            --accent-glow:     color-mix(in srgb, var(--color-accent)    35%, transparent);
-            --pop-glow:        color-mix(in srgb, var(--color-pop)       30%, transparent);
-            --vibrant-glow:    color-mix(in srgb, var(--color-vibrant)   20%, transparent);
-
-            --muted-text:  #999;
-            --body-text:   #ccc;
-            --light-text:  #ddd;
-            --border-dim:  #333;
+            --medium-gray:       color-mix(in srgb, var(--color-panel) 60%, var(--color-canvas));
+            --panel-border:      color-mix(in srgb, var(--color-primary) 80%, transparent);
+            --panel-glow:        color-mix(in srgb, var(--color-primary) 30%, transparent);
+            --secondary-glow:    color-mix(in srgb, var(--color-secondary) 30%, transparent);
+            --tertiary-glow:     color-mix(in srgb, var(--color-tertiary) 30%, transparent);
+            --orange-glow:       color-mix(in srgb, var(--neon-orange) 20%, transparent);
+            --blue-glow:         color-mix(in srgb, var(--neon-blue) 20%, transparent);
+            --body-text:         color-mix(in srgb, var(--white) 80%, var(--color-panel));
+            --muted-text:        color-mix(in srgb, var(--white) 60%, var(--color-canvas));
+            --subtle-text:       color-mix(in srgb, var(--white) 40%, var(--color-canvas));
+            --card-border:       color-mix(in srgb, var(--white) 20%, var(--color-canvas));
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: var(--black);
+            background: var(--color-canvas);
             color: var(--white);
             line-height: 1.6;
         }
@@ -71,7 +66,7 @@
 
         /* Navigation */
         nav {
-            background: var(--dark-gray);
+            background: var(--color-panel);
             border-bottom: 2px solid var(--color-primary);
             position: sticky;
             top: 0;
@@ -114,7 +109,7 @@
 
         /* Hero Section */
         .hero {
-            background: var(--black);
+            background: var(--color-canvas);
             padding: 80px 0;
             position: relative;
             overflow: hidden;
@@ -158,13 +153,13 @@
 
         .hero-text .subtitle {
             font-size: 1.5rem;
-            color: var(--color-accent);
+            color: var(--neon-blue);
             margin-bottom: 10px;
-            text-shadow: 0 0 15px var(--color-accent);
+            text-shadow: 0 0 15px var(--neon-blue);
         }
 
         .hero-text .graduation {
-            color: var(--muted-text);
+            color: var(--subtle-text);
             margin-bottom: 30px;
             font-size: 1.1rem;
         }
@@ -176,8 +171,8 @@
             margin: 0 auto;
             border-radius: 20px;
             border: 3px solid var(--color-primary);
-            box-shadow: 0 0 30px var(--color-primary), inset 0 0 30px var(--primary-glow);
-            background: linear-gradient(135deg, var(--dark-gray) 0%, var(--medium-gray) 100%);
+            box-shadow: 0 0 30px var(--color-primary), inset 0 0 30px var(--panel-glow);
+            background: linear-gradient(135deg, var(--color-panel) 0%, var(--medium-gray) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -193,7 +188,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: linear-gradient(45deg, transparent 30%, var(--primary-glow) 50%, transparent 70%);
+            background: linear-gradient(45deg, transparent 30%, var(--panel-glow) 50%, transparent 70%);
             animation: shimmer 3s infinite;
         }
 
@@ -222,7 +217,7 @@
 
         .btn-primary {
             background: var(--color-primary);
-            color: var(--black);
+            color: var(--color-canvas);
             border: 2px solid var(--color-primary);
             box-shadow: 0 0 20px var(--color-primary);
         }
@@ -242,7 +237,7 @@
 
         .btn-secondary:hover {
             background: var(--color-secondary);
-            color: var(--black);
+            color: var(--color-canvas);
         }
 
         /* Section Styles */
@@ -263,14 +258,14 @@
 
         .section-subtitle {
             text-align: center;
-            color: var(--muted-text);
+            color: var(--subtle-text);
             font-size: 1.15rem;
             margin-bottom: 50px;
         }
 
         /* About Section with Stock Image */
         .about {
-            background: var(--dark-gray);
+            background: var(--color-panel);
             position: relative;
         }
 
@@ -284,7 +279,7 @@
         .about-text {
             font-size: 1.1rem;
             line-height: 1.8;
-            color: var(--body-text);
+            color: var(--muted-text);
         }
 
         .about-text p {
@@ -295,8 +290,8 @@
             width: 100%;
             height: 400px;
             border-radius: 15px;
-            border: 2px solid var(--color-accent);
-            box-shadow: 0 0 30px var(--color-accent);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 30px var(--neon-blue);
             background: var(--medium-gray);
             display: flex;
             align-items: center;
@@ -312,7 +307,7 @@
 
         /* Skills Section */
         .skills {
-            background: var(--black);
+            background: var(--color-canvas);
         }
 
         .skills-grid {
@@ -323,24 +318,24 @@
         }
 
         .skill-category {
-            background: var(--dark-gray);
+            background: var(--color-panel);
             padding: 35px;
             border-radius: 15px;
-            border: 2px solid var(--color-pop);
-            box-shadow: 0 0 20px var(--pop-glow);
+            border: 2px solid var(--color-tertiary);
+            box-shadow: 0 0 20px var(--tertiary-glow);
             transition: all 0.3s;
         }
 
         .skill-category:hover {
             transform: translateY(-10px);
-            box-shadow: 0 0 40px var(--color-pop);
+            box-shadow: 0 0 40px var(--color-tertiary);
         }
 
         .skill-category h3 {
-            color: var(--color-pop);
+            color: var(--color-tertiary);
             margin-bottom: 25px;
             font-size: 1.5rem;
-            text-shadow: 0 0 10px var(--color-pop);
+            text-shadow: 0 0 10px var(--color-tertiary);
         }
 
         .skill-list {
@@ -349,11 +344,11 @@
 
         .skill-list li {
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-dim);
+            border-bottom: 1px solid var(--card-border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            color: var(--light-text);
+            color: var(--body-text);
         }
 
         .skill-list li:last-child {
@@ -368,7 +363,7 @@
 
         /* Experience Section with Stock Image */
         .experience {
-            background: var(--dark-gray);
+            background: var(--color-panel);
         }
 
         .experience-grid {
@@ -393,26 +388,26 @@
             background: var(--medium-gray);
             padding: 30px;
             border-radius: 15px;
-            border-left: 4px solid var(--color-vibrant);
-            box-shadow: 0 0 20px var(--vibrant-glow);
+            border-left: 4px solid var(--neon-orange);
+            box-shadow: 0 0 20px var(--orange-glow);
         }
 
         .experience-item h3 {
-            color: var(--color-vibrant);
+            color: var(--neon-orange);
             margin-bottom: 10px;
             font-size: 1.4rem;
-            text-shadow: 0 0 10px var(--color-vibrant);
+            text-shadow: 0 0 10px var(--neon-orange);
         }
 
         .experience-item .meta {
-            color: var(--muted-text);
+            color: var(--subtle-text);
             margin-bottom: 15px;
             font-size: 0.95rem;
         }
 
         .experience-item ul {
             margin-left: 20px;
-            color: var(--body-text);
+            color: var(--muted-text);
         }
 
         .experience-item ul li {
@@ -423,8 +418,8 @@
             width: 100%;
             height: 500px;
             border-radius: 15px;
-            border: 2px solid var(--color-vibrant);
-            box-shadow: 0 0 30px var(--color-vibrant);
+            border: 2px solid var(--neon-orange);
+            box-shadow: 0 0 30px var(--neon-orange);
             background: var(--medium-gray);
             position: sticky;
             top: 100px;
@@ -437,7 +432,7 @@
 
         /* Projects Section with Stock Image */
         .projects {
-            background: var(--black);
+            background: var(--color-canvas);
         }
 
         .projects-showcase {
@@ -468,28 +463,28 @@
         }
 
         .project-card {
-            background: var(--dark-gray);
+            background: var(--color-panel);
             padding: 30px;
             border-radius: 15px;
-            border: 2px solid var(--color-accent);
-            box-shadow: 0 0 20px var(--accent-glow);
+            border: 2px solid var(--neon-blue);
+            box-shadow: 0 0 20px var(--blue-glow);
             transition: all 0.3s;
         }
 
         .project-card:hover {
             transform: translateX(10px);
-            box-shadow: 0 0 40px var(--color-accent);
+            box-shadow: 0 0 40px var(--neon-blue);
         }
 
         .project-card h3 {
-            color: var(--color-accent);
+            color: var(--neon-blue);
             margin-bottom: 12px;
             font-size: 1.4rem;
-            text-shadow: 0 0 10px var(--color-accent);
+            text-shadow: 0 0 10px var(--neon-blue);
         }
 
         .project-card p {
-            color: var(--body-text);
+            color: var(--muted-text);
             line-height: 1.7;
         }
 
@@ -509,9 +504,16 @@
             border: 1px solid var(--color-primary);
         }
 
+        .project-icon {
+            display: block;
+            text-align: center;
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+        }
+
         /* Contact Section */
         .contact {
-            background: var(--dark-gray);
+            background: var(--color-panel);
         }
 
         .contact-content {
@@ -532,7 +534,7 @@
             padding: 35px;
             border-radius: 15px;
             border: 2px solid var(--color-primary);
-            box-shadow: 0 0 20px var(--primary-glow);
+            box-shadow: 0 0 20px var(--panel-glow);
             transition: all 0.3s;
         }
 
@@ -581,13 +583,13 @@
 
         .social-links a:hover {
             background: var(--color-secondary);
-            color: var(--black);
+            color: var(--color-canvas);
             box-shadow: 0 0 40px var(--color-secondary);
         }
 
         /* Footer */
         footer {
-            background: var(--black);
+            background: var(--color-canvas);
             border-top: 2px solid var(--color-primary);
             color: var(--white);
             text-align: center;
@@ -623,7 +625,7 @@
     <!-- Navigation -->
     <nav>
         <div class="container">
-            <div class="logo">{{name}}</div>
+            <div class="logo">{{first_name[0]}}{{last_name[0]}}</div>
             <ul>
                 <li><a href="#about">About</a></li>
                 <li><a href="#skills">Skills</a></li>
@@ -641,7 +643,7 @@
                 <div class="hero-text">
                     <h1 class="neon-text">{{name}}</h1>
                     <p class="subtitle neon-text">{{headline}}</p>
-                    <p class="graduation">📊 {{subheadline}}</p>
+                    <p class="graduation">{{subheadline}}</p>
                     <div class="cta-buttons">
                         <a href="#projects" class="btn btn-primary">View Work</a>
                         <a href="#contact" class="btn btn-secondary">Contact Me</a>
@@ -658,7 +660,7 @@
                         <rect width="400" height="450" fill="url(#grad1)"/>
                         <circle cx="200" cy="150" r="70" fill="#39ff14" opacity="0.4"/>
                         <rect x="130" y="240" width="140" height="180" fill="#00d9ff" opacity="0.4" rx="10"/>
-                        <text x="200" y="420" font-size="48" fill="#39ff14" text-anchor="middle" font-weight="bold" opacity="0.6">{{name}}</text>
+                        <text x="200" y="240" font-size="180" fill="#39ff14" text-anchor="middle" font-weight="bold" opacity="0.6">{{first_name[0]}}{{last_name[0]}}</text>
                     </svg>
                 </div>
             </div>
@@ -803,6 +805,7 @@
                 <div class="projects-grid">
                     {{#projects}}
                     <div class="project-card">
+                        <span class="project-icon">{{project_icon}}</span>
                         <h3>{{name}}</h3>
                         <p>{{description}}</p>
                         <div class="project-tags">
@@ -821,7 +824,7 @@
     <section id="contact" class="contact">
         <div class="container">
             <h2 class="neon-text">Get In Touch</h2>
-            <p class="section-subtitle">Available for full-time opportunities starting {{current_year}}</p>
+            <p class="section-subtitle">{{#has_open_to}}{{open_to}}{{/has_open_to}}</p>
             <div class="contact-content">
                 <div class="contact-info">
                     <div class="contact-item">
@@ -850,7 +853,9 @@
                     <a href="mailto:{{email}}" title="Email">✉️</a>
                 </div>
 
-                <p style="margin-top: 40px; color: var(--muted-text);">{{desired_role}}</p>
+                {{#has_open_to_items}}
+                <p style="margin-top: 40px; color: var(--subtle-text);">{{#open_to_items}}{{label}} • {{/open_to_items}}</p>
+                {{/has_open_to_items}}
             </div>
         </div>
     </section>

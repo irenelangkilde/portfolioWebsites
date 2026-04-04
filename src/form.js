@@ -263,6 +263,14 @@
       return true;
     }
 
+    // Pre-create validation message/checkmark scaffolding so the first focus on an
+    // input does not trigger DOM reparenting that can dismiss the browser's native
+    // autofill/autocomplete popup.
+    Object.keys(FIELD_VALIDATORS).forEach(id => {
+      getFieldMsg(id);
+      getFieldOkMark(id);
+    });
+
     // Wire each field: validate on blur; re-check on input once an error is showing.
     // Blur validation is deferred 200ms so browser autocomplete selections aren't
     // dismissed by DOM changes fired during the blur event.
@@ -292,6 +300,7 @@
       // Reset cache and kick off analysis
       resumeAnalysisCache = null;
       lastAnalysisData = null;
+      jobAdResult = null; // job_resolved depends on resume — clear so it reruns
       document.getElementById("reanalyzeResume").style.display = hasFile ? "inline" : "none";
       if (hasFile) {
         if (!hasCreditsRemaining()) {
@@ -315,6 +324,7 @@
       try { localStorage.removeItem(resumeCacheKey(file)); } catch {}
       resumeAnalysisCache = null;
       lastAnalysisData = null;
+      jobAdResult = null; // job_resolved depends on resume — force re-extraction
       analyzeResumeInBackground(file);
     });
 
@@ -479,6 +489,15 @@
       return text.length > maxLen ? text.slice(0, maxLen - 1) + "…" : text;
     }
 
+    async function readJsonResponseSafely(res) {
+      const text = await res.text().catch(() => "");
+      let data = null;
+      if (text) {
+        try { data = JSON.parse(text); } catch {}
+      }
+      return { ok: res.ok, status: res.status, text, data };
+    }
+
     function populateResumeDebugPanel(json) {
       const facts    = json?.resume_facts    ?? json;
       const strategy = json?.resume_strategy ?? null;
@@ -511,6 +530,17 @@
 
     function resumeCacheKey(file) {
       return `resumeAnalysis_v4:${file.name}:${file.size}:${file.lastModified}`;
+    }
+
+    function jobAdCacheKey(rawText) {
+      // Include resume file identity so cache is invalidated when resume changes
+      const file = resumeUpload?.files?.[0];
+      const resumeId = file ? `${file.name}:${file.size}:${file.lastModified}` : "no-resume";
+      // Include desired job position so different targets don't share a cache entry
+      const desiredRole = document.getElementById("desiredRole")?.value?.trim() || "";
+      // Use text length + first/last 40 chars as a lightweight fingerprint
+      const snippet = rawText.slice(0, 40) + rawText.slice(-40);
+      return `jobAdAnalysis_v1:${resumeId}:${desiredRole}:${rawText.length}:${snippet}`;
     }
 
     async function analyzeResumeInBackground(file) {
@@ -1663,6 +1693,19 @@
         return;
       }
 
+      // Check localStorage cache before hitting the API
+      try {
+        const cached = localStorage.getItem(jobAdCacheKey(rawText));
+        if (cached) {
+          const cachedData = JSON.parse(cached);
+          jobAdResult = cachedData;
+          setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted (cached)", "rgba(118,176,34,.9)");
+          populateJobAdDebug(cachedData);
+          if (isDebugMode()) wireStage2Debug();
+          return;
+        }
+      } catch {}
+
       jobAdResult     = null;
       jobAdInProgress = true;
       jobAdErrorDetail = null;
@@ -1697,11 +1740,12 @@
         while (Date.now() - startTime < 120000) {
           await new Promise(r => setTimeout(r, 2500));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          lastPollData = await pollRes.json().catch(async () => ({
+          const parsed = await readJsonResponseSafely(pollRes);
+          lastPollData = parsed.data ?? {
             status: pollRes.ok ? "pending" : "error",
             poll_status: pollRes.status,
-            raw_body: await pollRes.text().catch(() => "")
-          }));
+            raw_body: parsed.text
+          };
           if (!pollRes.ok) {
             jobAdErrorDetail = lastPollData?.error
               ? lastPollData
@@ -1709,7 +1753,12 @@
             populateJobAdDebug({ error: jobAdErrorDetail, job_resolved: null });
             break;
           }
-          if (lastPollData.status === "done") { jobAdResult = lastPollData; populateJobAdDebug(lastPollData); break; }
+          if (lastPollData.status === "done") {
+            jobAdResult = lastPollData;
+            populateJobAdDebug(lastPollData);
+            try { localStorage.setItem(jobAdCacheKey(rawText), JSON.stringify(lastPollData)); } catch {}
+            break;
+          }
           if (lastPollData.status === "error") {
             jobAdErrorDetail = lastPollData?.error ?? lastPollData;
             populateJobAdDebug(lastPollData);
@@ -1749,6 +1798,9 @@
     // ----------------------------
     async function doAnalyzeAndExtractJobAd() {
       // Block until Stage 1 (resume analysis) is finished
+      if (resumeAnalysisPending) {
+        setHeaderStatus("jobAnalysisStatus", "Job analysis waiting for resume analysis…", "rgba(141,224,255,.75)");
+      }
       while (resumeAnalysisPending) {
         await new Promise(r => setTimeout(r, 500));
       }
@@ -1804,9 +1856,10 @@
         while (Date.now() - startTime < 300000) {
           await new Promise(r => setTimeout(r, 3000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          const data = await pollRes.json().catch(() => ({}));
+          const parsed = await readJsonResponseSafely(pollRes);
+          const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
           if (data.status === "done") { bridgeResult = data; break; }
-          if (data.status === "error") { break; }
+          if (!pollRes.ok || data.status === "error") { bridgeResult = data; break; }
         }
       } catch { /* silent */ }
 
@@ -2036,7 +2089,8 @@
           await new Promise(r => setTimeout(r, pollIntervalMs));
           const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
-          const data = await pollRes.json().catch(() => ({}));
+          const parsed = await readJsonResponseSafely(pollRes);
+          const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
           const stageMsg = data.stage
             ? `${data.stage} (${remaining}s)`
             : `Generating portfolio… ${remaining}s`;
@@ -2050,6 +2104,9 @@
             setApplyBtnState(true);
             populateGenerationDebug(data);
             return;
+          }
+          if (!pollRes.ok) {
+            throw new Error(data.error || `Poll failed with HTTP ${pollRes.status}${parsed.text ? `: ${parsed.text.slice(0, 160)}` : ""}`);
           }
           if (data.status === "error") {
             if (data.quota) { showUpgradePrompt(data); return; }

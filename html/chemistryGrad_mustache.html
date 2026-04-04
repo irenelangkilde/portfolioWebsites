@@ -2,55 +2,38 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- { "default_color_scheme": { "primary": "#6e76ff", "secondary": "#8bdfc3", "accent": "#ffd5b0", "dark": "#111111", "light": "#ffffffb8" } } -->
+  <!-- { "default_color_scheme": { "primary": "#6e76ff", "secondary": "#8bdfc3", "tertiary": "#ffd5b0", "dark": "#111111", "light": "#ffffffb8" }, "about_word_count": 89, "hero_card_map": [] } -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} | {{major}} Major</title>
   <meta name="description" content="{{major}} major portfolio: research projects, lab skills, and career-ready highlights." />
   <style>
     :root{
       /* Five main theme colors */
-      --color-ink:     #111111;   /* 1. Canvas      — deep near-black body text & headings */
-      --color-muted:   #5b5b5b;   /* 2. Subtle       — secondary text, meta information     */
-      --color-accent:  #6e76ff;   /* 3. Interactive  — selection pill, primary accent        */
-      --color-grad-b:  #8bdfc3;   /* 4. Pop          — teal gradient stop, CTA gradient      */
-      --color-grad-c:  #ffd5b0;   /* 5. Vibrant      — warm peach gradient stop              */
+      --color-accent:   #6e76ff;   /* 1. Interactive  — primary accent, pills, highlights */
+      --color-warm:     #ffd5b0;   /* 2. Signature    — warm gradient stop, card tints   */
+      --color-cool:     #8bdfc3;   /* 3. Analogous    — cool gradient stop, card tints   */
+      --color-ink:      #111111;   /* 4. Canvas       — primary text, dark foreground    */
+      --color-muted:    #5b5b5b;   /* 5. Subtle       — secondary text, de-emphasized    */
 
       /* Theme-independent hard-coded neutrals */
-      --white:   #ffffff;
-      --black:   #000000;
+      --white:    #ffffff;
+      --black:    #000000;
 
       /* Derived tokens */
       --card:         color-mix(in srgb, var(--white) 72%, transparent);
-      --glass:         color-mix(in srgb, var(--white) 66%, transparent);
-      --stroke:        color-mix(in srgb, var(--black) 7%, transparent);
-      --accent-ink:    #2e2a77;
-      --accent-soft:   color-mix(in srgb, var(--color-accent) 16%, transparent);
-      --bg-blob-1:     color-mix(in srgb, #526be5 100%, transparent);
-      --bg-blob-2:     color-mix(in srgb, #7c6810 100%, transparent);
-      --bg-blob-3:     color-mix(in srgb, #44b746 100%, transparent);
-      --bg-blob-4:     color-mix(in srgb, #9b8b0f 100%, transparent);
-      --bg-base:       #f6f7fb;
-      --media-blob-1:  color-mix(in srgb, var(--color-accent) 35%, transparent);
-      --media-blob-2:  color-mix(in srgb, var(--color-grad-c) 45%, transparent);
-      --media-blob-3:  color-mix(in srgb, var(--color-grad-b) 40%, transparent);
-      --bubble-grad-1: color-mix(in srgb, var(--color-accent) 35%, transparent);
-      --bubble-grad-2: color-mix(in srgb, var(--color-grad-c) 25%, transparent);
-      --bubble-grad-3: color-mix(in srgb, var(--color-grad-b) 25%, transparent);
-      --btn-primary-1: color-mix(in srgb, var(--color-accent) 22%, transparent);
-      --btn-primary-2: color-mix(in srgb, var(--color-grad-c) 22%, transparent);
-      --btn-primary-3: color-mix(in srgb, var(--color-grad-b) 22%, transparent);
-      --btn-primary-border: color-mix(in srgb, var(--color-accent) 20%, transparent);
-      --pill-glass:    color-mix(in srgb, var(--white) 55%, transparent);
-      --tag-bg:        color-mix(in srgb, var(--white) 55%, transparent);
-      --btn-bg:        color-mix(in srgb, var(--white) 65%, transparent);
-      --mini-bg:       color-mix(in srgb, var(--white) 55%, transparent);
-      --mark-grad-1:   color-mix(in srgb, var(--color-accent) 100%, transparent);
-      --mark-grad-2:   color-mix(in srgb, var(--color-grad-b) 100%, transparent);
-      --mark-grad-3:   color-mix(in srgb, var(--color-grad-c) 100%, transparent);
+      --glass:        color-mix(in srgb, var(--white) 66%, transparent);
+      --stroke:       color-mix(in srgb, var(--black) 7%, transparent);
+      --accent-ink:   #2e2a77;
+      --accent-soft:  color-mix(in srgb, var(--color-accent) 16%, transparent);
+      --tag-bg:       color-mix(in srgb, var(--white) 55%, transparent);
+      --mini-bg:      color-mix(in srgb, var(--white) 55%, transparent);
+      --btn-bg:       color-mix(in srgb, var(--white) 65%, transparent);
+      --btn-primary:  color-mix(in srgb, var(--color-accent) 22%, transparent);
+      --pillbar-bg:   color-mix(in srgb, var(--white) 55%, transparent);
 
-      --shadow: 0 18px 50px rgba(0,0,0,.10);
+      --shadow:      0 18px 50px rgba(0,0,0,.10);
       --shadow-soft: 0 12px 30px rgba(0,0,0,.08);
-      --radius: 24px;
+      --radius:    24px;
       --radius-sm: 18px;
 
       --max: 1120px;
@@ -64,11 +47,11 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
       letter-spacing:-0.01em;
       background:
-        radial-gradient(1200px 650px at 15% 10%, var(--bg-blob-1) 0%, transparent 60%),
-        radial-gradient(1000px 600px at 60% 20%, var(--bg-blob-2) 0%, transparent 65%),
-        radial-gradient(1100px 700px at 90% 10%, var(--bg-blob-3) 0%, transparent 60%),
-        radial-gradient(900px 600px at 35% 35%, var(--bg-blob-4) 0%, transparent 65%),
-        var(--bg-base);
+        radial-gradient(1200px 650px at 15% 10%, #526be5 0%, transparent 60%),
+        radial-gradient(1000px 600px at 60% 20%, #7c6810 0%, transparent 65%),
+        radial-gradient(1100px 700px at 90% 10%, #44b746 0%, transparent 60%),
+        radial-gradient(900px 600px at 35% 35%, #9b8b0f 0%, transparent 65%),
+        #f6f7fb;
       overflow-x:hidden;
     }
 
@@ -98,7 +81,7 @@
       width:28px; height:28px; border-radius:10px;
       background:
         radial-gradient(12px 12px at 30% 35%, var(--white) 0%, transparent 65%),
-        linear-gradient(135deg, var(--mark-grad-1) 0%, var(--mark-grad-2) 60%, var(--mark-grad-3) 100%);
+        linear-gradient(135deg, var(--color-accent) 0%, var(--color-cool) 60%, var(--color-warm) 100%);
       box-shadow: 0 10px 20px rgba(0,0,0,.08);
       border: 1px solid var(--stroke);
     }
@@ -141,7 +124,7 @@
     .pillbar{
       margin: 24px auto 0;
       width: min(720px, 100%);
-      background: var(--pill-glass);
+      background: var(--pillbar-bg);
       border:1px solid var(--stroke);
       border-radius: 999px;
       padding: 10px;
@@ -165,7 +148,7 @@
     .pill[aria-selected="true"]{
       background: var(--accent-soft);
       color: var(--accent-ink);
-      box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-accent) 20%, transparent);
+      box-shadow: inset 0 0 0 1px rgba(110,118,255,.20);
     }
     .pill:hover{transform: translateY(-1px)}
 
@@ -199,10 +182,10 @@
     .media{
       min-height: 320px;
       background:
-        radial-gradient(180px 180px at 25% 55%, var(--media-blob-1) 0%, transparent 65%),
-        radial-gradient(180px 180px at 55% 45%, var(--media-blob-2) 0%, transparent 65%),
-        radial-gradient(260px 260px at 75% 70%, var(--media-blob-3) 0%, transparent 65%),
-        linear-gradient(135deg, color-mix(in srgb, var(--white) 35%, transparent), color-mix(in srgb, var(--white) 10%, transparent));
+        radial-gradient(180px 180px at 25% 55%, color-mix(in srgb, var(--color-accent) 35%, transparent) 0%, transparent 65%),
+        radial-gradient(180px 180px at 55% 45%, color-mix(in srgb, var(--color-warm) 45%, transparent) 0%, transparent 65%),
+        radial-gradient(260px 260px at 75% 70%, color-mix(in srgb, var(--color-cool) 40%, transparent) 0%, transparent 65%),
+        linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,.10));
       position:relative;
     }
     .bubble{
@@ -210,9 +193,9 @@
       width: 170px; height:170px; border-radius: 999px;
       left: 26%;
       top: 28%;
-      background: radial-gradient(circle at 30% 30%, var(--white) 0%, color-mix(in srgb, var(--white) 20%, transparent) 25%, transparent 55%),
-                  linear-gradient(140deg, var(--bubble-grad-1), var(--bubble-grad-2), var(--bubble-grad-3));
-      border:1px solid color-mix(in srgb, var(--white) 35%, transparent);
+      background: radial-gradient(circle at 30% 30%, var(--white) 0%, rgba(255,255,255,.2) 25%, transparent 55%),
+                  linear-gradient(140deg, color-mix(in srgb, var(--color-accent) 35%, transparent), color-mix(in srgb, var(--color-warm) 25%, transparent), color-mix(in srgb, var(--color-cool) 25%, transparent));
+      border:1px solid rgba(255,255,255,.35);
       box-shadow: 0 24px 60px rgba(0,0,0,.10);
       filter: saturate(1.05);
     }
@@ -276,8 +259,8 @@
     }
     .btn:hover{transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.08)}
     .btn.primary{
-      background: linear-gradient(135deg, var(--btn-primary-1), var(--btn-primary-2), var(--btn-primary-3));
-      border-color: var(--btn-primary-border);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 22%, transparent), color-mix(in srgb, var(--color-warm) 22%, transparent), color-mix(in srgb, var(--color-cool) 22%, transparent));
+      border-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
     }
     .btn small{font-weight:600; opacity:.75}
 
@@ -363,7 +346,6 @@
     <!-- Projects -->
     <section id="projects" class="active" role="tabpanel" aria-labelledby="tab-projects">
       {{#projects}}
-      {{#-first}}
       <div class="grid">
         <div class="card" aria-label="Featured project visual">
           <div class="media">
@@ -391,59 +373,50 @@
             </a>
             {{/demo_link}}
             {{#github_link}}
-            <a class="btn" href="{{github_link}}" aria-label="Open project data or appendix">
+            <a class="btn" href="{{github_link}}" aria-label="Open project repository">
               View data <small>(CSV)</small>
             </a>
             {{/github_link}}
           </div>
         </div>
       </div>
-      {{/-first}}
-      {{/projects}}
 
       <div style="height:18px"></div>
+      {{/projects}}
 
       <div class="grid" style="align-items:start">
         <div class="stack" aria-label="Additional projects list">
-          {{#projects}}
-          {{^-first}}
+          {{#experience}}
           <div class="mini">
-            <h3>{{name}}</h3>
+            <h3>{{title}} — {{company}}</h3>
             <p>{{description}}</p>
             <div class="meta">
-              {{#technologies}}<span>{{.}}</span>{{/technologies}}
-              {{#bullets}}<span>{{.}}</span>{{/bullets}}
+              <span>{{start_date}} – {{end_date}}</span>
+              <span>{{location}}</span>
             </div>
           </div>
-          {{/-first}}
-          {{/projects}}
+          {{/experience}}
         </div>
 
         <div class="stack" aria-label="Quick highlights">
           <div class="mini">
             <h3>What I'm looking for</h3>
+            <p>
+              {{#has_open_to}}{{open_to}}{{/has_open_to}}
+            </p>
+          </div>
+
+          <div class="mini">
+            <h3>Top strengths</h3>
             <p>{{value_proposition}}</p>
           </div>
 
-          {{#experience}}
-          {{#-first}}
-          <div class="mini">
-            <h3>Recent Experience</h3>
-            <p>{{title}} at {{company}}. {{description}}</p>
-          </div>
-          {{/-first}}
-          {{/experience}}
-
-          {{#education}}
-          {{#-first}}
           <div class="mini">
             <h3>Availability</h3>
             <p>
-              Graduating: <strong>{{graduation_date}}</strong>. Location: <strong>{{location}}</strong>.
+              {{#has_status_badges}}{{#status_badges}}<span class="tag">{{label}}</span> {{/status_badges}}{{/has_status_badges}}
             </p>
           </div>
-          {{/-first}}
-          {{/education}}
         </div>
       </div>
     </section>
@@ -453,35 +426,28 @@
       <div class="grid">
         <div class="content card" style="padding:26px">
           <div class="kicker">
-            {{#skill_groups}}
-            {{#-first}}<span class="tag">{{group_name}}</span>{{/-first}}
-            {{/skill_groups}}
-            <span class="tag">Tools</span>
-            <span class="tag">Micro-portfolio</span>
+            {{#skill_groups}}<span class="tag">{{group_name}}</span>{{/skill_groups}}
           </div>
           <h2>Playground</h2>
-          <p class="desc">{{about}}</p>
+          <p class="desc">
+            Small, focused demonstrations of skills—useful for hiring managers who want proof of
+            method discipline and clear thinking.
+          </p>
 
           <ul class="bullets">
             {{#skill_groups}}
-            <li><strong>{{group_name}}:</strong> {{#skills}}{{.}}{{^-last}}, {{/-last}}{{/skills}}</li>
+            <li><strong>{{group_name}}:</strong> {{#skills}}{{.}}{{/skills}}</li>
             {{/skill_groups}}
           </ul>
 
           <div class="cta-row">
-            {{#has_website}}
-            <a class="btn primary" href="{{website}}">Download Resume <small>(PDF)</small></a>
-            {{/has_website}}
-            {{#has_linkedin}}
-            <a class="btn" href="{{linkedin}}">LinkedIn</a>
-            {{/has_linkedin}}
-            {{#has_github}}
-            <a class="btn" href="{{github}}">GitHub <small>(Portfolio)</small></a>
-            {{/has_github}}
+            <a class="btn primary" href="#">Download Resume <small>(PDF)</small></a>
+            {{#has_website}}<a class="btn" href="{{website}}">Portfolio PDF</a>{{/has_website}}
           </div>
         </div>
 
         <div class="stack">
+          {{#has_certifications}}
           {{#certifications}}
           <div class="mini">
             <h3>{{name}}</h3>
@@ -489,20 +455,16 @@
             <div class="meta"><span>{{date}}</span></div>
           </div>
           {{/certifications}}
+          {{/has_certifications}}
+          {{#has_publications}}
           {{#publications}}
           <div class="mini">
             <h3>{{title}}</h3>
             <p>{{venue}}</p>
-            <div class="meta"><span>{{date}}</span>{{#link}}<span><a href="{{link}}">View</a></span>{{/link}}</div>
+            <div class="meta"><span>{{date}}</span></div>
           </div>
           {{/publications}}
-          {{#leadership}}
-          <div class="mini">
-            <h3>{{role}}</h3>
-            <p>{{organization}} — {{description}}</p>
-            <div class="meta"><span>{{dates}}</span></div>
-          </div>
-          {{/leadership}}
+          {{/has_publications}}
         </div>
       </div>
     </section>
@@ -523,19 +485,15 @@
             {{#education}}
             <li><strong>Education:</strong> {{degree}}, {{major}} ({{graduation_date}}), {{institution}}{{#honors}} — {{honors}}{{/honors}}</li>
             {{/education}}
-            {{#experience}}
-            <li><strong>{{title}}:</strong> {{company}}, {{start_date}}–{{end_date}}</li>
-            {{/experience}}
+            {{#has_professional_interests}}
+            <li><strong>Interests:</strong> {{#professional_interests}}{{.}} {{/professional_interests}}</li>
+            {{/has_professional_interests}}
           </ul>
 
           <div class="cta-row">
             <a class="btn primary" href="mailto:{{email}}">{{email}}</a>
-            {{#has_linkedin}}
-            <a class="btn" href="{{linkedin}}">LinkedIn</a>
-            {{/has_linkedin}}
-            {{#has_website}}
-            <a class="btn" href="{{website}}">Portfolio PDF</a>
-            {{/has_website}}
+            {{#has_linkedin}}<a class="btn" href="{{linkedin}}">LinkedIn</a>{{/has_linkedin}}
+            {{#has_website}}<a class="btn" href="{{website}}">Portfolio PDF</a>{{/has_website}}
           </div>
         </div>
 
@@ -543,19 +501,21 @@
           <div class="mini">
             <h3>Quick facts</h3>
             <p>{{value_proposition}}</p>
-            <div class="meta"><span>Location: {{location}}</span><span>Desired role: {{desired_role}}</span></div>
-          </div>
-
-          {{#education}}
-          <div class="mini">
-            <h3>{{institution}}</h3>
-            <p>{{degree}} in {{major}}{{#gpa}} — GPA: {{gpa}}{{/gpa}}</p>
             <div class="meta">
-              <span>{{graduation_date}}</span>
-              {{#activities}}<span>{{.}}</span>{{/activities}}
+              <span>Location: {{location}}</span>
+              {{#has_open_to}}<span>Open to: {{open_to}}</span>{{/has_open_to}}
             </div>
           </div>
-          {{/education}}
+
+          {{#has_leadership}}
+          {{#leadership}}
+          <div class="mini">
+            <h3>{{role}}</h3>
+            <p>{{description}}</p>
+            <div class="meta"><span>{{organization}}</span><span>{{dates}}</span></div>
+          </div>
+          {{/leadership}}
+          {{/has_leadership}}
 
           <div class="mini">
             <h3>References</h3>

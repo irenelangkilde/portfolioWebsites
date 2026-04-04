@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- { "default_color_scheme": { "primary": "#d97706", "secondary": "#059669", "accent": "#2563eb", "dark": "#1f2937", "light": "#f3f4f6" } } -->
+    <!-- { "default_color_scheme": { "primary": "#d97706", "secondary": "#059669", "tertiary": "#2563eb", "dark": "#1f2937", "light": "#f3f4f6" }, "about_word_count": 119, "hero_card_map": [] } -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{name}} - {{major}} Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -15,11 +15,11 @@
 
         :root {
             /* Five main theme colors */
-            --color-primary:   #d97706;   /* 1. Hero        — amber, main accent & headings     */
-            --color-secondary: #059669;   /* 2. Signature   — emerald, cert borders & accents   */
-            --color-accent:    #2563eb;   /* 3. Interactive — blue, structural project image     */
-            --color-dark:      #1f2937;   /* 4. Canvas      — near-black, body text & footer bg */
-            --color-light:     #f3f4f6;   /* 5. Panel       — cool gray, section & card fills   */
+            --color-primary:   #d97706;   /* 1. Brand       — amber, main accent & headings      */
+            --color-secondary: #059669;   /* 2. Secondary   — emerald, cert borders & accents     */
+            --color-accent:    #2563eb;   /* 3. Interactive — blue, structural project tint       */
+            --color-dark:      #1f2937;   /* 4. Canvas      — near-black, body text & footer bg  */
+            --color-light:     #f3f4f6;   /* 5. Panel       — off-white, section & card bg       */
 
             /* Theme-independent hard-coded neutrals */
             --white:   #ffffff;
@@ -27,27 +27,14 @@
             --gray:    #6b7280;
 
             /* Derived tokens */
-            --gradient:          linear-gradient(135deg, var(--color-primary) 0%, var(--color-orange) 100%);
-            --color-orange:      color-mix(in srgb, var(--color-primary) 60%, var(--black) 5%);
-            --photo-grad-start:  color-mix(in srgb, var(--color-primary) 70%, var(--white) 15%);
-            --photo-grad-end:    color-mix(in srgb, var(--color-accent) 40%, #dc2626 60%);
-            --shadow-hover:      color-mix(in srgb, var(--color-primary) 30%, transparent);
-            --card-shadow:       rgba(0,0,0,0.08);
-            --card-shadow-hover: rgba(0,0,0,0.12);
-            --nav-shadow:        rgba(0,0,0,0.1);
-            --hero-grid:         rgba(255,255,255,0.05);
-
-            /* Project image gradients */
-            --proj-structural-start: var(--color-accent);
-            --proj-structural-end:   color-mix(in srgb, var(--color-accent) 60%, var(--black));
-            --proj-transport-start:  var(--color-secondary);
-            --proj-transport-end:    color-mix(in srgb, var(--color-secondary) 70%, var(--black));
-            --proj-water-start:      #0891b2;
-            --proj-water-end:        #0e7490;
-            --proj-geo-start:        #92400e;
-            --proj-geo-end:          #78350f;
-            --proj-env-start:        #16a34a;
-            --proj-env-end:          #15803d;
+            --gradient:         linear-gradient(135deg, var(--color-primary) 0%, var(--color-orange) 100%);
+            --color-orange:     color-mix(in srgb, var(--color-primary) 60%, var(--color-accent) 20%);
+            --tint-primary:     color-mix(in srgb, var(--color-primary) 30%, transparent);
+            --tint-accent:      color-mix(in srgb, var(--color-accent) 30%, transparent);
+            --card-shadow:      color-mix(in srgb, var(--color-dark) 10%, transparent);
+            --card-shadow-hover:color-mix(in srgb, var(--color-dark) 15%, transparent);
+            --border-light:     color-mix(in srgb, var(--color-dark) 8%, var(--white));
+            --muted-text:       color-mix(in srgb, var(--gray) 100%, transparent);
         }
 
         body {
@@ -70,7 +57,7 @@
         /* Navigation */
         nav {
             background: var(--white);
-            box-shadow: 0 2px 10px var(--nav-shadow);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -132,9 +119,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background-image:
-                linear-gradient(90deg, var(--hero-grid) 1px, transparent 1px),
-                linear-gradient(var(--hero-grid) 1px, transparent 1px);
+            background-image: 
+                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 50px 50px;
             opacity: 0.3;
         }
@@ -153,7 +140,7 @@
             margin: 0 auto 25px;
             display: block;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            background: linear-gradient(135deg, var(--photo-grad-start) 0%, var(--photo-grad-end) 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
         }
 
         .hero h1 {
@@ -228,7 +215,7 @@
 
         .section-subtitle {
             text-align: center;
-            color: var(--gray);
+            color: var(--muted-text);
             font-size: 1.1rem;
             margin-bottom: 50px;
         }
@@ -303,7 +290,7 @@
 
         .skill-list li {
             padding: 10px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-light);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -315,7 +302,7 @@
 
         .skill-level {
             font-size: 0.85rem;
-            color: var(--gray);
+            color: var(--muted-text);
             font-weight: 600;
         }
 
@@ -334,14 +321,14 @@
             background: var(--white);
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px var(--card-shadow);
             transition: all 0.3s;
             border: 2px solid transparent;
         }
 
         .project-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            box-shadow: 0 15px 40px var(--card-shadow-hover);
             border-color: var(--color-primary);
         }
 
@@ -355,26 +342,6 @@
             color: var(--white);
             background: var(--gradient);
             position: relative;
-        }
-
-        .project-image.structural {
-            background: linear-gradient(135deg, var(--proj-structural-start) 0%, var(--proj-structural-end) 100%);
-        }
-
-        .project-image.transportation {
-            background: linear-gradient(135deg, var(--proj-transport-start) 0%, var(--proj-transport-end) 100%);
-        }
-
-        .project-image.water {
-            background: linear-gradient(135deg, var(--proj-water-start) 0%, var(--proj-water-end) 100%);
-        }
-
-        .project-image.geotechnical {
-            background: linear-gradient(135deg, var(--proj-geo-start) 0%, var(--proj-geo-end) 100%);
-        }
-
-        .project-image.environmental {
-            background: linear-gradient(135deg, var(--proj-env-start) 0%, var(--proj-env-end) 100%);
         }
 
         .project-content {
@@ -399,7 +366,7 @@
         }
 
         .project-content p {
-            color: var(--gray);
+            color: var(--muted-text);
             margin-bottom: 15px;
             line-height: 1.6;
         }
@@ -447,7 +414,7 @@
             padding: 25px;
             border-radius: 12px;
             margin-bottom: 20px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 3px 15px var(--card-shadow);
             border-left: 4px solid var(--color-primary);
         }
 
@@ -458,7 +425,7 @@
         }
 
         .resume-item .meta {
-            color: var(--gray);
+            color: var(--muted-text);
             font-size: 0.95rem;
             margin-bottom: 12px;
             display: flex;
@@ -492,7 +459,7 @@
             background: var(--white);
             padding: 20px;
             border-radius: 10px;
-            box-shadow: 0 3px 15px rgba(0,0,0,0.06);
+            box-shadow: 0 3px 15px var(--card-shadow);
             border-left: 4px solid var(--color-secondary);
         }
 
@@ -573,7 +540,7 @@
 
         .social-links a:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px var(--shadow-hover);
+            box-shadow: 0 8px 20px var(--tint-primary);
         }
 
         /* Footer */
@@ -630,7 +597,7 @@
     <!-- Hero Section -->
     <section class="hero">
         <div class="hero-content">
-            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f59e0b;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23dc2626;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='180' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='white' font-weight='bold'%3EJM%3C/text%3E%3C/svg%3E" alt="{{name}}" class="profile-photo">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23f59e0b;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23dc2626;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='180' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='white' font-weight='bold'%3E{{first_name}}%3C/text%3E%3C/svg%3E" alt="{{name}}" class="profile-photo">
             <h1>{{name}}</h1>
             <p class="subtitle">{{headline}}</p>
             <p class="graduation">🎓 {{subheadline}}</p>
@@ -680,7 +647,9 @@
             <div class="projects-grid">
                 {{#projects}}
                 <div class="project-card">
-                    <div class="project-image">🏗️</div>
+                    <div class="project-image">
+                        <span style="display:block; text-align:center; font-size:4rem;">{{project_icon}}</span>
+                    </div>
                     <div class="project-content">
                         <span class="project-type">{{role}}</span>
                         <h3>{{name}}</h3>
@@ -711,7 +680,7 @@
                     <h3>Education</h3>
                     {{#education}}
                     <div class="resume-item">
-                        <h4>{{degree}} in {{major}}</h4>
+                        <h4>{{degree}}</h4>
                         <div class="meta">
                             <span>📍 {{institution}}</span>
                             <span>📅 Expected Graduation: {{graduation_date}}</span>
@@ -730,7 +699,7 @@
                 <div class="resume-section">
                     <h3>Experience</h3>
                     {{#experience}}
-                    <div class="resume-item">
+                    <div class="resume-item" style="margin-bottom:14px">
                         <h4>{{title}}</h4>
                         <div class="meta">
                             <span>📍 {{company}}</span>
@@ -745,29 +714,26 @@
                     {{/experience}}
                 </div>
 
-                {{#certifications}}
-                {{#-first}}
+                {{#has_certifications}}
                 <div class="resume-section">
                     <h3>Certifications &amp; Training</h3>
                     <div class="cert-grid">
-                {{/-first}}
+                        {{#certifications}}
                         <div class="cert-item">
                             <h5>{{name}}</h5>
                             <p>{{issuer}} - {{date}}</p>
                         </div>
-                {{#-last}}
+                        {{/certifications}}
                     </div>
                 </div>
-                {{/-last}}
-                {{/certifications}}
+                {{/has_certifications}}
 
-                {{#leadership}}
-                {{#-first}}
+                {{#has_leadership}}
                 <div class="resume-section">
                     <h3>Leadership &amp; Activities</h3>
-                {{/-first}}
-                    <div class="resume-item">
-                        <h4>{{organization}} - {{role}}</h4>
+                    {{#leadership}}
+                    <div class="resume-item" style="margin-bottom:14px">
+                        <h4>{{role}} - {{organization}}</h4>
                         <div class="meta">
                             <span>📅 {{dates}}</span>
                         </div>
@@ -775,10 +741,9 @@
                             <li>{{description}}</li>
                         </ul>
                     </div>
-                {{#-last}}
+                    {{/leadership}}
                 </div>
-                {{/-last}}
-                {{/leadership}}
+                {{/has_leadership}}
 
                 <div class="download-resume">
                     <a href="#" class="btn btn-primary">📄 Download Full Resume (PDF)</a>
@@ -791,7 +756,9 @@
     <section id="contact" class="contact">
         <div class="container">
             <h2>Get In Touch</h2>
-            <p class="section-subtitle">Available for full-time positions starting {{current_year}}</p>
+            {{#has_open_to}}
+            <p class="section-subtitle">{{open_to}}</p>
+            {{/has_open_to}}
             <div class="contact-content">
 
                 <div class="contact-info">
@@ -821,7 +788,11 @@
                     <a href="mailto:{{email}}" title="Email">✉️</a>
                 </div>
 
-                <p style="margin-top: 30px; color: var(--gray);">{{value_proposition}}</p>
+                {{#has_professional_interests}}
+                <p style="margin-top: 30px; color: var(--muted-text);">
+                    {{#professional_interests}}{{.}} {{/professional_interests}}
+                </p>
+                {{/has_professional_interests}}
             </div>
         </div>
     </section>
@@ -830,7 +801,7 @@
     <footer>
         <div class="container">
             <p>&copy; {{current_year}} {{name}} | {{major}} Portfolio</p>
-            <p style="margin-top: 5px; font-size: 0.9rem;">{{subheadline}}</p>
+            <p style="margin-top: 5px; font-size: 0.9rem;">{{value_proposition}}</p>
         </div>
     </footer>
 </body>

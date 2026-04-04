@@ -626,6 +626,62 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
 
   // Merged copy seed: prefer resolved strategy (job_resolved/resume_resolved) copy seed; fall back to resume_strategy options
   const copySeed = strategy?.website_copy_seed || resumeStrategy?.website_copy_seed || {};
+  const openToRaw = String(copySeed.open_to || "").trim();
+
+  const buildOpenToItems = (value, fallbackRoles = []) => {
+    if (!value) return [];
+    const cleaned = value
+      .replace(/^[A-Za-z ]{0,24}:\s*/, "")
+      .replace(/\s+[—-]\s+(based in|located in|near|open to relocation|remote|hybrid)\b.*$/i, "")
+      .trim();
+    const isShortChip = label => {
+      const words = label.trim().split(/\s+/).filter(Boolean);
+      return label.length <= 32 && words.length >= 1 && words.length <= 4;
+    };
+    const normalizeChip = label => label
+      .replace(/\b(roles?|positions?|opportunities|companies|company)\b/gi, "")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      .replace(/^[,;:./\s-]+|[,;:./\s-]+$/g, "");
+
+    const explicitParts = cleaned
+      .split(/\s*[•|;]\s*|\s+[·•]\s+/)
+      .map(part => normalizeChip(part))
+      .filter(Boolean);
+    if (explicitParts.length > 1 && explicitParts.every(isShortChip)) {
+      return explicitParts.slice(0, 4).map(label => ({ label }));
+    }
+
+    const roleIndustryMatch = cleaned.match(/^(.*?)\s+\bat\b\s+(.*)$/i);
+    if (roleIndustryMatch) {
+      const roleParts = roleIndustryMatch[1]
+        .split(/\s+\bor\b\s+|\s+\band\b\s+/i)
+        .map(part => normalizeChip(part))
+        .filter(Boolean);
+      const industryParts = roleIndustryMatch[2]
+        .split(/\s+\bor\b\s+|\s+\band\b\s+/i)
+        .map(part => normalizeChip(part))
+        .filter(Boolean);
+      const combined = [...roleParts, ...industryParts].filter(isShortChip).slice(0, 4);
+      if (combined.length >= 2) return combined.map(label => ({ label }));
+    }
+
+    const roleParts = cleaned
+      .split(/\s+\bor\b\s+|\s+\band\b\s+/i)
+      .map(part => normalizeChip(part))
+      .filter(Boolean);
+    if (roleParts.length > 1 && roleParts.every(isShortChip)) {
+      return roleParts.slice(0, 4).map(label => ({ label }));
+    }
+
+    const roleFallback = fallbackRoles
+      .map(role => String(role || "").trim())
+      .map(normalizeChip)
+      .filter(Boolean)
+      .filter(isShortChip)
+      .slice(0, 4);
+    return roleFallback.map(label => ({ label }));
+  };
 
   // Convert skills object → skill_groups array, applying AI-generated subcategory labels
   const skills = resumeJson?.skills || {};
@@ -657,6 +713,22 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   const strengths = (copySeed.strengths_snapshot?.length
     ? copySeed.strengths_snapshot
     : (strategy?.editorial_direction?.strengths_to_emphasize || [])).slice(0, 4);
+  const desiredRoles = (resumeJson?.desired_roles?.length ? resumeJson.desired_roles
+    : strategy?.desired_roles?.length ? strategy.desired_roles
+    : (resumeStrategy?.desired_roles || [])).slice(0, 3);
+  const open_to_items = buildOpenToItems(openToRaw, desiredRoles);
+  const open_to_display = openToRaw || open_to_items.map(item => item.label).join(" • ");
+  const normalizedOpenToText = `${openToRaw} ${open_to_items.map(item => item.label).join(" ")}`.toLowerCase();
+  const status_badges = (copySeed.status_badges || [])
+    .map(label => String(label || "").trim())
+    .filter(Boolean)
+    .filter((label, idx, arr) => arr.findIndex(v => v.toLowerCase() === label.toLowerCase()) === idx)
+    .filter(label => !/^(seeking|open to|available|based in|located in)\b/i.test(label))
+    .filter(label => {
+      const lc = label.toLowerCase();
+      return !normalizedOpenToText || !normalizedOpenToText.includes(lc);
+    })
+    .map(label => ({ label }));
 
   // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
   // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
@@ -729,15 +801,16 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     major:             edu0.major        || "",
     specialization:    edu0.minor        || edu0.major || "",
     current_year:      new Date().getFullYear(),
-    desired_roles:     (resumeJson?.desired_roles?.length ? resumeJson.desired_roles
-                     : strategy?.desired_roles?.length   ? strategy.desired_roles
-                     : (resumeStrategy?.desired_roles || [])).slice(0, 3),
-    desired_role:      resumeJson?.desired_roles?.[0] || strategy?.desired_roles?.[0] || resumeStrategy?.desired_roles?.[0] || "",
+    desired_roles:     desiredRoles,
+    desired_role:      desiredRoles[0] || "",
 
-    open_to:          copySeed.open_to || "",
-    has_open_to:      !!(copySeed.open_to),
-    status_badges:    (copySeed.status_badges || []).map(b => ({ label: b })),
-    has_status_badges:!!(copySeed.status_badges?.length),
+    open_to:          openToRaw,
+    open_to_display,
+    open_to_items,
+    has_open_to:      !!openToRaw,
+    has_open_to_items:open_to_items.length > 0,
+    status_badges,
+    has_status_badges:status_badges.length > 0,
 
     has_github:   !!(personal.github),
     has_linkedin: !!(personal.linkedin),
@@ -1075,7 +1148,12 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     // Backward-compat: convert legacy hero_card_types array to hero_card_map format
     if (!heroCardMap && Array.isArray(templateMeta.hero_card_types)) {
       const DEFAULT_LABELS = { highlights: "Highlights", snapshot: "Strengths Snapshot", links: "Links" };
-      heroCardMap = templateMeta.hero_card_types.map(type => ({
+      const skillGroupCount = Math.max(0, Number(templateMeta.hero_card_skill_groups) || 0);
+      const legacyTypes = [
+        ...Array.from({ length: skillGroupCount }, () => "skill_group"),
+        ...templateMeta.hero_card_types
+      ];
+      heroCardMap = legacyTypes.map(type => ({
         original_label: type,
         type,
         display_label: DEFAULT_LABELS[type] || ""

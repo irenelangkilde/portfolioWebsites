@@ -25,7 +25,7 @@ Top-level scalars
   {{specialization}}
   {{current_year}}        e.g. 2026
   {{desired_role}}        Primary target role (first entry from desired_roles)
-  {{open_to}}             "Open to / Seeking / Available for" text — a single prose string
+  {{open_to}}             "Open to / Seeking / Available for" text — prose fallback / footer display
                           (e.g. "Full-time roles in embedded systems, open to relocation")
 
 Conditional blocks (omit the section entirely when the array is empty)
@@ -38,7 +38,13 @@ Conditional blocks (omit the section entirely when the array is empty)
   {{#has_publications}}            …  {{/has_publications}}
   {{#has_professional_interests}}  …  {{/has_professional_interests}}
   {{#has_open_to}}                 …  {{/has_open_to}}
+  {{#has_open_to_items}}           …  {{/has_open_to_items}}
   {{#has_status_badges}}           …  {{/has_status_badges}}
+
+Open-to items  (short bullets/chips when the original template uses brief phrases rather than prose)
+  {{#has_open_to_items}}
+  {{#open_to_items}}<span class="chip">{{label}}</span>{{/open_to_items}}
+  {{/has_open_to_items}}
 
 Status badges  (short hero chips: graduation date, availability, degree, honors, etc.)
   {{#has_status_badges}}
@@ -192,6 +198,7 @@ CONVERSION RULES
 
 1b. HERO SIDEBAR CARD GRID: If the template contains an at-a-glance / hero sidebar that shows highlights, snapshot strengths, social links, and/or skill chips as small cards in a 2–3-column grid, convert it to use `{{#hero_cards}}` instead of separate hardcoded sections:
     - Identify each card in the original sidebar and classify it using the HERO CARD TYPE → DATA SOURCE MAPPING table above.
+    - Preserve the original number of hero cards. If the source sidebar has 4 cards, `hero_card_map` must contain 4 entries in that same order. Do NOT collapse multiple cards into fewer generalized cards.
     - Replace every hardcoded card title / section heading with `{{card_label}}`. Never hardcode names.
     - Preserve the original title text verbatim as the display_label — do NOT generalize or shorten it.
     - Replace the body of each card type with the corresponding Mustache block:
@@ -233,7 +240,8 @@ CONVERSION RULES
    Incorrect: {{#leadership}}<section>{{#leadership}}…{{/leadership}}</section>{{/leadership}}
    Apply this pattern to: has_leadership, has_certifications, has_publications, and any other optional array section.
 
-5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}`. This includes hero sub-badges, footer taglines, and any inline paragraph with this content. Do NOT use `{{#desired_roles}}` for this — `desired_roles` is for explicit role lists only. Do NOT hardcode availability text.
+5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with dynamic availability tokens. Use `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}` for prose sentences/footers. Use `{{#has_open_to_items}}{{#open_to_items}}…{{label}}…{{/open_to_items}}{{/has_open_to_items}}` when the original design expects short bullets/chips of 1–3 words each. This includes hero sub-badges, footer taglines, and inline availability rows. Do NOT use `{{#desired_roles}}` for this — `desired_roles` is for explicit role lists only. Do NOT hardcode availability text.
+   Example: `Open to: Hardware Validation • Field Service • Test Engineering • Laser Systems` should become a short-item block with four `open_to_items`, not one long paragraph.
 
 5a. STATUS BADGES: Any short badge/chip/pill in the hero that shows graduation date, class year, degree label, availability, or honors (e.g. "Class of 2026", "B.S. Electrical Engineering", "Available June 2026") should be replaced with `{{#has_status_badges}}{{#status_badges}}<span class="[original-badge-class]">{{label}}</span>{{/status_badges}}{{/has_status_badges}}`. Preserve the original badge CSS class exactly.
 
@@ -269,8 +277,10 @@ CONVERSION RULES
                            source HTML has no readable title text for the card.
      The renderer builds hero_cards in this exact order, binding each card to its declared data source.
      Omit the field entirely if the template has no hero sidebar.
-     Example: [ { "original_label": "Language Snapshot", "type": "snapshot", "display_label": "Language Snapshot" },
-                { "original_label": "Key Highlights",    "type": "highlights", "display_label": "Key Highlights" } ]
+     Example: [ { "original_label": "Core Focus", "type": "skill_group", "display_label": "Core Focus" },
+                { "original_label": "Toolchain", "type": "skill_group", "display_label": "Toolchain" },
+                { "original_label": "Highlights", "type": "highlights", "display_label": "Highlights" },
+                { "original_label": "Links", "type": "links", "display_label": "Links" } ]
 
 ──────────────────────────────────────────────
 COLOR MAPPING

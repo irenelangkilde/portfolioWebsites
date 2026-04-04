@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- { "default_color_scheme": { "primary": "#4E70F1", "secondary": "#F28B86", "accent": "#8FD4C1", "dark": "#1f2328", "light": "#f7f9fb" }, "hero_card_types": ["highlights"], "hero_card_skill_groups": 0 } -->
+  <!-- { "default_color_scheme": { "primary": "#4E70F1", "secondary": "#F28B86", "tertiary": "#8FD4C1", "dark": "#1f2328", "light": "#f7f9fb" }, "about_word_count": 37, "hero_card_map": [] } -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} | {{major}}</title>
   <meta name="description" content="Resume & portfolio website for a {{major}} major." />
@@ -10,39 +10,28 @@
   <style>
     :root{
       /* Five main theme colors */
-      --color-ink:     #1f2328;   /* 1. Canvas     — deep charcoal page text / base dark  */
-      --color-muted:   #5b6672;   /* 2. Subtle     — secondary text, meta labels          */
-      --color-paper:   #f7f9fb;   /* 3. Panel      — lightest surface, page background    */
-      --color-accent:  #4E70F1;   /* 4. Interactive — confident blue, CTAs & headings     */
-      --color-accent2: #F28B86;   /* 5. Signature  — warm coral, primary CTA highlight    */
+      --color-ink:     #1f2328;   /* 1. Canvas      — deep charcoal, primary text & body */
+      --color-muted:   #5b6672;   /* 2. Subtle       — secondary text, meta labels        */
+      --color-paper:   #f7f9fb;   /* 3. Panel        — light page background surface      */
+      --color-accent:  #4E70F1;   /* 4. Interactive  — soft confident blue, CTAs & links  */
+      --color-accent2: #F28B86;   /* 5. Accent2      — warm coral, hero highlights        */
 
       /* Theme-independent hard-coded neutrals */
-      --white:   #ffffff;
-      --black:   #000000;
-      --accent3: #8FD4C1;         /* gentle mint — decorative only, not swapped by theme  */
+      --white:  #ffffff;
+      --black:  #000000;
+      --accent3: #8FD4C1;         /* gentle mint — decorative only */
 
       /* Derived tokens */
       --card:         color-mix(in srgb, var(--white) 88%, transparent);
       --stroke:       color-mix(in srgb, var(--black) 10%, transparent);
       --shadow:       0 18px 55px color-mix(in srgb, var(--black) 12%, transparent);
       --shadowSoft:   0 10px 28px color-mix(in srgb, var(--black) 10%, transparent);
-
       --tag-bg:       color-mix(in srgb, var(--color-accent) 12%, transparent);
       --tag-border:   color-mix(in srgb, var(--color-accent) 18%, transparent);
-      --tag-text:     color-mix(in srgb, var(--color-accent) 80%, var(--black));
-
-      --hero-bg-a:    color-mix(in srgb, var(--color-accent) 92%, transparent);
-      --hero-bg-b:    color-mix(in srgb, var(--color-accent) 70%, transparent);
-      --hero-tint2:   color-mix(in srgb, var(--color-accent2) 22%, transparent);
-      --hero-tint3:   color-mix(in srgb, var(--accent3) 22%, transparent);
-
-      --body-radial1: color-mix(in srgb, var(--color-accent) 14%, transparent);
-      --body-radial2: color-mix(in srgb, var(--color-accent2) 14%, transparent);
-      --body-radial3: color-mix(in srgb, var(--accent3) 12%, transparent);
-
+      --tag-text:     color-mix(in srgb, var(--color-accent) 90%, var(--black));
       --item-bg:      color-mix(in srgb, var(--white) 74%, transparent);
       --contact-bg:   color-mix(in srgb, var(--white) 82%, transparent);
-
+      --hero-card-bg: color-mix(in srgb, var(--white) 14%, transparent);
       --radius: 22px;
       --max: 1120px;
     }
@@ -54,9 +43,9 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--color-ink);
       background:
-        radial-gradient(1000px 520px at 12% 8%, var(--body-radial1) 0%, transparent 60%),
-        radial-gradient(900px 520px at 85% 0%, var(--body-radial2) 0%, transparent 58%),
-        radial-gradient(900px 520px at 55% 25%, var(--body-radial3) 0%, transparent 58%),
+        radial-gradient(1000px 520px at 12% 8%, color-mix(in srgb, var(--color-accent) 14%, transparent) 0%, transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, color-mix(in srgb, var(--color-accent2) 14%, transparent) 0%, transparent 58%),
+        radial-gradient(900px 520px at 55% 25%, color-mix(in srgb, var(--accent3) 12%, transparent) 0%, transparent 58%),
         var(--color-paper);
       overflow-x:hidden;
     }
@@ -68,9 +57,9 @@
     header{
       color:var(--white);
       background:
-        radial-gradient(900px 420px at 20% 30%, var(--hero-tint2), transparent 60%),
-        radial-gradient(900px 420px at 80% 20%, var(--hero-tint3), transparent 60%),
-        linear-gradient(120deg, var(--hero-bg-a), var(--hero-bg-b));
+        radial-gradient(900px 420px at 20% 30%, color-mix(in srgb, var(--color-accent2) 22%, transparent), transparent 60%),
+        radial-gradient(900px 420px at 80% 20%, color-mix(in srgb, var(--accent3) 22%, transparent), transparent 60%),
+        linear-gradient(120deg, color-mix(in srgb, var(--color-accent) 92%, transparent), color-mix(in srgb, var(--color-accent) 70%, transparent));
       position:relative;
       overflow:hidden;
     }
@@ -78,10 +67,10 @@
       content:"";
       position:absolute; inset:-40px -80px -80px -80px;
       background:
-        radial-gradient(circle at 15% 30%, rgba(255,255,255,.18) 0 22%, transparent 23%),
-        radial-gradient(circle at 45% 20%, rgba(255,255,255,.12) 0 16%, transparent 17%),
-        radial-gradient(circle at 75% 40%, rgba(255,255,255,.12) 0 20%, transparent 21%),
-        radial-gradient(circle at 85% 15%, rgba(255,255,255,.10) 0 14%, transparent 15%);
+        radial-gradient(circle at 15% 30%, color-mix(in srgb, var(--white) 18%, transparent) 0 22%, transparent 23%),
+        radial-gradient(circle at 45% 20%, color-mix(in srgb, var(--white) 12%, transparent) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 40%, color-mix(in srgb, var(--white) 12%, transparent) 0 20%, transparent 21%),
+        radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--white) 10%, transparent) 0 14%, transparent 15%);
       filter: blur(1px);
       opacity:.85;
       pointer-events:none;
@@ -107,9 +96,9 @@
     }
     .mark{
       width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, rgba(255,255,255,.30), rgba(255,255,255,.12));
-      border:1px solid rgba(255,255,255,.24);
-      box-shadow: 0 12px 26px rgba(0,0,0,.22);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--white) 30%, transparent), color-mix(in srgb, var(--white) 12%, transparent));
+      border:1px solid color-mix(in srgb, var(--white) 24%, transparent);
+      box-shadow: 0 12px 26px color-mix(in srgb, var(--black) 22%, transparent);
     }
     .brandText{ display:flex; flex-direction:column; line-height:1.1; }
     .brandText strong{ font-size:16px; letter-spacing:.02em; }
@@ -125,12 +114,12 @@
       font-size:13.5px;
       padding:10px 12px;
       border-radius:999px;
-      background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
+      background: color-mix(in srgb, var(--white) 14%, transparent);
+      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    nav a:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+    nav a:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent); }
 
     /* Hero */
     .hero{
@@ -165,10 +154,10 @@
     }
 
     .heroCard{
-      background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
+      background: var(--hero-card-bg);
+      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      box-shadow: 0 18px 44px color-mix(in srgb, var(--black) 18%, transparent);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -177,8 +166,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: rgba(255,255,255,.14);
-      border:1px solid rgba(255,255,255,.18);
+      background: color-mix(in srgb, var(--white) 14%, transparent);
+      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
       font-size:12.5px;
       font-weight:850;
       letter-spacing:.02em;
@@ -197,17 +186,17 @@
       justify-content:center;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid rgba(255,255,255,.22);
-      background: rgba(255,255,255,.14);
+      border:1px solid color-mix(in srgb, var(--white) 22%, transparent);
+      background: color-mix(in srgb, var(--white) 14%, transparent);
       color:var(--white);
       text-decoration:none;
       font-weight:850;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{ transform: translateY(-1px); background: rgba(255,255,255,.20); }
+    .btn:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent); }
     .btn.primary{
-      background: var(--hero-tint2);
+      background: color-mix(in srgb, var(--color-accent2) 22%, transparent);
       border-color: color-mix(in srgb, var(--color-accent2) 28%, transparent);
     }
 
@@ -287,7 +276,7 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:color-mix(in srgb, var(--color-muted) 30%, var(--white));
+      background:#ddd;
     }
     .contactCard{
       padding:22px;
@@ -320,7 +309,7 @@
         <div class="mark" aria-hidden="true"></div>
         <div class="brandText">
           <strong>{{name}}</strong>
-          <span>{{major}} • Graduation: {{graduation_date}}</span>
+          <span>{{major}}{{#specialization}} • {{specialization}}{{/specialization}}{{#has_status_badges}} • {{#status_badges}}{{label}}{{/status_badges}}{{/has_status_badges}}</span>
         </div>
       </div>
 
@@ -343,19 +332,13 @@
       <aside class="heroCard" aria-label="Quick highlights">
         <div class="pillRow">
           {{#skill_groups}}
-          {{#skills}}
-          <span class="pill">{{.}}</span>
-          {{/skills}}
+          {{#skills}}<span class="pill">{{.}}</span>{{/skills}}
           {{/skill_groups}}
         </div>
         <ul>
-          {{#hero_cards}}
-          {{#is_highlights}}
-          {{#highlights}}
-          <li>{{.}}</li>
-          {{/highlights}}
-          {{/is_highlights}}
-          {{/hero_cards}}
+          {{#experience}}
+          {{#bullets}}<li>{{.}}</li>{{/bullets}}
+          {{/experience}}
         </ul>
         <div class="ctaRow">
           <a class="btn primary" href="#portfolio">See Portfolio</a>
@@ -375,32 +358,29 @@
         <div class="card">
           <h3>Strengths</h3>
           <ul class="bullets">
-            {{#skill_groups}}
-            {{#skills}}
-            <li>{{.}}</li>
-            {{/skills}}
-            {{/skill_groups}}
+            {{#projects}}
+            {{#bullets}}<li>{{.}}</li>{{/bullets}}
+            {{/projects}}
           </ul>
           <div class="tagRow">
-            {{#skill_groups}}
-            {{#skills}}
-            <span class="tag">{{.}}</span>
-            {{/skills}}
-            {{/skill_groups}}
+            {{#has_professional_interests}}
+            {{#professional_interests}}<span class="tag">{{.}}</span>{{/professional_interests}}
+            {{/has_professional_interests}}
           </div>
         </div>
 
         <div class="card">
           <h3>What I'm Seeking</h3>
-          <p class="meta">{{value_proposition}}</p>
+          <p class="meta">
+            {{#has_open_to_items}}
+            {{#open_to_items}}{{label}} • {{/open_to_items}}
+            {{/has_open_to_items}}
+            {{#has_open_to}}{{open_to}}{{/has_open_to}}
+          </p>
           <ul class="bullets">
-            {{#hero_cards}}
-            {{#is_highlights}}
-            {{#highlights}}
-            <li>{{.}}</li>
-            {{/highlights}}
-            {{/is_highlights}}
-            {{/hero_cards}}
+            {{#experience}}
+            {{#bullets}}<li>{{.}}</li>{{/bullets}}
+            {{/experience}}
           </ul>
         </div>
       </div>
@@ -409,20 +389,19 @@
     <!-- EDUCATION -->
     <section id="education" class="section">
       <h2>Education</h2>
-      <p class="subhead">Academic background and coursework.</p>
+      <p class="subhead">{{value_proposition}}</p>
 
       <div class="timeline">
         {{#education}}
         <div class="item">
           <div class="itemTop">
-            <strong>{{degree}} in {{major}}</strong>
-            <span>Expected {{graduation_date}}</span>
+            <strong>{{degree}}{{#major}} in {{major}}{{/major}}</strong>
+            <span>{{graduation_date}}</span>
           </div>
-          <div class="meta">{{institution}} • {{location}} • GPA: {{gpa}}</div>
+          <div class="meta">{{institution}}{{#location}} • {{location}}{{/location}}{{#gpa}} • GPA: {{gpa}}{{/gpa}}</div>
           <ul class="bullets">
-            {{#activities}}
-            <li>{{.}}</li>
-            {{/activities}}
+            {{#activities}}<li>{{.}}</li>{{/activities}}
+            {{#honors}}<li>{{honors}}</li>{{/honors}}
           </ul>
         </div>
         {{/education}}
@@ -432,20 +411,18 @@
     <!-- EXPERIENCE -->
     <section id="experience" class="section">
       <h2>Experience</h2>
-      <p class="subhead">{{desired_role}} roles, practicums, and related experience.</p>
+      <p class="subhead">{{subheadline}}</p>
 
       <div class="timeline">
         {{#experience}}
-        <div class="item">
+        <div class="item" style="margin-bottom:14px">
           <div class="itemTop">
-            <strong>{{title}}, {{company}}</strong>
+            <strong>{{title}}{{#company}}, {{company}}{{/company}}</strong>
             <span>{{start_date}} – {{end_date}}</span>
           </div>
-          <div class="meta">{{company}} • {{location}}</div>
+          <div class="meta">{{company}}{{#location}} • {{location}}{{/location}}</div>
           <ul class="bullets">
-            {{#bullets}}
-            <li>{{.}}</li>
-            {{/bullets}}
+            {{#bullets}}<li>{{.}}</li>{{/bullets}}
           </ul>
         </div>
         {{/experience}}
@@ -455,22 +432,19 @@
     <!-- PORTFOLIO -->
     <section id="portfolio" class="section">
       <h2>Portfolio</h2>
-      <p class="subhead">Selected projects, lesson plans, and professional artifacts.</p>
+      <p class="subhead">{{subheadline}}</p>
 
       <div class="grid2">
         {{#projects}}
         <div class="card">
+          <span style="display:block; text-align:center; font-size:4rem; margin-bottom:0.5rem">{{project_icon}}</span>
           <h3>{{name}}</h3>
           <div class="meta">{{description}}</div>
           <ul class="bullets">
-            {{#bullets}}
-            <li>{{.}}</li>
-            {{/bullets}}
+            {{#bullets}}<li>{{.}}</li>{{/bullets}}
           </ul>
           <div class="tagRow">
-            {{#technologies}}
-            <span class="tag">{{.}}</span>
-            {{/technologies}}
+            {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
           </div>
         </div>
         {{/projects}}
@@ -480,12 +454,12 @@
     <!-- TEACHING PHILOSOPHY -->
     <section id="philosophy" class="section">
       <h2>Teaching Philosophy</h2>
-      <p class="subhead">A statement tailored for applications and interviews.</p>
+      <p class="subhead">{{subheadline}}</p>
 
       <div class="card">
         <h3>My Approach</h3>
-        <p style="margin:0; color:color-mix(in srgb, var(--color-ink) 85%, var(--white)); line-height:1.7;">
-          {{value_proposition}}
+        <p style="margin:0; color:color-mix(in srgb, var(--color-ink) 85%, var(--color-muted)); line-height:1.7;">
+          {{about}}
         </p>
       </div>
     </section>
@@ -493,14 +467,14 @@
     <!-- CONTACT -->
     <section id="contact" class="section">
       <h2>Contact</h2>
-      <p class="subhead">Get in touch for opportunities and collaborations.</p>
+      <p class="subhead">{{subheadline}}</p>
 
       <div class="contactWrap">
         <img class="headshot" src="headshot.jpg" alt="Headshot of {{name}}" />
 
         <div class="contactCard">
           <h3>{{name}}</h3>
-          <div class="meta">{{major}} • Graduation: {{graduation_date}} • Open to {{desired_role}} roles</div>
+          <div class="meta">{{major}}{{#has_status_badges}} • {{#status_badges}}{{label}}{{/status_badges}}{{/has_status_badges}}{{#has_open_to}} • {{open_to}}{{/has_open_to}}</div>
 
           <div class="contactRow">
             <div><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>
@@ -520,17 +494,15 @@
           </div>
 
           <div class="tagRow" style="margin-top:16px">
-            {{#skill_groups}}
-            {{#skills}}
-            <span class="tag">{{.}}</span>
-            {{/skills}}
-            {{/skill_groups}}
+            {{#has_professional_interests}}
+            {{#professional_interests}}<span class="tag">{{.}}</span>{{/professional_interests}}
+            {{/has_professional_interests}}
           </div>
         </div>
       </div>
     </section>
 
-    {{#certifications}}
+    {{#has_certifications}}
     <section id="certifications" class="section">
       <h2>Certifications</h2>
       <div class="timeline">
@@ -545,9 +517,9 @@
         {{/certifications}}
       </div>
     </section>
-    {{/certifications}}
+    {{/has_certifications}}
 
-    {{#publications}}
+    {{#has_publications}}
     <section id="publications" class="section">
       <h2>Publications</h2>
       <div class="timeline">
@@ -558,30 +530,30 @@
             <span>{{date}}</span>
           </div>
           <div class="meta">{{venue}}</div>
-          <div><a href="{{link}}" target="_blank" rel="noreferrer">{{link}}</a></div>
+          {{#link}}<div><a href="{{link}}" target="_blank" rel="noreferrer" style="color:var(--color-accent); font-weight:850; text-decoration:none;">View Publication</a></div>{{/link}}
         </div>
         {{/publications}}
       </div>
     </section>
-    {{/publications}}
+    {{/has_publications}}
 
-    {{#leadership}}
+    {{#has_leadership}}
     <section id="leadership" class="section">
-      <h2>Leadership &amp; Volunteer</h2>
+      <h2>Leadership &amp; Involvement</h2>
       <div class="timeline">
         {{#leadership}}
-        <div class="item">
+        <div class="item" style="margin-bottom:14px">
           <div class="itemTop">
             <strong>{{role}}</strong>
             <span>{{dates}}</span>
           </div>
           <div class="meta">{{organization}}</div>
-          <p style="margin:8px 0 0;">{{description}}</p>
+          <p style="margin:8px 0 0; font-size:14.5px; line-height:1.55;">{{description}}</p>
         </div>
         {{/leadership}}
       </div>
     </section>
-    {{/leadership}}
+    {{/has_leadership}}
 
     <footer>
       © <span id="y"></span> {{name}} • {{major}} Portfolio

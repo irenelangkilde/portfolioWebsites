@@ -415,7 +415,7 @@ Pick the single best value for each copy field from the working material in resu
 - highlights: copy from resume_strategy.website_copy_seed.highlights (max 4)
 - strengths_snapshot: copy from resume_strategy.website_copy_seed.strengths_snapshot (max 4)
 - open_to: copy from resume_strategy.website_copy_seed.open_to
-- status_badges: copy from resume_strategy.website_copy_seed.status_badges
+- status_badges: copy only short factual badges from resume_strategy.website_copy_seed.status_badges. Keep these to objective profile facts such as degree, honors, class year, GPA, or graduation timing. Do NOT include availability, role-seeking text, relocation, or location here; those belong in open_to instead.
 - skills_subcategory_labels: copy from resume_strategy.website_copy_seed.skills_subcategory_labels
 
 EXAMPLE OUTPUT (fields from both resume_strategy and resume_resolved — use as format reference, not as content defaults)
@@ -454,7 +454,7 @@ EXAMPLE OUTPUT (fields from both resume_strategy and resume_resolved — use as 
 
 "open_to": "Entry-level embedded or hardware engineering roles; open to relocation"
 
-"status_badges": ["Class of 2026", "B.S. Electrical Engineering", "Available June 2026"]
+"status_badges": ["Class of 2026", "B.S. Electrical Engineering", "Magna Cum Laude"]
 
 "highlights": [
   "Senior design: 48V→5V synchronous buck at 95% peak efficiency",

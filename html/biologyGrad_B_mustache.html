@@ -2,55 +2,57 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- { "default_color_scheme": { "primary": "#2e7d5b", "secondary": "#88c26e", "accent": "#f2d27c", "dark": "#132018", "light": "#f7fbf7" } } -->
+  <!-- { "default_color_scheme": { "primary": "#2e7d5b", "secondary": "#88c26e", "tertiary": "#f2d27c", "dark": "#132018", "light": "#f7fbf7" }, "about_word_count": 33, "hero_card_map": [] } -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>{{name}} | {{major}} Resume &amp; Portfolio</title>
+  <title>{{name}} | {{major}} Resume & Portfolio</title>
   <meta name="description" content="Resume and portfolio website for a college student majoring in {{major}}." />
 
   <style>
     :root{
       /* Five main theme colors */
-      --color-ink:     #132018;   /* 1. Canvas      — deep forest, primary body text   */
-      --color-muted:   #4e5d53;   /* 2. Panel        — muted green-grey, secondary text */
-      --color-paper:   #f7fbf7;   /* 3. OnCanvas     — soft botanical white, page bg   */
-      --color-accent:  #2e7d5b;   /* 4. Interactive  — forest green, CTAs & headings   */
-      --color-accent2: #88c26e;   /* 5. Accent2      — leaf green, pills & highlights  */
+      --color-ink:     #132018;   /* 1. Canvas      — deep forest, primary text          */
+      --color-muted:   #4e5d53;   /* 2. Subtle       — secondary text, meta labels        */
+      --color-paper:   #f7fbf7;   /* 3. Background   — light natural page background      */
+      --color-accent:  #2e7d5b;   /* 4. Interactive  — forest green, links & headings     */
+      --color-accent2: #88c26e;   /* 5. Vibrant      — leaf green, pills & highlights     */
 
       /* Theme-independent hard-coded neutrals */
-      --white:     #ffffff;
-      --black:     #000000;
-      --accent3:   #f2d27c;       /* warm sunlight — fixed decorative warm tone        */
-      --btn-text:  #ffffff;
+      --white:        #ffffff;
+      --black:        #000000;
+      --accent3:      #f2d27c;    /* warm sunlight — decorative highlight */
+      --btnText:      #ffffff;
 
       /* Derived tokens */
+      --ink:          var(--color-ink);
+      --muted:        var(--color-muted);
+      --paper:        var(--color-paper);
       --card:         color-mix(in srgb, var(--white) 82%, transparent);
       --stroke:       color-mix(in srgb, var(--black) 10%, transparent);
       --shadow:       0 18px 55px color-mix(in srgb, var(--black) 14%, transparent);
       --shadowSoft:   0 10px 28px color-mix(in srgb, var(--black) 10%, transparent);
       --radius:       22px;
-      --max:          1120px;
-
-      --tag-bg:       color-mix(in srgb, var(--color-accent) 12%, transparent);
-      --tag-border:   color-mix(in srgb, var(--color-accent) 18%, transparent);
-      --tag-text:     color-mix(in srgb, var(--color-accent) 85%, var(--black));
 
       --pill-bg:      color-mix(in srgb, var(--color-accent2) 18%, transparent);
       --pill-border:  color-mix(in srgb, var(--color-accent2) 22%, transparent);
+      --tag-bg:       color-mix(in srgb, var(--color-accent) 12%, transparent);
+      --tag-border:   color-mix(in srgb, var(--color-accent) 18%, transparent);
+      --tag-text:     color-mix(in srgb, var(--color-accent) 80%, var(--black));
 
-      --hero-bg-1:    color-mix(in srgb, var(--color-accent2) 18%, transparent);
-      --hero-bg-2:    color-mix(in srgb, var(--accent3) 18%, transparent);
+      --hero-overlay: color-mix(in srgb, var(--black) 55%, transparent);
+      --hero-overlay2:color-mix(in srgb, var(--black) 35%, transparent);
+      --hero-card-bg: color-mix(in srgb, var(--white) 12%, transparent);
+      --hero-card-bd: color-mix(in srgb, var(--white) 18%, transparent);
 
-      --hero-card-bg:  color-mix(in srgb, var(--white) 12%, transparent);
-      --hero-card-border: color-mix(in srgb, var(--white) 18%, transparent);
+      --grad-green:   color-mix(in srgb, var(--color-accent2) 18%, transparent);
+      --grad-gold:    color-mix(in srgb, var(--accent3) 18%, transparent);
+
+      --btn-primary-bg: color-mix(in srgb, var(--accent3) 18%, transparent);
+      --btn-primary-bd: color-mix(in srgb, var(--accent3) 26%, transparent);
 
       --item-bg:      color-mix(in srgb, var(--white) 72%, transparent);
-
       --contact-bg:   color-mix(in srgb, var(--white) 78%, transparent);
 
-      --footer-color: #6f7b73;
-
-      --overlay-dark:  rgba(10,20,14,.65);
-      --overlay-mid:   rgba(10,20,14,.42);
+      --max: 1120px;
     }
 
     *{box-sizing:border-box}
@@ -58,11 +60,11 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color:var(--color-ink);
+      color:var(--ink);
       background:
-        radial-gradient(1100px 520px at 12% 8%, var(--hero-bg-1) 0%, transparent 60%),
-        radial-gradient(900px 520px at 80% 0%, var(--hero-bg-2) 0%, transparent 58%),
-        var(--color-paper);
+        radial-gradient(1100px 520px at 12% 8%, var(--grad-green) 0%, transparent 60%),
+        radial-gradient(900px 520px at 80% 0%, var(--grad-gold) 0%, transparent 58%),
+        var(--paper);
       overflow-x:hidden;
     }
 
@@ -73,7 +75,7 @@
     header{
       color:var(--white);
       background:
-        linear-gradient(0deg, var(--overlay-dark), var(--overlay-mid)),
+        linear-gradient(0deg, var(--hero-overlay), var(--hero-overlay2)),
         url("../assets/images/biologyHero_B.png") center/cover no-repeat;
     }
 
@@ -150,7 +152,7 @@
 
     .heroCard{
       background: var(--hero-card-bg);
-      border:1px solid var(--hero-card-border);
+      border:1px solid var(--hero-card-bd);
       border-radius: var(--radius);
       box-shadow: 0 18px 44px color-mix(in srgb, var(--black) 18%, transparent);
       backdrop-filter: blur(10px);
@@ -194,8 +196,8 @@
     }
     .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent);}
     .btn.primary{
-      background: color-mix(in srgb, var(--accent3) 18%, transparent);
-      border-color: color-mix(in srgb, var(--accent3) 26%, transparent);
+      background: var(--btn-primary-bg);
+      border-color: var(--btn-primary-bd);
     }
 
     /* ===== Main content ===== */
@@ -206,7 +208,7 @@
       letter-spacing:-0.02em;
       color: var(--color-accent);
     }
-    .subhead{margin:0 0 22px; color:var(--color-muted); max-width: 85ch}
+    .subhead{margin:0 0 22px; color:var(--muted); max-width: 85ch}
 
     .grid2{
       display:grid;
@@ -226,7 +228,7 @@
       backdrop-filter: blur(8px);
     }
     .card h3{margin:0 0 8px; font-size:18px}
-    .meta{color:var(--color-muted); font-size:13.5px; margin-bottom:10px}
+    .meta{color:var(--muted); font-size:13.5px; margin-bottom:10px}
     .bullets{margin:12px 0 0; padding-left:18px}
     .bullets li{margin:6px 0}
 
@@ -259,7 +261,7 @@
       margin-bottom:6px;
     }
     .itemTop strong{font-size:16px}
-    .itemTop span{color:var(--color-muted); font-size:13.5px}
+    .itemTop span{color:var(--muted); font-size:13.5px}
 
     /* Contact section with headshot (last section before footer) */
     .contactWrap{
@@ -295,9 +297,16 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--footer-color);
+      color:#6f7b73;
       font-size:13.5px;
       text-align:center;
+    }
+
+    .project-icon{
+      display:block;
+      text-align:center;
+      font-size:4rem;
+      margin-bottom:0.5rem;
     }
 
     html{scroll-behavior:smooth}
@@ -333,9 +342,9 @@
 
       <aside class="heroCard" aria-label="Quick highlights">
         <div class="pillRow">
-          {{#skill_groups}}
-          {{#skills}}<span class="pill">{{.}}</span>{{/skills}}
-          {{/skill_groups}}
+          {{#has_status_badges}}
+          {{#status_badges}}<span class="pill">{{label}}</span>{{/status_badges}}
+          {{/has_status_badges}}
         </div>
         <ul>
           {{#experience}}
@@ -359,11 +368,11 @@
       <div class="grid2">
         <div class="card">
           <h3>Focus Areas</h3>
+          {{#has_professional_interests}}
           <ul class="bullets">
-            {{#skill_groups}}
-            {{#skills}}<li>{{.}}</li>{{/skills}}
-            {{/skill_groups}}
+            {{#professional_interests}}<li>{{.}}</li>{{/professional_interests}}
           </ul>
+          {{/has_professional_interests}}
           <div class="tagRow">
             {{#skill_groups}}
             {{#skills}}<span class="tag">{{.}}</span>{{/skills}}
@@ -391,9 +400,9 @@
         <div class="item">
           <div class="itemTop">
             <strong>{{degree}} {{major}}</strong>
-            <span>Expected {{graduation_date}}</span>
+            <span>{{graduation_date}}</span>
           </div>
-          <div class="meta">{{institution}} • {{location}} • GPA: {{gpa}}</div>
+          <div class="meta">{{institution}} • {{location}}{{#gpa}} • GPA: {{gpa}}{{/gpa}}</div>
           <ul class="bullets">
             {{#activities}}<li>{{.}}</li>{{/activities}}
           </ul>
@@ -443,11 +452,12 @@
     <!-- PROJECTS -->
     <section id="projects" class="section">
       <h2>Projects</h2>
-      <p class="subhead">Each project described in an employer-friendly way: methods, results, and takeaways.</p>
+      <p class="subhead">Projects presented in an employer-friendly way: methods, results, and takeaways.</p>
 
       <div class="grid2">
         {{#projects}}
         <div class="card">
+          <span class="project-icon">{{project_icon}}</span>
           <h3>{{name}}</h3>
           <div class="meta">{{role}} • {{dates}}</div>
           <p>{{description}}</p>
@@ -462,12 +472,10 @@
       </div>
     </section>
 
-    {{#certifications}}
+    {{#has_certifications}}
     <!-- CERTIFICATIONS -->
     <section id="certifications" class="section">
       <h2>Certifications</h2>
-      <p class="subhead">Professional credentials and training.</p>
-
       <div class="timeline">
         {{#certifications}}
         <div class="item">
@@ -480,14 +488,12 @@
         {{/certifications}}
       </div>
     </section>
-    {{/certifications}}
+    {{/has_certifications}}
 
-    {{#publications}}
+    {{#has_publications}}
     <!-- PUBLICATIONS -->
     <section id="publications" class="section">
       <h2>Publications</h2>
-      <p class="subhead">Research contributions and academic writing.</p>
-
       <div class="timeline">
         {{#publications}}
         <div class="item">
@@ -496,19 +502,17 @@
             <span>{{date}}</span>
           </div>
           <div class="meta">{{venue}}</div>
-          {{#link}}<div><a href="{{link}}" target="_blank" rel="noreferrer">View Publication</a></div>{{/link}}
+          {{#link}}<a href="{{link}}" target="_blank" rel="noreferrer" style="color:var(--color-accent);font-weight:850;text-decoration:none;font-size:13.5px;">View Publication</a>{{/link}}
         </div>
         {{/publications}}
       </div>
     </section>
-    {{/publications}}
+    {{/has_publications}}
 
-    {{#leadership}}
+    {{#has_leadership}}
     <!-- LEADERSHIP -->
     <section id="leadership" class="section">
-      <h2>Leadership &amp; Volunteer</h2>
-      <p class="subhead">Community involvement and leadership experience.</p>
-
+      <h2>Leadership &amp; Involvement</h2>
       <div class="timeline">
         {{#leadership}}
         <div class="item">
@@ -517,46 +521,38 @@
             <span>{{dates}}</span>
           </div>
           <div class="meta">{{organization}}</div>
-          <p>{{description}}</p>
+          <p style="margin:8px 0 0; font-size:14.5px; line-height:1.55;">{{description}}</p>
         </div>
         {{/leadership}}
       </div>
     </section>
-    {{/leadership}}
+    {{/has_leadership}}
 
     <!-- CONTACT (last section before footer) -->
     <section id="contact" class="section">
       <h2>Contact</h2>
-      <p class="subhead">Reach out directly — open to internships and entry-level opportunities.</p>
+      <p class="subhead">Get in touch — direct links below.</p>
 
       <div class="contactWrap">
         <img class="headshot" src="headshot.jpg" alt="Headshot of {{name}}" />
 
         <div class="contactCard">
           <h3>{{name}}</h3>
-          <div class="meta">{{major}} Major • Graduation: {{#education}}{{graduation_date}}{{/education}} • Open to internships &amp; entry-level roles</div>
+          <div class="meta">{{major}} Major • {{#education}}{{graduation_date}}{{/education}} • {{#has_open_to}}{{open_to}}{{/has_open_to}}</div>
 
           <div class="contactRow">
             <div><strong>Email:</strong> <a href="mailto:{{email}}">{{email}}</a></div>
-            {{#has_phone}}
-            <div><strong>Phone:</strong> <a href="tel:{{phone}}">{{phone}}</a></div>
-            {{/has_phone}}
-            {{#has_linkedin}}
-            <div><strong>LinkedIn:</strong> <a href="{{linkedin}}" target="_blank" rel="noreferrer">{{linkedin}}</a></div>
-            {{/has_linkedin}}
-            {{#has_github}}
-            <div><strong>GitHub:</strong> <a href="{{github}}" target="_blank" rel="noreferrer">{{github}}</a></div>
-            {{/has_github}}
-            {{#has_website}}
-            <div><strong>Website:</strong> <a href="{{website}}" target="_blank" rel="noreferrer">{{website}}</a></div>
-            {{/has_website}}
+            {{#has_linkedin}}<div><strong>LinkedIn:</strong> <a href="{{linkedin}}" target="_blank" rel="noreferrer">{{linkedin}}</a></div>{{/has_linkedin}}
+            {{#has_github}}<div><strong>GitHub:</strong> <a href="{{github}}" target="_blank" rel="noreferrer">{{github}}</a></div>{{/has_github}}
+            {{#has_website}}<div><strong>Website:</strong> <a href="{{website}}" target="_blank" rel="noreferrer">{{website}}</a></div>{{/has_website}}
+            {{#has_phone}}<div><strong>Phone:</strong> {{phone}}</div>{{/has_phone}}
             <div><strong>Location:</strong> {{location}}</div>
           </div>
 
           <div class="tagRow" style="margin-top:16px">
-            {{#skill_groups}}
-            {{#skills}}<span class="tag">{{.}}</span>{{/skills}}
-            {{/skill_groups}}
+            {{#has_open_to_items}}
+            {{#open_to_items}}<span class="tag">{{label}}</span>{{/open_to_items}}
+            {{/has_open_to_items}}
           </div>
         </div>
       </div>

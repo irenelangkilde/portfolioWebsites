@@ -24,6 +24,7 @@ OUTPUT JSON SHAPE
 {
   "job_resolved": {
     "target_role": {
+      "desired_job_position": "",
       "role_title": "",
       "company": "",
       "industry": "",
@@ -84,7 +85,8 @@ JOB_RESOLVED — general
 job_resolved contains the resolved, job-targeted decisions ready for downstream rendering. It has six sections: target_role, positioning, content_strategy, site_strategy, visual_language, and website_copy_seed (selected copy picks). Use resume_strategy as working material and resume_facts as ground truth — all named items must exist in resume_facts verbatim.
 
 TARGET ROLE
-Populate from the job posting.
+Populate from the job posting and the candidate's stated desired position.
+- desired_job_position: the candidate's own stated target position (from the job_posting preamble if provided, otherwise infer from role_title)
 - role_title: the exact job title from the posting
 - company: company name verbatim
 - industry: the employer's industry/sector
@@ -134,7 +136,7 @@ Pull the best raw material from resume_strategy.website_copy_seed and sharpen to
 - highlights: reorder resume_strategy.website_copy_seed.highlights so the items most relevant to this job come first. Drop items that don't speak to this role; add a job-specific one if there's a clear gap.
 - strengths_snapshot: rewrite resume_strategy.website_copy_seed.strengths_snapshot with phrases calibrated for this employer's culture and role requirements.
 - open_to: rewrite to name this role type and company type specifically.
-- status_badges: keep factual badges; add a role-relevant badge if appropriate (e.g. "Seeking [role type]").
+- status_badges: keep factual badges only. Do NOT add role-seeking, availability, relocation, or location badges here; that content belongs in open_to.
 - skills_subcategory_labels: reuse resume_strategy.website_copy_seed.skills_subcategory_labels as-is unless the role suggests a more targeted label.
 
 EXAMPLE OUTPUT (job_resolved fields — use as format reference, not as content defaults)
