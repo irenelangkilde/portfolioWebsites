@@ -4,11 +4,14 @@ const STORE_NAME = "preview-results";
 
 export function explainBlobStoreError(err) {
   const message = err?.message || "Unknown error";
+  const stack = err?.stack || "";
   const missing = [];
   if (!process.env.NETLIFY_SITE_ID) missing.push("NETLIFY_SITE_ID");
   if (!process.env.NETLIFY_AUTH_TOKEN) missing.push("NETLIFY_AUTH_TOKEN");
 
-  if (/invalid url/i.test(message)) {
+  const blobContext = /@netlify\/blobs|blobStore\.mjs|getPreviewResult\.mjs|analyzeResume-background\.mjs/.test(stack);
+
+  if (blobContext && /invalid url/i.test(message)) {
     const missingText = missing.length ? ` Missing: ${missing.join(", ")}.` : "";
     return `Netlify Blobs could not resolve a valid site/runtime URL.${missingText} Run this project with \`netlify dev\` from a linked site, or set valid Netlify credentials for local access. Underlying error: ${message}`;
   }

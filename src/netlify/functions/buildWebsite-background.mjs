@@ -1,6 +1,7 @@
 import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { createClient } from "@supabase/supabase-js";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
 
@@ -273,13 +274,15 @@ function cleanHtml(rawHtml) {
 // ─── Prompt loaders ──────────────────────────────────────────────────────────
 function loadPromptFile(filename) {
   const cwd = process.cwd();
-  const here = new URL(".", import.meta.url).pathname;
-  for (const candidate of [
-    resolve(here, filename),
+  let here = null;
+  try { here = dirname(fileURLToPath(import.meta.url)); } catch {}
+  const candidates = [
     resolve(cwd, `src/netlify/functions/${filename}`),
     resolve(cwd, `netlify/functions/${filename}`),
     resolve(cwd, filename),
-  ]) {
+  ];
+  if (here) candidates.unshift(resolve(here, filename));
+  for (const candidate of candidates) {
     try { return readFileSync(candidate, "utf-8"); } catch {}
   }
   throw new Error(`Could not load ${filename} (cwd=${cwd}, here=${here})`);

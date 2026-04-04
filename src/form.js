@@ -263,11 +263,13 @@
       return true;
     }
 
-    // Wire each field: validate on blur; re-check on input once an error is showing
+    // Wire each field: validate on blur; re-check on input once an error is showing.
+    // Blur validation is deferred 200ms so browser autocomplete selections aren't
+    // dismissed by DOM changes fired during the blur event.
     Object.keys(FIELD_VALIDATORS).forEach(id => {
       const input = document.getElementById(id);
       if (!input) return;
-      input.addEventListener("blur",  () => validateField(id, true));
+      input.addEventListener("blur",  () => setTimeout(() => validateField(id, true), 200));
       input.addEventListener("input", () => {
         if (getFieldMsg(id)?.textContent) validateField(id, false);
       });
