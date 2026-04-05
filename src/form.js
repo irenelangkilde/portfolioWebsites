@@ -748,6 +748,7 @@
 
     function setStep(step){
       currentStep = Math.max(0, Math.min(PAGES.length - 1, step));
+      if (currentStep >= 5) pillNavUnlocked = true;
       const activePageId = getPageId(PAGES[currentStep]);
       const seen = new Set();
       PAGES.forEach(p => {
@@ -924,10 +925,22 @@
     document.getElementById("resetTemplateKeyword")?.addEventListener("click", () => {
       const input = document.getElementById("modelTemplate");
       if (input) input.value = "";
+      sampleColors            = null;
+      lastExtractedUrl        = "";
       extractedTemplateCache  = null;
       lastExtractedTemplate   = "";
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
+      const sampleColorsBar = document.getElementById("sampleColorsBar");
+      const sampleColorsStatus = document.getElementById("sampleColorsStatus");
+      const useSampleColors = document.getElementById("useSampleColors");
+      const sampleColorsOverlay = document.getElementById("sampleColorsOverlay");
+      if (sampleColorsBar) sampleColorsBar.style.display = "none";
+      if (sampleColorsStatus) sampleColorsStatus.textContent = "";
+      if (useSampleColors) useSampleColors.checked = false;
+      if (sampleColorsOverlay) sampleColorsOverlay.style.display = "none";
+      updateTemplateCopyrightVisibility();
+      updateTemplateUI();
       setTemplateExtractStatus("");
       renderSuggestedPalettes();
       updateSubmitReadiness();
@@ -1050,6 +1063,7 @@
         //   mustache → *Grad_mustache.html
         const modeSuffix  = extractMode === "mustache" ? "_mustache" : "_template";
         const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
+        if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
 
         if (compiledKey === lastExtractedTemplate) return;
 
@@ -1208,6 +1222,139 @@
       return roles.sort((a, b) => a.index - b.index);
     }
 
+    function parseRootHexVars(html) {
+      if (!html) return [];
+      const rootMatch = html.match(/:root\s*\{([\s\S]*?)\}/);
+      if (!rootMatch) return [];
+      const vars = [];
+      const re = /--([\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})/g;
+      let m;
+      while ((m = re.exec(rootMatch[1])) !== null) {
+        vars.push({ name: m[1], hex: m[2] });
+      }
+      return vars;
+    }
+
+    function normalizeHex(hex) {
+      if (!hex) return null;
+      const h = String(hex).trim().toLowerCase();
+      if (!/^#[0-9a-f]{3,8}$/.test(h)) return h;
+      if (h.length === 4) return "#" + h.slice(1).split("").map(ch => ch + ch).join("");
+      return h.slice(0, 7);
+    }
+
+    function hexMetrics(hex) {
+      const n = normalizeHex(hex);
+      if (!n || n.length !== 7) return { chroma: 0, luminance: 0 };
+      const r = parseInt(n.slice(1, 3), 16);
+      const g = parseInt(n.slice(3, 5), 16);
+      const b = parseInt(n.slice(5, 7), 16);
+      return {
+        chroma: Math.max(r, g, b) - Math.min(r, g, b),
+        luminance: 0.2126 * r + 0.7152 * g + 0.0722 * b
+      };
+    }
+
+    function isNeutralHex(hex) {
+      return hexMetrics(hex).chroma < 22;
+    }
+
+    function buildTemplatePalette(cache) {
+      if (!cache) return null;
+      const slotNames = ["primary", "secondary", "accent", "dark", "light"];
+      const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
+      const rootVars = parseRootHexVars(cache.templateHtml);
+      const embedded = cache.embeddedJson?.default_color_scheme || {};
+
+      // Mustache templates with numbered --color-* comments already define the
+      // intended slot order. Preserve that exact 1-5 order instead of trying to
+      // reinterpret the colors semantically, or background/panel/accent colors
+      // will get shuffled when re-applied later.
+      if (roleColors.length) {
+        const colors = Object.fromEntries(slotNames.map((slot, i) => [slot, roleColors[i]?.hex || null]));
+        if (Object.values(colors).some(Boolean)) {
+          return { label: "Template palette", colors };
+        }
+      }
+
+      const palette = {
+        primary: embedded.primary || null,
+        secondary: embedded.secondary || null,
+        accent: embedded.accent || null,
+        dark: embedded.dark || null,
+        light: embedded.light || null
+      };
+
+      roleColors.forEach((r, i) => {
+        if (i < slotNames.length && !palette[slotNames[i]]) palette[slotNames[i]] = r.hex;
+      });
+
+      const seen = new Set();
+      const candidates = [];
+      const pushCandidate = (hex, score = 0, tag = "") => {
+        const norm = normalizeHex(hex);
+        if (!norm || seen.has(norm)) return;
+        seen.add(norm);
+        candidates.push({ hex, norm, score, tag, neutral: isNeutralHex(norm), ...hexMetrics(norm) });
+      };
+
+      Object.entries(embedded).forEach(([slot, hex]) => {
+        const bonus = ({ primary: 90, secondary: 80, accent: 85, dark: 55, light: 50 })[slot] || 0;
+        pushCandidate(hex, bonus, slot);
+      });
+      roleColors.forEach((r, i) => pushCandidate(r.hex, 70 - i * 3, r.label));
+      rootVars.forEach(v => {
+        const name = v.name.toLowerCase();
+        let score = 20;
+        if (/accent|brand|hero|signature|highlight|pop|vibrant/.test(name)) score += 40;
+        if (/accent2|accent3|secondary|tertiary/.test(name)) score += 25;
+        if (/bg|canvas|paper|surface|panel|ink|text|muted/.test(name)) score += 10;
+        if (/white|black|success|warning|danger|error|info/.test(name)) score -= 25;
+        pushCandidate(v.hex, score, name);
+      });
+
+      const pickUnused = list => list.find(c => !Object.values(palette).some(v => normalizeHex(v) === c.norm));
+      const chromatic = candidates
+        .filter(c => !c.neutral)
+        .sort((a, b) => b.score - a.score || b.chroma - a.chroma);
+      const neutrals = candidates
+        .filter(c => c.neutral)
+        .sort((a, b) => b.score - a.score || a.luminance - b.luminance);
+
+      ["primary", "secondary", "accent"].forEach(slot => {
+        const current = palette[slot];
+        const currentNorm = normalizeHex(current);
+        const duplicate = currentNorm && Object.entries(palette).some(([k, v]) => k !== slot && normalizeHex(v) === currentNorm);
+        if (!current || isNeutralHex(current) || duplicate) {
+          const next = pickUnused(chromatic);
+          if (next) palette[slot] = next.hex;
+        }
+      });
+
+      const darkCandidate = !palette.dark || Object.entries(palette).some(([k, v]) => k !== "dark" && normalizeHex(v) === normalizeHex(palette.dark))
+        ? neutrals.slice().sort((a, b) => a.luminance - b.luminance)[0] || pickUnused(candidates)
+        : null;
+      if (darkCandidate) palette.dark = darkCandidate.hex;
+
+      const lightCandidate = !palette.light || Object.entries(palette).some(([k, v]) => k !== "light" && normalizeHex(v) === normalizeHex(palette.light))
+        ? neutrals.slice().sort((a, b) => b.luminance - a.luminance)[0] || pickUnused(candidates)
+        : null;
+      if (lightCandidate) palette.light = lightCandidate.hex;
+
+      slotNames.forEach(slot => {
+        const current = palette[slot];
+        const currentNorm = normalizeHex(current);
+        const duplicate = currentNorm && slotNames.some(other => other !== slot && normalizeHex(palette[other]) === currentNorm);
+        if (!current || duplicate) {
+          const next = pickUnused(slot === "dark" || slot === "light" ? neutrals : chromatic) || pickUnused(candidates);
+          if (next) palette[slot] = next.hex;
+        }
+      });
+
+      if (!Object.values(palette).some(Boolean)) return null;
+      return { label: "Template palette", colors: palette };
+    }
+
     function applyColors(colors) {
       if (!colors) return;
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
@@ -1216,15 +1363,10 @@
       set("accent",    colors.accent);
       set("dark",      colors.dark);
       set("light",     colors.light);
-      // Update picker label text from --color-* role comments in the loaded template.
-      // Labels are assigned positionally: role 1 → primary picker, role 2 → secondary, etc.
-      // This matches the role-ordered colors built in renderSuggestedPalettes.
       const pickerIds = ["primary", "secondary", "accent", "dark", "light"];
-      const roles = extractedTemplateCache?.colorRoles || parseColorRoles(extractedTemplateCache?.templateHtml);
       pickerIds.forEach((slot, i) => {
-        const role = roles[i];
         const el = document.getElementById(slot + "-label");
-        if (el) el.textContent = role ? role.label : (slot.charAt(0).toUpperCase() + slot.slice(1));
+        if (el) el.textContent = String(i + 1);
       });
     }
 
@@ -2178,6 +2320,9 @@
       // editor never reads an empty slot. The popup-blocker rule only fires on
       // window.open(), not on localStorage writes.
       localStorage.setItem("portfolio_preview_html", generationResult.site_html);
+      // Pass page 4 colors so the editor can offer a "Reset to default" option
+      const p4Colors = getPage3Colors().theme;
+      localStorage.setItem("portfolio_page4_colors", JSON.stringify(p4Colors));
       const editorWin = window.open("editor.html", "_blank");
 
       // Collect visuals and inject them (client-side, may be instant or async).
@@ -2245,6 +2390,97 @@
       lastAnalysisData = null;
       setResumeAnalysisStatus("");
     });
+
+    // ── Downstream invalidation ───────────────────────────────────────────────
+    // When the user goes back to a page and changes an input, invalidate everything
+    // downstream that depended on that input. Attach listeners once at init time;
+    // they only invalidate if the user is currently on that page (currentStep check).
+
+    function invalidateFromPage1() {
+      if (currentStep !== 1) return;
+      // Resume/major/specialization changed — everything downstream is stale
+      lastAnalysisData     = null;
+      resumeAnalysisCache  = null;
+      jobAdResult          = null;
+      page2Submitted       = false;
+      extractedTemplateCache = null;
+      bridgeResult         = null;
+      generationResult     = null;
+      setResumeAnalysisStatus("");
+      setHeaderStatus("jobAnalysisStatus", "");
+      setHeaderStatus("templateExtractStatus", "");
+      setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("generatingWebsiteStatus", "");
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+    }
+
+    function invalidateFromPage2() {
+      if (currentStep !== 2) return;
+      // Job ad changed — job result and everything downstream is stale
+      jobAdResult      = null;
+      page2Submitted   = false;
+      bridgeResult     = null;
+      generationResult = null;
+      setHeaderStatus("jobAnalysisStatus", "");
+      setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("generatingWebsiteStatus", "");
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+    }
+
+    function invalidateFromPage3() {
+      if (currentStep !== 3) return;
+      // Design/template changed — template cache and everything downstream is stale
+      extractedTemplateCache = null;
+      bridgeResult           = null;
+      generationResult       = null;
+      setHeaderStatus("templateExtractStatus", "");
+      setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("generatingWebsiteStatus", "");
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+    }
+
+    function invalidateFromPage4() {
+      if (currentStep !== 4) return;
+      // Colors changed — bridge and generation are stale
+      bridgeResult     = null;
+      generationResult = null;
+      setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("generatingWebsiteStatus", "");
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+    }
+
+    // Page 1 inputs
+    ["major", "specialization"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", invalidateFromPage1);
+    });
+    resumeUpload?.addEventListener("change", invalidateFromPage1);
+
+    // Page 2 inputs
+    ["desiredRole", "jobAd"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", invalidateFromPage2);
+    });
+
+    // Page 3 inputs — template source radios, design selects, template keyword/file
+    ["designStyle", "designComposition", "designRenderMode", "designDensity",
+     "useEmojiIcons", "alternateSections", "modelTemplate"].forEach(id => {
+      const el = document.getElementById(id);
+      el?.addEventListener("change", invalidateFromPage3);
+      el?.addEventListener("input",  invalidateFromPage3);
+    });
+    document.querySelectorAll('input[name="templateSource"], input[name="templateCopyrightMode"]')
+      .forEach(el => el.addEventListener("change", invalidateFromPage3));
+    document.getElementById("templateScreenshotInput")
+      ?.addEventListener("change", invalidateFromPage3);
+
+    // Page 4 inputs — color pickers
+    ["primary", "secondary", "accent", "dark", "light"].forEach(id => {
+      document.getElementById(id)?.addEventListener("input", invalidateFromPage4);
+    });
+    document.getElementById("useSampleColors")?.addEventListener("change", invalidateFromPage4);
 
     // ── Page action helpers (action = everything except setStep) ─────────────
     function page1Action() {
@@ -2349,27 +2585,9 @@
       const rows      = document.getElementById("suggestedPalettesRows");
       if (!container || !rows) return;
 
-      // Slot 0: template palette — prefer colorRoles order (1=most dominant) over slot names
-      let tplPalette = null;
-      const tplColorRoles = extractedTemplateCache?.colorRoles;
-      if (tplColorRoles?.length) {
-        const slots = ["primary", "secondary", "accent", "dark", "light"];
-        const colors = {};
-        tplColorRoles.forEach((r, i) => { if (i < slots.length) colors[slots[i]] = r.hex; });
-        if (Object.values(colors).some(Boolean)) {
-          tplPalette = { label: "Template palette", colors };
-        }
-      }
-      if (!tplPalette) {
-        // Fallback: embedded default_color_scheme (templates without --color-* role comments)
-        const tplColors = extractedTemplateCache?.embeddedJson?.default_color_scheme;
-        if (tplColors && !Array.isArray(tplColors) && typeof tplColors === "object") {
-          const { primary, secondary, accent, dark, light } = tplColors;
-          if (primary || secondary || accent) {
-            tplPalette = { label: "Template palette", colors: { primary, secondary, accent, dark, light } };
-          }
-        }
-      }
+      // Slot 0: template palette — sanitize extracted colors so duplicate neutrals
+      // do not crowd out salient accent hues from the source design.
+      let tplPalette = buildTemplatePalette(extractedTemplateCache);
       if (!tplPalette && extractedTemplateCache?.templateHtml) {
         // Legacy fallback: old CSS var names (pre-color-role-comment templates)
         const rootMatch = extractedTemplateCache.templateHtml.match(/:root\s*\{([^}]+)\}/);
@@ -2408,12 +2626,13 @@
 
       const MAX = 4;
       const populated = visible.filter(Boolean).length;
+      const totalAvailable = Math.max(populated, Math.min(MAX, (tplPalette ? 1 : 0) + aiRows.length));
       const dataLoaded = !!(resolvedData);
       if (msg) {
         if (populated >= MAX) {
           msg.style.display = "none";
         } else if (dataLoaded) {
-          msg.textContent = populated === 0 ? "(No palettes found in analysis)" : `(${populated} of ${MAX} loaded)`;
+          msg.textContent = populated === 0 ? "(No palettes found in analysis)" : `(${populated} of ${totalAvailable} loaded)`;
           msg.style.display = "block";
         } else {
           msg.textContent = "(Thinking\u2026)";
@@ -2501,6 +2720,7 @@
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
       if (isMustacheMode()) {
+        setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
         doGenerateWebsite(); // bridge unused for mustache — skip straight to renderer
       } else {
         doBridgeContentAndDesign(); // fire-and-forget, auto-chains into doGenerateWebsite
@@ -2523,6 +2743,7 @@
       greyRendererButtons(true);
       setApplyBtnState(false);
       if (isMustacheMode()) {
+        setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else {
         doBridgeContentAndDesign(); // auto-chains into doGenerateWebsite() on completion

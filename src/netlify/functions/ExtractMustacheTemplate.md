@@ -23,6 +23,7 @@ Top-level scalars
   {{location}}
   {{major}}
   {{specialization}}
+  {{graduation_date}}     Graduation date/term as a short phrase, e.g. "Spring 2026" or "May 2026"
   {{current_year}}        e.g. 2026
   {{desired_role}}        Primary target role (first entry from desired_roles)
   {{open_to}}             "Open to / Seeking / Available for" text — prose fallback / footer display
@@ -40,6 +41,7 @@ Conditional blocks (omit the section entirely when the array is empty)
   {{#has_open_to}}                 …  {{/has_open_to}}
   {{#has_open_to_items}}           …  {{/has_open_to_items}}
   {{#has_status_badges}}           …  {{/has_status_badges}}
+  {{#has_status_badges_inline}}    …  {{/has_status_badges_inline}}
 
 Open-to items  (short bullets/chips when the original template uses brief phrases rather than prose)
   {{#has_open_to_items}}
@@ -50,6 +52,11 @@ Status badges  (short hero chips: graduation date, availability, degree, honors,
   {{#has_status_badges}}
   {{#status_badges}}<span class="badge">{{label}}</span>{{/status_badges}}
   {{/has_status_badges}}
+
+Status badges inline  (one combined hero meta line when the original design uses a single kicker rather than multiple pills)
+  {{#has_status_badges_inline}}
+  <p class="hero-kicker">{{status_badges_inline}}</p>
+  {{/has_status_badges_inline}}
 
 Professional interests  (candidate's stated areas of professional curiosity — keep as its own labeled section or tag cluster)
   {{#has_professional_interests}}
@@ -224,6 +231,10 @@ CONVERSION RULES
    - Skill tag labels
    - Footer copyright name
 
+2a. HERO BADGE / GRADUATION LABEL: If the template contains a badge, pill, or inline label that combines the candidate's major with a graduation term (e.g. "Electrical Engineering — Class of Spring Next Year", "Computer Science · May 2026"), replace it using the top-level tokens:
+    {{major}} — Class of {{graduation_date}}
+    Preserve the surrounding punctuation and separators (e.g. "—", "·", "Class of") as literal text. Do NOT collapse this into a single {{#status_badges}} entry, `{{status_badges_inline}}`, or any other opaque token.
+
 3. PRESERVE completely:
    - All <style> blocks and CSS rules (colors will be restructured per COLOR MAPPING — see below — but the visual result must be equivalent)
    - All class names and id attributes
@@ -243,7 +254,7 @@ CONVERSION RULES
 5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with dynamic availability tokens. Use `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}` for prose sentences/footers. Use `{{#has_open_to_items}}{{#open_to_items}}…{{label}}…{{/open_to_items}}{{/has_open_to_items}}` when the original design expects short bullets/chips of 1–3 words each. This includes hero sub-badges, footer taglines, and inline availability rows. Do NOT use `{{#desired_roles}}` for this — `desired_roles` is for explicit role lists only. Do NOT hardcode availability text.
    Example: `Open to: Hardware Validation • Field Service • Test Engineering • Laser Systems` should become a short-item block with four `open_to_items`, not one long paragraph.
 
-5a. STATUS BADGES: Any short badge/chip/pill in the hero that shows graduation date, class year, degree label, availability, or honors (e.g. "Class of 2026", "B.S. Electrical Engineering", "Available June 2026") should be replaced with `{{#has_status_badges}}{{#status_badges}}<span class="[original-badge-class]">{{label}}</span>{{/status_badges}}{{/has_status_badges}}`. Preserve the original badge CSS class exactly.
+5a. STATUS BADGES: Any short factual hero metadata that shows graduation date, class year, degree label, GPA, honors, or similar profile facts may be rendered in one of two ways, depending on the source design. If the source clearly uses multiple discrete chips/pills, use `{{#has_status_badges}}{{#status_badges}}<span class="[original-badge-class]">{{label}}</span>{{/status_badges}}{{/has_status_badges}}`. If the source instead reads as a single compact hero kicker/meta line, render one combined string using `{{#has_status_badges_inline}}...{{status_badges_inline}}...{{/has_status_badges_inline}}` with literal separators such as `•` preserved in the template. Do NOT force one factual item per pill when the original composition reads as one line.
 
 7. NAVIGATION LINKS: keep href="#section-id" anchors intact. Replace only the visible link label text if it is candidate-specific.
 
@@ -288,11 +299,18 @@ COLOR MAPPING
 
 Distill the template's colors into five named `--color-*` CSS custom properties (use fewer if the palette genuinely has fewer distinct roles). Keep the original hex values exactly — do NOT substitute Mustache placeholder tokens. Then rewrite every hardcoded color value anywhere in the file (`:root`, other CSS rules, and HTML inline `style=""` attributes) to reference these variables using `var()` or `color-mix()`. The rendered page must look identical to the source.
 
+The five core colors must be the most mutually distinct, high-signal colors in the design. Do NOT waste core slots on duplicate blacks, duplicate grays, or barely-different neutrals when the source has salient accent hues that drive headings, CTA buttons, hero art, cards, or section dividers. Preserve the meaningful accent colors first; neutrals belong in the core five only when they are truly repeated structural colors.
+
 Structure the `:root` block in three groups:
 
   1. Five main theme colors — one declaration per row, original hex value, plus a role comment in the format:
        /* N. RoleName — brief phrase */
      where N is 1–5 and RoleName is a word from the COLOR_ROLE_NAMING_CONVENTIONS table below that describes the main way the color is used. Make sure the five core color assignments are organized to provide sufficient contrast for all the text in various sections of the webpage to be easily viewed by humans.
+     Constraints:
+     - Never include the same hex twice in the five main colors.
+     - Avoid near-duplicate neutrals; at most two of the five core colors should be neutral unless the source is genuinely monochrome.
+     - If the source clearly uses multiple chromatic accents (for example blue, coral, and mint/green), keep those accents in the core five instead of replacing one with an extra gray.
+     - Do not promote pure utility colors such as warning red, success green, or hardcoded black/white into the core five unless they are truly part of the template's main visual identity.
 
   2. Theme-independent hard-coded neutrals — pure white, pure black, and any truly fixed utility colors (e.g. --white, --black, --success, --warning) that are not part of the palette and must never change with a theme swap.
 
@@ -328,6 +346,11 @@ Example:
 =============================================================================
 
 Establish theme color roles for each core color. A role is 1-4 words such as those in the COLOR_ROLE_NAMING_CONVENTIONS table except NOT a Role-based word NOR any hard-coded theme-independent color. A color may have multiple roles. Color roles that are computed by function may include: Elevated, Overlay, Tonal, Subtle, Container, Shadow, Highlight, etc. The theme color role should be posted in a comment adjacent to the color assignment in the html file and labeled with a number 1-5.
+
+Sanity check before finalizing the template:
+- Ask whether each of the five core colors is doing genuinely different work in the composition.
+- If two chosen core colors are both black/dark charcoal, or both light gray/off-white, replace one with a more distinctive accent from the source.
+- If a visually important heading/CTA/accent color is missing from the five core colors, the palette is wrong and must be revised.
 
 Potential Values for Color Theme Role Mapping
  1. Eg. Dominant, Primary, Background, Canvas, Brand, Hero

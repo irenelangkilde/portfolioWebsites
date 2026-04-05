@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Portfolio — Irene's Webworks</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
@@ -25,6 +26,8 @@
     .tbtn-ghost:hover  { background: rgba(255,255,255,.22); }
     .tbtn-primary { background: #667eea; color: #fff; }
     .tbtn-primary:hover { background: #5568d4; }
+    .tbtn-success { background: #2f8f5b; color: #fff; }
+    .tbtn-success:hover { background: #28794d; }
     .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
 
     #viewToggle { display: flex; gap: 2px; background: rgba(0,0,0,.3); border-radius: 7px; padding: 2px; }
@@ -110,6 +113,13 @@
       width: 32px; height: 24px; border: none; border-radius: 4px;
       cursor: pointer; padding: 1px; background: none;
     }
+    .drag-handle {
+      color: rgba(234,240,255,.25); font-size: 13px; cursor: grab;
+      user-select: none; line-height: 1; flex-shrink: 0;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .color-row.drag-over { outline: 2px solid rgba(102,126,234,.8); border-radius: 4px; }
+    .color-row.cp-dragging { opacity: .35; }
     #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
     #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
 
@@ -154,6 +164,7 @@
     </div>
     <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
+    <button class="tbtn tbtn-success" id="btnPublish">Publish</button>
   </div>
 
   <div id="editToolbar">
@@ -182,12 +193,15 @@
     </div>
     <div id="colorPanel" class="hidden">
       <h2>Colors</h2>
-      <div class="color-row"><label>Primary</label>  <input type="color" id="cp-primary"></div>
-      <div class="color-row"><label>Secondary</label><input type="color" id="cp-secondary"></div>
-      <div class="color-row"><label>Accent</label>   <input type="color" id="cp-accent"></div>
-      <div class="color-row"><label>Dark</label>     <input type="color" id="cp-dark"></div>
-      <div class="color-row"><label>Light</label>    <input type="color" id="cp-light"></div>
+      <div class="color-row" draggable="true" data-slot="primary">  <span class="drag-handle">⠿</span><label>1</label><input type="color" id="cp-primary"></div>
+      <div class="color-row" draggable="true" data-slot="secondary"><span class="drag-handle">⠿</span><label>2</label><input type="color" id="cp-secondary"></div>
+      <div class="color-row" draggable="true" data-slot="accent">   <span class="drag-handle">⠿</span><label>3</label><input type="color" id="cp-accent"></div>
+      <div class="color-row" draggable="true" data-slot="dark">     <span class="drag-handle">⠿</span><label>4</label><input type="color" id="cp-dark"></div>
+      <div class="color-row" draggable="true" data-slot="light">    <span class="drag-handle">⠿</span><label>5</label><input type="color" id="cp-light"></div>
       <hr>
+      <div style="padding: 4px 14px 10px;">
+        <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
+      </div>
       <p class="hint">Changes apply live. Download to save.</p>
     </div>
   </div>
@@ -212,6 +226,11 @@
 
   <script>
   (function () {
+    const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+    const supabaseClient = window.supabase?.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
     const fullHtml = localStorage.getItem("portfolio_preview_html");
 
     if (!fullHtml) {
@@ -331,6 +350,95 @@
     }
     document.getElementById("colorPanel").classList.remove("hidden");
 
+    // ── Reset colors ───────────────────────────────────────────────────────────
+    // Snapshot the initial colors (extracted from the generated HTML) so Reset
+    // always reverts to whatever was applied when the editor first opened.
+    const initialColors = { ...currentColors };
+    document.getElementById("btnResetColors").onclick = () => {
+      for (const name of CSS_VAR_NAMES) {
+        const hex = initialColors[name];
+        if (!hex) continue;
+        currentColors[name] = hex;
+        const input = document.getElementById(`cp-${name}`);
+        if (input) input.value = hex;
+      }
+      applyColorOverrides();
+    };
+
+    // ── Color row drag-to-swap ─────────────────────────────────────────────────
+    (function () {
+      const panel = document.getElementById("colorPanel");
+      let dragSrc = null;
+
+      panel.addEventListener("dragstart", e => {
+        const row = e.target.closest(".color-row");
+        if (!row) return;
+        // Only allow drag from the handle
+        if (!e.target.classList.contains("drag-handle")) { e.preventDefault(); return; }
+        dragSrc = row;
+        e.dataTransfer.effectAllowed = "move";
+        setTimeout(() => row.classList.add("cp-dragging"), 0);
+      });
+
+      panel.addEventListener("dragover", e => {
+        const row = e.target.closest(".color-row");
+        if (!row || row === dragSrc) return;
+        e.preventDefault();
+        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over"));
+        row.classList.add("drag-over");
+      });
+
+      panel.addEventListener("dragleave", e => {
+        const row = e.target.closest(".color-row");
+        if (row) row.classList.remove("drag-over");
+      });
+
+      panel.addEventListener("dragend", () => {
+        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over", "cp-dragging"));
+        dragSrc = null;
+      });
+
+      panel.addEventListener("drop", e => {
+        e.preventDefault();
+        const target = e.target.closest(".color-row");
+        if (!target || target === dragSrc || !dragSrc) return;
+
+        // Swap hex values between the two slots (keeps CSS var mapping intact)
+        const slotA = dragSrc.dataset.slot;
+        const slotB = target.dataset.slot;
+        const hexA  = currentColors[slotA];
+        const hexB  = currentColors[slotB];
+        currentColors[slotA] = hexB;
+        currentColors[slotB] = hexA;
+        const inputA = dragSrc.querySelector("input[type=color]");
+        const inputB = target.querySelector("input[type=color]");
+        if (inputA) inputA.value = hexB;
+        if (inputB) inputB.value = hexA;
+
+        // Swap DOM positions so the row visually moves
+        const parent  = panel;
+        const afterSrc = dragSrc.nextSibling;
+        const afterTgt = target.nextSibling;
+        if (afterSrc === target) {
+          parent.insertBefore(target, dragSrc);
+        } else if (afterTgt === dragSrc) {
+          parent.insertBefore(dragSrc, target);
+        } else {
+          parent.insertBefore(dragSrc, afterTgt);
+          parent.insertBefore(target, afterSrc);
+        }
+
+        // Renumber labels 1–5 top to bottom
+        panel.querySelectorAll(".color-row").forEach((r, i) => {
+          const lbl = r.querySelector("label");
+          if (lbl) lbl.textContent = String(i + 1);
+        });
+
+        target.classList.remove("drag-over");
+        applyColorOverrides();
+      });
+    })();
+
     // ── Resizable divider ──────────────────────────────────────────────────────
     const dividerEl = document.getElementById("divider");
     dividerEl.addEventListener("mousedown", e => {
@@ -441,6 +549,16 @@
       return html;
     }
 
+    function setEditStatus(message, kind = "") {
+      const el = document.getElementById("editStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.style.color =
+        kind === "error" ? "rgba(255,166,166,.88)" :
+        kind === "ok" ? "rgba(170,240,190,.88)" :
+        "rgba(234,240,255,.55)";
+    }
+
     // ── View HTML modal ────────────────────────────────────────────────────────
     document.getElementById("btnViewHtml").onclick = () => {
       document.getElementById("htmlModalText").value = buildHtmlString();
@@ -458,6 +576,57 @@
       const a = document.createElement("a");
       a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
       a.download = "portfolio.html"; a.click(); URL.revokeObjectURL(a.href);
+    };
+
+    document.getElementById("btnPublish").onclick = async () => {
+      if (!supabaseClient) {
+        alert("Supabase client failed to load. Publish is unavailable.");
+        return;
+      }
+
+      setEditStatus("Publishing...");
+      const publishBtn = document.getElementById("btnPublish");
+      const originalLabel = publishBtn.textContent;
+      publishBtn.disabled = true;
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) {
+          throw new Error("Sign in first. Publish requires an authenticated account.");
+        }
+
+        const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
+        const res = await fetch("/.netlify/functions/publishPortfolio", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            html: buildHtmlString(),
+            slug: storedSlug || undefined
+          })
+        });
+
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          throw new Error(payload?.error || `Publish failed (${res.status})`);
+        }
+
+        if (payload.slug) localStorage.setItem("portfolio_publish_slug", payload.slug);
+        if (payload.url) localStorage.setItem("portfolio_publish_url", payload.url);
+
+        setEditStatus(payload.republished ? "Republished." : "Published.", "ok");
+        const openNow = confirm(`${payload.republished ? "Republished" : "Published"} successfully.\n\n${payload.url}\n\nOpen the published page now?`);
+        if (openNow && payload.url) window.open(payload.url, "_blank", "noopener");
+      } catch (err) {
+        console.error("Publish failed:", err);
+        setEditStatus(err?.message || "Publish failed.", "error");
+        alert(err?.message || "Publish failed.");
+      } finally {
+        publishBtn.disabled = false;
+        publishBtn.textContent = originalLabel;
+      }
     };
 
     // ── Back ───────────────────────────────────────────────────────────────────

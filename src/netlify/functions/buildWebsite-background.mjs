@@ -717,7 +717,8 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     : strategy?.desired_roles?.length ? strategy.desired_roles
     : (resumeStrategy?.desired_roles || [])).slice(0, 3);
   const open_to_items = buildOpenToItems(openToRaw, desiredRoles);
-  const open_to_display = openToRaw || open_to_items.map(item => item.label).join(" • ");
+  const open_to_display = open_to_items.map(item => item.label).join(" • ");
+  const openToResolved = open_to_items.length ? open_to_display : "";
   const normalizedOpenToText = `${openToRaw} ${open_to_items.map(item => item.label).join(" ")}`.toLowerCase();
   const status_badges = (copySeed.status_badges || [])
     .map(label => String(label || "").trim())
@@ -729,6 +730,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       return !normalizedOpenToText || !normalizedOpenToText.includes(lc);
     })
     .map(label => ({ label }));
+  const status_badges_inline = status_badges.map(item => item.label).join(" • ");
 
   // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
   // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
@@ -799,18 +801,21 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     website:           personal.website  || "",
     location:          personal.location || "",
     major:             edu0.major        || "",
+    graduation_date:   edu0.graduation_date || "",
     specialization:    edu0.minor        || edu0.major || "",
     current_year:      new Date().getFullYear(),
     desired_roles:     desiredRoles,
     desired_role:      desiredRoles[0] || "",
 
-    open_to:          openToRaw,
+    open_to:          openToResolved,
     open_to_display,
     open_to_items,
-    has_open_to:      !!openToRaw,
+    has_open_to:      open_to_items.length > 0,
     has_open_to_items:open_to_items.length > 0,
     status_badges,
+    status_badges_inline,
     has_status_badges:status_badges.length > 0,
+    has_status_badges_inline:status_badges.length > 0,
 
     has_github:   !!(personal.github),
     has_linkedin: !!(personal.linkedin),

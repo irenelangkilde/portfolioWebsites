@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="https://unpkg.com/grapesjs@0.21.13/dist/css/grapes.min.css" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 48px; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
 
     #toolbar {
       display: flex;
@@ -44,8 +44,37 @@
     .tbtn-green   { background: #3a9e6e; color: #fff; }
     .tbtn-green:hover  { background: #2f8259; }
 
-    /* Give GrapesJS the full remaining height */
-    #gjs { height: calc(100vh - 48px); }
+    #colorBar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: #0f172a;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      flex-wrap: wrap;
+    }
+    #colorBar label {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      color: rgba(255,255,255,.6);
+      cursor: pointer;
+    }
+    #colorBar input[type="color"] {
+      width: 26px;
+      height: 22px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 4px;
+      padding: 1px;
+      background: none;
+      cursor: pointer;
+    }
+    #colorBar .sep { width: 1px; height: 20px; background: rgba(255,255,255,.15); margin: 0 2px; }
+    /* GrapesJS canvas height accounts for both toolbar + color bar */
+
+    /* Give GrapesJS the full remaining height (toolbar 48px + color bar 36px) */
+    #gjs { height: calc(100vh - 84px); }
 
     /* Force the GrapesJS canvas iframe to fill the full canvas height so that
        `100vh` inside the iframe matches the canvas height, not the content height.
@@ -84,6 +113,16 @@
     <button class="tbtn tbtn-ghost"   id="btnBack">← Back to Form</button>
     <button class="tbtn tbtn-green"   id="btnToggleEdit">✏️ Edit</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
+  </div>
+
+  <div id="colorBar">
+    <label>1 <input type="color" id="cp1" /></label>
+    <label>2 <input type="color" id="cp2" /></label>
+    <label>3 <input type="color" id="cp3" /></label>
+    <label>4 <input type="color" id="cp4" /></label>
+    <label>5 <input type="color" id="cp5" /></label>
+    <div class="sep"></div>
+    <button class="tbtn tbtn-ghost" id="btnResetColors" style="font-size:12px; padding:4px 10px;">↺ Reset to page 4 defaults</button>
   </div>
 
   <div id="gjs"></div>
@@ -147,6 +186,16 @@
   <script>
     const fullHtml    = localStorage.getItem("portfolio_preview_html");
     const headshotUrl = localStorage.getItem("portfolio_headshot_dataurl");
+    const page4Colors = JSON.parse(localStorage.getItem("portfolio_page4_colors") || "null");
+    // Slot order matches page 4: primary, secondary, accent, dark, light
+    const COLOR_SLOTS = ["primary", "secondary", "accent", "dark", "light"];
+    const colorPickers = [
+      document.getElementById("cp1"),
+      document.getElementById("cp2"),
+      document.getElementById("cp3"),
+      document.getElementById("cp4"),
+      document.getElementById("cp5"),
+    ];
 
     if (!fullHtml) {
       document.getElementById("no-preview").style.display = "flex";
@@ -179,6 +228,84 @@
         style: css
       });
 
+      // ── Color bar ─────────────────────────────────────────────────────────
+      // Reads --color-1…--color-5 (or page 4 slots as fallback) from the
+      // generated HTML and lets the user live-edit them in the iframe.
+
+      function getIframeDoc() {
+        try { return editor.Canvas.getFrameEl()?.contentDocument; } catch { return null; }
+      }
+
+      // Read computed value of a CSS variable from the iframe :root
+      function readCssVar(doc, name) {
+        try {
+          return getComputedStyle(doc.documentElement).getPropertyValue(name).trim();
+        } catch { return ""; }
+      }
+
+      // Apply a hex color to a CSS variable in the iframe
+      function setCssVar(name, hex) {
+        const doc = getIframeDoc();
+        if (!doc) return;
+        doc.documentElement.style.setProperty(name, hex);
+      }
+
+      // Detect which CSS variable names the template actually uses for its 5 color slots
+      function detectColorVarNames(doc) {
+        if (!doc) return [];
+        const style = doc.documentElement.getAttribute("style") || "";
+        const rootText = Array.from(doc.querySelectorAll("style"))
+          .map(s => s.textContent).join("\n");
+        // Look for --color-1…--color-5 first (our standard), then --color1…--color5
+        for (const pattern of [
+          ["--color-1","--color-2","--color-3","--color-4","--color-5"],
+          ["--color1","--color2","--color3","--color4","--color5"],
+        ]) {
+          if (pattern.every(v => rootText.includes(v))) return pattern;
+        }
+        return [];
+      }
+
+      let colorVarNames = []; // filled on editor load
+
+      function initColorBar() {
+        const doc = getIframeDoc();
+        colorVarNames = detectColorVarNames(doc);
+
+        // Seed pickers: try reading current CSS vars, fall back to page 4 values
+        colorPickers.forEach((picker, i) => {
+          if (!picker) return;
+          let val = colorVarNames[i] ? readCssVar(doc, colorVarNames[i]) : "";
+          if (!val && page4Colors) val = page4Colors[COLOR_SLOTS[i]] || "";
+          if (val) picker.value = val.startsWith("#") ? val : rgbToHex(val);
+        });
+      }
+
+      function rgbToHex(rgb) {
+        const m = rgb.match(/\d+/g);
+        if (!m || m.length < 3) return "#000000";
+        return "#" + m.slice(0,3).map(n => parseInt(n).toString(16).padStart(2,"0")).join("");
+      }
+
+      colorPickers.forEach((picker, i) => {
+        if (!picker) return;
+        picker.addEventListener("input", () => {
+          if (colorVarNames[i]) setCssVar(colorVarNames[i], picker.value);
+        });
+      });
+
+      document.getElementById("btnResetColors").onclick = () => {
+        if (!page4Colors) return;
+        const doc = getIframeDoc();
+        colorPickers.forEach((picker, i) => {
+          if (!picker) return;
+          const hex = page4Colors[COLOR_SLOTS[i]];
+          if (!hex) return;
+          picker.value = hex;
+          if (colorVarNames[i]) setCssVar(colorVarNames[i], hex);
+        });
+      };
+
       let isPreviewing = false; // GrapesJS starts in edit mode; we switch to preview on load
 
       editor.on("load", () => {
@@ -195,6 +322,9 @@
             iframeDoc.head.appendChild(fix);
           }
         } catch (e) { /* cross-origin or not ready — ignore */ }
+
+        // Seed color pickers from the loaded template's CSS variables
+        initColorBar();
 
         // Start in preview mode using GrapesJS's built-in command, which disables
         // all edit-mode interaction (hover highlights, selection, etc.)

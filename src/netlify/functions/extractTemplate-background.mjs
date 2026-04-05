@@ -1,8 +1,44 @@
-import { readFileSync } from "fs";
-import { resolve } from "path";
+import { accessSync, constants as fsConstants, existsSync, readFileSync } from "fs";
+import { dirname, resolve, sep as pathSep } from "path";
+import { fileURLToPath } from "url";
 import https from "https";
 import http from "http";
 import { getStore } from "@netlify/blobs";
+
+function findProjectHtmlRoot() {
+  let dir = dirname(fileURLToPath(import.meta.url));
+  for (let i = 0; i < 8; i += 1) {
+    const candidate = resolve(dir, "html");
+    if (existsSync(candidate)) return candidate;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  throw new Error("Could not locate the project's html directory from extractTemplate-background.");
+}
+
+function resolveMustacheOutputPath(relPath) {
+  const normalized = String(relPath || "").replace(/\\/g, "/").trim();
+  if (!normalized) throw new Error("Missing targetOutputPath for mustache extraction.");
+  if (!/^html\/.+_mustache\.html$/i.test(normalized)) {
+    throw new Error("targetOutputPath must point to an html/*_mustache.html file.");
+  }
+  const htmlRoot = findProjectHtmlRoot();
+  const projectRoot = dirname(htmlRoot);
+  const abs = resolve(projectRoot, normalized);
+  if (!(abs === htmlRoot || abs.startsWith(htmlRoot + pathSep))) {
+    throw new Error("targetOutputPath must stay within the html directory.");
+  }
+  return abs;
+}
+
+function ensureWritableOutputPath(absPath) {
+  if (existsSync(absPath)) {
+    accessSync(absPath, fsConstants.W_OK);
+    return;
+  }
+  accessSync(dirname(absPath), fsConstants.W_OK);
+}
 
 /** Fetch HTML via Node's http/https module — tolerant of SSL chain issues */
 function fetchHtmlNode(url) {
@@ -68,12 +104,26 @@ export async function handler(event) {
       major = "",
       specialization = "",
       provider = "claude",
-      templateMode = "analysis"   // "analysis" | "mustache"
+      templateMode = "analysis",   // "analysis" | "mustache"
+      targetOutputPath = ""
     } = body;
 
     if (!templateUrl && !templateHtmlBase64 && !templateImageBase64 && !templateJsonStr) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "One of templateUrl, templateHtmlBase64, templateImageBase64, or templateJsonStr is required" }), { ttl: 3600 });
       return { statusCode: 202 };
+    }
+
+    if (templateMode === "mustache" && targetOutputPath) {
+      try {
+        const absOutputPath = resolveMustacheOutputPath(targetOutputPath);
+        ensureWritableOutputPath(absOutputPath);
+      } catch (e) {
+        await store.set(jobId, JSON.stringify({
+          status: "error",
+          error: `Mustache extraction aborted before AI call: ${e.message}`
+        }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
     }
 
     // Load prompt — ConstructTemplate for image/JSON, ExtractMustacheTemplate for mustache mode, else EEWT
