@@ -1,17 +1,18 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
-// ── Credits / downloads per unit purchased ────────────────────────────────────
-// 1 unit = 5 credits + 1 download/deploy  (applies to all premium tiers)
+// ── Credits / downloads / deploys per unit purchased ─────────────────────────
+// 1 unit = 5 credits + 1 download + 1 deploy  (applies to all premium tiers)
 const CREDITS_PER_UNIT   = 5;
 const DOWNLOADS_PER_UNIT = 1;
+const DEPLOYS_PER_UNIT   = 1;
 
 // ── Static limits for tiers with a fixed unit count ──────────────────────────
 const TIER_LIMITS = {
-  basic: { tier: "basic", credits_limit: 5, downloads_limit: 1 },
+  basic: { tier: "basic", credits_limit: 5, downloads_limit: 1, deploys_limit: 1 },
   // premium tiers: limits are computed dynamically from quantity (see checkout handler)
   // premium_annual is the exception — unlimited
-  premium_annual: { tier: "premium", credits_limit: 120, downloads_limit: -1 },
+  premium_annual: { tier: "premium", credits_limit: 120, downloads_limit: -1, deploys_limit: -1 },
 };
 
 function getSupabaseAdmin() {
@@ -49,6 +50,7 @@ async function upgradePremiumMonthly(userId, quantity, extraFields = {}) {
       status:          "active",
       credits_limit:   quantity * CREDITS_PER_UNIT,
       downloads_limit: quantity * DOWNLOADS_PER_UNIT,
+      deploys_limit:   quantity * DEPLOYS_PER_UNIT,
       ...extraFields
     })
     .eq("user_id", userId);
@@ -148,8 +150,10 @@ export async function handler(event) {
               status:          "active",
               credits_used:    0,
               downloads_used:  0,
+              deploys_used:    0,
               credits_limit:   qty * CREDITS_PER_UNIT,
               downloads_limit: qty * DOWNLOADS_PER_UNIT,
+              deploys_limit:   qty * DEPLOYS_PER_UNIT,
               current_period_end: new Date(sub.current_period_end * 1000).toISOString()
             })
             .eq("user_id", userId);
@@ -160,6 +164,7 @@ export async function handler(event) {
               status:         "active",
               credits_used:   0,
               downloads_used: 0,
+              deploys_used:   0,
               current_period_end: new Date(sub.current_period_end * 1000).toISOString()
             })
             .eq("user_id", userId);

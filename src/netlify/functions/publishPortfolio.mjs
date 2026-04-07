@@ -84,7 +84,7 @@ export async function handler(event) {
 
   const { data: membership, error: membershipError } = await supabase
     .from("memberships")
-    .select("downloads_used, downloads_limit, status")
+    .select("deploys_used, deploys_limit, status")
     .eq("user_id", user.id)
     .single();
 
@@ -93,6 +93,12 @@ export async function handler(event) {
   }
   if (membership.status !== "active") {
     return json(403, { error: `Membership is ${membership.status}. Publishing is disabled.` });
+  }
+
+  const deploysUsed  = membership.deploys_used  ?? 0;
+  const deploysLimit = membership.deploys_limit ?? 0;
+  if (deploysLimit !== -1 && deploysUsed >= deploysLimit) {
+    return json(403, { error: "Please UPGRADE to publish or download with this account." });
   }
 
   const { store, configError } = getNamedBlobStore(PUBLISHED_SITES_STORE);
@@ -111,36 +117,44 @@ export async function handler(event) {
       return json(409, { error: "That publish URL is already taken." });
     }
 
-    const isFirstPublish = !existingMeta;
-    if (isFirstPublish && membership.downloads_limit !== -1 && membership.downloads_used >= membership.downloads_limit) {
-      return json(403, { error: "Please UPGRADE to publish or download with this account." });
-    }
+    // Each publish gets a versioned slug: {slug}-{N} where N = deploys_used + 1
+    const deployNumber   = deploysUsed + 1;
+    const versionedSlug  = `${slug}-${deployNumber}`;
+    const versionedHtmlKey = `html/${versionedSlug}.html`;
+    const versionedMetaKey = `meta/${versionedSlug}.json`;
 
     const now = new Date().toISOString();
-    await store.set(htmlKey, html);
-    await store.set(metaKey, JSON.stringify({
+    const metaPayload = {
       slug,
       user_id: user.id,
       email: user.email || "",
       created_at: existingMeta?.created_at || now,
-      updated_at: now
-    }));
+      updated_at: now,
+      latest_deploy: deployNumber
+    };
 
-    if (isFirstPublish) {
-      const { error: updateError } = await supabase
-        .from("memberships")
-        .update({ downloads_used: (membership.downloads_used || 0) + 1 })
-        .eq("user_id", user.id);
-      if (updateError) {
-        return json(500, { error: "Published, but failed to update download quota." });
-      }
+    // Write bare slug (always the latest) AND versioned slug (permanent snapshot)
+    await store.set(htmlKey, html);
+    await store.set(versionedHtmlKey, html);
+    await store.set(metaKey, JSON.stringify(metaPayload));
+    await store.set(versionedMetaKey, JSON.stringify({ ...metaPayload, slug: versionedSlug }));
+
+    const { error: updateError } = await supabase
+      .from("memberships")
+      .update({ deploys_used: deployNumber })
+      .eq("user_id", user.id);
+    if (updateError) {
+      return json(500, { error: "Published, but failed to update deploy quota." });
     }
 
     return json(200, {
       ok: true,
       slug,
+      versionedSlug,
       url: buildPublishUrl(event, slug),
-      republished: !isFirstPublish
+      versionedUrl: buildPublishUrl(event, versionedSlug),
+      deployNumber,
+      republished: !!existingMeta
     });
   } catch (err) {
     return json(500, { error: explainBlobStoreError(err) });

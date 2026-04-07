@@ -6,15 +6,18 @@
 
 -- ── 1. memberships ──────────────────────────────────────────
 -- One row per user. Tracks their tier and AI-call credit quota.
--- 1 unit = 5 credits + 1 download/deploy
-
+-- 1 unit = 5 credits + 1 download + 1 deploy
+--
+-- downloads = saving the HTML file to disk (client-side)
+-- deploys   = publishing to a live URL (server-side, versioned)
+--
 -- Tier limits:
---   free                 — 5 credits, 0 downloads  (preview; no purchase)
---   basic                — 5 credits, 1 download   ($7 one-time; 1 unit)
---   premium              — N×5 credits, N downloads (N units purchased)
+--   free                 — 5 credits, 0 downloads, 0 deploys  (preview; no purchase)
+--   basic                — 5 credits, 1 download,  1 deploy   ($7 one-time; 1 unit)
+--   premium              — N×5 credits, N downloads, N deploys (N units purchased)
 --     premium_monthly_new: graduated $19/11/7/5/4/2.95 per unit; no auto-renewal
 --     premium_monthly_sub: 50% off (month 2+), auto-renewing subscription
---     premium_annual:      $99/year; 120 credits, downloads_limit=-1 (unlimited downloads)
+--     premium_annual:      $99/year; 120 credits, downloads_limit=-1, deploys_limit=-1
 
 create table if not exists public.memberships (
   id                   uuid primary key default gen_random_uuid(),
@@ -27,6 +30,8 @@ create table if not exists public.memberships (
   credits_limit        integer not null default 5,      -- -1 = unlimited; overridden on upgrade
   downloads_used       integer not null default 0,
   downloads_limit      integer not null default 0,      -- 0 = none (free); -1 = unlimited
+  deploys_used         integer not null default 0,
+  deploys_limit        integer not null default 0,      -- 0 = none (free); -1 = unlimited
   stripe_customer_id      text,
   stripe_subscription_id  text,
   stripe_payment_intent   text,                         -- for one-time purchases
@@ -40,8 +45,8 @@ create table if not exists public.memberships (
 create or replace function public.handle_new_user()
 returns trigger language plpgsql security definer as $$
 begin
-  insert into public.memberships (user_id, tier, credits_limit, downloads_limit)
-  values (new.id, 'free', 5, 0)
+  insert into public.memberships (user_id, tier, credits_limit, downloads_limit, deploys_limit)
+  values (new.id, 'free', 5, 0, 0)
   on conflict (user_id) do nothing;
   return new;
 end;
@@ -182,3 +187,17 @@ create or replace function public.increment_anon_usage()
 returns void language sql security definer as $$
   update public.anon_usage set credits_used = credits_used + 1 where id = 1;
 $$;
+
+
+-- ── 6. Deploy tracking migration (run if memberships table already exists) ───
+-- Safe to re-run: IF NOT EXISTS / DO NOTHING guards.
+
+alter table public.memberships
+  add column if not exists deploys_used  integer not null default 0,
+  add column if not exists deploys_limit integer not null default 0;
+
+-- Back-fill deploys_limit to match downloads_limit for existing rows
+-- (new rows will get the right value from handle_new_user or the webhook)
+update public.memberships
+  set deploys_limit = downloads_limit
+  where deploys_limit = 0 and downloads_limit != 0;

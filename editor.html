@@ -232,6 +232,42 @@
       font-size: 12.5px; line-height: 1.6; padding: 14px 18px;
     }
 
+    /* ── Publish result modal ────────────────────────────────── */
+    #publishResultOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200001;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #publishResultOverlay.open { display: flex; }
+    #publishResultBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 26px; width: min(480px, 94vw);
+      display: flex; flex-direction: column; gap: 14px;
+    }
+    #publishResultBox h3 { font-size: 14px; font-weight: 700; color: #aef7c8; }
+    #publishResultBox .pub-row {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    #publishResultBox .pub-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: rgba(234,240,255,.4);
+    }
+    #publishResultBox .pub-link {
+      font-size: 12px; color: #7eb8ff; word-break: break-all;
+      text-decoration: underline; cursor: pointer;
+    }
+    #publishResultBox .pub-link:hover { color: #a8d0ff; }
+    #publishResultBox .pub-actions {
+      display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px;
+    }
+    #publishResultBox .pub-actions button {
+      padding: 6px 18px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    #btnPublishResultClose { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    #btnPublishResultClose:hover { background: rgba(255,255,255,.2); }
+    #btnPublishResultOpen  { background: #667eea; color: #fff; }
+    #btnPublishResultOpen:hover  { background: #5568d4; }
+
     #no-preview {
       display: none; position: fixed; inset: 0; background: #1a1a2e; color: white;
       align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 16px;
@@ -281,7 +317,7 @@
 <body class="visual-mode">
 
   <div id="toolbar">
-    <h1>Irene's Webworks — Visual Editor</h1>
+    <h1>Irene's Webworks — Visual Editor v2</h1>
     <button class="tbtn tbtn-ghost" id="btnBack">← Close Editor</button>
     <div id="viewToggle">
       <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
@@ -401,6 +437,25 @@
       </div>
       <div id="htmlModalBody">
         <textarea id="htmlModalText" spellcheck="false" readonly></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- Publish result modal -->
+  <div id="publishResultOverlay">
+    <div id="publishResultBox">
+      <h3 id="publishResultTitle">Published successfully</h3>
+      <div class="pub-row">
+        <span class="pub-label">Latest (always current)</span>
+        <a id="publishResultUrl" class="pub-link" target="_blank" rel="noopener"></a>
+      </div>
+      <div class="pub-row">
+        <span class="pub-label">Permanent snapshot</span>
+        <a id="publishResultVersionedUrl" class="pub-link" target="_blank" rel="noopener"></a>
+      </div>
+      <div class="pub-actions">
+        <button id="btnPublishResultClose">Close</button>
+        <button id="btnPublishResultOpen">Open latest ↗</button>
       </div>
     </div>
   </div>
@@ -552,6 +607,11 @@
       if (!imgReplaceTarget || !newSrc) return;
       try {
         imgReplaceTarget.src = newSrc;
+        // Ensure inserted image never overflows its container
+        if (!imgReplaceTarget.style.maxWidth) {
+          imgReplaceTarget.style.maxWidth = "100%";
+          imgReplaceTarget.style.height = "auto";
+        }
         scheduleVisualToCodeSync();
       } catch {}
       closeImgReplaceDialog();
@@ -579,9 +639,16 @@
     document.getElementById("imgReplaceUploadBtn").onclick = () => {
       document.getElementById("imgReplaceFile").click();
     };
+    const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+
     document.getElementById("imgReplaceFile").onchange = e => {
       const file = e.target.files?.[0];
       if (!file) return;
+      if (file.size > IMG_MAX_BYTES) {
+        alert(`Image is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please use an image under 2 MB.`);
+        e.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onload = ev => {
         const dataUrl = ev.target.result;
@@ -1097,7 +1164,7 @@
 
         const { data: membership } = await supabaseClient
           .from("memberships")
-          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit")
+          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit, deploys_used, deploys_limit")
           .eq("user_id", user.id)
           .single();
 
@@ -1110,9 +1177,9 @@
 
         const tier = membership.tier || "free";
         const status = membership.status || "unknown";
-        const credits = formatQuotaValue(membership.credits_used, membership.credits_limit);
+        const credits   = formatQuotaValue(membership.credits_used,  membership.credits_limit);
         const downloads = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
-        const deploys = downloads;
+        const deploys   = formatQuotaValue(membership.deploys_used,   membership.deploys_limit);
         userEl.textContent = `${name} · ${tier} · ${status}`;
         quotaEl.textContent = `Credits: ${credits} · Downloads: ${downloads} · Deploys: ${deploys}`;
       } catch {
@@ -1153,7 +1220,7 @@
       if (!userId) return null;
       const { data } = await supabaseClient
         .from("memberships")
-        .select("downloads_used, downloads_limit, status")
+        .select("downloads_used, downloads_limit, deploys_used, deploys_limit, status")
         .eq("user_id", userId)
         .single();
       return data || null;
@@ -1180,9 +1247,53 @@
       return membership;
     }
 
+    async function ensureDeployAllowed() {
+      if (!supabaseClient) {
+        throw new Error("Supabase client failed to load. Publish is unavailable.");
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sign in first. Publish requires an authenticated account.");
+      }
+      const membership = await getMembership();
+      if (!membership) {
+        throw new Error("No active membership record found for this account.");
+      }
+      if (membership.status !== "active") {
+        throw new Error(`Membership is ${membership.status}. Publishing is disabled.`);
+      }
+      const deploysUsed  = membership.deploys_used  ?? 0;
+      const deploysLimit = membership.deploys_limit ?? 0;
+      if (deploysLimit !== -1 && deploysUsed >= deploysLimit) {
+        throw new Error("Please UPGRADE to publish or download with this account.");
+      }
+      return membership;
+    }
+
     refreshEditorAccountStatus();
     supabaseClient?.auth?.onAuthStateChange?.(() => {
       refreshEditorAccountStatus();
+    });
+
+    // ── Publish result modal ───────────────────────────────────────────────────
+    function showPublishResult(verb, deployNumber, url, versionedUrl) {
+      document.getElementById("publishResultTitle").textContent =
+        `${verb} successfully — deploy #${deployNumber}`;
+      const urlEl = document.getElementById("publishResultUrl");
+      urlEl.textContent = url;
+      urlEl.href = url;
+      const vUrlEl = document.getElementById("publishResultVersionedUrl");
+      vUrlEl.textContent = versionedUrl;
+      vUrlEl.href = versionedUrl;
+      document.getElementById("btnPublishResultOpen").onclick =
+        () => window.open(url, "_blank", "noopener");
+      document.getElementById("publishResultOverlay").classList.add("open");
+    }
+    document.getElementById("btnPublishResultClose").onclick =
+      () => document.getElementById("publishResultOverlay").classList.remove("open");
+    document.getElementById("publishResultOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("publishResultOverlay"))
+        document.getElementById("publishResultOverlay").classList.remove("open");
     });
 
     // ── View HTML modal ────────────────────────────────────────────────────────
@@ -1215,22 +1326,16 @@
     };
 
     document.getElementById("btnPublish").onclick = async () => {
-      if (!supabaseClient) {
-        alert("Supabase client failed to load. Publish is unavailable.");
-        return;
-      }
-
-      setEditStatus("Publishing...");
       const publishBtn = document.getElementById("btnPublish");
       const originalLabel = publishBtn.textContent;
       publishBtn.disabled = true;
 
       try {
+        setEditStatus("Checking deploy access...");
         const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) {
-          throw new Error("Sign in first. Publish requires an authenticated account.");
-        }
+        await ensureDeployAllowed();
 
+        setEditStatus("Publishing...");
         const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
         const res = await fetch("/.netlify/functions/publishPortfolio", {
           method: "POST",
@@ -1250,18 +1355,16 @@
         }
 
         if (payload.slug) localStorage.setItem("portfolio_publish_slug", payload.slug);
-        if (payload.url) localStorage.setItem("portfolio_publish_url", payload.url);
+        if (payload.url)  localStorage.setItem("portfolio_publish_url",  payload.url);
+        if (payload.versionedUrl) localStorage.setItem("portfolio_publish_versioned_url", payload.versionedUrl);
 
-        setEditStatus(payload.republished ? "Republished." : "Published.", "ok");
+        const verb = payload.republished ? "Republished" : "Published";
+        setEditStatus(`${verb} as deploy #${payload.deployNumber}.`, "ok");
         refreshEditorAccountStatus();
-        const openNow = confirm(`${payload.republished ? "Republished" : "Published"} successfully.\n\n${payload.url}\n\nOpen the published page now?`);
-        if (openNow && payload.url) window.open(payload.url, "_blank", "noopener");
+        showPublishResult(verb, payload.deployNumber, payload.url, payload.versionedUrl);
       } catch (err) {
         console.error("Publish failed:", err);
         showLinkedError(err?.message || "Publish failed.");
-        if (!/\bupgrade\b/i.test(String(err?.message || ""))) {
-          alert(err?.message || "Publish failed.");
-        }
       } finally {
         publishBtn.disabled = false;
         publishBtn.textContent = originalLabel;
