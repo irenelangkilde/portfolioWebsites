@@ -236,6 +236,46 @@
       display: none; position: fixed; inset: 0; background: #1a1a2e; color: white;
       align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 16px;
     }
+
+    /* ── Image replace dialog ─────────────────────────────────────── */
+    #imgReplaceOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #imgReplaceOverlay.open { display: flex; }
+    #imgReplaceBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 20px 24px; width: min(420px, 94vw);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #imgReplaceBox h3 { font-size: 13px; font-weight: 700; color: rgba(234,240,255,.9); }
+    #imgReplaceBox .img-preview-wrap {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.04); border-radius: 6px; overflow: hidden; height: 100px;
+    }
+    #imgReplacePreview { max-height: 100px; max-width: 100%; object-fit: contain; }
+    #imgReplaceBox label { font-size: 12px; color: rgba(234,240,255,.6); margin-bottom: -6px; }
+    #imgReplaceUrl {
+      padding: 7px 10px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none; width: 100%;
+    }
+    #imgReplaceFile { display: none; }
+    #imgReplaceUploadBtn {
+      padding: 6px 14px; border: 1px dashed rgba(255,255,255,.25); border-radius: 6px;
+      background: rgba(255,255,255,.06); color: rgba(234,240,255,.7);
+      font-size: 12px; cursor: pointer; text-align: center; width: 100%;
+    }
+    #imgReplaceUploadBtn:hover { background: rgba(255,255,255,.12); }
+    .img-replace-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .img-replace-actions button {
+      padding: 6px 16px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    #imgReplaceCancel { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    #imgReplaceCancel:hover { background: rgba(255,255,255,.2); }
+    #imgReplaceApply  { background: #667eea; color: #fff; }
+    #imgReplaceApply:hover  { background: #5568d4; }
   </style>
 </head>
 <body class="visual-mode">
@@ -365,6 +405,24 @@
     </div>
   </div>
 
+  <!-- Image replace dialog -->
+  <div id="imgReplaceOverlay">
+    <div id="imgReplaceBox">
+      <h3>Replace Image</h3>
+      <div class="img-preview-wrap">
+        <img id="imgReplacePreview" src="" alt="current image" />
+      </div>
+      <label>Paste a URL</label>
+      <input type="text" id="imgReplaceUrl" placeholder="https://example.com/photo.jpg" autocomplete="off" />
+      <div id="imgReplaceUploadBtn">📁 Or click to upload a file…</div>
+      <input type="file" id="imgReplaceFile" accept="image/*" />
+      <div class="img-replace-actions">
+        <button id="imgReplaceCancel">Cancel</button>
+        <button id="imgReplaceApply">Apply</button>
+      </div>
+    </div>
+  </div>
+
   <div id="no-preview">
     <p>No portfolio found. Please generate one on Page 5 first.</p>
     <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
@@ -470,7 +528,88 @@
       } catch {}
     }
 
+    // ── Image click-to-replace ─────────────────────────────────────────────────
+    let imgReplaceTarget = null;
+
+    function openImgReplaceDialog(imgEl) {
+      imgReplaceTarget = imgEl;
+      const overlay = document.getElementById("imgReplaceOverlay");
+      const preview = document.getElementById("imgReplacePreview");
+      const urlInput = document.getElementById("imgReplaceUrl");
+      preview.src = imgEl.src || "";
+      urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (imgEl.src || "");
+      document.getElementById("imgReplaceFile").value = "";
+      overlay.classList.add("open");
+      urlInput.focus();
+    }
+
+    function closeImgReplaceDialog() {
+      document.getElementById("imgReplaceOverlay").classList.remove("open");
+      imgReplaceTarget = null;
+    }
+
+    function applyImgReplace(newSrc) {
+      if (!imgReplaceTarget || !newSrc) return;
+      try {
+        imgReplaceTarget.src = newSrc;
+        scheduleVisualToCodeSync();
+      } catch {}
+      closeImgReplaceDialog();
+    }
+
+    document.getElementById("imgReplaceCancel").onclick = closeImgReplaceDialog;
+
+    document.getElementById("imgReplaceApply").onclick = () => {
+      const url = document.getElementById("imgReplaceUrl").value.trim();
+      applyImgReplace(url);
+    };
+
+    document.getElementById("imgReplaceUrl").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("imgReplaceApply").click();
+      if (e.key === "Escape") closeImgReplaceDialog();
+    });
+
+    // Preview URL as user types
+    document.getElementById("imgReplaceUrl").addEventListener("input", e => {
+      const url = e.target.value.trim();
+      if (url) document.getElementById("imgReplacePreview").src = url;
+    });
+
+    // Upload file → convert to data URI
+    document.getElementById("imgReplaceUploadBtn").onclick = () => {
+      document.getElementById("imgReplaceFile").click();
+    };
+    document.getElementById("imgReplaceFile").onchange = e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const dataUrl = ev.target.result;
+        document.getElementById("imgReplacePreview").src = dataUrl;
+        document.getElementById("imgReplaceUrl").value = "";
+        // Apply immediately on upload
+        applyImgReplace(dataUrl);
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function attachIframeImageClickHandler() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        doc.addEventListener("click", e => {
+          const img = e.target.closest("img");
+          if (!img) return;
+          // Prevent designMode from placing a caret inside the click
+          e.preventDefault();
+          e.stopPropagation();
+          openImgReplaceDialog(img);
+        }, true); // capture phase so it fires before designMode handling
+      } catch {}
+    }
+
     frame.addEventListener("load", attachIframeInputListener);
+    frame.addEventListener("load", attachIframeImageClickHandler);
 
     function loadIframe(html) {
       frame.srcdoc = html;
