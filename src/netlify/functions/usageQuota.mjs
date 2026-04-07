@@ -47,11 +47,13 @@ export async function logUsageEvent(userId, fields) {
 export async function logAnonUsage() {
   const supabase = getSupabaseAdmin();
   if (!supabase) return;
-  await supabase.rpc("increment_anon_usage").catch(() => {
-    supabase.from("anon_usage").select("credits_used").eq("id", 1).single()
-      .then(({ data }) => {
-        if (data) supabase.from("anon_usage")
-          .update({ credits_used: data.credits_used + 1 }).eq("id", 1);
-      });
-  });
+  try {
+    await supabase.rpc("increment_anon_usage");
+  } catch {
+    // Fallback: manual increment if RPC unavailable
+    try {
+      const { data } = await supabase.from("anon_usage").select("credits_used").eq("id", 1).single();
+      if (data) await supabase.from("anon_usage").update({ credits_used: data.credits_used + 1 }).eq("id", 1);
+    } catch {}
+  }
 }

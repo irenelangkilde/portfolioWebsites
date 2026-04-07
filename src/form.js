@@ -1208,22 +1208,30 @@
 
         if (compiledKey === lastExtractedTemplate) return;
 
-        // Try pre-compiled version (fast path, no API call)
-        try {
-          const res = await fetch(compiledKey);
-          if (res.ok) {
+        // Try pre-compiled version (fast path, no API call).
+        // If mustache file is missing, fall back to the _template.html variant.
+        const candidateKeys = [compiledKey];
+        if (extractMode === "mustache") {
+          candidateKeys.push(srcPath.replace(/\.html$/, "_template.html"));
+        }
+        for (const candidateKey of candidateKeys) {
+          try {
+            const res = await fetch(candidateKey);
+            if (!res.ok) continue;
             const templateHtml = await res.text();
             const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
-            lastExtractedTemplate = compiledKey;
-            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: extractMode };
-            setTemplateExtractStatus("✓ Template loaded (pre-compiled)", "rgba(118,176,34,.9)");
+            const resolvedMode = candidateKey === compiledKey ? extractMode : "analysis";
+            lastExtractedTemplate = candidateKey;
+            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode };
+            const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
+            setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
             renderSuggestedPalettes();
             return;
-          }
-        } catch {}
+          } catch {}
+        }
 
         // No pre-compiled file — fetch source HTML and send to AI
         const apiKey = srcPath + "#" + extractMode;
