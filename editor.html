@@ -347,6 +347,7 @@
     <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
     <button class="tbtn tbtn-success" id="btnPublish">Publish</button>
+    <button class="tbtn tbtn-ghost"   id="btnCustomDomain" title="Map a custom domain to this portfolio">🌐 Domain</button>
     <div id="editorAccount" aria-live="polite">
       <div id="editorAccountUser">Signed out</div>
       <div id="editorAccountQuota">Credits: - · Downloads: - · Deploys: -</div>
@@ -1576,6 +1577,51 @@
       } finally {
         publishBtn.disabled = false;
         publishBtn.textContent = originalLabel;
+      }
+    };
+
+    // ── Custom domain ──────────────────────────────────────────────────────────
+    document.getElementById("btnCustomDomain").onclick = async () => {
+      const slug = localStorage.getItem("portfolio_publish_slug");
+      if (!slug) {
+        alert("Publish your portfolio first before mapping a custom domain.");
+        return;
+      }
+
+      const domain = prompt(
+        "Enter the custom domain to point at this portfolio.\n" +
+        "Examples: janesmith.com  or  www.janesmith.com\n\n" +
+        "After registering, you will need to add a DNS record at your registrar.",
+        ""
+      );
+      if (!domain) return;
+
+      try {
+        setEditStatus("Registering domain…");
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session?.access_token) throw new Error("Sign in first.");
+
+        const res = await fetch("/.netlify/functions/addCustomDomain", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ domain, slug })
+        });
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload?.error || `Failed (${res.status})`);
+
+        setEditStatus("Domain registered.", "ok");
+        alert(
+          `Domain registered successfully!\n\n` +
+          `${payload.instructions}\n\n` +
+          `Once DNS propagates, your portfolio will be live at:\n` +
+          `https://${payload.domain}`
+        );
+      } catch (err) {
+        console.error("Custom domain error:", err);
+        showLinkedError(err?.message || "Domain registration failed.");
       }
     };
 

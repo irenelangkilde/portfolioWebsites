@@ -1,12 +1,18 @@
 [build]
   publish = "."
   functions = "src/netlify/functions"
+  edge_functions = "netlify/edge-functions"
 
 [functions]
   node_bundler = "esbuild"
   directory = "src/netlify/functions"
   included_files = ["src/*.txt", "src/netlify/functions/*.md", "*.md"]
   external_node_modules = ["@anthropic-ai/sdk", "openai", "@supabase/supabase-js", "stripe"]
+
+# Edge function handles custom domain → portfolio routing
+[[edge_functions]]
+  function = "servePortfolio"
+  path = "/*"
 
 # Clean URLs for published portfolios
 # /u/janesmith       → latest version
