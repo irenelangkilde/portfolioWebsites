@@ -1,17 +1,12 @@
 /**
  * Edge Function: servePortfolio
  *
- * Handles two cases:
+ * Intercepts requests on custom domains (not *.netlify.app / localhost),
+ * looks up a domain → slug mapping in the published-sites blob store,
+ * and serves the corresponding portfolio HTML.
  *
- * 1. Custom domain (e.g. janesmith.com)
- *    - Reads Host header
- *    - Looks up domain → slug mapping in the published-sites blob store
- *    - Fetches and returns the portfolio HTML
- *
- * 2. Clean-URL rewrites via netlify.toml redirect (/u/:slug)
- *    - The slug is already in the URL; passes through to publishedPortfolio function
- *    - This edge function only intercepts custom-domain requests (those not
- *      matching *.netlify.app or localhost)
+ * /u/:slug requests on the main site pass straight through to the
+ * publishedPortfolio function via the redirect rule in netlify.toml.
  */
 
 import { getStore } from "@netlify/blobs";
@@ -19,27 +14,56 @@ import { getStore } from "@netlify/blobs";
 const PUBLISHED_SITES_STORE = "published-sites";
 
 // Hosts that should never be treated as custom portfolio domains
-const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live|localhost)(:\d+)?$|^localhost(:\d+)?$/i;
+const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
+
+function isSystemHost(host, primaryDomain) {
+  if (SYSTEM_HOST_PATTERN.test(host)) return true;
+  // Also pass through the site's own primary/alias domains
+  if (primaryDomain) {
+    const primaries = primaryDomain.split(",").map(d => d.trim().toLowerCase());
+    const bare = host.replace(/:\d+$/, "").toLowerCase();
+    if (primaries.includes(bare)) return true;
+  }
+  return false;
+}
+
+function html404(domain, message) {
+  return new Response(
+    `<!doctype html><html><body style="font-family:sans-serif;padding:40px">
+      <h2>Portfolio not found</h2>
+      <p>${message}</p>
+    </body></html>`,
+    { status: 404, headers: { "content-type": "text/html; charset=utf-8" } }
+  );
+}
 
 export default async function handler(request, context) {
-  const url  = new URL(request.url);
   const host = request.headers.get("host") || "";
 
-  // Only intercept custom domains — let /u/* rewrites and all other paths
-  // fall through to the normal routing
-  if (SYSTEM_HOST_PATTERN.test(host)) {
+  // Pass through requests on the main site domain(s) — let normal routing handle them
+  const primaryDomain = Netlify.env.get("NETLIFY_PRIMARY_DOMAIN") || "";
+  if (isSystemHost(host, primaryDomain)) {
     return context.next();
   }
 
-  // Strip port if present (e.g. localhost:8888 in dev — already excluded above,
-  // but defensive for edge cases)
   const domain = host.replace(/:\d+$/, "").toLowerCase();
+
+  // Edge functions need explicit credentials to access Netlify Blobs
+  const siteID = Netlify.env.get("NETLIFY_SITE_ID");
+  const token  = Netlify.env.get("NETLIFY_AUTH_TOKEN");
+
+  if (!siteID || !token) {
+    return new Response(
+      "Blob store credentials not configured (NETLIFY_SITE_ID / NETLIFY_AUTH_TOKEN).",
+      { status: 503 }
+    );
+  }
 
   let store;
   try {
-    store = getStore(PUBLISHED_SITES_STORE);
-  } catch {
-    return new Response("Service temporarily unavailable.", { status: 503 });
+    store = getStore({ name: PUBLISHED_SITES_STORE, siteID, token });
+  } catch (err) {
+    return new Response(`Blob store init failed: ${err?.message}`, { status: 503 });
   }
 
   // Look up domain → slug mapping
@@ -47,40 +71,28 @@ export default async function handler(request, context) {
   try {
     const raw = await store.get(`domain/${domain}`);
     if (!raw) {
-      return new Response(
-        `<html><body style="font-family:sans-serif;padding:40px">
-          <h2>Portfolio not found</h2>
-          <p>No portfolio is registered for <strong>${domain}</strong>.</p>
-        </body></html>`,
-        { status: 404, headers: { "content-type": "text/html; charset=utf-8" } }
-      );
+      return html404(domain, `No portfolio is registered for <strong>${domain}</strong>.`);
     }
     mapping = JSON.parse(raw);
-  } catch {
-    return new Response("Error looking up domain mapping.", { status: 500 });
+  } catch (err) {
+    return new Response(`Error looking up domain mapping: ${err?.message}`, { status: 500 });
   }
 
   const slug = mapping?.slug;
   if (!slug) {
-    return new Response("Invalid domain mapping.", { status: 500 });
+    return new Response("Domain mapping exists but contains no slug.", { status: 500 });
   }
 
-  // Fetch the portfolio HTML from the blob store
+  // Fetch the portfolio HTML
   let html;
   try {
     html = await store.get(`html/${slug}.html`);
-  } catch {
-    return new Response("Error fetching portfolio.", { status: 500 });
+  } catch (err) {
+    return new Response(`Error fetching portfolio HTML: ${err?.message}`, { status: 500 });
   }
 
   if (!html) {
-    return new Response(
-      `<html><body style="font-family:sans-serif;padding:40px">
-        <h2>Portfolio not found</h2>
-        <p>The portfolio for <strong>${domain}</strong> has not been published yet.</p>
-      </body></html>`,
-      { status: 404, headers: { "content-type": "text/html; charset=utf-8" } }
-    );
+    return html404(domain, `The portfolio for <strong>${domain}</strong> has not been published yet.`);
   }
 
   return new Response(html, {
