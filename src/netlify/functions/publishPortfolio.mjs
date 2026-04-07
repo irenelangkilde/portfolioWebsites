@@ -113,7 +113,7 @@ export async function handler(event) {
 
     const isFirstPublish = !existingMeta;
     if (isFirstPublish && membership.downloads_limit !== -1 && membership.downloads_used >= membership.downloads_limit) {
-      return json(403, { error: "No publish/downloads remaining on this account." });
+      return json(403, { error: "Please UPGRADE to publish or download with this account." });
     }
 
     const now = new Date().toISOString();

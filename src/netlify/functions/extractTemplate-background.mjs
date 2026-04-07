@@ -6,14 +6,27 @@ import http from "http";
 import { getStore } from "@netlify/blobs";
 
 function findProjectHtmlRoot() {
-  let dir = dirname(fileURLToPath(import.meta.url));
-  for (let i = 0; i < 8; i += 1) {
-    const candidate = resolve(dir, "html");
-    if (existsSync(candidate)) return candidate;
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
+  const startDirs = [];
+  if (typeof process.cwd === "function") {
+    try { startDirs.push(process.cwd()); } catch {}
   }
+  try {
+    if (typeof import.meta !== "undefined" && import.meta?.url) {
+      startDirs.push(dirname(fileURLToPath(import.meta.url)));
+    }
+  } catch {}
+
+  for (const startDir of startDirs.filter(Boolean)) {
+    let dir = startDir;
+    for (let i = 0; i < 8; i += 1) {
+      const candidate = resolve(dir, "html");
+      if (existsSync(candidate)) return candidate;
+      const parent = dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  }
+
   throw new Error("Could not locate the project's html directory from extractTemplate-background.");
 }
 

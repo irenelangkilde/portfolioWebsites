@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Personal Portfolio Website Intake Form</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(0,0,0,.25);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow: 0 10px 26px rgba(0,0,0,.35);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, color-mix(in oklab, var(--danger) 18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.5;
+    }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width: 980px; margin:0 auto; padding: 18px 14px 56px; }
+    header{
+      background: linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 8px 16px;
+      display:grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      column-gap: 18px;
+      row-gap: 8px;
+      align-items:start;
+    }
+    header h1{ margin:0; font-size: 22px; font-weight: 900; letter-spacing: .2px; }
+    header .sub{ color:var(--muted); font-size: 13.5px; margin:0; }
+    .headerIntro{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-start;
+      gap: 10px;
+    }
+    .headerAside{
+      min-width: 220px;
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 0;
+    }
+    .headerStatusPanel{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      gap: 0;
+      max-width: 260px;
+      flex-shrink:0;
+    }
+    .headerStatusPanel span{
+      display:block;
+      font-size:11.5px;
+      text-align:right;
+      line-height:1.25;
+      min-height: 14px;
+    }
+    @media (max-width: 760px){
+      header{
+        grid-template-columns: 1fr;
+      }
+      .headerAside{
+        min-width:0;
+        align-items:flex-start;
+      }
+      .headerStatusPanel{
+        align-items:flex-start;
+        max-width:none;
+      }
+      .headerStatusPanel span{
+        text-align:left;
+      }
+    }
+
+    .progressCard{
+      margin-top: 12px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+    }
+    .stepsRow{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom: 10px;
+    }
+    .stepPills{
+      display:flex;
+      gap: 8px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: rgba(234,240,255,.8);
+      font-weight: 800;
+      font-size: 12px;
+      user-select:none;
+    }
+    .pill.active{
+      background: color-mix(in oklab, var(--primary) 35%, rgba(0,0,0,.18));
+      border-color: color-mix(in oklab, var(--primary) 60%, rgba(255,255,255,.10));
+      color: rgba(234,240,255,.95);
+    }
+    .bar{
+      height: 10px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 999px;
+      overflow:hidden;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 60%, transparent), color-mix(in oklab, var(--accent) 55%, transparent));
+      border-radius: 999px;
+      transition: width .25s ease;
+    }
+
+    .card{
+      margin-top: 14px;
+      background: var(--panel);
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+    }
+
+    .grid{ display:grid; gap: 16px; }
+    .grid > div { background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); border-radius: 12px; padding: 14px 16px; }
+    .grid2{ display:grid; grid-template-columns: 1fr; gap: 12px; }
+    @media (min-width: 860px){ .grid2{ grid-template-columns: 1fr 1fr; } }
+
+    .themeLayout{ display:flex; gap: 16px; align-items: flex-start; }
+    .themeLeft{ flex: 0 0 260px; display:flex; flex-direction:column; gap: 10px; }
+    .themeRight{ flex: 1; min-width: 0; }
+    .themeLeft input[type="color"]{ border-radius: 4px; overflow: hidden; cursor: pointer; padding: 2px; }
+    .themeLeft input[type="color"]::-webkit-color-swatch-wrapper{ padding: 0; border-radius: 4px; }
+    .themeLeft input[type="color"]::-webkit-color-swatch{ border: none; border-radius: 3px; }
+    .themeLeft input[type="color"]::-moz-color-swatch{ border: none; border-radius: 3px; }
+
+    .colorPreview{ display:flex; border-radius: 8px; overflow:hidden; height: 36px; margin-top: 4px; }
+    .colorPreview .swatch{ flex:1; display:flex; align-items:center; justify-content:center; font-size:8px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.6); transition: background-color 0.3s ease; }
+
+    .sectionTitle{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      margin-bottom: 6px;
+    }
+    .sectionTitle h2{ margin:0; font-size: 16px; letter-spacing:.2px; }
+    .hint{ color: var(--muted); font-size: 13px; margin: 0; }
+    .hr{ height:1px; background: rgba(255,255,255,.12); margin: 12px 0; }
+
+    label{ display:block; font-weight: 900; font-size: 13px; margin-bottom: 6px; }
+    label .hint{ font-size: 11px; color: rgba(234,240,255,.45); font-weight: 400; }
+    input[type="text"], input[type="email"], input[type="url"], textarea, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.07);
+      color: var(--text);
+      outline:none;
+    }
+    textarea{ min-height: 92px; resize: vertical; }
+    input[type="file"] { color: rgba(141,180,255,.8); cursor: pointer; }
+    input[type="file"]::file-selector-button {
+      background: rgba(78,112,241,.18);
+      border: 1px solid rgba(78,112,241,.5);
+      border-radius: 8px;
+      color: rgba(168,192,255,.9);
+      padding: 5px 12px;
+      margin-right: 10px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    input[type="file"]::file-selector-button:hover { background: rgba(78,112,241,.32); }
+    input::placeholder, textarea::placeholder{ color: rgba(234,240,255,.55); }
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus {
+      -webkit-box-shadow: 0 0 0px 1000px #0f1a2e inset;
+      -webkit-text-fill-color: #eaf0ff;
+      caret-color: #eaf0ff;
+    }
+    input:focus, textarea:focus, select:focus{
+      border-color: color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.14));
+      box-shadow: 0 0 0 3px rgba(141,224,255,.14);
+    }
+
+    .row{ display:grid; gap: 10px; }
+    .row2{ display:grid; gap: 10px; grid-template-columns: 1fr; }
+    @media (min-width: 860px){ .row2{ grid-template-columns: 1fr 1fr; } }
+
+    .btnRow{
+      display:flex;
+      flex-wrap:wrap;
+      gap: 10px;
+      justify-content:flex-end;
+      margin-top: 14px;
+    }
+    .btn{
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.10);
+      color: var(--text);
+      font-weight: 900;
+      cursor:pointer;
+      user-select:none;
+    }
+    .btn.primary{
+      background: color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color: color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.ghost{ background: rgba(0,0,0,.15); }
+    .btn.danger{
+      background: color-mix(in oklab, var(--danger) 28%, rgba(255,255,255,.08));
+      border-color: color-mix(in oklab, var(--danger) 55%, rgba(255,255,255,.14));
+    }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; }
+    .mini{ font-size: 12px; padding: 7px 10px; border-radius: 10px; }
+
+    .note{
+      background: rgba(0,0,0,.25);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+      color: rgba(234,240,255,.85);
+      font-size: 13px;
+    }
+
+    .error{ color: color-mix(in oklab, var(--danger) 80%, white); font-weight: 900; }
+    .ok{ color: color-mix(in oklab, var(--ok) 80%, white); font-weight: 900; }
+
+    details{
+      background: rgba(0,0,0,.18);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+    summary{ cursor:pointer; font-weight: 900; }
+    pre{
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: rgba(0,0,0,.25);
+      border: 1px solid rgba(255,255,255,.10);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin: 10px 0 0;
+      font-size: 12px;
+      color: rgba(234,240,255,.92);
+      overflow:auto;
+      max-height: 280px;
+    }
+
+    .max480{ max-width: 480px; margin: 0 auto; }
+    .hidden{ display:none !important; }
+
+    .tipList{ margin: 8px 0 0; padding-left: 18px; color: rgba(234,240,255,.86); }
+    .tipList li{ margin: 6px 0; }
+
+    .fileBox{
+      border:1px dashed rgba(255,255,255,.22);
+      border-radius: 12px;
+      padding: 10px 12px;
+      background: rgba(0,0,0,.18);
+    }
+    .fileList{ margin: 8px 0 0; padding-left: 18px; color: rgba(234,240,255,.85); }
+    .fileList li{ margin: 4px 0; }
+
+    .inlineRow4{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .inlineRow4{
+        grid-template-columns: 140px 220px 1fr 1fr;
+        align-items:start;
+      }
+    }
+
+    .inlineRow2{
+      display:grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 860px){
+      .inlineRow2{
+        grid-template-columns: 1fr 1fr;
+        align-items:start;
+      }
+    }
+
+    .modalBackdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.65);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding: 14px;
+      z-index: 50;
+    }
+    .modal{
+      width: min(780px, 100%);
+      background: rgba(11,18,32,.92);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.55);
+      padding: 14px;
+    }
+    .modalTop{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .modalTop strong{ font-size: 14px; }
+    .modalClose{ cursor:pointer; }
+    .modalContent{
+      color: rgba(234,240,255,.88);
+      font-size: 13.5px;
+      line-height:1.55;
+      max-height: 70vh;
+      overflow:auto;
+      padding-right: 6px;
+    }
+    footer{
+      margin-top: 14px;
+      color: rgba(234,240,255,.62);
+      font-size: 12.5px;
+      text-align:center;
+    }
+    .resume-filelist { margin: 8px 0 0; padding: 0; list-style: none; font-size: 13px; color: #57d38c; }
+    .resume-filelist li::before { content: "📎 "; }
+    .dropzone {
+      border: 2px dashed rgba(78,112,241,.5);
+      border-radius: 10px;
+      background: rgba(78,112,241,.07);
+      padding: 24px 16px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      background: rgba(78,112,241,.18);
+      border-color: #4E70F1;
+    }
+    .dropzone input[type="file"] {
+      position: absolute; inset: 0;
+      opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .dropzone-label { pointer-events: none; color: var(--muted); font-size: 14px; line-height: 1.6; }
+    .dropzone-label strong { color: #4E70F1; }
+
+    .artifactRow {
+      display: grid;
+      gap: 8px;
+      grid-template-columns: 1fr;
+      align-items: start;
+    }
+    @media (min-width: 640px) {
+      .artifactRow {
+        grid-template-columns: 180px 1fr 180px 30px;
+      }
+    }
+    .artifactRow select,
+    .artifactRow input[type="text"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.07);
+      color: var(--text);
+      outline: none;
+      font-family: var(--font);
+      font-size: 13px;
+    }
+    .artifactRow select option { background: #0b1220; }
+    .artifactContentWrap { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+    .artifactContentWrap textarea {
+      width: 100%; padding: 8px 10px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5); background: rgba(78,112,241,.07);
+      color: var(--text); outline: none; font-family: var(--font); font-size: 13px;
+      resize: vertical; min-height: 80px;
+    }
+    .artifactColHead {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(234,240,255,.45);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    /* ── Auth modal ─────────────────────────────────── */
+    #authBtn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 13px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5);
+      background: rgba(78,112,241,.12);
+      color: var(--text); font-weight: 700; font-size: 13px;
+      cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    #authBtn:hover { background: rgba(78,112,241,.26); }
+    #authBtn .avatar {
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--primary); display: flex;
+      align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 900;
+    }
+    .authTabs { display: flex; gap: 4px; margin-bottom: 14px; }
+    .authTab {
+      flex: 1; padding: 8px; border-radius: 10px; border: 1px solid transparent;
+      background: rgba(255,255,255,.06); color: var(--muted);
+      font-weight: 700; font-size: 13px; cursor: pointer; text-align: center;
+    }
+    .authTab.active {
+      background: rgba(78,112,241,.22);
+      border-color: rgba(78,112,241,.5); color: var(--text);
+    }
+    .authForm { display: flex; flex-direction: column; gap: 12px; }
+    .authForm input {
+      width: 100%; padding: 10px 12px; border-radius: 10px;
+      border: 1px solid rgba(78,112,241,.5); background: rgba(78,112,241,.07);
+      color: var(--text); outline: none; font-size: 14px;
+    }
+    .authForm input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(141,224,255,.14); }
+    .authSubmit {
+      width: 100%; padding: 11px; border-radius: 10px;
+      background: color-mix(in oklab, var(--primary) 55%, rgba(255,255,255,.08));
+      border: 1px solid color-mix(in oklab, var(--primary) 75%, rgba(255,255,255,.14));
+      color: #fff; font-weight: 900; font-size: 14px; cursor: pointer;
+    }
+    .authSubmit:hover { background: color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.08)); }
+    .authMsg { font-size: 13px; min-height: 18px; text-align: center; }
+    .authMsg.ok  { color: var(--ok); }
+    .authMsg.err { color: var(--danger); }
+    .tierBadge {
+      font-size: 10px; font-weight: 900; padding: 2px 7px; border-radius: 999px;
+      background: rgba(141,224,255,.15); color: var(--accent); letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .tierBadge.basic    { background: rgba(118,176,34,.18); color: #76b022; }
+    .tierBadge.premium { background: rgba(251,171,156,.18); color: #fbab9c; }
+    .quotaBar { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+  </style>
+</head>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="headerIntro">
+        <div>
+          <h1>Personal Portfolio Website Intake</h1>
+          <p class="sub">Fill out a quick and easy form. Launch a striking personal website in minutes.</p>
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <button id="authBtn" onclick="openAuthModal()">
+            <span class="avatar" id="authAvatar">?</span>
+            <span id="authBtnLabel">Sign in</span>
+          </button>
+          <span id="creditsDisplay" style="display:none; font-size:11px; color:var(--muted);"></span>
+        </div>
+      </div>
+      <div class="headerAside">
+        <div id="headerStatusPanel" class="headerStatusPanel">
+          <span id="resumeAnalysisStatus"></span>
+          <span id="jobAnalysisStatus"></span>
+          <span id="templateExtractStatus"></span>
+          <span id="colorsChosenStatus"></span>
+          <span id="bridgeStatus"></span>
+          <span id="generatingWebsiteStatus"></span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ── Auth modal ───────────────────────────────────────────────────── -->
+    <div class="modalBackdrop" id="authModal" style="display:none;" onclick="if(event.target===this)closeAuthModal()">
+      <div class="modal" style="max-width:400px;">
+        <div class="modalTop">
+          <strong id="authModalTitle">Account</strong>
+          <span class="modalClose" onclick="closeAuthModal()">✕</span>
+        </div>
+
+        <!-- Logged-out view -->
+        <div id="authLoggedOut">
+          <div class="authTabs">
+            <div class="authTab active" id="tabLogin"  onclick="switchAuthTab('login')">Sign in</div>
+            <div class="authTab"        id="tabSignup" onclick="switchAuthTab('signup')">Create account</div>
+          </div>
+          <div class="authForm">
+            <input type="email"    id="authEmail"    placeholder="Email" autocomplete="email" />
+            <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
+            <div id="authPasswordConfirmWrap" class="hidden">
+              <input type="password" id="authPasswordConfirm" placeholder="Confirm password" autocomplete="new-password" style="width:100%;" />
+            </div>
+            <button class="authSubmit" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign in</button>
+            <div class="authMsg" id="authMsg"></div>
+          </div>
+        </div>
+
+        <!-- Logged-in view -->
+        <div id="authLoggedIn" class="hidden">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+            <div class="avatar" style="width:36px;height:36px;font-size:16px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:900;" id="authAvatarLarge">?</div>
+            <div>
+              <div style="font-weight:700;font-size:14px;" id="authUserEmail"></div>
+              <span class="tierBadge" id="authTierBadge">free</span>
+            </div>
+          </div>
+          <div class="quotaBar" id="authQuotaBar"></div>
+          <div style="margin-top:16px;">
+            <a class="btn ghost mini" href="subscriptions.html" style="width:100%; text-decoration:none; justify-content:center; margin-bottom:8px;">Plans &amp; Billing</a>
+            <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="progressCard">
+      <div class="stepsRow">
+        <div class="stepPills" id="stepPills"></div>
+        <div class="hint" id="stepLabel"></div>
+      </div>
+      <div class="bar"><div id="progressBar"></div></div>
+    </div>
+
+    <!-- Debug banner — visible only when "DEBUG" is in the Major field -->
+    <div id="debugBanner" class="hidden" style="
+        margin-top: 8px;
+        background: rgba(251,171,156,.1);
+        border: 1px solid rgba(251,171,156,.4);
+        border-radius: 10px;
+        padding: 8px 14px;
+        color: rgba(251,171,156,.92);
+        font-size: 12px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    ">🐛 DEBUG MODE — intermediate results and raw outputs will be available after generation</div>
+
+    <!-- PAGE 0: Overview -->
+    <section class="card" id="page0">
+      <div class="sectionTitle">
+        <h2>Overview</h2>
+        <p class="hint">You’ll generate a preview at the end of Stage 5, which you can then optionally refine.</p>
+      </div>
+      <div class="note">
+        <ol class="tipList">
+          <li><strong>Page 1:</strong> Basic info — resume, major, and specialization.</li>
+          <li><strong>Page 2:</strong> Job — target job ad.</li>
+          <li><strong>Page 3:</strong> Design — website design spec.</li>
+          <li><strong>Page 4:</strong> Colors — color scheme.</li>
+          <li><strong>Page 5:</strong> Visuals — headshot, links, images, and video.</li>
+          <li><strong>Page 6:</strong> Edit — refine your generated portfolio.</li>
+          <li><strong>Page 7:</strong> Publish — download or deploy your site.</li>
+        </ol>
+      </div>
+      <div class="btnRow">
+        <button class="btn primary" type="button" id="toPage1">Start</button>
+      </div>
+    </section>
+
+    <!-- PAGE 1: Basic Information -->
+    <section class="card hidden" id="page1">
+      <div class="sectionTitle">
+        <h2>Page 1 — Basic Information</h2>
+      </div>
+
+      <div class="max480 grid">
+        <div>
+          <label>Resume <span class="error">*</span> <span class="hint">(PDF or DOCX — drag &amp; drop or click)</span></label>
+          <div class="dropzone" id="resumeDropzone">
+            <input type="file" id="resumeUpload" name="resumeUpload" accept=".pdf,.doc,.docx" />
+            <div class="dropzone-label">
+              <strong>Choose file</strong> or drag it here<br>
+              <span style="font-size:12px;">PDF or DOCX</span>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:6px; margin-top:3px; min-height:14px;">
+            <div id="resumeAnalysisStatusInline" style="font-size:11.5px; flex:1;"></div>
+            <button type="button" id="reanalyzeResume" title="Re-extract resume" style="display:none; background:none; border:none; cursor:pointer; font-size:14px; color:rgba(141,224,255,.7); padding:0; line-height:1;">↺</button>
+          </div>
+        </div>
+
+        <div>
+          <label for="major">Major <span class="error">*</span></label>
+          <input id="major" type="text" placeholder="e.g., Data Science" required />
+          <div id="providerBadge" class="hidden" style="margin-top:4px; font-size:11px; font-weight:700; display:flex; align-items:center; gap:5px;"></div>
+        </div>
+
+        <div>
+          <label for="specialization">Specialization <span class="error">*</span></label>
+          <input id="specialization" type="text" placeholder="e.g., Cognitive Science, UX Research" required />
+        </div>
+
+      </div>
+
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit1">Submit</button>
+      </div>
+      <div class="btnRow">
+        <button class="btn danger" type="button" id="reset1" style="margin-right:auto; display:none;">Reset (double-click)</button>
+        <button class="btn primary" type="button" id="next1">Next</button>
+      </div>
+    </section>
+
+    <!-- PAGE 5: Visuals -->
+    <section class="card hidden" id="page5">
+      <div class="sectionTitle">
+        <h2>Page 5 — Visuals</h2>
+        <p class="hint">Optional supplementary materials to enrich your portfolio.</p>
+      </div>
+
+      <!-- Column headers (desktop only) -->
+      <div class="artifactRow" style="margin-bottom:2px;">
+        <span class="artifactColHead">Type</span>
+        <span class="artifactColHead">File / Link / Content</span>
+        <span class="artifactColHead">Positioning</span>
+        <span></span>
+      </div>
+
+      <!-- Artifact rows injected here by JS -->
+      <div id="artifactRows" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+      <div style="margin-top:10px;">
+        <button class="btn ghost mini" type="button" id="addArtifact">+ Add artifact</button>
+      </div>
+
+      <!-- Quota / upgrade prompt (shown when user hits credit limit) -->
+      <div id="upgradePrompt" class="hidden" style="margin-top:10px;">
+        <div class="note" style="border-color:rgba(251,171,156,.4); background:rgba(251,171,156,.07);">
+          <div style="font-weight:700; font-size:14px; margin-bottom:6px; color:var(--danger);">Credit limit reached</div>
+          <div id="upgradePromptMsg" class="hint" style="margin-bottom:10px;"></div>
+          <!-- Unit picker — only shown when upgrading to premium (quantity matters for graduated pricing) -->
+          <div id="unitPickerWrap" class="hidden" style="margin-bottom:12px;">
+            <label style="font-size:13px; font-weight:600; display:block; margin-bottom:6px;">
+              How many units?
+              <span class="hint" style="font-weight:400;"> — 1 unit = 5 credits + 1 download</span>
+            </label>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <input type="number" id="unitQty" min="1" max="20" value="1"
+                     style="width:64px; padding:6px 8px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); font-size:14px;"
+                     oninput="updateUnitPrice()" />
+              <span id="unitPriceDisplay" class="hint" style="font-size:13px;"></span>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button class="btn primary" onclick="openAuthModal()" style="font-size:13px;">View my account</button>
+            <a class="btn ghost" href="subscriptions.html" style="font-size:13px; text-decoration:none;">View plans</a>
+            <a class="btn" href="#" id="upgradeLink" style="font-size:13px; text-decoration:none;">Upgrade →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status (shown once generation completes or errors) -->
+      <div id="finalBox" class="hidden" style="margin-top:10px;">
+        <div class="note">
+          <div id="finalStatus" class="hint"></div>
+        </div>
+      </div>
+
+      <p id="resumePendingNotice" style="display:none; font-size:12px; color:rgba(141,224,255,.7); font-style:italic; text-align:right; margin:0 0 6px;">Resume, job, design and/or rendering analyses still running — generation will automatically proceed when ready.</p>
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit5">Submit</button>
+      </div>
+      <div class="btnRow" style="margin-top:14px;">
+        <button class="btn ghost" type="button" id="back2_bottom">Back</button>
+        <button class="btn primary" type="button" id="next2_bottom" disabled style="margin-left:auto; opacity:.4; cursor:not-allowed;">Open Editor</button>
+      </div>
+
+    </section>
+
+
+    <!-- PAGE 4: Color scheme -->
+    <section class="card hidden" id="page4">
+      <div class="sectionTitle">
+        <h2>Page 4 — Colors</h2>
+      </div>
+
+      <div class="hr"></div>
+    <!-- Sample colors bar — shown once a template URL is extracted -->
+    <div id="sampleColorsBar" style="display:none; flex-direction:row; align-items:center; flex-wrap:wrap; gap:10px; background:rgba(78,112,241,.08); border:1px solid rgba(78,112,241,.25); border-radius:8px; padding:10px 14px; margin-bottom:12px;">
+      <p id="sampleColorsStatus" class="hint" style="margin:0; flex:1; min-width:120px;"></p>
+      <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; font-weight:600; margin:0; white-space:nowrap;">
+        <input type="checkbox" id="useSampleColors" style="width:15px; height:15px; accent-color:var(--primary); cursor:pointer;" />
+        Use sample colors <span class="hint" style="font-weight:400;">(ignores palette)</span>
+      </label>
+      <button type="button" id="resetToSampleColors" class="btn ghost" style="font-size:12px; padding:5px 12px; white-space:nowrap;">↺ Reset to sample colors</button>
+    </div>
+<div class="themeLayout" style="position:relative;">
+  <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
+
+  <div class="themeLeft">
+    <p style="font-size:11px; color:rgba(234,240,255,.4); margin:0 0 6px; font-style:italic;">Click to activate, then click a swatch to paste a color. Double-click to see color dialog.</p>
+    <div style="display:flex; flex-direction:column; gap:5px;">
+      <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="primary-label">1</span><input id="primary"   type="color" value="#000000" /></label>
+      <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="secondary-label">2</span><input id="secondary" type="color" value="#000000" /></label>
+      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="accent-label">3</span><input id="accent"    type="color" value="#000000" /></label>
+      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="dark-label">4</span><input id="dark"      type="color" value="#000000" /></label>
+      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="light-label">5</span><input id="light"     type="color" value="#000000" /></label>
+    </div>
+    <div class="field" style="margin-top:14px;">
+      <label for="paletteUsageNote">Palette usage notes (optional)</label>
+      <textarea id="paletteUsageNote" rows="5" placeholder="Describe how this palette should be used across the site…" style="width:100%; margin-top:4px; resize:vertical;"></textarea>
+    </div>
+  </div>
+
+  <!-- Suggested palettes — right column, alongside color pickers -->
+  <div id="suggestedPalettes" class="themeRight">
+    <div style="display:flex; align-items:baseline; gap:10px; margin-bottom:8px;">
+      <p style="font-size:11px; font-weight:700; margin:0; color:rgba(255,255,255,.55); text-transform:uppercase; letter-spacing:.07em;">Suggested Palettes</p>
+      <span id="suggestedPalettesMsg" style="font-size:12px; color:rgba(234,240,255,.65); font-style:italic;"></span>
+    </div>
+    <div id="suggestedPalettesRows" style="display:flex; flex-direction:column; gap:6px;"></div>
+  </div>
+</div>
+
+<!-- Theme Gallery — full width below the pickers + suggested palettes row -->
+<div style="margin-top:16px;">
+  <div class="hint">Theme Gallery</div>
+  <iframe
+    id="colorThemesFrame"
+    src="src/color-themes.html"
+    style="margin-top:10px;width:100%;height:420px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:rgba(0,0,0,.18);"></iframe>
+</div>
+        <!--div class="grid2">
+          <div>
+            <label for="primary">1. Primary</label>
+            <input id="primary" type="text" placeholder="#4E70F1" />
+          </div>
+          <div>
+            <label for="secondary">2. Secondary</label>
+            <input id="secondary" type="text" placeholder="#FBAB9C" />
+          </div>
+          <div>
+            <label for="accent">3. Accent</label>
+            <input id="accent" type="text" placeholder="#8DE0FF" />
+          </div>
+          <div>
+            <label for="dark">4. Dark</label>
+            <input id="dark" type="text" placeholder="#0b1220" />
+          </div>
+          <div>
+            <label for="light">5. Light</label>
+            <input id="light" type="text" placeholder="#eaf0ff" />
+          </div>
+        </div-->
+
+        <!-- Top buttons (Back/Next) -->
+        <!--div class="btnRow">
+          <button class="btn ghost" type="button" id="back2_top">Back</button>
+          <button class="btn primary" type="button" id="next2_top">Next</button>
+        </div-->
+
+        <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+          <button class="btn" type="button" id="dbgSubmit4">Submit</button>
+        </div>
+        <div class="btnRow">
+          <button class="btn ghost" type="button" id="back4">Back</button>
+          <button class="btn primary" type="button" id="next4" style="margin-left:auto;">Submit</button>
+        </div>
+    </section>
+
+
+    <!-- PAGE 3: Template + Job target -->
+    <section class="card hidden" id="page3">
+      <div class="sectionTitle">
+        <h2>Page 3 — Design</h2>
+      </div>
+
+      <div class="grid" style="gap:6px; margin-bottom:14px;">
+        <label style="font-weight:900; font-size:13px; margin-bottom:0;">Model or template <span class="error">*</span></label>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplUrl" value="keyword" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Choose by name</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Enter a keyword to choose a <a href="https://irenes-ventures.shop/collections/all-portfolio-websites" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> (e.g. Biology, Civil Engineering) that matches your style/layout preferences (ignoring content).</p>
+          </div>
+        </label>
+        <div id="tplUrlWrap" class="hidden" style="padding:0 4px 4px; margin-left:33px;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input id="modelTemplate" type="text" placeholder="e.g., Biology, Civil Engineering, Data Science…" list="templateKeywords" autocomplete="off" style="flex:1;" />
+            <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Reload the available template names. This updates the list only and does not clear your current selection." style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
+            <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear the current template selection and remove its extracted colors/template state." style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
+          </div>
+          <datalist id="templateKeywords">
+            <!-- populated dynamically by listTemplates Netlify function -->
+          </datalist>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
+          </div>
+        </label>
+        <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px; margin-left:33px;">
+          <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
+          <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
+            <img id="templateScreenshotImg" src="" alt="Template preview"
+                 style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
+          </div>
+        </div>
+
+        <!-- Copyright mode — shown for external URL or uploaded file -->
+        <div id="templateCopyrightWrap" style="display:none; margin-left:33px; padding:10px 12px; background:rgba(0,0,0,.18); border:2px solid rgba(251,171,156,.7); border-radius:12px; box-shadow:0 0 12px rgba(251,171,156,.25);">
+          <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>I am the author/owner of the copyright or have written permission from the owner to use it exactly.</span>
+          </label>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>Use it for inspiration only</span>
+          </label>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Design options</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose composition, style, and render mode. Defaults are influenced by your resume.</p>
+          </div>
+        </label>
+
+        <!-- Design options sub-panel — shown when "Design options" is selected -->
+        <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px;">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+
+            <!-- Composition -->
+            <div>
+              <label for="designComposition">Composition</label>
+              <select id="designComposition" name="designComposition">
+                <option value="">— choose —</option>
+                <option value="split-left">Split left — content left, visual right</option>
+                <option value="split-right">Split right — visual left, content right</option>
+                <option value="central">Central — symmetric centered hero</option>
+                <option value="scene-based">Scene-based — lab, desk, workshop, field</option>
+                <option value="abstract_layered">Abstract layered — motifs, rings, grids</option>
+              </select>
+            </div>
+
+            <!-- Style -->
+            <div>
+              <label for="designStyle">Style</label>
+              <select id="designStyle" name="designStyle">
+                <option value="">— choose —</option>
+                <option value="clean-minimal">Clean minimal</option>
+                <option value="glassmorphism">Glassmorphism</option>
+                <option value="glass-dark">Glass dark</option>
+                <option value="brutalist">Brutalist</option>
+                <option value="dark terminal">Dark terminal</option>
+                <option value="soft pastel editorial">Soft pastel editorial</option>
+                <option value="Swiss grid">Swiss grid</option>
+                <option value="neon-tech">Neon tech</option>
+                <option value="other">Other…</option>
+              </select>
+              <input type="text" id="designStyleOther" placeholder="Describe your style…" style="display:none; margin-top:6px;" />
+            </div>
+
+            <!-- Render mode -->
+            <div>
+              <label for="designRenderMode">Render Mode</label>
+              <select id="designRenderMode" name="designRenderMode">
+                <option value="">— choose —</option>
+                <option value="cinematic technical minimalism">Cinematic technical minimalism</option>
+                <option value="3D scientific elegance">3D scientific elegance</option>
+                <option value="bold futuristic">Bold futuristic</option>
+                <option value="technical schematic aesthetic">Technical schematic aesthetic</option>
+              </select>
+            </div>
+
+            <!-- Density -->
+            <div>
+              <label for="designDensity">Density</label>
+              <select id="designDensity" name="designDensity">
+                <option value="compact" selected>Compact — tight padding, 3-col grids</option>
+                <option value="medium">Medium — balanced spacing</option>
+                <option value="spacious">Spacious — generous whitespace</option>
+              </select>
+            </div>
+
+            <!-- Use icons -->
+            <div>
+              <label for="useEmojiIcons">Use icons</label>
+              <select id="useEmojiIcons" name="useEmojiIcons">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+            <!-- Alternate sections -->
+            <div>
+              <label for="alternateSections">Alternate light &amp; dark sections</label>
+              <select id="alternateSections" name="alternateSections">
+                <option value="yes" selected>Yes</option>
+                <option value="no">No</option>
+              </select>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- Processing: countdown shown while extraction runs -->
+      <div id="extractProcessing" class="hidden" style="margin-top:14px; text-align:center; padding:16px 12px; background:rgba(0,0,0,.22); border:1px solid rgba(255,255,255,.1); border-radius:14px;">
+        <div id="extractCounter" style="font-size:40px; font-weight:900; color:rgba(141,224,255,.9); line-height:1; margin-bottom:6px;">35</div>
+        <div id="extractCounterLabel" style="font-size:12px; color:rgba(234,240,255,.55);">seconds remaining</div>
+      </div>
+
+      <!-- Extraction mode selector — visible only when "keyword" source is selected -->
+      <div id="templateModeRow" style="display:none; margin-top:10px; padding:8px 12px; background:rgba(78,112,241,.1); border:1px solid rgba(78,112,241,.28); border-radius:10px;">
+        <label for="extractTemplateMode" style="font-size:12px; font-weight:700; color:rgba(141,224,255,.85); display:block; margin-bottom:5px;">Extraction mode</label>
+        <select id="extractTemplateMode">
+          <option value="mustache" selected>mustache — convert to Mustache.js template</option>
+          <option value="analysis">analysis — extract design spec JSON</option>
+        </select>
+      </div>
+
+
+      <!-- Navigation -->
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit3">Submit</button>
+      </div>
+      <div class="btnRow" style="margin-top:14px;">
+        <button class="btn ghost" type="button" id="back3_bottom">Back</button>
+        <button class="btn primary" type="button" id="next3_bottom" style="margin-left:auto;">Next</button>
+      </div>
+    </section>
+
+
+    <!-- PAGE 2: Job Ad + Submit -->
+    <section class="card hidden" id="page2">
+      <div class="sectionTitle">
+        <h2>Page 2 — Job</h2>
+        <p class="hint">Optional but strongly improves relevance.</p>
+      </div>
+
+      <div class="grid">
+        <div>
+          <label for="desiredRole">Desired Job Position</label>
+          <input id="desiredRole" type="text" placeholder="e.g., Entry-level Data Analyst" />
+        </div>
+        <div>
+          <label for="jobAd">Job Position Description</label>
+          <textarea id="jobAd" placeholder="Paste the job posting here (optional)."></textarea>
+        </div>
+      </div>
+
+      <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
+        <button class="btn" type="button" id="dbgSubmit2">Submit</button>
+      </div>
+      <div class="btnRow">
+        <button class="btn ghost" type="button" id="back5">Back</button>
+        <button class="btn primary" type="button" id="submit_bottom" style="margin-left:auto;">Next</button>
+      </div>
+
+    </section>
+
+    <!--footer>MyPersonalPortfolioWebsiteIntakeForm.html • Version 3.0.0 • Updated 2026-02-27</footer-->
+
+    <!-- Debug: consolidated pipeline stage outputs — shared across pages 2-5, debug mode only -->
+    <div id="stagesDebugSection" class="hidden" style="margin-top:14px; padding:10px 12px; border-radius:10px; border:1px solid rgba(251,171,156,.3); background:rgba(251,171,156,.05);">
+      <div style="color:rgba(251,171,156,.85); font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px;">🐛 Pipeline Stage Outputs</div>
+      <div id="debugModelName" style="color:rgba(180,230,180,.85); font-size:12px; margin-bottom:4px;"></div>
+      <div id="tokenReport" style="display:none; font-size:11.5px; font-family:monospace; color:rgba(234,240,255,.7); background:rgba(0,0,0,.25); border-radius:6px; padding:6px 10px; margin-bottom:8px; white-space:pre;"></div>
+      <div style="display:grid; gap:6px;">
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Facts</span>
+          <button class="btn mini" type="button" id="dlResumeFacts">↓ resume-facts.json</button>
+          <button class="btn mini ghost" type="button" id="cpResumeFacts">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwResumeFacts">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">1 · Resume Strategy</span>
+          <button class="btn mini" type="button" id="dlResumeStrategy">↓ resume-strategy.json</button>
+          <button class="btn mini ghost" type="button" id="cpResumeStrategy">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwResumeStrategy">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Resolved Strategy</span>
+          <button class="btn mini" type="button" id="dlJobResolved">↓ job-resolved.json</button>
+          <button class="btn mini ghost" type="button" id="cpJobResolved">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwJobResolved">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Job · Error</span>
+          <button class="btn mini" type="button" id="dlJobError">↓ job-error.txt</button>
+          <button class="btn mini ghost" type="button" id="cpJobError">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwJobError">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">2 · Resolved Strategy</span>
+          <button class="btn mini" type="button" id="dlStage2">↓ resolved-strategy.json</button>
+          <button class="btn mini ghost" type="button" id="cpStage2">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwStage2">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · Spec JSON</span>
+          <button class="btn mini" type="button" id="dlTemplateJson">↓ spec.json</button>
+          <button class="btn mini ghost" type="button" id="cpTemplateJson">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwTemplateJson">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">3 · Template · HTML</span>
+          <button class="btn mini" type="button" id="dlTemplateHtml">↓ template.html</button>
+          <button class="btn mini ghost" type="button" id="vwTemplateHtml">View</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">4 · Bridge Profile &amp; Design</span>
+          <button class="btn mini" type="button" id="dlStage4">↓ bridge.json</button>
+          <button class="btn mini ghost" type="button" id="cpStage4">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwStage4">View</button>
+          <button class="btn mini ghost" type="button" id="recomputeStage4">↺ Recompute</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">5 · Renderer</span>
+          <button class="btn mini" type="button" id="dlFinalHtml">↓ portfolio.html</button>
+          <button class="btn mini ghost" type="button" id="cpFinalHtml">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwFinalHtml">View</button>
+          <button class="btn mini ghost" type="button" id="dlSummaryHtml">↓ summary.html</button>
+          <button class="btn mini ghost" type="button" id="cpSummaryHtml">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwSummaryHtml">View</button>
+          <button class="btn mini ghost" type="button" id="recomputeStage5">↺ Recompute</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,.08);">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">Form Payload</span>
+          <button class="btn mini ghost" type="button" id="dlDebugPayload">↓ payload.json</button>
+          <button class="btn mini ghost" type="button" id="cpDebugPayload">Copy</button>
+          <button class="btn mini ghost" type="button" id="vwDebugPayload">View</button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+
+<script src="src/form.js" defer></script>
+<script>
+  // ── Supabase auth ─────────────────────────────────────────────────────────
+  // SUPABASE_URL and SUPABASE_ANON_KEY are safe to expose in browser JS.
+  const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+
+  const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  // Exposed for form.js to read
+  window.getSupabaseUser = () => _currentUser;
+  window.getSupabaseMembership = () => _membership;
+
+  let _currentUser   = null;
+  let _membership    = null;
+  let _authTab       = "login";
+
+  // ── Session bootstrap ────────────────────────────────────────────────────
+  _supabase.auth.getSession().then(({ data: { session } }) => {
+    if (session?.user) onSignIn(session.user);
+  });
+
+  _supabase.auth.onAuthStateChange((_event, session) => {
+    if (session?.user) onSignIn(session.user);
+    else               onSignOut();
+  });
+
+  async function onSignIn(user) {
+    _currentUser = user;
+    const { data } = await _supabase
+      .from("memberships")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status")
+      .eq("user_id", user.id)
+      .single();
+    _membership = data;
+    updateAuthUI();
+  }
+
+  function onSignOut() {
+    _currentUser = null;
+    _membership  = null;
+    updateAuthUI();
+  }
+
+  // ── UI helpers ───────────────────────────────────────────────────────────
+  function updateAuthUI() {
+    const loggedIn  = !!_currentUser;
+    const email     = _currentUser?.email || "";
+    const initial   = email ? email[0].toUpperCase() : "?";
+    const tier      = _membership?.tier || "free";
+
+    document.getElementById("authAvatar").textContent    = loggedIn ? initial : "?";
+    document.getElementById("authBtnLabel").textContent  = loggedIn ? email.split("@")[0] : "Sign in";
+
+    document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
+    document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
+    if (!loggedIn) document.getElementById("creditsDisplay").style.display = "none";
+
+    if (loggedIn) {
+      document.getElementById("authUserEmail").textContent   = email;
+      document.getElementById("authAvatarLarge").textContent = initial;
+      const badge = document.getElementById("authTierBadge");
+      badge.textContent = tier;
+      badge.className   = "tierBadge " + (tier !== "free" ? tier : "");
+
+      const m = _membership;
+      if (m) {
+        const cUnlimited = m.credits_limit   === -1;
+        const dUnlimited = m.downloads_limit === -1;
+        const cStr = cUnlimited ? "∞" : `${m.credits_used}/${m.credits_limit}`;
+        const dStr = dUnlimited ? "∞" : `${m.downloads_used}/${m.downloads_limit}`;
+        document.getElementById("authQuotaBar").textContent =
+          `Credits: ${cStr}  ·  Downloads: ${dStr}`;
+
+        const creditsEl = document.getElementById("creditsDisplay");
+        if (creditsEl) {
+          if (cUnlimited) {
+            creditsEl.textContent = "unlimited credits";
+          } else {
+            const remaining = (m.credits_limit ?? 0) - (m.credits_used ?? 0);
+            creditsEl.textContent = `${remaining} credit${remaining === 1 ? "" : "s"} remaining`;
+          }
+          creditsEl.style.display = "";
+        }
+      }
+    }
+
+    // Let form.js react to auth state changes (gates buttons, passes userId)
+    if (typeof window.onAuthStateUpdated === "function") window.onAuthStateUpdated();
+  }
+
+  function switchAuthTab(tab) {
+    _authTab = tab;
+    document.getElementById("tabLogin").classList.toggle("active",  tab === "login");
+    document.getElementById("tabSignup").classList.toggle("active", tab === "signup");
+    document.getElementById("authSubmitBtn").textContent = tab === "login" ? "Sign in" : "Create account";
+    document.getElementById("authPasswordConfirmWrap").classList.toggle("hidden", tab === "login");
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  function openAuthModal() {
+    const modal = document.getElementById("authModal");
+    modal.style.display = "flex";
+  }
+
+  function closeAuthModal() {
+    document.getElementById("authModal").style.display = "none";
+    document.getElementById("authMsg").textContent = "";
+  }
+
+  function getEmailRedirectUrl() {
+    return `${window.location.origin}${window.location.pathname}`;
+  }
+
+  function formatAuthError(error) {
+    if (!error) return "Unknown authentication error.";
+
+    if (error.message === "Error sending confirmation email") {
+      return "Supabase could not send the confirmation email. Check Supabase Auth email settings, SMTP configuration, and allowed redirect URLs.";
+    }
+
+    return error.message || "Authentication failed.";
+  }
+
+  async function handleAuthSubmit() {
+    const email    = document.getElementById("authEmail").value.trim();
+    const password = document.getElementById("authPassword").value;
+    const confirm  = document.getElementById("authPasswordConfirm").value;
+    const msgEl    = document.getElementById("authMsg");
+    msgEl.className = "authMsg";
+    msgEl.textContent = "";
+
+    if (!email || !password) { msgEl.className = "authMsg err"; msgEl.textContent = "Email and password required."; return; }
+
+    if (_authTab === "signup") {
+      if (password !== confirm) { msgEl.className = "authMsg err"; msgEl.textContent = "Passwords don't match."; return; }
+      const { error } = await _supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: getEmailRedirectUrl() }
+      });
+      if (error) {
+        console.error("Supabase signUp error:", {
+          message: error.message,
+          status: error.status,
+          code: error.code,
+          name: error.name
+        });
+        msgEl.className = "authMsg err";
+        msgEl.textContent = formatAuthError(error);
+      }
+      else        { msgEl.className = "authMsg ok";  msgEl.textContent = "Check your email to confirm your account."; }
+    } else {
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
+      else        { closeAuthModal(); }
+    }
+  }
+
+  async function handleSignOut() {
+    await _supabase.auth.signOut();
+    closeAuthModal();
+  }
+</script>
+</body>
+</html>

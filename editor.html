@@ -49,6 +49,13 @@
     #editToolbar button:hover { background: rgba(255,255,255,.2); }
     #editToolbar .sep { width: 1px; height: 16px; background: rgba(255,255,255,.15); margin: 0 4px; flex-shrink: 0; }
 
+    #editStatus a {
+      color: #ffd7a6;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    #editStatus a:hover { color: #ffe6bf; }
+
     /* ── Main layout ──────────────────────────────────────────────── */
     #editorLayout {
       display: flex;
@@ -559,6 +566,65 @@
         "rgba(234,240,255,.55)";
     }
 
+    function setEditStatusHtml(message, kind = "") {
+      const el = document.getElementById("editStatus");
+      if (!el) return;
+      el.innerHTML = message || "";
+      el.style.color =
+        kind === "error" ? "rgba(255,166,166,.88)" :
+        kind === "ok" ? "rgba(170,240,190,.88)" :
+        "rgba(234,240,255,.55)";
+    }
+
+    function upgradeLinkedMessage(message) {
+      const text = String(message || "");
+      if (!/\bupgrade\b/i.test(text)) return text;
+      return text.replace(/\bupgrade\b/i, '<a href="subscriptions.html" target="_blank" rel="noopener">UPGRADE</a>');
+    }
+
+    function showLinkedError(message) {
+      const linked = upgradeLinkedMessage(message);
+      if (linked !== String(message || "")) {
+        setEditStatusHtml(linked, "error");
+      } else {
+        setEditStatus(message || "Action failed.", "error");
+      }
+    }
+
+    async function getMembership() {
+      if (!supabaseClient) return null;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const userId = session?.user?.id || null;
+      if (!userId) return null;
+      const { data } = await supabaseClient
+        .from("memberships")
+        .select("downloads_used, downloads_limit, status")
+        .eq("user_id", userId)
+        .single();
+      return data || null;
+    }
+
+    async function ensureDownloadAllowed(actionLabel) {
+      if (!supabaseClient) {
+        throw new Error(`${actionLabel} is unavailable because the Supabase client failed to load.`);
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error(`Sign in first. ${actionLabel} requires an authenticated account.`);
+      }
+      const membership = await getMembership();
+      if (!membership) {
+        throw new Error("No active membership record found for this account.");
+      }
+      if (membership.status !== "active") {
+        throw new Error(`Membership is ${membership.status}. ${actionLabel} is disabled.`);
+      }
+      if (membership.downloads_limit !== -1 && membership.downloads_used >= membership.downloads_limit) {
+        throw new Error("Please UPGRADE to publish or download with this account.");
+      }
+      return membership;
+    }
+
     // ── View HTML modal ────────────────────────────────────────────────────────
     document.getElementById("btnViewHtml").onclick = () => {
       document.getElementById("htmlModalText").value = buildHtmlString();
@@ -572,10 +638,20 @@
     };
 
     // ── Download ───────────────────────────────────────────────────────────────
-    document.getElementById("btnDownload").onclick = () => {
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
-      a.download = "portfolio.html"; a.click(); URL.revokeObjectURL(a.href);
+    document.getElementById("btnDownload").onclick = async () => {
+      try {
+        setEditStatus("Checking download access...");
+        await ensureDownloadAllowed("Download");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
+        a.download = "portfolio.html";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setEditStatus("Downloaded.", "ok");
+      } catch (err) {
+        console.error("Download failed:", err);
+        showLinkedError(err?.message || "Download failed.");
+      }
     };
 
     document.getElementById("btnPublish").onclick = async () => {
@@ -621,8 +697,10 @@
         if (openNow && payload.url) window.open(payload.url, "_blank", "noopener");
       } catch (err) {
         console.error("Publish failed:", err);
-        setEditStatus(err?.message || "Publish failed.", "error");
-        alert(err?.message || "Publish failed.");
+        showLinkedError(err?.message || "Publish failed.");
+        if (!/\bupgrade\b/i.test(String(err?.message || ""))) {
+          alert(err?.message || "Publish failed.");
+        }
       } finally {
         publishBtn.disabled = false;
         publishBtn.textContent = originalLabel;

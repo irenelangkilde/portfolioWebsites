@@ -51,6 +51,10 @@
       localStorage.setItem(ANON_CREDITS_KEY, String(getAnonCreditsUsed() + 1));
     }
 
+    function showAnonCreditPrompt() {
+      showUpgradePrompt({ tier: "free", used: getAnonCreditsUsed(), limit: ANON_CREDIT_LIMIT, anon: true });
+    }
+
     function hasCreditsRemaining() {
       if (!currentUserId()) {
         return getAnonCreditsUsed() < ANON_CREDIT_LIMIT;
@@ -305,6 +309,7 @@
       if (hasFile) {
         if (!hasCreditsRemaining()) {
           setResumeAnalysisStatus("No credits remaining — upgrade to analyze your resume.", "rgba(251,171,156,.8)");
+          if (!currentUserId()) showAnonCreditPrompt();
         } else {
           analyzeResumeInBackground(input.files[0]);
         }
@@ -316,6 +321,7 @@
     document.getElementById("reanalyzeResume")?.addEventListener("click", () => {
       if (!hasCreditsRemaining()) {
         setResumeAnalysisStatus("No credits remaining — upgrade to re-analyze.", "rgba(251,171,156,.8)");
+        if (!currentUserId()) showAnonCreditPrompt();
         return;
       }
       const input = document.getElementById("resumeUpload");
@@ -528,8 +534,115 @@
       return startCountdown("resumeAnalysisStatus", "Analyzing resume…", timeoutSec);
     }
 
+    function getCompatibleColorSchemes(data) {
+      const text = [
+        data?.resume_facts?.identity?.major,
+        data?.resume_facts?.identity?.specialization,
+        data?.resume_resolved?.target_role?.industry,
+        data?.resume_resolved?.target_role?.role_title,
+        data?.resume_strategy?.motifs?.broad_primary_domain,
+        data?.resume_strategy?.editorial_direction?.color_strategy
+      ].filter(Boolean).join(" ").toLowerCase();
+
+      const fallbackPalettes = (() => {
+        if (!text) return [
+          {
+            how_used: "Fallback professional palette with navy structure and bright accent.",
+            colors: ["#0f172a", "#2563eb", "#22c55e", "#f8fafc", "#94a3b8"]
+          },
+          {
+            how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
+            colors: ["#1f2937", "#ea580c", "#f59e0b", "#fff7ed", "#cbd5e1"]
+          }
+        ];
+        if (/bio|chem|health|medical|nurs|clinic|pharma|environment|ecolog|lab|science/.test(text)) return [
+          {
+            how_used: "Science-forward palette with deep slate, clinical blue, and laboratory green.",
+            colors: ["#102a43", "#2c7be5", "#2bb673", "#f8fbff", "#9fb3c8"]
+          },
+          {
+            how_used: "Natural research palette with evergreen depth and mineral teal accents.",
+            colors: ["#163a34", "#1f8a70", "#8fd694", "#f6fff8", "#a7b8a5"]
+          }
+        ];
+        if (/engineer|electrical|mechanical|computer|software|data|ai|robot|technical|hardware|systems|cyber/.test(text)) return [
+          {
+            how_used: "Technical palette with navy canvas, electric blue interaction, and mint accent.",
+            colors: ["#0b132b", "#3a86ff", "#2ec4b6", "#f5faff", "#98a7c1"]
+          },
+          {
+            how_used: "Hardware-inspired palette with graphite structure and signal-amber highlights.",
+            colors: ["#1f2937", "#2563eb", "#f59e0b", "#f9fafb", "#94a3b8"]
+          },
+          {
+            how_used: "Data-tech palette with deep indigo base and vivid cyan emphasis.",
+            colors: ["#111827", "#4f46e5", "#06b6d4", "#eef2ff", "#9ca3af"]
+          }
+        ];
+        if (/business|finance|account|econom|market|consult|admin|operations|sales/.test(text)) return [
+          {
+            how_used: "Corporate palette with navy credibility and gold confidence cues.",
+            colors: ["#14213d", "#1d4ed8", "#d4a017", "#fffdf7", "#9ca3af"]
+          },
+          {
+            how_used: "Finance palette with charcoal structure and emerald growth accents.",
+            colors: ["#1f2933", "#0f766e", "#22c55e", "#f8fafc", "#a7b0bb"]
+          }
+        ];
+        if (/design|art|media|film|architecture|creative|illustration|fashion/.test(text)) return [
+          {
+            how_used: "Creative palette with rich plum foundation and vivid coral energy.",
+            colors: ["#2d1e2f", "#c026d3", "#fb7185", "#fff7fb", "#b8a3b9"]
+          },
+          {
+            how_used: "Editorial palette with warm charcoal, sand neutrals, and citrus pop.",
+            colors: ["#2f2a24", "#d97706", "#facc15", "#fffbeb", "#b9afa1"]
+          }
+        ];
+        if (/education|teaching|psych|social|history|english|policy|community|public/.test(text)) return [
+          {
+            how_used: "Warm professional palette with indigo structure and approachable amber accents.",
+            colors: ["#243b53", "#4f46e5", "#f59e0b", "#fffdf7", "#a8b2c1"]
+          },
+          {
+            how_used: "Human-centered palette with deep teal grounding and soft coral highlights.",
+            colors: ["#164e63", "#0ea5e9", "#fb7185", "#fffaf7", "#b6c2c9"]
+          }
+        ];
+        return [
+          {
+            how_used: "Fallback professional palette with navy structure and bright accent.",
+            colors: ["#0f172a", "#2563eb", "#22c55e", "#f8fafc", "#94a3b8"]
+          },
+          {
+            how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
+            colors: ["#1f2937", "#ea580c", "#f59e0b", "#fff7ed", "#cbd5e1"]
+          }
+        ];
+      })();
+
+      const candidates = [
+        data?.resume_strategy?.compatible_color_schemes,
+        data?.compatible_color_schemes,
+        data?.resume_resolved?.compatible_color_schemes,
+        data?.resume_strategy?.website_copy_seed?.compatible_color_schemes,
+        data?.color_strategy?.compatible_color_schemes
+      ];
+      const found = candidates.find(arr => Array.isArray(arr) && arr.length);
+      return found || fallbackPalettes;
+    }
+
+    function hasUsablePaletteData(data) {
+      return getCompatibleColorSchemes(data).some(scheme => {
+        if (Array.isArray(scheme?.colors)) {
+          return scheme.colors.some(color => !!normalizeToHex(color));
+        }
+        return ["primary", "secondary", "accent", "dark", "light"].some(slot => !!normalizeToHex(scheme?.[slot]));
+      });
+    }
+
     function resumeCacheKey(file) {
-      return `resumeAnalysis_v4:${file.name}:${file.size}:${file.lastModified}`;
+      return `resumeAnalysis_v5:${file.name}:${file.size}:${file.lastModified}`;
     }
 
     function jobAdCacheKey(rawText) {
@@ -557,7 +670,14 @@
       let cachedData = null;
       try {
         const cached = localStorage.getItem(resumeCacheKey(file));
-        if (cached) cachedData = JSON.parse(cached);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (hasUsablePaletteData(parsed)) {
+            cachedData = parsed;
+          } else {
+            localStorage.removeItem(resumeCacheKey(file));
+          }
+        }
       } catch {}
       if (cachedData) {
         lastAnalysisData = cachedData;
@@ -590,14 +710,14 @@
       // Generate a unique jobId for this analysis run
       const jobId = "resume_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      const countdownTimer = startAnalysisCountdown(120);
+      const countdownTimer = startAnalysisCountdown(180);
 
       // Submit to background function (returns 202 immediately)
       try {
         const submitRes = await fetch("/.netlify/functions/analyzeResume-background", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ jobId, resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider })
+          body: JSON.stringify({ jobId, resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider, userId: currentUserId() })
         });
         if (!submitRes.ok) {
           clearInterval(countdownTimer);
@@ -651,6 +771,10 @@
         updateSubmitReadiness();
 
         if (result.status === "error") {
+          if (result.quota) {
+            showUpgradePrompt(result);
+            return;
+          }
           setResumeAnalysisStatus("Resume analysis failed: " + (result.error || "Unknown error"), "rgba(251,171,156,.8)");
           return;
         }
@@ -672,6 +796,7 @@
 
         // Persist to localStorage for reuse after refresh
         try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
+        if (!currentUserId()) incrementAnonCredits();
 
         lastAnalysisData = data;
         if (isDebugMode()) resumeAnalysisCache = data;
@@ -1025,33 +1150,36 @@
       return extractTemplatePending;
     }
 
+    function templateExtractionRequired() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      return !!source && source !== "none";
+    }
+
+    async function waitForTemplateExtraction(statusId) {
+      if (!extractTemplatePending || !templateExtractionRequired()) return;
+      setHeaderStatus(statusId, "Waiting for template…", "rgba(141,224,255,.6)");
+      try {
+        await extractTemplatePending;
+      } catch {
+        // _doExtractTemplate already sets user-facing error state; downstream stages will proceed
+        // with whatever template state is available.
+      }
+    }
+
     async function _doExtractTemplate() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (!source) return;
+      if (source === "none") {
+        setTemplateExtractStatus("Design options selected", "rgba(234,240,255,.45)");
+        return;
+      }
 
       const extractMode = document.getElementById("extractTemplateMode")?.value || "analysis";
 
       let key = "";
       let requestBody = { provider: getAnalysisProvider(), templateMode: extractMode };
 
-      if (source === "none") {
-        const styleVal = document.getElementById("designStyle")?.value || "";
-        const jsonSpec = {
-          source:             "design_options",
-          composition:        document.getElementById("designComposition")?.value  || "",
-          style:              styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "custom") : styleVal,
-          render_mode:        document.getElementById("designRenderMode")?.value   || "",
-          density:            document.getElementById("designDensity")?.value      || "medium",
-          use_emoji_icons:    document.getElementById("useEmojiIcons")?.value      === "yes",
-          alternate_sections: document.getElementById("alternateSections")?.value  !== "no"
-        };
-        key = "design_options_" + JSON.stringify(jsonSpec);
-        if (key === lastExtractedTemplate) return;
-        const p1 = getPage1();
-        requestBody.templateJsonStr = JSON.stringify(jsonSpec, null, 2);
-        requestBody.major           = p1.major;
-        requestBody.specialization  = p1.specialization;
-      } else if (source === "keyword") {
+      if (source === "keyword") {
         const val = document.getElementById("modelTemplate")?.value?.trim() || "";
         if (!val || looksLikeUrl(val)) return;
 
@@ -1460,7 +1588,7 @@
       // Template colors take priority — skip if already extracted from a template
       if (sampleColors) return;
       const slots = ["primary", "secondary", "accent", "dark", "light"];
-      const firstScheme = resumeJson?.resume_strategy?.compatible_color_schemes?.[0];
+      const firstScheme = getCompatibleColorSchemes(resumeJson)[0];
       let colors = null;
       if (Array.isArray(firstScheme?.colors) && firstScheme.colors.length) {
         // New schema: ordered array [Canvas, Interactive, Vibrant, OnCanvas, Subtle]
@@ -1834,6 +1962,11 @@
         setHeaderStatus("jobAnalysisStatus", "✓ Job skipped", "rgba(234,240,255,.4)");
         return;
       }
+      if (!currentUserId() && !hasCreditsRemaining()) {
+        setHeaderStatus("jobAnalysisStatus", "Credit limit reached.", "rgba(251,171,156,.8)");
+        showAnonCreditPrompt();
+        return;
+      }
 
       // Check localStorage cache before hitting the API
       try {
@@ -1864,7 +1997,8 @@
             jobAdText: rawText,
             resumeStrategy: lastAnalysisData?.resume_strategy || null,
             resumeFacts:    lastAnalysisData?.resume_facts    || null,
-            provider: getAnalysisProvider()
+            provider: getAnalysisProvider(),
+            userId: currentUserId()
           })
         });
         if (!res.ok && res.status !== 202) {
@@ -1899,11 +2033,16 @@
             jobAdResult = lastPollData;
             populateJobAdDebug(lastPollData);
             try { localStorage.setItem(jobAdCacheKey(rawText), JSON.stringify(lastPollData)); } catch {}
+            if (!currentUserId()) incrementAnonCredits();
             break;
           }
           if (lastPollData.status === "error") {
-            jobAdErrorDetail = lastPollData?.error ?? lastPollData;
+            jobAdErrorDetail = lastPollData?.quota ? lastPollData : (lastPollData?.error ?? lastPollData);
             populateJobAdDebug(lastPollData);
+            if (lastPollData?.quota) {
+              setHeaderStatus("jobAnalysisStatus", "Credit limit reached.", "rgba(251,171,156,.8)");
+              showUpgradePrompt(lastPollData);
+            }
             break;
           }
         }
@@ -1924,6 +2063,7 @@
 
       clearInterval(jobAdCountdown);
       jobAdInProgress = false;
+      if (jobAdErrorDetail?.quota) return;
       if (jobAdResult) {
         setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted", "rgba(118,176,34,.9)");
       } else {
@@ -1962,6 +2102,8 @@
       Object.keys(_tokenReportRows).forEach(k => delete _tokenReportRows[k]);
       const reportEl = document.getElementById("tokenReport");
       if (reportEl) reportEl.style.display = "none";
+
+      await waitForTemplateExtraction("bridgeStatus");
 
       // Block until job ad extraction is finished (bridge needs job_resolved)
       if (jobAdInProgress) {
@@ -2154,6 +2296,9 @@
         return;
       }
 
+      setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+
+      await waitForTemplateExtraction("generatingWebsiteStatus");
       setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
 
       // If the job ad field has content but page 2 hasn't been submitted yet, wait silently
@@ -2518,8 +2663,10 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (extractedTemplateCache) {
         populateTemplateExtractPanel(extractedTemplateCache);
-      } else if (source) {
+      } else if (source && source !== "none") {
         extractTemplateInBackground();
+      } else if (source === "none") {
+        setTemplateExtractStatus("Design options selected", "rgba(234,240,255,.45)");
       }
     }
 
@@ -2561,13 +2708,17 @@
         }
       }
 
-      extractTemplateInBackground().then(() => {
-        if (isDebugMode() && extractedTemplateCache) {
-          populateTemplateExtractPanel(extractedTemplateCache);
-          document.getElementById("templateExtractPanel")?.classList.remove("hidden");
-          document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
-        }
-      });
+      if (source !== "none") {
+        extractTemplateInBackground().then(() => {
+          if (isDebugMode() && extractedTemplateCache) {
+            populateTemplateExtractPanel(extractedTemplateCache);
+            document.getElementById("templateExtractPanel")?.classList.remove("hidden");
+            document.getElementById("templateExtractPanel")?.querySelector("details")?.setAttribute("open", "");
+          }
+        });
+      } else {
+        setTemplateExtractStatus("Design options selected", "rgba(234,240,255,.45)");
+      }
       return true;
     }
 
@@ -2606,9 +2757,7 @@
 
       // Slots 1-3: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
-      const aiPalettes = resolvedData?.resume_strategy?.compatible_color_schemes
-                      ?? resolvedData?.compatible_color_schemes
-                      ?? [];
+      const aiPalettes = getCompatibleColorSchemes(resolvedData);
       const slots = ["primary", "secondary", "accent", "dark", "light"];
       const aiRows = aiPalettes
         .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.accent)
@@ -2690,12 +2839,15 @@
         rows.appendChild(row);
       });
 
-      // Auto-select Template Palette the first time it arrives, but only if the user
-      // hasn't already made an active palette or theme choice.
-      if (tplPalette && !templatePaletteRendered && !userHasSelectedPalette) {
-        templatePaletteRendered = true;
+      // Auto-select the first available suggested palette the first time it arrives,
+      // but only if the user hasn't already made an active palette or theme choice.
+      if (!userHasSelectedPalette && visible.length > 0) {
         const firstRadio = rows.querySelector('input[name="suggestedPalette"]');
-        if (firstRadio) { firstRadio.checked = true; applyColors(tplPalette.colors); }
+        if (firstRadio) {
+          firstRadio.checked = true;
+          applyColors(visible[0].colors);
+          if (tplPalette) templatePaletteRendered = true;
+        }
       }
     }
 
@@ -2717,9 +2869,15 @@
 
     // Page 4 (Colors)
     function isMustacheMode() { return extractedTemplateCache?.templateMode === "mustache"; }
+    function isDirectDesignMode() {
+      return document.querySelector('input[name="templateSource"]:checked')?.value === "none";
+    }
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
-      if (isMustacheMode()) {
+      if (isDirectDesignMode()) {
+        setHeaderStatus("bridgeStatus", "Bridge skipped for design-options mode", "rgba(234,240,255,.35)");
+        doGenerateWebsite();
+      } else if (isMustacheMode()) {
         setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
         doGenerateWebsite(); // bridge unused for mustache — skip straight to renderer
       } else {
@@ -2742,7 +2900,10 @@
       generationResult = null;
       greyRendererButtons(true);
       setApplyBtnState(false);
-      if (isMustacheMode()) {
+      if (isDirectDesignMode()) {
+        setHeaderStatus("bridgeStatus", "Bridge skipped for design-options mode", "rgba(234,240,255,.35)");
+        doGenerateWebsite();
+      } else if (isMustacheMode()) {
         setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else {

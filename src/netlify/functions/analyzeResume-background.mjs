@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
+import { checkAndIncrementCredits, logUsageEvent } from "./usageQuota.mjs";
 
 /**
  * Netlify Background Function: analyzeResume-background
@@ -36,7 +37,8 @@ export async function handler(event) {
       resumeMime = "application/pdf",
       major = "",
       specialization = "",
-      provider = "claude"
+      provider = "claude",
+      userId = null
     } = body;
 
     if (!resumePdfBase64) {
@@ -47,6 +49,21 @@ export async function handler(event) {
     if (!/pdf/i.test(resumeMime || "")) {
       await store.set(jobId, JSON.stringify({ status: "error", error: `Unsupported file type: ${resumeMime}. Please upload a PDF.` }), { ttl: 3600 });
       return { statusCode: 202 };
+    }
+
+    if (userId) {
+      const quota = await checkAndIncrementCredits(userId);
+      if (!quota.allowed) {
+        await store.set(jobId, JSON.stringify({
+          status: "error",
+          error: quota.reason,
+          quota: true,
+          tier: quota.tier,
+          used: quota.used,
+          limit: quota.limit
+        }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
     }
 
     // Load prompt
@@ -151,6 +168,12 @@ export async function handler(event) {
     }
 
     await store.set(jobId, JSON.stringify({ status: "done", ...analysisJson }), { ttl: 3600 });
+    await logUsageEvent(userId, {
+      event_type: "resume_analysis",
+      provider,
+      model: provider === "openai" ? "gpt-4o" : "claude-sonnet-4-6",
+      success: true
+    });
   } catch (err) {
     const msg = explainBlobStoreError(err);
     console.error("analyzeResume-background error:", msg);

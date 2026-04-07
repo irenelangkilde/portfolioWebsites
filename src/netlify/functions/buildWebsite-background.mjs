@@ -2,69 +2,8 @@ import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { createClient } from "@supabase/supabase-js";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
-
-// ─── Supabase quota helpers ───────────────────────────────────────────────────
-
-function getSupabaseAdmin() {
-  const url = process.env.SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, { auth: { persistSession: false } });
-}
-
-// Returns { allowed: true } or { allowed: false, reason, tier, used, limit }
-async function checkAndIncrementRendering(userId) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return { allowed: true }; // graceful degradation if not configured
-
-  const { data: m, error } = await supabase
-    .from("memberships")
-    .select("tier, status, credits_used, credits_limit")
-    .eq("user_id", userId)
-    .single();
-
-  if (error || !m) return { allowed: true }; // no membership row — let it through (shouldn't happen)
-
-  const unlimited = m.credits_limit === -1;
-  if (!unlimited && m.credits_used >= m.credits_limit) {
-    return {
-      allowed: false,
-      reason: `Credit limit reached (${m.credits_used}/${m.credits_limit}) for tier "${m.tier}".`,
-      tier: m.tier,
-      used: m.credits_used,
-      limit: m.credits_limit
-    };
-  }
-
-  await supabase
-    .from("memberships")
-    .update({ credits_used: m.credits_used + 1 })
-    .eq("user_id", userId);
-
-  return { allowed: true };
-}
-
-async function logUsageEvent(userId, fields) {
-  const supabase = getSupabaseAdmin();
-  if (!supabase || !userId) return;
-  await supabase.from("usage_events").insert({ user_id: userId, ...fields });
-}
-
-async function logAnonUsage() {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return;
-  // Increment the single aggregate counter row (id=1) using a raw increment
-  await supabase.rpc("increment_anon_usage").catch(() => {
-    // Fallback if RPC not available: read then write
-    supabase.from("anon_usage").select("credits_used").eq("id", 1).single()
-      .then(({ data }) => {
-        if (data) supabase.from("anon_usage")
-          .update({ credits_used: data.credits_used + 1 }).eq("id", 1);
-      });
-  });
-}
+import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
 // Extracts all resume content into a structured JSON object.
@@ -995,11 +934,13 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
   } = opts;
   const tokenReport = [];
+  const isDesignOptionsMode = (page1?.template_source || "").toLowerCase() === "none";
+  const totalStages = isDesignOptionsMode ? 3 : 4;
   // ── Stage 1 (optional): Extract resume PDF → JSON ───────────────────────────
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
     await store.set(jobId, JSON.stringify({
-      status: "pending", stage: "Extracting resume content (1/4)…"
+      status: "pending", stage: `Extracting resume content (1/${totalStages})…`
     }), { ttl: 3600 });
 
     const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
@@ -1030,7 +971,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
   } else {
     // Legacy fallback: run buildContentStrategy.md for old analyses without resume_resolved
     await store.set(jobId, JSON.stringify({
-      status: "pending", stage: "Content strategy (2/4)…"
+      status: "pending", stage: `Content strategy (2/${totalStages})…`
     }), { ttl: 3600 });
 
     const contentPrompt = loadPromptFile("buildContentStrategy.md")
@@ -1052,6 +993,79 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       ...(resumeFacts.factual_profile ?? {})
     }
   };
+
+  if (isDesignOptionsMode) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: `Generating portfolio website (3/${totalStages})…`
+    }), { ttl: 3600 });
+
+    const candidateName = coreContent.source_facts?.identity?.name || "";
+    const headshotHint  = headshotName
+      ? `provided — use <img src='${headshotName}' alt='${candidateName}'>`
+      : `not provided — render a CSS monogram using the initials of "${candidateName}"`;
+
+    const directDesignSpec = {
+      composition:         page1?.design_composition || "",
+      style:               page1?.design_style || "",
+      render_mode:         page1?.design_render_mode || "",
+      density:             page1?.design_density || "medium",
+      use_emoji_icons:     page1?.use_emoji_icons ?? true,
+      alternate_sections:  page1?.alternate_sections ?? true
+    };
+
+    const directColorSpec = { ...theme, use_sample_colors: false };
+
+    const directPrompt = loadPromptFile("renderFromDesignSpec.md")
+      .replace(/\{\{MAJOR\}\}/g, page1?.major || "")
+      .replace(/\{\{SPECIALIZATION\}\}/g, page1?.specialization || "")
+      .replace(/\{\{RESUME_FACTS_JSON\}\}/g, JSON.stringify(resumeFacts, null, 2))
+      .replace(/\{\{RESOLVED_STRATEGY_JSON\}\}/g, JSON.stringify(aiStrategy, null, 2))
+      .replace(/\{\{DESIGN_SPEC_JSON\}\}/g, JSON.stringify(directDesignSpec, null, 2))
+      .replace(/\{\{COLOR_SPEC_JSON\}\}/g, JSON.stringify(directColorSpec, null, 2))
+      .replace(/\{\{HEADSHOT\}\}/g, headshotHint)
+      .replace(/\{\{YEAR\}\}/g, new Date().getFullYear().toString());
+
+    const directSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Output exactly one complete HTML file starting with <!DOCTYPE html>. Do not output markdown, explanations, or commentary.";
+    const directResponse = await callAI(provider, creds, {
+      system: directSystem,
+      userText: directPrompt,
+      maxTokens: 32000
+    });
+    tokenReport.push({ stage: "3 · Direct renderer", model: directResponse.model, ...directResponse.usage });
+
+    const siteHtml = cleanHtml(directResponse.text);
+    if (!/<[a-z]/i.test(siteHtml)) {
+      let reason;
+      if (!directResponse.text?.trim()) {
+        reason = "The AI returned an empty response. This is usually a transient error — please resubmit.";
+      } else if (directResponse.truncated) {
+        reason = "The AI's output was cut off before any HTML was produced (token limit reached). Try a shorter job description or fewer visuals, then resubmit.";
+      } else {
+        reason = `The AI did not return valid HTML. Raw output started with: "${directResponse.text?.slice(0, 120)}"`;
+      }
+      await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
+      return;
+    }
+
+    await store.set(jobId, JSON.stringify({
+      status: "done",
+      model: directResponse.model,
+      site_html: siteHtml,
+      resume_json: resumeJson,
+      strategy_json: coreContent.strategy,
+      visual_direction_json: directDesignSpec,
+      truncated: directResponse.truncated,
+      token_report: tokenReport
+    }), { ttl: 3600 });
+
+    await logUsageEvent(opts.userId, {
+      event_type: "generation",
+      provider: opts.provider || "claude",
+      model: directResponse.model,
+      success: true
+    });
+    return;
+  }
 
   // ── Stage 3: code-level visual_direction assembly ────────────────────────────
   await store.set(jobId, JSON.stringify({
@@ -1275,7 +1289,7 @@ export async function handler(event) {
         // Log to aggregate counter so usage can be monitored.
         await logAnonUsage();
       } else {
-        const quota = await checkAndIncrementRendering(userId);
+        const quota = await checkAndIncrementCredits(userId);
         if (!quota.allowed) {
           await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
           return { statusCode: 202 };
@@ -1315,6 +1329,20 @@ export async function handler(event) {
 
     // extractJobAd mode: extract structured job ad info from raw posting text
     if (mode === "extractJobAd") {
+      if (userId) {
+        const quota = await checkAndIncrementCredits(userId);
+        if (!quota.allowed) {
+          await store.set(jobId, JSON.stringify({
+            status: "error",
+            error: quota.reason,
+            quota: true,
+            tier: quota.tier,
+            used: quota.used,
+            limit: quota.limit
+          }), { ttl: 3600 });
+          return { statusCode: 202 };
+        }
+      }
       const rawJobAd = body.jobAdText || "";
       if (!rawJobAd.trim()) {
         await store.set(jobId, JSON.stringify({ status: "done", job_ad: null }), { ttl: 3600 });
@@ -1343,6 +1371,12 @@ export async function handler(event) {
         model:        r.model,
         token_report: [{ stage: "2a · Job ad extract", model: r.model, ...r.usage }]
       }), { ttl: 3600 });
+      await logUsageEvent(userId, {
+        event_type: "job_analysis",
+        provider,
+        model: r.model,
+        success: !!jobResolved
+      });
       return { statusCode: 202 };
     }
 
