@@ -158,7 +158,7 @@ OUTPUT JSON SHAPE
       "cta_options": [],
       "about_angle": "",
       "project_framing_notes": [
-        { "project_name": "", "framing": "" }
+        { "project_name": "", "framing": "", "project_icon": "" }
       ],
       "highlights": [],
       "strengths_snapshot": [],
@@ -217,7 +217,7 @@ OUTPUT JSON SHAPE
     "website_copy_seed": {
       "about_angle": "",
       "project_framing_notes": [
-        { "project_name": "", "framing": "" }
+        { "project_name": "", "framing": "", "project_icon": "" }
       ],
       "highlights": [],
       "strengths_snapshot": [],
@@ -331,7 +331,7 @@ VALUE PROPOSITIONS
 Two or three punchy sentences (not about_angle) that each capture the candidate's clearest professional offer — what they bring that is concrete and differentiated. Each should be a complete sentence. First person. The best one will be used as the hero sub-value pitch.
 
 PROJECT FRAMING NOTES
-For every project in resume_facts.factual_profile.projects, write one sentence reframing that project for a portfolio website audience. The framing should emphasize what problem it solved, what skill it demonstrates, or what outcome it produced — not just what it is. Use the exact project name from resume_facts.
+For every project in resume_facts.factual_profile.projects, write one sentence reframing that project for a portfolio website audience. The framing should emphasize what problem it solved, what skill it demonstrates, or what outcome it produced — not just what it is. Use the exact project name from resume_facts. Also choose one single emoji in `project_icon` that best fits that specific project. The emoji choice should come from the project's actual subject matter plus the candidate's motifs and target field. Avoid generic art/design emoji unless the project is genuinely about art/design/media.
 
 HIGHLIGHTS
 Write 3-4 short, punchy bullet strings for the hero "Highlights" card. These are quick-scan facts: concrete achievements, key skills, notable credentials, or defining characteristics. Each should be 5-10 words. Examples: "Thesis on X published in Y", "Fluent in Python and R", "Dean's List 3 semesters", "Built X used by Y people". No soft claims.
@@ -411,7 +411,7 @@ Synthesize from motifs. Condense to final decisions, not options.
 WEBSITE COPY SEED (resolved)
 Pick the single best value for each copy field from the working material in resume_strategy.website_copy_seed. These are the selected outputs — not arrays of options.
 - about_angle: copy the best entry from resume_strategy.website_copy_seed.about_angle
-- project_framing_notes: copy from resume_strategy.website_copy_seed.project_framing_notes
+- project_framing_notes: copy from resume_strategy.website_copy_seed.project_framing_notes, preserving both `framing` and `project_icon`
 - highlights: copy from resume_strategy.website_copy_seed.highlights (max 4)
 - strengths_snapshot: copy from resume_strategy.website_copy_seed.strengths_snapshot (max 4)
 - open_to: copy from resume_strategy.website_copy_seed.open_to
@@ -440,9 +440,9 @@ EXAMPLE OUTPUT (fields from both resume_strategy and resume_resolved — use as 
 ]
 
 "project_framing_notes": [
-  { "project_name": "BLDC Motor Driver (4-layer PCB)", "framing": "Shows end-to-end hardware ownership: schematic, layout, assembly, and firmware on a single shipped board." },
-  { "project_name": "BLE Wearable Sensor", "framing": "Demonstrates full product thinking across PCB design, Nordic BLE firmware, and a companion desktop app." },
-  { "project_name": "48V → 5V Synchronous Buck", "framing": "Quantified power electronics result (95% efficiency) with simulation, implementation, and thermal analysis." }
+  { "project_name": "BLDC Motor Driver (4-layer PCB)", "framing": "Shows end-to-end hardware ownership: schematic, layout, assembly, and firmware on a single shipped board.", "project_icon": "⚡" },
+  { "project_name": "BLE Wearable Sensor", "framing": "Demonstrates full product thinking across PCB design, Nordic BLE firmware, and a companion desktop app.", "project_icon": "📡" },
+  { "project_name": "48V → 5V Synchronous Buck", "framing": "Quantified power electronics result (95% efficiency) with simulation, implementation, and thermal analysis.", "project_icon": "🔋" }
 ]
 
 "skills_subcategory_labels": [

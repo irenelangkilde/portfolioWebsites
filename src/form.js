@@ -432,6 +432,18 @@
       if (el) { el.textContent = text; el.style.color = color; }
     }
 
+    function restorePersistentHeaderStatuses() {
+      const resumeEl = document.getElementById("resumeAnalysisStatus");
+      if (resumeEl && !resumeEl.textContent.trim() && lastAnalysisData && !resumeAnalysisPending) {
+        setResumeAnalysisStatus("✓ Resume analyzed", "rgba(118,176,34,.9)");
+      }
+
+      const jobEl = document.getElementById("jobAnalysisStatus");
+      if (jobEl && !jobEl.textContent.trim() && jobAdResult && !jobAdInProgress) {
+        setHeaderStatus("jobAnalysisStatus", "✓ Job info extracted", "rgba(118,176,34,.9)");
+      }
+    }
+
     function viewJson(str) {
       const blob = new Blob([str], { type: "application/json" });
       const url  = URL.createObjectURL(blob);
@@ -888,6 +900,7 @@
         document.getElementById("stagesDebugSection")?.classList.toggle("hidden", currentStep < 2);
       }
       renderStepUI();
+      restorePersistentHeaderStatuses();
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (currentStep === 3) updateTemplateUI();
       if (currentStep === 4) renderSuggestedPalettes();
@@ -1278,13 +1291,19 @@
         return;
       }
 
-      // Poll for result
+      // Poll for result. Keep this function pending until extraction actually
+      // finishes so downstream bridge/render stages can await it correctly.
       const POLL_INTERVAL_MS = 2500;
       const POLL_TIMEOUT_MS  = 300000; // 5 minutes
       const pollStart = Date.now();
 
-      const pollExtract = async () => {
-        if (lastExtractedTemplate !== key) { clearInterval(extractTicker); return; } // superseded
+      while (true) {
+        await new Promise(r => setTimeout(r, POLL_INTERVAL_MS));
+
+        if (lastExtractedTemplate !== key) {
+          clearInterval(extractTicker);
+          return;
+        }
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
           clearInterval(extractTicker);
           setTemplateExtractStatus("Template extraction timed out — try a smaller page or upload the HTML file instead.", "rgba(251,171,156,.8)");
@@ -1297,13 +1316,11 @@
           const text = await res.text();
           try { result = JSON.parse(text); } catch { result = null; }
         } catch {
-          setTimeout(pollExtract, POLL_INTERVAL_MS);
-          return;
+          continue;
         }
 
         if (!result || result.status === "pending") {
-          setTimeout(pollExtract, POLL_INTERVAL_MS);
-          return;
+          continue;
         }
 
         clearInterval(extractTicker);
@@ -1322,9 +1339,8 @@
         setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
         renderSuggestedPalettes();
-      };
-
-      setTimeout(pollExtract, POLL_INTERVAL_MS);
+        return;
+      }
     }
 
     // ----------------------------

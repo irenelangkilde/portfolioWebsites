@@ -126,7 +126,10 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    if (templateMode === "mustache" && targetOutputPath) {
+    // Output path validation only applies when running locally — on Netlify the
+    // filesystem is read-only so we skip the write and return the result in the blob only.
+    const isNetlify = !!(process.env.NETLIFY || process.env.NETLIFY_LOCAL);
+    if (templateMode === "mustache" && targetOutputPath && !isNetlify) {
       try {
         const absOutputPath = resolveMustacheOutputPath(targetOutputPath);
         ensureWritableOutputPath(absOutputPath);

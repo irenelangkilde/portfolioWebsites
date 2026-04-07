@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
+import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
@@ -479,52 +480,6 @@ function toFlatResumeSchema(f) {
   };
 }
 
-// Domain keyword → emoji candidates (ordered by specificity)
-const EMOJI_DOMAIN_MAP = [
-  { keywords: ["space","aerospace","rocket","satellite","orbital"],          emoji: ["🚀","🛸","🌌"] },
-  { keywords: ["game","simulation","unity","unreal","godot","pygame"],       emoji: ["🎮","🕹️","🎲"] },
-  { keywords: ["biology","genomics","bioinformatics","dna","rna","protein","cell","organism","ecology"], emoji: ["🧬","🌿","🦠"] },
-  { keywords: ["chemistry","chemical","synthesis","reaction","molecule","polymer"], emoji: ["⚗️","🧪","🔬"] },
-  { keywords: ["physics","optics","laser","photon","quantum","wave","acoustic"], emoji: ["🔬","💡","🌊","🔭"] },
-  { keywords: ["electrical","circuit","rf","antenna","pcb","embedded","fpga","microcontroller","arduino","esp32"], emoji: ["⚡","📡","🔌","🔋"] },
-  { keywords: ["mechanical","manufacturing","cad","solidworks","autocad","3d print","cnc","robotics"], emoji: ["⚙️","🏗️","🔩"] },
-  { keywords: ["environment","civil","geospatial","gis","hydrology","climate","geology","surveying"], emoji: ["🌍","🏔️","🌱"] },
-  { keywords: ["finance","accounting","trading","portfolio","stock","investment","banking","audit","tax"], emoji: ["💰","📉","🏦"] },
-  { keywords: ["data","analytics","machine learning","ml","deep learning","nlp","ai","statistics","tableau","power bi","pandas","numpy"], emoji: ["📊","📈","🤖","🧠"] },
-  { keywords: ["design","art","illustration","animation","figma","photoshop","ux","ui","media","film","video"], emoji: ["🎨","🖼️","🎬"] },
-  { keywords: ["network","security","cybersecurity","firewall","penetration","siem","soc","cryptography"], emoji: ["🔐","🌐","🖧"] },
-  { keywords: ["education","research","teaching","curriculum","pedagogy","writing","linguistics","language"], emoji: ["📚","🎓","📝"] },
-  { keywords: ["web","app","frontend","backend","api","react","vue","angular","node","django","flask","software"], emoji: ["💻","🖥️","🛠️","🔧"] },
-];
-
-const FALLBACK_EMOJI = ["🔭","💡","🧩","📌","🗂️","🧮","📐","🔎"];
-
-/**
- * Pick a domain-appropriate, per-project unique emoji.
- * Uses project name + description + technologies for keyword matching.
- * idx ensures uniqueness across projects even when domains overlap.
- */
-function pickProjectEmoji(project, idx) {
-  const hay = [
-    project.name        || "",
-    project.description || "",
-    ...(project.technologies || []),
-    ...(project.bullets || [])
-  ].join(" ").toLowerCase();
-
-  // Collect all matched emoji across all matching domains
-  const matched = [];
-  for (const domain of EMOJI_DOMAIN_MAP) {
-    if (domain.keywords.some(k => hay.includes(k))) {
-      matched.push(...domain.emoji);
-    }
-  }
-
-  const pool = matched.length ? matched : FALLBACK_EMOJI;
-  // Use modulo so adjacent projects in the same domain still differ
-  return pool[idx % pool.length];
-}
-
 /**
  * Maps contentJson + resumeJson into a flat Mustache data object
  * matching the schema in ExtractMustacheTemplate.md.
@@ -772,7 +727,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       technologies:e.technologies || []
     })),
 
-    projects: (resumeJson?.projects || []).map((p, idx) => ({
+    projects: assignProjectIcons(resumeJson?.projects || [], resumeJson).map((p) => ({
       name:        p.name        || "",
       description: p.description || "",
       role:        p.role        || "",
@@ -781,7 +736,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       technologies:p.technologies || [],
       github_link: p.links?.github || "",
       demo_link:   p.links?.demo   || "",
-      project_icon: pickProjectEmoji(p, idx)
+      project_icon: p.project_icon || "🔭"
     })),
 
     education: (resumeJson?.education || []).map(e => ({

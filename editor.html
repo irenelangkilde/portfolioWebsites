@@ -29,6 +29,31 @@
     .tbtn-success { background: #2f8f5b; color: #fff; }
     .tbtn-success:hover { background: #28794d; }
     .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
+    #editorAccount {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-left: 4px;
+      min-width: 0;
+      max-width: 290px;
+      text-align: right;
+      line-height: 1.2;
+    }
+    #editorAccountUser {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #editorAccountQuota {
+      font-size: 10px;
+      color: rgba(234,240,255,.62);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
     #viewToggle { display: flex; gap: 2px; background: rgba(0,0,0,.3); border-radius: 7px; padding: 2px; }
     #viewToggle .tbtn { border-radius: 5px; padding: 4px 10px; }
@@ -41,13 +66,60 @@
       border-bottom: 1px solid rgba(255,255,255,.07); height: 36px;
     }
     body.code-mode #editToolbar { display: none; }
+    #editToolbar {
+      height: auto; min-height: 36px; flex-wrap: wrap; row-gap: 3px;
+    }
     #editToolbar button {
       padding: 3px 9px; border: none; border-radius: 4px;
       background: rgba(255,255,255,.1); color: #eaf0ff;
       font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1.4;
     }
     #editToolbar button:hover { background: rgba(255,255,255,.2); }
+    #editToolbar button.et-active { background: rgba(103,126,234,.45); }
     #editToolbar .sep { width: 1px; height: 16px; background: rgba(255,255,255,.15); margin: 0 4px; flex-shrink: 0; }
+    #editToolbar select {
+      padding: 2px 4px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.1); color: #eaf0ff;
+      font-size: 12px; cursor: pointer; height: 24px;
+    }
+    #editToolbar select option { background: #1a2744; }
+    #editToolbar input[type="color"] {
+      width: 24px; height: 24px; border: none; border-radius: 4px;
+      padding: 1px; cursor: pointer; background: rgba(255,255,255,.1);
+    }
+    /* Find & replace bar */
+    #findBar {
+      display: none; position: fixed; top: 84px; right: 14px; z-index: 9999;
+      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; padding: 6px 10px;
+      display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+    #findBar.open { display: flex; }
+    #findBar input {
+      padding: 4px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2);
+      background: rgba(0,0,0,.3); color: #eaf0ff; font-size: 12px; width: 140px; outline: none;
+    }
+    #findBar label { font-size: 11px; color: rgba(234,240,255,.5); }
+    #findBar button {
+      padding: 3px 8px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.12); color: #eaf0ff; font-size: 12px; cursor: pointer;
+    }
+    #findBar button:hover { background: rgba(255,255,255,.22); }
+    #findBar .find-count { font-size: 11px; color: rgba(234,240,255,.45); min-width: 36px; text-align:center; }
+    /* Table picker popover */
+    #tablePicker {
+      display: none; position: fixed; z-index: 9999;
+      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; padding: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+    #tablePicker.open { display: block; }
+    #tablePicker .tg { display: grid; grid-template-columns: repeat(8, 18px); gap: 3px; }
+    #tablePicker .tg-cell {
+      width: 18px; height: 18px; border-radius: 3px;
+      background: rgba(255,255,255,.12); cursor: pointer;
+    }
+    #tablePicker .tg-cell.hover { background: #667eea; }
+    #tablePicker .tg-label { font-size: 11px; color: rgba(234,240,255,.5); text-align:center; margin-top:5px; }
 
     #editStatus a {
       color: #ffd7a6;
@@ -102,7 +174,7 @@
 
     /* ── Color panel ──────────────────────────────────────────────── */
     #colorPanel {
-      width: 180px; flex-shrink: 0; background: #16213e;
+      width: 120px; flex-shrink: 0; background: #16213e;
       border-left: 1px solid rgba(255,255,255,.1);
       display: flex; flex-direction: column; overflow-y: auto;
       transition: width .2s, opacity .2s;
@@ -114,8 +186,13 @@
       font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
       color: rgba(255,255,255,.45); padding: 14px 14px 8px;
     }
-    .color-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; }
-    .color-row label { font-size: 12px; color: rgba(234,240,255,.7); flex: 1; }
+    .color-row { display: flex; align-items: center; gap: 4px; padding: 5px 14px; }
+    .color-row label {
+      font-size: 12px;
+      color: rgba(234,240,255,.7);
+      flex: 0 0 auto;
+      min-width: 10px;
+    }
     .color-row input[type="color"] {
       width: 32px; height: 24px; border: none; border-radius: 4px;
       cursor: pointer; padding: 1px; background: none;
@@ -123,9 +200,11 @@
     .drag-handle {
       color: rgba(234,240,255,.25); font-size: 13px; cursor: grab;
       user-select: none; line-height: 1; flex-shrink: 0;
+      margin-left: -2px;
     }
     .drag-handle:active { cursor: grabbing; }
-    .color-row.drag-over { outline: 2px solid rgba(102,126,234,.8); border-radius: 4px; }
+    .color-row.drag-over,
+    .color-row.cp-source { outline: 2px solid rgba(102,126,234,.8); border-radius: 4px; }
     .color-row.cp-dragging { opacity: .35; }
     #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
     #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
@@ -172,22 +251,82 @@
     <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
     <button class="tbtn tbtn-success" id="btnPublish">Publish</button>
+    <div id="editorAccount" aria-live="polite">
+      <div id="editorAccountUser">Signed out</div>
+      <div id="editorAccountQuota">Credits: - · Downloads: - · Deploys: -</div>
+    </div>
   </div>
 
   <div id="editToolbar">
-    <button id="etBold"      title="Bold (Ctrl+B)"><b>B</b></button>
-    <button id="etItalic"    title="Italic (Ctrl+I)"><i>I</i></button>
-    <button id="etUnderline" title="Underline (Ctrl+U)"><u>U</u></button>
+    <!-- Block format -->
+    <select id="etBlock" title="Paragraph style">
+      <option value="p">Paragraph</option>
+      <option value="h1">Heading 1</option>
+      <option value="h2">Heading 2</option>
+      <option value="h3">Heading 3</option>
+      <option value="h4">Heading 4</option>
+      <option value="pre">Code block</option>
+      <option value="blockquote">Blockquote</option>
+    </select>
     <span class="sep"></span>
-    <button id="etLink"   title="Insert link">🔗 Link</button>
+    <!-- Inline formatting -->
+    <button id="etBold"          title="Bold (Ctrl+B)"><b>B</b></button>
+    <button id="etItalic"        title="Italic (Ctrl+I)"><i>I</i></button>
+    <button id="etUnderline"     title="Underline (Ctrl+U)"><u>U</u></button>
+    <button id="etStrike"        title="Strikethrough"><s>S</s></button>
+    <span class="sep"></span>
+    <!-- Color -->
+    <label title="Text color" style="display:flex;align-items:center;gap:3px;font-size:11px;color:rgba(234,240,255,.55);cursor:pointer;">A <input type="color" id="etForeColor" value="#ffffff" title="Text color"></label>
+    <label title="Highlight color" style="display:flex;align-items:center;gap:3px;font-size:11px;color:rgba(234,240,255,.55);cursor:pointer;">▐ <input type="color" id="etBackColor" value="#ffff00" title="Highlight color"></label>
+    <button id="etClearFormat" title="Remove all formatting from selection">✕ Clear</button>
+    <span class="sep"></span>
+    <!-- Alignment -->
+    <button id="etAlignL" title="Align left">⬤≡</button>
+    <button id="etAlignC" title="Align center">≡⬤≡</button>
+    <button id="etAlignR" title="Align right">≡⬤</button>
+    <span class="sep"></span>
+    <!-- Lists & indent -->
+    <button id="etUl"      title="Bullet list">• List</button>
+    <button id="etOl"      title="Numbered list">1. List</button>
+    <button id="etIndent"  title="Indent">→</button>
+    <button id="etOutdent" title="Outdent">←</button>
+    <span class="sep"></span>
+    <!-- Link -->
+    <button id="etLink"   title="Highlight text or image, press Link, then type the target URL in the box.">🔗 Link</button>
     <button id="etUnlink" title="Remove link">✂ Unlink</button>
+    <!-- Image -->
+    <button id="etImage"  title="Insert image">🖼 Image</button>
+    <!-- Table -->
+    <button id="etTable"  title="Insert table">⊞ Table</button>
     <span class="sep"></span>
-    <button id="etUl" title="Bullet list">• List</button>
+    <!-- Find & replace -->
+    <button id="etFind" title="Find and replace (Ctrl+H)">🔍 Find</button>
     <span class="sep"></span>
+    <!-- Undo/redo -->
     <button id="etUndo" title="Undo (Ctrl+Z)">↩ Undo</button>
     <button id="etRedo" title="Redo (Ctrl+Y)">↪ Redo</button>
     <span style="flex:1"></span>
     <span id="editStatus" style="font-size:11px; color:rgba(234,240,255,.35); padding-right:4px;"></span>
+  </div>
+
+  <!-- Table picker popover -->
+  <div id="tablePicker">
+    <div class="tg" id="tableGrid"></div>
+    <div class="tg-label" id="tablePickerLabel">1 × 1</div>
+  </div>
+
+  <!-- Find & replace bar -->
+  <div id="findBar">
+    <label>Find</label>
+    <input type="text" id="findInput" placeholder="Search…" />
+    <span class="find-count" id="findCount"></span>
+    <button id="findPrev" title="Previous match">↑</button>
+    <button id="findNext" title="Next match">↓</button>
+    <label>Replace</label>
+    <input type="text" id="replaceInput" placeholder="Replace with…" />
+    <button id="replaceOne" title="Replace this match">Replace</button>
+    <button id="replaceAll" title="Replace all matches">All</button>
+    <button id="findClose" title="Close">✕</button>
   </div>
 
   <div id="editorLayout">
@@ -200,11 +339,11 @@
     </div>
     <div id="colorPanel" class="hidden">
       <h2>Colors</h2>
-      <div class="color-row" draggable="true" data-slot="primary">  <span class="drag-handle">⠿</span><label>1</label><input type="color" id="cp-primary"></div>
-      <div class="color-row" draggable="true" data-slot="secondary"><span class="drag-handle">⠿</span><label>2</label><input type="color" id="cp-secondary"></div>
-      <div class="color-row" draggable="true" data-slot="accent">   <span class="drag-handle">⠿</span><label>3</label><input type="color" id="cp-accent"></div>
-      <div class="color-row" draggable="true" data-slot="dark">     <span class="drag-handle">⠿</span><label>4</label><input type="color" id="cp-dark"></div>
-      <div class="color-row" draggable="true" data-slot="light">    <span class="drag-handle">⠿</span><label>5</label><input type="color" id="cp-light"></div>
+      <div class="color-row" data-slot="primary"><label>1</label><span class="drag-handle">⠿</span><input type="color" id="cp-primary"></div>
+      <div class="color-row" data-slot="secondary"><label>2</label><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"></div>
+      <div class="color-row" data-slot="accent"><label>3</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent"></div>
+      <div class="color-row" data-slot="dark"><label>4</label><span class="drag-handle">⠿</span><input type="color" id="cp-dark"></div>
+      <div class="color-row" data-slot="light"><label>5</label><span class="drag-handle">⠿</span><input type="color" id="cp-light"></div>
       <hr>
       <div style="padding: 4px 14px 10px;">
         <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
@@ -251,7 +390,6 @@
     // ── CSS variable extraction ────────────────────────────────────────────────
     const CSS_VAR_NAMES = ["primary", "secondary", "accent", "dark", "light"];
     const cssVarMap = {};   // slot name → CSS variable name used for live overrides
-    const cssVarLabels = {}; // slot name → display label from role comment
     const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
       .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
 
@@ -272,7 +410,6 @@
           const slot = CSS_VAR_NAMES[i];
           vars[slot] = cv.hex;
           cssVarMap[slot] = cv.varName;
-          cssVarLabels[slot] = `${cv.index}. ${cv.roleWord}`;
         }
       });
       return vars;
@@ -316,6 +453,25 @@
     // ── Visual iframe (srcdoc — more reliable than doc.write) ─────────────────
     const frame = document.getElementById("visualFrame");
 
+    let visualSyncTimer = null;
+
+    function scheduleVisualToCodeSync() {
+      if (viewMode !== "split") return;
+      if (visualSyncTimer) clearTimeout(visualSyncTimer);
+      visualSyncTimer = setTimeout(() => {
+        visualSyncTimer = null;
+        syncVisualToCode();
+      }, 300);
+    }
+
+    function attachIframeInputListener() {
+      try {
+        frame.contentDocument?.addEventListener("input", scheduleVisualToCodeSync);
+      } catch {}
+    }
+
+    frame.addEventListener("load", attachIframeInputListener);
+
     function loadIframe(html) {
       frame.srcdoc = html;
     }
@@ -347,12 +503,10 @@
       const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
       if (row) {
         const input = row.querySelector("input[type=color]");
-        const label = row.querySelector("label");
         if (input) {
           input.value = hex;
           input.addEventListener("input", () => { currentColors[name] = input.value; applyColorOverrides(); });
         }
-        if (label && cssVarLabels[name]) label.textContent = cssVarLabels[name];
       }
     }
     document.getElementById("colorPanel").classList.remove("hidden");
@@ -372,78 +526,70 @@
       applyColorOverrides();
     };
 
-    // ── Color row drag-to-swap ─────────────────────────────────────────────────
+    // ── Color row swap interaction ─────────────────────────────────────────────
+    // The numbered slots stay fixed in place. Dragging from a handle swaps only
+    // the swatch values between two slots, which avoids brittle native HTML
+    // drag-and-drop behavior in the editor.
     (function () {
       const panel = document.getElementById("colorPanel");
       let dragSrc = null;
+      let activePointerId = null;
 
-      panel.addEventListener("dragstart", e => {
-        const row = e.target.closest(".color-row");
-        if (!row) return;
-        // Only allow drag from the handle
-        if (!e.target.classList.contains("drag-handle")) { e.preventDefault(); return; }
-        dragSrc = row;
-        e.dataTransfer.effectAllowed = "move";
-        setTimeout(() => row.classList.add("cp-dragging"), 0);
-      });
+      function clearSwapUi() {
+        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over", "cp-dragging", "cp-source"));
+      }
 
-      panel.addEventListener("dragover", e => {
-        const row = e.target.closest(".color-row");
-        if (!row || row === dragSrc) return;
-        e.preventDefault();
-        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over"));
-        row.classList.add("drag-over");
-      });
-
-      panel.addEventListener("dragleave", e => {
-        const row = e.target.closest(".color-row");
-        if (row) row.classList.remove("drag-over");
-      });
-
-      panel.addEventListener("dragend", () => {
-        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over", "cp-dragging"));
-        dragSrc = null;
-      });
-
-      panel.addEventListener("drop", e => {
-        e.preventDefault();
-        const target = e.target.closest(".color-row");
-        if (!target || target === dragSrc || !dragSrc) return;
-
-        // Swap hex values between the two slots (keeps CSS var mapping intact)
-        const slotA = dragSrc.dataset.slot;
-        const slotB = target.dataset.slot;
-        const hexA  = currentColors[slotA];
-        const hexB  = currentColors[slotB];
+      function swapRowColors(rowA, rowB) {
+        const slotA = rowA?.dataset.slot;
+        const slotB = rowB?.dataset.slot;
+        if (!slotA || !slotB || slotA === slotB) return;
+        const hexA = currentColors[slotA];
+        const hexB = currentColors[slotB];
         currentColors[slotA] = hexB;
         currentColors[slotB] = hexA;
-        const inputA = dragSrc.querySelector("input[type=color]");
-        const inputB = target.querySelector("input[type=color]");
+        const inputA = rowA.querySelector("input[type=color]");
+        const inputB = rowB.querySelector("input[type=color]");
         if (inputA) inputA.value = hexB;
         if (inputB) inputB.value = hexA;
-
-        // Swap DOM positions so the row visually moves
-        const parent  = panel;
-        const afterSrc = dragSrc.nextSibling;
-        const afterTgt = target.nextSibling;
-        if (afterSrc === target) {
-          parent.insertBefore(target, dragSrc);
-        } else if (afterTgt === dragSrc) {
-          parent.insertBefore(dragSrc, target);
-        } else {
-          parent.insertBefore(dragSrc, afterTgt);
-          parent.insertBefore(target, afterSrc);
-        }
-
-        // Renumber labels 1–5 top to bottom
-        panel.querySelectorAll(".color-row").forEach((r, i) => {
-          const lbl = r.querySelector("label");
-          if (lbl) lbl.textContent = String(i + 1);
-        });
-
-        target.classList.remove("drag-over");
         applyColorOverrides();
+      }
+
+      panel.addEventListener("pointerdown", e => {
+        const handle = e.target.closest(".drag-handle");
+        if (!handle) return;
+        const row = handle.closest(".color-row");
+        if (!row) return;
+        e.preventDefault();
+        dragSrc = row;
+        activePointerId = e.pointerId;
+        clearSwapUi();
+        row.classList.add("cp-source", "cp-dragging");
+        try { handle.setPointerCapture(e.pointerId); } catch {}
       });
+
+      panel.addEventListener("pointermove", e => {
+        if (!dragSrc || activePointerId !== e.pointerId) return;
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const row = hit?.closest?.(".color-row");
+        clearSwapUi();
+        dragSrc.classList.add("cp-source", "cp-dragging");
+        if (row && row !== dragSrc) row.classList.add("drag-over");
+      });
+
+      function finishPointerSwap(e) {
+        if (!dragSrc || activePointerId !== e.pointerId) return;
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const target = hit?.closest?.(".color-row");
+        if (target && target !== dragSrc) {
+          swapRowColors(dragSrc, target);
+        }
+        clearSwapUi();
+        dragSrc = null;
+        activePointerId = null;
+      }
+
+      panel.addEventListener("pointerup", finishPointerSwap);
+      panel.addEventListener("pointercancel", finishPointerSwap);
     })();
 
     // ── Resizable divider ──────────────────────────────────────────────────────
@@ -486,9 +632,41 @@
       }
     }
 
+    // Returns the value of the nearest ancestor id= in the iframe at the current caret,
+    // or null if none found. Used to scroll CodeMirror to the right place after sync.
+    function getCaretAnchorId() {
+      try {
+        const sel = frame.contentWindow?.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        while (node && node !== frame.contentDocument.body) {
+          if (node.id) return node.id;
+          node = node.parentElement;
+        }
+      } catch {}
+      return null;
+    }
+
     function syncVisualToCode() {
+      const anchorId = getCaretAnchorId();
       currentHtml = getVisualContent();
       setCodeContent(currentHtml);
+      if (anchorId) scrollCodeToId(anchorId);
+    }
+
+    function scrollCodeToId(id) {
+      if (!cmView) return;
+      const needle = `id="${id}"`;
+      const content = cmView.state.doc.toString();
+      const pos = content.indexOf(needle);
+      if (pos === -1) return;
+      const { EditorView } = cmModules || {};
+      if (!EditorView) return;
+      cmView.dispatch({
+        selection: { anchor: pos },
+        effects: EditorView.scrollIntoView(pos, { y: "center" })
+      });
     }
 
     function syncCodeToVisual() {
@@ -533,15 +711,201 @@
     // ── execCommand toolbar ────────────────────────────────────────────────────
     function exec(cmd, val = null) {
       try { frame.contentDocument.execCommand(cmd, false, val); frame.contentWindow.focus(); } catch {}
+      scheduleVisualToCodeSync();
     }
-    document.getElementById("etBold").onclick      = () => exec("bold");
-    document.getElementById("etItalic").onclick    = () => exec("italic");
-    document.getElementById("etUnderline").onclick = () => exec("underline");
-    document.getElementById("etUndo").onclick      = () => exec("undo");
-    document.getElementById("etRedo").onclick      = () => exec("redo");
-    document.getElementById("etUl").onclick        = () => exec("insertUnorderedList");
-    document.getElementById("etLink").onclick      = () => { const url = prompt("URL:", "https://"); if (url) exec("createLink", url); };
-    document.getElementById("etUnlink").onclick    = () => exec("unlink");
+
+    // Basic formatting
+    document.getElementById("etBold").onclick          = () => exec("bold");
+    document.getElementById("etItalic").onclick        = () => exec("italic");
+    document.getElementById("etUnderline").onclick     = () => exec("underline");
+    document.getElementById("etStrike").onclick        = () => exec("strikeThrough");
+    document.getElementById("etClearFormat").onclick   = () => exec("removeFormat");
+
+    // Block style
+    document.getElementById("etBlock").onchange = function() {
+      exec("formatBlock", this.value);
+      this.value = "p"; // reset dropdown so it can be re-triggered
+    };
+
+    // Color
+    document.getElementById("etForeColor").oninput = function() { exec("foreColor", this.value); };
+    document.getElementById("etBackColor").oninput = function() { exec("backColor", this.value); };
+
+    // Alignment
+    document.getElementById("etAlignL").onclick = () => exec("justifyLeft");
+    document.getElementById("etAlignC").onclick = () => exec("justifyCenter");
+    document.getElementById("etAlignR").onclick = () => exec("justifyRight");
+
+    // Lists & indent
+    document.getElementById("etUl").onclick      = () => exec("insertUnorderedList");
+    document.getElementById("etOl").onclick      = () => exec("insertOrderedList");
+    document.getElementById("etIndent").onclick  = () => exec("indent");
+    document.getElementById("etOutdent").onclick = () => exec("outdent");
+
+    // Link / image
+    document.getElementById("etLink").onclick   = () => { const url = prompt("URL:", "https://"); if (url) exec("createLink", url); };
+    document.getElementById("etUnlink").onclick = () => exec("unlink");
+    document.getElementById("etImage").onclick  = () => {
+      const url = prompt("Image URL (or paste a data: URI):", "https://");
+      if (url) exec("insertImage", url);
+    };
+
+    // Undo / redo
+    document.getElementById("etUndo").onclick = () => exec("undo");
+    document.getElementById("etRedo").onclick = () => exec("redo");
+
+    // ── Table picker ────────────────────────────────────────────────────────────
+    (function() {
+      const COLS = 8, ROWS = 6;
+      const picker = document.getElementById("tablePicker");
+      const grid   = document.getElementById("tableGrid");
+      const label  = document.getElementById("tablePickerLabel");
+      let hoverC = 0, hoverR = 0;
+
+      // Build grid cells
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const cell = document.createElement("div");
+          cell.className = "tg-cell";
+          cell.dataset.r = r; cell.dataset.c = c;
+          grid.appendChild(cell);
+        }
+      }
+
+      function highlight(r, c) {
+        hoverR = r; hoverC = c;
+        grid.querySelectorAll(".tg-cell").forEach(el => {
+          el.classList.toggle("hover", +el.dataset.r <= r && +el.dataset.c <= c);
+        });
+        label.textContent = `${r+1} × ${c+1}`;
+      }
+
+      grid.addEventListener("mouseover", e => {
+        const cell = e.target.closest(".tg-cell");
+        if (cell) highlight(+cell.dataset.r, +cell.dataset.c);
+      });
+
+      grid.addEventListener("click", e => {
+        const cell = e.target.closest(".tg-cell");
+        if (!cell) return;
+        const rows = +cell.dataset.r + 1, cols = +cell.dataset.c + 1;
+        let html = "<table border='1' style='border-collapse:collapse;width:100%'>";
+        for (let r = 0; r < rows; r++) {
+          html += "<tr>";
+          for (let c = 0; c < cols; c++) html += "<td style='padding:6px 10px;'>&nbsp;</td>";
+          html += "</tr>";
+        }
+        html += "</table><p></p>";
+        exec("insertHTML", html);
+        picker.classList.remove("open");
+      });
+
+      document.getElementById("etTable").onclick = e => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        picker.style.top  = (rect.bottom + 4) + "px";
+        picker.style.left = rect.left + "px";
+        picker.classList.toggle("open");
+      };
+
+      document.addEventListener("click", () => picker.classList.remove("open"));
+    })();
+
+    // ── Find & replace ──────────────────────────────────────────────────────────
+    (function() {
+      const bar          = document.getElementById("findBar");
+      const findInput    = document.getElementById("findInput");
+      const replaceInput = document.getElementById("replaceInput");
+      const findCount    = document.getElementById("findCount");
+      let matches = [], matchIdx = 0;
+
+      function closeFindBar() { bar.classList.remove("open"); clearHighlights(); }
+      document.getElementById("findClose").onclick = closeFindBar;
+
+      document.getElementById("etFind").onclick = e => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        bar.style.top = (rect.bottom + 4) + "px";
+        bar.classList.toggle("open");
+        if (bar.classList.contains("open")) { findInput.focus(); findInput.select(); }
+      };
+
+      // Keyboard shortcut Ctrl+H in visual frame
+      frame.addEventListener("load", () => {
+        try {
+          frame.contentDocument.addEventListener("keydown", e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "h") { e.preventDefault(); bar.classList.add("open"); findInput.focus(); }
+          });
+        } catch {}
+      });
+
+      function clearHighlights() {
+        try {
+          const doc = frame.contentDocument;
+          doc.querySelectorAll("mark[data-find]").forEach(m => {
+            m.replaceWith(document.createTextNode(m.textContent));
+          });
+          doc.normalize();
+        } catch {}
+        matches = []; matchIdx = 0; findCount.textContent = "";
+      }
+
+      function doFind() {
+        clearHighlights();
+        const term = findInput.value;
+        if (!term) return;
+        try {
+          const doc  = frame.contentDocument;
+          const body = doc.body;
+          const walker = doc.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+          const lc = term.toLowerCase();
+          const nodes = [];
+          let node;
+          while ((node = walker.nextNode())) nodes.push(node);
+          nodes.forEach(n => {
+            const idx = n.textContent.toLowerCase().indexOf(lc);
+            if (idx === -1) return;
+            const before = doc.createTextNode(n.textContent.slice(0, idx));
+            const mark   = doc.createElement("mark");
+            mark.dataset.find = "1";
+            mark.style.cssText = "background:#ffeb3b;color:#000;border-radius:2px;";
+            mark.textContent   = n.textContent.slice(idx, idx + term.length);
+            const after  = doc.createTextNode(n.textContent.slice(idx + term.length));
+            n.replaceWith(before, mark, after);
+            matches.push(mark);
+          });
+          findCount.textContent = matches.length ? `${matchIdx+1}/${matches.length}` : "0";
+          if (matches.length) scrollToMatch(0);
+        } catch {}
+      }
+
+      function scrollToMatch(i) {
+        if (!matches.length) return;
+        matchIdx = (i + matches.length) % matches.length;
+        matches.forEach((m, j) => m.style.background = j === matchIdx ? "#ff9800" : "#ffeb3b");
+        matches[matchIdx].scrollIntoView({ block: "center" });
+        findCount.textContent = `${matchIdx+1}/${matches.length}`;
+      }
+
+      findInput.addEventListener("input", doFind);
+      findInput.addEventListener("keydown", e => { if (e.key === "Enter") scrollToMatch(matchIdx + 1); });
+      document.getElementById("findNext").onclick = () => scrollToMatch(matchIdx + 1);
+      document.getElementById("findPrev").onclick = () => scrollToMatch(matchIdx - 1);
+
+      document.getElementById("replaceOne").onclick = () => {
+        if (!matches[matchIdx]) return;
+        matches[matchIdx].replaceWith(document.createTextNode(replaceInput.value));
+        matches.splice(matchIdx, 1);
+        findCount.textContent = matches.length ? `${Math.min(matchIdx, matches.length-1)+1}/${matches.length}` : "0";
+        scheduleVisualToCodeSync();
+      };
+
+      document.getElementById("replaceAll").onclick = () => {
+        matches.forEach(m => m.replaceWith(document.createTextNode(replaceInput.value)));
+        matches = []; findCount.textContent = "0";
+        scheduleVisualToCodeSync();
+      };
+    })();
 
     // ── Build final HTML ───────────────────────────────────────────────────────
     function buildHtmlString() {
@@ -564,6 +928,58 @@
         kind === "error" ? "rgba(255,166,166,.88)" :
         kind === "ok" ? "rgba(170,240,190,.88)" :
         "rgba(234,240,255,.55)";
+    }
+
+    function formatQuotaValue(used, limit) {
+      if (limit === -1) return "∞";
+      const safeUsed = Number.isFinite(used) ? used : 0;
+      const safeLimit = Number.isFinite(limit) ? limit : 0;
+      return `${safeUsed}/${safeLimit}`;
+    }
+
+    async function refreshEditorAccountStatus() {
+      const userEl = document.getElementById("editorAccountUser");
+      const quotaEl = document.getElementById("editorAccountQuota");
+      if (!userEl || !quotaEl) return;
+      if (!supabaseClient) {
+        userEl.textContent = "Account unavailable";
+        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+        return;
+      }
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const user = session?.user || null;
+        if (!user) {
+          userEl.textContent = "Signed out";
+          quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+          return;
+        }
+
+        const { data: membership } = await supabaseClient
+          .from("memberships")
+          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit")
+          .eq("user_id", user.id)
+          .single();
+
+        const name = user.email || user.id || "Signed in";
+        if (!membership) {
+          userEl.textContent = name;
+          quotaEl.textContent = "Membership unavailable";
+          return;
+        }
+
+        const tier = membership.tier || "free";
+        const status = membership.status || "unknown";
+        const credits = formatQuotaValue(membership.credits_used, membership.credits_limit);
+        const downloads = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
+        const deploys = downloads;
+        userEl.textContent = `${name} · ${tier} · ${status}`;
+        quotaEl.textContent = `Credits: ${credits} · Downloads: ${downloads} · Deploys: ${deploys}`;
+      } catch {
+        userEl.textContent = "Account unavailable";
+        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+      }
     }
 
     function setEditStatusHtml(message, kind = "") {
@@ -624,6 +1040,11 @@
       }
       return membership;
     }
+
+    refreshEditorAccountStatus();
+    supabaseClient?.auth?.onAuthStateChange?.(() => {
+      refreshEditorAccountStatus();
+    });
 
     // ── View HTML modal ────────────────────────────────────────────────────────
     document.getElementById("btnViewHtml").onclick = () => {
@@ -693,6 +1114,7 @@
         if (payload.url) localStorage.setItem("portfolio_publish_url", payload.url);
 
         setEditStatus(payload.republished ? "Republished." : "Published.", "ok");
+        refreshEditorAccountStatus();
         const openNow = confirm(`${payload.republished ? "Republished" : "Published"} successfully.\n\n${payload.url}\n\nOpen the published page now?`);
         if (openNow && payload.url) window.open(payload.url, "_blank", "noopener");
       } catch (err) {

@@ -1,6 +1,7 @@
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
+import { attachProjectIconsToAnalysis } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logUsageEvent } from "./usageQuota.mjs";
 
 /**
@@ -166,6 +167,8 @@ export async function handler(event) {
       await store.set(jobId, JSON.stringify({ status: "error", error: "Response was not valid JSON", raw_text: rawText.slice(0, 500) }), { ttl: 3600 });
       return { statusCode: 202 };
     }
+
+    attachProjectIconsToAnalysis(analysisJson);
 
     await store.set(jobId, JSON.stringify({ status: "done", ...analysisJson }), { ttl: 3600 });
     await logUsageEvent(userId, {
