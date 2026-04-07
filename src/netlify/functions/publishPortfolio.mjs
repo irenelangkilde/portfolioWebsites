@@ -34,11 +34,11 @@ function getSupabaseAdmin() {
 }
 
 function buildPublishUrl(event, slug) {
-  const proto =
-    event.headers["x-forwarded-proto"] ||
-    event.headers["X-Forwarded-Proto"] ||
-    "https";
-  const host = event.headers["x-forwarded-host"] || event.headers.host;
+  const host = event.headers["x-forwarded-host"] || event.headers.host || "localhost";
+  const isLocal = /^localhost(:\d+)?$/.test(host);
+  const proto = isLocal
+    ? "http"
+    : (event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https");
   return `${proto}://${host}/.netlify/functions/publishedPortfolio?slug=${encodeURIComponent(slug)}`;
 }
 
