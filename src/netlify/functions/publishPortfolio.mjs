@@ -39,7 +39,7 @@ function buildPublishUrl(event, slug) {
   const proto = isLocal
     ? "http"
     : (event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https");
-  return `${proto}://${host}/.netlify/functions/publishedPortfolio?slug=${encodeURIComponent(slug)}`;
+  return `${proto}://${host}/u/${encodeURIComponent(slug)}`;
 }
 
 export async function handler(event) {

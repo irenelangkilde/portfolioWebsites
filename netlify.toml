@@ -8,5 +8,13 @@
   included_files = ["src/*.txt", "src/netlify/functions/*.md", "*.md"]
   external_node_modules = ["@anthropic-ai/sdk", "openai", "@supabase/supabase-js", "stripe"]
 
+# Clean URLs for published portfolios
+# /u/janesmith       → latest version
+# /u/janesmith-1     → permanent deploy #1 snapshot
+[[redirects]]
+  from = "/u/:slug"
+  to = "/.netlify/functions/publishedPortfolio?slug=:slug"
+  status = 200
+
 
 
