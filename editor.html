@@ -273,6 +273,26 @@
       align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 16px;
     }
 
+    /* ── Card picker popover ─────────────────────────────────────── */
+    #cardPicker {
+      display: none; position: fixed; z-index: 10000;
+      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; padding: 8px 0; box-shadow: 0 4px 16px rgba(0,0,0,.5);
+      min-width: 200px; max-width: 320px;
+    }
+    #cardPicker.open { display: block; }
+    #cardPicker .cp-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: rgba(234,240,255,.4); padding: 4px 14px 6px;
+    }
+    #cardPicker .cp-item {
+      padding: 7px 14px; font-size: 12px; color: #eaf0ff; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #cardPicker .cp-item:hover { background: rgba(102,126,234,.35); }
+    #cardPicker .cp-item .cp-tag { color: #7eb8ff; font-weight: 700; margin-right: 5px; }
+    #cardPicker .cp-item .cp-cls { color: rgba(234,240,255,.45); font-size: 11px; }
+
     /* ── Image replace dialog ─────────────────────────────────────── */
     #imgReplaceOverlay {
       display: none; position: fixed; inset: 0; z-index: 200000;
@@ -317,7 +337,7 @@
 <body class="visual-mode">
 
   <div id="toolbar">
-    <h1>Irene's Webworks — Visual Editor v2</h1>
+    <h1>Irene's Webworks — Visual Editor v2.0</h1>
     <button class="tbtn tbtn-ghost" id="btnBack">← Close Editor</button>
     <div id="viewToggle">
       <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
@@ -375,6 +395,10 @@
     <!-- Table -->
     <button id="etTable"  title="Insert table">⊞ Table</button>
     <span class="sep"></span>
+    <!-- Add / delete repeating element -->
+    <button id="etAddElement"    title="Duplicate the card or item the cursor is in">+ Card</button>
+    <button id="etDeleteElement" title="Delete the card or item the cursor is in">− Card</button>
+    <span class="sep"></span>
     <!-- Find & replace -->
     <button id="etFind" title="Find and replace (Ctrl+H)">🔍 Find</button>
     <span class="sep"></span>
@@ -389,6 +413,11 @@
   <div id="tablePicker">
     <div class="tg" id="tableGrid"></div>
     <div class="tg-label" id="tablePickerLabel">1 × 1</div>
+  </div>
+
+  <!-- Card candidate picker -->
+  <div id="cardPicker">
+    <div class="cp-title" id="cardPickerTitle">Choose element</div>
   </div>
 
   <!-- Find & replace bar -->
@@ -471,6 +500,8 @@
       <input type="text" id="imgReplaceUrl" placeholder="https://example.com/photo.jpg" autocomplete="off" />
       <div id="imgReplaceUploadBtn">📁 Or click to upload a file…</div>
       <input type="file" id="imgReplaceFile" accept="image/*" />
+      <label>Max width <span style="color:rgba(234,240,255,.35);font-weight:400">(e.g. 1.5in, 300px, 50%, 100%)</span></label>
+      <input type="text" id="imgReplaceMaxWidth" placeholder="100%" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#eaf0ff;font-size:12px;outline:none;width:100%;" />
       <div class="img-replace-actions">
         <button id="imgReplaceCancel">Cancel</button>
         <button id="imgReplaceApply">Apply</button>
@@ -584,55 +615,69 @@
     }
 
     // ── Image click-to-replace ─────────────────────────────────────────────────
-    let imgReplaceTarget = null;
+    let imgReplaceTarget  = null;
+    let imgReplaceIsNew   = false;  // true when dialog was opened for a freshly inserted placeholder
+    let imgReplacePending = null;   // data URI from a file upload, waiting for Apply
 
-    function openImgReplaceDialog(imgEl) {
+    function openImgReplaceDialog(imgEl, isNew = false) {
       imgReplaceTarget = imgEl;
+      imgReplaceIsNew  = isNew;
       const overlay = document.getElementById("imgReplaceOverlay");
       const preview = document.getElementById("imgReplacePreview");
       const urlInput = document.getElementById("imgReplaceUrl");
-      preview.src = imgEl.src || "";
-      urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (imgEl.src || "");
+      preview.src = isNew ? "" : (imgEl.src || "");
+      urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (isNew ? "" : (imgEl.src || ""));
       document.getElementById("imgReplaceFile").value = "";
+      document.getElementById("imgReplaceMaxWidth").value = imgEl.style.maxWidth || "100%";
+      imgReplacePending = null;
       overlay.classList.add("open");
       urlInput.focus();
     }
 
-    function closeImgReplaceDialog() {
+    function closeImgReplaceDialog(cancelled = false) {
       document.getElementById("imgReplaceOverlay").classList.remove("open");
+      if (cancelled && imgReplaceIsNew && imgReplaceTarget?.parentNode) {
+        imgReplaceTarget.parentNode.removeChild(imgReplaceTarget);
+        scheduleVisualToCodeSync();
+      }
       imgReplaceTarget = null;
+      imgReplaceIsNew  = false;
     }
 
     function applyImgReplace(newSrc) {
       if (!imgReplaceTarget || !newSrc) return;
       try {
         imgReplaceTarget.src = newSrc;
-        // Ensure inserted image never overflows its container
-        if (!imgReplaceTarget.style.maxWidth) {
-          imgReplaceTarget.style.maxWidth = "100%";
-          imgReplaceTarget.style.height = "auto";
-        }
+        const maxW = document.getElementById("imgReplaceMaxWidth").value.trim();
+        imgReplaceTarget.style.maxWidth = maxW || "100%";
+        imgReplaceTarget.style.height = "auto";
         scheduleVisualToCodeSync();
       } catch {}
       closeImgReplaceDialog();
     }
 
-    document.getElementById("imgReplaceCancel").onclick = closeImgReplaceDialog;
+    document.getElementById("imgReplaceCancel").onclick = () => closeImgReplaceDialog(true);
 
     document.getElementById("imgReplaceApply").onclick = () => {
-      const url = document.getElementById("imgReplaceUrl").value.trim();
-      applyImgReplace(url);
+      const src = imgReplacePending || document.getElementById("imgReplaceUrl").value.trim();
+      applyImgReplace(src);
     };
 
     document.getElementById("imgReplaceUrl").addEventListener("keydown", e => {
       if (e.key === "Enter") document.getElementById("imgReplaceApply").click();
-      if (e.key === "Escape") closeImgReplaceDialog();
+      if (e.key === "Escape") closeImgReplaceDialog(true);
+    });
+    document.getElementById("imgReplaceOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("imgReplaceOverlay")) closeImgReplaceDialog(true);
     });
 
-    // Preview URL as user types
+    // Preview URL as user types; typing clears any pending file upload
     document.getElementById("imgReplaceUrl").addEventListener("input", e => {
       const url = e.target.value.trim();
-      if (url) document.getElementById("imgReplacePreview").src = url;
+      if (url) {
+        imgReplacePending = null;
+        document.getElementById("imgReplacePreview").src = url;
+      }
     });
 
     // Upload file → convert to data URI
@@ -652,10 +697,9 @@
       const reader = new FileReader();
       reader.onload = ev => {
         const dataUrl = ev.target.result;
+        imgReplacePending = dataUrl;
         document.getElementById("imgReplacePreview").src = dataUrl;
         document.getElementById("imgReplaceUrl").value = "";
-        // Apply immediately on upload
-        applyImgReplace(dataUrl);
       };
       reader.readAsDataURL(file);
     };
@@ -952,9 +996,173 @@
     document.getElementById("etLink").onclick   = () => { const url = prompt("URL:", "https://"); if (url) exec("createLink", url); };
     document.getElementById("etUnlink").onclick = () => exec("unlink");
     document.getElementById("etImage").onclick  = () => {
-      const url = prompt("Image URL (or paste a data: URI):", "https://");
-      if (url) exec("insertImage", url);
+      // Insert a placeholder, then immediately open the replace dialog on it
+      // so the user can set URL/file and max-width in one step.
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        const placeholder = doc.createElement("img");
+        placeholder.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; // 1×1 transparent
+        placeholder.alt = "";
+        placeholder.style.maxWidth = "100%";
+        placeholder.style.height = "auto";
+        const sel = doc.getSelection();
+        if (sel && sel.rangeCount) {
+          const range = sel.getRangeAt(0);
+          range.collapse(false);
+          range.insertNode(placeholder);
+        } else {
+          (doc.body || doc.documentElement).appendChild(placeholder);
+        }
+        openImgReplaceDialog(placeholder, true);
+      } catch {}
     };
+
+    // ── Add / Delete repeating element ────────────────────────────────────────
+
+    // Returns a human-readable label for a DOM element, e.g. "div .card"
+    function elementLabel(el) {
+      const tag = el.tagName.toLowerCase();
+      const cls = Array.from(el.classList).slice(0, 3).join(" ");
+      return cls ? `${tag} .${cls.replace(/ /g, " .")}` : tag;
+    }
+
+    // Walk up from the cursor node collecting every ancestor whose parent has
+    // at least 2 children sharing the same tag (or same first class). These are
+    // the "repeating unit" candidates. Stop at body.
+    function findRepeatCandidates() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return [];
+        const sel = doc.getSelection();
+        if (!sel || sel.rangeCount === 0) return [];
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+        const body = doc.body;
+        const candidates = [];
+        const seen = new Set();
+
+        while (node && node !== body && node !== doc.documentElement) {
+          const parent = node.parentElement;
+          if (parent && parent !== body) {
+            const siblings = Array.from(parent.children);
+            if (siblings.length >= 2) {
+              // Match by same tag
+              const sameTag = siblings.filter(s => s.tagName === node.tagName);
+              // Match by same first class
+              const firstCls = node.classList[0];
+              const sameCls  = firstCls
+                ? siblings.filter(s => s.classList.contains(firstCls))
+                : [];
+              if (sameTag.length >= 2 || sameCls.length >= 2) {
+                if (!seen.has(node)) {
+                  seen.add(node);
+                  candidates.push(node);
+                }
+              }
+            }
+          }
+          node = node.parentElement;
+        }
+        return candidates;
+      } catch { return []; }
+    }
+
+    // Close the picker if open
+    let cardPickerAction = null;
+    function closeCardPicker() {
+      document.getElementById("cardPicker").classList.remove("open");
+      cardPickerAction = null;
+    }
+
+    // Show picker anchored to a toolbar button, call action(element) on selection
+    function showCardPicker(anchorEl, candidates, action) {
+      const picker = document.getElementById("cardPicker");
+      const title  = document.getElementById("cardPickerTitle");
+      title.textContent = action === "add" ? "Duplicate which element?" : "Delete which element?";
+
+      // Clear old items
+      Array.from(picker.querySelectorAll(".cp-item")).forEach(i => i.remove());
+
+      candidates.forEach((el, i) => {
+        const item = document.createElement("div");
+        item.className = "cp-item";
+        const tag = document.createElement("span");
+        tag.className = "cp-tag";
+        tag.textContent = el.tagName.toLowerCase();
+        const cls = document.createElement("span");
+        cls.className = "cp-cls";
+        cls.textContent = Array.from(el.classList).slice(0,3).join(" ");
+        // Preview text snippet
+        const snippet = (el.textContent || "").trim().slice(0, 40);
+        const text = document.createTextNode((snippet ? " — " + snippet : ""));
+        item.appendChild(tag);
+        item.appendChild(cls);
+        item.appendChild(text);
+        item.title = elementLabel(el);
+        item.onclick = () => { closeCardPicker(); action === "add" ? doAddElement(el) : doDeleteElement(el); };
+        picker.appendChild(item);
+      });
+
+      // Position below the anchor button
+      const rect = anchorEl.getBoundingClientRect();
+      picker.style.top  = (rect.bottom + 4) + "px";
+      picker.style.left = Math.min(rect.left, window.innerWidth - 330) + "px";
+      picker.classList.add("open");
+      cardPickerAction = action;
+    }
+
+    function doAddElement(el) {
+      try {
+        const clone = el.cloneNode(true);
+        // Clear text inputs / textareas in clone so user can fill fresh content
+        el.parentNode.insertBefore(clone, el.nextSibling);
+        // Scroll clone into view inside the iframe
+        clone.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        scheduleVisualToCodeSync();
+      } catch {}
+    }
+
+    function doDeleteElement(el) {
+      try {
+        const siblings = Array.from(el.parentNode.children).filter(s => s.tagName === el.tagName);
+        if (siblings.length <= 1) {
+          alert("Can't delete the only remaining element of this type.");
+          return;
+        }
+        el.remove();
+        scheduleVisualToCodeSync();
+      } catch {}
+    }
+
+    function handleCardAction(action) {
+      const candidates = findRepeatCandidates();
+      if (candidates.length === 0) {
+        alert("No repeating card or list item found at the cursor position.\n\nClick inside a card, list item, or grid cell first.");
+        return;
+      }
+      const anchorId = action === "add" ? "etAddElement" : "etDeleteElement";
+      const anchor   = document.getElementById(anchorId);
+      if (candidates.length === 1) {
+        // No ambiguity — act immediately
+        action === "add" ? doAddElement(candidates[0]) : doDeleteElement(candidates[0]);
+      } else {
+        showCardPicker(anchor, candidates, action);
+      }
+    }
+
+    document.getElementById("etAddElement").onclick    = () => handleCardAction("add");
+    document.getElementById("etDeleteElement").onclick = () => handleCardAction("delete");
+
+    // Close picker on outside click
+    document.addEventListener("click", e => {
+      const picker = document.getElementById("cardPicker");
+      if (!picker.classList.contains("open")) return;
+      if (!picker.contains(e.target) &&
+          e.target.id !== "etAddElement" &&
+          e.target.id !== "etDeleteElement") closeCardPicker();
+    });
 
     // Undo / redo
     document.getElementById("etUndo").onclick = () => exec("undo");
