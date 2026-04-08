@@ -106,20 +106,6 @@
     }
     #findBar button:hover { background: rgba(255,255,255,.22); }
     #findBar .find-count { font-size: 11px; color: rgba(234,240,255,.45); min-width: 36px; text-align:center; }
-    /* Table picker popover */
-    #tablePicker {
-      display: none; position: fixed; z-index: 9999;
-      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
-      border-radius: 8px; padding: 8px; box-shadow: 0 4px 16px rgba(0,0,0,.4);
-    }
-    #tablePicker.open { display: block; }
-    #tablePicker .tg { display: grid; grid-template-columns: repeat(8, 18px); gap: 3px; }
-    #tablePicker .tg-cell {
-      width: 18px; height: 18px; border-radius: 3px;
-      background: rgba(255,255,255,.12); cursor: pointer;
-    }
-    #tablePicker .tg-cell.hover { background: #667eea; }
-    #tablePicker .tg-label { font-size: 11px; color: rgba(234,240,255,.5); text-align:center; margin-top:5px; }
 
     #editStatus a {
       color: #ffd7a6;
@@ -434,6 +420,10 @@
   </div>
 
   <div id="editToolbar">
+    <!-- Undo/redo -->
+    <button id="etUndo" title="Undo (Ctrl+Z)">↩ Undo</button>
+    <button id="etRedo" title="Redo (Ctrl+Y)">↪ Redo</button>
+    <span class="sep"></span>
     <!-- Block format -->
     <select id="etBlock" title="Paragraph style">
       <option value="p">Paragraph</option>
@@ -472,8 +462,6 @@
     <button id="etUnlink" title="Remove link">✂ Unlink</button>
     <!-- Image -->
     <button id="etImage"  title="Insert image">🖼 Image</button>
-    <!-- Table -->
-    <button id="etTable"  title="Insert table">⊞ Table</button>
     <span class="sep"></span>
     <!-- Add / delete repeating element -->
     <button id="etAddElement"    title="Duplicate the card or item the cursor is in">+ Card</button>
@@ -481,18 +469,8 @@
     <span class="sep"></span>
     <!-- Find & replace -->
     <button id="etFind" title="Find and replace (Ctrl+H)">🔍 Find</button>
-    <span class="sep"></span>
-    <!-- Undo/redo -->
-    <button id="etUndo" title="Undo (Ctrl+Z)">↩ Undo</button>
-    <button id="etRedo" title="Redo (Ctrl+Y)">↪ Redo</button>
     <span style="flex:1"></span>
     <span id="editStatus" style="font-size:11px; color:rgba(234,240,255,.35); padding-right:4px;"></span>
-  </div>
-
-  <!-- Table picker popover -->
-  <div id="tablePicker">
-    <div class="tg" id="tableGrid"></div>
-    <div class="tg-label" id="tablePickerLabel">1 × 1</div>
   </div>
 
   <!-- Card candidate picker -->
@@ -1292,63 +1270,6 @@
     // Undo / redo
     document.getElementById("etUndo").onclick = () => exec("undo");
     document.getElementById("etRedo").onclick = () => exec("redo");
-
-    // ── Table picker ────────────────────────────────────────────────────────────
-    (function() {
-      const COLS = 8, ROWS = 6;
-      const picker = document.getElementById("tablePicker");
-      const grid   = document.getElementById("tableGrid");
-      const label  = document.getElementById("tablePickerLabel");
-      let hoverC = 0, hoverR = 0;
-
-      // Build grid cells
-      for (let r = 0; r < ROWS; r++) {
-        for (let c = 0; c < COLS; c++) {
-          const cell = document.createElement("div");
-          cell.className = "tg-cell";
-          cell.dataset.r = r; cell.dataset.c = c;
-          grid.appendChild(cell);
-        }
-      }
-
-      function highlight(r, c) {
-        hoverR = r; hoverC = c;
-        grid.querySelectorAll(".tg-cell").forEach(el => {
-          el.classList.toggle("hover", +el.dataset.r <= r && +el.dataset.c <= c);
-        });
-        label.textContent = `${r+1} × ${c+1}`;
-      }
-
-      grid.addEventListener("mouseover", e => {
-        const cell = e.target.closest(".tg-cell");
-        if (cell) highlight(+cell.dataset.r, +cell.dataset.c);
-      });
-
-      grid.addEventListener("click", e => {
-        const cell = e.target.closest(".tg-cell");
-        if (!cell) return;
-        const rows = +cell.dataset.r + 1, cols = +cell.dataset.c + 1;
-        let html = "<table border='1' style='border-collapse:collapse;width:100%'>";
-        for (let r = 0; r < rows; r++) {
-          html += "<tr>";
-          for (let c = 0; c < cols; c++) html += "<td style='padding:6px 10px;'>&nbsp;</td>";
-          html += "</tr>";
-        }
-        html += "</table><p></p>";
-        exec("insertHTML", html);
-        picker.classList.remove("open");
-      });
-
-      document.getElementById("etTable").onclick = e => {
-        e.stopPropagation();
-        const rect = e.currentTarget.getBoundingClientRect();
-        picker.style.top  = (rect.bottom + 4) + "px";
-        picker.style.left = rect.left + "px";
-        picker.classList.toggle("open");
-      };
-
-      document.addEventListener("click", () => picker.classList.remove("open"));
-    })();
 
     // ── Find & replace ──────────────────────────────────────────────────────────
     (function() {
