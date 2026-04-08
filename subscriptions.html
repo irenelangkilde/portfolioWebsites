@@ -571,8 +571,12 @@
         window.close();
         return;
       }
-      window.open("", "_self");
-      window.close();
+      // Fallback: navigate back if possible, otherwise go to overview
+      if (document.referrer && !document.referrer.includes("subscriptions.html")) {
+        window.location.href = document.referrer;
+      } else {
+        window.location.href = "overview.html";
+      }
     }
 
     function updatePremiumCard(prefix, qty, multiplier) {
@@ -708,8 +712,23 @@
         document.getElementById("authEmail").focus();
         return;
       }
-      await refreshMembership(_currentUser);
-      renderAuthState();
+      const btn = document.getElementById("authActionBtn");
+      const msgEl = document.getElementById("authMsg");
+      btn.disabled = true;
+      btn.textContent = "Refreshing…";
+      try {
+        await refreshMembership(_currentUser);
+        renderAuthState();
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = "Account refreshed.";
+        setTimeout(() => { msgEl.textContent = ""; }, 2500);
+      } catch (err) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = err?.message || "Refresh failed.";
+      } finally {
+        btn.disabled = false;
+        // label restored by renderAuthState
+      }
     });
 
     document.getElementById("signOutBtn").addEventListener("click", async () => {

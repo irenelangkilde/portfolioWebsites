@@ -232,60 +232,60 @@
       font-size: 12.5px; line-height: 1.6; padding: 14px 18px;
     }
 
-    /* ── Publish result modal ────────────────────────────────── */
-    #publishResultOverlay {
+    /* ── Unified portfolio panel ─────────────────────────────── */
+    #portfolioPanelOverlay {
       display: none; position: fixed; inset: 0; z-index: 200001;
-      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+      background: rgba(0,0,0,.65); align-items: flex-start; justify-content: center;
+      padding-top: 80px;
     }
-    #publishResultOverlay.open { display: flex; }
-    #publishResultBox {
+    #portfolioPanelOverlay.open { display: flex; }
+    #portfolioPanelBox {
       background: #0f1929; border: 1px solid rgba(255,255,255,.18);
-      border-radius: 12px; padding: 22px 26px; width: min(480px, 94vw);
-      display: flex; flex-direction: column; gap: 14px;
+      border-radius: 12px; width: min(520px, 94vw);
+      display: flex; flex-direction: column; gap: 0;
+      max-height: calc(100vh - 110px); overflow-y: auto;
     }
-    #publishResultBox h3 { font-size: 14px; font-weight: 700; color: #aef7c8; }
-    #publishResultBox .pub-row {
-      display: flex; flex-direction: column; gap: 3px;
+    .pp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky; top: 0; background: #0f1929; z-index: 1;
     }
-    #publishResultBox .pub-label {
+    .pp-header span { font-size: 14px; font-weight: 700; color: rgba(234,240,255,.9); }
+    #ppClose {
+      background: none; border: none; color: rgba(234,240,255,.5);
+      font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
+    }
+    #ppClose:hover { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    .pp-status-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; background: rgba(102,126,234,.08);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .pp-spin { display: inline-block; animation: ppSpin 1s linear infinite; font-size: 16px; color: #7eb8ff; }
+    @keyframes ppSpin { to { transform: rotate(360deg); } }
+    #ppPublishMsg { font-size: 13px; color: rgba(234,240,255,.85); }
+    .pp-status-ok    { color: #aef7c8 !important; }
+    .pp-status-error { color: rgba(255,166,166,.9) !important; }
+    #ppUrlSection { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .pub-row { display: flex; flex-direction: column; gap: 3px; }
+    .pub-label {
       font-size: 11px; font-weight: 600; text-transform: uppercase;
       letter-spacing: .06em; color: rgba(234,240,255,.4);
     }
-    #publishResultBox .pub-link {
-      font-size: 12px; color: #7eb8ff; word-break: break-all;
-      text-decoration: underline; cursor: pointer;
-    }
-    #publishResultBox .pub-link:hover { color: #a8d0ff; }
-    #publishResultBox .pub-actions {
-      display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px;
-    }
-    #publishResultBox .pub-actions button {
+    .pub-link { font-size: 12px; color: #7eb8ff; word-break: break-all; text-decoration: underline; cursor: pointer; }
+    .pub-link:hover { color: #a8d0ff; }
+    .pp-url-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    #ppBtnOpen {
       padding: 6px 18px; border: none; border-radius: 6px;
       font-size: 12px; font-weight: 600; cursor: pointer;
+      background: #667eea; color: #fff;
     }
-    #btnPublishResultClose  { background: rgba(255,255,255,.1); color: #eaf0ff; }
-    #btnPublishResultClose:hover { background: rgba(255,255,255,.2); }
-    #btnPublishResultOpen   { background: #667eea; color: #fff; }
-    #btnPublishResultOpen:hover  { background: #5568d4; }
-    #btnPublishResultManage { background: rgba(255,255,255,.07); color: rgba(234,240,255,.6); border: 1px solid rgba(255,255,255,.15) !important; }
-    #btnPublishResultManage:hover { background: rgba(255,255,255,.13); color: #eaf0ff; }
-
-    /* ── Manage deploys modal ────────────────────────────────── */
-    #manageOverlay {
-      display: none; position: fixed; inset: 0; z-index: 200002;
-      background: rgba(0,0,0,.65); align-items: center; justify-content: center;
-    }
-    #manageOverlay.open { display: flex; }
-    #manageBox {
-      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
-      border-radius: 12px; padding: 22px 26px; width: min(520px, 94vw);
-      display: flex; flex-direction: column; gap: 16px; max-height: 88vh; overflow-y: auto;
-    }
-    #manageBox h3 { font-size: 14px; font-weight: 700; color: rgba(234,240,255,.9); }
-    #manageBox h4 { font-size: 11px; font-weight: 700; text-transform: uppercase;
+    #ppBtnOpen:hover { background: #5568d4; }
+    .pp-divider { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 0; }
+    .pp-hidden { display: none !important; }
+    .manage-section { display: flex; flex-direction: column; gap: 8px; padding: 14px 20px; }
+    #portfolioPanelBox h4 { font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: .07em; color: rgba(234,240,255,.4); margin-bottom: 2px; }
-    .manage-section { display: flex; flex-direction: column; gap: 8px; }
-    .manage-section hr { border: none; border-top: 1px solid rgba(255,255,255,.08); }
     /* Domain row */
     .manage-domain-row { display: flex; gap: 6px; }
     .manage-domain-row input {
@@ -293,14 +293,12 @@
       border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
       color: #eaf0ff; font-size: 12px; outline: none;
     }
-    .manage-domain-row button, #manageClose {
+    .manage-domain-row button {
       padding: 6px 14px; border: none; border-radius: 6px;
       font-size: 12px; font-weight: 600; cursor: pointer;
     }
     #manageDomainApply { background: #667eea; color: #fff; }
     #manageDomainApply:hover { background: #5568d4; }
-    #manageClose { background: rgba(255,255,255,.1); color: #eaf0ff; align-self: flex-end; }
-    #manageClose:hover { background: rgba(255,255,255,.2); }
     .manage-domain-hint { font-size: 11px; color: rgba(234,240,255,.35); line-height: 1.5; }
     /* Deploy list */
     #manageDeployList { display: flex; flex-direction: column; gap: 6px; }
@@ -526,31 +524,40 @@
     </div>
   </div>
 
-  <!-- Publish result modal -->
-  <div id="publishResultOverlay">
-    <div id="publishResultBox">
-      <h3 id="publishResultTitle">Published successfully</h3>
-      <div class="pub-row">
-        <span class="pub-label">Latest (always current)</span>
-        <a id="publishResultUrl" class="pub-link" target="_blank" rel="noopener"></a>
-      </div>
-      <div class="pub-row">
-        <span class="pub-label">Permanent snapshot</span>
-        <a id="publishResultVersionedUrl" class="pub-link" target="_blank" rel="noopener"></a>
-      </div>
-      <div class="pub-actions">
-        <button id="btnPublishResultClose">Close</button>
-        <button id="btnPublishResultManage">Manage deploys &amp; domain →</button>
-        <button id="btnPublishResultOpen">Open latest ↗</button>
-      </div>
-    </div>
-  </div>
+  <!-- Unified publish / manage panel -->
+  <div id="portfolioPanelOverlay">
+    <div id="portfolioPanelBox">
 
-  <!-- Manage deploys & domain modal -->
-  <div id="manageOverlay">
-    <div id="manageBox">
-      <h3>Manage Portfolio</h3>
+      <!-- Header -->
+      <div class="pp-header">
+        <span id="ppTitle">Publish Portfolio</span>
+        <button id="ppClose" title="Close">✕</button>
+      </div>
 
+      <!-- Publish status strip (visible during / after publish) -->
+      <div id="ppPublishStrip" class="pp-status-strip pp-hidden">
+        <span id="ppPublishIcon" class="pp-spin">⟳</span>
+        <span id="ppPublishMsg">Publishing…</span>
+      </div>
+
+      <!-- URLs (shown after successful publish) -->
+      <div id="ppUrlSection" class="pp-hidden">
+        <div class="pub-row">
+          <span class="pub-label">Latest (always current)</span>
+          <a id="ppUrlLatest" class="pub-link" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="pub-row">
+          <span class="pub-label">Permanent snapshot</span>
+          <a id="ppUrlVersioned" class="pub-link" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="pp-url-actions">
+          <button id="ppBtnOpen">Open latest ↗</button>
+        </div>
+      </div>
+
+      <hr class="pp-divider">
+
+      <!-- Custom domain -->
       <div class="manage-section">
         <h4>Custom Domain</h4>
         <div class="manage-domain-row">
@@ -562,15 +569,15 @@
         </div>
       </div>
 
-      <hr style="border:none;border-top:1px solid rgba(255,255,255,.08)">
+      <hr class="pp-divider">
 
+      <!-- Deploys list -->
       <div class="manage-section">
-        <h4>Deploys</h4>
-        <div id="manageDeployStatus">Loading…</div>
+        <h4>All Deploys</h4>
+        <div id="manageDeployStatus"></div>
         <div id="manageDeployList"></div>
       </div>
 
-      <button id="manageClose">Close</button>
     </div>
   </div>
 
@@ -1568,30 +1575,44 @@
       refreshEditorAccountStatus();
     });
 
-    // ── Publish result modal ───────────────────────────────────────────────────
-    function showPublishResult(verb, deployNumber, url, versionedUrl) {
-      document.getElementById("publishResultTitle").textContent =
-        `${verb} successfully — deploy #${deployNumber}`;
-      const urlEl = document.getElementById("publishResultUrl");
-      urlEl.textContent = url;
-      urlEl.href = url;
-      const vUrlEl = document.getElementById("publishResultVersionedUrl");
-      vUrlEl.textContent = versionedUrl;
-      vUrlEl.href = versionedUrl;
-      document.getElementById("btnPublishResultOpen").onclick =
-        () => window.open(url, "_blank", "noopener");
-      document.getElementById("publishResultOverlay").classList.add("open");
+    // ── Unified portfolio panel ────────────────────────────────────────────────
+    function openPortfolioPanel() {
+      document.getElementById("portfolioPanelOverlay").classList.add("open");
     }
-    document.getElementById("btnPublishResultClose").onclick =
-      () => document.getElementById("publishResultOverlay").classList.remove("open");
-    document.getElementById("publishResultOverlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("publishResultOverlay"))
-        document.getElementById("publishResultOverlay").classList.remove("open");
+    function closePortfolioPanel() {
+      document.getElementById("portfolioPanelOverlay").classList.remove("open");
+    }
+    function ppSetPublishing() {
+      document.getElementById("ppPublishStrip").classList.remove("pp-hidden");
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = "pp-spin"; icon.textContent = "⟳";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = "Publishing…"; msg.className = "";
+      document.getElementById("ppUrlSection").classList.add("pp-hidden");
+    }
+    function ppSetSuccess(verb, deployNumber, url, versionedUrl) {
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = ""; icon.textContent = "✓";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = `${verb} successfully — deploy #${deployNumber}`;
+      msg.className = "pp-status-ok";
+      const latestEl = document.getElementById("ppUrlLatest");
+      latestEl.textContent = url; latestEl.href = url;
+      const verEl = document.getElementById("ppUrlVersioned");
+      verEl.textContent = versionedUrl; verEl.href = versionedUrl;
+      document.getElementById("ppBtnOpen").onclick = () => window.open(url, "_blank", "noopener");
+      document.getElementById("ppUrlSection").classList.remove("pp-hidden");
+    }
+    function ppSetError(message) {
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = ""; icon.textContent = "✕";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = message; msg.className = "pp-status-error";
+    }
+    document.getElementById("ppClose").onclick = closePortfolioPanel;
+    document.getElementById("portfolioPanelOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("portfolioPanelOverlay")) closePortfolioPanel();
     });
-    document.getElementById("btnPublishResultManage").onclick = () => {
-      document.getElementById("publishResultOverlay").classList.remove("open");
-      openManageModal();
-    };
 
     // ── Manage deploys & domain modal ──────────────────────────────────────────
     async function manageRequest(body) {
@@ -1679,25 +1700,19 @@
     async function openManageModal() {
       const slug = localStorage.getItem("portfolio_publish_slug");
       if (!slug) { alert("Publish your portfolio first."); return; }
-
-      // Check paywall before opening
       try { await ensureDeployAllowed(); } catch (err) {
         showLinkedError(err.message); return;
       }
-
+      document.getElementById("ppTitle").textContent = "Manage Portfolio";
+      document.getElementById("ppPublishStrip").classList.add("pp-hidden");
+      document.getElementById("ppUrlSection").classList.add("pp-hidden");
       document.getElementById("manageDomainInput").value = "";
       document.getElementById("manageDomainHint").textContent =
         "Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.";
-      document.getElementById("manageOverlay").classList.add("open");
+      document.getElementById("manageDomainHint").style.color = "";
+      openPortfolioPanel();
       loadDeployList(slug);
     }
-
-    document.getElementById("manageClose").onclick =
-      () => document.getElementById("manageOverlay").classList.remove("open");
-    document.getElementById("manageOverlay").addEventListener("click", e => {
-      if (e.target === document.getElementById("manageOverlay"))
-        document.getElementById("manageOverlay").classList.remove("open");
-    });
 
     document.getElementById("manageDomainApply").onclick = async () => {
       const slug   = localStorage.getItem("portfolio_publish_slug");
@@ -1757,12 +1772,15 @@
       const originalLabel = publishBtn.textContent;
       publishBtn.disabled = true;
 
+      // Open panel immediately with spinner
+      document.getElementById("ppTitle").textContent = "Publish Portfolio";
+      ppSetPublishing();
+      openPortfolioPanel();
+
       try {
-        setEditStatus("Checking deploy access...");
         const { data: { session } } = await supabaseClient.auth.getSession();
         await ensureDeployAllowed();
 
-        setEditStatus("Publishing...");
         const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
         const res = await fetch("/.netlify/functions/publishPortfolio", {
           method: "POST",
@@ -1777,9 +1795,7 @@
         });
 
         const payload = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(payload?.error || `Publish failed (${res.status})`);
-        }
+        if (!res.ok) throw new Error(payload?.error || `Publish failed (${res.status})`);
 
         if (payload.slug) localStorage.setItem("portfolio_publish_slug", payload.slug);
         if (payload.url)  localStorage.setItem("portfolio_publish_url",  payload.url);
@@ -1788,9 +1804,11 @@
         const verb = payload.republished ? "Republished" : "Published";
         setEditStatus(`${verb} as deploy #${payload.deployNumber}.`, "ok");
         refreshEditorAccountStatus();
-        showPublishResult(verb, payload.deployNumber, payload.url, payload.versionedUrl);
+        ppSetSuccess(verb, payload.deployNumber, payload.url, payload.versionedUrl);
+        loadDeployList(payload.slug);
       } catch (err) {
         console.error("Publish failed:", err);
+        ppSetError(err?.message || "Publish failed.");
         showLinkedError(err?.message || "Publish failed.");
       } finally {
         publishBtn.disabled = false;
