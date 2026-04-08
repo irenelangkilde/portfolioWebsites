@@ -109,9 +109,18 @@ export default async function handler(request, context) {
     return new Response(`Error looking up domain mapping: ${err?.message}`, { status: 500 });
   }
 
-  const slug = mapping?.slug;
-  if (!slug) {
+  const baseSlug = mapping?.slug;
+  if (!baseSlug) {
     return new Response("Domain mapping exists but contains no slug.", { status: 500 });
+  }
+
+  // Support /v{N} path to serve a specific version, e.g. theirdomain.com/v4
+  // Strip any versioned suffix from baseSlug to get the root slug, then append -N.
+  let slug = baseSlug;
+  const versionMatch = url.pathname.match(/^\/v(\d+)\/?$/);
+  if (versionMatch) {
+    const rootSlug = baseSlug.replace(/-\d+$/, "");
+    slug = `${rootSlug}-${versionMatch[1]}`;
   }
 
   // Fetch the portfolio HTML
@@ -123,7 +132,10 @@ export default async function handler(request, context) {
   }
 
   if (!html) {
-    return html404(domain, `The portfolio for <strong>${domain}</strong> has not been published yet.`);
+    return html404(domain, versionMatch
+      ? `Version <strong>${versionMatch[1]}</strong> of the portfolio for <strong>${domain}</strong> was not found.`
+      : `The portfolio for <strong>${domain}</strong> has not been published yet.`
+    );
   }
 
   return new Response(html, {

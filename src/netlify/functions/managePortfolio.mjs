@@ -171,12 +171,30 @@ export async function handler(event) {
       return json(400, { error: "Invalid domain. Provide a bare domain like janesmith.com." });
     }
 
+    // targetSlug: which deploy to serve — defaults to bare slug (always latest).
+    // If a versioned slug is provided, verify it belongs to this portfolio.
+    let targetSlug = slug;
+    if (payload.targetSlug) {
+      const ts = sanitizeSlug(payload.targetSlug);
+      if (ts !== slug && !ts.startsWith(slug + "-")) {
+        return json(400, { error: "targetSlug does not belong to this portfolio." });
+      }
+      // Confirm it exists and belongs to user
+      try {
+        const raw = await store.get(`meta/${ts}.json`);
+        if (!raw) return json(404, { error: `Deploy "${ts}" not found.` });
+        const m = JSON.parse(raw);
+        if (m.user_id !== user.id) return json(403, { error: "That deploy does not belong to your account." });
+      } catch (err) { return json(500, { error: explainBlobStoreError(err) }); }
+      targetSlug = ts;
+    }
+
     const netlifyResult = await addNetlifyDomainAlias(domain);
     if (!netlifyResult.ok) return json(502, { error: netlifyResult.error });
 
     try {
       await store.set(`domain/${domain}`, JSON.stringify({
-        slug,
+        slug: targetSlug,
         user_id: user.id,
         registered_at: new Date().toISOString()
       }));
@@ -188,10 +206,63 @@ export async function handler(event) {
     return json(200, {
       ok: true,
       domain,
-      slug,
+      slug: targetSlug,
       alreadyRegistered: netlifyResult.alreadyRegistered,
       dnsInstructions: `CNAME  www  →  ${siteUrl}\nA      @    →  75.2.60.5`
     });
+  }
+
+  // ── LIST DOMAINS ─────────────────────────────────────────────────────────────
+  if (action === "listDomains") {
+    let keys;
+    try {
+      const result = await store.list({ prefix: "domain/" });
+      keys = result.blobs.map(b => b.key);
+    } catch (err) { return json(500, { error: explainBlobStoreError(err) }); }
+
+    const domains = [];
+    await Promise.all(keys.map(async key => {
+      try {
+        const raw = await store.get(key);
+        if (!raw) return;
+        const m = JSON.parse(raw);
+        if (m.user_id !== user.id) return;
+        // Only return domains mapped to this portfolio's slug family
+        const mappedSlug = m.slug || "";
+        const rootSlug = mappedSlug.replace(/-\d+$/, "");
+        if (rootSlug !== slug) return;
+        domains.push({
+          domain: key.replace(/^domain\//, ""),
+          slug:   mappedSlug,
+          registered_at: m.registered_at || null
+        });
+      } catch { /* skip malformed entries */ }
+    }));
+
+    domains.sort((a, b) => a.domain.localeCompare(b.domain));
+    return json(200, { ok: true, domains });
+  }
+
+  // ── DELETE DOMAIN ─────────────────────────────────────────────────────────────
+  if (action === "deleteDomain") {
+    const domain = sanitizeDomain(payload.domain);
+    if (!domain || !domain.includes(".")) {
+      return json(400, { error: "Invalid domain." });
+    }
+
+    // Verify the domain mapping belongs to this user before deleting
+    try {
+      const raw = await store.get(`domain/${domain}`);
+      if (!raw) return json(404, { error: `Domain "${domain}" not found.` });
+      const m = JSON.parse(raw);
+      if (m.user_id !== user.id) return json(403, { error: "That domain does not belong to your account." });
+    } catch (err) { return json(500, { error: explainBlobStoreError(err) }); }
+
+    try {
+      await store.delete(`domain/${domain}`);
+    } catch (err) { return json(500, { error: `Delete failed: ${explainBlobStoreError(err)}` }); }
+
+    return json(200, { ok: true, deleted: domain });
   }
 
   return json(400, { error: `Unknown action "${action}".` });

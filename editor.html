@@ -299,6 +299,32 @@
     }
     #manageDomainApply { background: #667eea; color: #fff; }
     #manageDomainApply:hover { background: #5568d4; }
+    .manage-domain-version-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    }
+    .manage-domain-version-row label {
+      font-size: 11px; color: rgba(234,240,255,.45); white-space: nowrap;
+    }
+    #manageDomainVersion {
+      flex: 1; padding: 5px 8px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none; cursor: pointer;
+    }
+    #manageDomainVersion option { background: #1a2744; }
+    #manageDomainList { display: flex; flex-direction: column; gap: 4px; }
+    .domain-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,.04);
+    }
+    .domain-row-name { font-size: 12px; color: #eaf0ff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .domain-row-slug { font-size: 10px; color: rgba(234,240,255,.35); white-space: nowrap; }
+    .domain-row-delete {
+      padding: 2px 9px; border: none; border-radius: 4px;
+      background: rgba(255,100,100,.15); color: rgba(255,160,160,.8);
+      font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .domain-row-delete:hover { background: rgba(255,100,100,.3); color: #ffaaaa; }
+    .domain-row-delete:disabled { opacity: .4; cursor: default; }
     .manage-domain-hint { font-size: 11px; color: rgba(234,240,255,.35); line-height: 1.5; }
     /* Deploy list */
     #manageDeployList { display: flex; flex-direction: column; gap: 6px; }
@@ -557,12 +583,19 @@
 
       <hr class="pp-divider">
 
-      <!-- Custom domain -->
+      <!-- Custom domains -->
       <div class="manage-section">
-        <h4>Custom Domain</h4>
-        <div class="manage-domain-row">
+        <h4>Custom Domains</h4>
+        <div id="manageDomainList"></div>
+        <div class="manage-domain-row" style="margin-top:6px">
           <input type="text" id="manageDomainInput" placeholder="janesmith.com" autocomplete="off" />
-          <button id="manageDomainApply">Set domain</button>
+          <button id="manageDomainApply">Add domain</button>
+        </div>
+        <div class="manage-domain-version-row">
+          <label for="manageDomainVersion">Point to</label>
+          <select id="manageDomainVersion">
+            <option value="">— loading deploys… —</option>
+          </select>
         </div>
         <div class="manage-domain-hint" id="manageDomainHint">
           Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.
@@ -1628,6 +1661,65 @@
       return payload;
     }
 
+    function populateVersionPicker(slug, deploys) {
+      const sel = document.getElementById("manageDomainVersion");
+      sel.innerHTML = "";
+      // "Latest (always current)" option maps to the bare slug
+      const latestOpt = document.createElement("option");
+      latestOpt.value = slug;
+      latestOpt.textContent = "Latest (always current)";
+      sel.appendChild(latestOpt);
+      // One option per versioned deploy, newest first
+      deploys.slice().reverse().forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.versionedSlug;
+        const dateStr = d.updated_at ? ` · ${new Date(d.updated_at).toLocaleDateString()}` : "";
+        opt.textContent = `Deploy #${d.deployNumber}${d.isLatest ? " (latest)" : ""}${dateStr}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function loadDomainList(slug) {
+      const listEl = document.getElementById("manageDomainList");
+      listEl.innerHTML = "";
+      try {
+        const data = await manageRequest({ action: "listDomains", slug });
+        if (!data.domains?.length) return;
+        data.domains.forEach(d => {
+          const row = document.createElement("div");
+          row.className = "domain-row";
+
+          const name = document.createElement("span");
+          name.className = "domain-row-name";
+          name.textContent = d.domain;
+
+          const slugBadge = document.createElement("span");
+          slugBadge.className = "domain-row-slug";
+          slugBadge.textContent = d.slug === slug ? "latest" : `v${d.slug.split("-").pop()}`;
+
+          const del = document.createElement("button");
+          del.className = "domain-row-delete";
+          del.textContent = "Remove";
+          del.onclick = async () => {
+            if (!confirm(`Remove domain ${d.domain}?\n\nYour DNS records will still point here until you update them.`)) return;
+            del.disabled = true; del.textContent = "Removing…";
+            try {
+              await manageRequest({ action: "deleteDomain", slug, domain: d.domain });
+              row.remove();
+            } catch (err) {
+              del.disabled = false; del.textContent = "Remove";
+              alert(`Error: ${err.message}`);
+            }
+          };
+
+          row.appendChild(name);
+          row.appendChild(slugBadge);
+          row.appendChild(del);
+          listEl.appendChild(row);
+        });
+      } catch { /* non-fatal — list stays empty */ }
+    }
+
     async function loadDeployList(slug) {
       const statusEl = document.getElementById("manageDeployStatus");
       const listEl   = document.getElementById("manageDeployList");
@@ -1637,9 +1729,11 @@
         const data = await manageRequest({ action: "list", slug });
         if (!data.deploys?.length) {
           statusEl.textContent = "No versioned deploys found.";
+          populateVersionPicker(slug, []);
           return;
         }
         statusEl.textContent = "";
+        populateVersionPicker(slug, data.deploys);
         data.deploys.slice().reverse().forEach(d => {
           const row = document.createElement("div");
           row.className = "manage-deploy-row" + (d.isLatest ? " is-latest" : "");
@@ -1712,10 +1806,12 @@
       document.getElementById("manageDomainHint").style.color = "";
       openPortfolioPanel();
       loadDeployList(slug);
+      loadDomainList(slug);
     }
 
     document.getElementById("manageDomainApply").onclick = async () => {
-      const slug   = localStorage.getItem("portfolio_publish_slug");
+      const bareSlug   = localStorage.getItem("portfolio_publish_slug");
+      const targetSlug = document.getElementById("manageDomainVersion").value || bareSlug;
       const domain = document.getElementById("manageDomainInput").value.trim();
       const hint   = document.getElementById("manageDomainHint");
       const btn    = document.getElementById("manageDomainApply");
@@ -1723,12 +1819,16 @@
       btn.disabled = true;
       btn.textContent = "Registering…";
       try {
-        const data = await manageRequest({ action: "domain", slug, domain });
+        const body = { action: "domain", slug: bareSlug, domain };
+        if (targetSlug && targetSlug !== bareSlug) body.targetSlug = targetSlug;
+        const data = await manageRequest(body);
         hint.textContent = data.alreadyRegistered
           ? `✓ ${domain} was already registered.`
           : `✓ Registered! DNS instructions:\n${data.dnsInstructions}\n\nSSL provisions automatically once DNS propagates.`;
         hint.style.whiteSpace = "pre-wrap";
         hint.style.color = "rgba(174,247,200,.8)";
+        document.getElementById("manageDomainInput").value = "";
+        loadDomainList(bareSlug);
       } catch (err) {
         hint.textContent = `Error: ${err.message}`;
         hint.style.color = "rgba(255,166,166,.88)";
@@ -1806,6 +1906,7 @@
         refreshEditorAccountStatus();
         ppSetSuccess(verb, payload.deployNumber, payload.url, payload.versionedUrl);
         loadDeployList(payload.slug);
+        loadDomainList(payload.slug);
       } catch (err) {
         console.error("Publish failed:", err);
         ppSetError(err?.message || "Publish failed.");
