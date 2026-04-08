@@ -37,12 +37,43 @@ function html404(domain, message) {
   );
 }
 
+function sanitizeSlug(value) {
+  return String(value || "").toLowerCase().trim()
+    .replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
+}
+
 export default async function handler(request, context) {
   const host = request.headers.get("host") || "";
+  const url  = new URL(request.url);
 
-  // Pass through requests on the main site domain(s) — let normal routing handle them
+  // Pass through requests on the main site domain(s) — let normal routing handle them,
+  // EXCEPT for /u/:slug paths which we handle here to avoid redirect/edge-function chain issues.
   const primaryDomain = Netlify.env.get("NETLIFY_PRIMARY_DOMAIN") || "";
   if (isSystemHost(host, primaryDomain)) {
+    // Handle /u/:slug on the primary domain directly
+    const slugMatch = url.pathname.match(/^\/u\/([^/]+)$/);
+    if (slugMatch) {
+      const slug = sanitizeSlug(slugMatch[1]);
+      if (!slug) return new Response("Missing slug", { status: 400 });
+
+      const siteID = Netlify.env.get("NETLIFY_SITE_ID");
+      const token  = Netlify.env.get("NETLIFY_AUTH_TOKEN");
+      if (!siteID || !token) return new Response("Blob store credentials not configured.", { status: 503 });
+
+      let store;
+      try { store = getStore({ name: PUBLISHED_SITES_STORE, siteID, token }); }
+      catch (err) { return new Response(`Blob store init failed: ${err?.message}`, { status: 503 }); }
+
+      let html;
+      try { html = await store.get(`html/${slug}.html`); }
+      catch (err) { return new Response(`Error fetching portfolio: ${err?.message}`, { status: 500 }); }
+
+      if (!html) return new Response("Published page not found", { status: 404,
+        headers: { "content-type": "text/plain; charset=utf-8" } });
+
+      return new Response(html, { status: 200,
+        headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=60" } });
+    }
     return context.next();
   }
 
