@@ -850,9 +850,8 @@
       { id: "page2", label: "2 Job" },
       { id: "page3", label: "3 Design" },
       { id: "page4", label: "4 Colors" },
-      { id: "page5",  label: "5 Visuals" },
-      { id: "page5b", pageId: "page5", label: "6 Edit" },
-      { id: "page5c", pageId: "page5", label: "7 Publish" },
+      { id: "page5b", pageId: "page4", label: "5 Edit" },
+      { id: "page5c", pageId: "page4", label: "6 Publish" },
     ];
     let currentStep = 0;
 
@@ -2323,6 +2322,8 @@
       // mergeTokenReport overwrites by stage key so re-renders stay clean.
       setApplyBtnState(false);
       setOpenEditorReady(false);
+      const _readyMsg = document.getElementById("generatorReadyMsg");
+      if (_readyMsg) _readyMsg.textContent = "";
       document.getElementById("upgradePrompt")?.classList.add("hidden");
 
       const resumeFile = resumeUpload.files[0];
@@ -2543,11 +2544,6 @@
         }
       }
 
-      const finalBox = document.getElementById("finalBox");
-      const finalStatus = document.getElementById("finalStatus");
-      finalBox.classList.remove("hidden");
-      finalBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
       const resumeData = getPage1();
       const designData = getPage2Template();
       const colorsData = getPage3Colors();
@@ -2564,9 +2560,15 @@
       // ── Debug panel — re-wire payload with visuals included now that generation ran ──
       if (isDebugMode()) wirePayloadDebug();
 
-      finalStatus.innerHTML = data.truncated
-        ? `<span class="ok">Portfolio ready</span> <span class="hint">(output was cut short — some sections may be missing; try regenerating)</span>`
-        : `<span class="ok">Portfolio ready.</span> Open the editor below.`;
+      const readyMsg = document.getElementById("generatorReadyMsg");
+      if (data.truncated) {
+        const msg = "Output was cut short — some sections may be missing; try regenerating.";
+        setHeaderStatus("generatingWebsiteStatus", "Portfolio ready. " + msg, "rgba(251,171,156,.8)");
+        if (readyMsg) { readyMsg.textContent = msg; readyMsg.style.color = "rgba(251,171,156,.8)"; }
+      } else {
+        setHeaderStatus("generatingWebsiteStatus", "Portfolio ready.", "rgba(118,176,34,.9)");
+        if (readyMsg) { readyMsg.textContent = "Portfolio ready."; readyMsg.style.color = "rgba(118,176,34,.9)"; }
+      }
 
       // If the popup was blocked, editorWin is null — open now that localStorage is set.
       if (!editorWin || editorWin.closed) {
@@ -2940,11 +2942,10 @@
       }
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
-    document.getElementById("next4")?.addEventListener("click", () => { page4Action(); setStep(5); });
+    document.getElementById("next4")?.addEventListener("click", page4Action);
     document.getElementById("dbgSubmit4")?.addEventListener("click", page4Action);
 
-    // Page 5 (Visuals)
-    document.getElementById("back2_bottom")?.addEventListener("click", () => setStep(4));
+    // Open Editor / visuals (now on page 4)
     document.getElementById("next2_bottom")?.addEventListener("click", doPreview);
     document.getElementById("dbgSubmit5")?.addEventListener("click", doPreview);
 
@@ -2972,9 +2973,6 @@
       setApplyBtnState(false);
       doGenerateWebsite();
     });
-    // Artifact rows — wire add button
-    document.getElementById("addArtifact")?.addEventListener("click", () => addArtifactRow());
-
     // Track which color input last had focus
     const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
     let focusedColorId = "primary";

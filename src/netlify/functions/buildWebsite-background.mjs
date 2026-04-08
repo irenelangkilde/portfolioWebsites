@@ -405,11 +405,13 @@ function renderMustache(template, data) {
   // Process sections in passes until stable — inner same-name sections render first,
   // then outer wrappers (e.g. {{#certs}}<section>{{#certs}}<item>{{/certs}}</section>{{/certs}})
   // are picked up on the next pass without conflicting with the inner closing tag.
-  const sectionRe = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+  const sectionRe  = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
+  const invertedRe = /\{\{\^(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
   let result = template;
   let prev;
   do {
     prev = result;
+    // Positive sections
     result = result.replace(sectionRe, (_, key, inner) => {
       const val = data[key];
       if (!val || (Array.isArray(val) && val.length === 0)) return "";
@@ -423,6 +425,14 @@ function renderMustache(template, data) {
       }
       // truthy scalar — render inner block once
       return renderMustache(inner, data);
+    });
+    // Inverted sections — render only when value is falsy / empty array
+    result = result.replace(invertedRe, (_, key, inner) => {
+      const val = data[key];
+      if (!val || (Array.isArray(val) && val.length === 0)) {
+        return renderMustache(inner, data);
+      }
+      return "";
     });
   } while (result !== prev);
 
