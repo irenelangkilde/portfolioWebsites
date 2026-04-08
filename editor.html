@@ -263,10 +263,66 @@
       padding: 6px 18px; border: none; border-radius: 6px;
       font-size: 12px; font-weight: 600; cursor: pointer;
     }
-    #btnPublishResultClose { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    #btnPublishResultClose  { background: rgba(255,255,255,.1); color: #eaf0ff; }
     #btnPublishResultClose:hover { background: rgba(255,255,255,.2); }
-    #btnPublishResultOpen  { background: #667eea; color: #fff; }
+    #btnPublishResultOpen   { background: #667eea; color: #fff; }
     #btnPublishResultOpen:hover  { background: #5568d4; }
+    #btnPublishResultManage { background: rgba(255,255,255,.07); color: rgba(234,240,255,.6); border: 1px solid rgba(255,255,255,.15) !important; }
+    #btnPublishResultManage:hover { background: rgba(255,255,255,.13); color: #eaf0ff; }
+
+    /* ── Manage deploys modal ────────────────────────────────── */
+    #manageOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200002;
+      background: rgba(0,0,0,.65); align-items: center; justify-content: center;
+    }
+    #manageOverlay.open { display: flex; }
+    #manageBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 26px; width: min(520px, 94vw);
+      display: flex; flex-direction: column; gap: 16px; max-height: 88vh; overflow-y: auto;
+    }
+    #manageBox h3 { font-size: 14px; font-weight: 700; color: rgba(234,240,255,.9); }
+    #manageBox h4 { font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: rgba(234,240,255,.4); margin-bottom: 2px; }
+    .manage-section { display: flex; flex-direction: column; gap: 8px; }
+    .manage-section hr { border: none; border-top: 1px solid rgba(255,255,255,.08); }
+    /* Domain row */
+    .manage-domain-row { display: flex; gap: 6px; }
+    .manage-domain-row input {
+      flex: 1; padding: 7px 10px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none;
+    }
+    .manage-domain-row button, #manageClose {
+      padding: 6px 14px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    #manageDomainApply { background: #667eea; color: #fff; }
+    #manageDomainApply:hover { background: #5568d4; }
+    #manageClose { background: rgba(255,255,255,.1); color: #eaf0ff; align-self: flex-end; }
+    #manageClose:hover { background: rgba(255,255,255,.2); }
+    .manage-domain-hint { font-size: 11px; color: rgba(234,240,255,.35); line-height: 1.5; }
+    /* Deploy list */
+    #manageDeployList { display: flex; flex-direction: column; gap: 6px; }
+    .manage-deploy-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 6px; background: rgba(255,255,255,.04);
+    }
+    .manage-deploy-row.is-latest { background: rgba(102,126,234,.12); }
+    .manage-deploy-num { font-size: 12px; font-weight: 700; color: #7eb8ff; min-width: 22px; }
+    .manage-deploy-link { font-size: 11px; color: #7eb8ff; text-decoration: underline; flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .manage-deploy-link:hover { color: #a8d0ff; }
+    .manage-deploy-date { font-size: 10px; color: rgba(234,240,255,.3); white-space: nowrap; }
+    .manage-deploy-latest { font-size: 10px; font-weight: 700; color: #aef7c8; }
+    .manage-deploy-delete {
+      padding: 3px 10px; border: none; border-radius: 4px;
+      background: rgba(255,100,100,.15); color: rgba(255,160,160,.8);
+      font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .manage-deploy-delete:hover { background: rgba(255,100,100,.3); color: #ffaaaa; }
+    .manage-deploy-delete:disabled { opacity: .4; cursor: default; }
+    #manageDeployStatus { font-size: 11px; color: rgba(234,240,255,.45); min-height: 16px; }
 
     #no-preview {
       display: none; position: fixed; inset: 0; background: #1a1a2e; color: white;
@@ -347,7 +403,6 @@
     <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
     <button class="tbtn tbtn-success" id="btnPublish">Publish</button>
-    <button class="tbtn tbtn-ghost"   id="btnCustomDomain" title="Map a custom domain to this portfolio">🌐 Domain</button>
     <div id="editorAccount" aria-live="polite">
       <div id="editorAccountUser">Signed out</div>
       <div id="editorAccountQuota">Credits: - · Downloads: - · Deploys: -</div>
@@ -485,8 +540,37 @@
       </div>
       <div class="pub-actions">
         <button id="btnPublishResultClose">Close</button>
+        <button id="btnPublishResultManage">Manage deploys &amp; domain →</button>
         <button id="btnPublishResultOpen">Open latest ↗</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Manage deploys & domain modal -->
+  <div id="manageOverlay">
+    <div id="manageBox">
+      <h3>Manage Portfolio</h3>
+
+      <div class="manage-section">
+        <h4>Custom Domain</h4>
+        <div class="manage-domain-row">
+          <input type="text" id="manageDomainInput" placeholder="janesmith.com" autocomplete="off" />
+          <button id="manageDomainApply">Set domain</button>
+        </div>
+        <div class="manage-domain-hint" id="manageDomainHint">
+          Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.
+        </div>
+      </div>
+
+      <hr style="border:none;border-top:1px solid rgba(255,255,255,.08)">
+
+      <div class="manage-section">
+        <h4>Deploys</h4>
+        <div id="manageDeployStatus">Loading…</div>
+        <div id="manageDeployList"></div>
+      </div>
+
+      <button id="manageClose">Close</button>
     </div>
   </div>
 
@@ -1504,6 +1588,140 @@
       if (e.target === document.getElementById("publishResultOverlay"))
         document.getElementById("publishResultOverlay").classList.remove("open");
     });
+    document.getElementById("btnPublishResultManage").onclick = () => {
+      document.getElementById("publishResultOverlay").classList.remove("open");
+      openManageModal();
+    };
+
+    // ── Manage deploys & domain modal ──────────────────────────────────────────
+    async function manageRequest(body) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) throw new Error("Sign in first.");
+      const res = await fetch("/.netlify/functions/managePortfolio", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(body)
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error || `Request failed (${res.status})`);
+      return payload;
+    }
+
+    async function loadDeployList(slug) {
+      const statusEl = document.getElementById("manageDeployStatus");
+      const listEl   = document.getElementById("manageDeployList");
+      statusEl.textContent = "Loading deploys…";
+      listEl.innerHTML = "";
+      try {
+        const data = await manageRequest({ action: "list", slug });
+        if (!data.deploys?.length) {
+          statusEl.textContent = "No versioned deploys found.";
+          return;
+        }
+        statusEl.textContent = "";
+        data.deploys.slice().reverse().forEach(d => {
+          const row = document.createElement("div");
+          row.className = "manage-deploy-row" + (d.isLatest ? " is-latest" : "");
+          row.dataset.vslug = d.versionedSlug;
+
+          const num = document.createElement("span");
+          num.className = "manage-deploy-num";
+          num.textContent = `#${d.deployNumber}`;
+
+          const link = document.createElement("a");
+          link.className = "manage-deploy-link";
+          link.href = d.url; link.target = "_blank"; link.rel = "noopener";
+          link.textContent = d.url;
+
+          const date = document.createElement("span");
+          date.className = "manage-deploy-date";
+          date.textContent = d.updated_at ? new Date(d.updated_at).toLocaleDateString() : "";
+
+          const badge = document.createElement("span");
+          badge.className = "manage-deploy-latest";
+          badge.textContent = d.isLatest ? "latest" : "";
+
+          const del = document.createElement("button");
+          del.className = "manage-deploy-delete";
+          del.textContent = "Delete";
+          if (d.isLatest) {
+            del.disabled = true;
+            del.title = "Cannot delete the latest deploy";
+          } else {
+            del.onclick = async () => {
+              if (!confirm(`Delete deploy #${d.deployNumber}?\n${d.url}\n\nThis cannot be undone.`)) return;
+              del.disabled = true;
+              del.textContent = "Deleting…";
+              try {
+                await manageRequest({ action: "delete", slug, versionedSlug: d.versionedSlug });
+                row.remove();
+                statusEl.textContent = `Deploy #${d.deployNumber} deleted.`;
+              } catch (err) {
+                del.disabled = false;
+                del.textContent = "Delete";
+                statusEl.textContent = `Error: ${err.message}`;
+              }
+            };
+          }
+
+          row.appendChild(num);
+          row.appendChild(link);
+          row.appendChild(date);
+          row.appendChild(badge);
+          row.appendChild(del);
+          listEl.appendChild(row);
+        });
+      } catch (err) {
+        statusEl.textContent = `Error loading deploys: ${err.message}`;
+      }
+    }
+
+    async function openManageModal() {
+      const slug = localStorage.getItem("portfolio_publish_slug");
+      if (!slug) { alert("Publish your portfolio first."); return; }
+
+      // Check paywall before opening
+      try { await ensureDeployAllowed(); } catch (err) {
+        showLinkedError(err.message); return;
+      }
+
+      document.getElementById("manageDomainInput").value = "";
+      document.getElementById("manageDomainHint").textContent =
+        "Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.";
+      document.getElementById("manageOverlay").classList.add("open");
+      loadDeployList(slug);
+    }
+
+    document.getElementById("manageClose").onclick =
+      () => document.getElementById("manageOverlay").classList.remove("open");
+    document.getElementById("manageOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("manageOverlay"))
+        document.getElementById("manageOverlay").classList.remove("open");
+    });
+
+    document.getElementById("manageDomainApply").onclick = async () => {
+      const slug   = localStorage.getItem("portfolio_publish_slug");
+      const domain = document.getElementById("manageDomainInput").value.trim();
+      const hint   = document.getElementById("manageDomainHint");
+      const btn    = document.getElementById("manageDomainApply");
+      if (!domain) { hint.textContent = "Please enter a domain."; return; }
+      btn.disabled = true;
+      btn.textContent = "Registering…";
+      try {
+        const data = await manageRequest({ action: "domain", slug, domain });
+        hint.textContent = data.alreadyRegistered
+          ? `✓ ${domain} was already registered.`
+          : `✓ Registered! DNS instructions:\n${data.dnsInstructions}\n\nSSL provisions automatically once DNS propagates.`;
+        hint.style.whiteSpace = "pre-wrap";
+        hint.style.color = "rgba(174,247,200,.8)";
+      } catch (err) {
+        hint.textContent = `Error: ${err.message}`;
+        hint.style.color = "rgba(255,166,166,.88)";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Set domain";
+      }
+    };
 
     // ── View HTML modal ────────────────────────────────────────────────────────
     document.getElementById("btnViewHtml").onclick = () => {
@@ -1580,50 +1798,6 @@
       }
     };
 
-    // ── Custom domain ──────────────────────────────────────────────────────────
-    document.getElementById("btnCustomDomain").onclick = async () => {
-      const slug = localStorage.getItem("portfolio_publish_slug");
-      if (!slug) {
-        alert("Publish your portfolio first before mapping a custom domain.");
-        return;
-      }
-
-      const domain = prompt(
-        "Enter the custom domain to point at this portfolio.\n" +
-        "Examples: janesmith.com  or  www.janesmith.com\n\n" +
-        "After registering, you will need to add a DNS record at your registrar.",
-        ""
-      );
-      if (!domain) return;
-
-      try {
-        setEditStatus("Registering domain…");
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session?.access_token) throw new Error("Sign in first.");
-
-        const res = await fetch("/.netlify/functions/addCustomDomain", {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            authorization: `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({ domain, slug })
-        });
-        const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload?.error || `Failed (${res.status})`);
-
-        setEditStatus("Domain registered.", "ok");
-        alert(
-          `Domain registered successfully!\n\n` +
-          `${payload.instructions}\n\n` +
-          `Once DNS propagates, your portfolio will be live at:\n` +
-          `https://${payload.domain}`
-        );
-      } catch (err) {
-        console.error("Custom domain error:", err);
-        showLinkedError(err?.message || "Domain registration failed.");
-      }
-    };
 
     // ── Back ───────────────────────────────────────────────────────────────────
     document.getElementById("btnBack").onclick = () => {

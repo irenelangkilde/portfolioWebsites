@@ -533,6 +533,9 @@
               <input type="password" id="authPasswordConfirm" placeholder="Confirm password" autocomplete="new-password" style="width:100%;" />
             </div>
             <button class="authSubmit" id="authSubmitBtn" onclick="handleAuthSubmit()">Sign in</button>
+            <div style="text-align:right;margin-top:2px;">
+              <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(234,240,255,.45);text-decoration:underline;" onclick="handleForgotPassword(event)">Forgot password?</a>
+            </div>
             <div class="authMsg" id="authMsg"></div>
           </div>
         </div>
@@ -1188,12 +1191,56 @@
     document.getElementById("authSubmitBtn").textContent = tab === "login" ? "Sign in" : "Create account";
     document.getElementById("authPasswordConfirmWrap").classList.toggle("hidden", tab === "login");
     document.getElementById("authMsg").textContent = "";
+    const forgotLink = document.getElementById("forgotPasswordLink");
+    if (forgotLink) forgotLink.style.display = tab === "signup" ? "none" : "";
   }
 
-  function openAuthModal() {
+  function openAuthModal(mode) {
     const modal = document.getElementById("authModal");
     modal.style.display = "flex";
+    if (mode === "reset") {
+      // Switch to login tab and show the new-password UI
+      switchAuthTab("login");
+      const msgEl = document.getElementById("authMsg");
+      const pwEl  = document.getElementById("authPassword");
+      msgEl.className = "authMsg ok";
+      msgEl.textContent = "Enter your new password below, then click Set new password.";
+      document.getElementById("authSubmitBtn").textContent = "Set new password";
+      document.getElementById("authSubmitBtn").onclick = async () => {
+        const newPw = pwEl.value;
+        msgEl.className = "authMsg";
+        msgEl.textContent = "";
+        if (!newPw || newPw.length < 6) {
+          msgEl.className = "authMsg err";
+          msgEl.textContent = "Password must be at least 6 characters.";
+          return;
+        }
+        const { error } = await _supabase.auth.updateUser({ password: newPw });
+        if (error) {
+          msgEl.className = "authMsg err";
+          msgEl.textContent = error.message;
+        } else {
+          msgEl.className = "authMsg ok";
+          msgEl.textContent = "Password updated. You are now signed in.";
+          document.getElementById("authSubmitBtn").textContent = "Sign in";
+          document.getElementById("authSubmitBtn").onclick = handleAuthSubmit;
+          setTimeout(closeAuthModal, 2000);
+        }
+      };
+    }
   }
+
+  // On page load, check if we're returning from a password reset link
+  (function checkPasswordResetRedirect() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get("reset")) return;
+    // Supabase puts the session tokens in the URL hash after a reset redirect
+    _supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        openAuthModal("reset");
+      }
+    });
+  })();
 
   function closeAuthModal() {
     document.getElementById("authModal").style.display = "none";
@@ -1253,6 +1300,30 @@
     await _supabase.auth.signOut();
     closeAuthModal();
   }
+
+  async function handleForgotPassword(e) {
+    e.preventDefault();
+    const email  = document.getElementById("authEmail").value.trim();
+    const msgEl  = document.getElementById("authMsg");
+    msgEl.className = "authMsg";
+    if (!email) {
+      msgEl.className = "authMsg err";
+      msgEl.textContent = "Enter your email address above, then click Forgot password.";
+      return;
+    }
+    msgEl.textContent = "Sending reset email…";
+    const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}${window.location.pathname}?reset=1`
+    });
+    if (error) {
+      msgEl.className = "authMsg err";
+      msgEl.textContent = error.message;
+    } else {
+      msgEl.className = "authMsg ok";
+      msgEl.textContent = "Password reset email sent. Check your inbox.";
+    }
+  }
+
 </script>
 </body>
 </html>

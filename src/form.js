@@ -2129,6 +2129,20 @@
 
       await waitForTemplateExtraction("bridgeStatus");
 
+      // Block until resume analysis is finished (bridge needs resume_facts + resume_strategy)
+      if (resumeAnalysisPending || !lastAnalysisData) {
+        setHeaderStatus("bridgeStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
+        const resumeWaitStart = Date.now();
+        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - resumeWaitStart < 300000) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        if (!lastAnalysisData) {
+          setHeaderStatus("bridgeStatus", "⚠ Resume analysis did not complete — cannot proceed.", "rgba(251,171,156,.9)");
+          bridgeInProgress = false;
+          return;
+        }
+      }
+
       // Block until job ad extraction is finished (bridge needs job_resolved)
       if (jobAdInProgress) {
         setHeaderStatus("bridgeStatus", "Waiting for job analysis…", "rgba(141,224,255,.6)");
@@ -2323,6 +2337,23 @@
       setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
 
       await waitForTemplateExtraction("generatingWebsiteStatus");
+
+      // Block until resume analysis is finished — resume_facts and resume_strategy are required
+      if (resumeAnalysisPending || !lastAnalysisData) {
+        setHeaderStatus("generatingWebsiteStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
+        const resumeWaitStart = Date.now();
+        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - resumeWaitStart < 300000) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        if (!lastAnalysisData) {
+          generationError = "Resume analysis did not complete. Please try re-uploading your resume.";
+          generationInProgress = false;
+          setHeaderStatus("generatingWebsiteStatus", "⚠ " + generationError, "rgba(251,171,156,.9)");
+          setApplyBtnState(true);
+          return;
+        }
+      }
+
       setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
 
       // If the job ad field has content but page 2 hasn't been submitted yet, wait silently

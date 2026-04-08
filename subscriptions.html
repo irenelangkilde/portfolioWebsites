@@ -527,6 +527,9 @@
           <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
           <button class="btn primary" id="authSubmitBtn" type="submit">Sign In</button>
         </form>
+        <div style="text-align:right;margin-top:2px;">
+          <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(120,140,180,.6);text-decoration:underline;">Forgot password?</a>
+        </div>
         <div class="authMsg" id="authMsg"></div>
       </aside>
     </section>
@@ -711,6 +714,29 @@
 
     document.getElementById("signOutBtn").addEventListener("click", async () => {
       await _supabase.auth.signOut();
+    });
+
+    document.getElementById("forgotPasswordLink").addEventListener("click", async e => {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const msgEl = document.getElementById("authMsg");
+      msgEl.className = "authMsg";
+      if (!email) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "Enter your email address above, then click Forgot password.";
+        return;
+      }
+      msgEl.textContent = "Sending reset email…";
+      const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/overview.html?reset=1`
+      });
+      if (error) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = "Password reset email sent. Check your inbox.";
+      }
     });
 
     document.getElementById("authForm").addEventListener("submit", async e => {
