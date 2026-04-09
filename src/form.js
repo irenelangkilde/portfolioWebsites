@@ -1110,6 +1110,8 @@
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
       paletteSuggestionsLocked = false;
+      displayedSuggestedPalettes = [];
+      selectedSuggestedPaletteKey = "";
       const sampleColorsBar = document.getElementById("sampleColorsBar");
       const sampleColorsStatus = document.getElementById("sampleColorsStatus");
       const useSampleColors = document.getElementById("useSampleColors");
@@ -1145,6 +1147,8 @@
     let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
     let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
     let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
+    let displayedSuggestedPalettes = []; // current visible palette rows, preserved when late arrivals appear
+    let selectedSuggestedPaletteKey = ""; // selected suggested palette, preserved across rerenders
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
@@ -1904,15 +1908,25 @@
     }
 
     function getPage3Colors(){
+      const slot1 = document.getElementById("primary").value.trim();
+      const slot2 = document.getElementById("secondary").value.trim();
+      const slot3 = document.getElementById("accent").value.trim();
+      const slot4 = document.getElementById("dark").value.trim();
+      const slot5 = document.getElementById("light").value.trim();
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
         theme: {
-          primary: document.getElementById("primary").value.trim(),
-          secondary: document.getElementById("secondary").value.trim(),
-          accent: document.getElementById("accent").value.trim(),
-          dark: document.getElementById("dark").value.trim(),
-          light: document.getElementById("light").value.trim()
+          slot1,
+          slot2,
+          slot3,
+          slot4,
+          slot5,
+          primary: slot1,
+          secondary: slot2,
+          accent: slot3,
+          dark: slot4,
+          light: slot5
         }
       };
     }
@@ -2805,6 +2819,8 @@
       lastAnalysisData = null;
       userHasSelectedPalette = false;
       paletteSuggestionsLocked = false;
+      displayedSuggestedPalettes = [];
+      selectedSuggestedPaletteKey = "";
       setResumeAnalysisStatus("");
     });
 
@@ -2826,6 +2842,8 @@
       resumeAnalysisCache  = null;
       userHasSelectedPalette = false;
       paletteSuggestionsLocked = false;
+      displayedSuggestedPalettes = [];
+      selectedSuggestedPaletteKey = "";
       jobAdResult          = null;
       page2Submitted       = false;
       page3Submitted       = false;
@@ -2873,6 +2891,8 @@
       templatePaletteRendered = false;
       userHasSelectedPalette = false;
       paletteSuggestionsLocked = false;
+      displayedSuggestedPalettes = [];
+      selectedSuggestedPaletteKey = "";
       bridgeResult           = null;
       generationResult       = null;
       // Abort any in-flight downstream tasks
@@ -3051,14 +3071,11 @@
       const container = document.getElementById("suggestedPalettes");
       const rows      = document.getElementById("suggestedPalettesRows");
       if (!container || !rows) return;
-
-      if (paletteSuggestionsLocked && rows.childElementCount > 0) {
-        if (msg) {
-          msg.textContent = "(Palette locked after selection)";
-          msg.style.display = "block";
-        }
-        return;
-      }
+      const paletteKey = palette => {
+        if (!palette?.colors) return "";
+        const slots = ["primary", "secondary", "accent", "dark", "light"];
+        return slots.map(slot => normalizeHex(palette.colors[slot]) || "").join("|");
+      };
 
       // Slot 0: template palette — sanitize extracted colors so duplicate neutrals
       // do not crowd out salient accent hues from the source design.
@@ -3095,17 +3112,37 @@
           return { label: p.how_used || `AI palette ${i + 1}`, colors };
         });
 
-      const visible = [...(tplPalette ? [tplPalette] : []), ...aiRows];
-
       const MAX = 4;
+      const incoming = [...(tplPalette ? [tplPalette] : []), ...aiRows];
+      let visible;
+      if (paletteSuggestionsLocked && displayedSuggestedPalettes.length) {
+        const merged = [...displayedSuggestedPalettes];
+        const seen = new Set(merged.map(paletteKey).filter(Boolean));
+        incoming.forEach(palette => {
+          const key = paletteKey(palette);
+          if (!key || seen.has(key) || merged.length >= MAX) return;
+          seen.add(key);
+          merged.push(palette);
+        });
+        displayedSuggestedPalettes = merged.slice(0, MAX);
+        visible = displayedSuggestedPalettes;
+      } else {
+        visible = incoming.slice(0, MAX);
+        displayedSuggestedPalettes = visible.slice();
+      }
+
       const populated = visible.filter(Boolean).length;
-      const totalAvailable = Math.max(populated, Math.min(MAX, (tplPalette ? 1 : 0) + aiRows.length));
+      const totalAvailable = Math.max(populated, Math.min(MAX, incoming.length));
       const dataLoaded = !!(resolvedData);
       if (msg) {
         if (populated >= MAX) {
           msg.style.display = "none";
         } else if (dataLoaded) {
-          msg.textContent = populated === 0 ? "(No palettes found in analysis)" : `(${populated} of ${totalAvailable} loaded)`;
+          msg.textContent = populated === 0
+            ? "(No palettes found in analysis)"
+            : paletteSuggestionsLocked
+              ? `(${populated} visible; late arrivals append only)`
+              : `(${populated} of ${totalAvailable} loaded)`;
           msg.style.display = "block";
         } else {
           msg.textContent = "(Thinking\u2026)";
@@ -3125,10 +3162,12 @@
         cb.disabled = empty;
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
+        if (!empty && selectedSuggestedPaletteKey && paletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
         cb.addEventListener("change", () => {
           if (cb.checked) {
             userHasSelectedPalette = true;
             paletteSuggestionsLocked = true;
+            selectedSuggestedPaletteKey = paletteKey(palette);
             applyColors(palette.colors);
           }
         });
@@ -3307,6 +3346,7 @@
       if (!msg || msg.type !== "colorPick") return;
       userHasSelectedPalette = true;
       paletteSuggestionsLocked = true;
+      selectedSuggestedPaletteKey = "";
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
     });
@@ -3335,6 +3375,7 @@
 
         userHasSelectedPalette = true;
         paletteSuggestionsLocked = true;
+        selectedSuggestedPaletteKey = "";
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
 

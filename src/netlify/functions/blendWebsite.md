@@ -14,11 +14,11 @@ CRITICAL RULES
 - Base visual_direction on design_spec_json mood and composition, not on personal style defaults.
 - Incorporate color_spec_json as the authoritative five-slot color palette.
 - Interpret the slots by prominence:
-  - primary   = slot 1, dominant masthead color
-  - secondary = slot 2, second most dominant distinct masthead color
-  - accent    = slot 3, third distinct color
-  - dark      = slot 4, fourth supporting color
-  - light     = slot 5, fifth supporting color
+  - slot1 = dominant masthead color
+  - slot2 = second most dominant distinct masthead color
+  - slot3 = third distinct color
+  - slot4 = fourth supporting color
+  - slot5 = fifth supporting color
 - Generate a small thumbnail photo for each project in core_content_json and the top two experiences, if they exist.
 - Plan specific placement and presentation for each visual in visual_placements.  Make sure the images are small in presentation (roughly 1-2 inches square).
 
@@ -42,11 +42,11 @@ SCHEMA
     "animation_guidance": [],
     "template_inspiration_notes": "",
     "color_application": {
-      "primary_use": "",
-      "secondary_use": "",
-      "accent_use": "",
-      "dark_use": "",
-      "light_use": "",
+      "slot_1_use": "",
+      "slot_2_use": "",
+      "slot_3_use": "",
+      "slot_4_use": "",
+      "slot_5_use": "",
       "gradient_notes": ""
     },
     "visual_placements": [

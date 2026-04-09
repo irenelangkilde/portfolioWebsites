@@ -237,11 +237,41 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
+const COLOR_SLOT_KEYS = ["slot1", "slot2", "slot3", "slot4", "slot5"];
+const LEGACY_COLOR_KEYS = ["primary", "secondary", "accent", "dark", "light"];
+
+function normalizeColorSpec(colorSpec = {}) {
+  const normalized = {
+    use_sample_colors: !!colorSpec?.use_sample_colors
+  };
+  COLOR_SLOT_KEYS.forEach((slotKey, index) => {
+    const legacyKey = LEGACY_COLOR_KEYS[index];
+    const value = colorSpec?.[slotKey] ?? colorSpec?.[legacyKey] ?? null;
+    normalized[slotKey] = value;
+    normalized[legacyKey] = value;
+  });
+  if (colorSpec?.note) normalized.note = colorSpec.note;
+  return normalized;
+}
+
+function serializeColorSpecForAI(colorSpec = {}) {
+  const normalized = normalizeColorSpec(colorSpec);
+  return {
+    use_sample_colors: !!normalized.use_sample_colors,
+    slot1: normalized.slot1,
+    slot2: normalized.slot2,
+    slot3: normalized.slot3,
+    slot4: normalized.slot4,
+    slot5: normalized.slot5
+  };
+}
+
 // ─── Post-render CSS color injection for Mustache templates ──────────────────
 // Replaces --color-* hex values in the rendered HTML using the user's colorSpec
 // and the template's embedded default_color_scheme metadata comment.
 function injectCssColors(html, colorSpec, templateHtml) {
-  if (!colorSpec || colorSpec.use_sample_colors) return html;
+  const normalizedColorSpec = normalizeColorSpec(colorSpec);
+  if (!normalizedColorSpec || normalizedColorSpec.use_sample_colors) return html;
   // Parse --color-* variable declarations with their adjacent numbered role comments.
   // Slots 1–5 map directly to primary/secondary/accent/dark/light in order.
   const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
@@ -263,7 +293,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   if (!Object.keys(varToSlot).length) return html;
   return html.replace(/(--color-[\w-]+)(\s*:\s*)#[0-9a-fA-F]{3,8}/g, (match, varName, colon) => {
     const slot = varToSlot[varName];
-    return (slot && colorSpec[slot]) ? varName + colon + colorSpec[slot] : match;
+    return (slot && normalizedColorSpec[slot]) ? varName + colon + normalizedColorSpec[slot] : match;
   });
 }
 
@@ -277,6 +307,7 @@ function parseTemplateMetadata(html) {
 
 // ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
 function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
+  const normalizedColorSpec = normalizeColorSpec(colorSpec);
   const attrs   = designSpec?.exemplary_attributes || {};
   const factors = designSpec?.design_factors || {};
   const density            = designSpec?.density            || attrs.section_density || factors.density || "medium";
@@ -293,22 +324,22 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
     || (Array.isArray(motifs?.rendering_style) ? motifs.rendering_style[0] : motifs?.rendering_style)
     || "clean editorial vector";
 
-  const isUseSampleColors = colorSpec?.use_sample_colors;
+  const isUseSampleColors = normalizedColorSpec?.use_sample_colors;
   const colorApp = isUseSampleColors
     ? {
-        primary_use:   "Preserve slot 1 as the masthead's most dominant color.",
-        secondary_use: "Preserve slot 2 as the second most dominant non-derivable masthead color.",
-        accent_use:    "Preserve slot 3 as the third distinct headline, section, or button color.",
-        dark_use:      "Preserve slot 4 as a lower-prominence orthogonal accent or text color.",
-        light_use:     "Preserve slot 5 as the least-prominent orthogonal accent or text color.",
+        slot_1_use:   "Preserve slot 1 as the masthead's most dominant color.",
+        slot_2_use:   "Preserve slot 2 as the second most dominant non-derivable masthead color.",
+        slot_3_use:   "Preserve slot 3 as the third distinct headline, section, or button color.",
+        slot_4_use:   "Preserve slot 4 as a lower-prominence orthogonal accent or text color.",
+        slot_5_use:   "Preserve slot 5 as the least-prominent orthogonal accent or text color.",
         gradient_notes: "Use template's existing gradient patterns"
       }
     : {
-        primary_use:   `${colorSpec?.primary || "slot 1"} — the most dominant masthead color, either foreground or background.`,
-        secondary_use: `${colorSpec?.secondary || "slot 2"} — the second most dominant masthead color, distinct from slot 1.`,
-        accent_use:    `${colorSpec?.accent || "slot 3"} — the third distinct headline, section, or button color.`,
-        dark_use:      `${colorSpec?.dark || "slot 4"} — a lower-prominence orthogonal accent or text color.`,
-        light_use:     `${colorSpec?.light || "slot 5"} — the least-prominent orthogonal accent or text color.`,
+        slot_1_use:   `${normalizedColorSpec?.slot1 || "slot 1"} — the most dominant masthead color, either foreground or background.`,
+        slot_2_use:   `${normalizedColorSpec?.slot2 || "slot 2"} — the second most dominant masthead color, distinct from slot 1.`,
+        slot_3_use:   `${normalizedColorSpec?.slot3 || "slot 3"} — the third distinct headline, section, or button color.`,
+        slot_4_use:   `${normalizedColorSpec?.slot4 || "slot 4"} — a lower-prominence orthogonal accent or text color.`,
+        slot_5_use:   `${normalizedColorSpec?.slot5 || "slot 5"} — the least-prominent orthogonal accent or text color.`,
         gradient_notes: `Preserve the template's gradient structure while making slots 1–3 carry most of the visual weight and slots 4–5 act as supporting contrast colors.`
       };
 
@@ -923,13 +954,14 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     ? `<img src="${headshotName}" alt="${name}" class="headshot" />`
     : "";
 
-  const theme = {
-    primary:   colorSpec.primary   || "#4E70F1",
-    secondary: colorSpec.secondary || "#FBAB9C",
-    accent:    colorSpec.accent    || "#8DE0FF",
-    dark:      colorSpec.dark      || "#0b1220",
-    light:     colorSpec.light     || "#eaf0ff",
-  };
+  const theme = normalizeColorSpec({
+    slot1: colorSpec.slot1 ?? colorSpec.primary ?? "#4E70F1",
+    slot2: colorSpec.slot2 ?? colorSpec.secondary ?? "#FBAB9C",
+    slot3: colorSpec.slot3 ?? colorSpec.accent ?? "#8DE0FF",
+    slot4: colorSpec.slot4 ?? colorSpec.dark ?? "#0b1220",
+    slot5: colorSpec.slot5 ?? colorSpec.light ?? "#eaf0ff",
+    use_sample_colors: colorSpec.use_sample_colors
+  });
 
   // Cap sample HTML to avoid exceeding model context
   const cappedSampleHtml = sampleHtml.length > 80000
@@ -1018,7 +1050,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       .replace("{{HERO_IMAGE_INSTRUCTION}}", mastheadImageInstruction)
       .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts,      null, 2))
       .replace("{{RESOLVED_STRATEGY_JSON}}", JSON.stringify(resolvedStrategy, null, 2))
-      .replace("{{COLOR_SPEC_JSON}}",      JSON.stringify(theme,            null, 2))
+      .replace("{{COLOR_SPEC_JSON}}",      JSON.stringify(serializeColorSpecForAI(theme), null, 2))
       .replace("{{SAMPLE_HTML}}",          cappedSampleHtml);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
@@ -1043,6 +1075,8 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   let siteHtml = cleanHtml(r.text || "");
   const truncated = !siteHtml.includes("</html>");
   const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
+  const stripHeroBgImageLayer = (html) =>
+    html.replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
 
   // If the sample indicates a raster masthead image, generate one with DALL-E.
   // Prefer replacing the explicit placeholder when the model emitted it; otherwise
@@ -1069,7 +1103,10 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       if (openaiKey) {
         const { major, specialization } = page1;
         const imagePrompt =
-          `Generate a professional masthead image for a portfolio website of a person majoring in ${major} and specializing in ${specialization}.`;
+          `Generate a professional masthead background image for a portfolio website of a person majoring in ${major} and specializing in ${specialization}. ` +
+          `It must read clearly behind headline text, with strong midtone and dark-value contrast, no washed-out white background, ` +
+          `no large pale blank areas, and a visually distinct engineering/scientific subject. ` +
+          `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay.`;
         console.log(
           `[buildWebsite-background] Masthead image prompt inputs: ${JSON.stringify({
             major,
@@ -1106,9 +1143,11 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
             console.log("[buildWebsite-background] Injected generated masthead image via #braid-img placeholder");
           } else if (siteHtml.includes(mastheadPlaceholderUrl)) {
             siteHtml = siteHtml.replaceAll(mastheadPlaceholderUrl, dataUri);
+            siteHtml = stripHeroBgImageLayer(siteHtml);
             console.log(`[buildWebsite-background] Replaced masthead placeholder filename in-place: ${mastheadPlaceholderUrl}`);
           } else if (sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)) {
             siteHtml = siteHtml.replaceAll(sampleRasterCssUrl, dataUri);
+            siteHtml = stripHeroBgImageLayer(siteHtml);
             console.log(`[buildWebsite-background] Replaced sample masthead CSS URL in-place: ${sampleRasterCssUrl}`);
           } else if (/--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)) {
             siteHtml = siteHtml.replace(
@@ -1145,12 +1184,16 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     token_report: tokenReport
   }), { ttl: 3600 });
 
-  await logUsageEvent(userId, {
-    event_type: "braid_generation",
-    provider,
-    model: r.model,
-    success: !!siteHtml
-  });
+  try {
+    await logUsageEvent(userId, {
+      event_type: "generation",
+      provider,
+      model: r.model,
+      success: !!siteHtml
+    });
+  } catch (usageErr) {
+    console.error("Non-fatal braid usage logging error:", usageErr?.message || usageErr);
+  }
 }
 
 // ─── Main pipeline ───────────────────────────────────────────────────────────
@@ -1304,7 +1347,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 
   const colorSpec = page2?.use_sample_colors
     ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
-    : { ...theme, use_sample_colors: false };
+    : normalizeColorSpec({ ...theme, use_sample_colors: false });
 
   // Enrich user-supplied artifacts with source and colorized fields.
   const COLORIZABLE_TYPES = new Set(["image", "html", "text"]);
@@ -1629,7 +1672,7 @@ export async function handler(event) {
       const templateMode      = body.templateMode || "none";
       const bridgePrompt = loadPromptFile("bridgeContentAndDesign.md")
         .replace("{{CONTENT_JSON}}",   JSON.stringify(contentJson, null, 2))
-        .replace("{{COLOR_SPEC_JSON}}", JSON.stringify(colorSpec, null, 2))
+        .replace("{{COLOR_SPEC_JSON}}", JSON.stringify(serializeColorSpecForAI(colorSpec), null, 2))
         .replace("{{TEMPLATE_MODE}}",  templateMode)
         .replace("{{EXAMPLE_WEBSITE}}", templateHtmlInput);
       const r = await callAI(provider, creds, { userText: bridgePrompt, maxTokens: 20000 });
@@ -1653,13 +1696,13 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    const theme = {
-      primary:   page2?.theme?.primary   || "#4E70F1",
-      secondary: page2?.theme?.secondary || "#FBAB9C",
-      accent:    page2?.theme?.accent    || "#8DE0FF",
-      dark:      page2?.theme?.dark      || "#0b1220",
-      light:     page2?.theme?.light     || "#eaf0ff"
-    };
+    const theme = normalizeColorSpec({
+      slot1: page2?.theme?.slot1 ?? page2?.theme?.primary ?? "#4E70F1",
+      slot2: page2?.theme?.slot2 ?? page2?.theme?.secondary ?? "#FBAB9C",
+      slot3: page2?.theme?.slot3 ?? page2?.theme?.accent ?? "#8DE0FF",
+      slot4: page2?.theme?.slot4 ?? page2?.theme?.dark ?? "#0b1220",
+      slot5: page2?.theme?.slot5 ?? page2?.theme?.light ?? "#eaf0ff"
+    });
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);
     const pdfBuffer  = Buffer.from(resumePdfBase64, "base64");

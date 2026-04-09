@@ -29,15 +29,14 @@ Reproduce the sample website's visual structure as closely as possible:
 PART 2 — COLOR SYSTEM  (orthogonal CSS variables)
 ═══════════════════════════════════════════════════
 
-The `color_spec` values are ordered palette slots, not old semantic roles.
-Treat the variable names as historical only:
-  - `primary`   = slot 1, the most dominant masthead color
-  - `secondary` = slot 2, the second most dominant distinct masthead color
-  - `accent`    = slot 3, the third most dominant distinct color
-  - `dark`      = slot 4, a lower-prominence orthogonal supporting color
-  - `light`     = slot 5, the least-prominent orthogonal supporting color
+The `color_spec` values are ordered palette slots with neutral names:
+  - `slot1` = the most dominant masthead color
+  - `slot2` = the second most dominant distinct masthead color
+  - `slot3` = the third most dominant distinct color
+  - `slot4` = a lower-prominence orthogonal supporting color
+  - `slot5` = the least-prominent orthogonal supporting color
 
-Do NOT infer that `dark` must be a background or that `light` must be a surface fill.
+Do NOT infer that slot 4 must be a background or that slot 5 must be a surface fill.
 If slot 5 is gray, it should remain a low-prominence supporting gray unless the sample itself
 clearly uses that exact supporting role in a visible accent. Slots 4 and 5 must not take over
 the masthead or become the page's dominant background unless the sample's layout truly requires it.
@@ -51,20 +50,20 @@ Step 1 — Analyze the sample HTML's color usage and identify five prominence sl
 
 Step 2 — In :root, under the comment /* ── Sample palette (reference) ── */,
   declare the five colors extracted from the sample as documentation:
-    --bp-primary-ref:   <hex>;
-    --bp-secondary-ref: <hex>;
-    --bp-accent-ref:    <hex>;
-    --bp-dark-ref:      <hex>;
-    --bp-light-ref:     <hex>;
+    --bp-slot-1-ref: <hex>;
+    --bp-slot-2-ref: <hex>;
+    --bp-slot-3-ref: <hex>;
+    --bp-slot-4-ref: <hex>;
+    --bp-slot-5-ref: <hex>;
 
 Step 3 — Express EVERY other color in the stylesheet exclusively as color-mix()
-  combining only the five --bp-* user variables. Use oklch color space for perceptual
+  combining only the five --bp-slot-* user variables. Use oklch color space for perceptual
   uniformity. Examples:
-    card border:      color-mix(in oklch, var(--bp-primary) 20%, var(--bp-light))
-    hero overlay:     color-mix(in oklch, var(--bp-dark) 80%, var(--bp-primary))
-    muted text:       color-mix(in oklch, var(--bp-dark) 40%, var(--bp-light))
-    section alt-bg:   color-mix(in oklch, var(--bp-dark) 92%, var(--bp-primary))
-    nav blur-bg:      color-mix(in oklch, var(--bp-dark) 75%, transparent)
+    card border:      color-mix(in oklch, var(--bp-slot-4) 35%, var(--bp-slot-1))
+    hero overlay:     color-mix(in oklch, transparent 35%, var(--bp-slot-1))
+    muted text:       color-mix(in oklch, var(--bp-slot-4) 55%, var(--bp-slot-2))
+    section alt-bg:   color-mix(in oklch, var(--bp-slot-1) 82%, var(--bp-slot-4))
+    nav blur-bg:      color-mix(in oklch, var(--bp-slot-1) 70%, transparent)
   Exceptions: keep red (#ef4444 range) for error/danger states and green (#22c55e range)
   for success indicators as literals — do not express these as color-mix().
 
@@ -75,9 +74,12 @@ Step 4 — Add this line inside :root so a hero background image can be injected
 Usage constraints:
   - Keep slots 1–3 carrying most of the visual weight.
   - Use slots 4–5 sparingly for borders, subtle text, outlines, quiet chips, panel tint, or contrast support.
+  - Large-area backgrounds, masthead washes, and major panels should usually derive from slots 1–3, not slot 5.
   - Do not let slot 5 become a page-wide wash, dominant panel, or masthead background unless the sample
     itself makes the fifth supporting color dominant, which should be rare.
   - Preserve the sample's hierarchy of prominence even after recoloring.
+  - If the sample contains a raster masthead image, keep that image visibly legible under the overlay; do not bury it
+    beneath opaque white, cream, or pale-gray layers.
 
 ═══════════════════════════════════════════════════
 PART 3 — CONTENT SUBSTITUTION
@@ -127,7 +129,8 @@ Headshot placeholder monogram:
   When {{HEADSHOT_HTML}} is empty, render a circular monogram element that:
   - Displays the candidate's initials ({{CANDIDATE_INITIALS}}) in large, bold text.
   - Uses a radial-gradient background blending --bp-primary and --bp-accent.
-  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--bp-primary) 50%, var(--bp-light)).
+  - Has a radial-gradient background blending --bp-slot-1 and --bp-slot-3.
+  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--bp-slot-1) 50%, var(--bp-slot-5)).
   - Carries a title attribute: title="Double-click to add your headshot"
   - Has a CSS class "headshot-placeholder" and an id="headshotPlaceholder".
   - Is sized to match where a real headshot photo would sit (min 96px, typically 120–160px diameter).
@@ -147,7 +150,7 @@ Maximum visual garnishment:
   - If the sample has any CSS animation (@keyframes), reproduce it.
   - Section dividers, clip-path cuts, and ::before/::after pseudo-element accents must
     all be preserved and adapted to the new palette.
-  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of --bp-primary.
+  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of --bp-slot-1.
   - The goal: a viewer should say "wow" within 3 seconds of loading the page.
 
 ═══════════════════════════════════════════════════

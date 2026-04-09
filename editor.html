@@ -719,6 +719,13 @@
 
     // ── CSS variable extraction ────────────────────────────────────────────────
     const CSS_VAR_NAMES = ["primary", "secondary", "accent", "dark", "light"];
+    const SLOT_ALIAS_MAP = {
+      primary: "slot1",
+      secondary: "slot2",
+      accent: "slot3",
+      dark: "slot4",
+      light: "slot5"
+    };
     const cssVarMap = {};   // slot name → CSS variable name used for live overrides
     const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
       .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
@@ -752,7 +759,8 @@
         allVars[m[1].trim().toLowerCase()] = m[2].trim().replace(/^['"]|['"]$/g, "");
       const vars = {};
       for (const name of CSS_VAR_NAMES) {
-        for (const c of [name, `bp-${name}`, `${name}-color`, `color-${name}`]) {
+        const slotAlias = SLOT_ALIAS_MAP[name];
+        for (const c of [name, `bp-${name}`, `${name}-color`, `color-${name}`, slotAlias, `bp-${slotAlias}`, `bp-slot-${slotAlias.slice(-1)}`, `color-${slotAlias}`]) {
           if (allVars[c] !== undefined) { vars[name] = allVars[c]; cssVarMap[name] = `--${c}`; break; }
         }
       }
@@ -934,7 +942,7 @@
     const byRole = extractCssVarsByRoleComment(cssText);
     const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
     for (const name of CSS_VAR_NAMES) {
-      const preferred = page4Colors?.[name];
+      const preferred = page4Colors?.[name] || page4Colors?.[SLOT_ALIAS_MAP[name]];
       const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
       currentColors[name] = hex;
       const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
@@ -952,7 +960,7 @@
     // ── Reset colors ───────────────────────────────────────────────────────────
     // Reset should prefer the exact page-4 palette the user submitted.
     const initialColors = page4Colors
-      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || currentColors[name] || "#000000")]))
+      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || page4Colors[SLOT_ALIAS_MAP[name]] || currentColors[name] || "#000000")]))
       : { ...currentColors };
     document.getElementById("btnResetColors").onclick = () => {
       for (const name of CSS_VAR_NAMES) {
