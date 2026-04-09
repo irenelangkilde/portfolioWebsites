@@ -270,6 +270,68 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function findBalancedElementByClass(html, className, startIndex = 0) {
+  const openRe = new RegExp(`<([a-z0-9:-]+)\\b[^>]*class=["'][^"']*\\b${escapeRegExp(className)}\\b[^"']*["'][^>]*>`, "ig");
+  openRe.lastIndex = startIndex;
+  const openMatch = openRe.exec(html);
+  if (!openMatch) return null;
+  const tagName = openMatch[1];
+  const openIndex = openMatch.index;
+  const tagRe = new RegExp(`<\\/?${escapeRegExp(tagName)}\\b[^>]*>`, "ig");
+  tagRe.lastIndex = openIndex;
+  let depth = 0;
+  let tagMatch;
+  while ((tagMatch = tagRe.exec(html)) !== null) {
+    const token = tagMatch[0];
+    const isClose = /^<\//.test(token);
+    if (!isClose && !/\/>$/.test(token)) depth += 1;
+    else if (isClose) depth -= 1;
+    if (depth === 0) {
+      return {
+        start: openIndex,
+        end: tagRe.lastIndex,
+        html: html.slice(openIndex, tagRe.lastIndex),
+        tagName
+      };
+    }
+  }
+  return null;
+}
+
+function findBalancedElementByTagContaining(html, tagNames, innerPattern, startIndex = 0) {
+  const tagsAlt = tagNames.map(escapeRegExp).join("|");
+  const openRe = new RegExp(`<(${tagsAlt})\\b[^>]*>`, "ig");
+  openRe.lastIndex = startIndex;
+  let openMatch;
+  while ((openMatch = openRe.exec(html)) !== null) {
+    const tagName = openMatch[1];
+    const openIndex = openMatch.index;
+    const tagRe = new RegExp(`<\\/?${escapeRegExp(tagName)}\\b[^>]*>`, "ig");
+    tagRe.lastIndex = openIndex;
+    let depth = 0;
+    let tagMatch;
+    while ((tagMatch = tagRe.exec(html)) !== null) {
+      const token = tagMatch[0];
+      const isClose = /^<\//.test(token);
+      if (!isClose && !/\/>$/.test(token)) depth += 1;
+      else if (isClose) depth -= 1;
+      if (depth === 0) {
+        const blockHtml = html.slice(openIndex, tagRe.lastIndex);
+        if (innerPattern.test(blockHtml)) {
+          return {
+            start: openIndex,
+            end: tagRe.lastIndex,
+            html: blockHtml,
+            tagName
+          };
+        }
+        break;
+      }
+    }
+  }
+  return null;
+}
+
 // ─── Post-render CSS color injection for Mustache templates ──────────────────
 // Replaces --color-* hex values in the rendered HTML using the user's colorSpec
 // and the template's embedded default_color_scheme metadata comment.
@@ -978,6 +1040,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   let sampleRasterCssUrl = "";
   let sampleRasterCssSelector = "";
   let sampleRasterBackgroundDecl = "";
+  let sampleHeaderContainsHero = false;
   const mastheadPlaceholderUrl = "braid-masthead.png";
   const mastheadImageInstruction = (() => {
     const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
@@ -1004,11 +1067,13 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       `[buildWebsite-background] Header/hero raster detection: ${JSON.stringify({
         hasHeaderRegion: !!headerMatch,
         hasHeroRegion: !!heroMatch,
+        sampleHeaderContainsHero: /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || ""),
         foundRasterImgTag: !!rasterImgMatch,
         foundRasterCssBackground: !!rasterBgMatch,
         matchedRasterCssUrl: typeof rasterBgMatch === "string" ? rasterBgMatch : ""
       })}`
     );
+    sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
 
     sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
 
@@ -1085,6 +1150,43 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
   const stripHeroBgImageLayer = (html) =>
     html.replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
+  const moveGeneratedHeroIntoHeader = (html) => {
+    if (!sampleHeaderContainsHero) return html;
+    const headerCloseMatch = html.match(/<\/header>/i);
+    if (!headerCloseMatch || headerCloseMatch.index == null) return html;
+    const headerCloseIdx = headerCloseMatch.index;
+    if (/<h1\b/i.test(html.slice(0, headerCloseIdx))) return html;
+    let heroBlock = findBalancedElementByClass(html, "hero", headerCloseIdx);
+    if (!heroBlock || heroBlock.start < headerCloseIdx) {
+      heroBlock = findBalancedElementByTagContaining(
+        html,
+        ["section", "div"],
+        /<h1\b[\s\S]*?(?:<a\b|<button\b|class=["'][^"']*(?:cta|pill|chip|card)[^"']*["'])/i,
+        headerCloseIdx
+      );
+    }
+    if (!heroBlock || heroBlock.start < headerCloseIdx) return html;
+    const withoutHero = html.slice(0, heroBlock.start) + html.slice(heroBlock.end);
+    const insertIdx = withoutHero.search(/<\/header>/i);
+    if (insertIdx === -1) return html;
+    console.log(`[buildWebsite-background] Moved generated hero block inside header to match sample structure using <${heroBlock.tagName}>`);
+    return withoutHero.slice(0, insertIdx) + "\n" + heroBlock.html + "\n" + withoutHero.slice(insertIdx);
+  };
+  const injectHeroBackgroundCleanup = (html) => {
+    if (!sampleHeaderContainsHero) return html;
+    const overrideCss = `
+<style id="braid-masthead-fix">
+header .hero,
+header > section:has(h1),
+header > div:has(h1){background:transparent !important;background-image:none !important;}
+header .hero::before,header .hero::after,
+header > section:has(h1)::before,header > section:has(h1)::after,
+header > div:has(h1)::before,header > div:has(h1)::after{background:none !important;background-image:none !important;box-shadow:none !important;}
+</style>`;
+    if (html.includes('id="braid-masthead-fix"')) return html;
+    if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${overrideCss}\n</head>`);
+    return overrideCss + html;
+  };
   const enforceSampleMastheadBackground = (html, dataUri) => {
     if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
     const normalizedBackgroundDecl = sampleRasterBackgroundDecl.replace(
@@ -1103,7 +1205,9 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       }
       return `${open}${nextBody}${close}`;
     });
-    const stripped = stripHeroBgImageLayer(updated);
+    let stripped = stripHeroBgImageLayer(updated);
+    stripped = moveGeneratedHeroIntoHeader(stripped);
+    stripped = injectHeroBackgroundCleanup(stripped);
     console.log(`[buildWebsite-background] Reapplied sample masthead background declaration for selector: ${sampleRasterCssSelector}`);
     return stripped;
   };
