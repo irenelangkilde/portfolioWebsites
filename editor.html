@@ -228,29 +228,6 @@
     #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
     #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
 
-    /* ── View HTML modal ──────────────────────────────────────────── */
-    #htmlModal {
-      display: none; position: fixed; inset: 0; z-index: 100000;
-      background: rgba(0,0,0,.75); align-items: center; justify-content: center;
-    }
-    #htmlModal.open { display: flex; }
-    #htmlModalBox {
-      background: #0f1929; border: 1px solid rgba(255,255,255,.15); border-radius: 12px;
-      width: min(900px, 94vw); height: 80vh; display: flex; flex-direction: column; overflow: hidden;
-    }
-    #htmlModalHeader {
-      display: flex; align-items: center; gap: 10px;
-      padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,.1); flex-shrink: 0;
-    }
-    #htmlModalHeader span { font-size: 13px; font-weight: 600; color: rgba(234,240,255,.8); flex: 1; }
-    #htmlModalBody { flex: 1; overflow: auto; }
-    #htmlModalBody textarea {
-      width: 100%; height: 100%; border: none; outline: none; resize: none;
-      background: #0f1929; color: #c9d1e3;
-      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-      font-size: 12.5px; line-height: 1.6; padding: 14px 18px;
-    }
-
     /* ── Unified portfolio panel ─────────────────────────────── */
     #portfolioPanelOverlay {
       display: none; position: fixed; inset: 0; z-index: 200001;
@@ -410,6 +387,11 @@
     }
     #imgReplacePreview { max-height: 100px; max-width: 100%; object-fit: contain; }
     #imgReplaceBox label { font-size: 12px; color: rgba(234,240,255,.6); margin-bottom: -6px; }
+    .img-replace-check {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(234,240,255,.82);
+    }
+    .img-replace-check input { accent-color: #667eea; }
     #imgReplaceUrl {
       padding: 7px 10px; border-radius: 6px;
       border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
@@ -429,6 +411,9 @@
     }
     #imgReplaceCancel { background: rgba(255,255,255,.1); color: #eaf0ff; }
     #imgReplaceCancel:hover { background: rgba(255,255,255,.2); }
+    #imgReplaceRegenerate { background: rgba(118,176,34,.9); color: #fff; }
+    #imgReplaceRegenerate:hover { background: rgba(102,154,28,.95); }
+    #imgReplaceRegenerate[disabled] { opacity: .55; cursor: wait; }
     #imgReplaceApply  { background: #667eea; color: #fff; }
     #imgReplaceApply:hover  { background: #5568d4; }
   </style>
@@ -455,7 +440,6 @@
       <button class="tbtn"             id="btnSplit">Split</button>
       <button class="tbtn"             id="btnCode">Code</button>
     </div>
-    <button class="tbtn tbtn-ghost"   id="btnViewHtml">View HTML</button>
     <button class="tbtn tbtn-primary" id="btnDownload">Download HTML</button>
     <button class="tbtn tbtn-success" id="btnPublish">Publish</button>
     <div id="editorAccount" aria-live="polite">
@@ -560,19 +544,6 @@
     </div>
   </div>
 
-  <div id="htmlModal">
-    <div id="htmlModalBox">
-      <div id="htmlModalHeader">
-        <span>Generated HTML</span>
-        <button class="tbtn tbtn-ghost" id="btnCopyHtml">Copy</button>
-        <button class="tbtn tbtn-ghost" id="btnCloseHtml">✕</button>
-      </div>
-      <div id="htmlModalBody">
-        <textarea id="htmlModalText" spellcheck="false" readonly></textarea>
-      </div>
-    </div>
-  </div>
-
   <!-- Unified publish / manage panel -->
   <div id="portfolioPanelOverlay">
     <div id="portfolioPanelBox">
@@ -650,8 +621,13 @@
       <input type="file" id="imgReplaceFile" accept="image/*" />
       <label>Max width <span style="color:rgba(234,240,255,.35);font-weight:400">(e.g. 1.5in, 300px, 50%, 100%)</span></label>
       <input type="text" id="imgReplaceMaxWidth" placeholder="100%" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#eaf0ff;font-size:12px;outline:none;width:100%;" />
+      <label class="img-replace-check">
+        <input type="checkbox" id="imgReplaceAsBackground" />
+        <span>Insert/replace background image</span>
+      </label>
       <div class="img-replace-actions">
         <button id="imgReplaceCancel">Cancel</button>
+        <button id="imgReplaceRegenerate" type="button">Regenerate (costs 1 credit)</button>
         <button id="imgReplaceApply">Apply</button>
       </div>
     </div>
@@ -704,6 +680,28 @@
         }
       } catch {}
       return window.__portfolioPage4Colors || null;
+    }
+
+    function getImageGenerationContext() {
+      try {
+        const stored = localStorage.getItem("portfolio_image_generation_context");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && window.opener.__portfolioImageGenerationContext) {
+          return window.opener.__portfolioImageGenerationContext;
+        }
+      } catch {}
+      return window.__portfolioImageGenerationContext || null;
+    }
+
+    function getAnonCreditsUsed() {
+      try { return parseInt(localStorage.getItem("anon_credits_used") || "0", 10); }
+      catch { return 0; }
+    }
+
+    function incrementAnonCredits() {
+      try { localStorage.setItem("anon_credits_used", String(getAnonCreditsUsed() + 1)); } catch {}
     }
 
     const fullHtml = getPreviewHtml();
@@ -812,10 +810,63 @@
     let imgReplaceTarget  = null;
     let imgReplaceIsNew   = false;  // true when dialog was opened for a freshly inserted placeholder
     let imgReplacePending = null;   // data URI from a file upload, waiting for Apply
+    let imgRegenerateInProgress = false;
+    let imgReplaceBackgroundTarget = null;
+
+    function extractUrlFromBackgroundImage(value) {
+      const match = String(value || "").match(/url\((['"]?)(.*?)\1\)/i);
+      return match?.[2] || "";
+    }
+
+    function extractCurrentBackgroundSrc(el) {
+      if (!el) return "";
+      return extractUrlFromBackgroundImage(el.style.backgroundImage || getComputedStyle(el).backgroundImage || "");
+    }
+
+    function getSelectionImageContainer() {
+      try {
+        const doc = frame.contentDocument;
+        const sel = doc?.getSelection?.();
+        if (!doc || !sel || !sel.rangeCount) return doc?.querySelector("header, section, article, main, aside, div") || doc?.body || null;
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        if (!node) return doc.body || null;
+        return node.closest?.("header, section, article, main, aside, div") || doc.body || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function isBackgroundMode() {
+      return !!document.getElementById("imgReplaceAsBackground")?.checked;
+    }
+
+    function syncImageDialogModePreview() {
+      const preview = document.getElementById("imgReplacePreview");
+      const urlInput = document.getElementById("imgReplaceUrl");
+      const maxWidthInput = document.getElementById("imgReplaceMaxWidth");
+      if (isBackgroundMode()) {
+        const bgSrc = imgReplacePending || extractUrlFromBackgroundImage(
+          imgReplaceBackgroundTarget
+            ? (imgReplaceBackgroundTarget.style.backgroundImage || getComputedStyle(imgReplaceBackgroundTarget).backgroundImage)
+            : ""
+        );
+        preview.src = bgSrc || "";
+        urlInput.value = imgReplacePending ? "" : (bgSrc && !bgSrc.startsWith("data:") ? bgSrc : "");
+        maxWidthInput.disabled = true;
+        maxWidthInput.style.opacity = ".45";
+      } else {
+        preview.src = imgReplacePending || (imgReplaceTarget?.src || "");
+        urlInput.value = imgReplacePending ? "" : (((imgReplaceTarget?.src || "").startsWith("data:")) ? "" : (imgReplaceTarget?.src || ""));
+        maxWidthInput.disabled = false;
+        maxWidthInput.style.opacity = "1";
+      }
+    }
 
     function openImgReplaceDialog(imgEl, isNew = false) {
       imgReplaceTarget = imgEl;
       imgReplaceIsNew  = isNew;
+      imgReplaceBackgroundTarget = getSelectionImageContainer();
       const overlay = document.getElementById("imgReplaceOverlay");
       const preview = document.getElementById("imgReplacePreview");
       const urlInput = document.getElementById("imgReplaceUrl");
@@ -823,7 +874,15 @@
       urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (isNew ? "" : (imgEl.src || ""));
       document.getElementById("imgReplaceFile").value = "";
       document.getElementById("imgReplaceMaxWidth").value = imgEl.style.maxWidth || "100%";
+      const existingBgSrc = extractCurrentBackgroundSrc(imgReplaceBackgroundTarget);
+      document.getElementById("imgReplaceAsBackground").checked = !!(isNew && existingBgSrc);
       imgReplacePending = null;
+      const regenBtn = document.getElementById("imgReplaceRegenerate");
+      if (regenBtn) {
+        regenBtn.disabled = false;
+        regenBtn.textContent = "Regenerate (costs 1 credit)";
+      }
+      syncImageDialogModePreview();
       overlay.classList.add("open");
       urlInput.focus();
     }
@@ -836,21 +895,145 @@
       }
       imgReplaceTarget = null;
       imgReplaceIsNew  = false;
+      imgRegenerateInProgress = false;
+      imgReplaceBackgroundTarget = null;
     }
 
     function applyImgReplace(newSrc) {
-      if (!imgReplaceTarget || !newSrc) return;
+      if (!newSrc) return;
       try {
-        imgReplaceTarget.src = newSrc;
-        const maxW = document.getElementById("imgReplaceMaxWidth").value.trim();
-        imgReplaceTarget.style.maxWidth = maxW || "100%";
-        imgReplaceTarget.style.height = "auto";
+        if (isBackgroundMode()) {
+          const bgTarget = imgReplaceBackgroundTarget || getSelectionImageContainer();
+          if (!bgTarget) throw new Error("No background target found.");
+          bgTarget.style.backgroundImage = `url("${newSrc}")`;
+          bgTarget.style.backgroundSize = bgTarget.style.backgroundSize || "cover";
+          bgTarget.style.backgroundPosition = bgTarget.style.backgroundPosition || "center";
+          bgTarget.style.backgroundRepeat = bgTarget.style.backgroundRepeat || "no-repeat";
+          const shouldRemoveImgTarget =
+            !!imgReplaceTarget &&
+            !!imgReplaceTarget.parentNode &&
+            (imgReplaceIsNew ||
+             imgReplaceTarget.closest?.("header, section, article, main, aside, div") === bgTarget);
+          if (shouldRemoveImgTarget) {
+            imgReplaceTarget.parentNode.removeChild(imgReplaceTarget);
+          }
+        } else {
+          if (!imgReplaceTarget) return;
+          imgReplaceTarget.src = newSrc;
+          const maxW = document.getElementById("imgReplaceMaxWidth").value.trim();
+          imgReplaceTarget.style.maxWidth = maxW || "100%";
+          imgReplaceTarget.style.height = "auto";
+        }
         scheduleVisualToCodeSync();
       } catch {}
       closeImgReplaceDialog();
     }
 
+    function collectActiveImageContext(imgEl) {
+      const container = isBackgroundMode()
+        ? (imgReplaceBackgroundTarget || getSelectionImageContainer())
+        : (imgEl?.closest("figure, article, section, header, main, aside, div, li") || imgEl?.parentElement);
+      const nearbyHeading = container?.querySelector?.("h1,h2,h3,h4,h5,h6")?.textContent?.replace(/\s+/g, " ").trim() || "";
+      const contextText = (container?.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 280);
+      return {
+        altText: isBackgroundMode() ? "background image" : (imgEl?.getAttribute("alt") || ""),
+        nearbyHeading,
+        contextText,
+        userPrompt: isBackgroundMode() ? "Create a background image suitable for this section." : ""
+      };
+    }
+
+    async function getEditorUserId() {
+      if (!supabaseClient) return null;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      return session?.user?.id || null;
+    }
+
+    async function regenerateActiveImage() {
+      if (!imgReplaceTarget || imgRegenerateInProgress) return;
+      const imageGenerationContext = getImageGenerationContext();
+      if (!imageGenerationContext?.page1 || !imageGenerationContext?.colorSpec) {
+        showLinkedError("Open the editor from the generator after choosing colors so image regeneration has the required context.");
+        return;
+      }
+      if (!supabaseClient && getAnonCreditsUsed() >= 5) {
+        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        return;
+      }
+
+      const regenBtn = document.getElementById("imgReplaceRegenerate");
+      const userId = await getEditorUserId();
+      if (!userId && getAnonCreditsUsed() >= 5) {
+        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        return;
+      }
+
+      imgRegenerateInProgress = true;
+      if (regenBtn) {
+        regenBtn.disabled = true;
+        regenBtn.textContent = "Generating… (1 credit)";
+      }
+
+      try {
+        const jobId = crypto.randomUUID();
+        const imageContext = collectActiveImageContext(imgReplaceTarget);
+        const startRes = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "generateImage",
+            imageKind: "editor",
+            jobId,
+            page1: imageGenerationContext.page1,
+            colorSpec: imageGenerationContext.colorSpec,
+            imageContext,
+            provider: "openai",
+            userId
+          })
+        });
+        if (!startRes.ok && startRes.status !== 202) {
+          const text = await startRes.text().catch(() => "");
+          throw new Error(text || `Server error ${startRes.status}`);
+        }
+        const deadline = Date.now() + 12 * 60 * 1000;
+        while (Date.now() < deadline) {
+          await new Promise(r => setTimeout(r, 2500));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const pollText = await pollRes.text().catch(() => "");
+          let data = null;
+          try { data = pollText ? JSON.parse(pollText) : null; } catch {}
+          if (data?.status === "done") {
+            if (!userId && !data.skipped) incrementAnonCredits();
+            applyImgReplace(data.image_data_uri);
+            setEditStatus("Image regenerated.", "ok");
+            return;
+          }
+          if (!pollRes.ok || data?.status === "error") {
+            if (data?.quota) {
+              showLinkedError(data.error || "Credit limit reached. Upgrade to continue.");
+              return;
+            }
+            throw new Error(data?.error || "Image generation failed.");
+          }
+        }
+        throw new Error("Image generation timed out.");
+      } catch (err) {
+        showLinkedError(err?.message || "Image generation failed.");
+      } finally {
+        imgRegenerateInProgress = false;
+        if (regenBtn) {
+          regenBtn.disabled = false;
+          regenBtn.textContent = "Regenerate (costs 1 credit)";
+        }
+      }
+    }
+
     document.getElementById("imgReplaceCancel").onclick = () => closeImgReplaceDialog(true);
+    document.getElementById("imgReplaceRegenerate").onclick = regenerateActiveImage;
+    document.getElementById("imgReplaceAsBackground").addEventListener("change", syncImageDialogModePreview);
 
     document.getElementById("imgReplaceApply").onclick = () => {
       const src = imgReplacePending || document.getElementById("imgReplaceUrl").value.trim();
@@ -933,6 +1116,8 @@
         if (!root) return;
         for (const [k, v] of Object.entries(currentColors))
           root.style.setProperty(cssVarMap[k] || `--${k}`, v);
+        currentHtml = getVisualContent();
+        setCodeContent(currentHtml);
       } catch {}
     }
 
@@ -1851,18 +2036,6 @@
         btn.disabled = false;
         btn.textContent = "Set domain";
       }
-    };
-
-    // ── View HTML modal ────────────────────────────────────────────────────────
-    document.getElementById("btnViewHtml").onclick = () => {
-      document.getElementById("htmlModalText").value = buildHtmlString();
-      document.getElementById("htmlModal").classList.add("open");
-    };
-    document.getElementById("btnCloseHtml").onclick = () => document.getElementById("htmlModal").classList.remove("open");
-    document.getElementById("htmlModal").addEventListener("click", e => { if (e.target === document.getElementById("htmlModal")) document.getElementById("htmlModal").classList.remove("open"); });
-    document.getElementById("btnCopyHtml").onclick = () => {
-      const btn = document.getElementById("btnCopyHtml");
-      navigator.clipboard.writeText(document.getElementById("htmlModalText").value).then(() => { btn.textContent = "Copied!"; setTimeout(() => btn.textContent = "Copy", 1800); });
     };
 
     // ── Download ───────────────────────────────────────────────────────────────

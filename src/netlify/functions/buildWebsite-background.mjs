@@ -340,6 +340,187 @@ function findBalancedElementByTagContaining(html, tagNames, innerPattern, startI
   return null;
 }
 
+const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
+
+function analyzeSampleMasthead(sampleHtml = "", domainContext = "") {
+  let sampleHasRasterHeroImage = false;
+  let sampleRasterCssUrl = "";
+  let sampleRasterCssSelector = "";
+  let sampleRasterBackgroundDecl = "";
+  let sampleHeaderContainsHero = false;
+
+  const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
+  const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)="[^"]*hero[^"]*"[^>]*>([\s\S]{0,5000})/i);
+  const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
+    .filter(Boolean)
+    .join("\n");
+  const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
+  const rasterImgMatch = searchRegions.match(
+    /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
+  );
+  const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
+  const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
+    /(header|\bhero\b)/i.test(selector) &&
+    /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
+  );
+  sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
+  sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
+  const rasterBgMatch = rasterBgBlock
+    ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
+    : null;
+  sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+  sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
+  sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+
+  const meta = {
+    sampleHasRasterHeroImage,
+    sampleRasterCssUrl,
+    sampleRasterCssSelector,
+    sampleRasterBackgroundDecl,
+    sampleHeaderContainsHero,
+    mastheadPlaceholderUrl: MASTHEAD_PLACEHOLDER_URL,
+    domainContext
+  };
+
+  console.log(
+    `[buildWebsite-background] Header/hero raster detection: ${JSON.stringify({
+      hasHeaderRegion: !!headerMatch,
+      hasHeroRegion: !!heroMatch,
+      sampleHeaderContainsHero,
+      foundRasterImgTag: !!rasterImgMatch,
+      foundRasterCssBackground: !!rasterBgMatch,
+      matchedRasterCssUrl: typeof rasterBgMatch === "string" ? rasterBgMatch : ""
+    })}`
+  );
+
+  return meta;
+}
+
+function buildMastheadImageInstruction(meta = {}, domainContext = "") {
+  if (meta.sampleHasRasterHeroImage) {
+    if (meta.sampleRasterCssUrl) {
+      return (
+        `The sample masthead uses a raster image inside a CSS background declaration (detected server-side).\n` +
+        `  Preserve the existing masthead selector, gradient layers, background shorthand, positioning, sizing,\n` +
+        `  repeat behavior, and all surrounding CSS exactly as in the sample.\n` +
+        `  Change only the raster image URL inside that masthead background declaration to:\n` +
+        `    url("${meta.mastheadPlaceholderUrl || MASTHEAD_PLACEHOLDER_URL}")\n` +
+        `  Do not add an <img> tag. Do not simplify or rewrite the masthead background styling.`
+      );
+    }
+    return (
+      `The sample masthead contains a JPG/PNG image (detected server-side).\n` +
+      `  Do NOT generate an SVG illustration. Instead, place exactly this element where the masthead image belongs:\n` +
+      `    <img id="braid-img" src="" alt="${domainContext}" style="max-width:100%;border-radius:inherit;">\n` +
+      `  The src will be filled in automatically after generation. Preserve all surrounding layout,\n` +
+      `  sizing, and positional CSS from the sample so the injected image fits naturally.`
+    );
+  }
+  return (
+    `The sample masthead has no JPG/PNG image (detected server-side) — use SVG.\n` +
+    `  Recreate a domain-appropriate masthead graphic as inline SVG embedded directly in the masthead\n` +
+    `  section. Base its visual style on the sample (flat vector / gradient shapes / geometric\n` +
+    `  abstraction / glowing rings). The SVG should reflect the candidate's professional field.\n` +
+    `  Minimum size: 280px wide. Make it visually striking — this is the first thing a recruiter sees.`
+  );
+}
+
+function serializePaletteForImagePrompt(colorSpec = {}) {
+  const normalized = normalizeColorSpec(colorSpec);
+  return COLOR_SLOT_KEYS
+    .map((slotKey) => `${slotKey}=${normalized[slotKey] || "unspecified"}`)
+    .join(", ");
+}
+
+function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
+  const { major = "", specialization = "" } = page1;
+  const paletteGuide = serializePaletteForImagePrompt(colorSpec);
+  return (
+    `Generate a professional masthead background image for a portfolio website of a person majoring in ${major} and specializing in ${specialization}. ` +
+    `Use the user's selected palette as guiding colors: ${paletteGuide}. ` +
+    `Do not depict identifiable people or any human figure with discernable ethnicity, race, or facial identity. ` +
+    `Prefer abstract, environmental, technical, scientific, or object-based imagery instead of portraits or human subjects. ` +
+    `The image must have a direct, concrete connection to the stated major and specialization. ` +
+    `It must read clearly behind headline text, with strong midtone and dark-value contrast, no washed-out white background, ` +
+    `no large pale blank areas, and a visually distinct engineering/scientific subject. ` +
+    `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay.`
+  );
+}
+
+function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
+  const { major = "", specialization = "" } = page1;
+  const paletteGuide = serializePaletteForImagePrompt(colorSpec);
+  const contextBits = [
+    imageContext?.altText ? `Alt text: ${imageContext.altText}.` : "",
+    imageContext?.nearbyHeading ? `Nearby heading: ${imageContext.nearbyHeading}.` : "",
+    imageContext?.contextText ? `Surrounding context: ${imageContext.contextText}.` : "",
+    imageContext?.userPrompt ? `Specific request: ${imageContext.userPrompt}.` : ""
+  ].filter(Boolean).join(" ");
+  return (
+    `Generate an image suitable for the resume/portfolio website of a person majoring in ${major} and specializing in ${specialization}. ` +
+    `Use the user's selected palette as guiding colors: ${paletteGuide}. ` +
+    `Do not depict identifiable people or any human figure with discernable ethnicity, race, or facial identity. ` +
+    `Prefer abstract, environmental, technical, scientific, or object-based imagery instead of portraits or human subjects. ` +
+    `The image must have a direct, concrete connection to the stated major and specialization. ` +
+    `Match a professional, recruiter-facing website style rather than a poster. ${contextBits} ` +
+    `Avoid watermarks, captions, and embedded text.`
+  ).trim();
+}
+
+async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "Image" }) {
+  const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
+  console.log(`[buildWebsite-background] ${stageLabel} API key present:`, !!openaiKey);
+  if (!openaiKey) {
+    throw new Error("OPENAI_API_KEY is not set.");
+  }
+
+  console.log(`[buildWebsite-background] ${stageLabel} prompt: ${prompt}`);
+  console.log(
+    `[buildWebsite-background] DALL-E request payload: ${JSON.stringify({
+      model: "dall-e-3",
+      prompt,
+      n: 1,
+      size,
+      response_format: "b64_json"
+    })}`
+  );
+
+  const openaiImgClient = new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" });
+  let imgResp = null;
+  let lastImgErr = null;
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      console.log(`[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts}`);
+      imgResp = await openaiImgClient.images.generate({
+        model: "dall-e-3",
+        prompt,
+        n: 1,
+        size,
+        response_format: "b64_json"
+      });
+      lastImgErr = null;
+      break;
+    } catch (err) {
+      lastImgErr = err;
+      const status = err?.status ?? err?.response?.status ?? null;
+      const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
+      console.warn(
+        `[buildWebsite-background] ${stageLabel} generation attempt ${attempt} failed: ${status || "no-status"} ${err?.message || err}`
+      );
+      if (!shouldRetry) break;
+      await sleep(900 * attempt);
+    }
+  }
+  if (lastImgErr) throw lastImgErr;
+  const b64 = imgResp?.data?.[0]?.b64_json || "";
+  console.log(`[buildWebsite-background] ${stageLabel} generated:`, !!b64);
+  return {
+    dataUri: b64 ? `data:image/png;base64,${b64}` : "",
+    model: "dall-e-3"
+  };
+}
+
 // ─── Post-render CSS color injection for Mustache templates ──────────────────
 // Replaces --color-* hex values in the rendered HTML using the user's colorSpec
 // and the template's embedded default_color_scheme metadata comment.
@@ -1042,77 +1223,8 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
     : sampleHtml;
 
-  // Detect whether the sample masthead uses a real JPG/PNG image.
-  // If so, instruct the renderer to emit a server-replaceable placeholder img.
-  let sampleHasRasterHeroImage = false;
-  let sampleRasterCssUrl = "";
-  let sampleRasterCssSelector = "";
-  let sampleRasterBackgroundDecl = "";
-  let sampleHeaderContainsHero = false;
-  const mastheadPlaceholderUrl = "braid-masthead.png";
-  const mastheadImageInstruction = (() => {
-    const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
-    const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)="[^"]*hero[^"]*"[^>]*>([\s\S]{0,5000})/i);
-    const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
-      .filter(Boolean)
-      .join("\n");
-    const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
-    const rasterImgMatch = searchRegions.match(
-      /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
-    );
-    const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
-    const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
-      /(header|\bhero\b)/i.test(selector) &&
-      /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
-    );
-    sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
-    sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
-    const rasterBgMatch = rasterBgBlock
-      ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
-      : null;
-    sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
-    console.log(
-      `[buildWebsite-background] Header/hero raster detection: ${JSON.stringify({
-        hasHeaderRegion: !!headerMatch,
-        hasHeroRegion: !!heroMatch,
-        sampleHeaderContainsHero: /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || ""),
-        foundRasterImgTag: !!rasterImgMatch,
-        foundRasterCssBackground: !!rasterBgMatch,
-        matchedRasterCssUrl: typeof rasterBgMatch === "string" ? rasterBgMatch : ""
-      })}`
-    );
-    sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
-
-    sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
-
-    if (sampleHasRasterHeroImage) {
-      if (sampleRasterCssUrl) {
-        return (
-          `The sample masthead uses a raster image inside a CSS background declaration (detected server-side).\n` +
-          `  Preserve the existing masthead selector, gradient layers, background shorthand, positioning, sizing,\n` +
-          `  repeat behavior, and all surrounding CSS exactly as in the sample.\n` +
-          `  Change only the raster image URL inside that masthead background declaration to:\n` +
-          `    url("${mastheadPlaceholderUrl}")\n` +
-          `  Do not add an <img> tag. Do not simplify or rewrite the masthead background styling.`
-        );
-      }
-      return (
-        `The sample masthead contains a JPG/PNG image (detected server-side).\n` +
-        `  Do NOT generate an SVG illustration. Instead, place exactly this element where the masthead image belongs:\n` +
-        `    <img id="braid-img" src="" alt="${domainContext}" style="max-width:100%;border-radius:inherit;">\n` +
-        `  The src will be filled in automatically after generation. Preserve all surrounding layout,\n` +
-        `  sizing, and positional CSS from the sample so the injected image fits naturally.`
-      );
-    } else {
-      return (
-        `The sample masthead has no JPG/PNG image (detected server-side) — use SVG.\n` +
-        `  Recreate a domain-appropriate masthead graphic as inline SVG embedded directly in the masthead\n` +
-        `  section. Base its visual style on the sample (flat vector / gradient shapes / geometric\n` +
-        `  abstraction / glowing rings). The SVG should reflect the candidate's professional field.\n` +
-        `  Minimum size: 280px wide. Make it visually striking — this is the first thing a recruiter sees.`
-      );
-    }
-  })();
+  const mastheadMeta = analyzeSampleMasthead(sampleHtml, domainContext);
+  const mastheadImageInstruction = buildMastheadImageInstruction(mastheadMeta, domainContext);
   console.log(`[buildWebsite-background] Masthead image instruction: ${mastheadImageInstruction}`);
 
   let prompt;
@@ -1156,228 +1268,26 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   let siteHtml = cleanHtml(r.text || "");
   const truncated = !siteHtml.includes("</html>");
   const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
-  const stripHeroBgImageLayer = (html) =>
-    html.replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
-  const moveGeneratedHeroIntoHeader = (html) => {
-    if (!sampleHeaderContainsHero) {
-      console.log("[buildWebsite-background] Hero move skipped: sample header does not contain hero content");
-      return html;
-    }
-    const headerCloseMatch = html.match(/<\/header>/i);
-    if (!headerCloseMatch || headerCloseMatch.index == null) {
-      console.log("[buildWebsite-background] Hero move skipped: generated HTML has no closing </header>");
-      return html;
-    }
-    const headerCloseIdx = headerCloseMatch.index;
-    if (/<h1\b/i.test(html.slice(0, headerCloseIdx))) {
-      console.log("[buildWebsite-background] Hero move skipped: generated header already contains <h1>");
-      return html;
-    }
-    let heroBlock = findBalancedElementByClass(html, "hero", headerCloseIdx);
-    if (!heroBlock || heroBlock.start < headerCloseIdx) {
-      heroBlock = findBalancedElementByTagContaining(
-        html,
-        ["section", "div"],
-        /<h1\b[\s\S]*?(?:<a\b|<button\b|class=["'][^"']*(?:cta|pill|chip|card)[^"']*["'])/i,
-        headerCloseIdx
-      );
-    }
-    if (!heroBlock || heroBlock.start < headerCloseIdx) {
-      const afterHeader = html.slice(headerCloseIdx + headerCloseMatch[0].length);
-      const firstBlock = afterHeader.match(/^\s*<(section|div)\b[\s\S]{0,1200}?<\/\1>/i)?.[0] || afterHeader.slice(0, 600);
-      console.log(`[buildWebsite-background] Hero move skipped: no post-header masthead block match. Snippet: ${JSON.stringify(firstBlock)}`);
-      return html;
-    }
-    const withoutHero = html.slice(0, heroBlock.start) + html.slice(heroBlock.end);
-    const insertIdx = withoutHero.search(/<\/header>/i);
-    if (insertIdx === -1) return html;
-    console.log(`[buildWebsite-background] Moved generated hero block inside header to match sample structure using <${heroBlock.tagName}>`);
-    return withoutHero.slice(0, insertIdx) + "\n" + heroBlock.html + "\n" + withoutHero.slice(insertIdx);
-  };
-  const injectHeroBackgroundCleanup = (html) => {
-    if (!sampleHeaderContainsHero) return html;
-    const overrideCss = `
-<style id="braid-masthead-fix">
-header .hero,
-header > section:has(h1),
-header > div:has(h1){background:transparent !important;background-image:none !important;}
-header .hero::before,header .hero::after,
-header > section:has(h1)::before,header > section:has(h1)::after,
-header > div:has(h1)::before,header > div:has(h1)::after{background:none !important;background-image:none !important;box-shadow:none !important;}
-</style>`;
-    if (html.includes('id="braid-masthead-fix"')) return html;
-    if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${overrideCss}\n</head>`);
-    return overrideCss + html;
-  };
-  const injectForcedMastheadSelectorCss = (html, dataUri) => {
-    if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
-    const forcedBackgroundDecl = sampleRasterBackgroundDecl
-      .replace(sampleRasterCssUrl, dataUri)
-      .replace(/;\s*$/, " !important;");
-    const forcedCss = `
-<style id="braid-masthead-force">
-${sampleRasterCssSelector}{${forcedBackgroundDecl}}
-${sampleRasterCssSelector}::before,
-${sampleRasterCssSelector}::after{background:none !important;background-image:none !important;box-shadow:none !important;content:none !important;}
-</style>`;
-    if (html.includes('id="braid-masthead-force"')) return html;
-    console.log(`[buildWebsite-background] Injected forced masthead override CSS for selector: ${sampleRasterCssSelector}`);
-    if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${forcedCss}\n</head>`);
-    return forcedCss + html;
-  };
-  const enforceSampleMastheadBackground = (html, dataUri) => {
-    if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
-    const normalizedBackgroundDecl = sampleRasterBackgroundDecl.replace(
-      sampleRasterCssUrl,
-      dataUri
-    );
-    const selectorRe = new RegExp(`(${escapeRegExp(sampleRasterCssSelector)}\\s*\\{)([\\s\\S]*?)(\\})`, "i");
-    let matched = false;
-    const updated = html.replace(selectorRe, (match, open, body, close) => {
-      matched = true;
-      let nextBody = body;
-      if (/background\s*:\s*[\s\S]*?;/i.test(nextBody)) {
-        nextBody = nextBody.replace(/background\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
-      } else if (/background-image\s*:\s*[\s\S]*?;/i.test(nextBody)) {
-        nextBody = nextBody.replace(/background-image\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
-      } else {
-        nextBody = `\n  ${normalizedBackgroundDecl}\n${nextBody}`;
-      }
-      return `${open}${nextBody}${close}`;
-    });
-    if (!matched) {
-      console.log(`[buildWebsite-background] Could not find generated masthead selector for reapply: ${sampleRasterCssSelector}`);
-      return stripHeroBgImageLayer(html);
-    }
-    let stripped = stripHeroBgImageLayer(updated);
-    stripped = moveGeneratedHeroIntoHeader(stripped);
-    stripped = injectHeroBackgroundCleanup(stripped);
-    stripped = injectForcedMastheadSelectorCss(stripped, dataUri);
-    console.log(`[buildWebsite-background] Reapplied sample masthead background declaration for selector: ${sampleRasterCssSelector}`);
-    return stripped;
-  };
-
-  // If the sample indicates a raster masthead image, generate one with DALL-E.
-  // Prefer replacing the explicit placeholder when the model emitted it; otherwise
-  // fall back to wiring the generated image into --hero-bg-image.
   const hasHeroPlaceholder = siteHtml.includes('id="braid-img"');
-  const hasSampleRasterCssUrl = !!(sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl));
-  const hasMastheadPlaceholderUrl = siteHtml.includes(mastheadPlaceholderUrl);
+  const hasSampleRasterCssUrl = !!(mastheadMeta.sampleRasterCssUrl && siteHtml.includes(mastheadMeta.sampleRasterCssUrl));
+  const hasMastheadPlaceholderUrl = siteHtml.includes(mastheadMeta.mastheadPlaceholderUrl);
   const hasHeroBgImageSlot = /--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml);
   console.log("[buildWebsite-background] Masthead image placeholder present:", hasHeroPlaceholder);
-  console.log("[buildWebsite-background] Sample requires generated masthead image:", sampleHasRasterHeroImage);
+  console.log("[buildWebsite-background] Sample requires generated masthead image:", mastheadMeta.sampleHasRasterHeroImage);
   console.log(
     `[buildWebsite-background] Masthead injection slots: ${JSON.stringify({
-      sampleRasterCssUrl,
+      sampleRasterCssUrl: mastheadMeta.sampleRasterCssUrl,
       hasSampleRasterCssUrl,
-      mastheadPlaceholderUrl,
+      mastheadPlaceholderUrl: mastheadMeta.mastheadPlaceholderUrl,
       hasMastheadPlaceholderUrl,
       hasHeroBgImageSlot
     })}`
   );
-  if (sampleHasRasterHeroImage) {
-    try {
-      const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
-      console.log("[buildWebsite-background] Masthead image API key present:", !!openaiKey);
-      if (openaiKey) {
-        const { major, specialization } = page1;
-        const imagePrompt =
-          `Generate a professional masthead background image for a portfolio website of a person majoring in ${major} and specializing in ${specialization}. ` +
-          `It must read clearly behind headline text, with strong midtone and dark-value contrast, no washed-out white background, ` +
-          `no large pale blank areas, and a visually distinct engineering/scientific subject. ` +
-          `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay.`;
-        console.log(
-          `[buildWebsite-background] Masthead image prompt inputs: ${JSON.stringify({
-            major,
-            specialization
-          })}`
-        );
-        console.log(`[buildWebsite-background] Masthead image prompt: ${imagePrompt}`);
-        console.log(
-          `[buildWebsite-background] DALL-E request payload: ${JSON.stringify({
-            model: "dall-e-3",
-            prompt: imagePrompt,
-            n: 1,
-            size: "1024x1024",
-            response_format: "b64_json"
-          })}`
-        );
-        const openaiImgClient = new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" });
-        let imgResp = null;
-        let lastImgErr = null;
-        const maxAttempts = 3;
-        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-          try {
-            console.log(`[buildWebsite-background] Masthead image generation attempt ${attempt}/${maxAttempts}`);
-            imgResp = await openaiImgClient.images.generate({
-              model:   "dall-e-3",
-              prompt:  imagePrompt,
-              n:       1,
-              size:    "1024x1024",
-              response_format: "b64_json"
-            });
-            lastImgErr = null;
-            break;
-          } catch (err) {
-            lastImgErr = err;
-            const status = err?.status ?? err?.response?.status ?? null;
-            const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
-            console.warn(
-              `[buildWebsite-background] Masthead image generation attempt ${attempt} failed: ${status || "no-status"} ${err?.message || err}`
-            );
-            if (!shouldRetry) break;
-            await sleep(900 * attempt);
-          }
-        }
-        if (lastImgErr) throw lastImgErr;
-        const b64 = imgResp.data?.[0]?.b64_json;
-        console.log("[buildWebsite-background] Masthead image generated:", !!b64);
-        if (b64) {
-          const dataUri = `data:image/png;base64,${b64}`;
-          if (hasHeroPlaceholder) {
-            siteHtml = siteHtml.replace(
-              /(<img[^>]*id="braid-img"[^>]*)src=""/,
-              `$1src="${dataUri}"`
-            );
-            console.log("[buildWebsite-background] Injected generated masthead image via #braid-img placeholder");
-          } else if (siteHtml.includes(mastheadPlaceholderUrl)) {
-            siteHtml = siteHtml.replaceAll(mastheadPlaceholderUrl, dataUri);
-            siteHtml = enforceSampleMastheadBackground(siteHtml, dataUri);
-            console.log(`[buildWebsite-background] Replaced masthead placeholder filename in-place: ${mastheadPlaceholderUrl}`);
-          } else if (sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)) {
-            siteHtml = siteHtml.replaceAll(sampleRasterCssUrl, dataUri);
-            siteHtml = enforceSampleMastheadBackground(siteHtml, dataUri);
-            console.log(`[buildWebsite-background] Replaced sample masthead CSS URL in-place: ${sampleRasterCssUrl}`);
-          } else if (/--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)) {
-            siteHtml = siteHtml.replace(
-              /--hero-bg-image\s*:\s*none\s*;/i,
-              `--hero-bg-image: url("${dataUri}");`
-            );
-            console.log("[buildWebsite-background] Injected generated masthead image via --hero-bg-image CSS variable");
-          } else {
-            console.log(
-              `[buildWebsite-background] Generated masthead image was available, but no injection slot was found: ${JSON.stringify({
-                hasHeroPlaceholder,
-                sampleRasterCssUrl,
-                hasSampleRasterCssUrl: !!(sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)),
-                mastheadPlaceholderUrl,
-                hasMastheadPlaceholderUrl: siteHtml.includes(mastheadPlaceholderUrl),
-                hasHeroBgImageSlot: /--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)
-              })}`
-            );
-          }
-          tokenReport.push({ stage: "braid · Masthead image (DALL-E 3)", model: "dall-e-3" });
-        }
-      }
-    } catch (imgErr) {
-      // Non-fatal — placeholder remains, user can replace manually
-      console.error("DALL-E masthead image generation failed:", imgErr?.message || imgErr);
-    }
-  }
 
   await store.set(jobId, JSON.stringify({
     status: "done",
     site_html:    siteHtml,
+    masthead_meta: mastheadMeta,
     model:        r.model,
     truncated,
     token_report: tokenReport
@@ -1392,6 +1302,98 @@ ${sampleRasterCssSelector}::after{background:none !important;background-image:no
     });
   } catch (usageErr) {
     console.error("Non-fatal braid usage logging error:", usageErr?.message || usageErr);
+  }
+}
+
+async function generateImageJob(store, jobId, body, userId) {
+  const {
+    imageKind = "masthead",
+    page1 = {},
+    colorSpec = {},
+    sampleHtml = "",
+    imageContext = {},
+    provider = "openai"
+  } = body;
+
+  await store.set(jobId, JSON.stringify({
+    status: "pending",
+    stage: imageKind === "masthead" ? "Generating masthead image…" : "Generating image…"
+  }), { ttl: 3600 });
+
+  const theme = normalizeColorSpec(colorSpec);
+  let prompt = "";
+  let size = "1024x1024";
+  let stageLabel = "Editor image";
+  let mastheadMeta = null;
+
+  if (imageKind === "masthead") {
+    mastheadMeta = analyzeSampleMasthead(sampleHtml, "");
+    if (!mastheadMeta.sampleHasRasterHeroImage) {
+      await store.set(jobId, JSON.stringify({
+        status: "done",
+        skipped: true,
+        image_kind: imageKind,
+        reason: "Sample masthead does not require a generated raster image.",
+        masthead_meta: mastheadMeta
+      }), { ttl: 3600 });
+      return;
+    }
+    prompt = buildMastheadImagePrompt(page1, theme);
+    size = "1792x1024";
+    stageLabel = "Masthead image";
+    console.log(
+      `[buildWebsite-background] Masthead image prompt inputs: ${JSON.stringify({
+        major: page1?.major || "",
+        specialization: page1?.specialization || "",
+        colors: serializeColorSpecForAI(theme)
+      })}`
+    );
+  } else {
+    prompt = buildEditorImagePrompt(page1, theme, imageContext);
+    stageLabel = "Editor image";
+    console.log(
+      `[buildWebsite-background] Editor image prompt inputs: ${JSON.stringify({
+        major: page1?.major || "",
+        specialization: page1?.specialization || "",
+        colors: serializeColorSpecForAI(theme),
+        imageContext
+      })}`
+    );
+  }
+
+  try {
+    const { dataUri, model } = await generateImageDataUri({ prompt, size, stageLabel });
+    if (!dataUri) {
+      await store.set(jobId, JSON.stringify({
+        status: "error",
+        error: `${stageLabel} generation returned no image data.`
+      }), { ttl: 3600 });
+      return;
+    }
+    await store.set(jobId, JSON.stringify({
+      status: "done",
+      image_kind: imageKind,
+      image_data_uri: dataUri,
+      image_prompt: prompt,
+      masthead_meta: mastheadMeta,
+      model,
+      token_report: [{ stage: `${imageKind} · Image`, model }]
+    }), { ttl: 3600 });
+    try {
+      await logUsageEvent(userId, {
+        event_type: "generation",
+        provider,
+        model,
+        success: true
+      });
+    } catch (usageErr) {
+      console.error("Non-fatal image usage logging error:", usageErr?.message || usageErr);
+    }
+  } catch (imgErr) {
+    await store.set(jobId, JSON.stringify({
+      status: "error",
+      error: `${stageLabel} generation failed: ${imgErr?.message || String(imgErr)}`
+    }), { ttl: 3600 });
   }
 }
 
@@ -1747,14 +1749,14 @@ export async function handler(event) {
       artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
       resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null,
-      mode = "full",          // "full" | "braid" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
+      mode = "full",          // "full" | "braid" | "generateImage" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
       strategyJson = null,    // pre-computed strategy from analyzeJob mode
       bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
       provider = "claude",    // "claude" (default) | "openai"
       userId = null           // Supabase user UUID — sent by client when logged in
     } = body;
 
-    // ── Quota check (full and braid modes — these are the billable generation steps) ──
+    // ── Quota check (billable AI generation steps) ──
     if (mode === "full" || mode === "braid") {
       if (!userId) {
         // Anonymous user — soft limit enforced client-side via localStorage.
@@ -1779,6 +1781,11 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for braid mode." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
+    } else if (mode === "generateImage") {
+      if ((body.imageKind || "masthead") === "masthead" && !body.sampleHtml) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for masthead image generation." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
     } else if (mode !== "bridgeContentAndDesign" && mode !== "extractJobAd") {
       if (!resumePdfBase64) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF is required." }), { ttl: 3600 });
@@ -1788,7 +1795,9 @@ export async function handler(event) {
 
     // Build provider credentials
     let creds;
-    if (provider === "openai") {
+    if (mode === "generateImage") {
+      creds = {};
+    } else if (provider === "openai") {
       const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
       if (!openaiKey) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
@@ -1860,6 +1869,26 @@ export async function handler(event) {
     // braid mode: single-pass layout clone + content substitution + color encoding
     if (mode === "braid") {
       await braidPortfolioWebsite(provider, creds, store, jobId, body, userId);
+      return { statusCode: 202 };
+    }
+
+    if (mode === "generateImage") {
+      const imageKind = body.imageKind || "masthead";
+      const sampleMeta = imageKind === "masthead"
+        ? analyzeSampleMasthead(body.sampleHtml || "", "")
+        : { sampleHasRasterHeroImage: true };
+      if (imageKind !== "masthead" || sampleMeta.sampleHasRasterHeroImage) {
+        if (!userId) {
+          await logAnonUsage();
+        } else {
+          const quota = await checkAndIncrementCredits(userId);
+          if (!quota.allowed) {
+            await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
+            return { statusCode: 202 };
+          }
+        }
+      }
+      await generateImageJob(store, jobId, body, userId);
       return { statusCode: 202 };
     }
 

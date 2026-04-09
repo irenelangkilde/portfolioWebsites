@@ -35,10 +35,14 @@
 
     // Braid (single-pass layout clone + content substitution — replaces bridge+render for options 1 & 2)
     let braidInProgress = false;
+    let mastheadImageInProgress = false;
+    let mastheadImageResult = null;
+    let mastheadImageError = null;
 
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
     let _braidRunId      = 0;
+    let _mastheadImageRunId = 0;
     let _bridgeRunId     = 0;
     let _generationRunId = 0;
 
@@ -88,6 +92,17 @@
       } catch (err) {
         try { localStorage.removeItem("portfolio_page4_colors"); } catch {}
         console.warn("Could not persist portfolio_page4_colors to localStorage:", err?.message || err);
+      }
+    }
+
+    function cacheImageGenerationContext(context) {
+      const value = context && typeof context === "object" ? JSON.parse(JSON.stringify(context)) : null;
+      window.__portfolioImageGenerationContext = value;
+      try {
+        localStorage.setItem("portfolio_image_generation_context", JSON.stringify(value));
+      } catch (err) {
+        try { localStorage.removeItem("portfolio_image_generation_context"); } catch {}
+        console.warn("Could not persist portfolio_image_generation_context to localStorage:", err?.message || err);
       }
     }
 
@@ -554,6 +569,239 @@
         try { data = JSON.parse(text); } catch {}
       }
       return { ok: res.ok, status: res.status, text, data };
+    }
+
+    function escapeRegExp(value) {
+      return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function findBalancedElementByClass(html, className, startIndex = 0) {
+      const openRe = new RegExp(`<([a-z0-9:-]+)\\b[^>]*class=["'][^"']*\\b${escapeRegExp(className)}\\b[^"']*["'][^>]*>`, "ig");
+      openRe.lastIndex = startIndex;
+      const openMatch = openRe.exec(html);
+      if (!openMatch) return null;
+      const tagName = openMatch[1];
+      const openIndex = openMatch.index;
+      const tagRe = new RegExp(`<\\/?${escapeRegExp(tagName)}\\b[^>]*>`, "ig");
+      tagRe.lastIndex = openIndex;
+      let depth = 0;
+      let tagMatch;
+      while ((tagMatch = tagRe.exec(html)) !== null) {
+        const token = tagMatch[0];
+        const isClose = /^<\//.test(token);
+        if (!isClose && !/\/>$/.test(token)) depth += 1;
+        else if (isClose) depth -= 1;
+        if (depth === 0) {
+          return {
+            start: openIndex,
+            end: tagRe.lastIndex,
+            html: html.slice(openIndex, tagRe.lastIndex),
+            tagName
+          };
+        }
+      }
+      return null;
+    }
+
+    function findBalancedElementByTagContaining(html, tagNames, innerPattern, startIndex = 0) {
+      const tagsAlt = tagNames.map(escapeRegExp).join("|");
+      const openRe = new RegExp(`<(${tagsAlt})\\b[^>]*>`, "ig");
+      openRe.lastIndex = startIndex;
+      let openMatch;
+      while ((openMatch = openRe.exec(html)) !== null) {
+        const tagName = openMatch[1];
+        const openIndex = openMatch.index;
+        const tagRe = new RegExp(`<\\/?${escapeRegExp(tagName)}\\b[^>]*>`, "ig");
+        tagRe.lastIndex = openIndex;
+        let depth = 0;
+        let tagMatch;
+        while ((tagMatch = tagRe.exec(html)) !== null) {
+          const token = tagMatch[0];
+          const isClose = /^<\//.test(token);
+          if (!isClose && !/\/>$/.test(token)) depth += 1;
+          else if (isClose) depth -= 1;
+          if (depth === 0) {
+            const blockHtml = html.slice(openIndex, tagRe.lastIndex);
+            if (innerPattern.test(blockHtml)) {
+              return {
+                start: openIndex,
+                end: tagRe.lastIndex,
+                html: blockHtml,
+                tagName
+              };
+            }
+            break;
+          }
+        }
+      }
+      return null;
+    }
+
+    function stripHeroBgImageLayer(html) {
+      return String(html || "").replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
+    }
+
+    function moveGeneratedHeroIntoHeader(html, mastheadMeta) {
+      if (!mastheadMeta?.sampleHeaderContainsHero) return html;
+      const headerCloseMatch = html.match(/<\/header>/i);
+      if (!headerCloseMatch || headerCloseMatch.index == null) return html;
+      const headerCloseIdx = headerCloseMatch.index;
+      if (/<h1\b/i.test(html.slice(0, headerCloseIdx))) return html;
+      let heroBlock = findBalancedElementByClass(html, "hero", headerCloseIdx);
+      if (!heroBlock || heroBlock.start < headerCloseIdx) {
+        heroBlock = findBalancedElementByTagContaining(
+          html,
+          ["section", "div"],
+          /<h1\b[\s\S]*?(?:<a\b|<button\b|class=["'][^"']*(?:cta|pill|chip|card)[^"']*["'])/i,
+          headerCloseIdx
+        );
+      }
+      if (!heroBlock || heroBlock.start < headerCloseIdx) return html;
+      const withoutHero = html.slice(0, heroBlock.start) + html.slice(heroBlock.end);
+      const insertIdx = withoutHero.search(/<\/header>/i);
+      if (insertIdx === -1) return html;
+      return withoutHero.slice(0, insertIdx) + "\n" + heroBlock.html + "\n" + withoutHero.slice(insertIdx);
+    }
+
+    function injectHeroBackgroundCleanup(html, mastheadMeta) {
+      if (!mastheadMeta?.sampleHeaderContainsHero) return html;
+      const overrideCss = `
+<style id="braid-masthead-fix">
+header .hero,
+header > section:has(h1),
+header > div:has(h1){background:transparent !important;background-image:none !important;}
+header .hero::before,header .hero::after,
+header > section:has(h1)::before,header > section:has(h1)::after,
+header > div:has(h1)::before,header > div:has(h1)::after{background:none !important;background-image:none !important;box-shadow:none !important;}
+</style>`;
+      if (html.includes('id="braid-masthead-fix"')) return html;
+      if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${overrideCss}\n</head>`);
+      return overrideCss + html;
+    }
+
+    function injectForcedMastheadSelectorCss(html, dataUri, mastheadMeta) {
+      if (!mastheadMeta?.sampleRasterCssSelector || !mastheadMeta?.sampleRasterBackgroundDecl || !mastheadMeta?.sampleRasterCssUrl) {
+        return html;
+      }
+      const forcedBackgroundDecl = mastheadMeta.sampleRasterBackgroundDecl
+        .replace(mastheadMeta.sampleRasterCssUrl, dataUri)
+        .replace(/;\s*$/, " !important;");
+      const forcedCss = `
+<style id="braid-masthead-force">
+${mastheadMeta.sampleRasterCssSelector}{${forcedBackgroundDecl}}
+${mastheadMeta.sampleRasterCssSelector}::before,
+${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;background-image:none !important;box-shadow:none !important;content:none !important;}
+</style>`;
+      if (html.includes('id="braid-masthead-force"')) return html;
+      if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${forcedCss}\n</head>`);
+      return forcedCss + html;
+    }
+
+    function enforceSampleMastheadBackground(html, dataUri, mastheadMeta) {
+      if (!mastheadMeta?.sampleRasterCssSelector || !mastheadMeta?.sampleRasterBackgroundDecl || !mastheadMeta?.sampleRasterCssUrl) {
+        return html;
+      }
+      const normalizedBackgroundDecl = mastheadMeta.sampleRasterBackgroundDecl.replace(
+        mastheadMeta.sampleRasterCssUrl,
+        dataUri
+      );
+      const selectorRe = new RegExp(`(${escapeRegExp(mastheadMeta.sampleRasterCssSelector)}\\s*\\{)([\\s\\S]*?)(\\})`, "i");
+      let matched = false;
+      const updated = html.replace(selectorRe, (match, open, body, close) => {
+        matched = true;
+        let nextBody = body;
+        if (/background\s*:\s*[\s\S]*?;/i.test(nextBody)) {
+          nextBody = nextBody.replace(/background\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
+        } else if (/background-image\s*:\s*[\s\S]*?;/i.test(nextBody)) {
+          nextBody = nextBody.replace(/background-image\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
+        } else {
+          nextBody = `\n  ${normalizedBackgroundDecl}\n${nextBody}`;
+        }
+        return `${open}${nextBody}${close}`;
+      });
+      let nextHtml = matched ? updated : stripHeroBgImageLayer(html);
+      nextHtml = stripHeroBgImageLayer(nextHtml);
+      nextHtml = moveGeneratedHeroIntoHeader(nextHtml, mastheadMeta);
+      nextHtml = injectHeroBackgroundCleanup(nextHtml, mastheadMeta);
+      nextHtml = injectForcedMastheadSelectorCss(nextHtml, dataUri, mastheadMeta);
+      return nextHtml;
+    }
+
+    function applyGeneratedMastheadImageToHtml(html, dataUri, mastheadMeta) {
+      if (!html || !dataUri) return html || "";
+      let nextHtml = String(html);
+      if (nextHtml.includes('id="braid-img"')) {
+        return nextHtml.replace(/(<img[^>]*id="braid-img"[^>]*)src=""/, `$1src="${dataUri}"`);
+      }
+      if (mastheadMeta?.mastheadPlaceholderUrl && nextHtml.includes(mastheadMeta.mastheadPlaceholderUrl)) {
+        nextHtml = nextHtml.replaceAll(mastheadMeta.mastheadPlaceholderUrl, dataUri);
+        return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
+      }
+      if (mastheadMeta?.sampleRasterCssUrl && nextHtml.includes(mastheadMeta.sampleRasterCssUrl)) {
+        nextHtml = nextHtml.replaceAll(mastheadMeta.sampleRasterCssUrl, dataUri);
+        return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
+      }
+      if (/--hero-bg-image\s*:\s*none\s*;/i.test(nextHtml)) {
+        return nextHtml.replace(
+          /--hero-bg-image\s*:\s*none\s*;/i,
+          `--hero-bg-image: url("${dataUri}");`
+        );
+      }
+      return nextHtml;
+    }
+
+    function applyBraidColorOverridesToHtml(html) {
+      const theme = getPage3Colors().theme;
+      if (!html || !theme) return html || "";
+      const overridePairs = [
+        ["--bp-slot1", theme.slot1],
+        ["--bp-slot2", theme.slot2],
+        ["--bp-slot3", theme.slot3],
+        ["--bp-slot4", theme.slot4],
+        ["--bp-slot5", theme.slot5],
+        ["--bp-slot-1", theme.slot1],
+        ["--bp-slot-2", theme.slot2],
+        ["--bp-slot-3", theme.slot3],
+        ["--bp-slot-4", theme.slot4],
+        ["--bp-slot-5", theme.slot5],
+        ["--bp-primary", theme.primary],
+        ["--bp-secondary", theme.secondary],
+        ["--bp-accent", theme.accent],
+        ["--bp-dark", theme.dark],
+        ["--bp-light", theme.light]
+      ];
+      const overrides = overridePairs
+        .filter(([, v]) => !!v)
+        .map(([k, v]) => `${k}: ${v};`)
+        .join(" ");
+      if (!overrides) return html;
+      const overrideBlock = `<style id="braid-user-colors">:root { ${overrides} }</style>`;
+      if (/id="braid-user-colors"/i.test(html)) {
+        return html.replace(/<style id="braid-user-colors">[\s\S]*?<\/style>/i, overrideBlock);
+      }
+      return html.replace("</head>", `${overrideBlock}\n</head>`);
+    }
+
+    function composeBraidPreviewHtml(result = generationResult) {
+      if (!result) return "";
+      let html = String(result.base_site_html || result.site_html || "");
+      if (mastheadImageResult?.image_data_uri) {
+        html = applyGeneratedMastheadImageToHtml(
+          html,
+          mastheadImageResult.image_data_uri,
+          result.masthead_meta || mastheadImageResult.masthead_meta || null
+        );
+      }
+      html = applyBraidColorOverridesToHtml(html);
+      return html;
+    }
+
+    function pushPreviewHtmlUpdate(html) {
+      cachePreviewHtml(html || "");
+      const editorWin = window.__portfolioEditorWindow;
+      if (editorWin && !editorWin.closed) {
+        try { editorWin.postMessage({ type: "portfolio_html", html }, location.origin); } catch {}
+      }
     }
 
     function populateResumeDebugPanel(json) {
@@ -2222,6 +2470,10 @@
     async function doBraidWebsite() {
       const myRunId = ++_braidRunId;
       braidInProgress  = true;
+      mastheadImageInProgress = false;
+      mastheadImageResult = null;
+      mastheadImageError = null;
+      _mastheadImageRunId += 1;
       generationResult = null;
       generationError  = null;
       setOpenEditorReady(false);
@@ -2303,19 +2555,21 @@
           setHeaderStatus("braidStatus", `Braiding portfolio… ${remaining}s`, "rgba(141,224,255,.75)");
           if (data.status === "done") {
             clearInterval(braidCountdown);
-            generationResult    = data;
+            generationResult    = { ...data, base_site_html: data.site_html || "" };
             braidInProgress     = false;
             generationInProgress = false;
             if (!currentUserId()) incrementAnonCredits();
-            // Apply user color overrides if they've already confirmed on page 4
-            if (page4Submitted) applyBraidColorOverrides(generationResult);
+            generationResult.site_html = page4Submitted ? composeBraidPreviewHtml(generationResult) : generationResult.base_site_html;
             setHeaderStatus("braidStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             setOpenEditorReady(true);
             if (isDebugMode()) mergeTokenReport(data?.token_report);
-            cachePreviewHtml(generationResult.site_html || "");
+            pushPreviewHtmlUpdate(generationResult.site_html || "");
             const readyMsg = document.getElementById("generatorReadyMsg");
-            if (readyMsg) { readyMsg.textContent = "Portfolio ready."; readyMsg.style.color = "rgba(118,176,34,.9)"; }
+            if (readyMsg) {
+              readyMsg.textContent = mastheadImageInProgress ? "Portfolio ready. Masthead image generating…" : "Portfolio ready.";
+              readyMsg.style.color = "rgba(118,176,34,.9)";
+            }
             greyRendererButtons(false);
             return;
           }
@@ -2337,6 +2591,89 @@
       } finally {
         braidInProgress = false;
         setApplyBtnState(true);
+      }
+    }
+
+    async function startMastheadImageGeneration() {
+      const sampleHtml = extractedTemplateCache?.templateHtml || "";
+      if (!sampleHtml || !isBraidMode()) return;
+      if (!currentUserId() && !hasCreditsRemaining()) {
+        showUpgradePrompt({ tier: "free", used: ANON_CREDIT_LIMIT, limit: ANON_CREDIT_LIMIT, anon: true });
+        return;
+      }
+
+      const myRunId = ++_mastheadImageRunId;
+      mastheadImageInProgress = true;
+      mastheadImageResult = null;
+      mastheadImageError = null;
+      const jobId = crypto.randomUUID();
+      const colors = getPage3Colors().theme;
+      const page1 = getPage1();
+
+      setHeaderStatus("colorsChosenStatus", "Generating masthead image…", "rgba(141,224,255,.75)");
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "generateImage",
+            imageKind: "masthead",
+            jobId,
+            page1,
+            sampleHtml,
+            colorSpec: colors,
+            provider: "openai",
+            userId: currentUserId()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          const t = await res.text();
+          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+        }
+
+        const maxWaitMs = 720000;
+        const startTime = Date.now();
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, 2500));
+          if (myRunId !== _mastheadImageRunId) {
+            mastheadImageInProgress = false;
+            return;
+          }
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const parsed = await readJsonResponseSafely(pollRes);
+          const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
+          if (data.status === "done") {
+            mastheadImageInProgress = false;
+            mastheadImageResult = data;
+            if (!currentUserId() && !data.skipped) incrementAnonCredits();
+            if (generationResult?.base_site_html && data.image_data_uri) {
+              generationResult.site_html = composeBraidPreviewHtml(generationResult);
+              pushPreviewHtmlUpdate(generationResult.site_html || "");
+            }
+            setHeaderStatus(
+              "colorsChosenStatus",
+              data.skipped ? "✓ Colors chosen" : "✓ Colors chosen • Masthead image ready",
+              "rgba(118,176,34,.9)"
+            );
+            const readyMsg = document.getElementById("generatorReadyMsg");
+            if (readyMsg && generationResult?.site_html) {
+              readyMsg.textContent = "Portfolio ready.";
+              readyMsg.style.color = "rgba(118,176,34,.9)";
+            }
+            if (isDebugMode()) mergeTokenReport(data?.token_report);
+            return;
+          }
+          if (!pollRes.ok || data.status === "error") {
+            if (data.quota) { showUpgradePrompt(data); return; }
+            throw new Error(data.error || "Image generation failed.");
+          }
+        }
+        throw new Error("Image generation timed out after 12 minutes.");
+      } catch (err) {
+        mastheadImageInProgress = false;
+        mastheadImageError = err?.message || String(err);
+        setHeaderStatus("colorsChosenStatus", `✓ Colors chosen • ${mastheadImageError}`, "rgba(251,171,156,.9)");
       }
     }
 
@@ -2751,7 +3088,9 @@
       // Pass page 4 colors so the editor can offer a "Reset to default" option
       const p4Colors = getPage3Colors().theme;
       cachePage4Colors(p4Colors);
+      cacheImageGenerationContext({ page1: getPage1(), colorSpec: p4Colors });
       const editorWin = window.open("editor.html", "_blank");
+      window.__portfolioEditorWindow = editorWin;
 
       // Collect visuals and inject them (client-side, may be instant or async).
       const { artifacts: dynamicVisuals } = await getPage5Artifacts();
@@ -2765,10 +3104,7 @@
         finalHtml = injectArtifacts(finalHtml, allVisuals);
         // Update localStorage with artifact-injected version and push it to the
         // already-open editor window via postMessage (no reload needed).
-        cachePreviewHtml(finalHtml);
-        if (editorWin && !editorWin.closed) {
-          try { editorWin.postMessage({ type: "portfolio_html", html: finalHtml }, location.origin); } catch {}
-        }
+        pushPreviewHtmlUpdate(finalHtml);
       }
 
       const resumeData = getPage1();
@@ -3247,26 +3583,17 @@
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       return (source === "keyword" || source === "file") && !isMustacheMode() && !isDirectDesignMode();
     }
-    // Inject user color overrides into the braid-generated HTML as a :root override block.
-    // The braid was run with the sample's own colors; this layer applies the user's choices.
     function applyBraidColorOverrides(result) {
       if (!result?.site_html) return;
-      const theme = getPage3Colors().theme;
-      if (!theme) return;
-      const overrides = Object.entries(theme)
-        .map(([k, v]) => `--bp-${k}: ${v};`)
-        .join(" ");
-      if (!overrides) return;
-      result.site_html = result.site_html.replace(
-        "</head>",
-        `<style>:root { ${overrides} }</style>\n</head>`
-      );
+      result.site_html = composeBraidPreviewHtml(result);
     }
 
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
       const submitMsg = document.getElementById("colorsSubmitMsg");
       if (submitMsg) submitMsg.textContent = "✓ Color scheme submitted";
+      cachePage4Colors(getPage3Colors().theme);
+      cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
       if (isDirectDesignMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Braid skipped — design-options mode", "rgba(234,240,255,.35)");
@@ -3276,20 +3603,19 @@
         setHeaderStatus("braidStatus", "Braid skipped — mustache mode", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else {
-        // Braid mode: braid is already running. Mark page4 confirmed.
+        // Braid mode: HTML and masthead image are separate async results.
         page4Submitted = true;
+        startMastheadImageGeneration();
         if (generationResult) {
-          // Braid finished before user reached page 4 — apply overrides now
           applyBraidColorOverrides(generationResult);
-          cachePreviewHtml(generationResult.site_html || "");
+          pushPreviewHtmlUpdate(generationResult.site_html || "");
           setOpenEditorReady(true);
           const readyMsg = document.getElementById("generatorReadyMsg");
           if (readyMsg) {
-            readyMsg.textContent = "Portfolio ready.";
+            readyMsg.textContent = mastheadImageInProgress ? "Portfolio ready. Masthead image generating…" : "Portfolio ready.";
             readyMsg.style.color = "rgba(118,176,34,.9)";
           }
         }
-        // If braid is still running, applyBraidColorOverrides will be called on completion
       }
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
