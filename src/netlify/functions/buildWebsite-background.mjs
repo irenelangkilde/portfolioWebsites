@@ -266,6 +266,10 @@ function serializeColorSpecForAI(colorSpec = {}) {
   };
 }
 
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 // ─── Post-render CSS color injection for Mustache templates ──────────────────
 // Replaces --color-* hex values in the rendered HTML using the user's colorSpec
 // and the template's embedded default_color_scheme metadata comment.
@@ -972,6 +976,8 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   // If so, instruct the renderer to emit a server-replaceable placeholder img.
   let sampleHasRasterHeroImage = false;
   let sampleRasterCssUrl = "";
+  let sampleRasterCssSelector = "";
+  let sampleRasterBackgroundDecl = "";
   const mastheadPlaceholderUrl = "braid-masthead.png";
   const mastheadImageInstruction = (() => {
     const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
@@ -988,6 +994,8 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       /(header|\bhero\b)/i.test(selector) &&
       /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
     );
+    sampleRasterCssSelector = rasterBgBlock?.[1]?.trim() || "";
+    sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
     const rasterBgMatch = rasterBgBlock
       ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
       : null;
@@ -1077,6 +1085,28 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
   const stripHeroBgImageLayer = (html) =>
     html.replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
+  const enforceSampleMastheadBackground = (html, dataUri) => {
+    if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
+    const normalizedBackgroundDecl = sampleRasterBackgroundDecl.replace(
+      sampleRasterCssUrl,
+      dataUri
+    );
+    const selectorRe = new RegExp(`(${escapeRegExp(sampleRasterCssSelector)}\\s*\\{)([\\s\\S]*?)(\\})`, "i");
+    const updated = html.replace(selectorRe, (match, open, body, close) => {
+      let nextBody = body;
+      if (/background\s*:\s*[\s\S]*?;/i.test(nextBody)) {
+        nextBody = nextBody.replace(/background\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
+      } else if (/background-image\s*:\s*[\s\S]*?;/i.test(nextBody)) {
+        nextBody = nextBody.replace(/background-image\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
+      } else {
+        nextBody = `\n  ${normalizedBackgroundDecl}\n${nextBody}`;
+      }
+      return `${open}${nextBody}${close}`;
+    });
+    const stripped = stripHeroBgImageLayer(updated);
+    console.log(`[buildWebsite-background] Reapplied sample masthead background declaration for selector: ${sampleRasterCssSelector}`);
+    return stripped;
+  };
 
   // If the sample indicates a raster masthead image, generate one with DALL-E.
   // Prefer replacing the explicit placeholder when the model emitted it; otherwise
@@ -1143,11 +1173,11 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
             console.log("[buildWebsite-background] Injected generated masthead image via #braid-img placeholder");
           } else if (siteHtml.includes(mastheadPlaceholderUrl)) {
             siteHtml = siteHtml.replaceAll(mastheadPlaceholderUrl, dataUri);
-            siteHtml = stripHeroBgImageLayer(siteHtml);
+            siteHtml = enforceSampleMastheadBackground(siteHtml, dataUri);
             console.log(`[buildWebsite-background] Replaced masthead placeholder filename in-place: ${mastheadPlaceholderUrl}`);
           } else if (sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)) {
             siteHtml = siteHtml.replaceAll(sampleRasterCssUrl, dataUri);
-            siteHtml = stripHeroBgImageLayer(siteHtml);
+            siteHtml = enforceSampleMastheadBackground(siteHtml, dataUri);
             console.log(`[buildWebsite-background] Replaced sample masthead CSS URL in-place: ${sampleRasterCssUrl}`);
           } else if (/--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)) {
             siteHtml = siteHtml.replace(
