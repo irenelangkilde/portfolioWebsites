@@ -270,6 +270,14 @@ function escapeRegExp(value) {
   return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function stripCssComments(value = "") {
+  return String(value).replace(/\/\*[\s\S]*?\*\//g, "").trim();
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function findBalancedElementByClass(html, className, startIndex = 0) {
   const openRe = new RegExp(`<([a-z0-9:-]+)\\b[^>]*class=["'][^"']*\\b${escapeRegExp(className)}\\b[^"']*["'][^>]*>`, "ig");
   openRe.lastIndex = startIndex;
@@ -1057,7 +1065,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       /(header|\bhero\b)/i.test(selector) &&
       /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
     );
-    sampleRasterCssSelector = rasterBgBlock?.[1]?.trim() || "";
+    sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
     sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
     const rasterBgMatch = rasterBgBlock
       ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
@@ -1151,11 +1159,20 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   const stripHeroBgImageLayer = (html) =>
     html.replace(/var\(--hero-bg-image\)\s*,\s*/g, "");
   const moveGeneratedHeroIntoHeader = (html) => {
-    if (!sampleHeaderContainsHero) return html;
+    if (!sampleHeaderContainsHero) {
+      console.log("[buildWebsite-background] Hero move skipped: sample header does not contain hero content");
+      return html;
+    }
     const headerCloseMatch = html.match(/<\/header>/i);
-    if (!headerCloseMatch || headerCloseMatch.index == null) return html;
+    if (!headerCloseMatch || headerCloseMatch.index == null) {
+      console.log("[buildWebsite-background] Hero move skipped: generated HTML has no closing </header>");
+      return html;
+    }
     const headerCloseIdx = headerCloseMatch.index;
-    if (/<h1\b/i.test(html.slice(0, headerCloseIdx))) return html;
+    if (/<h1\b/i.test(html.slice(0, headerCloseIdx))) {
+      console.log("[buildWebsite-background] Hero move skipped: generated header already contains <h1>");
+      return html;
+    }
     let heroBlock = findBalancedElementByClass(html, "hero", headerCloseIdx);
     if (!heroBlock || heroBlock.start < headerCloseIdx) {
       heroBlock = findBalancedElementByTagContaining(
@@ -1165,7 +1182,12 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
         headerCloseIdx
       );
     }
-    if (!heroBlock || heroBlock.start < headerCloseIdx) return html;
+    if (!heroBlock || heroBlock.start < headerCloseIdx) {
+      const afterHeader = html.slice(headerCloseIdx + headerCloseMatch[0].length);
+      const firstBlock = afterHeader.match(/^\s*<(section|div)\b[\s\S]{0,1200}?<\/\1>/i)?.[0] || afterHeader.slice(0, 600);
+      console.log(`[buildWebsite-background] Hero move skipped: no post-header masthead block match. Snippet: ${JSON.stringify(firstBlock)}`);
+      return html;
+    }
     const withoutHero = html.slice(0, heroBlock.start) + html.slice(heroBlock.end);
     const insertIdx = withoutHero.search(/<\/header>/i);
     if (insertIdx === -1) return html;
@@ -1187,6 +1209,22 @@ header > div:has(h1)::before,header > div:has(h1)::after{background:none !import
     if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${overrideCss}\n</head>`);
     return overrideCss + html;
   };
+  const injectForcedMastheadSelectorCss = (html, dataUri) => {
+    if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
+    const forcedBackgroundDecl = sampleRasterBackgroundDecl
+      .replace(sampleRasterCssUrl, dataUri)
+      .replace(/;\s*$/, " !important;");
+    const forcedCss = `
+<style id="braid-masthead-force">
+${sampleRasterCssSelector}{${forcedBackgroundDecl}}
+${sampleRasterCssSelector}::before,
+${sampleRasterCssSelector}::after{background:none !important;background-image:none !important;box-shadow:none !important;content:none !important;}
+</style>`;
+    if (html.includes('id="braid-masthead-force"')) return html;
+    console.log(`[buildWebsite-background] Injected forced masthead override CSS for selector: ${sampleRasterCssSelector}`);
+    if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${forcedCss}\n</head>`);
+    return forcedCss + html;
+  };
   const enforceSampleMastheadBackground = (html, dataUri) => {
     if (!sampleRasterCssSelector || !sampleRasterBackgroundDecl || !sampleRasterCssUrl) return html;
     const normalizedBackgroundDecl = sampleRasterBackgroundDecl.replace(
@@ -1194,7 +1232,9 @@ header > div:has(h1)::before,header > div:has(h1)::after{background:none !import
       dataUri
     );
     const selectorRe = new RegExp(`(${escapeRegExp(sampleRasterCssSelector)}\\s*\\{)([\\s\\S]*?)(\\})`, "i");
+    let matched = false;
     const updated = html.replace(selectorRe, (match, open, body, close) => {
+      matched = true;
       let nextBody = body;
       if (/background\s*:\s*[\s\S]*?;/i.test(nextBody)) {
         nextBody = nextBody.replace(/background\s*:\s*[\s\S]*?;/i, normalizedBackgroundDecl);
@@ -1205,9 +1245,14 @@ header > div:has(h1)::before,header > div:has(h1)::after{background:none !import
       }
       return `${open}${nextBody}${close}`;
     });
+    if (!matched) {
+      console.log(`[buildWebsite-background] Could not find generated masthead selector for reapply: ${sampleRasterCssSelector}`);
+      return stripHeroBgImageLayer(html);
+    }
     let stripped = stripHeroBgImageLayer(updated);
     stripped = moveGeneratedHeroIntoHeader(stripped);
     stripped = injectHeroBackgroundCleanup(stripped);
+    stripped = injectForcedMastheadSelectorCss(stripped, dataUri);
     console.log(`[buildWebsite-background] Reapplied sample masthead background declaration for selector: ${sampleRasterCssSelector}`);
     return stripped;
   };
@@ -1258,13 +1303,33 @@ header > div:has(h1)::before,header > div:has(h1)::after{background:none !import
           })}`
         );
         const openaiImgClient = new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" });
-        const imgResp = await openaiImgClient.images.generate({
-          model:   "dall-e-3",
-          prompt:  imagePrompt,
-          n:       1,
-          size:    "1024x1024",
-          response_format: "b64_json"
-        });
+        let imgResp = null;
+        let lastImgErr = null;
+        const maxAttempts = 3;
+        for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+          try {
+            console.log(`[buildWebsite-background] Masthead image generation attempt ${attempt}/${maxAttempts}`);
+            imgResp = await openaiImgClient.images.generate({
+              model:   "dall-e-3",
+              prompt:  imagePrompt,
+              n:       1,
+              size:    "1024x1024",
+              response_format: "b64_json"
+            });
+            lastImgErr = null;
+            break;
+          } catch (err) {
+            lastImgErr = err;
+            const status = err?.status ?? err?.response?.status ?? null;
+            const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
+            console.warn(
+              `[buildWebsite-background] Masthead image generation attempt ${attempt} failed: ${status || "no-status"} ${err?.message || err}`
+            );
+            if (!shouldRetry) break;
+            await sleep(900 * attempt);
+          }
+        }
+        if (lastImgErr) throw lastImgErr;
         const b64 = imgResp.data?.[0]?.b64_json;
         console.log("[buildWebsite-background] Masthead image generated:", !!b64);
         if (b64) {
