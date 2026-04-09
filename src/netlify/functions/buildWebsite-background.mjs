@@ -242,21 +242,24 @@ function parseJsonResponse(raw) {
 // and the template's embedded default_color_scheme metadata comment.
 function injectCssColors(html, colorSpec, templateHtml) {
   if (!colorSpec || colorSpec.use_sample_colors) return html;
-  // Parse --color-* variable declarations with role index from their /* N. Role — ... */ comments.
-  // The client assigns picker slots in the same order (role 1 → primary, role 2 → secondary, …),
-  // so we map CSS var name → slot name by matching on comment index.
+  // Parse --color-* variable declarations with their adjacent numbered role comments.
+  // Slots 1–5 map directly to primary/secondary/accent/dark/light in order.
   const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
   if (!rootMatch) return html;
-  const slots = ["primary", "secondary", "accent", "dark", "light"];
   const colorVars = [];
-  const re = /(--color-[\w-]+)\s*:\s*#[0-9a-fA-F]{3,8}[^;]*;\s*\/\*\s*(\d+)\./g;
+  const re = /(--color-[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*\s*(\d+)\.\s*([^*]+)\*\//g;
   let m;
   while ((m = re.exec(rootMatch[1])) !== null) {
-    colorVars.push({ varName: m[1], index: parseInt(m[2]) });
+    colorVars.push({ varName: m[1], hex: m[2], index: parseInt(m[3]), label: m[4].trim() });
   }
+  if (!colorVars.length) return html;
   colorVars.sort((a, b) => a.index - b.index);
+  const slots = ["primary", "secondary", "accent", "dark", "light"];
   const varToSlot = {};
-  colorVars.forEach((cv, i) => { if (i < slots.length) varToSlot[cv.varName] = slots[i]; });
+  colorVars.forEach((cv, i) => {
+    if (i < slots.length) varToSlot[cv.varName] = slots[i];
+  });
+
   if (!Object.keys(varToSlot).length) return html;
   return html.replace(/(--color-[\w-]+)(\s*:\s*)#[0-9a-fA-F]{3,8}/g, (match, varName, colon) => {
     const slot = varToSlot[varName];
@@ -293,20 +296,20 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const isUseSampleColors = colorSpec?.use_sample_colors;
   const colorApp = isUseSampleColors
     ? {
-        primary_use:   "Preserve template's primary color for headings and key UI elements",
-        secondary_use: "Preserve template's secondary color for subheadings and links",
-        accent_use:    "Preserve template's accent for hover states and CTAs",
-        dark_use:      "Preserve template's dark color for backgrounds and body text",
-        light_use:     "Preserve template's light color for cards and section backgrounds",
+        primary_use:   "Preserve slot 1 as the masthead's most dominant color.",
+        secondary_use: "Preserve slot 2 as the second most dominant non-derivable masthead color.",
+        accent_use:    "Preserve slot 3 as the third distinct headline, section, or button color.",
+        dark_use:      "Preserve slot 4 as a lower-prominence orthogonal accent or text color.",
+        light_use:     "Preserve slot 5 as the least-prominent orthogonal accent or text color.",
         gradient_notes: "Use template's existing gradient patterns"
       }
     : {
-        primary_use:   `${colorSpec?.primary || "primary"} — headings, navbar brand, primary buttons`,
-        secondary_use: `${colorSpec?.secondary || "secondary"} — subheadings, links, secondary buttons`,
-        accent_use:    `${colorSpec?.accent || "accent"} — hover states, CTAs, highlights, icon accents`,
-        dark_use:      `${colorSpec?.dark || "dark"} — hero background, dark section backgrounds`,
-        light_use:     `${colorSpec?.light || "light"} — card backgrounds, alternating section fills`,
-        gradient_notes: `Hero: ${colorSpec?.dark || "dark"} → ${colorSpec?.primary || "primary"}. Cards: subtle ${colorSpec?.light || "light"} base. Diagonal breaks: ${colorSpec?.primary || "primary"} → ${colorSpec?.secondary || "secondary"}.`
+        primary_use:   `${colorSpec?.primary || "slot 1"} — the most dominant masthead color, either foreground or background.`,
+        secondary_use: `${colorSpec?.secondary || "slot 2"} — the second most dominant masthead color, distinct from slot 1.`,
+        accent_use:    `${colorSpec?.accent || "slot 3"} — the third distinct headline, section, or button color.`,
+        dark_use:      `${colorSpec?.dark || "slot 4"} — a lower-prominence orthogonal accent or text color.`,
+        light_use:     `${colorSpec?.light || "slot 5"} — the least-prominent orthogonal accent or text color.`,
+        gradient_notes: `Preserve the template's gradient structure while making slots 1–3 carry most of the visual weight and slots 4–5 act as supporting contrast colors.`
       };
 
   const pace = (attrs.pacing || "").toLowerCase();
@@ -888,6 +891,268 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
   }), { ttl: 3600 });
 }
 
+// ─── Braid pipeline ──────────────────────────────────────────────────────────
+async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId) {
+  const {
+    page1            = {},
+    resumeFacts      = null,
+    resolvedStrategy = null,
+    sampleHtml       = "",
+    colorSpec        = {},
+    headshotName     = "",
+  } = body;
+
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Braiding portfolio website…"
+  }), { ttl: 3600 });
+
+  // Derive helper values for prompt substitution
+  const flatResumeFacts = toFlatResumeSchema(resumeFacts);
+  const name = flatResumeFacts?.personal?.name || resumeFacts?.identity?.name || "";
+  const initials = name.split(/\s+/).map(w => w[0] || "").join("").toUpperCase().slice(0, 2) || "?";
+  const currentYear = new Date().getFullYear();
+
+  const motifs = resolvedStrategy?.motifs || {};
+  const domainContext = [
+    motifs.broad_primary_domain,
+    (motifs.potential_visual_motifs || []).slice(0, 3).join(", "),
+    (motifs.symbolic_objects        || []).slice(0, 3).join(", ")
+  ].filter(Boolean).join(" — ") || name;
+
+  const headshotHtml = headshotName
+    ? `<img src="${headshotName}" alt="${name}" class="headshot" />`
+    : "";
+
+  const theme = {
+    primary:   colorSpec.primary   || "#4E70F1",
+    secondary: colorSpec.secondary || "#FBAB9C",
+    accent:    colorSpec.accent    || "#8DE0FF",
+    dark:      colorSpec.dark      || "#0b1220",
+    light:     colorSpec.light     || "#eaf0ff",
+  };
+
+  // Cap sample HTML to avoid exceeding model context
+  const cappedSampleHtml = sampleHtml.length > 80000
+    ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
+    : sampleHtml;
+
+  // Detect whether the sample masthead uses a real JPG/PNG image.
+  // If so, instruct the renderer to emit a server-replaceable placeholder img.
+  let sampleHasRasterHeroImage = false;
+  let sampleRasterCssUrl = "";
+  const mastheadPlaceholderUrl = "braid-masthead.png";
+  const mastheadImageInstruction = (() => {
+    const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
+    const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)="[^"]*hero[^"]*"[^>]*>([\s\S]{0,5000})/i);
+    const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
+      .filter(Boolean)
+      .join("\n");
+    const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
+    const rasterImgMatch = searchRegions.match(
+      /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
+    );
+    const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
+    const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
+      /(header|\bhero\b)/i.test(selector) &&
+      /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
+    );
+    const rasterBgMatch = rasterBgBlock
+      ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
+      : null;
+    sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+    console.log(
+      `[buildWebsite-background] Header/hero raster detection: ${JSON.stringify({
+        hasHeaderRegion: !!headerMatch,
+        hasHeroRegion: !!heroMatch,
+        foundRasterImgTag: !!rasterImgMatch,
+        foundRasterCssBackground: !!rasterBgMatch,
+        matchedRasterCssUrl: typeof rasterBgMatch === "string" ? rasterBgMatch : ""
+      })}`
+    );
+
+    sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+
+    if (sampleHasRasterHeroImage) {
+      if (sampleRasterCssUrl) {
+        return (
+          `The sample masthead uses a raster image inside a CSS background declaration (detected server-side).\n` +
+          `  Preserve the existing masthead selector, gradient layers, background shorthand, positioning, sizing,\n` +
+          `  repeat behavior, and all surrounding CSS exactly as in the sample.\n` +
+          `  Change only the raster image URL inside that masthead background declaration to:\n` +
+          `    url("${mastheadPlaceholderUrl}")\n` +
+          `  Do not add an <img> tag. Do not simplify or rewrite the masthead background styling.`
+        );
+      }
+      return (
+        `The sample masthead contains a JPG/PNG image (detected server-side).\n` +
+        `  Do NOT generate an SVG illustration. Instead, place exactly this element where the masthead image belongs:\n` +
+        `    <img id="braid-img" src="" alt="${domainContext}" style="max-width:100%;border-radius:inherit;">\n` +
+        `  The src will be filled in automatically after generation. Preserve all surrounding layout,\n` +
+        `  sizing, and positional CSS from the sample so the injected image fits naturally.`
+      );
+    } else {
+      return (
+        `The sample masthead has no JPG/PNG image (detected server-side) — use SVG.\n` +
+        `  Recreate a domain-appropriate masthead graphic as inline SVG embedded directly in the masthead\n` +
+        `  section. Base its visual style on the sample (flat vector / gradient shapes / geometric\n` +
+        `  abstraction / glowing rings). The SVG should reflect the candidate's professional field.\n` +
+        `  Minimum size: 280px wide. Make it visually striking — this is the first thing a recruiter sees.`
+      );
+    }
+  })();
+  console.log(`[buildWebsite-background] Masthead image instruction: ${mastheadImageInstruction}`);
+
+  let prompt;
+  try {
+    prompt = loadPromptFile("braidWebsite.md")
+      .replace("{{COLOR_PRIMARY}}",        theme.primary)
+      .replace("{{COLOR_SECONDARY}}",      theme.secondary)
+      .replace("{{COLOR_ACCENT}}",         theme.accent)
+      .replace("{{COLOR_DARK}}",           theme.dark)
+      .replace("{{COLOR_LIGHT}}",          theme.light)
+      .replace("{{HEADSHOT_HTML}}",        headshotHtml)
+      .replace("{{CANDIDATE_INITIALS}}",   initials)
+      .replace("{{CANDIDATE_NAME}}",       name)
+      .replace("{{CURRENT_YEAR}}",         String(currentYear))
+      .replace("{{DOMAIN_CONTEXT}}",       domainContext)
+      .replace("{{HERO_IMAGE_INSTRUCTION}}", mastheadImageInstruction)
+      .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts,      null, 2))
+      .replace("{{RESOLVED_STRATEGY_JSON}}", JSON.stringify(resolvedStrategy, null, 2))
+      .replace("{{COLOR_SPEC_JSON}}",      JSON.stringify(theme,            null, 2))
+      .replace("{{SAMPLE_HTML}}",          cappedSampleHtml);
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
+    return;
+  }
+
+  let r;
+  try {
+    r = await callAI(provider, creds, {
+      system: "You are an HTML code generator. Output only a single complete HTML file starting with <!DOCTYPE html>. No markdown. No explanation.",
+      userText: prompt,
+      maxTokens: 40000
+    });
+  } catch (aiErr) {
+    await store.set(jobId, JSON.stringify({
+      status: "error",
+      error: "Braid AI error: " + (aiErr?.message || String(aiErr))
+    }), { ttl: 3600 });
+    return;
+  }
+
+  let siteHtml = cleanHtml(r.text || "");
+  const truncated = !siteHtml.includes("</html>");
+  const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
+
+  // If the sample indicates a raster masthead image, generate one with DALL-E.
+  // Prefer replacing the explicit placeholder when the model emitted it; otherwise
+  // fall back to wiring the generated image into --hero-bg-image.
+  const hasHeroPlaceholder = siteHtml.includes('id="braid-img"');
+  const hasSampleRasterCssUrl = !!(sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl));
+  const hasMastheadPlaceholderUrl = siteHtml.includes(mastheadPlaceholderUrl);
+  const hasHeroBgImageSlot = /--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml);
+  console.log("[buildWebsite-background] Masthead image placeholder present:", hasHeroPlaceholder);
+  console.log("[buildWebsite-background] Sample requires generated masthead image:", sampleHasRasterHeroImage);
+  console.log(
+    `[buildWebsite-background] Masthead injection slots: ${JSON.stringify({
+      sampleRasterCssUrl,
+      hasSampleRasterCssUrl,
+      mastheadPlaceholderUrl,
+      hasMastheadPlaceholderUrl,
+      hasHeroBgImageSlot
+    })}`
+  );
+  if (sampleHasRasterHeroImage) {
+    try {
+      const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
+      console.log("[buildWebsite-background] Masthead image API key present:", !!openaiKey);
+      if (openaiKey) {
+        const { major, specialization } = page1;
+        const imagePrompt =
+          `Generate a professional masthead image for a portfolio website of a person majoring in ${major} and specializing in ${specialization}.`;
+        console.log(
+          `[buildWebsite-background] Masthead image prompt inputs: ${JSON.stringify({
+            major,
+            specialization
+          })}`
+        );
+        console.log(`[buildWebsite-background] Masthead image prompt: ${imagePrompt}`);
+        console.log(
+          `[buildWebsite-background] DALL-E request payload: ${JSON.stringify({
+            model: "dall-e-3",
+            prompt: imagePrompt,
+            n: 1,
+            size: "1024x1024",
+            response_format: "b64_json"
+          })}`
+        );
+        const openaiImgClient = new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" });
+        const imgResp = await openaiImgClient.images.generate({
+          model:   "dall-e-3",
+          prompt:  imagePrompt,
+          n:       1,
+          size:    "1024x1024",
+          response_format: "b64_json"
+        });
+        const b64 = imgResp.data?.[0]?.b64_json;
+        console.log("[buildWebsite-background] Masthead image generated:", !!b64);
+        if (b64) {
+          const dataUri = `data:image/png;base64,${b64}`;
+          if (hasHeroPlaceholder) {
+            siteHtml = siteHtml.replace(
+              /(<img[^>]*id="braid-img"[^>]*)src=""/,
+              `$1src="${dataUri}"`
+            );
+            console.log("[buildWebsite-background] Injected generated masthead image via #braid-img placeholder");
+          } else if (siteHtml.includes(mastheadPlaceholderUrl)) {
+            siteHtml = siteHtml.replaceAll(mastheadPlaceholderUrl, dataUri);
+            console.log(`[buildWebsite-background] Replaced masthead placeholder filename in-place: ${mastheadPlaceholderUrl}`);
+          } else if (sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)) {
+            siteHtml = siteHtml.replaceAll(sampleRasterCssUrl, dataUri);
+            console.log(`[buildWebsite-background] Replaced sample masthead CSS URL in-place: ${sampleRasterCssUrl}`);
+          } else if (/--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)) {
+            siteHtml = siteHtml.replace(
+              /--hero-bg-image\s*:\s*none\s*;/i,
+              `--hero-bg-image: url("${dataUri}");`
+            );
+            console.log("[buildWebsite-background] Injected generated masthead image via --hero-bg-image CSS variable");
+          } else {
+            console.log(
+              `[buildWebsite-background] Generated masthead image was available, but no injection slot was found: ${JSON.stringify({
+                hasHeroPlaceholder,
+                sampleRasterCssUrl,
+                hasSampleRasterCssUrl: !!(sampleRasterCssUrl && siteHtml.includes(sampleRasterCssUrl)),
+                mastheadPlaceholderUrl,
+                hasMastheadPlaceholderUrl: siteHtml.includes(mastheadPlaceholderUrl),
+                hasHeroBgImageSlot: /--hero-bg-image\s*:\s*none\s*;/i.test(siteHtml)
+              })}`
+            );
+          }
+          tokenReport.push({ stage: "braid · Masthead image (DALL-E 3)", model: "dall-e-3" });
+        }
+      }
+    } catch (imgErr) {
+      // Non-fatal — placeholder remains, user can replace manually
+      console.error("DALL-E masthead image generation failed:", imgErr?.message || imgErr);
+    }
+  }
+
+  await store.set(jobId, JSON.stringify({
+    status: "done",
+    site_html:    siteHtml,
+    model:        r.model,
+    truncated,
+    token_report: tokenReport
+  }), { ttl: 3600 });
+
+  await logUsageEvent(userId, {
+    event_type: "braid_generation",
+    provider,
+    model: r.model,
+    success: !!siteHtml
+  });
+}
+
 // ─── Main pipeline ───────────────────────────────────────────────────────────
 async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) {
   const {
@@ -1240,15 +1505,15 @@ export async function handler(event) {
       artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
       resumeAnalysisJson = null, templateAnalysisJson = null, templateHtml = null,
-      mode = "full",          // "full" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
+      mode = "full",          // "full" | "braid" | "analyzeJob" | "extractJobAd" | "bridgeContentAndDesign"
       strategyJson = null,    // pre-computed strategy from analyzeJob mode
       bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
       provider = "claude",    // "claude" (default) | "openai"
       userId = null           // Supabase user UUID — sent by client when logged in
     } = body;
 
-    // ── Quota check (full mode only — this is the billable generation step) ──
-    if (mode === "full") {
+    // ── Quota check (full and braid modes — these are the billable generation steps) ──
+    if (mode === "full" || mode === "braid") {
       if (!userId) {
         // Anonymous user — soft limit enforced client-side via localStorage.
         // Log to aggregate counter so usage can be monitored.
@@ -1265,6 +1530,11 @@ export async function handler(event) {
     if (mode === "analyzeJob") {
       if (!resumePdfBase64 && !resumeAnalysisJson) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
+        return { statusCode: 202 };
+      }
+    } else if (mode === "braid") {
+      if (!body.sampleHtml) {
+        await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for braid mode." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
     } else if (mode !== "bridgeContentAndDesign" && mode !== "extractJobAd") {
@@ -1342,6 +1612,12 @@ export async function handler(event) {
         model: r.model,
         success: !!jobResolved
       });
+      return { statusCode: 202 };
+    }
+
+    // braid mode: single-pass layout clone + content substitution + color encoding
+    if (mode === "braid") {
+      await braidPortfolioWebsite(provider, creds, store, jobId, body, userId);
       return { statusCode: 202 };
     }
 

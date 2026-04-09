@@ -354,11 +354,13 @@ Write 2-3 specific calls to action appropriate for this candidate's career stage
 6. SUBJECT-INSPIRED COLOR STRATEGY
 Conjure five colors inspired by the candidate's field and subject matter. Output them as an ordered array in `colors` — the order matters and must follow this convention:
 
-  colors[0] — Canvas: the dominant background/surface color (often deep or richly saturated)
-  colors[1] — Interactive: the primary action color (CTAs, links, key highlights)
-  colors[2] — Vibrant: a secondary accent (badges, supporting highlights, hover states)
-  colors[3] — OnCanvas: the text color (readable on the canvas color — often near-white or near-black)
-  colors[4] — Subtle: muted secondary text, borders, dividers
+  colors[0] — Slot 1 / Dominant: the most prominent color in the masthead or first screen, either foreground or background
+  colors[1] — Slot 2 / Secondary: the second most prominent masthead color that is clearly distinct from slot 1 and not just a shade/tint/mix of it
+  colors[2] — Slot 3 / Tertiary: the third distinct color, also not derivable from slots 1 or 2, suitable for headline text, buttons, or section emphasis
+  colors[3] — Slot 4 / Quaternary: a lower-prominence but still distinct supporting color, often used for accents, panels, labels, or text
+  colors[4] — Slot 5 / Quinary: the least-prominent distinct supporting color, often used for accents, secondary text, borders, or subtle contrast
+
+Do NOT make slots 1 and 2 near-duplicates. Do NOT default slots 4 and 5 to pure black and pure white unless the source concept genuinely requires that. Favor distinct, composition-driving colors over generic neutrals.
 
 In `how_used`, describe the overall palette mood and field connection in one sentence.
 

@@ -16,7 +16,13 @@ Bridge the candidate's professional profile with the visual design to produce co
 
 CRITICAL RULES
 - Base visual style on the example_website mood and composition, not on personal style defaults.
-- Incorporate color_spec_json (primary, secondary, accent, dark, light) as the authoritative palette.
+- Incorporate color_spec_json as the authoritative five-slot palette.
+- Interpret the slots by prominence:
+  - primary   = slot 1, dominant masthead color
+  - secondary = slot 2, second most dominant distinct masthead color
+  - accent    = slot 3, third distinct color
+  - dark      = slot 4, fourth supporting color
+  - light     = slot 5, fifth supporting color
 - Pull visual motifs from content_strategy_json to ensure domain relevance.
 - Plan thumbnail concepts for each project and the top two experiences if they exist — keep them small (roughly 1–3 inches square in presentation).
 
@@ -80,7 +86,7 @@ Use example_website signals to define:
 
 COLOR APPLICATION
 Map color_spec_json onto the visual direction:
-- Explain how each of the five colors (primary, secondary, accent, dark, light) will be used
+- Explain how each of the five ordered slots will be used by prominence
 - Describe gradient strategies that use the palette
 - Note where accent and secondary colors create visual hierarchy
 

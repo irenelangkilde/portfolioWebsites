@@ -12,7 +12,13 @@ Produce concrete visual and design decisions that the renderer will use alongsid
 
 CRITICAL RULES
 - Base visual_direction on design_spec_json mood and composition, not on personal style defaults.
-- Incorporate color_spec_json (primary, secondary, accent, dark, light) as the authoritative color palette.
+- Incorporate color_spec_json as the authoritative five-slot color palette.
+- Interpret the slots by prominence:
+  - primary   = slot 1, dominant masthead color
+  - secondary = slot 2, second most dominant distinct masthead color
+  - accent    = slot 3, third distinct color
+  - dark      = slot 4, fourth supporting color
+  - light     = slot 5, fifth supporting color
 - Generate a small thumbnail photo for each project in core_content_json and the top two experiences, if they exist.
 - Plan specific placement and presentation for each visual in visual_placements.  Make sure the images are small in presentation (roughly 1-2 inches square).
 
@@ -81,7 +87,7 @@ Use design_spec_json signals to define:
 
 COLOR APPLICATION
 Map color_spec_json onto the visual direction:
-- Explain how each of the five colors (primary, secondary, accent, dark, light) will be used
+- Explain how each of the five ordered slots will be used by prominence
 - Describe gradient strategies that use all five colors
 - Note where accent and secondary colors create visual hierarchy
 

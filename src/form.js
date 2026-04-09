@@ -29,9 +29,23 @@
     let jobAdErrorDetail = null;
     let page2Submitted   = false;  // set true when user presses Next on page 2
 
-    // Bridge Profile & Design (triggered on Colors Next)
+    // Bridge Profile & Design (triggered on Colors Next — legacy path)
     let bridgeResult      = null;   // {bridge_json, model} when done
     let bridgeInProgress  = false;
+
+    // Braid (single-pass layout clone + content substitution — replaces bridge+render for options 1 & 2)
+    let braidInProgress = false;
+
+    // Epoch counters — increment to abort any in-flight poll loop for that task
+    let _jobAdRunId      = 0;
+    let _braidRunId      = 0;
+    let _bridgeRunId     = 0;
+    let _generationRunId = 0;
+
+    // Set true when the braid/generate pipeline is first triggered; enables auto-restart
+    // after upstream inputs change on pages 1–4.
+    let page3Submitted = false;  // set when page 3 Next fires in braid mode
+    let page4Submitted = false;  // set when page 4 Next fires in mustache/design-options mode
 
     // ----------------------------
     // Auth / tier helpers
@@ -53,6 +67,28 @@
 
     function showAnonCreditPrompt() {
       showUpgradePrompt({ tier: "free", used: getAnonCreditsUsed(), limit: ANON_CREDIT_LIMIT, anon: true });
+    }
+
+    function cachePreviewHtml(html) {
+      const value = String(html || "");
+      window.__portfolioPreviewHtml = value;
+      try {
+        localStorage.setItem("portfolio_preview_html", value);
+      } catch (err) {
+        try { localStorage.removeItem("portfolio_preview_html"); } catch {}
+        console.warn("Could not persist portfolio_preview_html to localStorage:", err?.message || err);
+      }
+    }
+
+    function cachePage4Colors(colors) {
+      const value = colors && typeof colors === "object" ? { ...colors } : null;
+      window.__portfolioPage4Colors = value;
+      try {
+        localStorage.setItem("portfolio_page4_colors", JSON.stringify(value));
+      } catch (err) {
+        try { localStorage.removeItem("portfolio_page4_colors"); } catch {}
+        console.warn("Could not persist portfolio_page4_colors to localStorage:", err?.message || err);
+      }
     }
 
     function hasCreditsRemaining() {
@@ -456,6 +492,10 @@
       btn.disabled      = !ready;
       btn.style.opacity = ready ? "" : ".4";
       btn.style.cursor  = ready ? "" : "not-allowed";
+      if (ready && !pillNavUnlocked) {
+        pillNavUnlocked = true;
+        renderStepUI();
+      }
     }
 
     function greyRendererButtons(grey) {
@@ -860,6 +900,7 @@
     const progressBar = document.getElementById("progressBar");
 
     function getPageId(entry){ return entry.pageId ?? entry.id; }
+    function activePageId(){ return getPageId(PAGES[currentStep]); }
 
     let pillNavUnlocked = false;
 
@@ -1068,6 +1109,7 @@
       lastExtractedTemplate   = "";
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
+      paletteSuggestionsLocked = false;
       const sampleColorsBar = document.getElementById("sampleColorsBar");
       const sampleColorsStatus = document.getElementById("sampleColorsStatus");
       const useSampleColors = document.getElementById("useSampleColors");
@@ -1102,6 +1144,7 @@
     let extractedTemplateCache = null;   // { templateHtml, embeddedJson, templateMode }
     let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
     let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
+    let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
@@ -1205,6 +1248,24 @@
         const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
         if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
 
+        // Braid mode: fetch the original raw HTML directly — no pre-compiled template needed
+        if (isBraidMode()) {
+          const rawKey = srcPath;
+          if (rawKey === lastExtractedTemplate) return;
+          try {
+            const res = await fetch(srcPath);
+            if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
+            const html = await res.text();
+            lastExtractedTemplate = rawKey;
+            extractedTemplateCache = { templateHtml: html, embeddedJson: null, templateMode: "braid" };
+            setTemplateExtractStatus("✓ Sample website loaded", "rgba(118,176,34,.9)");
+            renderSuggestedPalettes();
+          } catch (e) {
+            setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+          }
+          return;
+        }
+
         if (compiledKey === lastExtractedTemplate) return;
 
         // Try pre-compiled version (fast path, no API call).
@@ -1221,9 +1282,8 @@
             const commentMatch = templateHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
-            const resolvedMode = candidateKey === compiledKey ? extractMode : "analysis";
             lastExtractedTemplate = candidateKey;
-            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode };
+            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis" };
             const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
@@ -1232,7 +1292,7 @@
           } catch {}
         }
 
-        // No pre-compiled file — fetch source HTML and send to AI
+        // No pre-compiled file — fetch source HTML and send to AI extraction
         const apiKey = srcPath + "#" + extractMode;
         if (apiKey === lastExtractedTemplate) return;
         try {
@@ -1258,7 +1318,15 @@
             requestBody.templateImageBase64 = b64;
             requestBody.templateImageMime   = file.type;
           } else {
-            // HTML file
+            // HTML file — for braid mode, skip AI extraction and cache raw HTML directly
+            if (isBraidMode()) {
+              const rawHtml = atob(b64);
+              lastExtractedTemplate = fileKey;
+              extractedTemplateCache = { templateHtml: rawHtml, embeddedJson: null, templateMode: "braid" };
+              setTemplateExtractStatus("✓ Sample website loaded", "rgba(118,176,34,.9)");
+              renderSuggestedPalettes();
+              return;
+            }
             requestBody.templateHtmlBase64 = b64;
           }
         } catch {
@@ -1356,8 +1424,9 @@
     let sampleColors = null;
     let lastExtractedUrl = "";
 
-    // Parse --color-* CSS variable role comments from a template's :root block.
-    // Returns [{index, label, hex}] sorted by index, e.g. [{index:1, label:"1. Canvas — deep slate…", hex:"#0f172a"}, …]
+    // Parse numbered --color-* role comments from a template's :root block.
+    // The numbers 1–5 are treated as ordered palette slots, not old fixed roles.
+    // Returns [{index, label, hex}] sorted by index.
     function parseColorRoles(html) {
       if (!html) return [];
       const rootMatch = html.match(/:root\s*\{([\s\S]*?)\}/);
@@ -1410,6 +1479,18 @@
       return hexMetrics(hex).chroma < 22;
     }
 
+    function mapRoleColorsToUiSlots(roleColors) {
+      if (!Array.isArray(roleColors) || !roleColors.length) return null;
+      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      return Object.fromEntries(slots.map((slot, i) => [slot, normalizeHex(roleColors[i]?.hex) || null]));
+    }
+
+    function mapAiPaletteToUiSlots(colorsArray) {
+      if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
+      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      return Object.fromEntries(slots.map((slot, i) => [slot, normalizeToHex(colorsArray[i]) || null]));
+    }
+
     function buildTemplatePalette(cache) {
       if (!cache) return null;
       const slotNames = ["primary", "secondary", "accent", "dark", "light"];
@@ -1417,12 +1498,9 @@
       const rootVars = parseRootHexVars(cache.templateHtml);
       const embedded = cache.embeddedJson?.default_color_scheme || {};
 
-      // Mustache templates with numbered --color-* comments already define the
-      // intended slot order. Preserve that exact 1-5 order instead of trying to
-      // reinterpret the colors semantically, or background/panel/accent colors
-      // will get shuffled when re-applied later.
+      // Numbered --color-* comments define slot order 1–5 directly.
       if (roleColors.length) {
-        const colors = Object.fromEntries(slotNames.map((slot, i) => [slot, roleColors[i]?.hex || null]));
+        const colors = mapRoleColorsToUiSlots(roleColors);
         if (Object.values(colors).some(Boolean)) {
           return { label: "Template palette", colors };
         }
@@ -1614,8 +1692,8 @@
       const firstScheme = getCompatibleColorSchemes(resumeJson)[0];
       let colors = null;
       if (Array.isArray(firstScheme?.colors) && firstScheme.colors.length) {
-        // New schema: ordered array [Canvas, Interactive, Vibrant, OnCanvas, Subtle]
-        colors = Object.fromEntries(slots.map((s, i) => [s, normalizeToHex(firstScheme.colors[i]) || null]));
+        // New schema: ordered array [slot1, slot2, slot3, slot4, slot5]
+        colors = mapAiPaletteToUiSlots(firstScheme.colors);
       } else if (firstScheme?.primary) {
         // Legacy named-slot schema
         colors = Object.fromEntries(slots.map(s => [s, normalizeToHex(firstScheme[s]) || null]));
@@ -2004,6 +2082,7 @@
         }
       } catch {}
 
+      const myRunId = ++_jobAdRunId;
       jobAdResult     = null;
       jobAdInProgress = true;
       jobAdErrorDetail = null;
@@ -2038,6 +2117,7 @@
         let lastPollData = null;
         while (Date.now() - startTime < 120000) {
           await new Promise(r => setTimeout(r, 2500));
+          if (myRunId !== _jobAdRunId) { clearInterval(jobAdCountdown); jobAdInProgress = false; return; }
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const parsed = await readJsonResponseSafely(pollRes);
           lastPollData = parsed.data ?? {
@@ -2112,13 +2192,143 @@
 
       await doExtractJobAd();
       if (jobAdResult) wireStage2Debug();
+      // If the pipeline was already triggered and job just re-completed, restart it
+      if (!braidInProgress && !bridgeInProgress && !generationInProgress) {
+        if (page3Submitted && isBraidMode()) doBraidWebsite();
+        else if (page4Submitted) page4Action();
+      }
     }
 
     // ----------------------------
     // Bridge Content & Design — triggered on page 4 (Colors) Next
     // Waits for Stage 2 (content strategy) if still in flight, then runs bridgeContentAndDesign.md
     // ----------------------------
+    // Braid — single-pass layout clone + content substitution
+    // ----------------------------
+    async function doBraidWebsite() {
+      const myRunId = ++_braidRunId;
+      braidInProgress  = true;
+      generationResult = null;
+      generationError  = null;
+      setOpenEditorReady(false);
+      setApplyBtnState(false);
+      greyRendererButtons(true);
+
+      await waitForTemplateExtraction("braidStatus");
+
+      // Wait for resume analysis
+      if (resumeAnalysisPending || !lastAnalysisData) {
+        setHeaderStatus("braidStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
+        const t0 = Date.now();
+        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - t0 < 300000) {
+          await new Promise(r => setTimeout(r, 500));
+        }
+        if (!lastAnalysisData) {
+          setHeaderStatus("braidStatus", "⚠ Resume analysis did not complete.", "rgba(251,171,156,.9)");
+          braidInProgress = false;
+          setApplyBtnState(true);
+          return;
+        }
+      }
+
+      // Wait for job ad if in flight
+      if (jobAdInProgress) {
+        setHeaderStatus("braidStatus", "Waiting for job analysis…", "rgba(141,224,255,.6)");
+        while (jobAdInProgress) await new Promise(r => setTimeout(r, 500));
+      }
+
+      const sampleHtml = extractedTemplateCache?.templateHtml || null;
+      if (!sampleHtml) {
+        setHeaderStatus("braidStatus", "⚠ No sample website loaded — please select a template.", "rgba(251,171,156,.9)");
+        braidInProgress = false;
+        setApplyBtnState(true);
+        return;
+      }
+
+      const braidCountdown = startCountdown("braidStatus", "Braiding portfolio…", 720);
+      const jobId = crypto.randomUUID();
+
+      const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
+      const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
+
+      // Use the sample website's own colors for the braid — user colors are applied afterward
+      const samplePalette = buildTemplatePalette(extractedTemplateCache);
+      const colorSpec = samplePalette?.colors || getPage3Colors().theme;
+
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+	          body: JSON.stringify({
+	            mode: "braid",
+	            jobId,
+	            page1: getPage1(),
+	            resumeFacts,
+	            resolvedStrategy,
+	            sampleHtml,
+	            colorSpec,
+            headshotName: headshotInput?.files?.[0]?.name || "",
+            provider:     getAnalysisProvider(),
+            userId:       currentUserId()
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          const t = await res.text();
+          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+        }
+
+        const maxWaitMs = 720000;
+        const startTime = Date.now();
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, 4000));
+          if (myRunId !== _braidRunId) { clearInterval(braidCountdown); braidInProgress = false; return; }
+          const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const parsed  = await readJsonResponseSafely(pollRes);
+          const data    = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
+          setHeaderStatus("braidStatus", `Braiding portfolio… ${remaining}s`, "rgba(141,224,255,.75)");
+          if (data.status === "done") {
+            clearInterval(braidCountdown);
+            generationResult    = data;
+            braidInProgress     = false;
+            generationInProgress = false;
+            if (!currentUserId()) incrementAnonCredits();
+            // Apply user color overrides if they've already confirmed on page 4
+            if (page4Submitted) applyBraidColorOverrides(generationResult);
+            setHeaderStatus("braidStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
+            setApplyBtnState(true);
+            setOpenEditorReady(true);
+            if (isDebugMode()) mergeTokenReport(data?.token_report);
+            cachePreviewHtml(generationResult.site_html || "");
+            const readyMsg = document.getElementById("generatorReadyMsg");
+            if (readyMsg) { readyMsg.textContent = "Portfolio ready."; readyMsg.style.color = "rgba(118,176,34,.9)"; }
+            greyRendererButtons(false);
+            return;
+          }
+          if (!pollRes.ok || data.status === "error") {
+            clearInterval(braidCountdown);
+            const errMsg = data.error || "Braid failed.";
+            generationError  = errMsg;
+            braidInProgress  = false;
+            setHeaderStatus("braidStatus", "⚠ " + errMsg, "rgba(251,171,156,.9)");
+            setApplyBtnState(true);
+            return;
+          }
+        }
+        clearInterval(braidCountdown);
+        setHeaderStatus("braidStatus", "⚠ Braid timed out. Please try again.", "rgba(251,171,156,.9)");
+      } catch (err) {
+        clearInterval(braidCountdown);
+        setHeaderStatus("braidStatus", "⚠ " + (err?.message || "Braid failed."), "rgba(251,171,156,.9)");
+      } finally {
+        braidInProgress = false;
+        setApplyBtnState(true);
+      }
+    }
+
+    // ----------------------------
     async function doBridgeContentAndDesign() {
+      const myRunId = ++_bridgeRunId;
       bridgeResult     = null;
       bridgeInProgress = true;
       // Clear token report here — this is the start of a new render cycle
@@ -2176,6 +2386,7 @@
         const startTime = Date.now();
         while (Date.now() - startTime < 300000) {
           await new Promise(r => setTimeout(r, 3000));
+          if (myRunId !== _bridgeRunId) { clearInterval(bridgeCountdown); bridgeInProgress = false; return; }
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const parsed = await readJsonResponseSafely(pollRes);
           const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
@@ -2315,6 +2526,7 @@
     // Generation — called from page 4 Next (fire-and-forget); visuals injected client-side after generation
     // ----------------------------
     async function doGenerateWebsite() {
+      const myRunId = ++_generationRunId;
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
@@ -2430,6 +2642,7 @@
 
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, pollIntervalMs));
+          if (myRunId !== _generationRunId) { generationInProgress = false; return; }
           const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed = await readJsonResponseSafely(pollRes);
@@ -2520,10 +2733,10 @@
       // Set localStorage with the base HTML *before* opening the window so the
       // editor never reads an empty slot. The popup-blocker rule only fires on
       // window.open(), not on localStorage writes.
-      localStorage.setItem("portfolio_preview_html", generationResult.site_html);
+      cachePreviewHtml(generationResult.site_html);
       // Pass page 4 colors so the editor can offer a "Reset to default" option
       const p4Colors = getPage3Colors().theme;
-      localStorage.setItem("portfolio_page4_colors", JSON.stringify(p4Colors));
+      cachePage4Colors(p4Colors);
       const editorWin = window.open("editor.html", "_blank");
 
       // Collect visuals and inject them (client-side, may be instant or async).
@@ -2538,7 +2751,7 @@
         finalHtml = injectArtifacts(finalHtml, allVisuals);
         // Update localStorage with artifact-injected version and push it to the
         // already-open editor window via postMessage (no reload needed).
-        localStorage.setItem("portfolio_preview_html", finalHtml);
+        cachePreviewHtml(finalHtml);
         if (editorWin && !editorWin.closed) {
           try { editorWin.postMessage({ type: "portfolio_html", html: finalHtml }, location.origin); } catch {}
         }
@@ -2590,6 +2803,8 @@
       if (resumeUpload) resumeUpload.value = "";
       resumeAnalysisCache = null;
       lastAnalysisData = null;
+      userHasSelectedPalette = false;
+      paletteSuggestionsLocked = false;
       setResumeAnalysisStatus("");
     });
 
@@ -2598,19 +2813,33 @@
     // downstream that depended on that input. Attach listeners once at init time;
     // they only invalidate if the user is currently on that page (currentStep check).
 
+    // Clear a status only if the corresponding background task is not currently running.
+    // If it IS running, its own countdown/update messages are still accurate — leave them.
+    function clearIfIdle(statusId, inProgressFlag) {
+      if (!inProgressFlag) setHeaderStatus(statusId, "");
+    }
+
     function invalidateFromPage1() {
-      if (currentStep !== 1) return;
+      if (activePageId() !== "page1") return;
       // Resume/major/specialization changed — everything downstream is stale
       lastAnalysisData     = null;
       resumeAnalysisCache  = null;
+      userHasSelectedPalette = false;
+      paletteSuggestionsLocked = false;
       jobAdResult          = null;
       page2Submitted       = false;
+      page3Submitted       = false;
+      page4Submitted       = false;
       extractedTemplateCache = null;
       bridgeResult         = null;
       generationResult     = null;
-      setResumeAnalysisStatus("");
+      // Abort any in-flight downstream tasks
+      ++_jobAdRunId; ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
+      // Resume analysis may have already auto-started on file change — don't stomp it
+      if (!resumeAnalysisPending) setResumeAnalysisStatus("");
       setHeaderStatus("jobAnalysisStatus", "");
       setHeaderStatus("templateExtractStatus", "");
+      setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
@@ -2618,41 +2847,71 @@
     }
 
     function invalidateFromPage2() {
-      if (currentStep !== 2) return;
+      if (activePageId() !== "page2") return;
       // Job ad changed — job result and everything downstream is stale
       jobAdResult      = null;
       page2Submitted   = false;
       bridgeResult     = null;
       generationResult = null;
+      // Abort any in-flight downstream tasks
+      ++_jobAdRunId; ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       setHeaderStatus("jobAnalysisStatus", "");
+      setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
+      // Auto-restart job analysis (page2Submitted was just cleared, re-trigger via flag check below)
+      if (page4Submitted) doAnalyzeAndExtractJobAd();
     }
 
     function invalidateFromPage3() {
-      if (currentStep !== 3) return;
+      if (activePageId() !== "page3") return;
       // Design/template changed — template cache and everything downstream is stale
       extractedTemplateCache = null;
+      lastExtractedTemplate  = "";   // force re-extraction even if same file/keyword
+      templatePaletteRendered = false;
+      userHasSelectedPalette = false;
+      paletteSuggestionsLocked = false;
       bridgeResult           = null;
       generationResult       = null;
+      // Abort any in-flight downstream tasks
+      ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
+      page3Submitted = false;
       setHeaderStatus("templateExtractStatus", "");
+      setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
+      // Re-run extraction if a template source is already selected (restores the status message)
+      extractTemplateInBackground();
+      // Auto-restart: braid triggers from page 3, mustache/design-options from page 4
+      if (page4Submitted) page4Action();
     }
 
     function invalidateFromPage4() {
-      if (currentStep !== 4) return;
-      // Colors changed — bridge and generation are stale
-      bridgeResult     = null;
-      generationResult = null;
+      if (activePageId() !== "page4") return;
+      page4Submitted = false;
+      const submitMsg = document.getElementById("colorsSubmitMsg");
+      if (submitMsg) submitMsg.textContent = "";
+      const readyMsg = document.getElementById("generatorReadyMsg");
+      if (readyMsg) readyMsg.textContent = "";
+      setHeaderStatus("colorsChosenStatus", "");
+      setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
+
+      if (isBraidMode()) {
+        return;
+      }
+
+      // Mustache / design-options: colors changed — generation is stale
+      bridgeResult     = null;
+      generationResult = null;
+      ++_bridgeRunId; ++_generationRunId;
     }
 
     // Page 1 inputs
@@ -2793,6 +3052,14 @@
       const rows      = document.getElementById("suggestedPalettesRows");
       if (!container || !rows) return;
 
+      if (paletteSuggestionsLocked && rows.childElementCount > 0) {
+        if (msg) {
+          msg.textContent = "(Palette locked after selection)";
+          msg.style.display = "block";
+        }
+        return;
+      }
+
       // Slot 0: template palette — sanitize extracted colors so duplicate neutrals
       // do not crowd out salient accent hues from the source design.
       let tplPalette = buildTemplatePalette(extractedTemplateCache);
@@ -2820,10 +3087,10 @@
         .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.accent)
         .slice(0, 3)
         .map((p, i) => {
-          // New format: ordered array matching role positions 1-5
+          // New format: ordered array matching slot positions 1-5
           // Legacy format: named slots (primary/secondary/accent/dark/light)
           const colors = Array.isArray(p.colors)
-            ? Object.fromEntries(slots.map((s, j) => [s, p.colors[j] || null]))
+            ? mapAiPaletteToUiSlots(p.colors)
             : { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light };
           return { label: p.how_used || `AI palette ${i + 1}`, colors };
         });
@@ -2859,7 +3126,11 @@
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
         cb.addEventListener("change", () => {
-          if (cb.checked) { userHasSelectedPalette = true; applyColors(palette.colors); }
+          if (cb.checked) {
+            userHasSelectedPalette = true;
+            paletteSuggestionsLocked = true;
+            applyColors(palette.colors);
+          }
         });
 
         const swatches = document.createElement("div");
@@ -2921,6 +3192,10 @@
     document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
     document.getElementById("next3_bottom")?.addEventListener("click", () => {
       if (!page3Action()) return;
+      if (isBraidMode()) {
+        page3Submitted = true;
+        doBraidWebsite();
+      }
       setStep(4);
     });
 
@@ -2929,16 +3204,53 @@
     function isDirectDesignMode() {
       return document.querySelector('input[name="templateSource"]:checked')?.value === "none";
     }
+    function isBraidMode() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      return (source === "keyword" || source === "file") && !isMustacheMode() && !isDirectDesignMode();
+    }
+    // Inject user color overrides into the braid-generated HTML as a :root override block.
+    // The braid was run with the sample's own colors; this layer applies the user's choices.
+    function applyBraidColorOverrides(result) {
+      if (!result?.site_html) return;
+      const theme = getPage3Colors().theme;
+      if (!theme) return;
+      const overrides = Object.entries(theme)
+        .map(([k, v]) => `--bp-${k}: ${v};`)
+        .join(" ");
+      if (!overrides) return;
+      result.site_html = result.site_html.replace(
+        "</head>",
+        `<style>:root { ${overrides} }</style>\n</head>`
+      );
+    }
+
     function page4Action() {
       setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
+      const submitMsg = document.getElementById("colorsSubmitMsg");
+      if (submitMsg) submitMsg.textContent = "✓ Color scheme submitted";
       if (isDirectDesignMode()) {
-        setHeaderStatus("bridgeStatus", "Bridge skipped for design-options mode", "rgba(234,240,255,.35)");
+        page4Submitted = true;
+        setHeaderStatus("braidStatus", "Braid skipped — design-options mode", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else if (isMustacheMode()) {
-        setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
-        doGenerateWebsite(); // bridge unused for mustache — skip straight to renderer
+        page4Submitted = true;
+        setHeaderStatus("braidStatus", "Braid skipped — mustache mode", "rgba(234,240,255,.35)");
+        doGenerateWebsite();
       } else {
-        doBridgeContentAndDesign(); // fire-and-forget, auto-chains into doGenerateWebsite
+        // Braid mode: braid is already running. Mark page4 confirmed.
+        page4Submitted = true;
+        if (generationResult) {
+          // Braid finished before user reached page 4 — apply overrides now
+          applyBraidColorOverrides(generationResult);
+          cachePreviewHtml(generationResult.site_html || "");
+          setOpenEditorReady(true);
+          const readyMsg = document.getElementById("generatorReadyMsg");
+          if (readyMsg) {
+            readyMsg.textContent = "Portfolio ready.";
+            readyMsg.style.color = "rgba(118,176,34,.9)";
+          }
+        }
+        // If braid is still running, applyBraidColorOverrides will be called on completion
       }
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
@@ -2951,19 +3263,21 @@
 
     // Debug recompute buttons
     document.getElementById("recomputeStage4")?.addEventListener("click", () => {
-      if (bridgeInProgress || generationInProgress) return;
+      if (braidInProgress || bridgeInProgress || generationInProgress) return;
       bridgeResult     = null;
       generationResult = null;
+      ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       greyRendererButtons(true);
       setApplyBtnState(false);
       if (isDirectDesignMode()) {
-        setHeaderStatus("bridgeStatus", "Bridge skipped for design-options mode", "rgba(234,240,255,.35)");
+        setHeaderStatus("braidStatus", "Braid skipped — design-options mode", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else if (isMustacheMode()) {
-        setHeaderStatus("bridgeStatus", "Bridge not needed", "rgba(234,240,255,.35)");
+        setHeaderStatus("braidStatus", "Braid skipped — mustache mode", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else {
-        doBridgeContentAndDesign(); // auto-chains into doGenerateWebsite() on completion
+        page3Submitted = true; page4Submitted = true;
+        doBraidWebsite();
       }
     });
     document.getElementById("recomputeStage5")?.addEventListener("click", () => {
@@ -2992,6 +3306,7 @@
       const msg = e.data;
       if (!msg || msg.type !== "colorPick") return;
       userHasSelectedPalette = true;
+      paletteSuggestionsLocked = true;
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
     });
@@ -3019,6 +3334,7 @@
         if (!msg || msg.type !== "colorThemeSelected") return;
 
         userHasSelectedPalette = true;
+        paletteSuggestionsLocked = true;
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
 

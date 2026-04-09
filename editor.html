@@ -17,7 +17,7 @@
       border-bottom: 1px solid rgba(255,255,255,.1);
       position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
     }
-    #toolbar h1 { font-size: 14px; font-weight: 600; flex: 1; opacity: .9; }
+    #toolbar h1 { font-size: 14px; font-weight: 600; flex: 0 0 auto; opacity: .9; }
     .tbtn {
       padding: 5px 12px; border: none; border-radius: 6px;
       font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
@@ -87,6 +87,39 @@
       width: 24px; height: 24px; border: none; border-radius: 4px;
       padding: 1px; cursor: pointer; background: rgba(255,255,255,.1);
     }
+    /* ── Suggestions carousel (inline in top toolbar) ───────────────── */
+    #sbWrap {
+      flex: 1; min-width: 0; position: relative;
+      display: flex; align-items: center;
+      margin-left: 24px;
+    }
+    #sbTicker {
+      font-size: 11px; color: rgba(234,240,255,.45);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: default; max-width: 100%;
+    }
+    #sbWrap:hover #sbTicker { visibility: hidden; }
+    #sbPopover {
+      display: none; position: absolute; top: calc(100% + 8px); left: 0;
+      background: #0f1a35; border: 1px solid rgba(103,126,234,.35);
+      border-radius: 8px; padding: 10px 14px 12px;
+      font-size: 11.5px; color: rgba(234,240,255,.8); line-height: 1.65;
+      white-space: normal; min-width: 380px; max-width: 520px;
+      box-shadow: 0 6px 24px rgba(0,0,0,.5); z-index: 10000;
+    }
+    #sbWrap:hover #sbPopover { display: block; }
+    #sbPopover strong { color: rgba(234,240,255,.45); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
+    #sbPopover ol { margin: 6px 0 0; padding-left: 18px; }
+    #sbPopover li { margin-bottom: 5px; }
+    @keyframes sbSlide {
+      0%   { opacity: 1; transform: translateY(0); }
+      20%  { opacity: 0; transform: translateY(-8px); }
+      21%  { opacity: 0; transform: translateY(8px); }
+      40%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    #sbTicker.animating { animation: sbSlide .8s ease forwards; }
+
     /* Find & replace bar */
     #findBar {
       display: none; position: fixed; top: 84px; right: 14px; z-index: 9999;
@@ -404,6 +437,18 @@
 
   <div id="toolbar">
     <h1>Irene's Webworks — Visual Editor v2.0</h1>
+    <div id="sbWrap">
+      <span id="sbTicker"></span>
+      <div id="sbPopover">
+        <strong>Suggestions</strong>
+        <ol>
+          <li>Add a headshot image by double-clicking a placeholder if there is one, otherwise use the <b>Image</b> button to insert one.</li>
+          <li>Insert images related to projects or work experience, such as graphs or charts, by clicking at the desired point of insertion and then clicking the <b>Image</b> button.</li>
+          <li>Link other artifacts, including YouTube videos, by highlighting a word or phrase, clicking <b>Link</b> and entering a URL.</li>
+          <li>Use <b>+ Card</b> / <b>− Card</b> to add or delete a section or subsection element. A popup menu lets you choose the level to operate on.</li>
+        </ol>
+      </div>
+    </div>
     <button class="tbtn tbtn-ghost" id="btnBack">← Close Editor</button>
     <div id="viewToggle">
       <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
@@ -624,7 +669,45 @@
     const supabaseClient = window.supabase?.createClient
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
-    const fullHtml = localStorage.getItem("portfolio_preview_html");
+    function getPreviewHtml() {
+      try {
+        const stored = localStorage.getItem("portfolio_preview_html");
+        if (stored) return stored;
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && typeof window.opener.__portfolioPreviewHtml === "string") {
+          return window.opener.__portfolioPreviewHtml;
+        }
+      } catch {}
+      return window.__portfolioPreviewHtml || "";
+    }
+
+    function cachePreviewHtml(html) {
+      const value = String(html || "");
+      window.__portfolioPreviewHtml = value;
+      try {
+        localStorage.setItem("portfolio_preview_html", value);
+      } catch (err) {
+        try { localStorage.removeItem("portfolio_preview_html"); } catch {}
+        console.warn("Could not persist portfolio_preview_html in editor:", err?.message || err);
+      }
+    }
+
+    function getPage4Colors() {
+      try {
+        const stored = localStorage.getItem("portfolio_page4_colors");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && window.opener.__portfolioPage4Colors) {
+          return window.opener.__portfolioPage4Colors;
+        }
+      } catch {}
+      return window.__portfolioPage4Colors || null;
+    }
+
+    const fullHtml = getPreviewHtml();
+    const page4Colors = getPage4Colors();
 
     if (!fullHtml) {
       document.getElementById("no-preview").style.display = "flex";
@@ -641,7 +724,7 @@
       .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
 
     // Primary strategy: read --color-* vars ordered by /* N. RoleName — ... */ comment.
-    // This handles the new naming convention (--color-canvas, --color-interactive, etc.)
+    // The numbers 1–5 define the fixed editor slot order directly.
     function extractCssVarsByRoleComment(text) {
       const rootMatch = text.match(/:root\s*\{([\s\S]*?)\}/);
       if (!rootMatch) return {};
@@ -669,7 +752,7 @@
         allVars[m[1].trim().toLowerCase()] = m[2].trim().replace(/^['"]|['"]$/g, "");
       const vars = {};
       for (const name of CSS_VAR_NAMES) {
-        for (const c of [name, `${name}-color`, `color-${name}`]) {
+        for (const c of [name, `bp-${name}`, `${name}-color`, `color-${name}`]) {
           if (allVars[c] !== undefined) { vars[name] = allVars[c]; cssVarMap[name] = `--${c}`; break; }
         }
       }
@@ -851,7 +934,8 @@
     const byRole = extractCssVarsByRoleComment(cssText);
     const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
     for (const name of CSS_VAR_NAMES) {
-      const hex = extracted[name] ? toHexColor(extracted[name]) : "#000000";
+      const preferred = page4Colors?.[name];
+      const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
       currentColors[name] = hex;
       const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
       if (row) {
@@ -862,12 +946,14 @@
         }
       }
     }
+    applyColorOverrides();
     document.getElementById("colorPanel").classList.remove("hidden");
 
     // ── Reset colors ───────────────────────────────────────────────────────────
-    // Snapshot the initial colors (extracted from the generated HTML) so Reset
-    // always reverts to whatever was applied when the editor first opened.
-    const initialColors = { ...currentColors };
+    // Reset should prefer the exact page-4 palette the user submitted.
+    const initialColors = page4Colors
+      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || currentColors[name] || "#000000")]))
+      : { ...currentColors };
     document.getElementById("btnResetColors").onclick = () => {
       for (const name of CSS_VAR_NAMES) {
         const hex = initialColors[name];
@@ -1852,7 +1938,7 @@
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
       currentHtml = e.data.html;
-      localStorage.setItem("portfolio_preview_html", e.data.html);
+      cachePreviewHtml(e.data.html);
       loadIframe(e.data.html);
       setCodeContent(e.data.html);
     });
@@ -1902,6 +1988,28 @@
         console.error("Failed to initialize code editor; leaving textarea fallback in place.", err);
       }
     }
+  })();
+
+  // ── Suggestions carousel ────────────────────────────────────────────────
+  (function () {
+    const tips = [
+      "Tip 1 of 4 — Add a headshot by double-clicking a placeholder, or use the Image button.",
+      "Tip 2 of 4 — Insert project images (graphs, charts) by clicking a location then Image.",
+      "Tip 3 of 4 — Link artifacts or YouTube videos: highlight text, click Link, enter a URL.",
+      "Tip 4 of 4 — Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
+    ];
+    const ticker = document.getElementById("sbTicker");
+    if (!ticker) return;
+    let idx = 0;
+    ticker.textContent = tips[0];
+
+    setInterval(() => {
+      ticker.classList.remove("animating");
+      void ticker.offsetWidth; // reflow to restart animation
+      idx = (idx + 1) % tips.length;
+      ticker.textContent = tips[idx];
+      ticker.classList.add("animating");
+    }, 5000);
   })();
   </script>
 </body>

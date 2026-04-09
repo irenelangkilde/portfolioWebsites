@@ -1,0 +1,1612 @@
+<html lang="en" style="--primary: #6b7a9e; --secondary: #4b4e7c; --accent: #2068c5; --dark: #1a1a1a; --light: #ffffff;"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Joel Kartchner — RF Systems &amp; Engineering Technician</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=JetBrains+Mono:wght@400;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ===== CSS VARIABLES ===== */
+:root {
+  --primary: #6a9e6a;
+  --secondary: #4a7c59;
+  --accent: #7aab8a;
+  --dark: #1a1a1a;
+  --light: #ffffff;
+
+  --c1: #6a9e6a;
+  --c1-lighter: #7aab8a;
+  --c1-lightest: #a8c9b4;
+  --c2: #4a7c59;
+  --c2-darker: #2d5c3e;
+  --c3: #7aab8a;
+  --c4: #1a1a1a;
+  --c5: #f5f7f5;
+
+  --bg-page: #111111;
+  --bg-section: #181818;
+  --bg-section-alt: #1e2620;
+  --text-primary: rgba(255,255,255,0.88);
+  --text-muted: rgba(255,255,255,0.55);
+  --text-heading: #6a9e6a;
+  --text-on-dark: #ffffff;
+  --border-light: rgba(106,158,106,0.18);
+  --border-card: rgba(106,158,106,0.22);
+  --shadow-card: 0 2px 20px rgba(0,0,0,0.35), 0 0 0 1px rgba(106,158,106,0.08);
+  --shadow-card-hover: 0 8px 32px rgba(106,158,106,0.18), 0 0 0 1px rgba(106,158,106,0.22);
+  --radius-card: 16px;
+  --radius-pill: 999px;
+  --hero-bg-image: none;
+}
+
+/* ===== RESET ===== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+a { text-decoration: none; color: inherit; }
+ul { list-style: none; }
+img { max-width: 100%; display: block; }
+
+/* ===== TYPOGRAPHY ===== */
+h1 { font-size: clamp(1.9rem, 4vw, 2.9rem); font-weight: 800; line-height: 1.15; }
+h2 { font-size: clamp(1.4rem, 2.8vw, 1.9rem); font-weight: 700; color: var(--primary); }
+h3 { font-size: 1.1rem; font-weight: 700; color: #ffffff; }
+h4 { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); }
+p { font-size: 0.95rem; line-height: 1.72; }
+
+/* ===== UTILITY ===== */
+.container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }
+.section { padding: 72px 0; }
+.section-alt { background: var(--bg-section-alt); }
+.section-dark { background: var(--bg-section); }
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* Section divider */
+.section-divider {
+  width: 48px; height: 4px;
+  background: linear-gradient(90deg, var(--primary), var(--accent));
+  border-radius: 999px;
+  margin-bottom: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+.section-divider::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transform: translateX(-100%);
+  animation: shimmer 2s ease-in-out infinite;
+}
+@keyframes shimmer { to { transform: translateX(200%); } }
+
+/* Section heading decoration */
+h2::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--primary), transparent);
+  margin-top: 0.3rem;
+  transition: width 0.6s ease;
+}
+h2.visible::after { width: 60px; }
+
+/* ===== PILLS & TAGS ===== */
+.pill-tag {
+  display: inline-block;
+  padding: 0.28rem 0.85rem;
+  border-radius: var(--radius-pill);
+  background: rgba(106,158,106,0.12);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 600;
+  border: 1.5px solid rgba(106,158,106,0.28);
+  cursor: default;
+  transition: all 0.2s;
+}
+.pill-tag:hover { background: rgba(106,158,106,0.22); border-color: var(--primary); }
+.pill-tag-dark {
+  background: rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.9);
+  border-color: rgba(255,255,255,0.25);
+}
+.pill-tag-instrument {
+  background: rgba(106,158,106,0.18);
+  color: #a8d4b4;
+  border-color: rgba(106,158,106,0.4);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.74rem;
+}
+.tags-row { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.9rem; }
+
+/* ===== BUTTONS ===== */
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.4rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.22s ease;
+  letter-spacing: 0.02em;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(106,158,106,0.3);
+}
+.btn-primary:hover {
+  background: linear-gradient(135deg, var(--accent), var(--primary));
+  box-shadow: 0 4px 20px rgba(106,158,106,0.45);
+  transform: translateY(-1px);
+}
+.btn-outline {
+  background: transparent;
+  color: rgba(255,255,255,0.9);
+  border: 1.5px solid rgba(255,255,255,0.4);
+}
+.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.7); }
+.btn-outline-green {
+  background: transparent;
+  color: var(--accent);
+  border: 1.5px solid rgba(106,158,106,0.5);
+}
+.btn-outline-green:hover { background: rgba(106,158,106,0.12); border-color: var(--primary); }
+
+/* ===== CARD ===== */
+.card {
+  background: #1e2420;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border-card);
+  padding: 1.5rem;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+.card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-card-hover);
+}
+.card-light {
+  background: #222c25;
+}
+
+/* ===== NAVBAR ===== */
+.navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 1000;
+  background: rgba(17,17,17,0.88);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(106,158,106,0.15);
+  padding: 0.65rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  transition: box-shadow 0.2s;
+}
+.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+.nav-logo {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.03em;
+  border: 1px solid rgba(106,158,106,0.35);
+  flex-shrink: 0;
+}
+.nav-name { font-size: 0.92rem; font-weight: 700; color: #fff; line-height: 1.2; }
+.nav-sub { font-size: 0.72rem; color: var(--accent); font-family: 'JetBrains Mono', monospace; }
+.nav-links { display: flex; gap: 0.35rem; flex-wrap: wrap; align-items: center; }
+.nav-links a {
+  padding: 0.38rem 0.95rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.75);
+  border: 1.5px solid rgba(106,158,106,0.18);
+  background: rgba(106,158,106,0.06);
+  transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+.nav-resume {
+  padding: 0.38rem 1.1rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-resume:hover { opacity: 0.88; transform: translateY(-1px); }
+
+/* ===== HERO ===== */
+.hero {
+  margin-top: 62px;
+  min-height: 600px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+.hero-bg-base {
+  position: absolute;
+  inset: 0;
+  background: #0e1210;
+  z-index: 0;
+}
+.hero-bg-bloom {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 15% 85%, rgba(106,158,106,0.22) 0%, transparent 58%),
+    radial-gradient(ellipse at 80% 20%, rgba(74,124,89,0.10) 0%, transparent 50%);
+  z-index: 1;
+  animation: bloom-pulse 0.8s ease-out forwards;
+}
+@keyframes bloom-pulse {
+  0% { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.hero-bg-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  opacity: 0.06;
+  background-image:repeating-linear-gradient(0deg, rgba(106,158,106,0.8) 0px, rgba(106,158,106,0.8) 1px, transparent 1px, transparent 28px), repeating-linear-gradient(90deg, rgba(106,158,106,0.8) 0px, rgba(106,158,106,0.8) 1px, transparent 1px, transparent 28px);
+}
+.hero-bg-speclines {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  overflow: hidden;
+}
+.hero-bg-speclines svg {
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 120px;
+  opacity: 0.12;
+}
+.hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(14,18,16,0.94) 0%, rgba(14,18,16,0.62) 55%, rgba(14,18,16,0.22) 100%);
+  z-index: 4;
+}
+.hero-bg-image {
+  position: absolute;
+  inset: 0;
+  background-image:var(--hero-bg-image);
+  background-size: cover;
+  background-position: center;
+  z-index: 3;
+  opacity: 0.18;
+}
+.hero-content {
+  position: relative;
+  z-index: 5;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2.5rem;
+  padding: 3rem 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.hero-left { flex: 1 1 400px; max-width: 520px; }
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  padding: 0.3rem 0.85rem;
+  border: 1px solid rgba(122,171,138,0.3);
+  border-radius: 999px;
+  background: rgba(122,171,138,0.08);
+}
+.hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: blink 1.8s ease-in-out infinite;
+}
+@keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.hero-left h1 {
+  color: #ffffff;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+}
+.hero-left h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.hero-left .hero-sub {
+  color: rgba(255,255,255,0.72);
+  font-size: 0.97rem;
+  max-width: 440px;
+  margin-bottom: 1.5rem;
+  line-height: 1.72;
+}
+.hero-cta-row { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+.hero-right {
+  flex: 0 0 340px;
+  background: rgba(74,124,89,0.2);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 20px;
+  border: 1px solid rgba(122,171,138,0.28);
+  padding: 1.75rem;
+  color: white;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+}
+.hero-right-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--accent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+  opacity: 0.8;
+}
+.hero-instrument-tags {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+.hero-bullets { margin-bottom: 1.3rem; }
+.hero-bullets li {
+  font-size: 0.87rem;
+  color: rgba(255,255,255,0.88);
+  padding: 0.28rem 0 0.28rem 1.1rem;
+  position: relative;
+  line-height: 1.55;
+}
+.hero-bullets li::before {
+  content: '›';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 1rem;
+  font-weight: 700;
+  top: 0.18rem;
+}
+.hero-right-cta { display: flex; flex-direction: column; gap: 0.5rem; }
+.hero-right-cta .btn { width: 100%; text-align: center; }
+
+/* ===== STATUS BADGES ===== */
+.status-badges {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1.2rem;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(26,26,26,0.7);
+  border: 1px solid rgba(106,158,106,0.3);
+  color: var(--accent);
+}
+.badge i { font-size: 0.65rem; color: var(--primary); }
+
+/* ===== ABOUT / INTRO ===== */
+.about-wrapper {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2.5rem;
+  align-items: start;
+  margin-bottom: 2.5rem;
+}
+.monogram-circle {
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--secondary), var(--primary));
+  border: 3px solid rgba(106,158,106,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 800;
+  color: white;
+  letter-spacing: -0.04em;
+  flex-shrink: 0;
+  box-shadow: 0 4px 24px rgba(106,158,106,0.25);
+}
+.about-text h3 { color: white; margin-bottom: 0.6rem; font-size: 1.25rem; }
+.about-text p { color: rgba(255,255,255,0.72); font-size: 0.96rem; }
+.about-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.25rem;
+}
+.about-card-ul li {
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.72);
+  padding: 0.22rem 0 0.22rem 1.1rem;
+  position: relative;
+}
+.about-card-ul li::before {
+  content: '•';
+  position: absolute;
+  left: 0;
+  color: var(--primary);
+  font-weight: bold;
+}
+
+/* ===== EXPERIENCE ===== */
+.experience-list { display: flex; flex-direction: column; gap: 1.4rem; }
+.exp-card {
+  display: flex;
+  gap: 1.25rem;
+  align-items: flex-start;
+}
+.exp-icon {
+  flex-shrink: 0;
+  width: 56px; height: 56px;
+  border-radius: 14px;
+  background: #1a2a1e;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(106,158,106,0.28);
+  overflow: hidden;
+}
+.exp-body { flex: 1; }
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-bottom: 0.25rem;
+}
+.exp-date {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  font-family: 'JetBrains Mono', monospace;
+}
+.exp-org { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 0.55rem; }
+.exp-body ul li {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.72);
+  padding: 0.18rem 0 0.18rem 1.2rem;
+  position: relative;
+  line-height: 1.6;
+}
+.exp-body ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.72rem;
+  top: 0.25rem;
+}
+.exp-body ul li strong { color: rgba(255,255,255,0.92); }
+
+/* Featured highlight for Raytheon */
+.exp-featured {
+  border-color: rgba(106,158,106,0.45);
+  background: linear-gradient(135deg, #1a2a1e, #182218);
+  position: relative;
+  overflow: hidden;
+}
+.exp-featured::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  background: linear-gradient(180deg, var(--primary), var(--accent));
+  border-radius: 999px 0 0 999px;
+}
+.exp-featured-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: rgba(106,158,106,0.18);
+  color: var(--accent);
+  border: 1px solid rgba(106,158,106,0.35);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ===== PROJECTS ===== */
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.4rem;
+}
+.project-card { overflow: hidden; padding: 0; }
+.project-thumb {
+  width: 100%;
+  height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+.project-body { padding: 1.25rem; }
+.project-category {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.project-body h3 { margin-bottom: 0.4rem; color: #ffffff; font-size: 1rem; }
+.project-body p { font-size: 0.85rem; color: rgba(255,255,255,0.65); margin-bottom: 0.85rem; line-height: 1.62; }
+
+/* ===== SKILLS ===== */
+.skills-outer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.skills-group-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  padding-bottom: 0.45rem;
+  border-bottom: 1.5px solid rgba(106,158,106,0.2);
+  font-family: 'JetBrains Mono', monospace;
+}
+.skill-bar-row { margin-bottom: 0.9rem; }
+.skill-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.84rem;
+  margin-bottom: 0.28rem;
+  color: rgba(255,255,255,0.82);
+}
+.skill-bar-label .mono { font-size: 0.78rem; color: var(--accent); }
+.skill-bar-track {
+  height: 6px;
+  background: rgba(106,158,106,0.12);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.skill-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--primary));
+  width: 0;
+  transition: width 1s ease;
+}
+.skills-tags-card { grid-column: 1 / -1; }
+.skills-all-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.6rem; }
+
+/* ===== RESEARCH & PUBLICATIONS ===== */
+.research-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.4rem;
+  align-items: start;
+}
+.pub-card { }
+.pub-title { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem; line-height: 1.45; }
+.pub-venue { font-size: 0.82rem; color: rgba(255,255,255,0.55); margin-bottom: 0.55rem; }
+.pub-authors { font-size: 0.8rem; color: rgba(255,255,255,0.45); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.8rem; }
+.pub-doi {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--accent);
+  border: 1px solid rgba(122,171,138,0.35);
+  padding: 0.3rem 0.8rem;
+  border-radius: 999px;
+  transition: all 0.2s;
+}
+.pub-doi:hover { background: rgba(122,171,138,0.12); }
+.research-detail-card { }
+.research-detail-card h3 { color: white; margin-bottom: 0.6rem; }
+.research-detail-card ul li {
+  font-size: 0.875rem;
+  color: rgba(255,255,255,0.7);
+  padding: 0.2rem 0 0.2rem 1.2rem;
+  position: relative;
+}
+.research-detail-card ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-size: 0.72rem;
+  top: 0.26rem;
+}
+
+/* ===== LEADERSHIP ===== */
+.leadership-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+}
+.leadership-card h3 { font-size: 1rem; color: white; margin-bottom: 0.2rem; }
+.leadership-card .org { font-size: 0.82rem; color: var(--accent); margin-bottom: 0.4rem; font-family: 'JetBrains Mono', monospace; }
+.leadership-card p { font-size: 0.85rem; color: rgba(255,255,255,0.65); }
+
+/* ===== EDUCATION ===== */
+.education-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.4rem;
+}
+.edu-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  background: rgba(106,158,106,0.14);
+  border: 1px solid rgba(106,158,106,0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+  margin-bottom: 0.85rem;
+}
+.edu-year { font-size: 0.75rem; font-weight: 700; color: var(--primary); font-family: 'JetBrains Mono', monospace; margin-bottom: 0.25rem; }
+.edu-degree { font-weight: 700; color: #ffffff; margin-bottom: 0.15rem; font-size: 1rem; }
+.edu-inst { font-size: 0.85rem; color: rgba(255,255,255,0.5); margin-bottom: 0.5rem; }
+.edu-gpa { font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 0.5rem; font-family: 'JetBrains Mono', monospace; }
+.edu-courses { font-size: 0.82rem; color: rgba(255,255,255,0.58); line-height: 1.6; }
+
+/* ===== CONTACT ===== */
+.contact-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.contact-info h3 { color: white; margin-bottom: 0.8rem; }
+.contact-info p { font-size: 0.92rem; color: rgba(255,255,255,0.65); margin-bottom: 1.5rem; }
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0;
+  border-bottom: 1px solid rgba(106,158,106,0.12);
+  font-size: 0.88rem;
+  color: rgba(255,255,255,0.8);
+}
+.contact-icon {
+  width: 36px; height: 36px;
+  border-radius: 10px;
+  background: rgba(106,158,106,0.12);
+  border: 1px solid rgba(106,158,106,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  color: var(--accent);
+}
+.contact-form { display: flex; flex-direction: column; gap: 1rem; }
+.form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+.form-group label { font-size: 0.8rem; font-weight: 700; color: var(--secondary); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em; }
+.form-group input,
+.form-group textarea {
+  padding: 0.65rem 0.9rem;
+  border-radius: 10px;
+  border: 1.5px solid rgba(106,158,106,0.2);
+  background: rgba(26,42,30,0.6);
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  color: rgba(255,255,255,0.88);
+}
+.form-group input::placeholder, .form-group textarea::placeholder { color: rgba(255,255,255,0.3); }
+.form-group input:focus, .form-group textarea:focus { border-color: var(--primary); background: rgba(26,42,30,0.85); }
+.form-group textarea { resize: vertical; min-height: 110px; }
+
+/* ===== DIAGONAL DIVIDER ===== */
+.section-angled {
+  clip-path: polygon(0 0, 100% 3%, 100% 100%, 0 97%);
+  padding: 90px 0;
+  margin: -20px 0;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  background: #0b0f0c;
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+  padding: 2rem 1.5rem;
+  font-size: 0.82rem;
+  border-top: 1px solid rgba(106,158,106,0.12);
+}
+.footer span { color: var(--accent); }
+
+/* ===== SCROLL ANIMATIONS ===== */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 900px) {
+  .skills-outer { grid-template-columns: 1fr; }
+  .research-grid { grid-template-columns: 1fr; }
+  .contact-wrapper { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .hero-content { flex-direction: column; }
+  .hero-right { flex: 1 1 auto; width: 100%; }
+  .hero-left { max-width: 100%; }
+  .about-wrapper { grid-template-columns: 1fr; }
+  .about-cards { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .exp-card { flex-direction: column; }
+  .exp-icon { display: none; }
+  .section-angled { clip-path: none; padding: 72px 0; margin: 0; }
+}
+@media (max-width: 520px) {
+  .hero-left h1 { font-size: 1.65rem; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .education-grid { grid-template-columns: 1fr; }
+}
+</style>
+<style>:root{--primary:#6b7a9e; --secondary:#4b4e7c; --accent:#2068c5; --dark:#1a1a1a; --light:#ffffff;}</style>
+</head>
+<body>
+
+<!-- ===== NAVBAR ===== -->
+<nav class="navbar" id="navbar" style="box-shadow: none; border-bottom-color: rgba(106, 158, 106, 0.15);">
+  <div class="nav-brand">
+    <div class="nav-logo">JK</div>
+    <div>
+      <div class="nav-name">Joel Kartchner</div>
+      <div class="nav-sub mono">RF &amp; EE · BYU M.S. 2027</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="#experience" class="">Experience</a>
+    <a href="#projects" class="">Projects</a>
+    <a href="#skills" class="">Skills</a>
+    <a href="#research" class="">Research</a>
+    <a href="#education" class="">Education</a>
+    <a href="#contact" class="">Contact</a>
+    <a href="resume.pdf" class="nav-resume"><i class="fa-solid fa-download" style="margin-right:0.35rem;font-size:0.75rem;"></i>Resume</a>
+  </div>
+</nav>
+
+<!-- ===== HERO ===== -->
+<section class="hero" id="home">
+  <div class="hero-bg-base"></div>
+  <div class="hero-bg-image"></div>
+  <div class="hero-bg-bloom"></div>
+  <div class="hero-bg-grid"></div>
+  <div class="hero-bg-speclines">
+    <svg viewBox="0 0 1200 120" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="0,80 60,80 80,60 120,60 140,90 200,90 240,45 300,45 340,75 400,75 440,30 500,30 540,70 600,70 650,50 720,50 760,85 820,85 870,40 940,40 980,65 1040,65 1080,80 1200,80" fill="none" stroke="#7aab8a" stroke-width="1.5"></polyline>
+      <polyline points="0,95 80,95 120,78 180,78 220,100 280,100 320,60 380,60 420,88 480,88 520,55 580,55 630,82 700,82 760,68 830,68 880,95 950,95 1000,72 1060,72 1100,88 1200,88" fill="none" stroke="#4a7c59" stroke-width="1"></polyline>
+    </svg>
+  </div>
+  <div class="hero-bg-overlay"></div>
+
+  <div class="hero-content">
+    <div class="hero-left">
+      <div class="hero-eyebrow">RF Systems &amp; Hardware Validation</div>
+      <h1>I design RF systems<br>and <em>prove they work.</em></h1>
+      <p class="hero-sub">Two summers validating RF circuits at Raytheon — bench testing, schematic interpretation, and hardware troubleshooting in a defense environment. Now pursuing M.S. EE at BYU.</p>
+      <div class="status-badges">
+        <span class="badge"><i class="fa-solid fa-circle-check"></i> M.S. EE — BYU 2027</span>
+        <span class="badge"><i class="fa-solid fa-award"></i> B.S. Magna Cum Laude</span>
+        <span class="badge"><i class="fa-solid fa-star"></i> GPA 3.98</span>
+        <span class="badge"><i class="fa-solid fa-file-lines"></i> IEEE Published</span>
+      </div>
+      <div class="hero-cta-row" style="margin-top:1.5rem;">
+        <a href="#experience" class="btn btn-primary">View Experience</a>
+        <a href="resume.pdf" class="btn btn-outline"><i class="fa-solid fa-download" style="margin-right:0.4rem;font-size:0.8rem;"></i>Download Resume</a>
+        <a href="#projects" class="btn btn-outline-green">See Projects</a>
+      </div>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-right-label">// Lab Instruments</div>
+      <div class="hero-instrument-tags">
+        <span class="pill-tag pill-tag-instrument">Network Analyzer</span>
+        <span class="pill-tag pill-tag-instrument">Spectrum Analyzer</span>
+        <span class="pill-tag pill-tag-instrument">Signal Generator</span>
+        <span class="pill-tag pill-tag-dark">HFSS</span>
+        <span class="pill-tag pill-tag-dark">ADS</span>
+        <span class="pill-tag pill-tag-dark">SystemVue</span>
+      </div>
+      <ul class="hero-bullets">
+        <li>Tested &amp; troubleshot RF circuit cards at Raytheon using named bench instruments — Network Analyzer, Spectrum Analyzer, Signal Generator</li>
+        <li>Built and validated an 80GHz mmWave radar system end-to-end in a laboratory setting</li>
+        <li>Correlated ADS/SystemVue simulations to hardware measurements; wrote Python test scripts for circuit validation workflows</li>
+      </ul>
+      <div class="hero-right-cta">
+        <a href="#contact" class="btn btn-primary">Get in Touch</a>
+        <a href="#projects" class="btn btn-outline" style="text-align:center;">See My Projects</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT ===== -->
+<section class="section section-dark" id="about">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">About</h2>
+    <div style="height:1.5rem;"></div>
+
+    <div class="about-wrapper fade-in visible">
+      <div class="monogram-circle">JK</div>
+      <div class="about-text">
+        <h3>Joel Kartchner — RF &amp; Electrical Engineer</h3>
+        <p>I have spent the last two summers at Raytheon testing and troubleshooting RF circuit cards — operating network analyzers, spectrum analyzers, and signal generators, writing Python test scripts, and correlating simulation results to hardware measurements. At BYU I built an 80GHz radar system from scratch in the lab and designed microwave filters in HFSS as a graduate researcher. My work lives at the intersection of simulation and bench: I know what the tools say and I know how to find out if the hardware agrees.</p>
+      </div>
+    </div>
+
+    <div class="about-cards">
+      <div class="card card-light fade-in visible">
+        <h3 style="margin-bottom:0.75rem;">Core Strengths</h3>
+        <ul class="about-card-ul">
+          <li>RF bench testing and troubleshooting — named instruments, real circuits</li>
+          <li>Simulation-to-hardware correlation (ADS, SystemVue, HFSS)</li>
+          <li>Defense lab environment experience at Raytheon, Tucson</li>
+          <li>End-to-end system assembly, validation, and documentation</li>
+        </ul>
+        <div class="tags-row">
+          <span class="pill-tag">RF Circuit Testing</span>
+          <span class="pill-tag">Hardware Validation</span>
+          <span class="pill-tag">Schematic Reading</span>
+          <span class="pill-tag">Python Test Code</span>
+        </div>
+      </div>
+      <div class="card card-light fade-in visible">
+        <h3 style="margin-bottom:0.75rem;">Open To</h3>
+        <p style="color:rgba(255,255,255,0.65);font-size:0.88rem;margin-bottom:0.75rem;">Engineering technician and RF systems roles at defense and aerospace organizations — specifically hands-on bench testing, hardware validation, and RF circuit troubleshooting positions.</p>
+        <ul class="about-card-ul">
+          <li>Sr. Advanced Engineering Technician — GDMS and peers</li>
+          <li>RF Systems Technician — defense &amp; aerospace bench roles</li>
+          <li>Hardware Validation Engineer — simulation-to-bench track</li>
+        </ul>
+        <div class="tags-row">
+          <span class="pill-tag">Defense &amp; Aerospace</span>
+          <span class="pill-tag">Bench Testing</span>
+          <span class="pill-tag">Provo / Tucson</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== EXPERIENCE ===== -->
+<section class="section section-alt" id="experience">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Experience</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Hands-on RF testing, simulation, and research roles — defense-validated bench experience highlighted first.</p>
+
+    <div class="experience-list">
+
+      <!-- Raytheon — FEATURED -->
+      <div class="card exp-featured fade-in visible">
+        <div style="padding-left:0.25rem;">
+          <div class="exp-featured-badge"><i class="fa-solid fa-shield-halved"></i> Defense — Primary Role Fit</div>
+          <div class="exp-card" style="gap:1.25rem;">
+            <div class="exp-icon">
+              <!-- Spectrum analyzer SVG schematic -->
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="56" height="56" rx="14" fill="#1a2a1e"></rect>
+                <rect x="6" y="10" width="44" height="30" rx="3" fill="none" stroke="#4a7c59" stroke-width="1"></rect>
+                <!-- grid lines -->
+                <line x1="6" y1="18" x2="50" y2="18" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <line x1="6" y1="25" x2="50" y2="25" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <line x1="6" y1="32" x2="50" y2="32" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <line x1="17" y1="10" x2="17" y2="40" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <line x1="28" y1="10" x2="28" y2="40" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <line x1="39" y1="10" x2="39" y2="40" stroke="#4a7c59" stroke-width="0.4" opacity="0.4"></line>
+                <!-- S21 curve -->
+                <path d="M8,36 C12,36 15,38 18,36 C21,34 23,16 28,14 C33,12 35,34 38,36 C41,38 44,36 48,36" fill="none" stroke="#7aab8a" stroke-width="1.5"></path>
+                <!-- noise floor -->
+                <path d="M8,37 L14,37 L16,38 L18,37 L20,38 L22,37 L24,37.5 L26,37 L30,37 L32,37.5 L34,37 L36,38 L38,37 L40,37.5 L42,37 L48,37" fill="none" stroke="#4a7c59" stroke-width="0.8" opacity="0.7"></path>
+                <!-- bottom labels -->
+                <text x="28" y="50" font-size="5" fill="#7aab8a" text-anchor="middle" font-family="monospace">S₂₁</text>
+              </svg>
+            </div>
+            <div class="exp-body">
+              <div class="exp-header">
+                <h3>RF Products Summer Intern</h3>
+                <span class="exp-date">May 2024 – Aug 2025</span>
+              </div>
+              <div class="exp-org">Raytheon · Tucson, AZ</div>
+              <ul>
+                <li>Tested and troubleshot <strong>RF circuit cards</strong> using <strong>Network Analyzer, Spectrum Analyzer, and Signal Generator</strong> in a defense production environment</li>
+                <li>Wrote <strong>Python test scripts</strong> to automate and support circuit card validation workflows</li>
+                <li>Used <strong>SystemVue and ADS</strong> to simulate RF exciters and receivers across frequency and temperature; correlated simulated results to hardware measurements to validate component changes</li>
+                <li>Assisted with <strong>EME/EMI testing</strong> on defense RF systems</li>
+              </ul>
+              <div class="tags-row">
+                <span class="pill-tag pill-tag-instrument">Network Analyzer</span>
+                <span class="pill-tag pill-tag-instrument">Spectrum Analyzer</span>
+                <span class="pill-tag pill-tag-instrument">Signal Generator</span>
+                <span class="pill-tag">SystemVue</span>
+                <span class="pill-tag">ADS</span>
+                <span class="pill-tag">Python</span>
+                <span class="pill-tag">EME/EMI</span>
+                <span class="pill-tag">Schematic Interpretation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Masters Research -->
+      <div class="card fade-in visible">
+        <div class="exp-card">
+          <div class="exp-icon">
+            <!-- HFSS stepped-impedance filter SVG -->
+            <svg width="56" height="56" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="56" height="56" rx="14" fill="#1a2a1e"></rect>
+              <!-- stepped impedance filter outline -->
+              <rect x="5" y="24" width="6" height="8" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="11" y="20" width="8" height="16" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="19" y="24" width="6" height="8" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="25" y="20" width="8" height="16" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="33" y="24" width="6" height="8" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="39" y="20" width="8" height="16" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <rect x="47" y="24" width="5" height="8" fill="none" stroke="#7aab8a" stroke-width="1.2"></rect>
+              <!-- port labels -->
+              <text x="3" y="16" font-size="5" fill="#6a9e6a" font-family="monospace">P1</text>
+              <text x="47" y="16" font-size="5" fill="#6a9e6a" font-family="monospace">P2</text>
+              <text x="28" y="50" font-size="5" fill="#4a7c59" text-anchor="middle" font-family="monospace">BPF</text>
+            </svg>
+          </div>
+          <div class="exp-body">
+            <div class="exp-header">
+              <h3>Masters Research Assistant</h3>
+              <span class="exp-date">Sept 2025 – Present</span>
+            </div>
+            <div class="exp-org">BYU College of Electrical and Computer Engineering · Provo, UT</div>
+            <ul>
+              <li>Used <strong>HFSS</strong> to simulate RF thin film flex cables in a graduate research setting</li>
+              <li>Designed and simulated <strong>Coupled Line and Stepped Impedance filters</strong> using Python and HFSS — directly relevant to microwave filter design in defense RF systems</li>
+            </ul>
+            <div class="tags-row">
+              <span class="pill-tag">HFSS</span>
+              <span class="pill-tag">Filter Design</span>
+              <span class="pill-tag">Python</span>
+              <span class="pill-tag">RF Simulation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Teaching Assistant (current) -->
+      <div class="card fade-in visible">
+        <div class="exp-card">
+          <div class="exp-icon" style="font-size:1.5rem;">📡</div>
+          <div class="exp-body">
+            <div class="exp-header">
+              <h3>Teaching Assistant — Wireless Communication Circuits &amp; EM Fields</h3>
+              <span class="exp-date">Sept 2025 – Present</span>
+            </div>
+            <div class="exp-org">BYU College of Electrical and Computer Engineering · Provo, UT</div>
+            <ul>
+              <li>Teaching assistant for Wireless Communication Circuits and EM Fields and Waves</li>
+              <li>Tutored students on Stub/Lumped Element Matching, Noise, Gain and Stability Circles</li>
+            </ul>
+            <div class="tags-row">
+              <span class="pill-tag">RF Circuit Theory</span>
+              <span class="pill-tag">EM Fields</span>
+              <span class="pill-tag">Impedance Matching</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laser Ablation Lab -->
+      <div class="card fade-in visible">
+        <div class="exp-card">
+          <div class="exp-icon" style="font-size:1.5rem;">🔬</div>
+          <div class="exp-body">
+            <div class="exp-header">
+              <h3>Research Assistant — Laser Ablation Lab</h3>
+              <span class="exp-date">May 2023 – Apr 2025</span>
+            </div>
+            <div class="exp-org">BYU College of Electrical and Computer Engineering · Provo, UT</div>
+            <ul>
+              <li>Developed a laser ablation tool to create RF metal mesh filters and microscopic flexible cables — fabrication work that led to the published IEEE IETC 2024 paper</li>
+            </ul>
+            <div class="tags-row">
+              <span class="pill-tag">Fabrication</span>
+              <span class="pill-tag">RF Flex Cables</span>
+              <span class="pill-tag">Lab Instrumentation</span>
+              <span class="pill-tag">IEEE Published</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Circuit Analysis TA -->
+      <div class="card fade-in visible">
+        <div class="exp-card">
+          <div class="exp-icon" style="font-size:1.5rem;">⚡</div>
+          <div class="exp-body">
+            <div class="exp-header">
+              <h3>Teaching Assistant — Circuit Analysis</h3>
+              <span class="exp-date">Sept 2023 – Dec 2023</span>
+            </div>
+            <div class="exp-org">BYU College of Electrical and Computer Engineering · Provo, UT</div>
+            <ul>
+              <li>Tutored students on circuit analysis concepts and assisted in lab circuit building exercises</li>
+            </ul>
+            <div class="tags-row">
+              <span class="pill-tag">Circuit Analysis</span>
+              <span class="pill-tag">Lab Instruction</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROJECTS ===== -->
+<section class="section section-dark section-angled" id="projects">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Projects</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Selected engineering projects demonstrating end-to-end system construction and bench validation.</p>
+
+    <div class="projects-grid">
+
+      <!-- mmWave Radar — FEATURED -->
+      <div class="card project-card fade-in visible" style="border-color:rgba(106,158,106,0.4);">
+        <div class="project-thumb" style="background:#0e1a10;position:relative;">
+          <!-- Radar sweep SVG -->
+          <svg width="100%" height="168" viewBox="0 0 340 168" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <rect width="340" height="168" fill="#0e1a10"></rect>
+            <!-- Fine grid background -->
+            <defs>
+              <pattern id="rgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#4a7c59" stroke-width="0.4" opacity="0.3"></path>
+              </pattern>
+            </defs>
+            <rect width="340" height="168" fill="url(#rgrid)"></rect>
+            <!-- Concentric arcs from bottom-left origin (20,168) -->
+            <path d="M 20,168 A 60,60 0 0,1 80,108" fill="none" stroke="#6a9e6a" stroke-width="1.8" opacity="1"></path>
+            <path d="M 20,168 A 100,100 0 0,1 120,68" fill="none" stroke="#6a9e6a" stroke-width="1.5" opacity="0.65"></path>
+            <path d="M 20,168 A 145,145 0 0,1 160,23" fill="none" stroke="#6a9e6a" stroke-width="1.2" opacity="0.38"></path>
+            <path d="M 20,168 A 190,190 0 0,1 200,-22" fill="none" stroke="#6a9e6a" stroke-width="0.9" opacity="0.22"></path>
+            <!-- Sweep line at ~35 degrees -->
+            <line x1="20" y1="168" x2="168" y2="42" stroke="#7aab8a" stroke-width="1.5" opacity="0.8"></line>
+            <!-- Origin dot -->
+            <circle cx="20" cy="168" r="4" fill="#6a9e6a"></circle>
+            <circle cx="20" cy="168" r="7" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.5"></circle>
+            <!-- Target blip -->
+            <circle cx="120" cy="78" r="3" fill="#a8c9b4" opacity="0.85"></circle>
+            <circle cx="120" cy="78" r="6" fill="none" stroke="#7aab8a" stroke-width="1" opacity="0.5"></circle>
+            <!-- Label -->
+            <text x="170" y="155" font-size="9" fill="#7aab8a" font-family="monospace" opacity="0.7">80 GHz mmWave</text>
+            <text x="170" y="165" font-size="7.5" fill="#4a7c59" font-family="monospace" opacity="0.6">Projectile Detection Radar</text>
+          </svg>
+        </div>
+        <div class="project-body">
+          <div class="project-category">📡 Senior Capstone · RF Systems</div>
+          <h3>80GHz mmWave Radar System</h3>
+          <p>Built and tested an end-to-end 80GHz radar system in a laboratory setting to detect small high-velocity projectiles — demonstrating hands-on system assembly, bench validation, and troubleshooting at a frequency band where tolerances leave almost no margin for error.</p>
+          <div class="tags-row" style="margin-bottom:0.75rem;">
+            <span class="pill-tag">80GHz</span>
+            <span class="pill-tag">Radar</span>
+            <span class="pill-tag">Bench Testing</span>
+            <span class="pill-tag">System Integration</span>
+            <span class="pill-tag">2024–2025</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Laser Tag -->
+      <div class="card project-card fade-in visible">
+        <div class="project-thumb" style="background:#0f1c14;position:relative;">
+          <!-- PCB trace SVG -->
+          <svg width="100%" height="168" viewBox="0 0 340 168" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <rect width="340" height="168" fill="#0f1c14" opacity="0.95"></rect>
+            <rect width="340" height="168" fill="#4a7c59" opacity="0.08"></rect>
+            <!-- PCB trace routes -->
+            <!-- Trace 1: horizontal then vertical -->
+            <polyline points="60,84 160,84 160,50 250,50" fill="none" stroke="#7aab8a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <!-- Trace 2: L-shape bottom -->
+            <polyline points="60,100 130,100 130,130 250,130" fill="none" stroke="#7aab8a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></polyline>
+            <!-- Trace 3: diagonal connector -->
+            <polyline points="160,84 160,100" fill="none" stroke="#7aab8a" stroke-width="1.2" stroke-linecap="round"></polyline>
+            <!-- Pads left (TX) -->
+            <rect x="44" y="78" width="16" height="12" rx="2" fill="none" stroke="#7aab8a" stroke-width="1.5"></rect>
+            <rect x="44" y="94" width="16" height="12" rx="2" fill="none" stroke="#7aab8a" stroke-width="1.5"></rect>
+            <!-- Pads right (RX) -->
+            <rect x="250" y="43" width="18" height="13" rx="2" fill="none" stroke="#6a9e6a" stroke-width="1.5"></rect>
+            <rect x="250" y="123" width="18" height="13" rx="2" fill="none" stroke="#6a9e6a" stroke-width="1.5"></rect>
+            <!-- Via circles -->
+            <circle cx="160" cy="84" r="4" fill="none" stroke="#7aab8a" stroke-width="1.2"></circle>
+            <circle cx="130" cy="100" r="3.5" fill="none" stroke="#7aab8a" stroke-width="1.2"></circle>
+            <!-- Labels -->
+            <text x="30" y="74" font-size="7" fill="#6a9e6a" font-family="monospace">TX</text>
+            <text x="272" y="40" font-size="7" fill="#6a9e6a" font-family="monospace">RX</text>
+            <text x="140" y="162" font-size="8" fill="#4a7c59" font-family="monospace" text-anchor="middle">RF Transmit / Receive PCB</text>
+          </svg>
+        </div>
+        <div class="project-body">
+          <div class="project-category">🎯 Junior Team Design · Circuit Design</div>
+          <h3>Laser Tag Game System</h3>
+          <p>Junior Team Design Project: Built a Laser Tag Game System and Grenade. Designed transmit &amp; receive circuits, power systems, and wrote game code and drivers — demonstrating end-to-end circuit design, assembly, and integration on a team project.</p>
+          <div class="tags-row" style="margin-bottom:0.75rem;">
+            <span class="pill-tag">Circuit Design</span>
+            <span class="pill-tag">TX/RX Systems</span>
+            <span class="pill-tag">Power Electronics</span>
+            <span class="pill-tag">Firmware</span>
+            <span class="pill-tag">2023–2024</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tesla Coil -->
+      <div class="card project-card fade-in visible">
+        <div class="project-thumb" style="background:#111613;position:relative;">
+          <!-- Tesla coil SVG -->
+          <svg width="100%" height="168" viewBox="0 0 340 168" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+            <rect width="340" height="168" fill="#111613"></rect>
+            <!-- Ground plate -->
+            <rect x="120" y="148" width="100" height="6" rx="2" fill="#4a7c59" opacity="0.7"></rect>
+            <!-- Primary coil spiral (bottom) -->
+            <ellipse cx="170" cy="138" rx="40" ry="6" fill="none" stroke="#6a9e6a" stroke-width="1.8"></ellipse>
+            <ellipse cx="170" cy="132" rx="34" ry="5" fill="none" stroke="#6a9e6a" stroke-width="1.5"></ellipse>
+            <ellipse cx="170" cy="126" rx="28" ry="4" fill="none" stroke="#6a9e6a" stroke-width="1.3"></ellipse>
+            <!-- Secondary coil tower -->
+            <line x1="170" y1="126" x2="170" y2="55" stroke="#6a9e6a" stroke-width="2"></line>
+            <ellipse cx="170" cy="116" rx="20" ry="3" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.6"></ellipse>
+            <ellipse cx="170" cy="104" rx="20" ry="3" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.6"></ellipse>
+            <ellipse cx="170" cy="92" rx="20" ry="3" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.6"></ellipse>
+            <ellipse cx="170" cy="80" rx="20" ry="3" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.6"></ellipse>
+            <ellipse cx="170" cy="68" rx="20" ry="3" fill="none" stroke="#6a9e6a" stroke-width="1" opacity="0.6"></ellipse>
+            <!-- Top terminal sphere -->
+            <circle cx="170" cy="50" r="10" fill="none" stroke="#7aab8a" stroke-width="1.5"></circle>
+            <!-- Discharge arcs -->
+            <path d="M 175,42 C 185,30 195,22 210,18" fill="none" stroke="#7aab8a" stroke-width="1.2" opacity="0.8"></path>
+            <path d="M 178,46 C 195,38 210,42 222,35" fill="none" stroke="#7aab8a" stroke-width="0.9" opacity="0.6"></path>
+            <path d="M 164,42 C 150,28 138,22 125,14" fill="none" stroke="#7aab8a" stroke-width="0.9" opacity="0.5"></path>
+            <!-- Label -->
+            <text x="170" y="12" font-size="7.5" fill="#4a7c59" font-family="monospace" text-anchor="middle">500,000V SSTC</text>
+          </svg>
+        </div>
+        <div class="project-body">
+          <div class="project-category">⚡ High Voltage · Resonance</div>
+          <h3>500,000V Tesla Coil</h3>
+          <p>Designed and built a 500,000 Volt Tesla Coil and safely demonstrated it to groups — a high-voltage resonance project showing foundational electrical principles and responsible operation around high-energy systems.</p>
+          <div class="tags-row" style="margin-bottom:0.75rem;">
+            <span class="pill-tag">High Voltage</span>
+            <span class="pill-tag">Resonance</span>
+            <span class="pill-tag">Power Electronics</span>
+            <span class="pill-tag">2022</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== SKILLS ===== -->
+<section class="section section-alt" id="skills">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Skills</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Lab instruments and simulation tools separated for fast recruiter scanning — bench competency first.</p>
+
+    <div class="skills-outer">
+
+      <!-- Bench Instruments -->
+      <div class="card fade-in visible">
+        <div class="skills-group-label">🔬 Lab Instruments &amp; Bench Equipment</div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Network Analyzer</span><span class="mono">Raytheon</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="92" style="width: 92%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Spectrum Analyzer</span><span class="mono">Raytheon</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90" style="width: 90%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Signal Generator</span><span class="mono">Raytheon</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="88" style="width: 88%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>RF Circuit Troubleshooting</span><span class="mono">Defense</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90" style="width: 90%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Schematic Interpretation</span><span class="mono">Hands-on</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="88" style="width: 88%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Hardware Validation</span><span class="mono">Sim-to-bench</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="87" style="width: 87%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Simulation Tools -->
+      <div class="card fade-in visible">
+        <div class="skills-group-label">💻 Simulation &amp; EDA Tools</div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>HFSS</span><span class="mono">BYU Research</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="85" style="width: 85%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>ADS</span><span class="mono">Raytheon</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="86" style="width: 86%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>SystemVue</span><span class="mono">Raytheon</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="84" style="width: 84%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>LTSpice</span><span class="mono">Circuit Sim</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="80" style="width: 80%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>KiCad PCB</span><span class="mono">Layout</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="78" style="width: 78%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Vivado</span><span class="mono">FPGA</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="65" style="width: 65%;"></div></div>
+        </div>
+      </div>
+
+      <!-- Programming -->
+      <div class="card fade-in visible">
+        <div class="skills-group-label">⌨️ Programming Languages</div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>Python</span><span class="mono">Test Scripts</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="90" style="width: 90%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>MATLAB</span><span class="mono">Simulation</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="82" style="width: 82%;"></div></div>
+        </div>
+        <div class="skill-bar-row">
+          <div class="skill-bar-label"><span>C / C++</span><span class="mono">Embedded</span></div>
+          <div class="skill-bar-track"><div class="skill-bar-fill" data-width="75" style="width: 75%;"></div></div>
+        </div>
+      </div>
+
+      <!-- All Skills Tags -->
+      <div class="card fade-in skills-tags-card visible" style="grid-column: auto;">
+        <div class="skills-group-label">🏷️ Full Skill Inventory</div>
+        <div class="skills-all-tags">
+          <span class="pill-tag pill-tag-instrument">Network Analyzer</span>
+          <span class="pill-tag pill-tag-instrument">Spectrum Analyzer</span>
+          <span class="pill-tag pill-tag-instrument">Signal Generator</span>
+          <span class="pill-tag">HFSS</span>
+          <span class="pill-tag">ADS</span>
+          <span class="pill-tag">SystemVue</span>
+          <span class="pill-tag">LTSpice</span>
+          <span class="pill-tag">KiCad PCB</span>
+          <span class="pill-tag">Vivado</span>
+          <span class="pill-tag">Python</span>
+          <span class="pill-tag">MATLAB</span>
+          <span class="pill-tag">C</span>
+          <span class="pill-tag">C++</span>
+          <span class="pill-tag">RF Circuit Testing</span>
+          <span class="pill-tag">Hardware Troubleshooting</span>
+          <span class="pill-tag">Schematic Interpretation</span>
+          <span class="pill-tag">Simulation-to-Hardware Correlation</span>
+          <span class="pill-tag">EME/EMI Testing</span>
+          <span class="pill-tag">Filter Design</span>
+          <span class="pill-tag">Electro-Mechanical Systems</span>
+          <span class="pill-tag">Test Procedures</span>
+          <span class="pill-tag">Defense Environment</span>
+          <span class="pill-tag">Portuguese</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== RESEARCH & PUBLICATIONS ===== -->
+<section class="section section-dark" id="research">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Research &amp; Publications</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Verifiable proof point — peer-reviewed IEEE publication from undergraduate bench fabrication research.</p>
+
+    <div class="research-grid">
+
+      <div class="card pub-card fade-in visible" style="border-color:rgba(106,158,106,0.35);">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem;">
+          <span style="font-size:1.5rem;">📄</span>
+          <span style="font-size:0.72rem;font-weight:700;color:var(--primary);font-family:'JetBrains Mono',monospace;letter-spacing:0.08em;text-transform:uppercase;">IEEE Conference Paper · 2024</span>
+        </div>
+        <div class="pub-title">Fabrication of High Density Flex Cables Using Direct Write Laser Ablation</div>
+        <div class="pub-venue">2024 Intermountain Engineering, Technology and Computing (IETC) · Logan, UT, USA</div>
+        <div class="pub-authors">J. Kartchner, B. Ferguson, D. Jensen, J. Payne, G. Nielson, S. Schultz</div>
+        <a href="https://doi.org/10.1109/IETC61393.2024.10564256" target="_blank" rel="noopener" class="pub-doi">
+          <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:0.72rem;"></i>
+          DOI: 10.1109/IETC61393.2024.10564256
+        </a>
+      </div>
+
+      <div class="card research-detail-card fade-in visible">
+        <h3 style="margin-bottom:0.75rem;">Graduate Research — HFSS Filter Design</h3>
+        <ul>
+          <li>Simulated RF thin film flex cables in HFSS for graduate research at BYU</li>
+          <li>Designed <strong>Coupled Line</strong> and <strong>Stepped Impedance</strong> bandpass filters in HFSS using Python scripting for parameterization</li>
+          <li>Modeled S-parameters for photonic components using Python — earlier research track (Sept 2022 – May 2023)</li>
+        </ul>
+        <div class="tags-row">
+          <span class="pill-tag">HFSS</span>
+          <span class="pill-tag">Microwave Filter Design</span>
+          <span class="pill-tag">S-Parameters</span>
+          <span class="pill-tag">Python Scripting</span>
+          <span class="pill-tag">RF Flex Cables</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== LEADERSHIP ===== -->
+<section class="section section-alt" id="leadership">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Leadership &amp; Volunteer</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Professional organization involvement and community engagement.</p>
+
+    <div class="leadership-grid">
+      <div class="card leadership-card fade-in visible">
+        <div style="font-size:1.5rem;margin-bottom:0.7rem;">🔌</div>
+        <h3>Secretary — BYU IEEE Chapter</h3>
+        <div class="org">BYU IEEE · 2023–2024</div>
+        <p>Helped organize and run technical events for the BYU chapter of IEEE — professional development and networking within the electrical engineering student community.</p>
+        <div class="tags-row">
+          <span class="pill-tag">IEEE</span>
+          <span class="pill-tag">Organization</span>
+          <span class="pill-tag">Leadership</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== EDUCATION ===== -->
+<section class="section section-dark" id="education">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Education</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Electrical Engineering — Brigham Young University.</p>
+
+    <div class="education-grid">
+
+      <div class="card fade-in visible" style="border-color:rgba(106,158,106,0.32);">
+        <div class="edu-icon">🎓</div>
+        <div class="edu-year">Sept 2025 – Apr 2027 (Anticipated)</div>
+        <div class="edu-degree">Master of Science — Electrical Engineering</div>
+        <div class="edu-inst">Brigham Young University · Provo, UT</div>
+        <div class="edu-gpa">GPA: 3.85</div>
+        <div class="edu-courses">Relevant Coursework: Radar and Comm Systems · Math of Signal and Systems · Numerical Methods · Applied EM and Optics · Autonomous Aircraft Control</div>
+        <div class="tags-row">
+          <span class="pill-tag">RF Systems</span>
+          <span class="pill-tag">Radar</span>
+          <span class="pill-tag">Applied EM</span>
+          <span class="pill-tag">HFSS Research</span>
+        </div>
+      </div>
+
+      <div class="card fade-in visible">
+        <div class="edu-icon">🏛️</div>
+        <div class="edu-year">2021 – Apr 2025</div>
+        <div class="edu-degree">BS — Electrical Engineering</div>
+        <div class="edu-inst">Brigham Young University · Provo, UT</div>
+        <div class="edu-gpa">GPA: 3.98 · Magna Cum Laude</div>
+        <div class="edu-courses">Full EE curriculum including RF circuits, electromagnetics, signals &amp; systems, circuit analysis, and senior capstone (80GHz mmWave Radar)</div>
+        <div class="tags-row">
+          <span class="pill-tag">Magna Cum Laude</span>
+          <span class="pill-tag">GPA 3.98</span>
+          <span class="pill-tag">Senior Capstone</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section class="section section-alt" id="contact">
+  <div class="container">
+    <div class="section-divider"></div>
+    <h2 class="visible">Contact</h2>
+    <p style="color:rgba(255,255,255,0.5);margin-bottom:2rem;font-size:0.92rem;">Interested in RF systems and engineering technician roles at defense and aerospace organizations. Let's connect.</p>
+
+    <div class="contact-wrapper">
+
+      <div class="contact-info fade-in visible">
+        <h3>Let's Connect</h3>
+        <p>I'm actively seeking Sr. Engineering Technician and RF Systems Technician roles at defense and aerospace organizations — specifically hands-on bench testing, hardware validation, and RF circuit troubleshooting positions. I'll respond promptly.</p>
+
+        <div class="contact-item">
+          <div class="contact-icon"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:0.1rem;">Email</div>
+            <a href="mailto:joel.kartchner@gmail.com" style="color:rgba(255,255,255,0.85);">joel.kartchner@gmail.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><i class="fa-solid fa-phone"></i></div>
+          <div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:0.1rem;">Phone</div>
+            <span style="color:rgba(255,255,255,0.85);">(509) 392-9318</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><i class="fa-brands fa-linkedin"></i></div>
+          <div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:0.1rem;">LinkedIn</div>
+            <a href="https://www.linkedin.com/in/joel-kartchner" target="_blank" rel="noopener" style="color:var(--accent);">linkedin.com/in/joel-kartchner</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-icon"><i class="fa-solid fa-file-pdf"></i></div>
+          <div>
+            <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);font-weight:600;margin-bottom:0.1rem;">Resume</div>
+            <a href="resume.pdf" style="color:var(--accent);font-weight:700;">Download PDF →</a>
+          </div>
+        </div>
+
+        <div class="tags-row" style="margin-top:1.5rem;">
+          <span class="pill-tag">Open to Defense Roles</span>
+          <span class="pill-tag">RF Bench Testing</span>
+          <span class="pill-tag">U.S. Citizen</span>
+          <span class="pill-tag">Provo / Relocatable</span>
+        </div>
+      </div>
+
+      <form class="card contact-form fade-in visible" onsubmit="return false;">
+        <h3 style="margin-bottom:0.5rem;">Send a Message</h3>
+        <div class="form-group">
+          <label for="cname">Your Name</label>
+          <input type="text" id="cname" placeholder="Jane Smith">
+        </div>
+        <div class="form-group">
+          <label for="cemail">Email Address</label>
+          <input type="email" id="cemail" placeholder="jane@company.com">
+        </div>
+        <div class="form-group">
+          <label for="csubject">Subject</label>
+          <input type="text" id="csubject" placeholder="Engineering Technician Opportunity">
+        </div>
+        <div class="form-group">
+          <label for="cmessage">Message</label>
+          <textarea id="cmessage" placeholder="Hi Joel, I'm reaching out about..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="align-self:flex-start;padding:0.7rem 2rem;">
+          Send Message
+        </button>
+      </form>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer class="footer">
+  <p>© 2026 <span>Joel Kartchner</span> · RF &amp; Electrical Engineering · Brigham Young University</p>
+</footer>
+
+<script>
+// ===== INTERSECTION OBSERVER — FADE IN =====
+const fadeEls = document.querySelectorAll('.fade-in');
+const fadeObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      fadeObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.12 });
+fadeEls.forEach(el => fadeObserver.observe(el));
+
+// ===== SKILL BAR ANIMATION =====
+const skillBars = document.querySelectorAll('.skill-bar-fill[data-width]');
+const barObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      const bar = entry.target;
+      const w = bar.getAttribute('data-width');
+      setTimeout(() => { bar.style.width = w + '%'; }, 120);
+      barObserver.unobserve(bar);
+    }
+  });
+}, { threshold: 0.3 });
+skillBars.forEach(bar => barObserver.observe(bar));
+
+// ===== SECTION HEADING ANIMATION =====
+const h2s = document.querySelectorAll('h2');
+const h2Observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      h2Observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.5 });
+h2s.forEach(el => h2Observer.observe(el));
+
+// ===== NAVBAR ACTIVE LINK =====
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a[href^="#"]');
+const sectionObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      navLinks.forEach(link => link.classList.remove('active'));
+      const active = document.querySelector(`.nav-links a[href="#${entry.target.id}"]`);
+      if (active) active.classList.add('active');
+    }
+  });
+}, { threshold: 0.35 });
+sections.forEach(s => sectionObserver.observe(s));
+
+// ===== NAVBAR SHADOW ON SCROLL =====
+window.addEventListener('scroll', () => {
+  const navbar = document.getElementById('navbar');
+  if (window.scrollY > 20) {
+    navbar.style.boxShadow = '0 2px 24px rgba(0,0,0,0.5)';
+    navbar.style.borderBottomColor = 'rgba(106,158,106,0.22)';
+  } else {
+    navbar.style.boxShadow = 'none';
+    navbar.style.borderBottomColor = 'rgba(106,158,106,0.15)';
+  }
+});
+</script>
+
+</body></html>

@@ -265,12 +265,13 @@ CONVERSION RULES
 10. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
    <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "dark": "<hex>", "light": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
    Populate it with:
-   - default_color_scheme: the original hardcoded hex values from the template's CSS :root block, mapping:
-     - primary   → the main accent / button color (e.g. --accent)
-     - secondary → the secondary accent color (e.g. --accent-2)
-     - accent    → a highlight or hover color if present, else same as primary
-     - dark      → the background color (e.g. --bg)
-     - light     → the lightest surface color (e.g. --light, --panel, --chip) if present, else omit
+   - default_color_scheme: the original hardcoded hex values from the template's CSS :root block in strict slot order:
+     - primary   → slot 1, the most dominant color in the header / masthead (foreground or background)
+     - secondary → slot 2, the second most dominant masthead color that is clearly distinct from slot 1
+     - accent    → slot 3, the third most dominant distinct color
+     - dark      → slot 4, the fourth distinct supporting color
+     - light     → slot 5, the fifth distinct supporting color
+     The five slots are ordered by visual prominence and distinctness, not by old semantic categories like background/accent/text.
      This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
    - about_word_count: the exact word count of the original about/summary text that you replaced with {{about}}.
      Count words by splitting the original text on whitespace. This is used at render time to trim the
@@ -299,13 +300,13 @@ COLOR MAPPING
 
 Distill the template's colors into five named `--color-*` CSS custom properties (use fewer if the palette genuinely has fewer distinct roles). Keep the original hex values exactly — do NOT substitute Mustache placeholder tokens. Then rewrite every hardcoded color value anywhere in the file (`:root`, other CSS rules, and HTML inline `style=""` attributes) to reference these variables using `var()` or `color-mix()`. The rendered page must look identical to the source.
 
-The five core colors must be the most mutually distinct, high-signal colors in the design. Do NOT waste core slots on duplicate blacks, duplicate grays, or barely-different neutrals when the source has salient accent hues that drive headings, CTA buttons, hero art, cards, or section dividers. Preserve the meaningful accent colors first; neutrals belong in the core five only when they are truly repeated structural colors.
+The five core colors must be the five most visually important and mutually distinct colors in the design, ordered by prominence. Slot 1 should be the most dominant color in the masthead. Slot 2 should be the next most dominant masthead color and must not be merely a tint/shade/gradient-stop variant of slot 1. Slot 3 should be the next distinct color. Slots 4 and 5 are progressively less prominent but still must be meaningfully distinct from the earlier slots. Do NOT waste slots on duplicate blacks, duplicate grays, or barely-different neutrals when the source has salient accent hues that drive headings, CTA buttons, hero art, cards, or section dividers.
 
 Structure the `:root` block in three groups:
 
   1. Five main theme colors — one declaration per row, original hex value, plus a role comment in the format:
        /* N. RoleName — brief phrase */
-     where N is 1–5 and RoleName is a word from the COLOR_ROLE_NAMING_CONVENTIONS table below that describes the main way the color is used. Make sure the five core color assignments are organized to provide sufficient contrast for all the text in various sections of the webpage to be easily viewed by humans.
+     where N is 1–5 and RoleName is a short label such as Dominant, Secondary, Tertiary, Quaternary, Quinary, or another brief descriptor that matches the slot's prominence. Make sure the five core color assignments are organized to provide sufficient contrast for all the text in various sections of the webpage to be easily viewed by humans.
      Constraints:
      - Never include the same hex twice in the five main colors.
      - Avoid near-duplicate neutrals; at most two of the five core colors should be neutral unless the source is genuinely monochrome.
@@ -321,11 +322,11 @@ Example:
 <style>
     :root {
       /* Five main theme colors */
-      --color-bg:      #150b2d;   /* 1. Canvas      — deep purple page background     */
-      --color-surface: #072e3d;   /* 2. Panel        — teal card / section surface     */
-      --color-text:    #e5e7eb;   /* 3. OnCanvas     — cool white, body text           */
-      --color-muted:   #94a3b8;   /* 4. Subtle       — secondary text, borders         */
-      --color-accent:  #2563eb;   /* 5. Interactive  — electric blue, CTAs & links     */
+      --color-dominant:   #150b2d;   /* 1. Dominant    — deepest, most prominent masthead color */
+      --color-secondary:  #072e3d;   /* 2. Secondary   — second prominent masthead/panel color  */
+      --color-tertiary:   #2563eb;   /* 3. Tertiary    — third distinct CTA/highlight color      */
+      --color-quaternary: #94a3b8;   /* 4. Quaternary  — lower-prominence supporting color       */
+      --color-quinary:    #e5e7eb;   /* 5. Quinary     — least-prominent supporting contrast     */
 
       /* Theme-independent hard-coded neutrals */
       --white:   #ffffff;
@@ -345,7 +346,7 @@ Example:
 </style>
 =============================================================================
 
-Establish theme color roles for each core color. A role is 1-4 words such as those in the COLOR_ROLE_NAMING_CONVENTIONS table except NOT a Role-based word NOR any hard-coded theme-independent color. A color may have multiple roles. Color roles that are computed by function may include: Elevated, Overlay, Tonal, Subtle, Container, Shadow, Highlight, etc. The theme color role should be posted in a comment adjacent to the color assignment in the html file and labeled with a number 1-5.
+Establish the five core colors in order of prominence and distinctness. The numbered comment is the source of truth. Role labels may describe the slot's visual identity, but the slot number determines how the palette picker interprets the color.
 
 Sanity check before finalizing the template:
 - Ask whether each of the five core colors is doing genuinely different work in the composition.
@@ -353,11 +354,11 @@ Sanity check before finalizing the template:
 - If a visually important heading/CTA/accent color is missing from the five core colors, the palette is wrong and must be revised.
 
 Potential Values for Color Theme Role Mapping
- 1. Eg. Dominant, Primary, Background, Canvas, Brand, Hero
- 2. Eg. Secondary, Panel, Container, Signature, Inverse, Background2
- 3. Eg. Tertiary, Triadic, Analogous, Outline, Pop, Vibrant
- 4. Eg. Accent, Highlight, Interactive, Accent, Border
- 5. Eg. Accent2, Divider, Separator, Selection
+ 1. Eg. Dominant, Hero, Brand, Background, Foreground
+ 2. Eg. Secondary, Panel, Signature, Headline, Surface
+ 3. Eg. Tertiary, Pop, Vibrant, CTA, Highlight
+ 4. Eg. Quaternary, Accent, Border, Label, Support
+ 5. Eg. Quinary, Divider, Text, Accent2, Contrast
 
   COLOR_ROLE_NAMING_CONVENTIONS TABLE
     Role-based (functional):
