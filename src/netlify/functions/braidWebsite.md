@@ -117,8 +117,7 @@ SVG icons — Experience entries:
   Never repeat the same SVG design for two entries.
 
 SVG icons — Project entries:
-  Every project card MUST contain either a unique inline SVG icon OR a large domain-
-  appropriate emoji (font-size: 3.5rem). Never repeat the same icon/emoji.
+  Every project card MUST contain a unique inline SVG icon (approx. 2 inches wide).  Never repeat the same icon/emoji.
 
 Masthead illustration:
   Domain context for this candidate: {{DOMAIN_CONTEXT}}

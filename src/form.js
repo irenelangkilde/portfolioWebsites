@@ -38,6 +38,7 @@
     let mastheadImageInProgress = false;
     let mastheadImageResult = null;
     let mastheadImageError = null;
+    let autoMastheadImageTriggered = false;
 
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
@@ -2548,11 +2549,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 4000));
           if (myRunId !== _braidRunId) { clearInterval(braidCountdown); braidInProgress = false; return; }
-          const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed  = await readJsonResponseSafely(pollRes);
           const data    = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
-          setHeaderStatus("braidStatus", `Braiding portfolio… ${remaining}s`, "rgba(141,224,255,.75)");
           if (data.status === "done") {
             clearInterval(braidCountdown);
             generationResult    = { ...data, base_site_html: data.site_html || "" };
@@ -3187,6 +3186,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       extractedTemplateCache = null;
       bridgeResult         = null;
       generationResult     = null;
+      autoMastheadImageTriggered = false;
       // Abort any in-flight downstream tasks
       ++_jobAdRunId; ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       // Resume analysis may have already auto-started on file change — don't stomp it
@@ -3207,6 +3207,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       page2Submitted   = false;
       bridgeResult     = null;
       generationResult = null;
+      autoMastheadImageTriggered = false;
       // Abort any in-flight downstream tasks
       ++_jobAdRunId; ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       setHeaderStatus("jobAnalysisStatus", "");
@@ -3231,6 +3232,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       selectedSuggestedPaletteKey = "";
       bridgeResult           = null;
       generationResult       = null;
+      autoMastheadImageTriggered = false;
       // Abort any in-flight downstream tasks
       ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       page3Submitted = false;
@@ -3249,14 +3251,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function invalidateFromPage4() {
       if (activePageId() !== "page4") return;
       page4Submitted = false;
-      const submitMsg = document.getElementById("colorsSubmitMsg");
-      if (submitMsg) submitMsg.textContent = "";
-      const readyMsg = document.getElementById("generatorReadyMsg");
-      if (readyMsg) readyMsg.textContent = "";
-      setHeaderStatus("colorsChosenStatus", "");
-      setHeaderStatus("braidStatus", "");
-      setHeaderStatus("bridgeStatus", "");
-      setHeaderStatus("generatingWebsiteStatus", "");
+      clearColorRelatedStatusMessages();
       setApplyBtnState(false);
       setOpenEditorReady(false);
 
@@ -3268,6 +3263,17 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       bridgeResult     = null;
       generationResult = null;
       ++_bridgeRunId; ++_generationRunId;
+    }
+
+    function clearColorRelatedStatusMessages() {
+      const submitMsg = document.getElementById("colorsSubmitMsg");
+      if (submitMsg) submitMsg.textContent = "";
+      const readyMsg = document.getElementById("generatorReadyMsg");
+      if (readyMsg) readyMsg.textContent = "";
+      setHeaderStatus("colorsChosenStatus", "");
+      setHeaderStatus("braidStatus", "");
+      setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("generatingWebsiteStatus", "");
     }
 
     // Page 1 inputs
@@ -3295,7 +3301,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     // Page 4 inputs — color pickers
     ["primary", "secondary", "accent", "dark", "light"].forEach(id => {
-      document.getElementById(id)?.addEventListener("input", invalidateFromPage4);
+      const el = document.getElementById(id);
+      el?.addEventListener("input", invalidateFromPage4);
+      el?.addEventListener("change", invalidateFromPage4);
     });
     document.getElementById("useSampleColors")?.addEventListener("change", invalidateFromPage4);
 
@@ -3605,7 +3613,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       } else {
         // Braid mode: HTML and masthead image are separate async results.
         page4Submitted = true;
-        startMastheadImageGeneration();
+        if (!autoMastheadImageTriggered) {
+          autoMastheadImageTriggered = true;
+          startMastheadImageGeneration();
+        }
         if (generationResult) {
           applyBraidColorOverrides(generationResult);
           pushPreviewHtmlUpdate(generationResult.site_html || "");
@@ -3631,6 +3642,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (braidInProgress || bridgeInProgress || generationInProgress) return;
       bridgeResult     = null;
       generationResult = null;
+      autoMastheadImageTriggered = false;
       ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
       greyRendererButtons(true);
       setApplyBtnState(false);

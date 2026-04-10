@@ -460,7 +460,7 @@ function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
     `Generate an image suitable for the resume/portfolio website of a person majoring in ${major} and specializing in ${specialization}. ` +
     `Use the user's selected palette as guiding colors: ${paletteGuide}. ` +
     `Do not depict identifiable people or any human figure with discernable ethnicity, race, or facial identity. ` +
-    `Prefer abstract, environmental, technical, scientific, or object-based imagery instead of portraits or human subjects. ` +
+    `Prefer abstract, environmental, technical, scientific, futuristic, or object-based imagery instead of portraits or human subjects. ` +
     `The image must have a direct, concrete connection to the stated major and specialization. ` +
     `Match a professional, recruiter-facing website style rather than a poster. ${contextBits} ` +
     `Avoid watermarks, captions, and embedded text.`
@@ -469,6 +469,7 @@ function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
 
 async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "Image" }) {
   const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
+  const imageModel = "gpt-image-1.5";
   console.log(`[buildWebsite-background] ${stageLabel} API key present:`, !!openaiKey);
   if (!openaiKey) {
     throw new Error("OPENAI_API_KEY is not set.");
@@ -476,12 +477,11 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
 
   console.log(`[buildWebsite-background] ${stageLabel} prompt: ${prompt}`);
   console.log(
-    `[buildWebsite-background] DALL-E request payload: ${JSON.stringify({
-      model: "dall-e-3",
+    `[buildWebsite-background] Image request payload: ${JSON.stringify({
+      model: imageModel,
       prompt,
       n: 1,
-      size,
-      response_format: "b64_json"
+      size
     })}`
   );
 
@@ -493,11 +493,10 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
     try {
       console.log(`[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts}`);
       imgResp = await openaiImgClient.images.generate({
-        model: "dall-e-3",
+        model: imageModel,
         prompt,
         n: 1,
-        size,
-        response_format: "b64_json"
+        size
       });
       lastImgErr = null;
       break;
@@ -517,7 +516,7 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
   console.log(`[buildWebsite-background] ${stageLabel} generated:`, !!b64);
   return {
     dataUri: b64 ? `data:image/png;base64,${b64}` : "",
-    model: "dall-e-3"
+    model: imageModel
   };
 }
 
