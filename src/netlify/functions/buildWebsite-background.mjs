@@ -464,8 +464,8 @@ function buildMastheadImageInstruction(meta = {}, domainContext = "") {
 
 function serializePaletteForImagePrompt(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
-  return COLOR_SLOT_KEYS
-    .map((slotKey) => `${slotKey}=${normalized[slotKey] || "unspecified"}`)
+  return COLOR_ROLE_KEYS
+    .map((roleKey) => `${roleKey}=${normalized[roleKey] || "unspecified"}`)
     .join(", ");
 }
 
