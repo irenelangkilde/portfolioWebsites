@@ -3,7 +3,7 @@ The output is JSON structured as shown below.  (Json values are just examples, n
 
 Infer the type of structure/composition, abstracting away the numbers of subsection elements. You should maintain the layout of the website, including sections types and accessory visual elements, cards, and boxes, but IGNORE the textual content and exact numbers of subsection elements. 
 
-Infer a 5-color set of variables for the website color palette, mainly based on the masthead. Encode the remainder of the website---the background and body---with these variables, functions of these variables (eg., a shade or two lighter, darker, redder, greener, or blue-er) and/or neutral colors. Create a second palette using the same set of colors but with an oppositely constrasting scheme for alternating sections of the website. 
+Infer a semantic 5-color palette for the website, mainly based on the masthead. The five roles are: `background`, `foreground`, `primary`, `secondary`, and `accent`. Encode the remainder of the website using these variables, functions of these variables (e.g. lighter, darker, redder, greener, or bluer), and/or neutral utility colors. Create a second palette using the same semantic roles but with an oppositely contrasting scheme for alternating sections of the website.
 
 For each of the substantial visual elements (such as images and animations) with a src file name report it in a json structure like the following:
 
@@ -24,11 +24,11 @@ For each of the substantial visual elements (such as images and animations) with
     "visual_treatment": "soft gradients with frosted-glass card overlays"
   },
   "default_color_scheme": {
+    "background": "",
+    "foreground": "",
     "primary": "",
     "secondary": "",
-    "tertiary": "",
-    "accent1": "",
-    "accent2": ""
+    "accent": ""
   },
   design_factors": {
     "composition_option": "central",

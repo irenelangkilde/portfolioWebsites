@@ -253,19 +253,25 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
-const COLOR_SLOT_KEYS = ["slot1", "slot2", "slot3", "slot4", "slot5"];
-const LEGACY_COLOR_KEYS = ["primary", "secondary", "tertiary", "accent1", "accent2"];
+const COLOR_ROLE_KEYS = ["background", "foreground", "primary", "secondary", "accent"];
 
 function normalizeColorSpec(colorSpec = {}) {
-  const normalized = {
-    use_sample_colors: !!colorSpec?.use_sample_colors
-  };
-  COLOR_SLOT_KEYS.forEach((slotKey, index) => {
-    const legacyKey = LEGACY_COLOR_KEYS[index];
-    const value = colorSpec?.[slotKey] ?? colorSpec?.[legacyKey] ?? null;
-    normalized[slotKey] = value;
-    normalized[legacyKey] = value;
-  });
+  const normalized = { use_sample_colors: !!colorSpec?.use_sample_colors };
+  normalized.background = colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot5 ?? null;
+  normalized.foreground = colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot4 ?? null;
+  normalized.primary = colorSpec?.primary ?? colorSpec?.slot1 ?? null;
+  normalized.secondary = colorSpec?.secondary ?? colorSpec?.slot2 ?? null;
+  normalized.accent = colorSpec?.accent ?? colorSpec?.tertiary ?? colorSpec?.slot3 ?? null;
+
+  // Backward-compatible aliases for older prompts/templates/editor code.
+  normalized.tertiary = normalized.accent;
+  normalized.accent1 = normalized.background;
+  normalized.accent2 = normalized.foreground;
+  normalized.slot1 = normalized.primary;
+  normalized.slot2 = normalized.secondary;
+  normalized.slot3 = normalized.accent;
+  normalized.slot4 = normalized.foreground;
+  normalized.slot5 = normalized.background;
   if (colorSpec?.note) normalized.note = colorSpec.note;
   return normalized;
 }
@@ -274,11 +280,11 @@ function serializeColorSpecForAI(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
   return {
     use_sample_colors: !!normalized.use_sample_colors,
-    slot1: normalized.slot1,
-    slot2: normalized.slot2,
-    slot3: normalized.slot3,
-    slot4: normalized.slot4,
-    slot5: normalized.slot5
+    background: normalized.background,
+    foreground: normalized.foreground,
+    primary: normalized.primary,
+    secondary: normalized.secondary,
+    accent: normalized.accent
   };
 }
 
@@ -561,7 +567,8 @@ function injectCssColors(html, colorSpec, templateHtml) {
   const normalizedColorSpec = normalizeColorSpec(colorSpec);
   if (!normalizedColorSpec || normalizedColorSpec.use_sample_colors) return html;
   // Parse --color-* variable declarations with their adjacent numbered role comments.
-  // Slots 1–5 map directly to primary/secondary/tertiary/accent1/accent2 in order.
+  // Numbered sample slots map to semantic roles:
+  // 1→primary, 2→secondary, 3→accent, 4→foreground, 5→background.
   const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
   if (!rootMatch) return html;
   const colorVars = [];
@@ -572,7 +579,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   }
   if (!colorVars.length) return html;
   colorVars.sort((a, b) => a.index - b.index);
-  const slots = ["primary", "secondary", "tertiary", "accent1", "accent2"];
+  const slots = ["primary", "secondary", "accent", "foreground", "background"];
   const varToSlot = {};
   colorVars.forEach((cv, i) => {
     if (i < slots.length) varToSlot[cv.varName] = slots[i];
@@ -615,20 +622,20 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const isUseSampleColors = normalizedColorSpec?.use_sample_colors;
   const colorApp = isUseSampleColors
     ? {
-        slot_1_use:   "Preserve slot 1 as the masthead's most dominant color.",
-        slot_2_use:   "Preserve slot 2 as the second most dominant non-derivable masthead color.",
-        slot_3_use:   "Preserve slot 3 as the third distinct headline, section, or button color.",
-        slot_4_use:   "Preserve slot 4 as a lower-prominence orthogonal accent or text color.",
-        slot_5_use:   "Preserve slot 5 as the least-prominent orthogonal accent or text color.",
+        background_use: "Preserve the sample's page canvas and large-area background treatment.",
+        foreground_use: "Preserve the sample's readable ink / text contrast treatment.",
+        primary_use: "Preserve the sample's main brand/action emphasis.",
+        secondary_use: "Preserve the sample's secondary accent and hierarchy support.",
+        accent_use: "Preserve the sample's fifth contrast color for highlights and supporting emphasis.",
         gradient_notes: "Use template's existing gradient patterns"
       }
     : {
-        slot_1_use:   `${normalizedColorSpec?.slot1 || "slot 1"} — the most dominant masthead color, either foreground or background.`,
-        slot_2_use:   `${normalizedColorSpec?.slot2 || "slot 2"} — the second most dominant masthead color, distinct from slot 1.`,
-        slot_3_use:   `${normalizedColorSpec?.slot3 || "slot 3"} — the third distinct headline, section, or button color.`,
-        slot_4_use:   `${normalizedColorSpec?.slot4 || "slot 4"} — a lower-prominence orthogonal accent or text color.`,
-        slot_5_use:   `${normalizedColorSpec?.slot5 || "slot 5"} — the least-prominent orthogonal accent or text color.`,
-        gradient_notes: `Preserve the template's gradient structure while making slots 1–3 carry most of the visual weight and slots 4–5 act as supporting contrast colors.`
+        background_use: `${normalizedColorSpec?.background || "background"} — page canvas, large surfaces, or atmospheric wash.`,
+        foreground_use: `${normalizedColorSpec?.foreground || "foreground"} — readable text, dark/light ink, and contrast support.`,
+        primary_use: `${normalizedColorSpec?.primary || "primary"} — main CTA, headline emphasis, and strongest brand/action color.`,
+        secondary_use: `${normalizedColorSpec?.secondary || "secondary"} — supporting accent used for chips, panels, or secondary emphasis.`,
+        accent_use: `${normalizedColorSpec?.accent || "accent"} — orthogonal highlight color for contrast, detail, and selective emphasis.`,
+        gradient_notes: `Preserve the template's gradient structure while using background/foreground for readability and primary/secondary/accent for hierarchy.`
       };
 
   const pace = (attrs.pacing || "").toLowerCase();
@@ -815,7 +822,7 @@ function toFlatResumeSchema(f) {
 /**
  * Maps contentJson + resumeJson into a flat Mustache data object
  * matching the schema in ExtractMustacheTemplate.md.
- * colorSpec: { primary, secondary, tertiary, accent1, accent2 } — user's palette choice
+ * colorSpec: { background, foreground, primary, secondary, accent } — user's palette choice
  */
 function trimAboutToLength(text, targetWords) {
   if (!targetWords || targetWords <= 0) return text;
@@ -1003,14 +1010,20 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   ].filter(l => (l.role && l.organization) || l.description);
 
   // Theme color variables for Mustache templates that expose CSS custom properties
-  const tp = colorSpec?.primary   || "#2563eb";
-  const ts = colorSpec?.secondary || "#22c55e";
-  const td = colorSpec?.accent2   || "#0f172a";
+  const normalizedTheme = normalizeColorSpec(colorSpec);
+  const tp = normalizedTheme.primary || "#2563eb";
+  const ts = normalizedTheme.secondary || "#22c55e";
+  const td = normalizedTheme.foreground || "#0f172a";
+  const tb = normalizedTheme.background || "#f8fafc";
+  const ta = normalizedTheme.accent || "#8de0ff";
 
   return {
     // ── Theme colors ──
+    theme_background: tb,
+    theme_foreground: td,
     theme_primary:   tp,
     theme_secondary: ts,
+    theme_accent:    ta,
     theme_dark:      td,
 
     name:              personal.name     || "",
@@ -1245,19 +1258,20 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     : "";
 
   const theme = normalizeColorSpec({
-    slot1: colorSpec.slot1 ?? colorSpec.primary ?? "#4E70F1",
-    slot2: colorSpec.slot2 ?? colorSpec.secondary ?? "#FBAB9C",
-    slot3: colorSpec.slot3 ?? colorSpec.tertiary ?? "#8DE0FF",
-    slot4: colorSpec.slot4 ?? colorSpec.accent2 ?? "#0b1220",
-    slot5: colorSpec.slot5 ?? colorSpec.accent1 ?? "#eaf0ff",
+    background: colorSpec.background,
+    foreground: colorSpec.foreground,
+    primary: colorSpec.primary,
+    secondary: colorSpec.secondary,
+    accent: colorSpec.accent,
     use_sample_colors: colorSpec.use_sample_colors
   });
 
   // Cap sample HTML to avoid exceeding model context.
   // If the sample was pre-normalized, prepend a comment listing the extracted palette so
-  // the braid AI can read the slots directly instead of doing color archaeology from scratch.
-  const samplePrefix = (templateColorSlots && Object.keys(templateColorSlots).length >= 3)
-    ? `<!--\n  PRE-EXTRACTED SAMPLE PALETTE:\n${Object.entries(templateColorSlots).map(([k, v]) => `  ${k} = ${v}`).join("\n")}\n  The sample HTML is color-normalized: its :root already contains --color-* vars with numbered role comments.\n  Use those directly as the slot-1 through slot-5 references in Part 2. Do not re-analyze colors from scratch.\n-->\n`
+  // the braid AI can read the semantic roles directly instead of doing color archaeology.
+  const samplePaletteRef = templateColorSlots ? normalizeColorSpec(templateColorSlots) : null;
+  const samplePrefix = (samplePaletteRef && [samplePaletteRef.background, samplePaletteRef.foreground, samplePaletteRef.primary, samplePaletteRef.secondary, samplePaletteRef.accent].filter(Boolean).length >= 3)
+    ? `<!--\n  PRE-EXTRACTED SAMPLE PALETTE:\n  background = ${samplePaletteRef.background || ""}\n  foreground = ${samplePaletteRef.foreground || ""}\n  primary = ${samplePaletteRef.primary || ""}\n  secondary = ${samplePaletteRef.secondary || ""}\n  accent = ${samplePaletteRef.accent || ""}\n  The sample HTML is color-normalized. Treat these semantic roles as the authoritative sample-reference palette for Part 2, even if the CSS still contains numbered legacy comments.\n-->\n`
     : "";
   const cappedSampleHtml = samplePrefix + (sampleHtml.length > 80000
     ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
@@ -1996,11 +2010,11 @@ export async function handler(event) {
     }
 
     const theme = normalizeColorSpec({
-      slot1: page2?.theme?.slot1 ?? page2?.theme?.primary ?? "#4E70F1",
-      slot2: page2?.theme?.slot2 ?? page2?.theme?.secondary ?? "#FBAB9C",
-      slot3: page2?.theme?.slot3 ?? page2?.theme?.tertiary ?? "#8DE0FF",
-      slot4: page2?.theme?.slot4 ?? page2?.theme?.accent2 ?? "#0b1220",
-      slot5: page2?.theme?.slot5 ?? page2?.theme?.accent1 ?? "#eaf0ff"
+      background: page2?.theme?.background,
+      foreground: page2?.theme?.foreground,
+      primary: page2?.theme?.primary,
+      secondary: page2?.theme?.secondary,
+      accent: page2?.theme?.accent
     });
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);

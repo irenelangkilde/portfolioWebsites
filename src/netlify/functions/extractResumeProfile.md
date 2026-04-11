@@ -170,7 +170,13 @@ OUTPUT JSON SHAPE
     },
     "compatible_color_schemes": [
       {
-        "colors": ["", "", "", "", ""],
+        "base_colors": {
+          "background": "",
+          "foreground": "",
+          "primary": "",
+          "secondary": "",
+          "accent": ""
+        },
         "how_used": ""
       }
     ]
@@ -352,15 +358,19 @@ CTA OPTIONS
 Write 2-3 specific calls to action appropriate for this candidate's career stage and field. Avoid generic "Get in Touch" — make them action-specific and honest. Examples: "See my research", "View my projects", "Download my resume", "Let's talk about your team's needs". Pair with context: what page action or link they point to.
 
 6. SUBJECT-INSPIRED COLOR STRATEGY
-Conjure five colors inspired by the candidate's field and subject matter. Output them as an ordered array in `colors` — the order matters and must follow this convention:
+Conjure five colors inspired by the candidate's field and subject matter. Output them in `base_colors` using these semantic roles:
 
-  colors[0] — Slot 1 / Dominant: the most prominent color in the masthead or first screen, either foreground or background
-  colors[1] — Slot 2 / Secondary: the second most prominent masthead color that is clearly distinct from slot 1 and not just a shade/tint/mix of it
-  colors[2] — Slot 3 / Tertiary: the third distinct color, also not derivable from slots 1 or 2, suitable for headline text, buttons, or section emphasis
-  colors[3] — Slot 4 / Quaternary: a lower-prominence but still distinct supporting color, often used for accents, panels, labels, or text
-  colors[4] — Slot 5 / Quinary: the least-prominent distinct supporting color, often used for accents, secondary text, borders, or subtle contrast
+  background — the dominant page canvas or atmospheric base
+  foreground — the main readable ink/text color against the background
+  primary — the strongest action / emphasis color
+  secondary — a distinct supporting brand or hierarchy color
+  accent — a fifth orthogonal highlight color that adds new contrast
 
-Do NOT make slots 1 and 2 near-duplicates. Do NOT default slots 4 and 5 to pure black and pure white unless the source concept genuinely requires that. Favor distinct, composition-driving colors over generic neutrals.
+Rules:
+- `foreground` must be readable on `background`.
+- `primary`, `secondary`, and `accent` must be genuinely distinct.
+- Do NOT default to generic black/white unless the subject matter genuinely demands it.
+- Favor field-relevant, composition-driving colors over bland neutrals.
 
 In `how_used`, describe the overall palette mood and field connection in one sentence.
 

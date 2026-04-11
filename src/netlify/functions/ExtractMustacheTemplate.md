@@ -263,15 +263,14 @@ CONVERSION RULES
 9. OUTPUT a single complete HTML file. No markdown. No explanation.
 
 10. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
-   <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "accent1": "<hex>", "accent2": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
+   <!-- { "default_color_scheme": { "background": "<hex>", "foreground": "<hex>", "primary": "<hex>", "secondary": "<hex>", "accent": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
    Populate it with:
-   - default_color_scheme: the original hardcoded hex values from the template's CSS :root block in strict slot order:
-     - primary   → slot 1, the most dominant color in the header / masthead (foreground or background)
-     - secondary → slot 2, the second most dominant masthead color that is clearly distinct from slot 1
-     - tertiary    → slot 3, the third most dominant distinct color
-     - accent1      → slot 4, the fourth distinct supporting color
-     - accent2     → slot 5, the fifth distinct supporting color
-     The five slots are ordered by visual prominence and distinctness, not by old semantic categories like background/accent/text.
+   - default_color_scheme: the original hardcoded semantic palette from the template's CSS :root block:
+     - background → page canvas or atmospheric base
+     - foreground → main readable ink / text color
+     - primary    → strongest CTA / emphasis color
+     - secondary  → distinct supporting hierarchy color
+     - accent     → orthogonal highlight color
      This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
    - about_word_count: the exact word count of the original about/summary text that you replaced with {{about}}.
      Count words by splitting the original text on whitespace. This is used at render time to trim the
@@ -298,15 +297,21 @@ CONVERSION RULES
 COLOR MAPPING
 ──────────────────────────────────────────────
 
-Distill the template's colors into five named `--color-*` CSS custom properties (use fewer if the palette genuinely has fewer distinct roles). Keep the original hex values exactly — do NOT substitute Mustache placeholder tokens. Then rewrite every hardcoded color value anywhere in the file (`:root`, other CSS rules, and HTML inline `style=""` attributes) to reference these variables using `var()` or `color-mix()`. The rendered page must look identical to the source.
+Distill the template's colors into exactly five semantic `--color-*` CSS custom properties:
+  --color-background
+  --color-foreground
+  --color-primary
+  --color-secondary
+  --color-accent
+Keep the original hex values exactly — do NOT substitute Mustache placeholder tokens. Then rewrite every hardcoded color value anywhere in the file (`:root`, other CSS rules, and HTML inline `style=""` attributes) to reference these variables using `var()` or `color-mix()`. The rendered page must look identical to the source.
 
-The five core colors must be the five most visually important and mutually distinct colors in the design, ordered by prominence. Slot 1 should be the most dominant color in the masthead. Slot 2 should be the next most dominant masthead color and must not be merely a tint/shade/gradient-stop variant of slot 1. Slot 3 should be the next distinct color. Slots 4 and 5 are progressively less prominent but still must be meaningfully distinct from the earlier slots. Do NOT waste slots on duplicate blacks, duplicate grays, or barely-different neutrals when the source has salient accent hues that drive headings, CTA buttons, hero art, cards, or section dividers.
+The five core colors must be the five most visually important and mutually distinct colors in the design, mapped to semantic roles. `background` should define the canvas, `foreground` should define the main readable ink, and `primary` / `secondary` / `accent` should capture the strongest distinct chromatic emphases. Do NOT waste roles on duplicate blacks, duplicate grays, or barely-different neutrals when the source has salient accent hues that drive headings, CTA buttons, hero art, cards, or section dividers.
 
 Structure the `:root` block in three groups:
 
   1. Five main theme colors — one declaration per row, original hex value, plus a role comment in the format:
        /* N. RoleName — brief phrase */
-     where N is 1–5 and RoleName is a short label such as Dominant, Secondary, Tertiary, Quaternary, Quinary, or another brief descriptor that matches the slot's prominence. Make sure the five core color assignments are organized to provide sufficient contrast for all the text in various sections of the webpage to be easily viewed by humans.
+     where N is 1–5 and RoleName is exactly one of Background, Foreground, Primary, Secondary, or Accent. Make sure the five core color assignments provide sufficient contrast for all the text in various sections of the webpage.
      Constraints:
      - Never include the same hex twice in the five main colors.
      - Avoid near-duplicate neutrals; at most two of the five core colors should be neutral unless the source is genuinely monochrome.
@@ -322,11 +327,11 @@ Example:
 <style>
     :root {
       /* Five main theme colors */
-      --dominant:   #150b2d;   /* 1. Dominant    — deepest, most prominent masthead color */
-      --secondary:  #072e3d;   /* 2. Secondary   — second prominent masthead/panel color  */
-      --tertiary:   #2563eb;   /* 3. Tertiary    — third distinct CTA/highlight color      */
-      --quaternary: #94a3b8;   /* 4. Quaternary  — lower-prominence supporting color       */
-      --quinary:    #e5e7eb;   /* 5. Quinary     — least-prominent supporting contrast     */
+      --color-background: #150b2d; /* 1. Background — deepest page canvas / atmospheric base */
+      --color-foreground: #e5e7eb; /* 2. Foreground — main readable text / ink */
+      --color-primary:    #2563eb; /* 3. Primary    — strongest CTA / emphasis color */
+      --color-secondary:  #072e3d; /* 4. Secondary  — supporting hierarchy / panel color */
+      --color-accent:     #94a3b8; /* 5. Accent     — orthogonal highlight color */
 
       /* Theme-independent hard-coded neutrals */
       --white:   #ffffff;
@@ -335,30 +340,23 @@ Example:
       --warning: #a3e635;
 
       /* Derived tokens */
-      --bg-top:    color-mix(in srgb, var(--color-bg) 82%, var(--color-surface));
-      --bg-bottom: color-mix(in srgb, var(--color-surface) 88%, var(--black));
-      --card-top:  color-mix(in srgb, var(--color-surface) 92%, var(--color-bg));
-      --card-btm:  color-mix(in srgb, var(--color-surface) 78%, var(--black));
+      --bg-top:    color-mix(in srgb, var(--color-background) 82%, var(--color-primary));
+      --bg-bottom: color-mix(in srgb, var(--color-background) 88%, var(--black));
+      --card-top:  color-mix(in srgb, var(--color-background) 92%, var(--color-foreground));
+      --card-btm:  color-mix(in srgb, var(--color-background) 78%, var(--black));
       --tint-accent:  color-mix(in srgb, var(--color-accent) 35%, transparent);
-      --light-text:   color-mix(in srgb, var(--color-muted) 60%, var(--white));
+      --light-text:   color-mix(in srgb, var(--color-foreground) 60%, var(--white));
       ...
     }
 </style>
 =============================================================================
 
-Establish the five core colors in order of prominence and distinctness. The numbered comment is the source of truth. Role labels may describe the slot's visual identity, but the slot number determines how the palette picker interprets the color.
+Establish the five core colors by semantic role. The numbered comment is only a stable ordering aid; the semantic role name is the source of truth.
 
 Sanity check before finalizing the template:
 - Ask whether each of the five core colors is doing genuinely different work in the composition.
 - If two chosen core colors are both black/dark charcoal, or both light gray/off-white, replace one with a more distinctive accent from the source.
 - If a visually important heading/CTA/accent color is missing from the five core colors, the palette is wrong and must be revised.
-
-Potential Values for Color Theme Role Mapping
- 1. Eg. Dominant, Hero, Brand, Background, Foreground
- 2. Eg. Secondary, Panel, Signature, Headline, Surface
- 3. Eg. Tertiary, Pop, Vibrant, CTA, Highlight
- 4. Eg. Quaternary, Accent, Border, Label, Support
- 5. Eg. Quinary, Divider, Text, Accent2, Contrast
 
   COLOR_ROLE_NAMING_CONVENTIONS TABLE
     Role-based (functional):

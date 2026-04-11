@@ -16,13 +16,12 @@ Bridge the candidate's professional profile with the visual design to produce co
 
 CRITICAL RULES
 - Base visual style on the example_website mood and composition, not on personal style defaults.
-- Incorporate color_spec_json as the authoritative five-slot palette.
-- Interpret the slots by prominence:
-  - slot1 = dominant masthead color
-  - slot2 = second most dominant distinct masthead color
-  - slot3 = third distinct color
-  - slot4 = fourth supporting color
-  - slot5 = fifth supporting color
+- Incorporate color_spec_json as the authoritative five-color semantic palette:
+  - background
+  - foreground
+  - primary
+  - secondary
+  - accent
 - Pull visual motifs from content_strategy_json to ensure domain relevance.
 - Plan thumbnail concepts for each project and the top two experiences if they exist — keep them small (roughly 1–3 inches square in presentation).
 
@@ -46,11 +45,11 @@ SCHEMA
     "animation_guidance": [],
     "template_inspiration_notes": "",
     "color_application": {
-      "slot_1_use": "",
-      "slot_2_use": "",
-      "slot_3_use": "",
-      "slot_4_use": "",
-      "slot_5_use": "",
+      "background_use": "",
+      "foreground_use": "",
+      "primary_use": "",
+      "secondary_use": "",
+      "accent_use": "",
       "gradient_notes": ""
     },
     "visual_placements": [
@@ -86,9 +85,9 @@ Use example_website signals to define:
 
 COLOR APPLICATION
 Map color_spec_json onto the visual direction:
-- Explain how each of the five ordered slots will be used by prominence
+- Explain how each of the five semantic color roles will be used
 - Describe gradient strategies that use the palette
-- Note where accent and secondary colors create visual hierarchy
+- Note where primary, secondary, and accent create visual hierarchy
 
 PAGE CONCEPT
 Describe the structural intent at an intermediate level — more concrete than mood/motifs, less precise than a wireframe:

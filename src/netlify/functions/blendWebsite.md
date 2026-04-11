@@ -12,13 +12,12 @@ Produce concrete visual and design decisions that the renderer will use alongsid
 
 CRITICAL RULES
 - Base visual_direction on design_spec_json mood and composition, not on personal style defaults.
-- Incorporate color_spec_json as the authoritative five-slot color palette.
-- Interpret the slots by prominence:
-  - slot1 = dominant masthead color
-  - slot2 = second most dominant distinct masthead color
-  - slot3 = third distinct color
-  - slot4 = fourth supporting color
-  - slot5 = fifth supporting color
+- Incorporate color_spec_json as the authoritative five-color semantic palette:
+  - background
+  - foreground
+  - primary
+  - secondary
+  - accent
 - Generate a small thumbnail photo for each project in core_content_json and the top two experiences, if they exist.
 - Plan specific placement and presentation for each visual in visual_placements.  Make sure the images are small in presentation (roughly 1-2 inches square).
 
@@ -42,11 +41,11 @@ SCHEMA
     "animation_guidance": [],
     "template_inspiration_notes": "",
     "color_application": {
-      "slot_1_use": "",
-      "slot_2_use": "",
-      "slot_3_use": "",
-      "slot_4_use": "",
-      "slot_5_use": "",
+      "background_use": "",
+      "foreground_use": "",
+      "primary_use": "",
+      "secondary_use": "",
+      "accent_use": "",
       "gradient_notes": ""
     },
     "visual_placements": [
@@ -87,9 +86,9 @@ Use design_spec_json signals to define:
 
 COLOR APPLICATION
 Map color_spec_json onto the visual direction:
-- Explain how each of the five ordered slots will be used by prominence
-- Describe gradient strategies that use all five colors
-- Note where accent and secondary colors create visual hierarchy
+- Explain how each semantic color role will be used
+- Describe gradient strategies that use the palette coherently
+- Note where primary, secondary, and accent create visual hierarchy
 
 VISUALS
 For each item in visuals_json, specify:

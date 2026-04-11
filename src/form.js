@@ -824,31 +824,45 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     function applyBraidColorOverridesToHtml(html) {
-      const theme = getPage3Colors().theme;
+      const theme = themeWithAliases(getPage3Colors().theme);
       if (!html || !theme) return html || "";
       const overridePairs = [
-        // Canonical names (new system)
-        ["--dominant",   theme.slot1],
-        ["--secondary",  theme.slot2],
-        ["--tertiary",   theme.slot3],
-        ["--quaternary", theme.slot4],
-        ["--quinary",    theme.slot5],
-        // Legacy aliases — kept for backward compat with older generated HTML
-        ["--bp-slot1",   theme.slot1],
-        ["--bp-slot2",   theme.slot2],
-        ["--bp-slot3",   theme.slot3],
-        ["--bp-slot4",   theme.slot4],
-        ["--bp-slot5",   theme.slot5],
-        ["--bp-slot-1",  theme.slot1],
-        ["--bp-slot-2",  theme.slot2],
-        ["--bp-slot-3",  theme.slot3],
-        ["--bp-slot-4",  theme.slot4],
-        ["--bp-slot-5",  theme.slot5],
-        ["--bp-primary",    theme.primary],
-        ["--bp-secondary",  theme.secondary],
-        ["--bp-tertiary",   theme.tertiary],
-        ["--bp-accent2",    theme.accent2],
-        ["--bp-accent1",    theme.accent1]
+        // Canonical semantic names
+        ["--background", theme.background],
+        ["--foreground", theme.foreground],
+        ["--primary", theme.primary],
+        ["--secondary", theme.secondary],
+        ["--accent", theme.accent],
+        // Backward-compatible aliases for older generated HTML
+        ["--dominant", theme.primary],
+        ["--tertiary", theme.accent],
+        ["--quaternary", theme.foreground],
+        ["--quinary", theme.background],
+        ["--bp-slot1", theme.primary],
+        ["--bp-slot2", theme.secondary],
+        ["--bp-slot3", theme.accent],
+        ["--bp-slot4", theme.foreground],
+        ["--bp-slot5", theme.background],
+        ["--bp-slot-1", theme.primary],
+        ["--bp-slot-2", theme.secondary],
+        ["--bp-slot-3", theme.accent],
+        ["--bp-slot-4", theme.foreground],
+        ["--bp-slot-5", theme.background],
+        ["--slot1", theme.primary],
+        ["--slot2", theme.secondary],
+        ["--slot3", theme.accent],
+        ["--slot4", theme.foreground],
+        ["--slot5", theme.background],
+        ["--slot-1", theme.primary],
+        ["--slot-2", theme.secondary],
+        ["--slot-3", theme.accent],
+        ["--slot-4", theme.foreground],
+        ["--slot-5", theme.background],
+        ["--bp-primary", theme.primary],
+        ["--bp-secondary", theme.secondary],
+        ["--bp-tertiary", theme.accent],
+        ["--bp-accent2", theme.foreground],
+        ["--bp-accent1", theme.background]
       ];
       const overrides = overridePairs
         .filter(([, v]) => !!v)
@@ -1017,7 +1031,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (Array.isArray(scheme?.colors)) {
           return scheme.colors.some(color => !!normalizeToHex(color));
         }
-        return ["primary", "secondary", "tertiary", "accent2", "accent1"].some(slot => !!normalizeToHex(scheme?.[slot]));
+        if (scheme?.base_colors) {
+          return THEME_ROLE_KEYS.some(role => !!normalizeToHex(scheme.base_colors?.[role]));
+        }
+        return THEME_ROLE_KEYS.some(role => !!normalizeToHex(scheme?.[role])) ||
+          ["primary", "secondary", "tertiary", "accent2", "accent1"].some(slot => !!normalizeToHex(scheme?.[slot]));
       });
     }
 
@@ -1536,12 +1554,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
       if (Array.isArray(colors) && colors.length >= 1) {
-        const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-        const mapped = {};
-        slots.forEach((role, i) => {
-          const hex = normalizeToHex(colors[i]);
-          if (hex) mapped[role] = hex;
-        });
+        const mapped = mapAiPaletteToUiSlots(colors);
         if (Object.keys(mapped).length) {
           sampleColors = { ...sampleColors, ...mapped };
           applyColors(sampleColors);
@@ -1564,13 +1577,15 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return !!source && source !== "none";
     }
 
-    // Converts parseColorRoles() output [{index, label, hex}] → { slot1, slot2, ... }
+    // Converts parseColorRoles() output [{index, label, hex}] → semantic role object
     function colorRolesToSlots(colorRoles) {
-      const slots = {};
-      (colorRoles || []).forEach(r => {
-        if (r.index >= 1 && r.index <= 5) slots[`slot${r.index}`] = r.hex;
+      return themeWithAliases({
+        primary: (colorRoles || []).find(r => r.index === 1)?.hex || null,
+        secondary: (colorRoles || []).find(r => r.index === 2)?.hex || null,
+        accent: (colorRoles || []).find(r => r.index === 3)?.hex || null,
+        foreground: (colorRoles || []).find(r => r.index === 4)?.hex || null,
+        background: (colorRoles || []).find(r => r.index === 5)?.hex || null
       });
-      return slots;
     }
 
     // Submits the sample HTML to the backend for color normalization (option 2, file upload).
@@ -1879,7 +1894,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     let lastExtractedUrl = "";
 
     // Parse numbered --color-* role comments from a template's :root block.
-    // The numbers 1–5 are treated as ordered palette slots, not old fixed roles.
+    // Existing normalized templates may still annotate semantic roles with numbers 1–5.
     // Returns [{index, label, hex}] sorted by index.
     function parseColorRoles(html) {
       if (!html) return [];
@@ -1933,21 +1948,82 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return hexMetrics(hex).chroma < 22;
     }
 
+    const THEME_ROLE_KEYS = ["background", "foreground", "primary", "secondary", "accent"];
+    const THEME_INPUT_IDS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+    const ROLE_TO_INPUT_ID = {
+      background: "primary",
+      foreground: "secondary",
+      primary: "tertiary",
+      secondary: "accent2",
+      accent: "accent1"
+    };
+    const INPUT_ID_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_INPUT_ID).map(([role, id]) => [id, role]));
+    const THEME_ROLE_LABELS = {
+      background: "Background",
+      foreground: "Foreground",
+      primary: "Primary",
+      secondary: "Secondary",
+      accent: "Accent"
+    };
+
+    function normalizeThemeColors(value = {}) {
+      const theme = {
+        background: normalizeHex(value.background || value.accent1 || value.slot5 || null),
+        foreground: normalizeHex(value.foreground || value.accent2 || value.slot4 || null),
+        primary: normalizeHex(value.primary || value.slot1 || null),
+        secondary: normalizeHex(value.secondary || value.slot2 || null),
+        accent: normalizeHex(value.accent || value.tertiary || value.slot3 || null)
+      };
+      return theme;
+    }
+
+    function themeWithAliases(value = {}) {
+      const theme = normalizeThemeColors(value);
+      return {
+        ...theme,
+        tertiary: theme.accent,
+        accent1: theme.background,
+        accent2: theme.foreground,
+        slot1: theme.primary,
+        slot2: theme.secondary,
+        slot3: theme.accent,
+        slot4: theme.foreground,
+        slot5: theme.background
+      };
+    }
+
+    function updateColorRoleLabels() {
+      Object.entries(THEME_ROLE_LABELS).forEach(([role, label]) => {
+        const el = document.getElementById(`${ROLE_TO_INPUT_ID[role]}-label`);
+        if (el) el.textContent = label;
+      });
+    }
+
     function mapRoleColorsToUiSlots(roleColors) {
       if (!Array.isArray(roleColors) || !roleColors.length) return null;
-      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-      return Object.fromEntries(slots.map((slot, i) => [slot, normalizeHex(roleColors[i]?.hex) || null]));
+      const ordered = roleColors.map(item => normalizeHex(item?.hex) || null);
+      return themeWithAliases({
+        primary: ordered[0],
+        secondary: ordered[1],
+        accent: ordered[2],
+        foreground: ordered[3],
+        background: ordered[4]
+      });
     }
 
     function mapAiPaletteToUiSlots(colorsArray) {
       if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
-      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-      return Object.fromEntries(slots.map((slot, i) => [slot, normalizeToHex(colorsArray[i]) || null]));
+      return themeWithAliases({
+        primary: normalizeToHex(colorsArray[0]) || null,
+        secondary: normalizeToHex(colorsArray[1]) || null,
+        accent: normalizeToHex(colorsArray[2]) || null,
+        foreground: normalizeToHex(colorsArray[3]) || null,
+        background: normalizeToHex(colorsArray[4]) || null
+      });
     }
 
     function buildTemplatePalette(cache) {
       if (!cache) return null;
-      const slotNames = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
       const rootVars = parseRootHexVars(cache.templateHtml);
       const embedded = cache.embeddedJson?.default_color_scheme || {};
@@ -1960,16 +2036,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
       }
 
-      const palette = {
+      const palette = themeWithAliases({
         primary: embedded.primary || null,
         secondary: embedded.secondary || null,
-        tertiary: embedded.tertiary || null,
-        accent2: embedded.accent2 || null,
-        accent1: embedded.accent1 || null
-      };
-
-      roleColors.forEach((r, i) => {
-        if (i < slotNames.length && !palette[slotNames[i]]) palette[slotNames[i]] = r.hex;
+        accent: embedded.accent || embedded.tertiary || null,
+        foreground: embedded.foreground || embedded.accent2 || null,
+        background: embedded.background || embedded.accent1 || null
       });
 
       const seen = new Set();
@@ -1982,7 +2054,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       };
 
       Object.entries(embedded).forEach(([slot, hex]) => {
-        const bonus = ({ primary: 90, secondary: 80, tertiary: 85, accent2: 55, accent1: 50 })[slot] || 0;
+        const bonus = ({ primary: 90, secondary: 80, accent: 85, tertiary: 85, foreground: 60, accent2: 60, background: 65, accent1: 65 })[slot] || 0;
         pushCandidate(hex, bonus, slot);
       });
       roleColors.forEach((r, i) => pushCandidate(r.hex, 70 - i * 3, r.label));
@@ -2004,7 +2076,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         .filter(c => c.neutral)
         .sort((a, b) => b.score - a.score || a.luminance - b.luminance);
 
-      ["primary", "secondary", "tertiary"].forEach(slot => {
+      ["primary", "secondary", "accent"].forEach(slot => {
         const current = palette[slot];
         const currentNorm = normalizeHex(current);
         const duplicate = currentNorm && Object.entries(palette).some(([k, v]) => k !== slot && normalizeHex(v) === currentNorm);
@@ -2014,43 +2086,36 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
       });
 
-      const darkCandidate = !palette.accent2 || Object.entries(palette).some(([k, v]) => k !== "accent2" && normalizeHex(v) === normalizeHex(palette.accent2))
+      const darkCandidate = !palette.foreground || Object.entries(palette).some(([k, v]) => k !== "foreground" && normalizeHex(v) === normalizeHex(palette.foreground))
         ? neutrals.slice().sort((a, b) => a.luminance - b.luminance)[0] || pickUnused(candidates)
         : null;
-      if (darkCandidate) palette.accent2 = darkCandidate.hex;
+      if (darkCandidate) palette.foreground = darkCandidate.hex;
 
-      const lightCandidate = !palette.accent1 || Object.entries(palette).some(([k, v]) => k !== "accent1" && normalizeHex(v) === normalizeHex(palette.accent1))
+      const lightCandidate = !palette.background || Object.entries(palette).some(([k, v]) => k !== "background" && normalizeHex(v) === normalizeHex(palette.background))
         ? neutrals.slice().sort((a, b) => b.luminance - a.luminance)[0] || pickUnused(candidates)
         : null;
-      if (lightCandidate) palette.accent1 = lightCandidate.hex;
+      if (lightCandidate) palette.background = lightCandidate.hex;
 
-      slotNames.forEach(slot => {
+      THEME_ROLE_KEYS.forEach(slot => {
         const current = palette[slot];
         const currentNorm = normalizeHex(current);
-        const duplicate = currentNorm && slotNames.some(other => other !== slot && normalizeHex(palette[other]) === currentNorm);
+        const duplicate = currentNorm && THEME_ROLE_KEYS.some(other => other !== slot && normalizeHex(palette[other]) === currentNorm);
         if (!current || duplicate) {
-          const next = pickUnused(slot === "accent2" || slot === "accent1" ? neutrals : chromatic) || pickUnused(candidates);
+          const next = pickUnused(slot === "foreground" || slot === "background" ? neutrals : chromatic) || pickUnused(candidates);
           if (next) palette[slot] = next.hex;
         }
       });
 
       if (!Object.values(palette).some(Boolean)) return null;
-      return { label: "Template palette", colors: palette };
+      return { label: "Template palette", colors: themeWithAliases(palette) };
     }
 
     function applyColors(colors) {
       if (!colors) return;
+      const theme = themeWithAliases(colors);
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
-      set("primary",   colors.primary);
-      set("secondary", colors.secondary);
-      set("tertiary",  colors.tertiary);
-      set("accent2",   colors.accent2);
-      set("accent1",   colors.accent1);
-      const pickerIds = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-      pickerIds.forEach((slot, i) => {
-        const el = document.getElementById(slot + "-label");
-        if (el) el.textContent = String(i + 1);
-      });
+      Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
+      updateColorRoleLabels();
     }
 
     function isOwnLibraryUrl(url) {
@@ -2142,20 +2207,23 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function applyColorDefaults(resumeJson) {
       // Template colors take priority — skip if already extracted from a template
       if (sampleColors) return;
-      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const firstScheme = getCompatibleColorSchemes(resumeJson)[0];
       let colors = null;
       if (Array.isArray(firstScheme?.colors) && firstScheme.colors.length) {
-        // New schema: ordered array [slot1, slot2, slot3, slot4, slot5]
+        // Legacy ordered slot schema: [slot1, slot2, slot3, slot4, slot5]
         colors = mapAiPaletteToUiSlots(firstScheme.colors);
+      } else if (firstScheme?.base_colors) {
+        colors = themeWithAliases(firstScheme.base_colors);
+      } else if (firstScheme?.background || firstScheme?.foreground || firstScheme?.accent) {
+        colors = themeWithAliases(firstScheme);
       } else if (firstScheme?.primary) {
         // Legacy named-slot schema
-        colors = Object.fromEntries(slots.map(s => [s, normalizeToHex(firstScheme[s]) || null]));
+        colors = themeWithAliases(firstScheme);
       } else {
         // Oldest legacy: compatible_color_scheme.five_key_colors array
         const arr = resumeJson?.compatible_color_scheme?.five_key_colors;
         if (Array.isArray(arr) && arr.length)
-          colors = Object.fromEntries(slots.map((s, i) => [s, normalizeToHex(arr[i]) || null]));
+          colors = mapAiPaletteToUiSlots(arr);
       }
       if (colors) applyColors(colors);
     }
@@ -2358,26 +2426,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     function getPage3Colors(){
-      const slot1 = document.getElementById("primary").value.trim();
-      const slot2 = document.getElementById("secondary").value.trim();
-      const slot3 = document.getElementById("tertiary").value.trim();
-      const slot4 = document.getElementById("accent2").value.trim();
-      const slot5 = document.getElementById("accent1").value.trim();
+      const background = document.getElementById("primary").value.trim();
+      const foreground = document.getElementById("secondary").value.trim();
+      const primary = document.getElementById("tertiary").value.trim();
+      const secondary = document.getElementById("accent2").value.trim();
+      const accent = document.getElementById("accent1").value.trim();
+      const theme = themeWithAliases({ background, foreground, primary, secondary, accent });
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
-        theme: {
-          slot1,
-          slot2,
-          slot3,
-          slot4,
-          slot5,
-          primary: slot1,
-          secondary: slot2,
-          tertiary: slot3,
-          accent2: slot4,
-          accent1: slot5
-        }
+        theme
       };
     }
 
@@ -2727,12 +2785,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
       const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
 
-      // Prefer the user's chosen palette so the braid generates color-mix() expressions
-      // calibrated to those colors. Fall back to the sample's own palette only when the
-      // user hasn't picked anything yet.
+      // Prefer the user's chosen semantic palette so the braid generates color-mix()
+      // expressions calibrated to those colors. Fall back to the sample's own palette
+      // only when the user hasn't picked anything yet.
       const samplePalette = buildTemplatePalette(extractedTemplateCache);
       const userColors    = getPage3Colors().theme;
-      const colorSpec     = (userColors?.slot1 ? userColors : null) ?? samplePalette?.colors;
+      const colorSpec     = (userColors?.primary ? userColors : null) ?? samplePalette?.colors;
 
       try {
         const res = await fetch("/.netlify/functions/buildWebsite-background", {
@@ -3545,7 +3603,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       ?.addEventListener("change", invalidateFromPage3);
 
     // Page 4 inputs — color pickers
-    ["primary", "secondary", "tertiary", "accent2", "accent1"].forEach(id => {
+    THEME_INPUT_IDS.forEach(id => {
       const el = document.getElementById(id);
       el?.addEventListener("input", invalidateFromPage4);
       el?.addEventListener("change", invalidateFromPage4);
@@ -3653,7 +3711,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
 
     // Page 3 (Colors)
-    const PALETTE_SLOTS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+    const PALETTE_SLOTS = THEME_ROLE_KEYS;
 
     function renderSuggestedPalettes(analysisData) {
       const msg = document.getElementById("suggestedPalettesMsg");
@@ -3662,8 +3720,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!container || !rows) return;
       const paletteKey = palette => {
         if (!palette?.colors) return "";
-        const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-        return slots.map(slot => normalizeHex(palette.colors[slot]) || "").join("|");
+        return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
       };
 
       // Slot 0: template palette — sanitize extracted colors so duplicate neutrals
@@ -3680,7 +3737,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           const dark      = cssVar("bg");
           const light     = cssVar("light") || cssVar("panel");
           if (primary || secondary) {
-            tplPalette = { label: "Template palette", colors: { primary, secondary, accent2: dark, accent1: light, tertiary: null } };
+            tplPalette = { label: "Template palette", colors: themeWithAliases({ background: light, foreground: dark, primary, secondary, accent: null }) };
           }
         }
       }
@@ -3688,16 +3745,15 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Slots 1-3: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
       const aiPalettes = getCompatibleColorSchemes(resolvedData);
-      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const aiRows = aiPalettes
-        .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.tertiary)
+        .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.base_colors || p.background || p.foreground || p.primary || p.secondary || p.accent || p.tertiary)
         .slice(0, 3)
         .map((p, i) => {
-          // New format: ordered array matching slot positions 1-5
-          // Legacy format: named slots (primary/secondary/tertiary/accent2/accent1)
+          // New format: semantic base colors
+          // Legacy format: ordered slot array or named slot aliases
           const colors = Array.isArray(p.colors)
             ? mapAiPaletteToUiSlots(p.colors)
-            : { primary: p.primary, secondary: p.secondary, tertiary: p.tertiary, accent2: p.accent2, accent1: p.accent1 };
+            : themeWithAliases(p.base_colors || p);
           return { label: p.how_used || `AI palette ${i + 1}`, colors };
         });
 
@@ -3924,7 +3980,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       doGenerateWebsite();
     });
     // Track which color input last had focus
-    const colorInputIds = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+    const colorInputIds = THEME_INPUT_IDS;
     let focusedColorId = "primary";
     colorInputIds.forEach(id => {
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
@@ -3954,12 +4010,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     // Boot
     // ----------------------------
     function applyDefaults(){
-      // Default theme values (nice starting point)
-      document.getElementById("primary").value = "#4E70F1";
-      document.getElementById("secondary").value = "#FBAB9C";
-      document.getElementById("tertiary").value = "#8DE0FF";
-      document.getElementById("accent2").value = "#0b1220";
-      document.getElementById("accent1").value = "#eaf0ff";
+      // Semantic starter palette
+      applyColors({
+        background: "#eaf0ff",
+        foreground: "#0b1220",
+        primary: "#4E70F1",
+        secondary: "#FBAB9C",
+        accent: "#8DE0FF"
+      });
     }
 
     updateDebugBanner();
@@ -3975,11 +4033,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         selectedSuggestedPaletteKey = "";
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
+        const theme = themeWithAliases(t.base_colors || t);
 
         set("themeNumber", msg.number ?? "");
-        set("primary",   t.primary);
-        set("secondary", t.secondary);
-        set("tertiary",  t.tertiary);
-        set("accent2",   t.accent2);
-        set("accent1",   t.accent1);
+        set("primary",   theme.background);
+        set("secondary", theme.foreground);
+        set("tertiary",  theme.primary);
+        set("accent2",   theme.secondary);
+        set("accent1",   theme.accent);
       });

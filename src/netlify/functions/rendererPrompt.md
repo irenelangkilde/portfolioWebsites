@@ -53,7 +53,8 @@ VISUAL COMPLEXITY (CRITICAL)
 The second common failure mode is a site that looks like a plain HTML template. Avoid it:
 
 - Hero: layered background using gradients + SVG shapes or clip-path, NOT a flat single color.
-- Use CSS custom properties (--primary, --secondary, etc.) throughout.
+- Use CSS custom properties throughout, with these five semantic base variables available:
+  --background, --foreground, --primary, --secondary, --accent.
 - Cards: box-shadow, subtle border, hover lift effect (transform: translateY(-3px)).
 - Navbar: sticky, with backdrop-filter: blur() frosted-glass effect.
 - Use ::before / ::after pseudo-elements for decorative accents on section headings.
@@ -79,6 +80,8 @@ STYLE REQUIREMENTS
 
 - Apply the provided color theme throughout using CSS custom properties
 - Use gradients combining at least 2 of the 5 palette colors
+- Treat --background as the canvas / surface base and --foreground as the main readable text color.
+- Treat --primary as the strongest action / emphasis color, --secondary as a distinct supporting brand color, and --accent as an orthogonal highlight.
 - Use subtle visual enhancements: glow effects, card depth, section dividers
 - Maintain readability and professionalism
 - ALWAYS declare `--hero-bg-image: none` in `:root` and apply it on the hero section as `background-image: var(--hero-bg-image)` (layered over the gradient). This property will be overridden client-side if the user supplies a background image.

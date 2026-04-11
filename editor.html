@@ -580,11 +580,11 @@
     </div>
     <div id="colorPanel" class="hidden">
       <h2>Colors</h2>
-      <div class="color-row" data-slot="primary"><label>1</label><span class="drag-handle">⠿</span><input type="color" id="cp-primary"></div>
-      <div class="color-row" data-slot="secondary"><label>2</label><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"></div>
-      <div class="color-row" data-slot="tertiary"><label>3</label><span class="drag-handle">⠿</span><input type="color" id="cp-tertiary"></div>
-      <div class="color-row" data-slot="accent2"><label>4</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent2"></div>
-      <div class="color-row" data-slot="accent1"><label>5</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent1"></div>
+      <div class="color-row" data-slot="background"><label>Background</label><span class="drag-handle">⠿</span><input type="color" id="cp-background"></div>
+      <div class="color-row" data-slot="foreground"><label>Foreground</label><span class="drag-handle">⠿</span><input type="color" id="cp-foreground"></div>
+      <div class="color-row" data-slot="primary"><label>Primary</label><span class="drag-handle">⠿</span><input type="color" id="cp-primary"></div>
+      <div class="color-row" data-slot="secondary"><label>Secondary</label><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"></div>
+      <div class="color-row" data-slot="accent"><label>Accent</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent"></div>
       <hr>
       <div style="padding: 4px 14px 10px;">
         <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
@@ -785,27 +785,33 @@
     }
 
     // ── CSS variable extraction ────────────────────────────────────────────────
-    const CSS_VAR_NAMES = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+    const CSS_VAR_NAMES = ["background", "foreground", "primary", "secondary", "accent"];
     const SLOT_ALIAS_MAP = {
+      background: "slot5",
+      foreground: "slot4",
       primary: "slot1",
       secondary: "slot2",
-      tertiary: "slot3",
-      accent2: "slot4",
-      accent1: "slot5"
+      accent: "slot3"
+    };
+    const LEGACY_ROLE_ALIAS_MAP = {
+      background: "accent1",
+      foreground: "accent2",
+      primary: "tertiary",
+      secondary: "secondary",
+      accent: "primary"
     };
     const SLOT_CSS_VAR_FAMILIES = {
-      primary: ["--dominant", "--bp-slot1", "--bp-slot-1", "--slot1", "--slot-1", "--bp-primary", "--primary"],
+      background: ["--background", "--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"],
+      foreground: ["--foreground", "--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
+      primary: ["--primary", "--dominant", "--bp-slot1", "--bp-slot-1", "--slot1", "--slot-1", "--bp-primary"],
       secondary: ["--secondary", "--bp-slot2", "--bp-slot-2", "--slot2", "--slot-2", "--bp-secondary"],
-      tertiary: ["--tertiary", "--bp-slot3", "--bp-slot-3", "--slot3", "--slot-3", "--bp-tertiary"],
-      accent2: ["--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
-      accent1: ["--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"]
+      accent: ["--accent", "--tertiary", "--bp-slot3", "--bp-slot-3", "--slot3", "--slot-3", "--bp-tertiary"]
     };
     const cssVarMap = {};   // slot name → CSS variable name used for live overrides
     const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
       .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
 
-    // Primary strategy: read --color-* vars ordered by /* N. RoleName — ... */ comment.
-    // The numbers 1–5 define the fixed editor slot order directly.
+    // Primary strategy: read --color-* vars ordered by semantic role comments.
     function extractCssVarsByRoleComment(text) {
       const rootMatch = text.match(/:root\s*\{([\s\S]*?)\}/);
       if (!rootMatch) return {};
@@ -816,11 +822,18 @@
         found.push({ varName: m[1], hex: m[2], index: parseInt(m[3]), roleWord: m[4] });
       found.sort((a, b) => a.index - b.index);
       const vars = {};
-      found.forEach((cv, i) => {
-        if (i < CSS_VAR_NAMES.length) {
-          const slot = CSS_VAR_NAMES[i];
-          vars[slot] = cv.hex;
-          cssVarMap[slot] = cv.varName;
+      const commentRoleMap = {
+        background: "background",
+        foreground: "foreground",
+        primary: "primary",
+        secondary: "secondary",
+        accent: "accent"
+      };
+      found.forEach(cv => {
+        const role = commentRoleMap[String(cv.roleWord || "").toLowerCase()];
+        if (role) {
+          vars[role] = cv.hex;
+          cssVarMap[role] = cv.varName;
         }
       });
       return vars;
@@ -834,7 +847,22 @@
       const vars = {};
       for (const name of CSS_VAR_NAMES) {
         const slotAlias = SLOT_ALIAS_MAP[name];
-        for (const c of [slotAlias, `bp-${slotAlias}`, `bp-slot-${slotAlias.slice(-1)}`, `bp-slot-${slotAlias.slice(-1)}`, `${slotAlias}-color`, `color-${slotAlias}`, name, `bp-${name}`, `${name}-color`, `color-${name}`]) {
+        const legacyAlias = LEGACY_ROLE_ALIAS_MAP[name];
+        for (const c of [
+          slotAlias,
+          `bp-${slotAlias}`,
+          `bp-slot-${slotAlias.slice(-1)}`,
+          `${slotAlias}-color`,
+          `color-${slotAlias}`,
+          name,
+          `bp-${name}`,
+          `${name}-color`,
+          `color-${name}`,
+          legacyAlias,
+          legacyAlias ? `bp-${legacyAlias}` : null,
+          legacyAlias ? `${legacyAlias}-color` : null,
+          legacyAlias ? `color-${legacyAlias}` : null
+        ].filter(Boolean)) {
           if (allVars[c] !== undefined) { vars[name] = allVars[c]; cssVarMap[name] = `--${c}`; break; }
         }
       }
@@ -2043,7 +2071,7 @@
     const byRole = extractCssVarsByRoleComment(cssText);
     const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
     for (const name of CSS_VAR_NAMES) {
-      const preferred = page4Colors?.[name] || page4Colors?.[SLOT_ALIAS_MAP[name]];
+      const preferred = page4Colors?.[name] || page4Colors?.[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors?.[SLOT_ALIAS_MAP[name]];
       const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
       currentColors[name] = hex;
       const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
@@ -2061,7 +2089,7 @@
     // ── Reset colors ───────────────────────────────────────────────────────────
     // Reset should prefer the exact page-4 palette the user submitted.
     const initialColors = page4Colors
-      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || page4Colors[SLOT_ALIAS_MAP[name]] || currentColors[name] || "#000000")]))
+      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || page4Colors[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors[SLOT_ALIAS_MAP[name]] || currentColors[name] || "#000000")]))
       : { ...currentColors };
     document.getElementById("btnResetColors").onclick = () => {
       for (const name of CSS_VAR_NAMES) {
@@ -2075,8 +2103,8 @@
     };
 
     // ── Color row swap interaction ─────────────────────────────────────────────
-    // The numbered slots stay fixed in place. Dragging from a handle swaps only
-    // the swatch values between two slots, which avoids brittle native HTML
+    // The semantic role rows stay fixed in place. Dragging from a handle swaps only
+    // the swatch values between two roles, which avoids brittle native HTML
     // drag-and-drop behavior in the editor.
     (function () {
       const panel = document.getElementById("colorPanel");
