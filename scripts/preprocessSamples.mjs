@@ -29,6 +29,7 @@ const PROMPT_PATH = join(ROOT, "src/netlify/functions/ExtractVisuals.md");
 const MODEL     = "claude-sonnet-4-6";
 const MAX_TOKENS = 40000;
 const RATE_LIMIT_MS = 4000; // pause between API calls
+const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
 
 const API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!API_KEY) {
@@ -52,6 +53,63 @@ if (args.length > 0) {
 
 const promptTemplate = readFileSync(PROMPT_PATH, "utf-8");
 
+function stripCssComments(value = "") {
+  return String(value || "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
+}
+
+function analyzeSampleMasthead(sampleHtml = "") {
+  let sampleHasRasterHeroImage = false;
+  let sampleRasterCssUrl = "";
+  let sampleRasterCssSelector = "";
+  let sampleRasterBackgroundDecl = "";
+  let sampleHeaderContainsHero = false;
+
+  const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
+  const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)=["'][^"']*hero[^"']*["'][^>]*>([\s\S]{0,5000})/i);
+  const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
+    .filter(Boolean)
+    .join("\n");
+  const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
+  const rasterImgMatch = searchRegions.match(
+    /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
+  );
+  const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
+  const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
+    /(header|\bhero\b)/i.test(selector) &&
+    /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
+  );
+  sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
+  sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
+  const rasterBgMatch = rasterBgBlock
+    ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
+    : null;
+  sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+  sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
+  sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+
+  return {
+    sampleHasRasterHeroImage,
+    sampleRasterCssUrl,
+    sampleRasterCssSelector,
+    sampleRasterBackgroundDecl,
+    sampleHeaderContainsHero,
+    mastheadPlaceholderUrl: MASTHEAD_PLACEHOLDER_URL,
+    domainContext: ""
+  };
+}
+
+function embedMastheadMetaComment(html = "", mastheadMeta = null) {
+  if (!mastheadMeta || !html) return html;
+  const comment = `<!-- IW_MASTHEAD_META: ${JSON.stringify(mastheadMeta)} -->\n`;
+  if (/<!--\s*IW_MASTHEAD_META:/i.test(html)) {
+    return html.replace(/<!--\s*IW_MASTHEAD_META:\s*[\s\S]*?-->\s*/i, comment);
+  }
+  if (/<!DOCTYPE[^>]*>\s*/i.test(html)) {
+    return html.replace(/(<!DOCTYPE[^>]*>\s*)/i, `$1${comment}`);
+  }
+  return comment + html;
+}
+
 const files = readdirSync(HTML_DIR)
   .filter(f => f.endsWith(".html"))
   .filter(f => typeof fileFilter === "function" ? fileFilter(f) : fileFilter.test(f))
@@ -74,6 +132,7 @@ for (const file of files) {
   }
 
   const html   = readFileSync(srcPath, "utf-8");
+  const mastheadMeta = analyzeSampleMasthead(html);
   const capped = html.length > 80000 ? html.slice(0, 80000) + "\n<!-- truncated -->" : html;
   const prompt = promptTemplate.replace("{{EXAMPLE_HTML}}", capped);
 
@@ -102,13 +161,13 @@ for (const file of files) {
     }
 
     const data = await res.json();
-    const normalized = (data.content || [])
+    const normalized = embedMastheadMetaComment((data.content || [])
       .filter(b => b.type === "text")
       .map(b => b.text)
       .join("")
       .replace(/^```[a-zA-Z]*\n?/m, "")
       .replace(/\n?```\s*$/m, "")
-      .trim();
+      .trim(), mastheadMeta);
 
     if (!normalized.startsWith("<!DOCTYPE") && !normalized.startsWith("<html")) {
       console.error("⚠ Output doesn't look like HTML — skipping.");

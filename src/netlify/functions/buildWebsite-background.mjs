@@ -290,6 +290,18 @@ function stripCssComments(value = "") {
   return String(value).replace(/\/\*[\s\S]*?\*\//g, "").trim();
 }
 
+function embedMastheadMetaComment(html = "", mastheadMeta = null) {
+  if (!mastheadMeta || !html) return html;
+  const comment = `<!-- IW_MASTHEAD_META: ${JSON.stringify(mastheadMeta)} -->\n`;
+  if (/<!--\s*IW_MASTHEAD_META:/i.test(html)) {
+    return html.replace(/<!--\s*IW_MASTHEAD_META:\s*[\s\S]*?-->\s*/i, comment);
+  }
+  if (/<!DOCTYPE[^>]*>\s*/i.test(html)) {
+    return html.replace(/(<!DOCTYPE[^>]*>\s*)/i, `$1${comment}`);
+  }
+  return comment + html;
+}
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -462,6 +474,8 @@ function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
     `The image must have a direct, concrete connection to the stated major and specialization. ` +
     `It must read clearly behind headline text, with strong midtone and dark-value contrast, no washed-out white background, ` +
     `no large pale blank areas, and a visually distinct engineering/scientific subject. ` +
+    `Avoid fog, haze, pastel washes, cloudy emptiness, cream backdrops, soft white gradients, or low-contrast atmospheric scenes. ` +
+    `Use a darker full-bleed composition with clear subject matter spanning most of the frame, so the masthead does not look blank or faded. ` +
     `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay.`
   );
 }
@@ -481,6 +495,7 @@ function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
     `Do not depict identifiable people or any human figure with discernable ethnicity, race, or facial identity. ` +
     `Prefer abstract, environmental, technical, scientific, futuristic, or object-based imagery instead of portraits or human subjects. ` +
     `The image must have a direct, concrete connection to the stated major and specialization. ` +
+    `Avoid washed-out white backgrounds, pastel haze, fog, cloudy emptiness, or large pale blank areas. ` +
     `Match a professional, recruiter-facing website style rather than a poster. ${contextBits} ` +
     `Avoid watermarks, captions, and embedded text.`
   ).trim();
@@ -1202,6 +1217,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     resumeFacts      = null,
     resolvedStrategy = null,
     sampleHtml       = "",
+    mastheadMeta: providedMastheadMeta = null,
     colorSpec        = {},
     headshotName         = "",
     templateColorSlots   = null,  // pre-extracted from color-normalized sample (optional)
@@ -1247,7 +1263,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
     : sampleHtml);
 
-  const mastheadMeta = analyzeSampleMasthead(sampleHtml, domainContext);
+  const mastheadMeta = providedMastheadMeta || analyzeSampleMasthead(sampleHtml, domainContext);
   const mastheadImageInstruction = buildMastheadImageInstruction(mastheadMeta, domainContext);
   console.log(`[buildWebsite-background] Masthead image instruction: ${mastheadImageInstruction}`);
 
@@ -1335,6 +1351,7 @@ async function generateImageJob(store, jobId, body, userId) {
     page1 = {},
     colorSpec = {},
     sampleHtml = "",
+    mastheadMeta: providedMastheadMeta = null,
     imageContext = {},
     provider = "openai"
   } = body;
@@ -1351,17 +1368,10 @@ async function generateImageJob(store, jobId, body, userId) {
   let mastheadMeta = null;
 
   if (imageKind === "masthead") {
-    mastheadMeta = analyzeSampleMasthead(sampleHtml, "");
-    if (!mastheadMeta.sampleHasRasterHeroImage) {
-      await store.set(jobId, JSON.stringify({
-        status: "done",
-        skipped: true,
-        image_kind: imageKind,
-        reason: "Sample masthead does not require a generated raster image.",
-        masthead_meta: mastheadMeta
-      }), { ttl: 3600 });
-      return;
-    }
+    mastheadMeta = providedMastheadMeta || analyzeSampleMasthead(sampleHtml, "");
+    // Normalized samples have no raster images (replaced with SVG/gradients), so
+    // sampleHasRasterHeroImage is always false for them. Always generate the masthead
+    // image — the --hero-bg-image CSS variable slot in the braid output will receive it.
     prompt = buildMastheadImagePrompt(page1, theme);
     size = "1536x1024";
     stageLabel = "Masthead image";
@@ -1751,6 +1761,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
   const sampleHtml = body.sampleHtml || "";
   await store.set(jobId, JSON.stringify({ status: "pending", stage: "Normalizing template colors…" }), { ttl: 3600 });
+  const mastheadMeta = analyzeSampleMasthead(sampleHtml, "");
   let prompt;
   try {
     const rawHtml = sampleHtml.length > 80000 ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->" : sampleHtml;
@@ -1770,12 +1781,13 @@ async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
     await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
     return;
   }
-  const normalizedHtml = cleanHtml(r.text || "");
+  const normalizedHtml = embedMastheadMetaComment(cleanHtml(r.text || ""), mastheadMeta);
   const colorSlots = parseNormalizedColorSlots(normalizedHtml);
   await store.set(jobId, JSON.stringify({
     status: "done",
     normalizedHtml,
     colorSlots,
+    mastheadMeta,
     token_report: [{ stage: "normalizeTemplate", model: r.model, ...r.usage }]
   }), { ttl: 3600 });
 }
@@ -1938,19 +1950,13 @@ export async function handler(event) {
     }
 
     if (mode === "generateImage") {
-      const imageKind = body.imageKind || "masthead";
-      const sampleMeta = imageKind === "masthead"
-        ? analyzeSampleMasthead(body.sampleHtml || "", "")
-        : { sampleHasRasterHeroImage: true };
-      if (imageKind !== "masthead" || sampleMeta.sampleHasRasterHeroImage) {
-        if (!userId) {
-          await logAnonUsage();
-        } else {
-          const quota = await checkAndIncrementCredits(userId);
-          if (!quota.allowed) {
-            await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
-            return { statusCode: 202 };
-          }
+      if (!userId) {
+        await logAnonUsage();
+      } else {
+        const quota = await checkAndIncrementCredits(userId);
+        if (!quota.allowed) {
+          await store.set(jobId, JSON.stringify({ status: "error", error: quota.reason, quota: true, tier: quota.tier, used: quota.used, limit: quota.limit }), { ttl: 3600 });
+          return { statusCode: 202 };
         }
       }
       await generateImageJob(store, jobId, body, userId);

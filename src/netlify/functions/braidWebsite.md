@@ -41,11 +41,18 @@ If slot 5 is gray, it should remain a low-prominence supporting gray unless the 
 clearly uses that exact supporting role in a visible accent. Slots 4 and 5 must not take over
 the masthead or become the page's dominant background unless the sample's layout truly requires it.
 
+`color_spec` is authoritative for the actual rendered website colors.
+The sample palette is reference-only and exists solely to preserve the sample's hierarchy of
+prominence, contrast, and placement. Do NOT copy the sample's literal colors into the final site.
+Do NOT invent a new palette. Do NOT average the sample colors with `color_spec`.
+Use `color_spec` for every live rendered color token.
+
 Step 1 — Analyze the sample HTML's color usage and identify five prominence slots.
   Pre-normalized shortcut: if the sample's :root already contains `--color-*` variables
   with numbered role comments (e.g. `/* 1. Dominant — … */`), or if a <!-- PRE-EXTRACTED
   SAMPLE PALETTE --> comment appears at the top of the sample listing the five slots, use
   those values directly as slots 1–5 and skip color archaeology. Do not contradict them.
+  This step is for prominence mapping only, not for choosing final literal colors.
   (a) slot 1 — dominant color in the masthead (either foreground or background)
   (b) slot 2 — second most dominant masthead color that is clearly distinct from slot 1
   (c) slot 3 — third distinct color used for headlines, sections, buttons, chips, or key accents
@@ -71,6 +78,16 @@ Step 3 — Express EVERY other color in the stylesheet exclusively as color-mix(
   Exceptions: keep red (#ef4444 range) for error/danger states and green (#22c55e range)
   for success indicators as literals — do not express these as color-mix().
 
+Step 3a — The rendered five live palette variables must come directly from `color_spec`.
+  Map them as:
+    --dominant:   color_spec.slot1;
+    --secondary:  color_spec.slot2;
+    --tertiary:   color_spec.slot3;
+    --quaternary: color_spec.slot4;
+    --quinary:    color_spec.slot5;
+  Do not substitute sample colors for these variables.
+  Do not reorder these five live variables unless the prompt explicitly says otherwise.
+
 Step 4 — Add this line inside :root so a hero background image can be injected later:
     --hero-bg-image: none;
   Apply it in the hero: background-image: var(--hero-bg-image), <gradient...>;
@@ -79,11 +96,9 @@ Usage constraints:
   - Keep slots 1–3 carrying most of the visual weight.
   - Use slots 4–5 sparingly for borders, subtle text, outlines, quiet chips, panel tint, or contrast support.
   - Large-area backgrounds, masthead washes, and major panels should usually derive from slots 1–3, not slot 5.
-  - Do not let slot 5 become a page-wide wash, dominant panel, or masthead background unless the sample
-    itself makes the fifth supporting color dominant, which should be rare.
+  - Do not let slot 5 become a page-wide wash, dominant panel.
   - Preserve the sample's hierarchy of prominence even after recoloring.
-  - If the sample contains a raster masthead image, keep that image visibly legible under the overlay; do not bury it
-    beneath opaque white, cream, or pale-gray layers.
+  - If the sample contains a raster masthead image, keep that image visibly legible under the overlay; do not bury it beneath opaque white, cream, or pale-gray layers.
 
 ═══════════════════════════════════════════════════
 PART 3 — CONTENT SUBSTITUTION

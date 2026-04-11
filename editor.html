@@ -96,21 +96,9 @@
     #sbTicker {
       font-size: 11px; color: rgba(234,240,255,.45);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      cursor: default; max-width: 100%;
+      cursor: pointer; max-width: 100%;
     }
-    #sbWrap:hover #sbTicker { visibility: hidden; }
-    #sbPopover {
-      display: none; position: absolute; top: calc(100% + 8px); left: 0;
-      background: #0f1a35; border: 1px solid rgba(103,126,234,.35);
-      border-radius: 8px; padding: 10px 14px 12px;
-      font-size: 11.5px; color: rgba(234,240,255,.8); line-height: 1.65;
-      white-space: normal; min-width: 380px; max-width: 520px;
-      box-shadow: 0 6px 24px rgba(0,0,0,.5); z-index: 10000;
-    }
-    #sbWrap:hover #sbPopover { display: block; }
-    #sbPopover strong { color: rgba(234,240,255,.45); font-size: 10px; letter-spacing: .07em; text-transform: uppercase; }
-    #sbPopover ol { margin: 6px 0 0; padding-left: 18px; }
-    #sbPopover li { margin-bottom: 5px; }
+    #sbTicker:hover { color: rgba(234,240,255,.7); }
     @keyframes sbSlide {
       0%   { opacity: 1; transform: translateY(0); }
       20%  { opacity: 0; transform: translateY(-8px); }
@@ -119,6 +107,39 @@
       100% { opacity: 1; transform: translateY(0); }
     }
     #sbTicker.animating { animation: sbSlide .8s ease forwards; }
+
+    /* Tips button (shown after carousel is dismissed) */
+    #btnTips {
+      display: none; font-size: 11px; padding: 3px 9px;
+      background: rgba(103,126,234,.18); border: 1px solid rgba(103,126,234,.35);
+      color: rgba(234,240,255,.65); border-radius: 5px; cursor: pointer;
+      white-space: nowrap; margin-left: 12px;
+    }
+    #btnTips:hover { background: rgba(103,126,234,.32); color: rgba(234,240,255,.9); }
+
+    /* Tips modal */
+    #tipsModal {
+      display: none; position: fixed; inset: 0; z-index: 20000;
+      background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+    }
+    #tipsModal.open { display: flex; }
+    #tipsModalBox {
+      background: #0f1a35; border: 1px solid rgba(103,126,234,.4);
+      border-radius: 10px; padding: 18px 22px 20px; min-width: 380px; max-width: 520px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6); color: rgba(234,240,255,.85);
+    }
+    #tipsModalBox strong {
+      display: block; font-size: 10px; color: rgba(234,240,255,.45);
+      letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px;
+    }
+    #tipsModalBox ol { margin: 0 0 16px; padding-left: 18px; font-size: 11.5px; line-height: 1.65; }
+    #tipsModalBox li { margin-bottom: 6px; }
+    #btnTipsDismiss {
+      display: block; margin-left: auto; padding: 5px 16px;
+      background: rgba(103,126,234,.25); border: 1px solid rgba(103,126,234,.4);
+      border-radius: 6px; color: rgba(234,240,255,.85); font-size: 12px; cursor: pointer;
+    }
+    #btnTipsDismiss:hover { background: rgba(103,126,234,.45); }
 
     /* Find & replace bar */
     #findBar {
@@ -458,17 +479,9 @@
 
   <div id="toolbar">
     <h1>Irene's Webworks — Visual Editor v2.0</h1>
+    <button class="tbtn tbtn-ghost" id="btnTips">Tips</button>
     <div id="sbWrap">
       <span id="sbTicker"></span>
-      <div id="sbPopover">
-        <strong>Suggestions</strong>
-        <ol>
-          <li>Add a headshot image by double-clicking a placeholder if there is one, otherwise use the <b>Image</b> button to insert one.</li>
-          <li>Insert images related to projects or work experience, such as graphs or charts, by clicking at the desired point of insertion and then clicking the <b>Image</b> button.</li>
-          <li>Link other artifacts, including YouTube videos, by highlighting a word or phrase, clicking <b>Link</b> and entering a URL.</li>
-          <li>Use <b>+ Card</b> / <b>− Card</b> to add or delete a section or subsection element. A popup menu lets you choose the level to operate on.</li>
-        </ol>
-      </div>
     </div>
     <button class="tbtn tbtn-ghost" id="btnBack">← Close Editor</button>
     <div id="viewToggle">
@@ -691,6 +704,8 @@
     <p>No portfolio found. Please generate one on Page 5 first.</p>
     <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
   </div>
+
+  <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
 
   <script>
   (function () {
@@ -2208,6 +2223,19 @@
       loadIframe(html);
     }
 
+    function importHtmlIntoEditor(html, sourceLabel = "Imported HTML") {
+      const nextHtml = String(html || "").trim();
+      if (!nextHtml) throw new Error("The selected file was empty.");
+      currentHtml = nextHtml;
+      setCodeContent(nextHtml);
+      loadIframe(nextHtml);
+      try {
+        cachePreviewHtml(nextHtml);
+        localStorage.setItem("portfolio_preview_html", nextHtml);
+      } catch {}
+      setEditStatus(`${sourceLabel} loaded.`, "ok");
+    }
+
     function scheduleSplitPreviewSync() {
       if (splitSyncTimer) clearTimeout(splitSyncTimer);
       splitSyncTimer = setTimeout(() => {
@@ -2956,7 +2984,26 @@
     };
 
     // ── Download ───────────────────────────────────────────────────────────────
-    document.getElementById("btnDownload").onclick = async () => {
+    const htmlImportInput = document.getElementById("htmlImportInput");
+    htmlImportInput?.addEventListener("change", async e => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      try {
+        const html = await file.text();
+        importHtmlIntoEditor(html, file.name || "HTML file");
+      } catch (err) {
+        console.error("HTML import failed:", err);
+        showLinkedError(err?.message || "Failed to load HTML file.");
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    document.getElementById("btnDownload").onclick = async (e) => {
+      if (e.shiftKey) {
+        htmlImportInput?.click();
+        return;
+      }
       try {
         setEditStatus("Checking download access...");
         await ensureDownloadAllowed("Download");
@@ -3088,27 +3135,73 @@
     }
   })();
 
-  // ── Suggestions carousel ────────────────────────────────────────────────
+  // ── Suggestions carousel + Tips modal ───────────────────────────────────
   (function () {
     const tips = [
-      "Tip 1 of 4 — Add a headshot by double-clicking a placeholder, or use the Image button.",
-      "Tip 2 of 4 — Insert project images (graphs, charts) by clicking a location then Image.",
-      "Tip 3 of 4 — Link artifacts or YouTube videos: highlight text, click Link, enter a URL.",
-      "Tip 4 of 4 — Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
+      "Add a headshot by double-clicking a placeholder, or use the Image button.",
+      "Insert project images (graphs, charts) by clicking a location then Image.",
+      "Link artifacts or YouTube videos: highlight text, click Link, enter a URL.",
+      "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
     ];
-    const ticker = document.getElementById("sbTicker");
-    if (!ticker) return;
-    let idx = 0;
-    ticker.textContent = tips[0];
 
-    setInterval(() => {
+    const ticker  = document.getElementById("sbTicker");
+    const sbWrap  = document.getElementById("sbWrap");
+    const btnTips = document.getElementById("btnTips");
+    const modal   = document.getElementById("tipsModal");
+    const dismiss = document.getElementById("btnTipsDismiss");
+    if (!ticker) return;
+
+    let idx = 0;
+    let intervalId = null;
+
+    function updateTicker() {
       ticker.classList.remove("animating");
-      void ticker.offsetWidth; // reflow to restart animation
-      idx = (idx + 1) % tips.length;
-      ticker.textContent = tips[idx];
+      void ticker.offsetWidth;
+      ticker.textContent = "Tip — " + tips[idx];
       ticker.classList.add("animating");
+    }
+
+    ticker.textContent = "Tip — " + tips[0];
+    intervalId = setInterval(() => {
+      idx = (idx + 1) % tips.length;
+      updateTicker();
     }, 5000);
+
+    function openModal() { modal?.classList.add("open"); }
+    function closeModal() { modal?.classList.remove("open"); }
+
+    // Click on ticker → open modal
+    ticker.addEventListener("click", openModal);
+
+    // Tips button (shown after dismiss) → open modal
+    btnTips?.addEventListener("click", openModal);
+
+    // Dismiss → stop carousel, hide ticker area, show Tips button
+    dismiss?.addEventListener("click", () => {
+      closeModal();
+      clearInterval(intervalId);
+      intervalId = null;
+      if (sbWrap)  sbWrap.style.display  = "none";
+      if (btnTips) btnTips.style.display = "";
+    });
+
+    // Click outside modal box to close
+    modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
   })();
   </script>
+
+  <!-- Tips modal -->
+  <div id="tipsModal" role="dialog" aria-modal="true" aria-label="Tips">
+    <div id="tipsModalBox">
+      <strong>Tips</strong>
+      <ol>
+        <li>Add a headshot image by double-clicking a placeholder if there is one, otherwise use the <b>Image</b> button to insert one.</li>
+        <li>Insert images related to projects or work experience, such as graphs or charts, by clicking at the desired point of insertion and then clicking the <b>Image</b> button.</li>
+        <li>Link other artifacts, including YouTube videos, by highlighting a word or phrase, clicking <b>Link</b> and entering a URL.</li>
+        <li>Use <b>+ Card</b> / <b>− Card</b> to add or delete a section or subsection element. A popup menu lets you choose the level to operate on.</li>
+      </ol>
+      <button id="btnTipsDismiss">Dismiss</button>
+    </div>
+  </div>
 </body>
 </html>

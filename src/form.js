@@ -438,6 +438,7 @@
       if (debug) populateBridgeDebug(bridgeResult);
       if (debug) populateTemplateExtractPanel(extractedTemplateCache ?? {});
       if (debug) greyRendererButtons(!generationResult);
+      if (debug) wireMastheadImageDebug(mastheadImageResult?.image_data_uri || null);
       if (debug) wirePayloadDebug();
     }
 
@@ -575,6 +576,58 @@
 
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function stripCssComments(value = "") {
+      return String(value || "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
+    }
+
+    function parseEmbeddedMastheadMeta(html = "") {
+      const match = String(html || "").match(/<!--\s*IW_MASTHEAD_META:\s*(\{[\s\S]*?\})\s*-->/i);
+      if (!match) return null;
+      try { return JSON.parse(match[1]); } catch { return null; }
+    }
+
+    function analyzeSampleMastheadLocal(sampleHtml = "") {
+      const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
+      let sampleHasRasterHeroImage = false;
+      let sampleRasterCssUrl = "";
+      let sampleRasterCssSelector = "";
+      let sampleRasterBackgroundDecl = "";
+      let sampleHeaderContainsHero = false;
+
+      const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
+      const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)=["'][^"']*hero[^"']*["'][^>]*>([\s\S]{0,5000})/i);
+      const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
+        .filter(Boolean)
+        .join("\n");
+      const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
+      const rasterImgMatch = searchRegions.match(
+        /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
+      );
+      const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
+      const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
+        /(header|\bhero\b)/i.test(selector) &&
+        /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
+      );
+      sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
+      sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
+      const rasterBgMatch = rasterBgBlock
+        ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
+        : null;
+      sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+      sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
+      sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+
+      return {
+        sampleHasRasterHeroImage,
+        sampleRasterCssUrl,
+        sampleRasterCssSelector,
+        sampleRasterBackgroundDecl,
+        sampleHeaderContainsHero,
+        mastheadPlaceholderUrl: MASTHEAD_PLACEHOLDER_URL,
+        domainContext: ""
+      };
     }
 
     function findBalancedElementByClass(html, className, startIndex = 0) {
@@ -732,23 +785,41 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function applyGeneratedMastheadImageToHtml(html, dataUri, mastheadMeta) {
       if (!html || !dataUri) return html || "";
       let nextHtml = String(html);
+
+      // Path 1: braid-img placeholder <img> tag
       if (nextHtml.includes('id="braid-img"')) {
         return nextHtml.replace(/(<img[^>]*id="braid-img"[^>]*)src=""/, `$1src="${dataUri}"`);
       }
+
+      // Path 2: braid-masthead.png placeholder URL in CSS
       if (mastheadMeta?.mastheadPlaceholderUrl && nextHtml.includes(mastheadMeta.mastheadPlaceholderUrl)) {
         nextHtml = nextHtml.replaceAll(mastheadMeta.mastheadPlaceholderUrl, dataUri);
         return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
       }
+
+      // Path 3: original sample raster URL survived into braid output
       if (mastheadMeta?.sampleRasterCssUrl && nextHtml.includes(mastheadMeta.sampleRasterCssUrl)) {
         nextHtml = nextHtml.replaceAll(mastheadMeta.sampleRasterCssUrl, dataUri);
         return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
       }
-      if (/--hero-bg-image\s*:\s*none\s*;/i.test(nextHtml)) {
-        return nextHtml.replace(
-          /--hero-bg-image\s*:\s*none\s*;/i,
-          `--hero-bg-image: url("${dataUri}");`
-        );
+
+      // Path 4: --hero-bg-image CSS variable slot (LLM compliance)
+      nextHtml = nextHtml.replace(
+        /--hero-bg-image\s*:\s*[^;]+;/i,
+        `--hero-bg-image: url("${dataUri}");`
+      );
+      // Also inject a :root override style block so it wins even if the variable
+      // was declared with a different value or the in-place replace missed it.
+      const heroVarOverride = `<style id="braid-masthead-image">:root { --hero-bg-image: url("${dataUri}"); }</style>`;
+      if (!/id="braid-masthead-image"/i.test(nextHtml)) {
+        nextHtml = nextHtml.replace(/<\/head>/i, `${heroVarOverride}\n</head>`);
       }
+
+      // Final fallback: if the sample had a known CSS selector and background declaration,
+      // force-inject it regardless of what the LLM put in the braid output.
+      // This fires even when the LLM deviated from the placeholder instructions.
+      nextHtml = injectForcedMastheadSelectorCss(nextHtml, dataUri, mastheadMeta);
+
       return nextHtml;
     }
 
@@ -1380,6 +1451,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       lastExtractedUrl        = "";
       extractedTemplateCache  = null;
       lastExtractedTemplate   = "";
+      normalizedTemplateResult = null;
+      normalizeTemplatePending = null;
+      ++_normalizeRunId;
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
       paletteSuggestionsLocked = false;
@@ -1416,7 +1490,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     // ----------------------------
     // Template extraction cache
     // ----------------------------
-    let extractedTemplateCache = null;   // { templateHtml, embeddedJson, templateMode }
+    let extractedTemplateCache = null;   // { templateHtml, rawTemplateHtml, mastheadMeta, embeddedJson, templateMode }
     let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
     let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
     let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
@@ -1426,7 +1500,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
     let normalizeTemplatePending = null; // in-flight color normalization promise (option 2 file upload)
-    let normalizedTemplateResult = null; // { normalizedHtml, colorSlots } once normalization completes
+    let normalizedTemplateResult = null; // { normalizedHtml, colorSlots, mastheadMeta } once normalization completes
     let _normalizeRunId = 0;             // epoch counter to abort stale normalization poll loops
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
@@ -1528,7 +1602,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const data = pollRes.ok ? JSON.parse(await pollRes.text()) : null;
           if (data?.status === "done") {
-            normalizedTemplateResult = { normalizedHtml: data.normalizedHtml, colorSlots: data.colorSlots || {} };
+            normalizedTemplateResult = { normalizedHtml: data.normalizedHtml, colorSlots: data.colorSlots || {}, mastheadMeta: data.mastheadMeta || null };
             return normalizedTemplateResult;
           }
           if (data?.status === "error") return null;
@@ -1583,14 +1657,17 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           if (cacheKey === lastExtractedTemplate) return;
           let html = null;
           let usedKey = srcPath;
+          let rawTemplateHtml = "";
+          let mastheadMeta = null;
           try {
             const normRes = await fetch(normalizedKey);
             if (normRes.ok) {
               html = await normRes.text();
               usedKey = normalizedKey;
+              mastheadMeta = parseEmbeddedMastheadMeta(html);
               // Parse the pre-extracted color slots from the normalized HTML
               const colorRoles = parseColorRoles(html);
-              normalizedTemplateResult = { normalizedHtml: html, colorSlots: colorRolesToSlots(colorRoles) };
+              normalizedTemplateResult = { normalizedHtml: html, colorSlots: colorRolesToSlots(colorRoles), mastheadMeta };
             }
           } catch {}
           if (!html) {
@@ -1598,13 +1675,27 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
               const res = await fetch(srcPath);
               if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
               html = await res.text();
+              rawTemplateHtml = html;
+              mastheadMeta = analyzeSampleMastheadLocal(rawTemplateHtml);
             } catch (e) {
               setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
               return;
             }
           }
           lastExtractedTemplate = cacheKey;
-          extractedTemplateCache = { templateHtml: html, embeddedJson: null, templateMode: "braid" };
+          if (usedKey === normalizedKey && !mastheadMeta) {
+            try {
+              const rawRes = await fetch(srcPath);
+              if (rawRes.ok) rawTemplateHtml = await rawRes.text();
+            } catch {}
+            mastheadMeta = analyzeSampleMastheadLocal(rawTemplateHtml);
+            if (normalizedTemplateResult?.normalizedHtml === html) {
+              normalizedTemplateResult = { ...normalizedTemplateResult, mastheadMeta };
+            }
+          }
+          rawTemplateHtml = rawTemplateHtml || html;
+          mastheadMeta = mastheadMeta || normalizedTemplateResult?.mastheadMeta || null;
+          extractedTemplateCache = { templateHtml: html, rawTemplateHtml, mastheadMeta, embeddedJson: null, templateMode: "braid" };
           setTemplateExtractStatus(
             usedKey === normalizedKey ? "✓ Sample website loaded (pre-normalized)" : "✓ Sample website loaded",
             "rgba(118,176,34,.9)"
@@ -1630,7 +1721,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
             lastExtractedTemplate = candidateKey;
-            extractedTemplateCache = { templateHtml, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis" };
+            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: null, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis" };
             const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
@@ -1671,14 +1762,20 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
               const rawHtml = atob(b64);
               lastExtractedTemplate = fileKey;
               normalizedTemplateResult = null;
-              extractedTemplateCache = { templateHtml: rawHtml, embeddedJson: null, templateMode: "braid" };
+              extractedTemplateCache = {
+                templateHtml: rawHtml,
+                rawTemplateHtml: rawHtml,
+                mastheadMeta: analyzeSampleMastheadLocal(rawHtml),
+                embeddedJson: null,
+                templateMode: "braid"
+              };
               setTemplateExtractStatus("✓ Sample website loaded — normalizing colors…", "rgba(118,176,34,.9)");
               renderSuggestedPalettes();
               normalizeTemplatePending = doNormalizeTemplate(rawHtml).finally(() => {
                 normalizeTemplatePending = null;
                 if (normalizedTemplateResult) {
                   // Swap template cache to use normalized HTML
-                  extractedTemplateCache = { ...extractedTemplateCache, templateHtml: normalizedTemplateResult.normalizedHtml };
+                  extractedTemplateCache = { ...extractedTemplateCache, templateHtml: normalizedTemplateResult.normalizedHtml, mastheadMeta: normalizedTemplateResult.mastheadMeta || extractedTemplateCache?.mastheadMeta || null };
                   setTemplateExtractStatus("✓ Sample website loaded (colors normalized)", "rgba(118,176,34,.9)");
                 }
               });
@@ -1766,7 +1863,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           return;
         }
 
-        const data = { templateHtml: result.templateHtml, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode };
+        const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode };
         extractedTemplateCache = data;
         setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
@@ -2575,6 +2672,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     async function doBraidWebsite() {
       const myRunId = ++_braidRunId;
       braidInProgress  = true;
+      autoMastheadImageTriggered = false;
       mastheadImageInProgress = false;
       mastheadImageResult = null;
       mastheadImageError = null;
@@ -2615,6 +2713,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
 
       const sampleHtml = extractedTemplateCache?.templateHtml || null;
+      const mastheadMeta = normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
       if (!sampleHtml) {
         setHeaderStatus("braidStatus", "⚠ No sample website loaded — please select a template.", "rgba(251,171,156,.9)");
         braidInProgress = false;
@@ -2628,9 +2727,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
       const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
 
-      // Use the sample website's own colors for the braid — user colors are applied afterward
+      // Prefer the user's chosen palette so the braid generates color-mix() expressions
+      // calibrated to those colors. Fall back to the sample's own palette only when the
+      // user hasn't picked anything yet.
       const samplePalette = buildTemplatePalette(extractedTemplateCache);
-      const colorSpec = samplePalette?.colors || getPage3Colors().theme;
+      const userColors    = getPage3Colors().theme;
+      const colorSpec     = (userColors?.slot1 ? userColors : null) ?? samplePalette?.colors;
 
       try {
         const res = await fetch("/.netlify/functions/buildWebsite-background", {
@@ -2643,6 +2745,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 	            resumeFacts,
 	            resolvedStrategy,
 	            sampleHtml,
+              mastheadMeta,
 	            colorSpec,
             templateColorSlots: normalizedTemplateResult?.colorSlots || null,
             headshotName: headshotInput?.files?.[0]?.name || "",
@@ -2674,7 +2777,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             setApplyBtnState(true);
             if (isDebugMode()) mergeTokenReport(data?.token_report);
             pushPreviewHtmlUpdate(generationResult.site_html || "");
-            setHeaderStatus("braidStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
+            setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
+            setHeaderStatus("bridgeStatus", "Bridge not needed.", "rgba(234,240,255,.28)");
             greyRendererButtons(false);
             return;
           }
@@ -2701,7 +2805,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     async function startMastheadImageGeneration() {
       const sampleHtml = extractedTemplateCache?.templateHtml || "";
-      if (!sampleHtml || !isBraidMode()) return;
+      const mastheadMeta = normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
+      if (!sampleHtml) return;
       if (!currentUserId() && !hasCreditsRemaining()) {
         showUpgradePrompt({ tier: "free", used: ANON_CREDIT_LIMIT, limit: ANON_CREDIT_LIMIT, anon: true });
         return;
@@ -2728,6 +2833,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             jobId,
             page1,
             sampleHtml,
+            mastheadMeta,
             colorSpec: colors,
             provider: "openai",
             userId: currentUserId()
@@ -2890,7 +2996,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         a.download = "masthead-image.png";
         a.click();
       };
-      if (vw) vw.onclick = () => window.open(dataUri, "_blank");
+      if (vw) vw.onclick = () => {
+        const html = `<!doctype html><html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUri}" style="max-width:100%;max-height:100vh;display:block"></body></html>`;
+        const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+        window.open(url, "_blank");
+      };
     }
 
     function wirePayloadDebug() {
@@ -3252,6 +3362,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // ── Debug panel — re-wire payload with visuals included now that generation ran ──
       if (isDebugMode()) wirePayloadDebug();
 
+      setHeaderStatus("bridgeStatus", "Bridge not needed.", "rgba(234,240,255,.28)");
       if (data.truncated) {
         setHeaderStatus("generatingWebsiteStatus", "✓ Portfolio ready — output cut short, try regenerating", "rgba(251,171,156,.8)");
       } else {
@@ -3321,6 +3432,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       setHeaderStatus("templateExtractStatus", "");
       setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("editorAutoOpenStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
@@ -3339,6 +3451,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       setHeaderStatus("jobAnalysisStatus", "");
       setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("editorAutoOpenStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
@@ -3351,6 +3464,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Design/template changed — template cache and everything downstream is stale
       extractedTemplateCache = null;
       lastExtractedTemplate  = "";   // force re-extraction even if same file/keyword
+      normalizedTemplateResult = null;
+      normalizeTemplatePending = null;
+      ++_normalizeRunId;
       templatePaletteRendered = false;
       userHasSelectedPalette = false;
       paletteSuggestionsLocked = false;
@@ -3365,6 +3481,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       setHeaderStatus("templateExtractStatus", "");
       setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("editorAutoOpenStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
       setApplyBtnState(false);
       setOpenEditorReady(false);
@@ -3400,6 +3517,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       setHeaderStatus("colorsChosenStatus", "");
       setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
+      setHeaderStatus("editorAutoOpenStatus", "");
       setHeaderStatus("generatingWebsiteStatus", "");
     }
 
@@ -3731,12 +3849,17 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
-      setHeaderStatus("colorsChosenStatus", "Colors submitted. Waiting for website and masthead image to finish…", "rgba(141,224,255,.75)");
+      setHeaderStatus("editorAutoOpenStatus", "Editor will open automatically when HTML is ready.", "rgba(141,224,255,.75)");
 
       if (isDirectDesignMode() || isMustacheMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+        if (!autoMastheadImageTriggered) {
+          autoMastheadImageTriggered = true;
+          startMastheadImageGeneration();
+        }
         await doGenerateWebsite();
+        while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
         doPreview();
         setOpenEditorReady(true);
         return;
