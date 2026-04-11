@@ -41,7 +41,11 @@ If slot 5 is gray, it should remain a low-prominence supporting gray unless the 
 clearly uses that exact supporting role in a visible accent. Slots 4 and 5 must not take over
 the masthead or become the page's dominant background unless the sample's layout truly requires it.
 
-Step 1 — Analyze the sample HTML's color usage and identify five prominence slots:
+Step 1 — Analyze the sample HTML's color usage and identify five prominence slots.
+  Pre-normalized shortcut: if the sample's :root already contains `--color-*` variables
+  with numbered role comments (e.g. `/* 1. Dominant — … */`), or if a <!-- PRE-EXTRACTED
+  SAMPLE PALETTE --> comment appears at the top of the sample listing the five slots, use
+  those values directly as slots 1–5 and skip color archaeology. Do not contradict them.
   (a) slot 1 — dominant color in the masthead (either foreground or background)
   (b) slot 2 — second most dominant masthead color that is clearly distinct from slot 1
   (c) slot 3 — third distinct color used for headlines, sections, buttons, chips, or key accents
@@ -50,20 +54,20 @@ Step 1 — Analyze the sample HTML's color usage and identify five prominence sl
 
 Step 2 — In :root, under the comment /* ── Sample palette (reference) ── */,
   declare the five colors extracted from the sample as documentation:
-    --bp-slot-1-ref: <hex>;
-    --bp-slot-2-ref: <hex>;
-    --bp-slot-3-ref: <hex>;
-    --bp-slot-4-ref: <hex>;
-    --bp-slot-5-ref: <hex>;
+    --dominant-ref:   <hex>;
+    --secondary-ref:  <hex>;
+    --tertiary-ref:   <hex>;
+    --quaternary-ref: <hex>;
+    --quinary-ref:    <hex>;
 
 Step 3 — Express EVERY other color in the stylesheet exclusively as color-mix()
-  combining only the five --bp-slot-* user variables. Use oklch color space for perceptual
+  combining only the five palette variables. Use oklch color space for perceptual
   uniformity. Examples:
-    card border:      color-mix(in oklch, var(--bp-slot-4) 35%, var(--bp-slot-1))
-    hero overlay:     color-mix(in oklch, transparent 35%, var(--bp-slot-1))
-    muted text:       color-mix(in oklch, var(--bp-slot-4) 55%, var(--bp-slot-2))
-    section alt-bg:   color-mix(in oklch, var(--bp-slot-1) 82%, var(--bp-slot-4))
-    nav blur-bg:      color-mix(in oklch, var(--bp-slot-1) 70%, transparent)
+    card border:      color-mix(in oklch, var(--quaternary) 35%, var(--dominant))
+    hero overlay:     color-mix(in oklch, transparent 35%, var(--dominant))
+    muted text:       color-mix(in oklch, var(--quaternary) 55%, var(--secondary))
+    section alt-bg:   color-mix(in oklch, var(--dominant) 82%, var(--quaternary))
+    nav blur-bg:      color-mix(in oklch, var(--dominant) 70%, transparent)
   Exceptions: keep red (#ef4444 range) for error/danger states and green (#22c55e range)
   for success indicators as literals — do not express these as color-mix().
 
@@ -104,6 +108,11 @@ Use ONLY the data provided — never fabricate facts.
 
   If a resume field is absent, omit that element cleanly — no placeholder text.
 
+  Hero uniqueness rule: every piece of text in the hero section must appear exactly once.
+  Do NOT repeat the candidate's name, headline, subheadline, major, institution, or any
+  other fact across multiple hero elements (e.g. do not show the name in both the heading
+  and a separate label, or the headline in both the heading and a subtitle paragraph).
+
 ═══════════════════════════════════════════════════
 PART 4 — VISUAL ENRICHMENT
 ═══════════════════════════════════════════════════
@@ -127,9 +136,9 @@ Masthead illustration:
 Headshot placeholder monogram:
   When {{HEADSHOT_HTML}} is empty, render a circular monogram element that:
   - Displays the candidate's initials ({{CANDIDATE_INITIALS}}) in large, bold text.
-  - Uses a radial-gradient background blending --bp-primary and --bp-accent.
-  - Has a radial-gradient background blending --bp-slot-1 and --bp-slot-3.
-  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--bp-slot-1) 50%, var(--bp-slot-5)).
+  - Uses a radial-gradient background blending --dominant and --tertiary.
+  - Has a radial-gradient background blending --dominant and --tertiary.
+  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--dominant) 50%, var(--quinary)).
   - Carries a title attribute: title="Double-click to add your headshot"
   - Has a CSS class "headshot-placeholder" and an id="headshotPlaceholder".
   - Is sized to match where a real headshot photo would sit (min 96px, typically 120–160px diameter).
@@ -149,7 +158,7 @@ Maximum visual garnishment:
   - If the sample has any CSS animation (@keyframes), reproduce it.
   - Section dividers, clip-path cuts, and ::before/::after pseudo-element accents must
     all be preserved and adapted to the new palette.
-  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of --bp-slot-1.
+  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of --dominant.
   - The goal: a viewer should say "wow" within 3 seconds of loading the page.
 
 ═══════════════════════════════════════════════════

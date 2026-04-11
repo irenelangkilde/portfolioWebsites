@@ -10,7 +10,7 @@ Contact information JSON (name, email, phone, LinkedIn, GitHub, etc.)
 Major and specialization (e.g., "Data Science" with specialization in "Machine Learning")
 Resume PDF content (education, experience, skills, projects)
 Sample website HTML (use this as your layout template)
-Color scheme (hex codes for primary, secondary, accent colors)
+Color scheme (hex codes for primary, secondary, tertiary colors)
 
 
 Instructions
@@ -29,9 +29,9 @@ Try to use all the colors.
 
 Primary color: Main headings, primary buttons, key branding elements
 Secondary color: Subheadings, links, secondary buttons
-Accent color: Highlights, hover states, call-to-action elements
-Dark color: paragraph text
-Light color: background
+Tertiary color: Highlights, hover states, call-to-action elements
+Accent 2 color: paragraph text
+Accent 1 color: background
 
 Ensure sufficient contrast for accessibility (text must be readable)
 

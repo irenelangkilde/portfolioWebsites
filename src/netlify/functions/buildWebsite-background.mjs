@@ -211,6 +211,22 @@ function cleanHtml(rawHtml) {
   return html;
 }
 
+// ─── Color slot parser for pre-normalized templates ──────────────────────────
+// Reads the five --color-* hex values from a :root block that already has numbered
+// role comments (e.g. /* 1. Dominant — ... */). Returns { slot1: "#...", ... }.
+function parseNormalizedColorSlots(html) {
+  const rootMatch = (html || "").match(/:root\s*\{([\s\S]*?)\}/);
+  if (!rootMatch) return {};
+  const slots = {};
+  const re = /--color-[\w-]+\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*\s*(\d+)\./g;
+  let m;
+  while ((m = re.exec(rootMatch[1])) !== null) {
+    const idx = parseInt(m[2]);
+    if (idx >= 1 && idx <= 5) slots[`slot${idx}`] = m[1].toLowerCase();
+  }
+  return slots;
+}
+
 // ─── Prompt loaders ──────────────────────────────────────────────────────────
 function loadPromptFile(filename) {
   const cwd = process.cwd();
@@ -238,7 +254,7 @@ function parseJsonResponse(raw) {
 }
 
 const COLOR_SLOT_KEYS = ["slot1", "slot2", "slot3", "slot4", "slot5"];
-const LEGACY_COLOR_KEYS = ["primary", "secondary", "accent", "dark", "light"];
+const LEGACY_COLOR_KEYS = ["primary", "secondary", "tertiary", "accent1", "accent2"];
 
 function normalizeColorSpec(colorSpec = {}) {
   const normalized = {
@@ -417,11 +433,14 @@ function buildMastheadImageInstruction(meta = {}, domainContext = "") {
     );
   }
   return (
-    `The sample masthead has no JPG/PNG image (detected server-side) — use SVG.\n` +
-    `  Recreate a domain-appropriate masthead graphic as inline SVG embedded directly in the masthead\n` +
-    `  section. Base its visual style on the sample (flat vector / gradient shapes / geometric\n` +
-    `  abstraction / glowing rings). The SVG should reflect the candidate's professional field.\n` +
-    `  Minimum size: 280px wide. Make it visually striking — this is the first thing a recruiter sees.`
+    `The sample masthead has no JPG/PNG image (detected server-side).\n` +
+    `  A generated raster masthead image will be injected via the --hero-bg-image CSS variable.\n` +
+    `  You MUST follow Part 2 Step 4 exactly:\n` +
+    `    1. Declare inside :root:  --hero-bg-image: none;\n` +
+    `    2. In the hero/masthead CSS use:  background-image: var(--hero-bg-image), <your gradient layers>;\n` +
+    `  Do NOT create an inline SVG illustration as the primary masthead visual.\n` +
+    `  The injected image will appear behind text; pair it with a semi-transparent dark gradient overlay\n` +
+    `  so headline text remains readable.`
   );
 }
 
@@ -527,7 +546,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   const normalizedColorSpec = normalizeColorSpec(colorSpec);
   if (!normalizedColorSpec || normalizedColorSpec.use_sample_colors) return html;
   // Parse --color-* variable declarations with their adjacent numbered role comments.
-  // Slots 1–5 map directly to primary/secondary/accent/dark/light in order.
+  // Slots 1–5 map directly to primary/secondary/tertiary/accent1/accent2 in order.
   const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
   if (!rootMatch) return html;
   const colorVars = [];
@@ -538,7 +557,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   }
   if (!colorVars.length) return html;
   colorVars.sort((a, b) => a.index - b.index);
-  const slots = ["primary", "secondary", "accent", "dark", "light"];
+  const slots = ["primary", "secondary", "tertiary", "accent1", "accent2"];
   const varToSlot = {};
   colorVars.forEach((cv, i) => {
     if (i < slots.length) varToSlot[cv.varName] = slots[i];
@@ -781,7 +800,7 @@ function toFlatResumeSchema(f) {
 /**
  * Maps contentJson + resumeJson into a flat Mustache data object
  * matching the schema in ExtractMustacheTemplate.md.
- * colorSpec: { primary, secondary, accent, dark, light } — user's palette choice
+ * colorSpec: { primary, secondary, tertiary, accent1, accent2 } — user's palette choice
  */
 function trimAboutToLength(text, targetWords) {
   if (!targetWords || targetWords <= 0) return text;
@@ -971,7 +990,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
   // Theme color variables for Mustache templates that expose CSS custom properties
   const tp = colorSpec?.primary   || "#2563eb";
   const ts = colorSpec?.secondary || "#22c55e";
-  const td = colorSpec?.dark      || "#0f172a";
+  const td = colorSpec?.accent2   || "#0f172a";
 
   return {
     // ── Theme colors ──
@@ -1184,7 +1203,8 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     resolvedStrategy = null,
     sampleHtml       = "",
     colorSpec        = {},
-    headshotName     = "",
+    headshotName         = "",
+    templateColorSlots   = null,  // pre-extracted from color-normalized sample (optional)
   } = body;
 
   await store.set(jobId, JSON.stringify({
@@ -1211,16 +1231,21 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   const theme = normalizeColorSpec({
     slot1: colorSpec.slot1 ?? colorSpec.primary ?? "#4E70F1",
     slot2: colorSpec.slot2 ?? colorSpec.secondary ?? "#FBAB9C",
-    slot3: colorSpec.slot3 ?? colorSpec.accent ?? "#8DE0FF",
-    slot4: colorSpec.slot4 ?? colorSpec.dark ?? "#0b1220",
-    slot5: colorSpec.slot5 ?? colorSpec.light ?? "#eaf0ff",
+    slot3: colorSpec.slot3 ?? colorSpec.tertiary ?? "#8DE0FF",
+    slot4: colorSpec.slot4 ?? colorSpec.accent2 ?? "#0b1220",
+    slot5: colorSpec.slot5 ?? colorSpec.accent1 ?? "#eaf0ff",
     use_sample_colors: colorSpec.use_sample_colors
   });
 
-  // Cap sample HTML to avoid exceeding model context
-  const cappedSampleHtml = sampleHtml.length > 80000
+  // Cap sample HTML to avoid exceeding model context.
+  // If the sample was pre-normalized, prepend a comment listing the extracted palette so
+  // the braid AI can read the slots directly instead of doing color archaeology from scratch.
+  const samplePrefix = (templateColorSlots && Object.keys(templateColorSlots).length >= 3)
+    ? `<!--\n  PRE-EXTRACTED SAMPLE PALETTE:\n${Object.entries(templateColorSlots).map(([k, v]) => `  ${k} = ${v}`).join("\n")}\n  The sample HTML is color-normalized: its :root already contains --color-* vars with numbered role comments.\n  Use those directly as the slot-1 through slot-5 references in Part 2. Do not re-analyze colors from scratch.\n-->\n`
+    : "";
+  const cappedSampleHtml = samplePrefix + (sampleHtml.length > 80000
     ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
-    : sampleHtml;
+    : sampleHtml);
 
   const mastheadMeta = analyzeSampleMasthead(sampleHtml, domainContext);
   const mastheadImageInstruction = buildMastheadImageInstruction(mastheadMeta, domainContext);
@@ -1231,9 +1256,9 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     prompt = loadPromptFile("braidWebsite.md")
       .replace("{{COLOR_PRIMARY}}",        theme.primary)
       .replace("{{COLOR_SECONDARY}}",      theme.secondary)
-      .replace("{{COLOR_ACCENT}}",         theme.accent)
-      .replace("{{COLOR_DARK}}",           theme.dark)
-      .replace("{{COLOR_LIGHT}}",          theme.light)
+      .replace("{{COLOR_TERTIARY}}",       theme.tertiary)
+      .replace("{{COLOR_ACCENT2}}",        theme.accent2)
+      .replace("{{COLOR_ACCENT1}}",        theme.accent1)
       .replace("{{HEADSHOT_HTML}}",        headshotHtml)
       .replace("{{CANDIDATE_INITIALS}}",   initials)
       .replace("{{CANDIDATE_NAME}}",       name)
@@ -1338,7 +1363,7 @@ async function generateImageJob(store, jobId, body, userId) {
       return;
     }
     prompt = buildMastheadImagePrompt(page1, theme);
-    size = "1792x1024";
+    size = "1536x1024";
     stageLabel = "Masthead image";
     console.log(
       `[buildWebsite-background] Masthead image prompt inputs: ${JSON.stringify({
@@ -1720,6 +1745,41 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
   });
 }
 
+// ─── Template color normalization pipeline ───────────────────────────────────
+// Rewrites all color values in a sample HTML as 5 named --color-* CSS variables,
+// preserving visual appearance. Used offline (preprocessing script) and in-flow.
+async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
+  const sampleHtml = body.sampleHtml || "";
+  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Normalizing template colors…" }), { ttl: 3600 });
+  let prompt;
+  try {
+    const rawHtml = sampleHtml.length > 80000 ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->" : sampleHtml;
+    prompt = loadPromptFile("ExtractVisuals.md").replace("{{EXAMPLE_HTML}}", rawHtml);
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
+    return;
+  }
+  let r;
+  try {
+    r = await callAI(provider, creds, {
+      system: "You are an HTML engineer. Rewrite the HTML to replace all color values with exactly 5 named CSS custom properties in :root, following the instructions in the prompt. Output only raw HTML starting with <!DOCTYPE html>. No markdown. No explanation.",
+      userText: prompt,
+      maxTokens: 40000
+    });
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
+    return;
+  }
+  const normalizedHtml = cleanHtml(r.text || "");
+  const colorSlots = parseNormalizedColorSlots(normalizedHtml);
+  await store.set(jobId, JSON.stringify({
+    status: "done",
+    normalizedHtml,
+    colorSlots,
+    token_report: [{ stage: "normalizeTemplate", model: r.model, ...r.usage }]
+  }), { ttl: 3600 });
+}
+
 export async function handler(event) {
   // Parse body and jobId FIRST so the catch block can always reference them
   let body, jobId, store;
@@ -1775,9 +1835,9 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-    } else if (mode === "braid") {
+    } else if (mode === "braid" || mode === "normalizeTemplate") {
       if (!body.sampleHtml) {
-        await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for braid mode." }), { ttl: 3600 });
+        await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for this mode." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
     } else if (mode === "generateImage") {
@@ -1865,6 +1925,12 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
+    // normalizeTemplate mode: rewrite sample HTML with 5 named --color-* CSS variables
+    if (mode === "normalizeTemplate") {
+      await normalizeTemplateColorsJob(provider, creds, store, jobId, body);
+      return { statusCode: 202 };
+    }
+
     // braid mode: single-pass layout clone + content substitution + color encoding
     if (mode === "braid") {
       await braidPortfolioWebsite(provider, creds, store, jobId, body, userId);
@@ -1926,9 +1992,9 @@ export async function handler(event) {
     const theme = normalizeColorSpec({
       slot1: page2?.theme?.slot1 ?? page2?.theme?.primary ?? "#4E70F1",
       slot2: page2?.theme?.slot2 ?? page2?.theme?.secondary ?? "#FBAB9C",
-      slot3: page2?.theme?.slot3 ?? page2?.theme?.accent ?? "#8DE0FF",
-      slot4: page2?.theme?.slot4 ?? page2?.theme?.dark ?? "#0b1220",
-      slot5: page2?.theme?.slot5 ?? page2?.theme?.light ?? "#eaf0ff"
+      slot3: page2?.theme?.slot3 ?? page2?.theme?.tertiary ?? "#8DE0FF",
+      slot4: page2?.theme?.slot4 ?? page2?.theme?.accent2 ?? "#0b1220",
+      slot5: page2?.theme?.slot5 ?? page2?.theme?.accent1 ?? "#eaf0ff"
     });
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);

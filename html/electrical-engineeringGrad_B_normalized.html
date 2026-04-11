@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Alex Chen - Electrical Engineering Portfolio</title>
+    <link href="css/theme.css" rel="stylesheet" type="text/css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        /* Five main theme colors */
+        --dominant:   #0d7377;   /* 1. Dominant    — primary teal, masthead & headings */
+        --secondary:  #14ffec;   /* 2. Secondary   — vivid cyan, gradient end & accents */
+        --tertiary:   #32e0c4;   /* 3. Tertiary    — mint, hover & interactive accent */
+        --quaternary: #0a4d4e;   /* 4. Quaternary  — deep teal, footer & dark panels */
+        --quinary:    #2c3e50;   /* 5. Quinary     — dark slate, body text */
+
+        /* Theme-independent hard-coded neutrals */
+        --white:   #ffffff;
+        --black:   #000000;
+
+        /* Derived tokens */
+        --light-surface:   color-mix(in srgb, var(--dominant) 8%, var(--white));
+        --gray-muted:      color-mix(in srgb, var(--quinary) 45%, var(--white));
+        --gradient:        linear-gradient(135deg, var(--dominant) 0%, var(--secondary) 100%);
+        --border-light:    color-mix(in srgb, var(--dominant) 12%, var(--white));
+        --tag-bg:          color-mix(in srgb, var(--dominant) 8%, var(--white));
+        --shadow-sm:       rgba(0, 0, 0, 0.08);
+        --shadow-md:       rgba(0, 0, 0, 0.12);
+        --shadow-lg:       rgba(0, 0, 0, 0.15);
+        --shadow-hero:     rgba(0, 0, 0, 0.2);
+        --shadow-nav:      rgba(0, 0, 0, 0.1);
+      }
+      body {
+        font-family: "Inter", sans-serif;
+        line-height: 1.6;
+        color: var(--quinary);
+        background: var(--white);
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      /* Navigation */
+      nav {
+        background: var(--white);
+        box-shadow: 0 2px 10px var(--shadow-nav);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      nav .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 20px;
+      }
+      nav .logo {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--dominant);
+      }
+      nav ul {
+        display: flex;
+        list-style: none;
+        gap: 2rem;
+      }
+      nav a {
+        text-decoration: none;
+        color: var(--quinary);
+        font-weight: 500;
+        transition: color 0.3s;
+      }
+      nav a:hover {
+        color: var(--dominant);
+      }
+      /* Hero Section */
+      .hero {
+        background: var(--gradient);
+        color: var(--white);
+        padding: 80px 0;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"><path fill="%23ffffff" fill-opacity="0.1" d="M0,96L48,112C96,128,192,160,288,160C384,160,480,128,576,122.7C672,117,768,139,864,138.7C960,139,1056,117,1152,101.3C1248,85,1344,75,1392,69.3L1440,64L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path></svg>')
+          no-repeat bottom;
+        background-size: cover;
+      }
+      .hero-content {
+        position: relative;
+        z-index: 1;
+      }
+      .profile-photo {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        border: 5px solid var(--white);
+        object-fit: cover;
+        margin: 0 auto 20px;
+        display: block;
+        box-shadow: 0 10px 30px var(--shadow-hero);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        font-weight: 700;
+      }
+      .hero .subtitle {
+        font-size: 1.3rem;
+        margin-bottom: 20px;
+        opacity: 0.95;
+      }
+      .hero .graduation {
+        font-size: 1rem;
+        opacity: 0.9;
+        margin-bottom: 30px;
+      }
+      .cta-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 12px 30px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s;
+        display: inline-block;
+      }
+      .btn-primary {
+        background: var(--white);
+        color: var(--dominant);
+      }
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+      }
+      .btn-secondary {
+        background: transparent;
+        color: var(--white);
+        border: 2px solid var(--white);
+      }
+      .btn-secondary:hover {
+        background: var(--white);
+        color: var(--dominant);
+      }
+      /* Section Styles */
+      section {
+        padding: 80px 0;
+      }
+      section h2 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 50px;
+        color: var(--dominant);
+        position: relative;
+        padding-bottom: 15px;
+      }
+      section h2::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: var(--gradient);
+        border-radius: 2px;
+      }
+      /* About Section */
+      .about {
+        background: var(--light-surface);
+      }
+      .about-content {
+        max-width: 800px;
+        margin: 0 auto;
+        text-align: center;
+        font-size: 1.1rem;
+        line-height: 1.8;
+      }
+      /* Skills Section */
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+      }
+      .skill-category {
+        background: var(--white);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px var(--shadow-sm);
+        transition: transform 0.3s;
+      }
+      .skill-category:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px var(--shadow-md);
+      }
+      .skill-category h3 {
+        color: var(--dominant);
+        margin-bottom: 20px;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .skill-category h3::before {
+        content: "⚡";
+        font-size: 1.5rem;
+      }
+      .skill-list {
+        list-style: none;
+      }
+      .skill-list li {
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .skill-list li:last-child {
+        border-bottom: none;
+      }
+      .skill-level {
+        font-size: 0.85rem;
+        color: var(--gray-muted);
+        font-weight: 600;
+      }
+      /* Projects Section */
+      .projects {
+        background: var(--light-surface);
+      }
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+        gap: 30px;
+      }
+      .project-card {
+        background: var(--white);
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 5px 20px var(--shadow-sm);
+        transition: transform 0.3s;
+      }
+      .project-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px var(--shadow-lg);
+      }
+      .project-image {
+        width: 100%;
+        height: 220px;
+        background: var(--gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--white);
+      }
+      .project-content {
+        padding: 25px;
+      }
+      .project-content h3 {
+        color: var(--dominant);
+        margin-bottom: 10px;
+        font-size: 1.4rem;
+      }
+      .project-content p {
+        color: var(--gray-muted);
+        margin-bottom: 15px;
+        line-height: 1.6;
+      }
+      .tech-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+      }
+      .tech-tag {
+        background: var(--tag-bg);
+        color: var(--dominant);
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .project-link {
+        display: inline-block;
+        margin-top: 15px;
+        color: var(--dominant);
+        font-weight: 600;
+        text-decoration: none;
+        transition: color 0.3s;
+      }
+      .project-link:hover {
+        color: var(--tertiary);
+      }
+      /* Resume Section */
+      .resume-content {
+        max-width: 900px;
+        margin: 0 auto;
+      }
+      .resume-section {
+        margin-bottom: 40px;
+      }
+      .resume-section h3 {
+        color: var(--dominant);
+        font-size: 1.8rem;
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+        border-bottom: 2px solid var(--light-surface);
+      }
+      .resume-item {
+        background: var(--white);
+        padding: 25px;
+        border-radius: 12px;
+        margin-bottom: 20px;
+        box-shadow: 0 3px 15px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid var(--dominant);
+      }
+      .resume-item h4 {
+        color: var(--dominant);
+        font-size: 1.3rem;
+        margin-bottom: 8px;
+      }
+      .resume-item .meta {
+        color: var(--gray-muted);
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+      }
+      .resume-item ul {
+        margin-left: 20px;
+        color: var(--quinary);
+      }
+      .resume-item ul li {
+        margin-bottom: 8px;
+      }
+      .download-resume {
+        text-align: center;
+        margin-top: 40px;
+      }
+      /* Contact Section */
+      .contact {
+        background: var(--light-surface);
+      }
+      .contact-content {
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+      }
+      .contact-info {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 30px;
+        margin: 40px 0;
+      }
+      .contact-item {
+        background: var(--white);
+        padding: 30px;
+        border-radius: 15px;
+        box-shadow: 0 5px 20px var(--shadow-sm);
+      }
+      .contact-item h3 {
+        color: var(--dominant);
+        margin-bottom: 15px;
+        font-size: 1.2rem;
+      }
+      .contact-item a {
+        color: var(--quinary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s;
+      }
+      .contact-item a:hover {
+        color: var(--dominant);
+      }
+      .social-links {
+        display: flex;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 30px;
+      }
+      .social-links a {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: var(--dominant);
+        color: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        font-size: 1.5rem;
+        transition: all 0.3s;
+      }
+      .social-links a:hover {
+        background: var(--tertiary);
+        transform: translateY(-3px);
+      }
+      /* Footer */
+      footer {
+        background: var(--quaternary);
+        color: var(--white);
+        text-align: center;
+        padding: 30px 0;
+      }
+      /* Responsive */
+      @media (max-width: 768px) {
+        nav ul {
+          gap: 1rem;
+        }
+        .hero h1 {
+          font-size: 2rem;
+        }
+        .hero .subtitle {
+          font-size: 1.1rem;
+        }
+        section h2 {
+          font-size: 2rem;
+        }
+        .projects-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav>
+      <div class="container">
+        <div class="logo">AC</div>
+        <ul>
+          <li>
+            <a href="#about">About</a>
+          </li>
+          <li>
+            <a href="#skills">Skills</a>
+          </li>
+          <li>
+            <a href="#projects">Projects</a>
+          </li>
+          <li>
+            <a href="#resume">Resume</a>
+          </li>
+          <li>
+            <a href="#contact">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </nav>
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-content">
+        <img
+          src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Crect fill='%23667eea' width='180' height='180'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='72' fill='white' font-weight='bold'%3EAC%3C/text%3E%3C/svg%3E"
+          alt="Alex Chen"
+          class="profile-photo"
+        />
+        <h1>Alex Chen</h1>
+        <p class="subtitle">Electrical Engineering Student</p>
+        <p class="graduation">
+          🎓 Graduating Spring 2026 | Available for Full-Time Opportunities
+        </p>
+        <div class="cta-buttons">
+          <a href="#projects" class="btn btn-primary">View My Work</a
+          ><a href="#contact" class="btn btn-secondary">Get In Touch</a>
+        </div>
+      </div>
+    </section>
+    <!-- About Section -->
+    <section id="about" class="about">
+      <div class="container">
+        <h2>About Me</h2>
+        <div class="about-content">
+          <p>
+            I'm a passionate Electrical Engineering student with hands-on
+            experience in circuit design, embedded systems, and power
+            electronics. Through my coursework and personal projects, I've
+            developed strong skills in both analog and digital systems, with a
+            focus on practical applications and real-world problem-solving.
+          </p>
+          <p>
+            I'm seeking full-time opportunities starting Summer 2026 where I can
+            contribute to innovative engineering solutions and continue learning
+            from experienced professionals in the field.
+          </p>
+        </div>
+      </div>
+    </section>
+    <!-- Skills Section -->
+    <section id="skills">
+      <div class="container">
+        <h2>Technical Skills</h2>
+        <div class="skills-grid">
+          <div class="skill-category">
+            <h3>Programming &amp; Software</h3>
+            <ul class="skill-list">
+              <li>
+                <span>C/C++</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>Python</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>MATLAB</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>Verilog/VHDL</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+              <li>
+                <span>LabVIEW</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+            </ul>
+          </div>
+          <div class="skill-category">
+            <h3>Circuit Design &amp; Tools</h3>
+            <ul class="skill-list">
+              <li>
+                <span>Altium Designer</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>LTspice</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>KiCad</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>Multisim</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>OrCAD</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+            </ul>
+          </div>
+          <div class="skill-category">
+            <h3>Hardware &amp; Systems</h3>
+            <ul class="skill-list">
+              <li>
+                <span>Arduino/ESP32</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>Raspberry Pi</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>STM32</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+              <li>
+                <span>FPGA Design</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+              <li>
+                <span>PCB Design</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+            </ul>
+          </div>
+          <div class="skill-category">
+            <h3>Core Competencies</h3>
+            <ul class="skill-list">
+              <li>
+                <span>Analog Circuit Design</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>Digital Logic Design</span>
+                <span class="skill-level">Advanced</span>
+              </li>
+              <li>
+                <span>Signal Processing</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>Power Electronics</span>
+                <span class="skill-level">Proficient</span>
+              </li>
+              <li>
+                <span>Control Systems</span>
+                <span class="skill-level">Intermediate</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Projects Section -->
+    <section id="projects" class="projects">
+      <div class="container">
+        <h2>Featured Projects</h2>
+        <div class="projects-grid">
+          <div class="project-card">
+            <div class="project-image">🔌</div>
+            <div class="project-content">
+              <h3>Smart Power Monitor</h3>
+              <p>
+                Designed and built a real-time power monitoring system using
+                ESP32 with current and voltage sensors. Features wireless data
+                transmission and mobile app interface for tracking energy
+                consumption.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">ESP32</span
+                ><span class="tech-tag">C++</span
+                ><span class="tech-tag">IoT</span
+                ><span class="tech-tag">PCB Design</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-image">🤖</div>
+            <div class="project-content">
+              <h3>Autonomous Line-Following Robot</h3>
+              <p>
+                Built an autonomous robot using Arduino and IR sensors with PID
+                control algorithm. Implemented motor control circuits and
+                programmed navigation logic for precise line tracking.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">Arduino</span
+                ><span class="tech-tag">C</span
+                ><span class="tech-tag">PID Control</span
+                ><span class="tech-tag">Motor Control</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-image">📡</div>
+            <div class="project-content">
+              <h3>FPGA-Based Signal Processor</h3>
+              <p>
+                Developed a digital signal processing system on FPGA for
+                real-time audio filtering. Implemented FIR filters using Verilog
+                and verified performance through extensive simulation and
+                hardware testing.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">FPGA</span
+                ><span class="tech-tag">Verilog</span
+                ><span class="tech-tag">DSP</span
+                ><span class="tech-tag">Xilinx</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-image">⚡</div>
+            <div class="project-content">
+              <h3>DC-DC Buck Converter</h3>
+              <p>
+                Designed a high-efficiency step-down converter with 90%+
+                efficiency. Created complete PCB layout, performed thermal
+                analysis, and validated performance under various load
+                conditions.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">Power Electronics</span
+                ><span class="tech-tag">Altium</span
+                ><span class="tech-tag">LTspice</span
+                ><span class="tech-tag">PCB Design</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-image">🎵</div>
+            <div class="project-content">
+              <h3>Audio Amplifier Circuit</h3>
+              <p>
+                Designed and tested a Class AB audio amplifier with low
+                distortion and high fidelity. Optimized circuit for minimal
+                noise and maximum power efficiency with proper heat management.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">Analog Design</span
+                ><span class="tech-tag">Amplifiers</span
+                ><span class="tech-tag">Multisim</span
+                ><span class="tech-tag">Testing</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+          <div class="project-card">
+            <div class="project-image">🌡️</div>
+            <div class="project-content">
+              <h3>Temperature Control System</h3>
+              <p>
+                Developed a closed-loop temperature controller using STM32
+                microcontroller with PID algorithm. Integrated LCD display and
+                implemented data logging capabilities for analysis.
+              </p>
+              <div class="tech-tags">
+                <span class="tech-tag">STM32</span
+                ><span class="tech-tag">Embedded C</span
+                ><span class="tech-tag">Control Systems</span
+                ><span class="tech-tag">Sensors</span>
+              </div>
+              <a href="#" class="project-link">View Details →</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Resume Section -->
+    <section id="resume">
+      <div class="container">
+        <h2>Resume</h2>
+        <div class="resume-content">
+          <div class="resume-section">
+            <h3>Education</h3>
+            <div class="resume-item">
+              <h4>Bachelor of Science in Electrical Engineering</h4>
+              <div class="meta">
+                <span>📍 University Name</span
+                ><span>📅 Expected Graduation: May 2026</span
+                ><span>🎯 GPA: 3.7/4.0</span>
+              </div>
+              <ul>
+                <li>
+                  Relevant Coursework: Circuit Analysis, Digital Logic Design,
+                  Signals &amp; Systems, Electromagnetics, Power Electronics,
+                  Control Systems, Embedded Systems
+                </li>
+                <li>Dean's List: Fall 2023, Spring 2024, Fall 2024</li>
+              </ul>
+            </div>
+          </div>
+          <div class="resume-section">
+            <h3>Experience</h3>
+            <div class="resume-item">
+              <h4>Engineering Intern</h4>
+              <div class="meta">
+                <span>📍 Tech Company Inc.</span><span>📅 Summer 2025</span>
+              </div>
+              <ul>
+                <li>
+                  Assisted in the design and testing of power distribution
+                  circuits for consumer electronics
+                </li>
+                <li>
+                  Performed circuit simulations and analyzed test data to
+                  optimize performance
+                </li>
+                <li>
+                  Collaborated with senior engineers on PCB layout reviews and
+                  design improvements
+                </li>
+                <li>
+                  Documented test procedures and results for quality assurance
+                  purposes
+                </li>
+              </ul>
+            </div>
+            <div class="resume-item">
+              <h4>Research Assistant</h4>
+              <div class="meta">
+                <span>📍 University Engineering Lab</span
+                ><span>📅 Jan 2024 - Present</span>
+              </div>
+              <ul>
+                <li>
+                  Conducting research on renewable energy systems and power
+                  conversion efficiency
+                </li>
+                <li>
+                  Building and testing prototype circuits for solar power
+                  optimization
+                </li>
+                <li>Analyzing experimental data using MATLAB and Python</li>
+                <li>
+                  Co-authored technical report on DC-DC converter efficiency
+                  improvements
+                </li>
+              </ul>
+            </div>
+            <div class="resume-item">
+              <h4>Lab Teaching Assistant</h4>
+              <div class="meta">
+                <span>📍 EE Department</span><span>📅 Sep 2024 - Present</span>
+              </div>
+              <ul>
+                <li>
+                  Assist students in Circuit Analysis Lab with experiments and
+                  troubleshooting
+                </li>
+                <li>
+                  Grade lab reports and provide constructive feedback on circuit
+                  designs
+                </li>
+                <li>
+                  Hold office hours to help students understand complex EE
+                  concepts
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="resume-section">
+            <h3>Leadership &amp; Activities</h3>
+            <div class="resume-item">
+              <h4>IEEE Student Branch - Project Lead</h4>
+              <div class="meta"><span>📅 Sep 2023 - Present</span></div>
+              <ul>
+                <li>
+                  Lead team of 8 students in developing renewable energy
+                  projects
+                </li>
+                <li>
+                  Organized workshops on PCB design and embedded systems
+                  programming
+                </li>
+                <li>
+                  Coordinated with industry professionals for guest speaker
+                  events
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="download-resume">
+            <a href="#" class="btn btn-primary"
+              >📄 Download Full Resume (PDF)</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <h2>Get In Touch</h2>
+        <div class="contact-content">
+          <p>
+            I'm actively seeking full-time electrical engineering positions
+            starting Summer 2026. Let's connect!
+          </p>
+          <div class="contact-info">
+            <div class="contact-item">
+              <h3>📧 Email</h3>
+              <a href="mailto:alex.chen@email.com">alex.chen@email.com</a>
+            </div>
+            <div class="contact-item">
+              <h3>📱 Phone</h3>
+              <a href="tel:+15551234567">(555) 123-4567</a>
+            </div>
+            <div class="contact-item">
+              <h3>📍 Location</h3>
+              <p>City, State<br />Open to Relocation</p>
+            </div>
+          </div>
+          <div class="social-links">
+            <a
+              href="https://linkedin.com/in/alexchen"
+              target="_blank"
+              title="LinkedIn"
+              >in</a
+            ><a
+              href="https://github.com/alexchen"
+              target="_blank"
+              title="GitHub"
+              >💻</a
+            ><a href="mailto:alex.chen@email.com" title="Email">✉️</a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <!-- Footer -->
+    <footer>
+      <div class="container">
+        <p>&copy; 2026 Alex Chen | Electrical Engineering Portfolio</p>
+      </div>
+    </footer>
+  </body>
+</html>

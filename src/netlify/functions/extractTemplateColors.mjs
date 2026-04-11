@@ -2,7 +2,7 @@
  * Netlify Function: extractTemplateColors
  * GET /.netlify/functions/extractTemplateColors?url=<encoded_url>
  * Fetches the template page server-side (no CORS issues) and extracts
- * the 5 theme colors (primary, secondary, accent, dark, light).
+ * the 5 theme colors (#1-5).
  */
 
 function hexToRgb(hex) {
@@ -49,9 +49,9 @@ function parseColorString(str) {
 const VAR_PATTERNS = {
   primary:   [/--primary\b/, /--color-primary\b/, /--brand\b/, /--main-color\b/, /--theme-primary\b/],
   secondary: [/--secondary\b/, /--color-secondary\b/, /--theme-secondary\b/],
-  accent:    [/--accent\b/, /--highlight\b/, /--cta-color\b/, /--theme-accent\b/],
-  dark:      [/--dark\b/, /--bg-dark\b/, /--background-dark\b/, /--color-dark\b/, /--surface-dark\b/],
-  light:     [/--light\b/, /--bg-light\b/, /--background-light\b/, /--bg\b/, /--surface\b/, /--bg-color\b/],
+  tertiary:    [/--accent\b/, /--highlight\b/, /--cta-color\b/, /--theme-accent\b/],
+  accent1:      [/--dark\b/, /--bg-dark\b/, /--background-dark\b/, /--color-dark\b/, /--surface-dark\b/],
+  accent2:     [/--light\b/, /--bg-light\b/, /--background-light\b/, /--bg\b/, /--surface\b/, /--bg-color\b/],
 };
 
 function tryExtractVars(css) {
@@ -101,11 +101,11 @@ function categorizeByHsl(colors) {
   const lights = hsl.filter(c => c.l > 80);
   const vivid  = hsl.filter(c => c.s > 25 && c.l >= 22 && c.l <= 80).sort((a, b) => b.s - a.s);
 
-  if (darks[0])  result.dark      = darks[0].hex;
-  if (lights[0]) result.light     = lights[0].hex;
+  if (darks[0])  result.accent2   = darks[0].hex;
+  if (lights[0]) result.accent1   = lights[0].hex;
   if (vivid[0])  result.primary   = vivid[0].hex;
   if (vivid[1])  result.secondary = vivid[1].hex;
-  if (vivid[2])  result.accent    = vivid[2].hex;
+  if (vivid[2])  result.tertiary  = vivid[2].hex;
   return result;
 }
 
@@ -121,16 +121,16 @@ function extractColors(html) {
   const fromVars = tryExtractVars(allCss);
 
   // 2. Fill gaps with frequency analysis
-  const missing = ["primary", "secondary", "accent", "dark", "light"].filter(r => !fromVars[r]);
+  const missing = ["primary", "secondary", "tertiary", "accent2", "accent1"].filter(r => !fromVars[r]);
   let fromFreq = {};
   if (missing.length > 0) {
     fromFreq = categorizeByHsl(colorFrequencyList(allCss));
   }
 
   // 3. Fallback defaults
-  const defaults = { primary: "#4E70F1", secondary: "#FBAB9C", accent: "#8DE0FF", dark: "#0b1220", light: "#eaf0ff" };
+  const defaults = { primary: "#4E70F1", secondary: "#FBAB9C", tertiary: "#8DE0FF", accent2: "#0b1220", accent1: "#eaf0ff" };
   const result = {};
-  for (const role of ["primary", "secondary", "accent", "dark", "light"]) {
+  for (const role of ["primary", "secondary", "tertiary", "accent2", "accent1"]) {
     result[role] = fromVars[role] || fromFreq[role] || defaults[role];
   }
   return result;

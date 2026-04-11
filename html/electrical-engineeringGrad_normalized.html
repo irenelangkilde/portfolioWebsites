@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Job‑ready portfolio for an electrical engineering student graduating next spring: projects, skills, resume, and contact." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title><!-- Your Name --> Electrical Engineering Portfolio</title>
+  <style>
+    :root {
+      /* Five main theme colors */
+      --dominant:   #0f172a;   /* 1. Dominant    — deep slate, primary background/masthead */
+      --secondary:  #2563eb;   /* 2. Secondary   — blue-600, CTA buttons and accent links  */
+      --tertiary:   #22c55e;   /* 3. Tertiary    — green-500, badge accent and highlights   */
+      --quaternary: #94a3b8;   /* 4. Quaternary  — slate-400, muted text and borders        */
+      --quinary:    #a5b4fc;   /* 5. Quinary     — indigo-300, mono/code label color        */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+      --lime:    #a3e635;
+
+      /* Derived tokens */
+      --bg:              var(--dominant);
+      --panel:           color-mix(in srgb, var(--dominant) 75%, var(--black));
+      --muted:           var(--quaternary);
+      --text:            #e5e7eb;
+      --accent:          var(--secondary);
+      --accent-2:        var(--tertiary);
+      --chip:            color-mix(in srgb, var(--dominant) 60%, var(--black));
+      --bg-mid:          color-mix(in srgb, var(--dominant) 85%, var(--black));
+      --bg-deep:         color-mix(in srgb, var(--dominant) 65%, var(--black));
+      --card-top:        color-mix(in srgb, var(--dominant) 70%, var(--black));
+      --card-btm:        color-mix(in srgb, var(--dominant) 50%, var(--black));
+      --header-bg:       color-mix(in srgb, var(--dominant) 60%, transparent);
+      --border-subtle:   color-mix(in srgb, var(--quaternary) 15%, transparent);
+      --border-medium:   color-mix(in srgb, var(--quaternary) 20%, transparent);
+      --border-dashed:   color-mix(in srgb, var(--quaternary) 30%, transparent);
+      --badge-bg:        color-mix(in srgb, var(--tertiary) 12%, transparent);
+      --badge-border:    color-mix(in srgb, var(--tertiary) 35%, transparent);
+      --badge-text:      color-mix(in srgb, var(--tertiary) 85%, var(--white));
+      --accent-shadow:   color-mix(in srgb, var(--secondary) 35%, transparent);
+      --timeline-dot:    #38bdf8;
+      --timeline-glow:   color-mix(in srgb, #38bdf8 28%, transparent);
+      --hero-card-top:   color-mix(in srgb, var(--dominant) 90%, transparent);
+      --hero-card-btm:   color-mix(in srgb, var(--black) 90%, var(--dominant));
+      --input-bg:        color-mix(in srgb, var(--dominant) 80%, var(--black));
+      --link-default:    color-mix(in srgb, var(--quaternary) 80%, var(--white));
+      --ee-class:        #1ea472;
+      --logo-start:      #3b82f6;
+      --logo-end:        #1d4ed8;
+      --ring:            0 0 0 3px color-mix(in srgb, var(--secondary) 35%, transparent);
+      --radius:          18px;
+      --shadow:          0 10px 30px color-mix(in srgb, var(--black) 35%, transparent);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--bg-mid) 55%, var(--bg-deep));color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:28px}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:color-mix(in srgb, var(--bg-deep) 60%, transparent);border-bottom:1px solid var(--border-subtle);z-index:10}
+    nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%, var(--logo-start), var(--logo-end));box-shadow:0 6px 18px var(--accent-shadow)}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
+    .links a{margin-left:18px;font-weight:600;color:var(--link-default)}
+    .links a:hover{color:var(--white)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--white);border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:0 8px 20px var(--accent-shadow);cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
+    .btn.secondary{background:transparent;border:1px solid var(--border-dashed);color:color-mix(in srgb, var(--quaternary) 80%, var(--white))}
+    .section{padding:64px 0}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
+    .badge{display:inline-flex;align-items:center;gap:10px;background:var(--badge-bg);color:var(--badge-text);border:1px solid var(--badge-border);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
+    h2{font-size:34px;margin:12px 0 6px}
+    p.lead{color:var(--link-default);font-size:18px;line-height:1.65}
+    .hero-card{background:linear-gradient(180deg, var(--hero-card-top), var(--hero-card-btm));border:1px solid var(--border-subtle);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .hero-photo {
+        display: block;
+        margin: 24px auto 12px;
+        max-width: 80px;
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 6px 20px color-mix(in srgb, var(--black) 12%, transparent);
+      }
+      .ee-class {
+        color: var(--ee-class);
+        margin-top: 0;
+      }
+    .grid{display:grid;gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .card{background:linear-gradient(180deg, var(--card-top), var(--card-btm));border:1px solid var(--border-medium);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card h3{margin-top:2px;margin-bottom:6px}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid var(--border-medium);color:var(--link-default);padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
+    .mono{font-family:"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;color:var(--quinary)}
+    .timeline{position:relative;margin-top:6px}
+    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:color-mix(in srgb, var(--quaternary) 25%, transparent)}
+    .t-item{position:relative;margin-left:36px;padding:12px 0}
+    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:var(--timeline-dot);border:2px solid var(--panel);border-radius:50%;box-shadow:0 0 0 3px var(--timeline-glow)}
+    .resume{display:flex;gap:12px;flex-wrap:wrap}
+    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%, var(--bg-mid) 0%, var(--bg-deep) 60%);border-radius:12px;border:1px dashed var(--border-dashed);display:flex;align-items:center;justify-content:center;color:color-mix(in srgb, var(--secondary) 70%, var(--white));font-weight:700}
+    footer{border-top:1px solid var(--border-subtle);padding:38px 0;color:var(--muted)}
+    @media (max-width: 960px){ .hero{grid-template-columns:1fr} .grid.cols-3{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">
+          <!--div class="logo" aria-hidden="true" </div -->
+
+          <!-- Portfolio headshot/photo just above the green phrase -->
+        <img
+          src="../assets/images/stockphoto_youngman.png"
+          alt="Your Name — Electrical Engineering"
+          class="hero-photo"
+        />
+
+          <h1><!-- Your Name --> Your Name</h1>
+        </div>
+        <div class="links">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+          <a class="btn secondary" href="#resume">Resume</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="section">
+      <div class="container hero">
+        <div>
+
+        <!--h2 class="ee-class">Electrical Engineering — Class of 2026</h2 -->
+    
+          <span class="badge">Electrical Engineering — Class of <!-- Year --> Spring Next Year</span>
+          <h2>Designing reliable hardware and smart embedded systems.</h2>
+          <p class="lead">I'm <strong><!-- YourName --></strong>, an electrical engineering major focused on <em>embedded systems</em>, <em>PCB design</em>, and <em>power electronics</em>. I love building things that ship — from STM32‑powered devices to IoT dashboards and high‑efficiency motor drivers.</p>
+          <div class="resume" style="margin-top:14px">
+            <a class="btn" href="#contact">Hire Me</a>
+            <a class="btn secondary" href="#projects">See Projects</a>
+          </div>
+          <p style="margin-top:10px;color:var(--muted)">Open to: Hardware/Embedded Internships • New‑Grad EE Roles • FPGA/Verification • Power/Controls</p>
+        </div>
+        <div class="hero-card" aria-label="At‑a‑glance">
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+            <div class="card">
+              <div class="mono">Core Focus</div>
+              <div class="chip">Embedded C/C++ (ARM, STM32)</div>
+              <div class="chip">FreeRTOS</div>
+              <div class="chip">Altium/KiCad</div>
+              <div class="chip">Oscilloscope & DMM</div>
+            </div>
+            <div class="card">
+              <div class="mono">Toolchain</div>
+              <div class="chip">Python · NumPy</div>
+              <div class="chip">MATLAB/Simulink</div>
+              <div class="chip">LTspice · PLECS</div>
+              <div class="chip">Git · Linux</div>
+            </div>
+            <div class="card">
+              <div class="mono">Highlights</div>
+              <ul style="margin:.3rem 0 0 .5rem;line-height:1.4;font-size:14px;padding-left:0">
+                <li>Senior design: 48V → 5V synchronous buck @ 95% peak η</li>
+                <li>STM32 wearable with BLE + low‑power sleep &lt; 200µA</li>
+                <li>Two internships: test automation & embedded driver dev</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="mono">Links</div>
+              <p style="margin:.3rem 0 0"><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://github.com/" target="_blank" rel="noopener">GitHub</a> · <a href="#resume">Resume (PDF)</a></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section" aria-labelledby="projects-h">
+      <div class="container">
+        <h2 id="projects-h">Selected Projects</h2>
+        <div class="grid cols-3">
+          <article class="card" aria-label="Motor Driver">
+            <div class="project-media" style="padding:0;overflow:hidden;"><img src="https://images.unsplash.com/photo-1581092160562-40aa08e78837?w=800&h=450&fit=crop" alt="Motor Driver Circuit Board" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>
+            <h3>BLDC Motor Driver (4‑layer PCB)</h3>
+            <p>Designed and assembled a 4‑layer board (Altium) for a 24V BLDC with gate drivers, current sense (INA240), and reverse‑polarity protection. Firmware in C on STM32 with FOC experiments.</p>
+            <div class="chip">Altium</div><div class="chip">STM32</div><div class="chip">FOC</div>
+          </article>
+          <article class="card" aria-label="Wearable">
+            <div class="project-media" style="padding:0;overflow:hidden;"><img src="https://images.unsplash.com/photo-1544117519-31a4b719223d?w=800&h=450&fit=crop" alt="Wearable Sensor Device" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>
+            <h3>BLE Wearable Sensor</h3>
+            <p>End‑to‑end prototype: KiCad PCB, Nordic BLE stack, and Python desktop app. Optimized power profile to extend coin‑cell life beyond 9 months.</p>
+            <div class="chip">nRF52</div><div class="chip">BLE</div><div class="chip">KiCad</div>
+          </article>
+          <article class="card" aria-label="Power">
+            <div class="project-media" style="padding:0;overflow:hidden;"><img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=450&fit=crop" alt="Power Electronics Circuit" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>
+            <h3>48V → 5V Synchronous Buck</h3>
+            <p>Modeled in LTspice; implemented current‑mode control and measured 95% peak efficiency at 1A. Thermal analysis and layout for low EMI.</p>
+            <div class="chip">LTspice</div><div class="chip">DC/DC</div><div class="chip">Current‑mode</div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section" aria-labelledby="skills-h">
+      <div class="container">
+        <h2 id="skills-h">Skills</h2>
+        <div class="card">
+          <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+            <div>
+              <h3>Hardware</h3>
+              <ul>
+                <li>PCB design (Altium, KiCad)</li>
+                <li>Signal integrity & layout</li>
+                <li>Power electronics, DC/DC</li>
+                <li>Test & measurement (scope, SMU)</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Embedded</h3>
+              <ul>
+                <li>C/C++, drivers, peripherals</li>
+                <li>RTOS (FreeRTOS), low‑power</li>
+                <li>BLE/Serial/Modbus</li>
+                <li>Bootloaders & OTA basics</li>
+              </ul>
+            </div>
+            <div>
+              <h3>Software</h3>
+              <ul>
+                <li>Python (NumPy, Pandas)</li>
+                <li>MATLAB/Simulink</li>
+                <li>Git, Linux, CI basics</li>
+                <li>Data Viz & dashboards</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE / TIMELINE -->
+    <section id="experience" class="section" aria-labelledby="exp-h">
+      <div class="container">
+        <h2 id="exp-h">Experience</h2>
+        <div class="card timeline">
+          <div class="t-item">
+            <h3>Embedded Engineering Intern — ACME Robotics</h3>
+            <p class="mono">Summer 2024 · Salt Lake City, UT</p>
+            <ul>
+              <li>Implemented SPI driver and DMA for high‑rate IMU data; reduced CPU usage by 38%.</li>
+              <li>Wrote hardware tests (pytest) for regression coverage of board bring‑up.</li>
+            </ul>
+          </div>
+          <div class="t-item">
+            <h3>Electronics Lab Assistant — University EE Dept.</h3>
+            <p class="mono">2023–2024</p>
+            <ul>
+              <li>Supported students with oscilloscopes, power supplies, and soldering best practices.</li>
+              <li>Maintained parts inventory and updated lab documentation.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESUME CTA -->
+    <section id="resume" class="section" aria-labelledby="resume-h">
+      <div class="container">
+        <h2 id="resume-h">Resume</h2>
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <p>Download a one‑page PDF with coursework, projects, and experience. <span class="mono">GPA, graduation: Spring <!-- year -->.</span></p>
+          <a class="btn" href="#" download>Download PDF</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section" aria-labelledby="contact-h">
+      <div class="container">
+        <h2 id="contact-h">Contact</h2>
+        <div class="card">
+          <form style="display:grid;gap:12px;grid-template-columns:1fr 1fr" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply shortly.');">
+            <label style="grid-column:span 1">Name
+              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-dashed);background:var(--input-bg);color:var(--text)" />
+            </label>
+            <label style="grid-column:span 1">Email
+              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-dashed);background:var(--input-bg);color:var(--text)" />
+            </label>
+            <label style="grid-column:1 / -1">Message
+              <textarea required rows="4" placeholder="Hi — we\'d love to chat about our Embedded New‑Grad role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-dashed);background:var(--input-bg);color:var(--text)"></textarea>
+            </label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn" type="submit">Send</button>
+              <a class="btn secondary" href="/cdn-cgi/l/email-protection#8cf5e3f9fee9e1ede5e0cce9f4ede1fce0e9a2efe3e1">Email Me</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span>© <span id="year"></span> <!-- Your Name --> Your Name. All rights reserved.</span>
+        <span style="color:var(--lime)">Ready for interviews · Available for relocation</span>
+      </div>
+    </div>
+  </footer>
+
+  <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflar"></script>
+</body>
+</html>

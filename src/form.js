@@ -39,6 +39,7 @@
     let mastheadImageResult = null;
     let mastheadImageError = null;
     let autoMastheadImageTriggered = false;
+    let mastheadImageTicker = null;   // interval handle for the generating countdown
 
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
@@ -755,21 +756,28 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const theme = getPage3Colors().theme;
       if (!html || !theme) return html || "";
       const overridePairs = [
-        ["--bp-slot1", theme.slot1],
-        ["--bp-slot2", theme.slot2],
-        ["--bp-slot3", theme.slot3],
-        ["--bp-slot4", theme.slot4],
-        ["--bp-slot5", theme.slot5],
-        ["--bp-slot-1", theme.slot1],
-        ["--bp-slot-2", theme.slot2],
-        ["--bp-slot-3", theme.slot3],
-        ["--bp-slot-4", theme.slot4],
-        ["--bp-slot-5", theme.slot5],
-        ["--bp-primary", theme.primary],
-        ["--bp-secondary", theme.secondary],
-        ["--bp-accent", theme.accent],
-        ["--bp-dark", theme.dark],
-        ["--bp-light", theme.light]
+        // Canonical names (new system)
+        ["--dominant",   theme.slot1],
+        ["--secondary",  theme.slot2],
+        ["--tertiary",   theme.slot3],
+        ["--quaternary", theme.slot4],
+        ["--quinary",    theme.slot5],
+        // Legacy aliases — kept for backward compat with older generated HTML
+        ["--bp-slot1",   theme.slot1],
+        ["--bp-slot2",   theme.slot2],
+        ["--bp-slot3",   theme.slot3],
+        ["--bp-slot4",   theme.slot4],
+        ["--bp-slot5",   theme.slot5],
+        ["--bp-slot-1",  theme.slot1],
+        ["--bp-slot-2",  theme.slot2],
+        ["--bp-slot-3",  theme.slot3],
+        ["--bp-slot-4",  theme.slot4],
+        ["--bp-slot-5",  theme.slot5],
+        ["--bp-primary",    theme.primary],
+        ["--bp-secondary",  theme.secondary],
+        ["--bp-tertiary",   theme.tertiary],
+        ["--bp-accent2",    theme.accent2],
+        ["--bp-accent1",    theme.accent1]
       ];
       const overrides = overridePairs
         .filter(([, v]) => !!v)
@@ -938,7 +946,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (Array.isArray(scheme?.colors)) {
           return scheme.colors.some(color => !!normalizeToHex(color));
         }
-        return ["primary", "secondary", "accent", "dark", "light"].some(slot => !!normalizeToHex(scheme?.[slot]));
+        return ["primary", "secondary", "tertiary", "accent2", "accent1"].some(slot => !!normalizeToHex(scheme?.[slot]));
       });
     }
 
@@ -1172,6 +1180,20 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       progressBar.style.width = `${pct}%`;
     }
 
+    function moveSharedStatusPanel() {
+      const panel = document.getElementById("headerStatusPanel");
+      if (!panel) return;
+      const slotIdByPage = {
+        page1: "statusSlotPage1",
+        page2: "statusSlotPage2",
+        page3: "statusSlotPage3",
+        page4: "statusSlotPage4",
+      };
+      const target = document.getElementById(slotIdByPage[activePageId()] || "");
+      if (target && panel.parentElement !== target) target.appendChild(panel);
+      panel.classList.toggle("hidden", !target);
+    }
+
     function setStep(step){
       currentStep = Math.max(0, Math.min(PAGES.length - 1, step));
       if (currentStep >= 5) pillNavUnlocked = true;
@@ -1189,10 +1211,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         document.getElementById("stagesDebugSection")?.classList.toggle("hidden", currentStep < 2);
       }
       renderStepUI();
+      moveSharedStatusPanel();
       restorePersistentHeaderStatuses();
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (currentStep === 3) updateTemplateUI();
       if (currentStep === 4) renderSuggestedPalettes();
+      if (currentStep === 4) setOpenEditorReady(true);
     }
 
     // ----------------------------
@@ -1401,6 +1425,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
+    let normalizeTemplatePending = null; // in-flight color normalization promise (option 2 file upload)
+    let normalizedTemplateResult = null; // { normalizedHtml, colorSlots } once normalization completes
+    let _normalizeRunId = 0;             // epoch counter to abort stale normalization poll loops
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
       const el = document.getElementById("templateExtractStatus");
@@ -1435,7 +1462,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
       if (Array.isArray(colors) && colors.length >= 1) {
-        const slots = ["primary", "secondary", "accent", "dark", "light"];
+        const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
         const mapped = {};
         slots.forEach((role, i) => {
           const hex = normalizeToHex(colors[i]);
@@ -1461,6 +1488,53 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function templateExtractionRequired() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       return !!source && source !== "none";
+    }
+
+    // Converts parseColorRoles() output [{index, label, hex}] → { slot1, slot2, ... }
+    function colorRolesToSlots(colorRoles) {
+      const slots = {};
+      (colorRoles || []).forEach(r => {
+        if (r.index >= 1 && r.index <= 5) slots[`slot${r.index}`] = r.hex;
+      });
+      return slots;
+    }
+
+    // Submits the sample HTML to the backend for color normalization (option 2, file upload).
+    // Polls until done, then stores result in normalizedTemplateResult.
+    async function doNormalizeTemplate(sampleHtml) {
+      const myRunId = ++_normalizeRunId;
+      normalizedTemplateResult = null;
+      const jobId = "normalize_" + crypto.randomUUID();
+      try {
+        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "normalizeTemplate",
+            jobId,
+            sampleHtml,
+            provider: getAnalysisProvider(),
+            userId: currentUserId()
+          })
+        });
+        if (!res.ok && res.status !== 202) return null;
+      } catch { return null; }
+
+      const startTime = Date.now();
+      while (Date.now() - startTime < 180000) {
+        await new Promise(r => setTimeout(r, 3000));
+        if (myRunId !== _normalizeRunId) return null; // superseded by newer call
+        try {
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+          const data = pollRes.ok ? JSON.parse(await pollRes.text()) : null;
+          if (data?.status === "done") {
+            normalizedTemplateResult = { normalizedHtml: data.normalizedHtml, colorSlots: data.colorSlots || {} };
+            return normalizedTemplateResult;
+          }
+          if (data?.status === "error") return null;
+        } catch {}
+      }
+      return null;
     }
 
     async function waitForTemplateExtraction(statusId) {
@@ -1501,21 +1575,41 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
         if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
 
-        // Braid mode: fetch the original raw HTML directly — no pre-compiled template needed
+        // Braid mode: prefer _normalized.html (pre-processed offline) over raw HTML.
+        // If normalized exists, color slots are already extracted — no in-flight AI call needed.
         if (isBraidMode()) {
-          const rawKey = srcPath;
-          if (rawKey === lastExtractedTemplate) return;
+          const normalizedKey = srcPath.replace(/\.html$/, "_normalized.html");
+          const cacheKey = normalizedKey; // use normalized path as dedup key
+          if (cacheKey === lastExtractedTemplate) return;
+          let html = null;
+          let usedKey = srcPath;
           try {
-            const res = await fetch(srcPath);
-            if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
-            const html = await res.text();
-            lastExtractedTemplate = rawKey;
-            extractedTemplateCache = { templateHtml: html, embeddedJson: null, templateMode: "braid" };
-            setTemplateExtractStatus("✓ Sample website loaded", "rgba(118,176,34,.9)");
-            renderSuggestedPalettes();
-          } catch (e) {
-            setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+            const normRes = await fetch(normalizedKey);
+            if (normRes.ok) {
+              html = await normRes.text();
+              usedKey = normalizedKey;
+              // Parse the pre-extracted color slots from the normalized HTML
+              const colorRoles = parseColorRoles(html);
+              normalizedTemplateResult = { normalizedHtml: html, colorSlots: colorRolesToSlots(colorRoles) };
+            }
+          } catch {}
+          if (!html) {
+            try {
+              const res = await fetch(srcPath);
+              if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
+              html = await res.text();
+            } catch (e) {
+              setTemplateExtractStatus(`Could not load template: ${e.message}`, "rgba(251,171,156,.8)");
+              return;
+            }
           }
+          lastExtractedTemplate = cacheKey;
+          extractedTemplateCache = { templateHtml: html, embeddedJson: null, templateMode: "braid" };
+          setTemplateExtractStatus(
+            usedKey === normalizedKey ? "✓ Sample website loaded (pre-normalized)" : "✓ Sample website loaded",
+            "rgba(118,176,34,.9)"
+          );
+          renderSuggestedPalettes();
           return;
         }
 
@@ -1571,13 +1665,23 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             requestBody.templateImageBase64 = b64;
             requestBody.templateImageMime   = file.type;
           } else {
-            // HTML file — for braid mode, skip AI extraction and cache raw HTML directly
+            // HTML file — for braid mode, skip AI extraction and cache raw HTML directly,
+            // then kick off color normalization in background.
             if (isBraidMode()) {
               const rawHtml = atob(b64);
               lastExtractedTemplate = fileKey;
+              normalizedTemplateResult = null;
               extractedTemplateCache = { templateHtml: rawHtml, embeddedJson: null, templateMode: "braid" };
-              setTemplateExtractStatus("✓ Sample website loaded", "rgba(118,176,34,.9)");
+              setTemplateExtractStatus("✓ Sample website loaded — normalizing colors…", "rgba(118,176,34,.9)");
               renderSuggestedPalettes();
+              normalizeTemplatePending = doNormalizeTemplate(rawHtml).finally(() => {
+                normalizeTemplatePending = null;
+                if (normalizedTemplateResult) {
+                  // Swap template cache to use normalized HTML
+                  extractedTemplateCache = { ...extractedTemplateCache, templateHtml: normalizedTemplateResult.normalizedHtml };
+                  setTemplateExtractStatus("✓ Sample website loaded (colors normalized)", "rgba(118,176,34,.9)");
+                }
+              });
               return;
             }
             requestBody.templateHtmlBase64 = b64;
@@ -1734,19 +1838,19 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     function mapRoleColorsToUiSlots(roleColors) {
       if (!Array.isArray(roleColors) || !roleColors.length) return null;
-      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       return Object.fromEntries(slots.map((slot, i) => [slot, normalizeHex(roleColors[i]?.hex) || null]));
     }
 
     function mapAiPaletteToUiSlots(colorsArray) {
       if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
-      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       return Object.fromEntries(slots.map((slot, i) => [slot, normalizeToHex(colorsArray[i]) || null]));
     }
 
     function buildTemplatePalette(cache) {
       if (!cache) return null;
-      const slotNames = ["primary", "secondary", "accent", "dark", "light"];
+      const slotNames = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
       const rootVars = parseRootHexVars(cache.templateHtml);
       const embedded = cache.embeddedJson?.default_color_scheme || {};
@@ -1762,9 +1866,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const palette = {
         primary: embedded.primary || null,
         secondary: embedded.secondary || null,
-        accent: embedded.accent || null,
-        dark: embedded.dark || null,
-        light: embedded.light || null
+        tertiary: embedded.tertiary || null,
+        accent2: embedded.accent2 || null,
+        accent1: embedded.accent1 || null
       };
 
       roleColors.forEach((r, i) => {
@@ -1781,7 +1885,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       };
 
       Object.entries(embedded).forEach(([slot, hex]) => {
-        const bonus = ({ primary: 90, secondary: 80, accent: 85, dark: 55, light: 50 })[slot] || 0;
+        const bonus = ({ primary: 90, secondary: 80, tertiary: 85, accent2: 55, accent1: 50 })[slot] || 0;
         pushCandidate(hex, bonus, slot);
       });
       roleColors.forEach((r, i) => pushCandidate(r.hex, 70 - i * 3, r.label));
@@ -1803,7 +1907,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         .filter(c => c.neutral)
         .sort((a, b) => b.score - a.score || a.luminance - b.luminance);
 
-      ["primary", "secondary", "accent"].forEach(slot => {
+      ["primary", "secondary", "tertiary"].forEach(slot => {
         const current = palette[slot];
         const currentNorm = normalizeHex(current);
         const duplicate = currentNorm && Object.entries(palette).some(([k, v]) => k !== slot && normalizeHex(v) === currentNorm);
@@ -1813,22 +1917,22 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
       });
 
-      const darkCandidate = !palette.dark || Object.entries(palette).some(([k, v]) => k !== "dark" && normalizeHex(v) === normalizeHex(palette.dark))
+      const darkCandidate = !palette.accent2 || Object.entries(palette).some(([k, v]) => k !== "accent2" && normalizeHex(v) === normalizeHex(palette.accent2))
         ? neutrals.slice().sort((a, b) => a.luminance - b.luminance)[0] || pickUnused(candidates)
         : null;
-      if (darkCandidate) palette.dark = darkCandidate.hex;
+      if (darkCandidate) palette.accent2 = darkCandidate.hex;
 
-      const lightCandidate = !palette.light || Object.entries(palette).some(([k, v]) => k !== "light" && normalizeHex(v) === normalizeHex(palette.light))
+      const lightCandidate = !palette.accent1 || Object.entries(palette).some(([k, v]) => k !== "accent1" && normalizeHex(v) === normalizeHex(palette.accent1))
         ? neutrals.slice().sort((a, b) => b.luminance - a.luminance)[0] || pickUnused(candidates)
         : null;
-      if (lightCandidate) palette.light = lightCandidate.hex;
+      if (lightCandidate) palette.accent1 = lightCandidate.hex;
 
       slotNames.forEach(slot => {
         const current = palette[slot];
         const currentNorm = normalizeHex(current);
         const duplicate = currentNorm && slotNames.some(other => other !== slot && normalizeHex(palette[other]) === currentNorm);
         if (!current || duplicate) {
-          const next = pickUnused(slot === "dark" || slot === "light" ? neutrals : chromatic) || pickUnused(candidates);
+          const next = pickUnused(slot === "accent2" || slot === "accent1" ? neutrals : chromatic) || pickUnused(candidates);
           if (next) palette[slot] = next.hex;
         }
       });
@@ -1842,10 +1946,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
       set("primary",   colors.primary);
       set("secondary", colors.secondary);
-      set("accent",    colors.accent);
-      set("dark",      colors.dark);
-      set("light",     colors.light);
-      const pickerIds = ["primary", "secondary", "accent", "dark", "light"];
+      set("tertiary",  colors.tertiary);
+      set("accent2",   colors.accent2);
+      set("accent1",   colors.accent1);
+      const pickerIds = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       pickerIds.forEach((slot, i) => {
         const el = document.getElementById(slot + "-label");
         if (el) el.textContent = String(i + 1);
@@ -1941,7 +2045,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function applyColorDefaults(resumeJson) {
       // Template colors take priority — skip if already extracted from a template
       if (sampleColors) return;
-      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const firstScheme = getCompatibleColorSchemes(resumeJson)[0];
       let colors = null;
       if (Array.isArray(firstScheme?.colors) && firstScheme.colors.length) {
@@ -2159,9 +2263,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function getPage3Colors(){
       const slot1 = document.getElementById("primary").value.trim();
       const slot2 = document.getElementById("secondary").value.trim();
-      const slot3 = document.getElementById("accent").value.trim();
-      const slot4 = document.getElementById("dark").value.trim();
-      const slot5 = document.getElementById("light").value.trim();
+      const slot3 = document.getElementById("tertiary").value.trim();
+      const slot4 = document.getElementById("accent2").value.trim();
+      const slot5 = document.getElementById("accent1").value.trim();
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -2173,9 +2277,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           slot5,
           primary: slot1,
           secondary: slot2,
-          accent: slot3,
-          dark: slot4,
-          light: slot5
+          tertiary: slot3,
+          accent2: slot4,
+          accent1: slot5
         }
       };
     }
@@ -2458,7 +2562,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // If the pipeline was already triggered and job just re-completed, restart it
       if (!braidInProgress && !bridgeInProgress && !generationInProgress) {
         if (page3Submitted && isBraidMode()) doBraidWebsite();
-        else if (page4Submitted) page4Action();
+        else if (page4Submitted) page4OpenEditorAction();
       }
     }
 
@@ -2504,6 +2608,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         while (jobAdInProgress) await new Promise(r => setTimeout(r, 500));
       }
 
+      // Wait for template color normalization if in flight (option 2 — file upload)
+      if (normalizeTemplatePending) {
+        setHeaderStatus("braidStatus", "Analyzing template colors…", "rgba(141,224,255,.6)");
+        await normalizeTemplatePending;
+      }
+
       const sampleHtml = extractedTemplateCache?.templateHtml || null;
       if (!sampleHtml) {
         setHeaderStatus("braidStatus", "⚠ No sample website loaded — please select a template.", "rgba(251,171,156,.9)");
@@ -2512,7 +2622,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return;
       }
 
-      const braidCountdown = startCountdown("braidStatus", "Braiding portfolio…", 720);
+      const braidCountdown = startCountdown("braidStatus", "Generating portfolio…", 720);
       const jobId = crypto.randomUUID();
 
       const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
@@ -2534,6 +2644,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 	            resolvedStrategy,
 	            sampleHtml,
 	            colorSpec,
+            templateColorSlots: normalizedTemplateResult?.colorSlots || null,
             headshotName: headshotInput?.files?.[0]?.name || "",
             provider:     getAnalysisProvider(),
             userId:       currentUserId()
@@ -2559,16 +2670,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             generationInProgress = false;
             if (!currentUserId()) incrementAnonCredits();
             generationResult.site_html = page4Submitted ? composeBraidPreviewHtml(generationResult) : generationResult.base_site_html;
-            setHeaderStatus("braidStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
+            setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
-            setOpenEditorReady(true);
             if (isDebugMode()) mergeTokenReport(data?.token_report);
             pushPreviewHtmlUpdate(generationResult.site_html || "");
-            const readyMsg = document.getElementById("generatorReadyMsg");
-            if (readyMsg) {
-              readyMsg.textContent = mastheadImageInProgress ? "Portfolio ready. Masthead image generating…" : "Portfolio ready.";
-              readyMsg.style.color = "rgba(118,176,34,.9)";
-            }
+            setHeaderStatus("braidStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
             greyRendererButtons(false);
             return;
           }
@@ -2609,7 +2715,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const colors = getPage3Colors().theme;
       const page1 = getPage1();
 
-      setHeaderStatus("colorsChosenStatus", "Generating masthead image…", "rgba(141,224,255,.75)");
+      clearInterval(mastheadImageTicker);
+      mastheadImageTicker = startCountdown("colorsChosenStatus", "Generating masthead image…", 90);
 
       try {
         const res = await fetch("/.netlify/functions/buildWebsite-background", {
@@ -2636,6 +2743,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 2500));
           if (myRunId !== _mastheadImageRunId) {
+            clearInterval(mastheadImageTicker);
             mastheadImageInProgress = false;
             return;
           }
@@ -2643,6 +2751,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           const parsed = await readJsonResponseSafely(pollRes);
           const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
           if (data.status === "done") {
+            clearInterval(mastheadImageTicker);
             mastheadImageInProgress = false;
             mastheadImageResult = data;
             if (!currentUserId() && !data.skipped) incrementAnonCredits();
@@ -2655,12 +2764,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
               data.skipped ? "✓ Colors chosen" : "✓ Colors chosen • Masthead image ready",
               "rgba(118,176,34,.9)"
             );
-            const readyMsg = document.getElementById("generatorReadyMsg");
-            if (readyMsg && generationResult?.site_html) {
-              readyMsg.textContent = "Portfolio ready.";
-              readyMsg.style.color = "rgba(118,176,34,.9)";
+            if (isDebugMode()) {
+              mergeTokenReport(data?.token_report);
+              wireMastheadImageDebug(data.image_data_uri || null);
             }
-            if (isDebugMode()) mergeTokenReport(data?.token_report);
             return;
           }
           if (!pollRes.ok || data.status === "error") {
@@ -2670,6 +2777,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
         throw new Error("Image generation timed out after 12 minutes.");
       } catch (err) {
+        clearInterval(mastheadImageTicker);
         mastheadImageInProgress = false;
         mastheadImageError = err?.message || String(err);
         setHeaderStatus("colorsChosenStatus", `✓ Colors chosen • ${mastheadImageError}`, "rgba(251,171,156,.9)");
@@ -2759,6 +2867,30 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!generationResult && !generationInProgress) {
         doGenerateWebsite();
       }
+    }
+
+    function wireMastheadImageDebug(dataUri) {
+      const dl = document.getElementById("dlMastheadImage");
+      const vw = document.getElementById("vwMastheadImage");
+      const hasData = !!dataUri;
+      [dl, vw].forEach(btn => {
+        if (!btn) return;
+        btn.disabled = !hasData;
+        btn.style.opacity = hasData ? "" : "0.35";
+        btn.style.cursor  = hasData ? "" : "not-allowed";
+      });
+      if (!hasData) {
+        if (dl) dl.onclick = null;
+        if (vw) vw.onclick = null;
+        return;
+      }
+      if (dl) dl.onclick = () => {
+        const a = document.createElement("a");
+        a.href = dataUri;
+        a.download = "masthead-image.png";
+        a.click();
+      };
+      if (vw) vw.onclick = () => window.open(dataUri, "_blank");
     }
 
     function wirePayloadDebug() {
@@ -2884,8 +3016,6 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // mergeTokenReport overwrites by stage key so re-renders stay clean.
       setApplyBtnState(false);
       setOpenEditorReady(false);
-      const _readyMsg = document.getElementById("generatorReadyMsg");
-      if (_readyMsg) _readyMsg.textContent = "";
       document.getElementById("upgradePrompt")?.classList.add("hidden");
 
       const resumeFile = resumeUpload.files[0];
@@ -3122,14 +3252,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // ── Debug panel — re-wire payload with visuals included now that generation ran ──
       if (isDebugMode()) wirePayloadDebug();
 
-      const readyMsg = document.getElementById("generatorReadyMsg");
       if (data.truncated) {
-        const msg = "Output was cut short — some sections may be missing; try regenerating.";
-        setHeaderStatus("generatingWebsiteStatus", "Portfolio ready. " + msg, "rgba(251,171,156,.8)");
-        if (readyMsg) { readyMsg.textContent = msg; readyMsg.style.color = "rgba(251,171,156,.8)"; }
+        setHeaderStatus("generatingWebsiteStatus", "✓ Portfolio ready — output cut short, try regenerating", "rgba(251,171,156,.8)");
       } else {
-        setHeaderStatus("generatingWebsiteStatus", "Portfolio ready.", "rgba(118,176,34,.9)");
-        if (readyMsg) { readyMsg.textContent = "Portfolio ready."; readyMsg.style.color = "rgba(118,176,34,.9)"; }
+        setHeaderStatus("generatingWebsiteStatus", "✓ Portfolio ready", "rgba(118,176,34,.9)");
       }
 
       // If the popup was blocked, editorWin is null — open now that localStorage is set.
@@ -3245,31 +3371,32 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Re-run extraction if a template source is already selected (restores the status message)
       extractTemplateInBackground();
       // Auto-restart: braid triggers from page 3, mustache/design-options from page 4
-      if (page4Submitted) page4Action();
+      if (page4Submitted) page4OpenEditorAction();
     }
 
     function invalidateFromPage4() {
       if (activePageId() !== "page4") return;
-      page4Submitted = false;
-      clearColorRelatedStatusMessages();
-      setApplyBtnState(false);
-      setOpenEditorReady(false);
 
       if (isBraidMode()) {
+        // Live-apply new colors to already-generated result without re-triggering generation
+        if (generationResult?.base_site_html) {
+          generationResult.site_html = composeBraidPreviewHtml(generationResult);
+          pushPreviewHtmlUpdate(generationResult.site_html);
+        }
         return;
       }
 
       // Mustache / design-options: colors changed — generation is stale
+      page4Submitted = false;
+      clearColorRelatedStatusMessages();
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
       bridgeResult     = null;
       generationResult = null;
       ++_bridgeRunId; ++_generationRunId;
     }
 
     function clearColorRelatedStatusMessages() {
-      const submitMsg = document.getElementById("colorsSubmitMsg");
-      if (submitMsg) submitMsg.textContent = "";
-      const readyMsg = document.getElementById("generatorReadyMsg");
-      if (readyMsg) readyMsg.textContent = "";
       setHeaderStatus("colorsChosenStatus", "");
       setHeaderStatus("braidStatus", "");
       setHeaderStatus("bridgeStatus", "");
@@ -3300,7 +3427,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       ?.addEventListener("change", invalidateFromPage3);
 
     // Page 4 inputs — color pickers
-    ["primary", "secondary", "accent", "dark", "light"].forEach(id => {
+    ["primary", "secondary", "tertiary", "accent2", "accent1"].forEach(id => {
       const el = document.getElementById(id);
       el?.addEventListener("input", invalidateFromPage4);
       el?.addEventListener("change", invalidateFromPage4);
@@ -3408,7 +3535,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
 
     // Page 3 (Colors)
-    const PALETTE_SLOTS = ["primary", "secondary", "accent", "dark", "light"];
+    const PALETTE_SLOTS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
 
     function renderSuggestedPalettes(analysisData) {
       const msg = document.getElementById("suggestedPalettesMsg");
@@ -3417,7 +3544,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!container || !rows) return;
       const paletteKey = palette => {
         if (!palette?.colors) return "";
-        const slots = ["primary", "secondary", "accent", "dark", "light"];
+        const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
         return slots.map(slot => normalizeHex(palette.colors[slot]) || "").join("|");
       };
 
@@ -3435,7 +3562,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           const dark      = cssVar("bg");
           const light     = cssVar("light") || cssVar("panel");
           if (primary || secondary) {
-            tplPalette = { label: "Template palette", colors: { primary, secondary, dark, light, accent: null } };
+            tplPalette = { label: "Template palette", colors: { primary, secondary, accent2: dark, accent1: light, tertiary: null } };
           }
         }
       }
@@ -3443,16 +3570,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Slots 1-3: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
       const aiPalettes = getCompatibleColorSchemes(resolvedData);
-      const slots = ["primary", "secondary", "accent", "dark", "light"];
+      const slots = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const aiRows = aiPalettes
-        .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.accent)
+        .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.primary || p.secondary || p.tertiary)
         .slice(0, 3)
         .map((p, i) => {
           // New format: ordered array matching slot positions 1-5
-          // Legacy format: named slots (primary/secondary/accent/dark/light)
+          // Legacy format: named slots (primary/secondary/tertiary/accent2/accent1)
           const colors = Array.isArray(p.colors)
             ? mapAiPaletteToUiSlots(p.colors)
-            : { primary: p.primary, secondary: p.secondary, accent: p.accent, dark: p.dark, light: p.light };
+            : { primary: p.primary, secondary: p.secondary, tertiary: p.tertiary, accent2: p.accent2, accent1: p.accent1 };
           return { label: p.how_used || `AI palette ${i + 1}`, colors };
         });
 
@@ -3596,45 +3723,54 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       result.site_html = composeBraidPreviewHtml(result);
     }
 
-    function page4Action() {
-      setHeaderStatus("colorsChosenStatus", "✓ Colors chosen", "rgba(118,176,34,.9)");
-      const submitMsg = document.getElementById("colorsSubmitMsg");
-      if (submitMsg) submitMsg.textContent = "✓ Color scheme submitted";
+    async function page4OpenEditorAction() {
+      // Grey the button immediately — re-enabled when the editor opens.
+      const openBtn = document.getElementById("next2_bottom");
+      if (openBtn) { openBtn.disabled = true; openBtn.style.opacity = ".4"; openBtn.style.cursor = "not-allowed"; }
+
+      // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
-      if (isDirectDesignMode()) {
+      setHeaderStatus("colorsChosenStatus", "Colors submitted. Waiting for website and masthead image to finish…", "rgba(141,224,255,.75)");
+
+      if (isDirectDesignMode() || isMustacheMode()) {
         page4Submitted = true;
-        setHeaderStatus("braidStatus", "Braid skipped — design-options mode", "rgba(234,240,255,.35)");
-        doGenerateWebsite();
-      } else if (isMustacheMode()) {
-        page4Submitted = true;
-        setHeaderStatus("braidStatus", "Braid skipped — mustache mode", "rgba(234,240,255,.35)");
-        doGenerateWebsite();
-      } else {
-        // Braid mode: HTML and masthead image are separate async results.
-        page4Submitted = true;
-        if (!autoMastheadImageTriggered) {
-          autoMastheadImageTriggered = true;
-          startMastheadImageGeneration();
-        }
-        if (generationResult) {
-          applyBraidColorOverrides(generationResult);
-          pushPreviewHtmlUpdate(generationResult.site_html || "");
-          setOpenEditorReady(true);
-          const readyMsg = document.getElementById("generatorReadyMsg");
-          if (readyMsg) {
-            readyMsg.textContent = mastheadImageInProgress ? "Portfolio ready. Masthead image generating…" : "Portfolio ready.";
-            readyMsg.style.color = "rgba(118,176,34,.9)";
-          }
-        }
+        setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+        await doGenerateWebsite();
+        doPreview();
+        setOpenEditorReady(true);
+        return;
       }
+
+      // Braid mode.
+      page4Submitted = true;
+      if (generationResult) applyBraidColorOverrides(generationResult);
+
+      // Start masthead image generation on the first click only.
+      if (!autoMastheadImageTriggered) {
+        autoMastheadImageTriggered = true;
+        startMastheadImageGeneration();
+      }
+
+      // Wait for braid HTML (may still be in progress if user clicked quickly).
+      while (braidInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      // Wait for masthead image.
+      while (mastheadImageInProgress) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      doPreview();
+      setOpenEditorReady(true);
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
-    document.getElementById("next4")?.addEventListener("click", page4Action);
-    document.getElementById("dbgSubmit4")?.addEventListener("click", page4Action);
+    document.getElementById("next4")?.addEventListener("click", page4OpenEditorAction);
+    document.getElementById("dbgSubmit4")?.addEventListener("click", page4OpenEditorAction);
 
     // Open Editor / visuals (now on page 4)
-    document.getElementById("next2_bottom")?.addEventListener("click", doPreview);
+    document.getElementById("next2_bottom")?.addEventListener("click", page4OpenEditorAction);
     document.getElementById("dbgSubmit5")?.addEventListener("click", doPreview);
 
     // Debug recompute buttons
@@ -3647,10 +3783,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       greyRendererButtons(true);
       setApplyBtnState(false);
       if (isDirectDesignMode()) {
-        setHeaderStatus("braidStatus", "Braid skipped — design-options mode", "rgba(234,240,255,.35)");
+        setHeaderStatus("braidStatus", "Portfolio generated", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else if (isMustacheMode()) {
-        setHeaderStatus("braidStatus", "Braid skipped — mustache mode", "rgba(234,240,255,.35)");
+        setHeaderStatus("braidStatus", "Portfolio generated", "rgba(234,240,255,.35)");
         doGenerateWebsite();
       } else {
         page3Submitted = true; page4Submitted = true;
@@ -3665,7 +3801,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       doGenerateWebsite();
     });
     // Track which color input last had focus
-    const colorInputIds = ["primary", "secondary", "accent", "dark", "light"];
+    const colorInputIds = ["primary", "secondary", "tertiary", "accent2", "accent1"];
     let focusedColorId = "primary";
     colorInputIds.forEach(id => {
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
@@ -3698,9 +3834,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Default theme values (nice starting point)
       document.getElementById("primary").value = "#4E70F1";
       document.getElementById("secondary").value = "#FBAB9C";
-      document.getElementById("accent").value = "#8DE0FF";
-      document.getElementById("dark").value = "#0b1220";
-      document.getElementById("light").value = "#eaf0ff";
+      document.getElementById("tertiary").value = "#8DE0FF";
+      document.getElementById("accent2").value = "#0b1220";
+      document.getElementById("accent1").value = "#eaf0ff";
     }
 
     updateDebugBanner();
@@ -3720,7 +3856,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         set("themeNumber", msg.number ?? "");
         set("primary",   t.primary);
         set("secondary", t.secondary);
-        set("accent",    t.accent);
-        set("dark",      t.dark);
-        set("light",     t.light);
+        set("tertiary",  t.tertiary);
+        set("accent2",   t.accent2);
+        set("accent1",   t.accent1);
       });

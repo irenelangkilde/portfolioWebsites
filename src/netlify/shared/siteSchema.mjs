@@ -23,11 +23,11 @@ export const SITE_JSON_SCHEMA = {
             properties: {
               primary: { type: "string" },
               secondary: { type: "string" },
-              accent: { type: "string" },
-              dark: { type: "string" },
-              light: { type: "string" }
+              tertiary: { type: "string" },
+              accent2: { type: "string" },
+              accent1: { type: "string" }
             },
-            required: ["primary", "secondary", "accent", "dark", "light"]
+            required: ["primary", "secondary", "tertiary", "accent2", "accent1"]
           }
         },
         required: ["name", "headline", "subtitle", "email", "phone", "linkedin", "major", "specialization", "theme"]

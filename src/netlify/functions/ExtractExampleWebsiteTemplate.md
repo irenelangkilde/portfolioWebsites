@@ -26,9 +26,9 @@ For each of the substantial visual elements (such as images and animations) with
   "default_color_scheme": {
     "primary": "",
     "secondary": "",
-    "accent": "",
-    "dark": "",
-    "light": ""
+    "tertiary": "",
+    "accent1": "",
+    "accent2": ""
   },
   design_factors": {
     "composition_option": "central",

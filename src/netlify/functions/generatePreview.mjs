@@ -5,7 +5,7 @@ import { resolve } from "path";
 /**
  * Netlify Function: generatePreview
  * Input:  { page1: { name, email, phone, major, specialization, linkedin, github, model_template },
- *           page2: { theme: { primary, secondary, accent, dark, light } },
+ *           page2: { theme: { primary, secondary, tertiary, accent2, accent1 } },
  *           resumeText?: string }
  * Output: { site_html: "<!doctype html>..." }
  *
@@ -73,9 +73,9 @@ export async function handler(event) {
     const theme = {
       primary:   page2?.theme?.primary   || "#4E70F1",
       secondary: page2?.theme?.secondary || "#FBAB9C",
-      accent:    page2?.theme?.accent    || "#8DE0FF",
-      dark:      page2?.theme?.dark      || "#0b1220",
-      light:     page2?.theme?.light     || "#eaf0ff"
+      tertiary:  page2?.theme?.tertiary  || "#8DE0FF",
+      accent2:   page2?.theme?.accent2   || "#0b1220",
+      accent1:   page2?.theme?.accent1   || "#eaf0ff"
     };
 
     const contactInfo = {

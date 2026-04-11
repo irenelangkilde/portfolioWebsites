@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Student Name | Anthropology Portfolio</title>
+  <meta name="description" content="Resume and portfolio website for a college student majoring in Anthropology." />
+
+  <style>
+    :root {
+      /* Five main theme colors */
+      --dominant:   #1f1a16;   /* 1. Dominant    — deep dark brown, primary text/masthead base */
+      --secondary:  #b8744f;   /* 2. Secondary   — terracotta accent, CTA/links/highlights */
+      --tertiary:   #fbf7f3;   /* 3. Tertiary    — warm paper background, page canvas */
+      --quaternary: #5c514a;   /* 4. Quaternary  — muted warm brown, supporting/meta text */
+      --quinary:    #e2beab;   /* 5. Quinary     — warm beige, soft accent fills/tags */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+
+      /* Derived tokens */
+      --ink:          var(--dominant);
+      --muted:        var(--quaternary);
+      --paper:        var(--tertiary);
+      --accent:       var(--secondary);
+      --accent2:      var(--quinary);
+      --accent3:      color-mix(in srgb, var(--quinary) 55%, var(--white));
+      --card:         color-mix(in srgb, var(--white) 80%, transparent);
+      --glass:        color-mix(in srgb, var(--white) 66%, transparent);
+      --stroke:       color-mix(in srgb, var(--black) 8%, transparent);
+      --btn:          var(--dominant);
+      --btnText:      var(--white);
+      --card-surface: color-mix(in srgb, var(--white) 78%, transparent);
+      --tag-bg:       color-mix(in srgb, var(--secondary) 12%, transparent);
+      --tag-border:   color-mix(in srgb, var(--secondary) 18%, transparent);
+      --tag-text:     color-mix(in srgb, var(--dominant) 60%, var(--secondary));
+      --footer-text:  color-mix(in srgb, var(--quaternary) 80%, var(--tertiary));
+      --body-text-deep: color-mix(in srgb, var(--dominant) 75%, var(--quinary));
+      --paper-overlay: color-mix(in srgb, var(--tertiary) 72%, transparent);
+      --masthead-dark1: color-mix(in srgb, var(--dominant) 62%, transparent);
+      --masthead-dark2: color-mix(in srgb, var(--dominant) 45%, transparent);
+      --brandmark-top: color-mix(in srgb, var(--accent3) 90%, transparent);
+      --brandmark-btm: color-mix(in srgb, var(--secondary) 70%, transparent);
+      --pill-bg:       color-mix(in srgb, var(--accent3) 18%, transparent);
+      --pill-border:   color-mix(in srgb, var(--accent3) 22%, transparent);
+      --hero-card-bg:  color-mix(in srgb, var(--white) 12%, transparent);
+      --hero-card-bdr: color-mix(in srgb, var(--white) 18%, transparent);
+      --nav-bg:        color-mix(in srgb, var(--white) 10%, transparent);
+      --nav-border:    color-mix(in srgb, var(--white) 18%, transparent);
+      --nav-hover-bg:  color-mix(in srgb, var(--white) 16%, transparent);
+      --btn-bg:        color-mix(in srgb, var(--white) 14%, transparent);
+      --btn-border:    color-mix(in srgb, var(--white) 22%, transparent);
+      --btn-hover-bg:  color-mix(in srgb, var(--white) 20%, transparent);
+      --btn-primary-bg:  color-mix(in srgb, var(--accent3) 22%, transparent);
+      --btn-primary-bdr: color-mix(in srgb, var(--accent3) 30%, transparent);
+      --writing-bg:    color-mix(in srgb, var(--white) 72%, transparent);
+      --item-bg:       color-mix(in srgb, var(--white) 70%, transparent);
+
+      --shadow:     0 18px 55px rgba(0,0,0,.12);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,.10);
+      --radius: 22px;
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+        margin:0;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+        color:var(--ink);
+        background:
+            linear-gradient(
+            var(--paper-overlay),
+            var(--paper-overlay)
+            ),
+            url("../assets/images/anthropologyGrad_hero.png") center / 180% no-repeat fixed;
+        overflow-x:hidden;
+        }
+
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:0 22px 80px;}
+
+    /* ===== Masthead (Header + Hero) with your image ===== */
+    .masthead{
+      margin:0 auto;
+      background:
+        linear-gradient(0deg, var(--masthead-dark1), var(--masthead-dark2)),
+        url("../assets/images/anthropologyGrad_hero.png") center/cover no-repeat;
+      color:var(--white);
+    }
+
+    /* Top navigation inside masthead */
+    .topbar{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:18px 22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      min-width: 240px;
+    }
+    .brandMark{
+      width:34px;height:34px;border-radius:12px;
+      background: linear-gradient(135deg, var(--brandmark-top), var(--brandmark-btm));
+      border:1px solid color-mix(in srgb, var(--white) 25%, transparent);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
+    }
+    .brandText{display:flex; flex-direction:column; line-height:1.1}
+    .brandText strong{font-size:16px; letter-spacing:.02em}
+    .brandText span{font-size:12.5px; opacity:.9}
+
+    .navLinks{
+      display:flex; gap:18px; flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .navLinks a{
+      text-decoration:none;
+      font-weight:600;
+      font-size:13.5px;
+      letter-spacing:.02em;
+      padding:10px 12px;
+      border-radius:999px;
+      background: var(--nav-bg);
+      border:1px solid var(--nav-border);
+      backdrop-filter: blur(8px);
+      transition: transform .15s ease, background .15s ease;
+    }
+    .navLinks a:hover{transform: translateY(-1px); background: var(--nav-hover-bg);}
+
+    /* Hero block */
+    .hero{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:74px 22px 74px;
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:26px;
+      align-items:end;
+    }
+    @media (max-width: 920px){
+      .hero{grid-template-columns:1fr; padding:54px 22px 62px;}
+      .brand{min-width:auto}
+    }
+
+    .hero h1{
+      margin:0;
+      font-size: clamp(30px, 4vw, 52px);
+      line-height:1.12;
+      letter-spacing:-0.02em;
+      font-weight:800;
+    }
+    .hero p{
+      margin:14px 0 0;
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.55;
+      opacity:.95;
+      max-width: 60ch;
+    }
+
+    .heroCard{
+      background: var(--hero-card-bg);
+      border:1px solid var(--hero-card-bdr);
+      border-radius: var(--radius);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+      backdrop-filter: blur(10px);
+      padding:18px;
+    }
+    .heroCard .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-bottom:10px;
+    }
+    .heroActions {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        }
+
+        .heroAction {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 14px;
+        align-items: center;
+        }
+
+        .heroAction p {
+        margin: 0;
+        font-size: 14.5px;
+        line-height: 1.45;
+        opacity: 0.95;
+        }
+
+    .pill{
+      display:inline-flex;
+      padding:8px 10px;
+      border-radius:999px;
+      background: var(--pill-bg);
+      border:1px solid var(--pill-border);
+      font-size:12.5px;
+      font-weight:700;
+      letter-spacing:.02em;
+    }
+    .heroCard ul{
+      margin:10px 0 0;
+      padding-left:18px;
+      line-height:1.55;
+      font-size: 14.5px;
+      opacity:.95;
+    }
+    .ctaRow{
+      display:flex; gap:10px; flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid var(--btn-border);
+      background: var(--btn-bg);
+      color:var(--white);
+      text-decoration:none;
+      font-weight:800;
+      font-size:13.5px;
+      transition: transform .15s ease, background .15s ease;
+    }
+    .btn:hover{transform: translateY(-1px); background: var(--btn-hover-bg);}
+    .btn.primary{
+      background: var(--btn-primary-bg);
+      border-color: var(--btn-primary-bdr);
+    }
+
+    /* ===== Main content sections ===== */
+    .section{
+      padding:66px 0 0;
+    }
+    .section h2{
+      margin:0 0 14px;
+      font-size: 28px;
+      letter-spacing:-0.02em;
+      color: var(--ink);
+    }
+    .subhead{
+      margin:0 0 22px;
+      color:var(--muted);
+      max-width: 80ch;
+    }
+
+    .grid2{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:18px;
+    }
+    @media (max-width: 900px){
+      .grid2{grid-template-columns:1fr}
+    }
+
+    .card{
+      background: var(--card);
+      border:1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadowSoft);
+      padding:20px 20px;
+      backdrop-filter: blur(10px);
+    }
+    .card h3{
+      margin:0 0 8px;
+      font-size:18px;
+      letter-spacing:-0.01em;
+    }
+    .meta{
+      color:var(--muted);
+      font-size:13.5px;
+      margin-bottom:10px;
+    }
+    .card p{margin:10px 0 0; color:var(--body-text-deep)}
+    .card,
+    .contactCard,
+    .item,
+    .writing {
+         backdrop-filter: blur(6px);
+        background-color: var(--card-surface);
+    }
+    .bullets{
+      margin:12px 0 0;
+      padding-left:18px;
+      color:var(--body-text-deep);
+    }
+    .bullets li{margin:6px 0}
+
+    .tagRow{display:flex; flex-wrap:wrap; gap:8px; margin-top:10px}
+    .tag{
+      font-size:12.5px;
+      font-weight:700;
+      padding:7px 10px;
+      border-radius:999px;
+      background: var(--tag-bg);
+      border:1px solid var(--tag-border);
+      color:var(--tag-text);
+    }
+
+    /* Timeline */
+    .timeline{
+      display:grid;
+      gap:14px;
+    }
+    .item{
+      padding:18px;
+      border-radius:18px;
+      border:1px solid var(--stroke);
+      background: var(--item-bg);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
+    }
+    .itemTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:baseline;
+      margin-bottom:6px;
+    }
+    .itemTop strong{font-size:16px}
+    .itemTop span{color:var(--muted); font-size:13.5px}
+
+    /* Writing samples */
+    .writingList{
+      display:grid;
+      gap:12px;
+    }
+    .writing{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      padding:14px 16px;
+      border-radius:16px;
+      border:1px solid var(--stroke);
+      background: var(--writing-bg);
+    }
+    .writing a{
+      text-decoration:none;
+      font-weight:800;
+      color: var(--accent);
+    }
+    .writing small{color:var(--muted)}
+
+    /* Contact section w/ headshot */
+    .contactWrap{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:18px;
+      align-items:stretch;
+    }
+    @media (max-width: 900px){
+      .contactWrap{grid-template-columns:1fr}
+    }
+    .headshot{
+      width:100%;
+      aspect-ratio: 4/5;
+      border-radius: var(--radius);
+      object-fit: cover;
+      border:1px solid var(--stroke);
+      box-shadow: var(--shadow);
+      background: color-mix(in srgb, var(--quaternary) 30%, var(--white));
+    }
+    .contactCard{
+      padding:22px;
+      border-radius: var(--radius);
+      border:1px solid var(--stroke);
+      background: color-mix(in srgb, var(--white) 78%, transparent);
+      box-shadow: var(--shadowSoft);
+    }
+    .contactCard h3{margin:0 0 8px}
+    .contactRow{
+      display:grid;
+      gap:10px;
+      margin-top: 14px;
+    }
+    .contactRow a{
+      color: var(--accent);
+      font-weight:800;
+      text-decoration:none;
+    }
+
+    /* Footer */
+    footer{
+      margin-top:70px;
+      padding:28px 0 0;
+      color:var(--footer-text);
+      font-size:13.5px;
+      text-align:center;
+    }
+
+    /* Smooth anchor */
+    html{scroll-behavior:smooth}
+  </style>
+</head>
+
+<body>
+  <!-- Masthead includes BOTH header + hero and uses your background image -->
+  <div class="masthead" role="banner" aria-label="Header and hero with background image">
+    <div class="topbar">
+      <div class="brand" aria-label="Brand">
+        <div class="brandMark" aria-hidden="true"></div>
+        <div class="brandText">
+          <strong>Student Name</strong>
+          <span>Anthropology Major • Graduation: May 2026</span>
+        </div>
+      </div>
+
+      <div class="navLinks" aria-label="Site navigation">
+        <a href="#about">About</a>
+        <a href="#education">Education</a>
+        <a href="#experience">Experience</a>
+        <a href="#projects">Projects</a>
+        <a href="#writing">Writing</a>
+        <a href="#contact">Contact</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <h1>Anthropology Portfolio & Resume</h1>
+        <p>
+          I study how people create meaning—through culture, material remains, language, and lived experience.
+          I'm seeking internships and entry-level opportunities in research, museums, cultural resource work,
+          UX research, public policy, NGOs, and education.
+        </p>
+      </div>
+        <aside class="heroCard" aria-label="Quick highlights">
+        <div class="heroActions">
+
+            <div class="heroAction">
+            <a class="btn primary" href="#projects">Research</a>
+            <p>Qualitative research, ethnography, and cultural analysis</p>
+            </div>
+
+            <div class="heroAction">
+            <a class="btn primary" href="#skills">Field Methods</a>
+            <p>Observation, documentation, and material culture analysis</p>
+            </div>
+
+            <div class="heroAction">
+            <a class="btn primary" href="#writing">Writing</a>
+            <p>Clear academic and applied writing with evidence-based arguments</p>
+            </div>
+
+        </div>
+        </aside>
+
+    </div>
+  </div>
+
+  <main class="wrap">
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <h2>About</h2>
+      <p class="subhead">
+        I'm an Anthropology major with interests in cultural analysis, archaeology, and human-centered research.
+        I enjoy turning complex human contexts into clear insights that support real decisions—whether in academic,
+        public-facing, or applied settings.
+      </p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Focus Areas</h3>
+          <ul class="bullets">
+            <li>Cultural anthropology: community practices, identity, and lived experience</li>
+            <li>Archaeology: material remains, documentation, and interpretation</li>
+            <li>Applied research: making findings useful and understandable</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Ethnography</span>
+            <span class="tag">Material Culture</span>
+            <span class="tag">Qualitative Analysis</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>What I'm Looking For</h3>
+          <p>
+            Roles involving research, documentation, analysis, and communication—especially environments that value
+            careful observation, ethical practice, and well-supported conclusions.
+          </p>
+          <ul class="bullets">
+            <li>Research assistant • Museum / archive support • Cultural resource support</li>
+            <li>UX research / human-centered research • Program evaluation</li>
+            <li>Education, outreach, and public history</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="section">
+      <h2>Education</h2>
+      <p class="subhead">Replace placeholders with your real school details.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>B.A. / B.S. in Anthropology</strong>
+            <span>Expected May 2026</span>
+          </div>
+          <div class="meta">Brigham Young University (example) • GPA: 3.X (optional) • Provo, UT</div>
+          <ul class="bullets">
+            <li>Coursework: Archaeological Method & Theory, Cultural Anthropology, Linguistic Anthropology, Statistics/Methods (edit)</li>
+            <li>Capstone: Research design, ethics, and formal presentation of findings</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section">
+      <h2>Skills</h2>
+      <p class="subhead">A quick snapshot of skills employers look for in anthropology-adjacent roles.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Research Methods</h3>
+          <ul class="bullets">
+            <li>Interviewing and focus groups (protocols, consent, note-taking)</li>
+            <li>Participant observation and field notes</li>
+            <li>Thematic coding and synthesis (basic qualitative workflows)</li>
+            <li>Artifact documentation and descriptive cataloging</li>
+          </ul>
+        </div>
+
+        <div class="card">
+          <h3>Communication & Tools</h3>
+          <ul class="bullets">
+            <li>Clear writing: briefs, reports, presentations</li>
+            <li>Slides, documents, and structured summaries</li>
+            <li>Spreadsheets and basic data organization</li>
+            <li>Optional: NVivo/Atlas.ti, GIS, or archival tools (edit)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE -->
+    <section id="experience" class="section">
+      <h2>Experience</h2>
+      <p class="subhead">Include campus roles, internships, volunteer work, research labs, museum work, etc.</p>
+
+      <div class="timeline">
+        <div class="item">
+          <div class="itemTop">
+            <strong>Research Assistant, Anthropology Lab (Example)</strong>
+            <span>Sep 2024 – Present</span>
+          </div>
+          <div class="meta">University Department / Lab Name • City, State</div>
+          <ul class="bullets">
+            <li>Supported literature reviews and summarized findings for faculty and graduate researchers.</li>
+            <li>Maintained organized research notes, citations, and documentation for project continuity.</li>
+            <li>Assisted with interview scheduling, transcription review, and preliminary theme identification.</li>
+          </ul>
+        </div>
+
+        <div class="item">
+          <div class="itemTop">
+            <strong>Museum / Archive Volunteer (Example)</strong>
+            <span>Jan 2024 – Aug 2024</span>
+          </div>
+          <div class="meta">Museum Name • City, State</div>
+          <ul class="bullets">
+            <li>Helped catalog objects with consistent metadata and careful handling procedures.</li>
+            <li>Supported visitor education through short explanations and exhibit guidance.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section">
+      <h2>Projects</h2>
+      <p class="subhead">These are written in a hiring-manager-friendly way. Replace titles with real projects.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Ethnography Mini-Study</h3>
+          <div class="meta">Qualitative research • Interviewing • Thematic coding</div>
+          <p>
+            Designed a small ethnographic inquiry around a community practice, conducted interviews, and produced a
+            structured write-up linking evidence to interpretation.
+          </p>
+          <ul class="bullets">
+            <li>Created research questions and an interview guide; documented consent.</li>
+            <li>Summarized themes and supported them with direct observations and participant input.</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Field Notes</span>
+            <span class="tag">Analysis</span>
+            <span class="tag">Report Writing</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Material Culture Analysis</h3>
+          <div class="meta">Interpretation • Documentation • Context building</div>
+          <p>
+            Analyzed objects as cultural texts—identifying function, symbolism, and social meaning through comparison
+            to historical and cultural sources.
+          </p>
+          <ul class="bullets">
+            <li>Built a short catalog with consistent attributes and interpretive notes.</li>
+            <li>Presented findings in a concise brief designed for non-specialist readers.</li>
+          </ul>
+          <div class="tagRow">
+            <span class="tag">Cataloging</span>
+            <span class="tag">Contextual Research</span>
+            <span class="tag">Synthesis</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WRITING -->
+    <section id="writing" class="section">
+      <h2>Writing Samples</h2>
+      <p class="subhead">
+        Add PDFs or links. If you don't have public links yet, use placeholders and swap later.
+      </p>
+
+      <div class="writingList">
+        <div class="writing">
+          <div>
+            <strong>Research Brief: Culture & Meaning (Example)</strong><br/>
+            <small>2–3 pages • clear executive summary + evidence</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+
+        <div class="writing">
+          <div>
+            <strong>Artifact / Site Interpretation (Example)</strong><br/>
+            <small>Methods + interpretation • documentation-forward</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+
+        <div class="writing">
+          <div>
+            <strong>Ethnographic Reflection (Example)</strong><br/>
+            <small>Field notes → themes → conclusion</small>
+          </div>
+          <a href="#" aria-label="Open writing sample">Open</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- AWARDS / LEADERSHIP -->
+    <section id="awards" class="section">
+      <h2>Leadership & Awards</h2>
+      <p class="subhead">Optional but useful for scholarships, honors programs, and internships.</p>
+
+      <div class="grid2">
+        <div class="card">
+          <h3>Leadership</h3>
+          <ul class="bullets">
+            <li>Student club role (example): event planning, outreach, coordinating speakers</li>
+            <li>Peer mentor / tutor (example): supporting writing and study habits</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Awards</h3>
+          <ul class="bullets">
+            <li>Department recognition / scholarship (example)</li>
+            <li>Dean's list (optional)</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT (headshot + contact info in last section) -->
+    <section id="contact" class="section">
+      <h2>Contact</h2>
+      <p class="subhead">
+        This section is designed for quick recruiter scanning: a friendly photo and direct contact links.
+      </p>
+
+      <div class="contactWrap">
+        <!-- Replace headshot.jpg with the student's real photo -->
+        <img class="headshot" src="headshot.jpg" alt="Headshot of Student Name" />
+
+        <div class="contactCard">
+          <h3>Student Name</h3>
+          <div class="meta">Anthropology Major • Graduation: May 2026 • Open to internships & entry-level roles</div>
+
+          <div class="contactRow">
+            <div><strong>Email:</strong> <a href="mailto:student.email@example.com">student.email@example.com</a></div>
+            <div><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer">linkedin.com/in/studentname</a></div>
+            <div><strong>Portfolio PDF:</strong> <a href="#" target="_blank" rel="noreferrer">Download</a></div>
+            <div><strong>Location:</strong> Provo, UT (open to relocation / remote)</div>
+          </div>
+
+          <div class="tagRow" style="margin-top:16px">
+            <span class="tag">Research</span>
+            <span class="tag">Museums/Archives</span>
+            <span class="tag">Field Methods</span>
+            <span class="tag">UX Research</span>
+            <span class="tag">Policy/NGO</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      © <span id="y"></span> Student Name • Built for clarity, credibility, and quick scanning.
+    </footer>
+  </main>
+
+  <script>
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

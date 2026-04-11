@@ -57,8 +57,8 @@ export function renderHTML(site) {
   <title>${escapeHTML(site.meta.name)} — Portfolio</title>
   <style>
     :root{
-      --primary:${t.primary}; --secondary:${t.secondary}; --accent:${t.accent};
-      --dark:${t.dark}; --light:${t.light};
+      --primary:${t.primary}; --secondary:${t.secondary}; --tertiary:${t.tertiary};
+      --accent2:${t.accent2}; --accent1:${t.accent1};
       --panel: rgba(255,255,255,0.06);
       --border: rgba(255,255,255,0.14);
       --shadow: 0 10px 30px rgba(0,0,0,0.35);
@@ -67,15 +67,15 @@ export function renderHTML(site) {
     }
     *{box-sizing:border-box}
     body{
-      margin:0; font-family:var(--font); color:var(--light);
+      margin:0; font-family:var(--font); color:var(--accent1);
       background:
         radial-gradient(900px 520px at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
         radial-gradient(900px 520px at 85% 0%, color-mix(in oklab, var(--secondary) 18%, transparent), transparent 60%),
-        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
-        var(--dark);
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--tertiary) 14%, transparent), transparent 60%),
+        var(--accent2);
       line-height:1.5;
     }
-    a{ color:var(--accent); text-decoration:none }
+    a{ color:var(--tertiary); text-decoration:none }
     a:hover{ text-decoration:underline }
     .wrap{ max-width: 980px; margin: 0 auto; padding: 24px 16px 56px; }
     header{
@@ -129,7 +129,7 @@ export function renderHTML(site) {
     .skill-col h3{ margin:0 0 6px; font-size: 13.5px }
     .cta{
       display:flex; align-items:center; justify-content:space-between; gap: 12px; flex-wrap:wrap;
-      background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 40%, transparent), color-mix(in oklab, var(--accent) 25%, transparent));
+      background: linear-gradient(90deg, color-mix(in oklab, var(--primary) 40%, transparent), color-mix(in oklab, var(--tertiary) 25%, transparent));
       border:1px solid rgba(255,255,255,.16);
     }
     .btn{

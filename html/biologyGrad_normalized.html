@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BioLaunch - Hal Pearson's Biology Portfolio</title>
+        <link href="css/theme.css" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+        <style>* { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+          /* Five main theme colors */
+          --dominant:   #16a34a;   /* 1. Dominant    — primary green, brand/CTA/logo color */
+          --secondary:  #0ea5e9;   /* 2. Secondary   — sky blue, hero gradient & card accent */
+          --tertiary:   #84cc16;   /* 3. Tertiary    — lime accent, research card & tag highlight */
+          --quaternary: #0f172a;   /* 4. Quaternary  — deep navy, body text & footer background */
+          --quinary:    #f1f5f9;   /* 5. Quinary     — light slate, section backgrounds & surfaces */
+
+          /* Theme-independent hard-coded neutrals */
+          --white: #ffffff;
+          --black: #000000;
+
+          /* Derived tokens */
+          --primary-dark:        color-mix(in srgb, var(--dominant) 80%, var(--black));
+          --hero-gradient-start: var(--dominant);
+          --hero-gradient-end:   var(--secondary);
+          --about-bg:            var(--quinary);
+          --skills-bg:           var(--quinary);
+          --research-bg:         var(--white);
+          --publications-bg:     var(--white);
+          --footer-bg:           var(--quaternary);
+          --card-surface:        var(--white);
+          --tag-bg:              color-mix(in srgb, var(--dominant) 8%, var(--white));
+          --tag-text:            var(--dominant);
+          --border-light:        color-mix(in srgb, var(--quaternary) 12%, var(--white));
+          --muted-text:          color-mix(in srgb, var(--quaternary) 45%, var(--white));
+          --body-text:           color-mix(in srgb, var(--quaternary) 60%, var(--white));
+          --publication-bg:      var(--quinary);
+          --contact-gradient-start: var(--dominant);
+          --contact-gradient-end:   var(--secondary);
+          --research-card2-mid:  var(--secondary);
+          --research-card2-end:  var(--tertiary);
+          --research-card3-start: var(--tertiary);
+          --research-card3-end:   var(--dominant);
+        }
+
+        body { font-family: 'Inter', sans-serif; line-height: 1.7; color: var(--quaternary); background: var(--white); }
+        h1, h2, h3 { font-family: 'Playfair Display', serif; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+        /* Navigation */
+        nav { background: var(--white); padding: 20px 0; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        nav .container { display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-size: 1.8rem; font-weight: 700; color: var(--dominant); font-family: 'Playfair Display', serif; display: flex; align-items: center; gap: 10px; }
+        .logo svg { width: 35px; height: 35px; }
+        nav ul { display: flex; list-style: none; gap: 2rem; }
+        nav a { text-decoration: none; color: var(--quaternary); font-weight: 500; transition: color 0.3s; }
+        nav a:hover { color: var(--dominant); }
+
+        /* Hero Section */
+        .hero { background: linear-gradient(135deg, var(--hero-gradient-start) 0%, var(--hero-gradient-end) 100%); color: var(--white); padding: 100px 0; position: relative; overflow: hidden; }
+        .hero::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 600"><circle cx="100" cy="100" r="50" fill="%23ffffff" opacity="0.1"/><circle cx="800" cy="400" r="80" fill="%23ffffff" opacity="0.1"/><circle cx="1000" cy="150" r="60" fill="%23ffffff" opacity="0.1"/><path d="M200,300 Q400,200 600,300 T1000,300" stroke="%23ffffff" stroke-width="2" fill="none" opacity="0.1"/></svg>'); background-size: cover; opacity: 0.3; }
+        .hero-content { position: relative; z-index: 1; text-align: center; max-width: 800px; margin: 0 auto; }
+        .hero h1 { font-size: 3.5rem; margin-bottom: 20px; animation: fadeInUp 1s ease; }
+        .hero .subtitle { font-size: 1.5rem; margin-bottom: 15px; opacity: 0.95; }
+        .hero .tagline { font-size: 1.1rem; margin-bottom: 40px; opacity: 0.9; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .hero-buttons { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+        .btn { padding: 14px 35px; border-radius: 50px; text-decoration: none; font-weight: 600; transition: all 0.3s; display: inline-block; }
+        .btn-primary { background: var(--white); color: var(--dominant); }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .btn-secondary { background: transparent; color: var(--white); border: 2px solid var(--white); }
+        .btn-secondary:hover { background: var(--white); color: var(--dominant); }
+
+        /* Section Styles */
+        section { padding: 80px 0; }
+        section h2 { font-size: 2.8rem; margin-bottom: 20px; color: var(--quaternary); text-align: center; }
+        .section-subtitle { text-align: center; color: var(--muted-text); font-size: 1.15rem; margin-bottom: 60px; max-width: 700px; margin-left: auto; margin-right: auto; }
+
+        /* About Section */
+        .about { background: var(--about-bg); }
+        .about-content { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+        .about-image { width: 100%; height: 450px; background: linear-gradient(135deg, var(--dominant) 0%, var(--secondary) 100%); border-radius: 20px; display: flex; align-items: center; justify-content: center; box-shadow: 0 20px 60px rgba(0,0,0,0.15); }
+        .about-image svg { width: 80%; height: 80%; }
+        .about-text p { margin-bottom: 20px; font-size: 1.05rem; line-height: 1.8; color: var(--body-text); }
+        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 30px; }
+        .stat-card { background: var(--card-surface); padding: 25px; border-radius: 15px; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .stat-number { font-size: 2.5rem; font-weight: 700; color: var(--dominant); margin-bottom: 5px; }
+        .stat-label { color: var(--muted-text); font-size: 0.95rem; }
+
+        /* Research Section */
+        .research { background: var(--research-bg); }
+        .research-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 40px; }
+        .research-card { background: var(--card-surface); border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: all 0.3s; }
+        .research-card:hover { transform: translateY(-10px); box-shadow: 0 20px 50px rgba(0,0,0,0.15); }
+        .research-image { width: 100%; height: 220px; background: linear-gradient(135deg, var(--dominant), var(--secondary)); display: flex; align-items: center; justify-content: center; font-size: 4rem; }
+        .research-card:nth-child(2) .research-image { background: linear-gradient(135deg, var(--research-card2-mid), var(--research-card2-end)); }
+        .research-card:nth-child(3) .research-image { background: linear-gradient(135deg, var(--research-card3-start), var(--research-card3-end)); }
+        .research-content { padding: 30px; }
+        .research-content h3 { font-size: 1.5rem; margin-bottom: 15px; color: var(--quaternary); }
+        .research-content p { color: var(--muted-text); margin-bottom: 20px; line-height: 1.7; }
+        .research-tags { display: flex; flex-wrap: wrap; gap: 10px; }
+        .tag { background: var(--tag-bg); color: var(--tag-text); padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
+
+        /* Skills Section */
+        .skills { background: var(--skills-bg); }
+        .skills-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .skill-category { background: var(--card-surface); padding: 35px; border-radius: 20px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); }
+        .skill-category h3 { color: var(--dominant); margin-bottom: 25px; font-size: 1.4rem; display: flex; align-items: center; gap: 10px; }
+        .skill-list { list-style: none; }
+        .skill-list li { padding: 12px 0; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; color: var(--body-text); }
+        .skill-list li:last-child { border-bottom: none; }
+        .skill-level { color: var(--dominant); font-weight: 600; font-size: 0.9rem; }
+
+        /* Publications Section */
+        .publications { background: var(--publications-bg); }
+        .publication-list { max-width: 900px; margin: 0 auto; }
+        .publication-item { background: var(--publication-bg); padding: 30px; border-radius: 15px; margin-bottom: 25px; border-left: 4px solid var(--dominant); transition: all 0.3s; }
+        .publication-item:hover { transform: translateX(10px); box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .publication-title { font-size: 1.3rem; font-weight: 600; color: var(--quaternary); margin-bottom: 10px; }
+        .publication-meta { color: var(--muted-text); font-size: 0.95rem; margin-bottom: 15px; }
+        .publication-abstract { color: var(--body-text); line-height: 1.7; }
+
+        /* Contact Section */
+        .contact { background: linear-gradient(135deg, var(--contact-gradient-start), var(--contact-gradient-end)); color: var(--white); }
+        .contact h2, .contact .section-subtitle { color: var(--white); }
+        .contact-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 40px; margin-top: 60px; }
+        .contact-card { background: rgba(255,255,255,0.15); backdrop-filter: blur(10px); padding: 40px; border-radius: 20px; text-align: center; border: 1px solid rgba(255,255,255,0.2); transition: all 0.3s; }
+        .contact-card:hover { background: rgba(255,255,255,0.25); transform: translateY(-5px); }
+        .contact-card h3 { font-size: 1.3rem; margin-bottom: 15px; }
+        .contact-card a { color: var(--white); text-decoration: none; transition: opacity 0.3s; }
+        .contact-card a:hover { opacity: 0.8; }
+
+        /* Footer */
+        footer { background: var(--footer-bg); color: var(--white); padding: 40px 0; text-align: center; }
+        footer p { opacity: 0.8; }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+          .hero h1 { font-size: 2.5rem; }
+          .about-content { grid-template-columns: 1fr; }
+          .stats { grid-template-columns: 1fr; }
+          nav ul { gap: 1rem; font-size: 0.9rem; }
+        }
+        </style>
+    </head>
+    <body>
+        <!-- Navigation -->
+        <nav>
+            <div class="container">
+                <div class="logo">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 2v4m0 12v4M2 12h4m12 0h4"/>
+                    </svg>
+                    BioLaunch
+                </div>
+                <ul>
+                    <li>
+                        <a href="#about">About</a>
+                    </li>
+                    <li>
+                        <a href="#research">Research</a>
+                    </li>
+                    <li>
+                        <a href="#skills">Skills</a>
+                    </li>
+                    <li>
+                        <a href="#publications">Publications</a>
+                    </li>
+                    <li>
+                        <a href="#contact">Contact</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>Hal Pearson</h1>
+                    <p class="subtitle">Biology Researcher & Educator</p>
+                    <p class="tagline">Exploring the frontiers of molecular biology and ecological systems</p>
+                    <div class="hero-buttons"><a href="#research" class="btn btn-primary">View Research</a><a href="#contact" class="btn btn-secondary">Get in Touch</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- About Section -->
+        <section id="about" class="about">
+            <div class="container">
+                <h2>About Me</h2>
+                <p class="section-subtitle">Passionate biologist dedicated to understanding life at molecular and ecological scales</p>
+                <div class="about-content">
+                    <div class="about-text">
+                        <p>I'm a biology graduate with specialized expertise in molecular biology, genetics, and ecosystem dynamics. My research focuses on understanding cellular mechanisms and their broader ecological implications.</p>
+                        <p>Throughout my academic journey, I've conducted extensive laboratory research, field studies, and data analysis. I'm proficient in molecular techniques including PCR, gel electrophoresis, DNA sequencing, and protein analysis, as well as ecological sampling and statistical modeling.</p>
+                        <p>I'm seeking opportunities in research laboratories, biotechnology companies, environmental consulting firms, or graduate programs where I can apply my biological expertise to solve real-world challenges.</p>
+                        <div class="stats">
+                            <div class="stat-card">
+                                <div class="stat-number">12+</div>
+                                <div class="stat-label">Research Projects</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">5</div>
+                                <div class="stat-label">Publications</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">3.9</div>
+                                <div class="stat-label">GPA</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-image">
+                        <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <radialGradient id="cellGrad">
+                                    <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0.8"/>
+                                    <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0.2"/>
+                                </radialGradient>
+                            </defs>
+                            <!-- DNA helix -->
+                            <ellipse cx="200" cy="200" rx="120" ry="180" fill="none" stroke="white" stroke-width="4" opacity="0.6"/>
+                            <ellipse cx="200" cy="200" rx="80" ry="180" fill="none" stroke="white" stroke-width="4" opacity="0.6"/>
+                            <!-- Cell structures -->
+                            <circle cx="200" cy="200" r="100" fill="url(#cellGrad)" opacity="0.4"/>
+                            <circle cx="200" cy="200" r="30" fill="white" opacity="0.6"/>
+                            <!-- Molecules -->
+                            <circle cx="120" cy="120" r="15" fill="white" opacity="0.5"/>
+                            <circle cx="280" cy="120" r="15" fill="white" opacity="0.5"/>
+                            <circle cx="120" cy="280" r="15" fill="white" opacity="0.5"/>
+                            <circle cx="280" cy="280" r="15" fill="white" opacity="0.5"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Research Section -->
+        <section id="research" class="research">
+            <div class="container">
+                <h2>Featured Research</h2>
+                <p class="section-subtitle">Innovative projects advancing our understanding of biological systems</p>
+                <div class="research-grid">
+                    <div class="research-card">
+                        <div class="research-image">🧬</div>
+                        <div class="research-content">
+                            <h3>CRISPR Gene Editing Analysis</h3>
+                            <p>Investigated the efficiency of CRISPR-Cas9 gene editing in plant cells. Designed guide RNAs, performed gene knockout experiments, and analyzed off-target effects using NGS sequencing data.</p>
+                            <div class="research-tags"><span class="tag">Molecular Biology</span><span class="tag">CRISPR</span><span class="tag">Genetics</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="research-card">
+                        <div class="research-image">🦠</div>
+                        <div class="research-content">
+                            <h3>Microbial Community Dynamics</h3>
+                            <p>Examined bacterial diversity in soil ecosystems under varying environmental conditions. Used metagenomic sequencing and bioinformatics to identify keystone species and community interactions.</p>
+                            <div class="research-tags"><span class="tag">Ecology</span><span class="tag">Microbiology</span><span class="tag">Bioinformatics</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="research-card">
+                        <div class="research-image">🌱</div>
+                        <div class="research-content">
+                            <h3>Plant Stress Response Mechanisms</h3>
+                            <p>Senior thesis investigating molecular pathways activated in plants under drought stress. Conducted qPCR analysis of stress-responsive genes and measured physiological parameters.</p>
+                            <div class="research-tags"><span class="tag">Plant Biology</span><span class="tag">qPCR</span><span class="tag">Biochemistry</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Skills Section -->
+        <section id="skills" class="skills">
+            <div class="container">
+                <h2>Technical Skills</h2>
+                <p class="section-subtitle">Laboratory techniques and analytical expertise</p>
+                <div class="skills-grid">
+                    <div class="skill-category">
+                        <h3>🔬 Molecular Techniques</h3>
+                        <ul class="skill-list">
+                            <li>
+                                <span>PCR & qPCR</span>
+                                <span class="skill-level">Expert</span>
+                            </li>
+                            <li>
+                                <span>Gel Electrophoresis</span>
+                                <span class="skill-level">Expert</span>
+                            </li>
+                            <li>
+                                <span>DNA/RNA Extraction</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Protein Purification</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Western Blotting</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>Cell Culture</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>📊 Data Analysis</h3>
+                        <ul class="skill-list">
+                            <li>
+                                <span>R & RStudio</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Python (BioPython)</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>Statistical Analysis</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Bioinformatics Tools</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>GraphPad Prism</span>
+                                <span class="skill-level">Expert</span>
+                            </li>
+                            <li>
+                                <span>ImageJ/FIJI</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>🌿 Field & Ecology</h3>
+                        <ul class="skill-list">
+                            <li>
+                                <span>Species Identification</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Ecological Sampling</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>GIS Mapping</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>Water Quality Testing</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Population Surveys</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>Habitat Assessment</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="skill-category">
+                        <h3>🧪 Laboratory Skills</h3>
+                        <ul class="skill-list">
+                            <li>
+                                <span>Sterile Technique</span>
+                                <span class="skill-level">Expert</span>
+                            </li>
+                            <li>
+                                <span>Microscopy</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Spectrophotometry</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                            <li>
+                                <span>Chromatography</span>
+                                <span class="skill-level">Proficient</span>
+                            </li>
+                            <li>
+                                <span>Lab Safety Protocols</span>
+                                <span class="skill-level">Expert</span>
+                            </li>
+                            <li>
+                                <span>Equipment Maintenance</span>
+                                <span class="skill-level">Advanced</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Publications Section -->
+        <section id="publications" class="publications">
+            <div class="container">
+                <h2>Publications & Presentations</h2>
+                <p class="section-subtitle">Academic contributions and conference presentations</p>
+                <div class="publication-list">
+                    <div class="publication-item">
+                        <div class="publication-title">Effects of Climate Change on Native Plant Phenology</div>
+                        <div class="publication-meta">Pearson, H., Johnson, R., & Smith, K. | Journal of Ecology | 2025</div>
+                        <div class="publication-abstract">Examined shifts in flowering times of native plant species over a 20-year period in response to changing temperature patterns. Found significant correlations between early spring warming and advanced flowering dates.</div>
+                    </div>
+                    <div class="publication-item">
+                        <div class="publication-title">CRISPR-Cas9 Optimization in Arabidopsis thaliana</div>
+                        <div class="publication-meta">Pearson, H. & Chen, L. | Plant Molecular Biology Reports | 2024</div>
+                        <div class="publication-abstract">Developed improved protocols for CRISPR-Cas9 gene editing in model plant species. Achieved 85% editing efficiency with reduced off-target effects through optimized guide RNA design.</div>
+                    </div>
+                    <div class="publication-item">
+                        <div class="publication-title">Soil Microbiome Analysis in Restored Wetlands</div>
+                        <div class="publication-meta">Presented at Ecological Society of America Annual Meeting | 2024</div>
+                        <div class="publication-abstract">Poster presentation analyzing bacterial community composition in restored wetland ecosystems. Identified key indicator species associated with successful wetland restoration outcomes.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Contact Section -->
+        <section id="contact" class="contact">
+            <div class="container">
+                <h2>Get In Touch</h2>
+                <p class="section-subtitle">Let's collaborate on research or discuss opportunities</p>
+                <div class="contact-content">
+                    <div class="contact-card">
+                        <h3>📧 Email</h3><a href="mailto:hal.pearson@email.com">hal.pearson@email.com</a>
+                    </div>
+                    <div class="contact-card">
+                        <h3>💼 LinkedIn</h3><a href="https://linkedin.com/in/halpearson">linkedin.com/in/halpearson</a>
+                    </div>
+                    <div class="contact-card">
+                        <h3>📍 Location</h3>
+                        <p>Seattle, WA<br>Open to Relocation</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Footer -->
+        <footer>
+            <div class="container">
+                <p>&copy; 2026 Hal Pearson | BioLaunch - Biology Portfolio</p>
+                <p style="margin-top: 10px; opacity: 0.7;">"In every walk with nature, one receives far more than he seeks." - John Muir</p>
+            </div>
+        </footer>
+    </body>
+</html>

@@ -20,9 +20,9 @@ function buildPreviewPrompt(page1, page2) {
     "Color theme (hex):",
     `Primary: ${theme.primary || ""}`,
     `Secondary: ${theme.secondary || ""}`,
-    `Accent: ${theme.accent || ""}`,
-    `Dark: ${theme.dark || ""}`,
-    `Light: ${theme.light || ""}`,
+    `Tertiary: ${theme.tertiary || ""}`,
+    `Accent 2: ${theme.accent2 || ""}`,
+    `Accent 1: ${theme.accent1 || ""}`,
     "",
     "Rules:",
     "- Draft should be skimmable, professional, and honest.",
@@ -46,9 +46,9 @@ export async function handler(event) {
     const theme = {
       primary: page2?.theme?.primary || "#4E70F1",
       secondary: page2?.theme?.secondary || "#FBAB9C",
-      accent: page2?.theme?.accent || "#8DE0FF",
-      dark: page2?.theme?.dark || "#0b1220",
-      light: page2?.theme?.light || "#eaf0ff"
+      tertiary: page2?.theme?.tertiary || "#8DE0FF",
+      accent2: page2?.theme?.accent2 || "#0b1220",
+      accent1: page2?.theme?.accent1 || "#eaf0ff"
     };
 
     const prompt = buildPreviewPrompt(page1, { ...page2, theme });

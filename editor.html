@@ -385,23 +385,39 @@
       display: flex; align-items: center; justify-content: center;
       background: rgba(255,255,255,.04); border-radius: 6px; overflow: hidden; height: 100px;
     }
-    #imgReplacePreview { max-height: 100px; max-width: 100%; object-fit: contain; }
-    #imgReplaceBox label { font-size: 12px; color: rgba(234,240,255,.6); margin-bottom: -6px; }
+    #imgReplaceBox .img-preview-wrap.hidden { display: none; }
+    #imgReplacePreview { max-height: 100px; max-width: 100%; object-fit: cover; }
     .img-replace-check {
       display: flex; align-items: center; gap: 8px;
       font-size: 12px; color: rgba(234,240,255,.82);
     }
     .img-replace-check input { accent-color: #667eea; }
-    .img-source-option {
-      display: flex; align-items: flex-start; gap: 8px;
-      font-size: 12px; color: rgba(234,240,255,.86);
-      margin-bottom: -4px;
+    /* "+" add button + dropdown */
+    .img-source-add-row { position: relative; display: flex; align-items: center; }
+    #imgSourceAddBtn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: none;
+      background: none; color: #4caf50;
+      font-size: 30px; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
-    .img-source-option input[type="radio"] { accent-color: #667eea; margin-top: 2px; }
-    .img-source-sep {
-      border: none; border-top: 1px solid rgba(255,255,255,.08);
-      margin: 2px 0 0;
+    #imgSourceAddBtn:hover { color: #76b022; }
+    #imgSourceDropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: #1a2a42; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; overflow: hidden; z-index: 10; min-width: 210px;
     }
+    #imgSourceDropdown.open { display: block; }
+    #imgSourceDropdown button {
+      display: block; width: 100%; padding: 9px 14px; text-align: left;
+      background: none; border: none; border-bottom: 1px solid rgba(255,255,255,.06);
+      color: rgba(234,240,255,.86); font-size: 12px; cursor: pointer;
+    }
+    #imgSourceDropdown button:last-child { border-bottom: none; }
+    #imgSourceDropdown button:hover { background: rgba(255,255,255,.08); }
+    /* source panels */
+    .img-source-panel { display: none; }
+    .img-source-panel.active { display: block; }
     #imgReplaceError {
       min-height: 16px;
       font-size: 11.5px;
@@ -414,7 +430,7 @@
       color: #eaf0ff; font-size: 12px; outline: none; width: 100%;
       font-family: inherit;
     }
-    #imgReplaceUrl {
+    #imgReplaceUrl, #imgInsertWidth {
       padding: 7px 10px; border-radius: 6px;
       border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
       color: #eaf0ff; font-size: 12px; outline: none; width: 100%;
@@ -510,7 +526,7 @@
     <button id="etLink"   title="Highlight text or image, press Link, then type the target URL in the box.">🔗 Link</button>
     <button id="etUnlink" title="Remove link">✂ Unlink</button>
     <!-- Image -->
-    <button id="etImage"  title="Insert image">🖼 Image</button>
+    <button id="etImage"  title="Insert image">🖼 Media</button>
     <span class="sep"></span>
     <!-- Add / delete repeating element -->
     <button id="etAddElement"    title="Duplicate the card or item the cursor is in">+ Card</button>
@@ -553,9 +569,9 @@
       <h2>Colors</h2>
       <div class="color-row" data-slot="primary"><label>1</label><span class="drag-handle">⠿</span><input type="color" id="cp-primary"></div>
       <div class="color-row" data-slot="secondary"><label>2</label><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"></div>
-      <div class="color-row" data-slot="accent"><label>3</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent"></div>
-      <div class="color-row" data-slot="dark"><label>4</label><span class="drag-handle">⠿</span><input type="color" id="cp-dark"></div>
-      <div class="color-row" data-slot="light"><label>5</label><span class="drag-handle">⠿</span><input type="color" id="cp-light"></div>
+      <div class="color-row" data-slot="tertiary"><label>3</label><span class="drag-handle">⠿</span><input type="color" id="cp-tertiary"></div>
+      <div class="color-row" data-slot="accent2"><label>4</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent2"></div>
+      <div class="color-row" data-slot="accent1"><label>5</label><span class="drag-handle">⠿</span><input type="color" id="cp-accent1"></div>
       <hr>
       <div style="padding: 4px 14px 10px;">
         <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
@@ -631,29 +647,33 @@
   <!-- Image replace dialog -->
   <div id="imgReplaceOverlay">
     <div id="imgReplaceBox">
-      <h3>Replace Image</h3>
-      <div class="img-preview-wrap">
+      <h3>Media</h3>
+      <div class="img-preview-wrap hidden" id="imgPreviewWrap">
         <img id="imgReplacePreview" src="" alt="current image" />
       </div>
-      <label class="img-source-option">
-        <input type="radio" name="imgSourceMode" id="imgSourceUrl" value="url" checked />
-        <span>1. Paste a URL</span>
-      </label>
-      <input type="text" id="imgReplaceUrl" placeholder="https://example.com/photo.jpg" autocomplete="off" />
-      <label class="img-source-option">
-        <input type="radio" name="imgSourceMode" id="imgSourceUpload" value="upload" />
-        <span>2. Upload a file</span>
-      </label>
-      <div id="imgReplaceUploadBtn">📁 Click to choose a file…</div>
-      <input type="file" id="imgReplaceFile" accept="image/*" />
-      <label class="img-source-option">
-        <input type="radio" name="imgSourceMode" id="imgSourceRegenerate" value="regenerate" />
-        <span>3. Regenerate with AI (costs 1 credit)</span>
-      </label>
-      <textarea id="imgReplacePrompt" placeholder="Describe the kind of image you want..."></textarea>
-      <hr class="img-source-sep">
-      <label>Max width <span style="color:rgba(234,240,255,.35);font-weight:400">(e.g. 1.5in, 300px, 50%, 100%)</span></label>
-      <input type="text" id="imgReplaceMaxWidth" placeholder="100%" autocomplete="off" style="padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:#eaf0ff;font-size:12px;outline:none;width:100%;" />
+      <div class="img-source-add-row">
+        <button id="imgSourceAddBtn" type="button" title="Choose source">+</button>
+        <span id="imgSourceNudge" style="font-size:12px;color:rgba(234,240,255,.45);margin-left:8px;">Paste a URL · Upload a file · Generate with AI</span>
+        <div id="imgSourceDropdown">
+          <button type="button" data-source="url">Paste URL</button>
+          <button type="button" data-source="upload">Upload a file</button>
+          <button type="button" data-source="regenerate">Generate / Regenerate with AI</button>
+        </div>
+      </div>
+      <div class="img-source-panel" data-panel="url">
+        <input type="text" id="imgReplaceUrl" placeholder="https://example.com/photo.jpg" autocomplete="off" />
+      </div>
+      <div class="img-source-panel" data-panel="upload">
+        <div id="imgReplaceUploadBtn">📁 Click to choose a file…</div>
+        <input type="file" id="imgReplaceFile" accept="image/*" />
+      </div>
+      <div class="img-source-panel" data-panel="regenerate">
+        <textarea id="imgReplacePrompt" placeholder="Describe the kind of image you want..."></textarea>
+      </div>
+      <div id="imgSizeField" style="display:none;">
+        <label style="font-size:12px;color:rgba(234,240,255,.6);margin-bottom:4px;display:block;">Width <span style="color:rgba(234,240,255,.32);font-weight:400;">— e.g. 120px · 50% · 100% · 2in</span> <span id="imgSizeHint" style="color:rgba(234,240,255,.45);font-weight:400;font-style:italic;"></span></label>
+        <input type="text" id="imgInsertWidth" placeholder="e.g. 120px, 50%, 100%" autocomplete="off" />
+      </div>
       <label class="img-replace-check">
         <input type="checkbox" id="imgReplaceAsBackground" />
         <span>Insert/replace background image</span>
@@ -750,20 +770,20 @@
     }
 
     // ── CSS variable extraction ────────────────────────────────────────────────
-    const CSS_VAR_NAMES = ["primary", "secondary", "accent", "dark", "light"];
+    const CSS_VAR_NAMES = ["primary", "secondary", "tertiary", "accent2", "accent1"];
     const SLOT_ALIAS_MAP = {
       primary: "slot1",
       secondary: "slot2",
-      accent: "slot3",
-      dark: "slot4",
-      light: "slot5"
+      tertiary: "slot3",
+      accent2: "slot4",
+      accent1: "slot5"
     };
     const SLOT_CSS_VAR_FAMILIES = {
-      primary: ["--bp-slot1", "--bp-slot-1", "--slot1", "--slot-1", "--bp-primary", "--primary"],
-      secondary: ["--bp-slot2", "--bp-slot-2", "--slot2", "--slot-2", "--bp-secondary", "--secondary"],
-      accent: ["--bp-slot3", "--bp-slot-3", "--slot3", "--slot-3", "--bp-accent", "--accent"],
-      dark: ["--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-dark", "--dark"],
-      light: ["--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-light", "--light"]
+      primary: ["--dominant", "--bp-slot1", "--bp-slot-1", "--slot1", "--slot-1", "--bp-primary", "--primary"],
+      secondary: ["--secondary", "--bp-slot2", "--bp-slot-2", "--slot2", "--slot-2", "--bp-secondary"],
+      tertiary: ["--tertiary", "--bp-slot3", "--bp-slot-3", "--slot3", "--slot-3", "--bp-tertiary"],
+      accent2: ["--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
+      accent1: ["--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"]
     };
     const cssVarMap = {};   // slot name → CSS variable name used for live overrides
     const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
@@ -858,19 +878,23 @@
     let imgReplaceTarget  = null;
     let imgReplaceIsNew   = false;  // true when dialog was opened for a freshly inserted placeholder
     let imgReplacePending = null;   // data URI from a file upload, waiting for Apply
+    let imgInsertInferredSize = null; // { width, height, hint, confident } for new insertions
     let imgRegenerateInProgress = false;
+    let imgRegenerateCountdownTimer = null;
     let imgReplaceBackgroundTarget = null;
+    let imgReplaceBackgroundCandidates = [];
+    let highlightedBackgroundTarget = null;
     let lastIframeActiveElement = null;
     let lastIframeRange = null;
     let lastIframePointerTarget = null;
 
     function getImageSourceMode() {
-      return document.querySelector('input[name="imgSourceMode"]:checked')?.value || "url";
+      return document.getElementById("imgReplaceBox")?.dataset.sourceMode || "";
     }
 
     function setImageSourceMode(mode) {
-      const el = document.querySelector(`input[name="imgSourceMode"][value="${mode}"]`);
-      if (el) el.checked = true;
+      const box = document.getElementById("imgReplaceBox");
+      if (box) box.dataset.sourceMode = mode;
       syncImageSourceModeUi();
     }
 
@@ -888,7 +912,7 @@
 
     function extractCurrentBackgroundSrc(el) {
       if (!el) return "";
-      const computed = getComputedStyle(el);
+      const computed = (el.ownerDocument?.defaultView || window).getComputedStyle(el);
       return (
         extractUrlFromBackgroundImage(el.style.backgroundImage) ||
         extractUrlFromBackgroundImage(computed.backgroundImage) ||
@@ -896,6 +920,16 @@
         extractUrlFromBackgroundImage(computed.background) ||
         ""
       );
+    }
+
+    function summarizeImageSource(src) {
+      const value = String(src || "");
+      if (!value) return { kind: "empty", length: 0, head: "" };
+      return {
+        kind: value.startsWith("data:") ? "data-uri" : "url",
+        length: value.length,
+        head: value.slice(0, 96)
+      };
     }
 
     function resolveBackgroundSource(el) {
@@ -910,6 +944,158 @@
         }
       } catch {}
       return { el: el || null, src: "" };
+    }
+
+    function getNodeDepth(el) {
+      let depth = 0;
+      let node = el;
+      while (node?.parentElement) {
+        depth += 1;
+        node = node.parentElement;
+      }
+      return depth;
+    }
+
+    function describeBackgroundTarget(el) {
+      if (!el) return { title: "Unknown target", meta: "" };
+      const tag = el.tagName.toLowerCase();
+      const id = el.id ? `#${el.id}` : "";
+      const classBits = String(el.className || "").trim().split(/\s+/).filter(Boolean).slice(0, 2);
+      const classText = classBits.length ? `.${classBits.join(".")}` : "";
+      const rect = el.getBoundingClientRect?.();
+      const sizeText = rect ? `${Math.round(rect.width)}×${Math.round(rect.height)}` : "";
+      const heading = el.querySelector?.("h1,h2,h3,h4,h5,h6")?.textContent?.replace(/\s+/g, " ").trim() || "";
+      return {
+        title: `${tag}${id}${classText}` || tag,
+        meta: [sizeText, heading ? `contains “${heading.slice(0, 42)}${heading.length > 42 ? "…" : ""}”` : ""].filter(Boolean).join(" · ")
+      };
+    }
+
+    function clearBackgroundTargetHighlight() {
+      if (!highlightedBackgroundTarget) return;
+      highlightedBackgroundTarget.style.outline = highlightedBackgroundTarget.dataset.iwPrevOutline || "";
+      highlightedBackgroundTarget.style.outlineOffset = highlightedBackgroundTarget.dataset.iwPrevOutlineOffset || "";
+      delete highlightedBackgroundTarget.dataset.iwPrevOutline;
+      delete highlightedBackgroundTarget.dataset.iwPrevOutlineOffset;
+      highlightedBackgroundTarget = null;
+    }
+
+    function highlightBackgroundTarget(el) {
+      clearBackgroundTargetHighlight();
+      if (!el) return;
+      highlightedBackgroundTarget = el;
+      el.dataset.iwPrevOutline = el.style.outline || "";
+      el.dataset.iwPrevOutlineOffset = el.style.outlineOffset || "";
+      el.style.outline = "2px solid rgba(141,224,255,.95)";
+      el.style.outlineOffset = "-2px";
+    }
+
+    function collectBackgroundTargetCandidates(baseEl) {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return [];
+        const seed = resolveBackgroundSource(baseEl)?.el || baseEl || findDocumentMastheadTarget() || doc.body;
+        const raw = [];
+        let node = seed;
+        while (node && node.nodeType === Node.ELEMENT_NODE) {
+          raw.push(node);
+          if (node === doc.body) break;
+          node = node.parentElement;
+        }
+        raw.push(
+          seed?.closest?.("header, section, article, main, aside, div") || null,
+          seed?.closest?.(".masthead, .hero, .banner, [class*='masthead'], [class*='hero']") || null,
+          doc.querySelector("header"),
+          doc.querySelector(".masthead, .hero, .banner, [class*='masthead'], [class*='hero']"),
+          findDocumentMastheadTarget()
+        );
+        raw.push(...Array.from(seed?.querySelectorAll?.("header, section, article, main, aside, div") || []));
+        const unique = Array.from(new Set(raw.filter(Boolean)));
+        const candidates = unique
+          .filter(el => {
+            if (!(el instanceof Element)) return false;
+            const rect = el.getBoundingClientRect?.();
+            if (!rect || rect.width < 80 || rect.height < 40) return false;
+            const hasBg = !!extractCurrentBackgroundSrc(el);
+            const classText = `${el.className || ""} ${el.id || ""}`;
+            const hasHeading = !!el.querySelector?.("h1,h2,h3");
+            const looksSemantic = /^(HEADER|SECTION|ARTICLE|MAIN|ASIDE|DIV)$/i.test(el.tagName);
+            const heroLike = /\b(hero|masthead|banner|lead)\b/i.test(classText);
+            return hasBg || el === seed || (looksSemantic && (heroLike || hasHeading));
+          })
+          .sort((a, b) => {
+            const score = el => {
+              const hasBg = !!extractCurrentBackgroundSrc(el);
+              const classText = `${el.className || ""} ${el.id || ""}`;
+              const hasHeading = !!el.querySelector?.("h1,h2,h3");
+              let s = 0;
+              if (hasBg) s += 30;
+              if (/\b(hero|masthead|banner|lead)\b/i.test(classText)) s += 20;
+              if (el.tagName === "HEADER") s += 15;
+              if (hasHeading) s += 10;
+              s -= getNodeDepth(el) * 0.1;
+              return s;
+            };
+            return score(b) - score(a);
+          })
+          .slice(0, 6);
+        if (candidates.length) return candidates;
+        const fallback = unique
+          .filter(el => {
+            if (!(el instanceof Element)) return false;
+            const rect = el.getBoundingClientRect?.();
+            return !!rect && rect.width >= 80 && rect.height >= 40;
+          })
+          .sort((a, b) => getNodeDepth(a) - getNodeDepth(b))
+          .slice(0, 6);
+        return fallback.length ? fallback : [seed].filter(Boolean);
+      } catch {
+        return baseEl ? [baseEl] : [];
+      }
+    }
+
+    function renderBackgroundTargetPicker() {
+      const picker = document.getElementById("imgReplaceTargetPicker");
+      if (!picker) return;
+      picker.innerHTML = "";
+      picker.classList.toggle("open", isBackgroundMode());
+      if (!isBackgroundMode()) {
+        clearBackgroundTargetHighlight();
+        return;
+      }
+      const title = document.createElement("div");
+      title.style.cssText = "font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(234,240,255,.55);";
+      title.textContent = "Background Target";
+      picker.appendChild(title);
+      if (!imgReplaceBackgroundCandidates.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "font-size:11.5px; color:rgba(234,240,255,.55);";
+        empty.textContent = "No specific target candidates found. The editor will use the current masthead selection.";
+        picker.appendChild(empty);
+        clearBackgroundTargetHighlight();
+        return;
+      }
+      imgReplaceBackgroundCandidates.forEach((candidate, idx) => {
+        const desc = describeBackgroundTarget(candidate);
+        const label = document.createElement("label");
+        label.className = "img-target-option";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "imgBackgroundTarget";
+        radio.value = String(idx);
+        radio.checked = candidate === imgReplaceBackgroundTarget;
+        radio.addEventListener("change", () => {
+          imgReplaceBackgroundTarget = candidate;
+          highlightBackgroundTarget(candidate);
+          syncImageDialogModePreview();
+        });
+        const textWrap = document.createElement("span");
+        textWrap.innerHTML = `${desc.title}${desc.meta ? `<small>${desc.meta}</small>` : ""}`;
+        label.append(radio, textWrap);
+        label.addEventListener("mouseenter", () => highlightBackgroundTarget(candidate));
+        picker.appendChild(label);
+      });
+      highlightBackgroundTarget(imgReplaceBackgroundTarget || imgReplaceBackgroundCandidates[0]);
     }
 
     function debugBackgroundResolution(label, el) {
@@ -1051,17 +1237,28 @@
       return `${chosenOverlay}, ${withoutKnownOverlay}`;
     }
 
+    function pickLastLayerValue(value, fallback = "") {
+      const parts = String(value || "").split(",").map(s => s.trim()).filter(Boolean);
+      return parts.length ? parts[parts.length - 1] : fallback;
+    }
+
+    function getBackgroundSizeOverride() {
+      return "";
+    }
+
     function replaceBackgroundImageSource(el, newSrc) {
       if (!el) return false;
       const computed = getComputedStyle(el);
       const currentSrc = extractCurrentBackgroundSrc(el);
       const readabilityOverlay = selectReadableBackgroundOverlay(el);
+      const sizeOverride = getBackgroundSizeOverride();
 
       const replacedBackground =
         replaceLastBackgroundUrl(el.style.background, newSrc, currentSrc) ||
         replaceLastBackgroundUrl(computed.background, newSrc, currentSrc);
       if (replacedBackground) {
         el.style.background = ensureReadableBackgroundOverlay(replacedBackground, readabilityOverlay);
+        if (sizeOverride) el.style.backgroundSize = sizeOverride;
         return true;
       }
 
@@ -1070,7 +1267,7 @@
         replaceLastBackgroundUrl(computed.backgroundImage, newSrc, currentSrc);
       if (replacedBackgroundImage) {
         el.style.backgroundImage = ensureReadableBackgroundOverlay(replacedBackgroundImage, readabilityOverlay);
-        el.style.backgroundSize = el.style.backgroundSize || computed.backgroundSize || "cover";
+        el.style.backgroundSize = sizeOverride || el.style.backgroundSize || computed.backgroundSize || "cover";
         el.style.backgroundPosition = el.style.backgroundPosition || computed.backgroundPosition || "center";
         el.style.backgroundRepeat = el.style.backgroundRepeat || computed.backgroundRepeat || "no-repeat";
         return true;
@@ -1079,15 +1276,67 @@
       return false;
     }
 
+    function forceBackgroundImageSource(el, newSrc, overlay) {
+      if (!el) return;
+      const computed = getComputedStyle(el);
+      const readabilityOverlay = overlay || selectReadableBackgroundOverlay(el);
+      const size = getBackgroundSizeOverride() || pickLastLayerValue(el.style.backgroundSize || computed.backgroundSize, "").trim() || "cover";
+      const position = pickLastLayerValue(el.style.backgroundPosition || computed.backgroundPosition, "").trim() || "center";
+      const repeat = pickLastLayerValue(el.style.backgroundRepeat || computed.backgroundRepeat, "").trim() || "no-repeat";
+      const forcedBackgroundImage = ensureReadableBackgroundOverlay(`url("${newSrc}")`, readabilityOverlay);
+      const forcedBackground = ensureReadableBackgroundOverlay(`url("${newSrc}") ${position} / ${size} ${repeat}`, readabilityOverlay);
+      el.style.setProperty("background", forcedBackground, "important");
+      el.style.setProperty("background-image", forcedBackgroundImage, "important");
+      el.style.setProperty("background-size", size, "important");
+      el.style.setProperty("background-position", position, "important");
+      el.style.setProperty("background-repeat", repeat, "important");
+      el.style.setProperty("--hero-bg-image", `url("${newSrc}")`, "important");
+    }
+
+    function ensureEditorBackgroundLayer(el, newSrc, overlay) {
+      if (!el) return null;
+      const readabilityOverlay = overlay || selectReadableBackgroundOverlay(el);
+      const computed = getComputedStyle(el);
+      const size = getBackgroundSizeOverride() || pickLastLayerValue(el.style.backgroundSize || computed.backgroundSize, "").trim() || "cover";
+      const position = pickLastLayerValue(el.style.backgroundPosition || computed.backgroundPosition, "").trim() || "center";
+      const repeat = pickLastLayerValue(el.style.backgroundRepeat || computed.backgroundRepeat, "").trim() || "no-repeat";
+      const doc = el.ownerDocument;
+      let layer = el.querySelector(':scope > .iw-bg-replacement-layer');
+      if (!layer) {
+        layer = doc.createElement("div");
+        layer.className = "iw-bg-replacement-layer";
+        el.insertBefore(layer, el.firstChild || null);
+      }
+      const currentPosition = getComputedStyle(el).position;
+      if (!currentPosition || currentPosition === "static") {
+        el.style.position = "relative";
+      }
+      el.style.overflow = el.style.overflow || "hidden";
+      layer.style.position = "absolute";
+      layer.style.inset = "0";
+      layer.style.zIndex = "0";
+      layer.style.pointerEvents = "none";
+      layer.style.background = ensureReadableBackgroundOverlay(`url("${newSrc}") ${position} / ${size} ${repeat}`, readabilityOverlay);
+      Array.from(el.children).forEach(child => {
+        if (child === layer) return;
+        if (getComputedStyle(child).position === "static") child.style.position = "relative";
+        if (!child.style.zIndex) child.style.zIndex = "1";
+      });
+      return layer;
+    }
+
     function setImageDialogPreviewSrc(src) {
       const preview = document.getElementById("imgReplacePreview");
+      const wrap = document.getElementById("imgPreviewWrap");
       if (!preview) return;
       if (src) {
         preview.src = src;
         preview.style.display = "";
+        if (wrap) wrap.classList.remove("hidden");
       } else {
         preview.removeAttribute("src");
         preview.style.display = "none";
+        if (wrap) wrap.classList.add("hidden");
       }
     }
 
@@ -1107,6 +1356,24 @@
         kind === "error" ? "rgba(251,171,156,.92)" :
         kind === "ok" ? "rgba(118,176,34,.92)" :
         "rgba(234,240,255,.72)";
+    }
+
+    function stopImageDialogCountdown() {
+      if (imgRegenerateCountdownTimer) {
+        clearInterval(imgRegenerateCountdownTimer);
+        imgRegenerateCountdownTimer = null;
+      }
+    }
+
+    function startImageDialogCountdown(totalSeconds = 90) {
+      stopImageDialogCountdown();
+      let remaining = totalSeconds;
+      setImageDialogStatus(`Generating image… (${remaining}s)`, "ok");
+      imgRegenerateCountdownTimer = setInterval(() => {
+        remaining = Math.max(0, remaining - 1);
+        setImageDialogStatus(`Generating image… (${remaining}s)`, "ok");
+        if (remaining <= 0) stopImageDialogCountdown();
+      }, 1000);
     }
 
     function getSelectionImageContainer() {
@@ -1219,44 +1486,83 @@
 
     function syncImageSourceModeUi() {
       const mode = getImageSourceMode();
-      const urlInput = document.getElementById("imgReplaceUrl");
-      const uploadBtn = document.getElementById("imgReplaceUploadBtn");
-      const promptInput = document.getElementById("imgReplacePrompt");
-      if (urlInput) {
-        urlInput.disabled = mode !== "url";
-        urlInput.style.opacity = mode === "url" ? "1" : ".5";
-      }
-      if (uploadBtn) {
-        uploadBtn.style.opacity = mode === "upload" ? "1" : ".5";
-        uploadBtn.style.pointerEvents = mode === "upload" ? "auto" : "none";
-      }
-      if (promptInput) {
-        promptInput.disabled = mode !== "regenerate";
-        promptInput.style.opacity = mode === "regenerate" ? "1" : ".5";
-      }
+      document.querySelectorAll(".img-source-panel").forEach(p => {
+        p.classList.toggle("active", !!mode && p.dataset.panel === mode);
+      });
+      const nudge = document.getElementById("imgSourceNudge");
+      if (nudge) nudge.style.display = mode ? "none" : "";
+      // Background checkbox only relevant when source is an image (url or upload)
+      const bgCheck = document.querySelector(".img-replace-check");
+      if (bgCheck) bgCheck.style.display = (mode === "url" || mode === "upload") ? "" : "none";
       setImageDialogError("");
       if (!imgRegenerateInProgress) setImageDialogStatus("");
     }
 
     function syncImageDialogModePreview() {
       const urlInput = document.getElementById("imgReplaceUrl");
-      const maxWidthInput = document.getElementById("imgReplaceMaxWidth");
+      const sizeField = document.getElementById("imgSizeField");
       if (isBackgroundMode()) {
+        if (!imgReplaceBackgroundCandidates.length) {
+          imgReplaceBackgroundCandidates = collectBackgroundTargetCandidates(imgReplaceBackgroundTarget || getPreferredBackgroundTarget(imgReplaceTarget));
+          if (imgReplaceBackgroundCandidates.length && !imgReplaceBackgroundTarget) {
+            imgReplaceBackgroundTarget = imgReplaceBackgroundCandidates[0];
+          }
+        }
         const resolvedBg = resolveBackgroundSource(imgReplaceBackgroundTarget);
         if (resolvedBg?.el) imgReplaceBackgroundTarget = resolvedBg.el;
         debugBackgroundResolution("syncImageDialogModePreview", imgReplaceBackgroundTarget);
         const bgSrc = imgReplacePending || resolvedBg.src;
         setImageDialogPreviewSrc(bgSrc);
-        urlInput.value = imgReplacePending ? "" : (bgSrc && !bgSrc.startsWith("data:") ? bgSrc : "");
-        maxWidthInput.disabled = true;
-        maxWidthInput.style.opacity = ".45";
+        if (urlInput) urlInput.value = imgReplacePending ? "" : (bgSrc && !bgSrc.startsWith("data:") ? bgSrc : "");
+        if (sizeField) sizeField.style.display = "none";
       } else {
+        clearBackgroundTargetHighlight();
         setImageDialogPreviewSrc(imgReplacePending || (imgReplaceTarget?.src || ""));
-        urlInput.value = imgReplacePending ? "" : (((imgReplaceTarget?.src || "").startsWith("data:")) ? "" : (imgReplaceTarget?.src || ""));
-        maxWidthInput.disabled = false;
-        maxWidthInput.style.opacity = "1";
+        if (urlInput) urlInput.value = imgReplacePending ? "" : (((imgReplaceTarget?.src || "").startsWith("data:")) ? "" : (imgReplaceTarget?.src || ""));
+        if (sizeField) sizeField.style.display = "";
       }
       syncImageSourceModeUi();
+    }
+
+    function inferInsertionSize(placeholder) {
+      const parent = placeholder.parentElement;
+      if (!parent) return { width: "", height: "auto", hint: "", confident: false };
+
+      // 1. Sibling <img> in same container with rendered dimensions
+      const siblingImgs = Array.from(parent.querySelectorAll("img"))
+        .filter(el => el !== placeholder && el.offsetWidth > 0);
+      if (siblingImgs.length) {
+        const si = siblingImgs[0];
+        const w = si.offsetWidth, h = si.offsetHeight;
+        return { width: `${w}px`, height: h > 0 ? `${h}px` : "auto", hint: "matched sibling image", confident: true };
+      }
+
+      // 2. Class name hints on parent or nearby ancestors
+      const classHints = [
+        { pattern: /\b(avatar|profile[-_]?pic|headshot|portrait|monogram)\b/i, width: "120px", height: "120px", hint: "avatar size" },
+        { pattern: /\b(thumbnail|thumb)\b/i,                                   width: "160px", height: "auto",  hint: "thumbnail size" },
+        { pattern: /\b(logo)\b/i,                                              width: "140px", height: "auto",  hint: "logo size" },
+        { pattern: /\b(hero|masthead|banner)\b/i,                              width: "100%",  height: "auto",  hint: "hero width" },
+        { pattern: /\b(card|tile|panel)\b/i,                                   width: "100%",  height: "auto",  hint: "card width" },
+      ];
+      let el = parent;
+      for (let i = 0; i < 5; i++) {
+        if (!el || el === document.body) break;
+        const cls = Array.from(el.classList).join(" ");
+        for (const { pattern, width, height, hint } of classHints) {
+          if (pattern.test(cls)) return { width, height, hint, confident: true };
+        }
+        el = el.parentElement;
+      }
+
+      // 3. Narrow parent container → use its pixel width
+      const parentW = Math.round(parent.getBoundingClientRect().width);
+      if (parentW > 0 && parentW <= 240) {
+        return { width: `${parentW}px`, height: "auto", hint: "from container", confident: true };
+      }
+
+      // No confident inference — ask user
+      return { width: "100%", height: "auto", hint: "", confident: false };
     }
 
     function openImgReplaceDialog(imgEl, isNew = false) {
@@ -1271,18 +1577,41 @@
       urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (isNew ? "" : (imgEl.src || ""));
       promptInput.value = "";
       document.getElementById("imgReplaceFile").value = "";
-      document.getElementById("imgReplaceMaxWidth").value = imgEl.style.maxWidth || "100%";
+      // Size field — available for foreground images, including existing ones
+      const sizeField  = document.getElementById("imgSizeField");
+      const sizeInput  = document.getElementById("imgInsertWidth");
+      const sizeHint   = document.getElementById("imgSizeHint");
+      if (isNew) {
+        imgInsertInferredSize = inferInsertionSize(imgEl);
+        sizeInput.value = imgInsertInferredSize.width;
+        sizeHint.textContent = imgInsertInferredSize.hint
+          ? `(${imgInsertInferredSize.hint})`
+          : "(enter a width — nothing inferred from context)";
+        if (sizeField) sizeField.style.display = "";
+      } else {
+        imgInsertInferredSize = null;
+        const computed = getComputedStyle(imgEl);
+        const currentWidth = imgEl.style.width || imgEl.style.maxWidth || `${Math.round(imgEl.getBoundingClientRect().width)}px`;
+        sizeInput.value = currentWidth;
+        sizeHint.textContent = "(current image width)";
+        if (sizeField) sizeField.style.display = "";
+      }
       const resolvedBg = resolveBackgroundSource(imgReplaceBackgroundTarget);
       if (resolvedBg?.el) imgReplaceBackgroundTarget = resolvedBg.el;
+      imgReplaceBackgroundCandidates = collectBackgroundTargetCandidates(imgReplaceBackgroundTarget);
+      if (imgReplaceBackgroundCandidates.length && !imgReplaceBackgroundCandidates.includes(imgReplaceBackgroundTarget)) {
+        imgReplaceBackgroundTarget = imgReplaceBackgroundCandidates[0];
+      }
       const existingBgSrc = resolvedBg.src;
       document.getElementById("imgReplaceAsBackground").checked = !!(isNew && existingBgSrc);
       imgReplacePending = null;
       setImageDialogError("");
       setImageDialogStatus("");
-      setImageSourceMode("url");
+      // Always start with no mode selected so the nudge is visible and no panel is pre-shown.
+      setImageSourceMode("");
       syncImageDialogModePreview();
       overlay.classList.add("open");
-      urlInput.focus();
+      if (!isNew) document.getElementById("imgReplaceUrl")?.focus();
     }
 
     function closeImgReplaceDialog(cancelled = false) {
@@ -1293,8 +1622,12 @@
       }
       imgReplaceTarget = null;
       imgReplaceIsNew  = false;
+      imgInsertInferredSize = null;
       imgRegenerateInProgress = false;
       imgReplaceBackgroundTarget = null;
+      imgReplaceBackgroundCandidates = [];
+      clearBackgroundTargetHighlight();
+      stopImageDialogCountdown();
       setImageDialogStatus("");
     }
 
@@ -1307,12 +1640,48 @@
         if (isBackgroundMode()) {
           const bgTarget = imgReplaceBackgroundTarget || getSelectionImageContainer();
           if (!bgTarget) throw new Error("No background target found.");
+          const previousSrc = extractCurrentBackgroundSrc(bgTarget);
+          const readabilityOverlay = selectReadableBackgroundOverlay(bgTarget);
+          const subtreeTargets = [bgTarget, ...Array.from(bgTarget.querySelectorAll("*"))]
+            .filter((node, idx, arr) => {
+              if (!(node instanceof Element)) return false;
+              if (arr.indexOf(node) !== idx) return false;
+              const src = extractCurrentBackgroundSrc(node);
+              return !!src && (!previousSrc || src === previousSrc);
+            });
+          const layerTarget = subtreeTargets[subtreeTargets.length - 1] || bgTarget;
           const replaced = replaceBackgroundImageSource(bgTarget, newSrc);
-          if (!replaced) {
-            bgTarget.style.backgroundImage = `url("${newSrc}")`;
-            bgTarget.style.backgroundSize = bgTarget.style.backgroundSize || "cover";
-            bgTarget.style.backgroundPosition = bgTarget.style.backgroundPosition || "center";
-            bgTarget.style.backgroundRepeat = bgTarget.style.backgroundRepeat || "no-repeat";
+          if (!replaced && subtreeTargets.length <= 1) {
+            forceBackgroundImageSource(bgTarget, newSrc, readabilityOverlay);
+          }
+          subtreeTargets.forEach(node => {
+            if (node !== layerTarget) forceBackgroundImageSource(node, newSrc, readabilityOverlay);
+          });
+          ensureEditorBackgroundLayer(layerTarget, newSrc, readabilityOverlay);
+          let appliedSrc = extractCurrentBackgroundSrc(layerTarget);
+          if (appliedSrc !== newSrc) {
+            forceBackgroundImageSource(layerTarget, newSrc, readabilityOverlay);
+            ensureEditorBackgroundLayer(layerTarget, newSrc, readabilityOverlay);
+            appliedSrc = extractCurrentBackgroundSrc(layerTarget);
+          }
+          if (appliedSrc !== newSrc || appliedSrc === previousSrc) {
+            throw new Error("The new background image did not apply.");
+          }
+          // Remove braid-injected forced CSS that overrides the replaced background with !important.
+          // Retain pseudo-element suppression in a lightweight replacement so ::before/::after
+          // decorative backgrounds from the generated CSS don't bleed through.
+          {
+            const _doc = layerTarget.ownerDocument;
+            const _forceStyle = _doc?.getElementById("braid-masthead-force");
+            const _fixStyle   = _doc?.getElementById("braid-masthead-fix");
+            const _tag = bgTarget?.tagName?.toLowerCase() || "header";
+            [_forceStyle, _fixStyle].forEach(s => s?.remove());
+            if (_doc && !_doc.getElementById("iw-masthead-clear")) {
+              const _s = _doc.createElement("style");
+              _s.id = "iw-masthead-clear";
+              _s.textContent = `${_tag}::before,${_tag}::after{background:none!important;background-image:none!important;content:none!important;box-shadow:none!important;}`;
+              _doc.head?.appendChild(_s);
+            }
           }
           applyReadableForegroundStyles(bgTarget);
           if (imgReplaceIsNew && imgReplaceTarget?.parentNode) {
@@ -1321,9 +1690,17 @@
         } else {
           if (!imgReplaceTarget) throw new Error("No image element selected.");
           imgReplaceTarget.src = newSrc;
-          const maxW = document.getElementById("imgReplaceMaxWidth").value.trim();
-          imgReplaceTarget.style.maxWidth = maxW || "100%";
-          imgReplaceTarget.style.height = "auto";
+          const w = document.getElementById("imgInsertWidth")?.value.trim() || imgInsertInferredSize?.width || "100%";
+          const h = imgReplaceIsNew ? (imgInsertInferredSize?.height || "auto") : "auto";
+          if (w.endsWith("%")) {
+            imgReplaceTarget.style.width = "";
+            imgReplaceTarget.style.maxWidth = w;
+          } else {
+            imgReplaceTarget.style.width = w;
+            imgReplaceTarget.style.maxWidth = "";
+          }
+          imgReplaceTarget.style.height = h;
+          if (imgReplaceIsNew) imgReplaceTarget.style.objectFit = "cover";
         }
         scheduleVisualToCodeSync();
       } catch (err) {
@@ -1377,7 +1754,7 @@
 
       imgRegenerateInProgress = true;
       setImageDialogError("");
-      setImageDialogStatus("Generating image… 1 credit will be used when this finishes.", "");
+      startImageDialogCountdown(90);
       const applyBtn = document.getElementById("imgReplaceApply");
       const cancelBtn = document.getElementById("imgReplaceCancel");
       if (applyBtn) {
@@ -1418,6 +1795,22 @@
           try { data = pollText ? JSON.parse(pollText) : null; } catch {}
           if (data?.status === "done") {
             if (!userId && !data.skipped) incrementAnonCredits();
+            const currentVisualSrc = isBackgroundMode()
+              ? extractCurrentBackgroundSrc(imgReplaceBackgroundTarget || getSelectionImageContainer())
+              : (imgReplaceTarget?.src || "");
+            const newVisualSrc = data.image_data_uri || "";
+            const sameImage = !!currentVisualSrc && !!newVisualSrc && currentVisualSrc === newVisualSrc;
+            console.log("[editor] Image regenerate compare:", {
+              sameImage,
+              current: summarizeImageSource(currentVisualSrc),
+              next: summarizeImageSource(newVisualSrc)
+            });
+            if (sameImage) {
+              stopImageDialogCountdown();
+              setImageDialogError("The generated image matches the current one.");
+              setImageDialogStatus("Generated image matched the current image.", "error");
+              return;
+            }
             if (applyImgReplace(data.image_data_uri)) {
               setEditStatus("Image regenerated.", "ok");
             }
@@ -1437,10 +1830,16 @@
         }
         throw new Error("Image generation timed out.");
       } catch (err) {
-        setImageDialogError(err?.message || "Image generation failed.");
+        stopImageDialogCountdown();
+        const isNetworkFailure = err instanceof TypeError && /failed to fetch/i.test(err.message);
+        const displayMsg = isNetworkFailure
+          ? "Could not reach the image generation service. Make sure the Netlify dev server is running (netlify dev)."
+          : (err?.message || "Image generation failed.");
+        setImageDialogError(displayMsg);
         setImageDialogStatus("Image generation failed.", "error");
-        showLinkedError(err?.message || "Image generation failed.");
+        showLinkedError(displayMsg);
       } finally {
+        stopImageDialogCountdown();
         imgRegenerateInProgress = false;
         if (applyBtn) {
           applyBtn.disabled = false;
@@ -1454,8 +1853,27 @@
 
     document.getElementById("imgReplaceCancel").onclick = () => closeImgReplaceDialog(true);
     document.getElementById("imgReplaceAsBackground").addEventListener("change", syncImageDialogModePreview);
-    document.querySelectorAll('input[name="imgSourceMode"]').forEach(el => {
-      el.addEventListener("change", syncImageSourceModeUi);
+
+    // "+" button toggles source dropdown
+    document.getElementById("imgSourceAddBtn").onclick = e => {
+      e.stopPropagation();
+      document.getElementById("imgSourceDropdown").classList.toggle("open");
+    };
+    // Dropdown items set source mode
+    document.querySelectorAll("#imgSourceDropdown [data-source]").forEach(btn => {
+      btn.onclick = () => {
+        setImageSourceMode(btn.dataset.source);
+        document.getElementById("imgSourceDropdown").classList.remove("open");
+        const focusMap = { url: "imgReplaceUrl", regenerate: "imgReplacePrompt" };
+        const focusId = focusMap[btn.dataset.source];
+        if (focusId) document.getElementById(focusId)?.focus();
+      };
+    });
+    // Close dropdown when clicking outside
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".img-source-add-row")) {
+        document.getElementById("imgSourceDropdown")?.classList.remove("open");
+      }
     });
 
     document.getElementById("imgReplaceApply").onclick = async () => {
@@ -1469,7 +1887,7 @@
         ? imgReplacePending
         : document.getElementById("imgReplaceUrl").value.trim();
       if (!src) {
-        setImageDialogError(mode === "upload" ? "Choose a file first." : "Enter an image URL first.");
+        setImageDialogError(!mode ? "Click + to choose a source first." : mode === "upload" ? "Choose a file first." : "Enter an image URL first.");
         return;
       }
       applyImgReplace(src);

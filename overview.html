@@ -55,27 +55,51 @@
       display:flex;
       flex-direction:column;
       align-items:flex-start;
-      gap: 10px;
+      gap: 4px;
     }
     .headerAside{
       min-width: 220px;
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap: 0;
+      gap: 8px;
     }
-    .headerStatusPanel{
+    .headerAccountBar{
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap: 0;
-      max-width: 260px;
-      flex-shrink:0;
+      justify-content:flex-start;
+      gap:4px;
+      flex-wrap:nowrap;
     }
-    .headerStatusPanel span{
+    .statusNavRow{
+      display:grid !important;
+      grid-template-columns:auto minmax(260px, 1fr) auto;
+      width: 100%;
+      gap: 10px;
+      align-items:center;
+      margin-top: 14px;
+    }
+    .statusNavRow .btn:first-child{ justify-self:start; }
+    .statusNavRow .btn:last-child{ justify-self:end; }
+    .statusNavSlot{
+      min-width:0;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+    }
+    .sharedStatusPanel{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 0;
+      min-width:0;
+      width:100%;
+    }
+    .sharedStatusPanel span{
       display:block;
       font-size:11.5px;
-      text-align:right;
+      text-align:center;
       line-height:1.25;
       min-height: 14px;
       font-variant-numeric: tabular-nums;
@@ -88,11 +112,24 @@
         min-width:0;
         align-items:flex-start;
       }
-      .headerStatusPanel{
+      .headerAccountBar{
         align-items:flex-start;
-        max-width:none;
       }
-      .headerStatusPanel span{
+      .statusNavRow{
+        display:grid !important;
+        grid-template-columns: 1fr;
+      }
+      .statusNavRow .btn:first-child,
+      .statusNavRow .btn:last-child{
+        justify-self:stretch;
+      }
+      .statusNavSlot{
+        justify-content:flex-start;
+      }
+      .sharedStatusPanel{
+        align-items:flex-start;
+      }
+      .sharedStatusPanel span{
         text-align:left;
       }
     }
@@ -493,23 +530,14 @@
           <h1>Personal Portfolio Website Intake</h1>
           <p class="sub">Fill out a quick and easy form. Launch a striking personal website in minutes.</p>
         </div>
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      </div>
+      <div class="headerAside">
+        <div class="headerAccountBar">
           <button id="authBtn" onclick="openAuthModal()">
             <span class="avatar" id="authAvatar">?</span>
             <span id="authBtnLabel">Sign in</span>
           </button>
           <span id="creditsDisplay" style="display:none; font-size:11px; color:var(--muted);"></span>
-        </div>
-      </div>
-      <div class="headerAside">
-        <div id="headerStatusPanel" class="headerStatusPanel">
-          <span id="resumeAnalysisStatus"></span>
-          <span id="jobAnalysisStatus"></span>
-          <span id="templateExtractStatus"></span>
-          <span id="colorsChosenStatus"></span>
-          <span id="braidStatus"></span>
-          <span id="bridgeStatus"></span>
-          <span id="generatingWebsiteStatus"></span>
         </div>
       </div>
     </header>
@@ -642,8 +670,19 @@
       <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
         <button class="btn" type="button" id="dbgSubmit1">Submit</button>
       </div>
-      <div class="btnRow">
+      <div class="btnRow statusNavRow">
         <button class="btn danger" type="button" id="reset1" style="margin-right:auto; display:none;">Reset (double-click)</button>
+        <div class="statusNavSlot" id="statusSlotPage1">
+          <div id="headerStatusPanel" class="sharedStatusPanel">
+            <span id="resumeAnalysisStatus"></span>
+            <span id="jobAnalysisStatus"></span>
+            <span id="templateExtractStatus"></span>
+            <span id="braidStatus"></span>
+            <span id="bridgeStatus"></span>
+            <span id="generatingWebsiteStatus"></span>
+            <span id="colorsChosenStatus"></span>
+          </div>
+        </div>
         <button class="btn primary" type="button" id="next1">Next</button>
       </div>
     </section>
@@ -674,9 +713,9 @@
     <div style="display:flex; flex-direction:column; gap:5px;">
       <label for="primary"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="primary-label">1</span><input id="primary"   type="color" value="#000000" /></label>
       <label for="secondary" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="secondary-label">2</span><input id="secondary" type="color" value="#000000" /></label>
-      <label for="accent"    style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="accent-label">3</span><input id="accent"    type="color" value="#000000" /></label>
-      <label for="dark"      style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="dark-label">4</span><input id="dark"      type="color" value="#000000" /></label>
-      <label for="light"     style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="light-label">5</span><input id="light"     type="color" value="#000000" /></label>
+      <label for="tertiary"  style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="tertiary-label">3</span><input id="tertiary"  type="color" value="#000000" /></label>
+      <label for="accent2"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="accent2-label">4</span><input id="accent2"   type="color" value="#000000" /></label>
+      <label for="accent1"   style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><span id="accent1-label">5</span><input id="accent1"   type="color" value="#000000" /></label>
     </div>
     <div class="field" style="margin-top:14px;">
       <label for="paletteUsageNote">Palette usage notes (optional)</label>
@@ -712,16 +751,16 @@
             <input id="secondary" type="text" placeholder="#FBAB9C" />
           </div>
           <div>
-            <label for="accent">3. Accent</label>
-            <input id="accent" type="text" placeholder="#8DE0FF" />
+            <label for="tertiary">3. Tertiary</label>
+            <input id="tertiary" type="text" placeholder="#8DE0FF" />
           </div>
           <div>
-            <label for="dark">4. Dark</label>
-            <input id="dark" type="text" placeholder="#0b1220" />
+            <label for="accent2">4. Accent 2</label>
+            <input id="accent2" type="text" placeholder="#0b1220" />
           </div>
           <div>
-            <label for="light">5. Light</label>
-            <input id="light" type="text" placeholder="#eaf0ff" />
+            <label for="accent1">5. Accent 1</label>
+            <input id="accent1" type="text" placeholder="#eaf0ff" />
           </div>
         </div-->
 
@@ -734,14 +773,11 @@
         <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
           <button class="btn" type="button" id="dbgSubmit4">Submit</button>
         </div>
-        <div class="btnRow" style="align-items:center;">
+        <div class="btnRow statusNavRow" style="align-items:center;">
           <button class="btn ghost" type="button" id="back4">Back</button>
-          <span id="colorsSubmitMsg" style="flex:1; font-size:12px; color:rgba(118,176,34,.9); text-align:right; padding-right:10px;"></span>
-          <button class="btn primary" type="button" id="next4">Submit</button>
+          <div class="statusNavSlot" id="statusSlotPage4"></div>
         </div>
-
         <div class="btnRow" style="margin-top:14px; justify-content:flex-end; align-items:center;">
-          <span id="generatorReadyMsg" style="font-size:12px; color:rgba(118,176,34,.9); flex:1;"></span>
           <button class="btn primary" type="button" id="next2_bottom" disabled style="opacity:.4; cursor:not-allowed;">Open Editor</button>
         </div>
 
@@ -912,9 +948,10 @@
       <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
         <button class="btn" type="button" id="dbgSubmit3">Submit</button>
       </div>
-      <div class="btnRow" style="margin-top:14px;">
+      <div class="btnRow statusNavRow" style="margin-top:14px;">
         <button class="btn ghost" type="button" id="back3_bottom">Back</button>
-        <button class="btn primary" type="button" id="next3_bottom" style="margin-left:auto;">Next</button>
+        <div class="statusNavSlot" id="statusSlotPage3"></div>
+        <button class="btn primary" type="button" id="next3_bottom">Next</button>
       </div>
     </section>
 
@@ -940,9 +977,10 @@
       <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
         <button class="btn" type="button" id="dbgSubmit2">Submit</button>
       </div>
-      <div class="btnRow">
+      <div class="btnRow statusNavRow">
         <button class="btn ghost" type="button" id="back5">Back</button>
-        <button class="btn primary" type="button" id="submit_bottom" style="margin-left:auto;">Next</button>
+        <div class="statusNavSlot" id="statusSlotPage2"></div>
+        <button class="btn primary" type="button" id="submit_bottom">Next</button>
       </div>
 
     </section>
@@ -1021,6 +1059,12 @@
           <button class="btn mini ghost" type="button" id="cpSummaryHtml">Copy</button>
           <button class="btn mini ghost" type="button" id="vwSummaryHtml">View</button>
           <button class="btn mini ghost" type="button" id="recomputeStage5">↺ Recompute</button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <span style="font-size:11.5px; color:rgba(234,240,255,.55); width:220px; flex-shrink:0;">4 · Masthead Image</span>
+          <button class="btn mini" type="button" id="dlMastheadImage">↓ masthead-image.png</button>
+          <button class="btn mini ghost" type="button" id="vwMastheadImage">View</button>
         </div>
 
         <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:4px; padding-top:6px; border-top:1px solid rgba(255,255,255,.08);">

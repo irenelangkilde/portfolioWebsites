@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dr. Aria Patel - Physics Portfolio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            /* Five main theme colors */
+            --dominant:   #8b5cf6;   /* 1. Dominant    — primary violet, masthead accent & CTA */
+            --secondary:  #1e1b4b;   /* 2. Secondary   — deep indigo, hero background & footer */
+            --tertiary:   #3b82f6;   /* 3. Tertiary    — blue, publications & secondary accents */
+            --quaternary: #06b6d4;   /* 4. Quaternary  — cyan, computational research card accent */
+            --quinary:    #f0f9ff;   /* 5. Quinary     — light sky tint, section backgrounds */
+
+            /* Theme-independent hard-coded neutrals */
+            --white:   #ffffff;
+            --black:   #000000;
+
+            /* Derived tokens */
+            --gradient:        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --cosmic:          linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, var(--secondary) 100%);
+            --card-shadow:     color-mix(in srgb, var(--dominant) 10%, transparent);
+            --card-shadow-hover: color-mix(in srgb, var(--dominant) 20%, transparent);
+            --nav-shadow:      color-mix(in srgb, var(--dominant) 10%, transparent);
+            --hero-glow:       color-mix(in srgb, var(--dominant) 50%, transparent);
+            --social-hover-shadow: color-mix(in srgb, var(--dominant) 30%, transparent);
+            --wave-border:     color-mix(in srgb, var(--dominant) 20%, transparent);
+            --wave-bg:         color-mix(in srgb, var(--dominant) 5%, transparent);
+            --wave-bg2:        color-mix(in srgb, var(--tertiary) 5%, transparent);
+            --resume-shadow:   color-mix(in srgb, var(--dominant) 8%, transparent);
+            --pub-shadow:      color-mix(in srgb, var(--dominant) 6%, transparent);
+            --contact-shadow:  color-mix(in srgb, var(--dominant) 8%, transparent);
+            --muted-text:      #6b7280;
+            --skill-border:    #f0f0f0;
+            --skill-level-color: #9ca3af;
+            --research-tag-bg: #f3f4f6;
+            --research-card-shadow: rgba(0,0,0,0.1);
+        }
+
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            line-height: 1.6;
+            color: var(--secondary);
+            background: var(--white);
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            box-shadow: 0 2px 15px var(--nav-shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 20px;
+        }
+
+        nav .logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dominant);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        nav .logo::before {
+            content: '⚛️';
+            font-size: 1.8rem;
+        }
+
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--secondary);
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--dominant);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: var(--cosmic);
+            color: var(--white);
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, var(--white), transparent),
+                radial-gradient(2px 2px at 60% 70%, var(--white), transparent),
+                radial-gradient(1px 1px at 50% 50%, var(--white), transparent),
+                radial-gradient(1px 1px at 80% 10%, var(--white), transparent),
+                radial-gradient(2px 2px at 90% 60%, var(--white), transparent),
+                radial-gradient(1px 1px at 33% 80%, var(--white), transparent);
+            background-size: 200% 200%;
+            animation: stars 60s linear infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes stars {
+            from {
+                background-position: 0 0;
+            }
+            to {
+                background-position: -200% -200%;
+            }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .profile-photo {
+            width: 190px;
+            height: 190px;
+            border-radius: 50%;
+            border: 5px solid rgba(255,255,255,0.3);
+            object-fit: cover;
+            margin: 0 auto 25px;
+            display: block;
+            box-shadow: 0 0 40px var(--hero-glow);
+            background: var(--gradient);
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .hero .subtitle {
+            font-size: 1.4rem;
+            margin-bottom: 20px;
+            opacity: 0.95;
+            font-weight: 300;
+        }
+
+        .hero .graduation {
+            font-size: 1.05rem;
+            opacity: 0.9;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 13px 32px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--white);
+            color: var(--dominant);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: var(--white);
+            color: var(--dominant);
+        }
+
+        /* Section Styles */
+        section {
+            padding: 85px 0;
+        }
+
+        section h2 {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            color: var(--dominant);
+            font-weight: 700;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--muted-text);
+            font-size: 1.15rem;
+            margin-bottom: 55px;
+        }
+
+        /* About Section */
+        .about {
+            background: var(--quinary);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.9;
+        }
+
+        .about-content p {
+            margin-bottom: 20px;
+        }
+
+        /* Skills Section */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+
+        .skill-category {
+            background: var(--white);
+            padding: 32px;
+            border-radius: 18px;
+            box-shadow: 0 5px 25px var(--card-shadow);
+            transition: all 0.3s;
+            border-top: 4px solid var(--dominant);
+        }
+
+        .skill-category:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 40px var(--card-shadow-hover);
+        }
+
+        .skill-category h3 {
+            color: var(--dominant);
+            margin-bottom: 22px;
+            font-size: 1.35rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .skill-icon {
+            font-size: 1.6rem;
+        }
+
+        .skill-list {
+            list-style: none;
+        }
+
+        .skill-list li {
+            padding: 11px 0;
+            border-bottom: 1px solid var(--skill-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .skill-list li:last-child {
+            border-bottom: none;
+        }
+
+        .skill-level {
+            font-size: 0.85rem;
+            color: var(--skill-level-color);
+            font-weight: 600;
+        }
+
+        /* Research Section */
+        .research {
+            background: var(--white);
+        }
+
+        .research-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 35px;
+        }
+
+        .research-card {
+            background: var(--white);
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px var(--research-card-shadow);
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+
+        .research-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px var(--card-shadow-hover);
+            border-color: var(--dominant);
+        }
+
+        .research-image {
+            width: 100%;
+            height: 230px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4.5rem;
+            color: var(--white);
+            position: relative;
+        }
+
+        .research-image.quantum {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .research-image.astro {
+            background: linear-gradient(135deg, #1e3a8a 0%, #312e81 100%);
+        }
+
+        .research-image.particle {
+            background: linear-gradient(135deg, var(--tertiary) 0%, #2563eb 100%);
+        }
+
+        .research-image.computational {
+            background: linear-gradient(135deg, var(--quaternary) 0%, #0891b2 100%);
+        }
+
+        .research-image.optics {
+            background: linear-gradient(135deg, var(--dominant) 0%, #7c3aed 100%);
+        }
+
+        .research-image.condensed {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        }
+
+        .research-content {
+            padding: 28px;
+        }
+
+        .research-content h3 {
+            color: var(--secondary);
+            margin-bottom: 12px;
+            font-size: 1.45rem;
+        }
+
+        .research-field {
+            display: inline-block;
+            background: var(--quinary);
+            color: var(--dominant);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+        }
+
+        .research-content p {
+            color: var(--muted-text);
+            margin-bottom: 15px;
+            line-height: 1.7;
+        }
+
+        .research-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .research-tag {
+            background: var(--research-tag-bg);
+            color: var(--secondary);
+            padding: 5px 13px;
+            border-radius: 20px;
+            font-size: 0.82rem;
+            font-weight: 600;
+        }
+
+        /* Resume Section */
+        .resume {
+            background: var(--quinary);
+        }
+
+        .resume-content {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .resume-section {
+            margin-bottom: 45px;
+        }
+
+        .resume-section h3 {
+            color: var(--dominant);
+            font-size: 1.9rem;
+            margin-bottom: 28px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--dominant);
+        }
+
+        .resume-item {
+            background: var(--white);
+            padding: 28px;
+            border-radius: 15px;
+            margin-bottom: 22px;
+            box-shadow: 0 5px 20px var(--resume-shadow);
+            border-left: 5px solid var(--dominant);
+        }
+
+        .resume-item h4 {
+            color: var(--secondary);
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+        }
+
+        .resume-item .meta {
+            color: var(--muted-text);
+            font-size: 0.95rem;
+            margin-bottom: 14px;
+            display: flex;
+            gap: 22px;
+            flex-wrap: wrap;
+        }
+
+        .resume-item ul {
+            margin-left: 20px;
+            color: var(--secondary);
+        }
+
+        .resume-item ul li {
+            margin-bottom: 9px;
+            line-height: 1.6;
+        }
+
+        .download-resume {
+            text-align: center;
+            margin-top: 45px;
+        }
+
+        .publications {
+            background: var(--white);
+            padding: 25px;
+            border-radius: 12px;
+            margin-bottom: 18px;
+            box-shadow: 0 3px 15px var(--pub-shadow);
+            border-left: 4px solid var(--tertiary);
+        }
+
+        .publications h5 {
+            color: var(--tertiary);
+            margin-bottom: 10px;
+            font-size: 1.05rem;
+        }
+
+        .publications p {
+            color: var(--muted-text);
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        /* Contact Section */
+        .contact {
+            background: var(--white);
+        }
+
+        .contact-content {
+            max-width: 650px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .contact-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin: 45px 0;
+        }
+
+        .contact-item {
+            background: var(--quinary);
+            padding: 32px;
+            border-radius: 18px;
+            box-shadow: 0 5px 20px var(--contact-shadow);
+            transition: all 0.3s;
+        }
+
+        .contact-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 35px var(--card-shadow-hover);
+        }
+
+        .contact-item h3 {
+            color: var(--dominant);
+            margin-bottom: 15px;
+            font-size: 1.25rem;
+        }
+
+        .contact-item a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-item a:hover {
+            color: var(--dominant);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 35px;
+        }
+
+        .social-links a {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: var(--gradient);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            font-size: 1.5rem;
+            transition: all 0.3s;
+        }
+
+        .social-links a:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 10px 30px var(--social-hover-shadow);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--secondary);
+            color: var(--white);
+            text-align: center;
+            padding: 35px 0;
+        }
+
+        footer p {
+            opacity: 0.85;
+        }
+
+        /* Wave Function Visualization */
+        .wave-canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 50px auto 0;
+            padding: 30px;
+            background: linear-gradient(135deg, var(--wave-bg) 0%, var(--wave-bg2) 100%);
+            border-radius: 20px;
+            border: 2px solid var(--wave-border);
+            box-shadow: 0 10px 40px var(--card-shadow-hover);
+        }
+
+        .wave-canvas-container h3 {
+            text-align: center;
+            color: var(--dominant);
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .wave-equation {
+            text-align: center;
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+            color: var(--muted-text);
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        #waveCanvas {
+            width: 100%;
+            height: 300px;
+            border-radius: 12px;
+            background: var(--white);
+            box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .wave-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .wave-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--secondary);
+        }
+
+        .wave-control label {
+            font-weight: 600;
+        }
+
+        .wave-control input[type="range"] {
+            width: 120px;
+            accent-color: var(--dominant);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav ul {
+                gap: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .hero h1 {
+                font-size: 2.2rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.1rem;
+            }
+
+            section h2 {
+                font-size: 2rem;
+            }
+
+            .research-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .wave-canvas-container {
+                padding: 20px;
+            }
+
+            #waveCanvas {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="logo">Aria Patel</div>
+            <ul>
+                <li><a href="#about">About</a></li>
+                <li><a href="#skills">Skills</a></li>
+                <li><a href="#research">Research</a></li>
+                <li><a href="#resume">Resume</a></li>
+                <li><a href="#contact">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='190' height='190'%3E%3Cdefs%3E%3ClinearGradient id='grad1' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect fill='url(%23grad1)' width='190' height='190'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial, sans-serif' font-size='80' fill='white' font-weight='bold'%3EAP%3C/text%3E%3C/svg%3E" alt="Aria Patel" class="profile-photo">
+            <h1>Aria Patel</h1>
+            <p class="subtitle">Physics Major | Computational Researcher</p>
+            <p class="graduation">🔬 BS in Physics | Graduating Spring 2026 | Research Focus: Quantum Computing</p>
+            <div class="cta-buttons">
+                <a href="#research" class="btn btn-primary">View Research</a>
+                <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About Me</h2>
+            <p class="section-subtitle">Exploring the fundamental nature of the universe through research and computation</p>
+            <div class="about-content">
+                <p>I'm a dedicated physics student with a passion for understanding the fundamental laws that govern our universe. My research interests span quantum mechanics, computational physics, and astrophysics, with a particular focus on quantum computing applications and many-body systems.</p>
+                <p>Through rigorous coursework, research experience, and computational projects, I've developed strong analytical skills and proficiency in both theoretical frameworks and experimental techniques. I'm experienced in Python, C++, and MATLAB for scientific computing, and have contributed to research in quantum simulation and condensed matter physics.</p>
+                <p>I'm seeking opportunities in research laboratories, tech companies working on quantum computing, data science positions, or graduate programs where I can apply my physics knowledge and computational skills to solve complex problems and advance scientific understanding.</p>
+            </div>
+
+            <!-- Interactive Wave Function Visualization -->
+            <div class="wave-canvas-container">
+                <h3>🌊 Quantum Wave Interference Simulator</h3>
+                <div class="wave-equation">ψ(x,t) = A·sin(kx - ωt + φ)</div>
+                <canvas id="waveCanvas"></canvas>
+                <div class="wave-controls">
+                    <div class="wave-control">
+                        <label>Frequency:</label>
+                        <input type="range" id="frequency" min="1" max="10" value="3" step="0.5">
+                        <span id="freqValue">3</span>
+                    </div>
+                    <div class="wave-control">
+                        <label>Amplitude:</label>
+                        <input type="range" id="amplitude" min="20" max="80" value="50" step="5">
+                        <span id="ampValue">50</span>
+                    </div>
+                    <div class="wave-control">
+                        <label>Waves:</label>
+                        <input type="range" id="waveCount" min="1" max="5" value="2" step="1">
+                        <span id="waveValue">2</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Skills Section -->
+    <section id="skills">
+        <div class="container">
+            <h2>Technical Skills</h2>
+            <p class="section-subtitle">Computational expertise and experimental proficiency</p>
+            <div class="skills-grid">
+                <div class="skill-category">
+                    <h3><span class="skill-icon">💻</span>Programming & Computing</h3>
+                    <ul class="skill-list">
+                        <li><span>Python (NumPy, SciPy, Pandas)</span><span class="skill-level">Expert</span></li>
+                        <li><span>C/C++</span><span class="skill-level">Advanced</span></li>
+                        <li><span>MATLAB</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Mathematica</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Julia</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>LaTeX</span><span class="skill-level">Expert</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">🔬</span>Specialized Tools</h3>
+                    <ul class="skill-list">
+                        <li><span>Qiskit (Quantum)</span><span class="skill-level">Advanced</span></li>
+                        <li><span>ROOT (CERN)</span><span class="skill-level">Proficient</span></li>
+                        <li><span>COMSOL Multiphysics</span><span class="skill-level">Intermediate</span></li>
+                        <li><span>LabVIEW</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Origin/Igor Pro</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Git/GitHub</span><span class="skill-level">Advanced</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">📊</span>Data Analysis & Simulation</h3>
+                    <ul class="skill-list">
+                        <li><span>Machine Learning (TensorFlow)</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Monte Carlo Simulations</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Statistical Analysis</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Numerical Methods</span><span class="skill-level">Expert</span></li>
+                        <li><span>Data Visualization</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Signal Processing</span><span class="skill-level">Proficient</span></li>
+                    </ul>
+                </div>
+
+                <div class="skill-category">
+                    <h3><span class="skill-icon">⚡</span>Physics Competencies</h3>
+                    <ul class="skill-list">
+                        <li><span>Quantum Mechanics</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Statistical Mechanics</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Electromagnetism</span><span class="skill-level">Advanced</span></li>
+                        <li><span>Classical Mechanics</span><span class="skill-level">Expert</span></li>
+                        <li><span>Optics & Photonics</span><span class="skill-level">Proficient</span></li>
+                        <li><span>Experimental Design</span><span class="skill-level">Advanced</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Research Section -->
+    <section id="research" class="research">
+        <div class="container">
+            <h2>Research Experience</h2>
+            <p class="section-subtitle">Projects spanning theoretical, computational, and experimental physics</p>
+            <div class="research-grid">
+                <div class="research-card">
+                    <div class="research-image quantum">⚛️</div>
+                    <div class="research-content">
+                        <span class="research-field">Quantum Computing</span>
+                        <h3>Quantum Error Correction Algorithms</h3>
+                        <p>Developed and tested quantum error correction protocols using Qiskit. Simulated surface codes and analyzed error rates in noisy quantum systems, contributing to improved gate fidelity metrics.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">Qiskit</span>
+                            <span class="research-tag">Python</span>
+                            <span class="research-tag">Quantum Algorithms</span>
+                            <span class="research-tag">Error Correction</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="research-image astro">🌌</div>
+                    <div class="research-content">
+                        <span class="research-field">Astrophysics</span>
+                        <h3>Exoplanet Transit Analysis</h3>
+                        <p>Analyzed lightcurve data from TESS satellite to detect and characterize exoplanets. Used Python and statistical methods to identify transit signals and estimate planetary parameters including radius and orbital period.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">Python</span>
+                            <span class="research-tag">Data Analysis</span>
+                            <span class="research-tag">TESS</span>
+                            <span class="research-tag">Astrophysics</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="research-image particle">🔮</div>
+                    <div class="research-content">
+                        <span class="research-field">Particle Physics</span>
+                        <h3>High-Energy Collision Simulations</h3>
+                        <p>Conducted Monte Carlo simulations of particle collisions using C++ and ROOT framework. Analyzed decay channels and reconstructed particle trajectories to understand fundamental interaction processes.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">C++</span>
+                            <span class="research-tag">ROOT</span>
+                            <span class="research-tag">Monte Carlo</span>
+                            <span class="research-tag">HEP</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="research-image computational">💡</div>
+                    <div class="research-content">
+                        <span class="research-field">Computational Physics</span>
+                        <h3>Molecular Dynamics Simulation</h3>
+                        <p>Implemented molecular dynamics simulations to study thermal properties of materials. Developed custom Python code to model atomic interactions and analyze phase transitions in nanoscale systems.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">Python</span>
+                            <span class="research-tag">NumPy</span>
+                            <span class="research-tag">Molecular Dynamics</span>
+                            <span class="research-tag">Materials</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="research-image optics">🌈</div>
+                    <div class="research-content">
+                        <span class="research-field">Optics</span>
+                        <h3>Laser Spectroscopy Study</h3>
+                        <p>Performed high-resolution laser spectroscopy experiments to measure atomic transition frequencies. Used LabVIEW for data acquisition and analyzed spectral lines to determine quantum state properties.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">LabVIEW</span>
+                            <span class="research-tag">Spectroscopy</span>
+                            <span class="research-tag">Optics</span>
+                            <span class="research-tag">Experimental</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="research-card">
+                    <div class="research-image condensed">🧲</div>
+                    <div class="research-content">
+                        <span class="research-field">Condensed Matter</span>
+                        <h3>Superconductor Phase Transitions</h3>
+                        <p>Investigated critical temperature behavior in high-Tc superconductors using resistance measurements. Analyzed temperature-dependent data and modeled phase transition dynamics using mean-field theory.</p>
+                        <div class="research-tags">
+                            <span class="research-tag">MATLAB</span>
+                            <span class="research-tag">Experimental</span>
+                            <span class="research-tag">Superconductivity</span>
+                            <span class="research-tag">Materials</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Resume Section -->
+    <section id="resume" class="resume">
+        <div class="container">
+            <h2>Resume</h2>
+            <p class="section-subtitle">Academic achievements and research experience</p>
+            <div class="resume-content">
+                <div class="resume-section">
+                    <h3>Education</h3>
+                    <div class="resume-item">
+                        <h4>Bachelor of Science in Physics</h4>
+                        <div class="meta">
+                            <span>📍 Research University</span>
+                            <span>📅 Expected Graduation: May 2026</span>
+                            <span>🎯 GPA: 3.95/4.0</span>
+                        </div>
+                        <ul>
+                            <li>Honors Program | Presidential Scholar | Phi Beta Kappa</li>
+                            <li>Concentration: Quantum Computing & Condensed Matter Physics</li>
+                            <li>Senior Thesis: "Quantum Error Mitigation in NISQ-Era Quantum Computers"</li>
+                            <li>Relevant Coursework: Quantum Mechanics I & II, Statistical Mechanics, Electrodynamics, Mathematical Methods, Computational Physics, Particle Physics, Solid State Physics, Advanced Lab</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Research Experience</h3>
+                    <div class="resume-item">
+                        <h4>Undergraduate Research Assistant</h4>
+                        <div class="meta">
+                            <span>📍 Quantum Computing Lab, Physics Department</span>
+                            <span>📅 Sep 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Developing quantum algorithms for error mitigation on NISQ quantum computers</li>
+                            <li>Implemented quantum circuits using Qiskit and tested on IBM quantum hardware</li>
+                            <li>Analyzed performance metrics and optimized gate sequences for improved fidelity</li>
+                            <li>Co-authored paper submitted to Physical Review A (under review)</li>
+                            <li>Presented findings at regional American Physical Society conference</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Summer Research Intern</h4>
+                        <div class="meta">
+                            <span>📍 National Laboratory - Particle Physics Division</span>
+                            <span>📅 Summer 2025</span>
+                        </div>
+                        <ul>
+                            <li>Conducted data analysis for high-energy physics experiments using ROOT and C++</li>
+                            <li>Developed Monte Carlo simulations to model particle detector responses</li>
+                            <li>Collaborated with international research team on data quality assessment</li>
+                            <li>Contributed to calibration procedures for detector subsystems</li>
+                            <li>Presented results at weekly collaboration meetings</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Research Assistant - Condensed Matter Lab</h4>
+                        <div class="meta">
+                            <span>📍 Materials Physics Lab</span>
+                            <span>📅 Jan 2024 - Aug 2024</span>
+                        </div>
+                        <ul>
+                            <li>Investigated superconducting properties of novel materials at cryogenic temperatures</li>
+                            <li>Operated and maintained low-temperature measurement systems</li>
+                            <li>Analyzed resistance and magnetic susceptibility data using Python</li>
+                            <li>Contributed to group publication on phase transition dynamics</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Publications & Presentations</h3>
+                    <div class="publications">
+                        <h5>Paper Submitted</h5>
+                        <p>A. Patel, Dr. J. Smith, et al. "Optimization of Quantum Error Mitigation Protocols for NISQ Devices" - Physical Review A (2025, under review)</p>
+                    </div>
+                    <div class="publications">
+                        <h5>Conference Presentations</h5>
+                        <p>"Quantum Error Correction in Near-Term Quantum Computing" - American Physical Society March Meeting (2025)</p>
+                        <p>"Analysis of Superconducting Phase Transitions in High-Tc Materials" - Undergraduate Research Symposium (2024)</p>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Teaching & Leadership</h3>
+                    <div class="resume-item">
+                        <h4>Physics Tutor & Teaching Assistant</h4>
+                        <div class="meta">
+                            <span>📅 Sep 2023 - Present</span>
+                        </div>
+                        <ul>
+                            <li>TA for Introductory Physics Lab - assist students with experiments and data analysis</li>
+                            <li>Tutor students in quantum mechanics, E&M, and classical mechanics</li>
+                            <li>Grade problem sets and provide detailed feedback on solutions</li>
+                            <li>Hold weekly office hours and review sessions before exams</li>
+                        </ul>
+                    </div>
+
+                    <div class="resume-item">
+                        <h4>Society of Physics Students - President</h4>
+                        <div class="meta">
+                            <span>📅 May 2024 - Present</span>
+                        </div>
+                        <ul>
+                            <li>Lead organization of 100+ members promoting physics education and outreach</li>
+                            <li>Organize seminars with faculty and visiting researchers</li>
+                            <li>Coordinate participation in Physics Olympiad and competitions</li>
+                            <li>Manage annual physics demonstration show for local schools</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="resume-section">
+                    <h3>Awards & Honors</h3>
+                    <div class="resume-item">
+                        <ul>
+                            <li>Presidential Scholarship (Full Tuition, 2022-2026)</li>
+                            <li>Phi Beta Kappa Honors Society</li>
+                            <li>Barry Goldwater Scholarship Honorable Mention (2025)</li>
+                            <li>Outstanding Undergraduate Researcher Award (2024)</li>
+                            <li>Dean's List All Semesters</li>
+                            <li>Physics Department Undergraduate Research Award (2024)</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="download-resume">
+                    <a href="#" class="btn btn-primary">📄 Download Full CV & Resume</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+        <div class="container">
+            <h2>Let's Connect</h2>
+            <p class="section-subtitle">Open to research opportunities, graduate programs, and industry positions</p>
+            <div class="contact-content">
+                
+                <div class="contact-info">
+                    <div class="contact-item">
+                        <h3>📧 Email</h3>
+                        <a href="mailto:aria.patel@email.edu">aria.patel@email.edu</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📱 Phone</h3>
+                        <a href="tel:+15558889999">(555) 888-9999</a>
+                    </div>
+                    <div class="contact-item">
+                        <h3>📍 Location</h3>
+                        <p>Boston, MA<br>Open to Relocation</p>
+                    </div>
+                </div>
+
+                <div class="social-links">
+                    <a href="https://linkedin.com/in/ariapatel" target="_blank" title="LinkedIn">in</a>
+                    <a href="https://github.com/ariapatel" target="_blank" title="GitHub">💻</a>
+                    <a href="https://orcid.org/0000-0000-0000-0000" target="_blank" title="ORCID">📚</a>
+                    <a href="mailto:aria.patel@email.edu" title="Email">✉️</a>
+                </div>
+
+                <p style="margin-top: 30px; color: var(--muted-text);">Research Interests: Quantum Computing • Computational Physics • Condensed Matter • Data Science</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Aria Patel | Physics Research Portfolio</p>
+            <p style="margin-top: 8px; font-size: 0.9rem;">"The universe is not only stranger than we imagine, it is stranger than we can imagine" - J.B.S. Haldane</p>
+        </div>
+    </footer>
+
+    <script>
+        // Quantum Wave Interference Visualization
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Wave parameters
+        let frequency = 3;
+        let amplitude = 50;
+        let waveCount = 2;
+        let time = 0;
+
+        // Control event listeners
+        document.getElementById('frequency').addEventListener('input', (e) => {
+            frequency = parseFloat(e.target.value);
+            document.getElementById('freqValue').textContent = frequency;
+        });
+
+        document.getElementById('amplitude').addEventListener('input', (e) => {
+            amplitude = parseFloat(e.target.value);
+            document.getElementById('ampValue').textContent = amplitude;
+        });
+
+        document.getElementById('waveCount').addEventListener('input', (e) => {
+            waveCount = parseInt(e.target.value);
+            document.getElementById('waveValue').textContent = waveCount;
+        });
+
+        // Animation function
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const centerY = canvas.height / 2;
+            const width = canvas.width;
+
+            // Draw axis
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(width, centerY);
+            ctx.stroke();
+
+            // Calculate combined wave
+            const combinedWave = [];
+            for (let x = 0; x < width; x++) {
+                let y = 0;
+                for (let i = 0; i < waveCount; i++) {
+                    const k = (frequency * (i + 1)) * 0.02;
+                    const phase = i * Math.PI / 3;
+                    y += amplitude * Math.sin(k * x - time + phase) / waveCount;
+                }
+                combinedWave.push(y);
+            }
+
+            // Draw individual waves (faded)
+            for (let i = 0; i < waveCount; i++) {
+                ctx.beginPath();
+                ctx.strokeStyle = `hsla(${250 + i * 30}, 70%, 60%, 0.3)`;
+                ctx.lineWidth = 1.5;
+
+                for (let x = 0; x < width; x++) {
+                    const k = (frequency * (i + 1)) * 0.02;
+                    const phase = i * Math.PI / 3;
+                    const y = centerY + amplitude * Math.sin(k * x - time + phase) / waveCount;
+
+                    if (x === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                }
+                ctx.stroke();
+            }
+
+            // Draw combined wave (interference pattern)
+            ctx.beginPath();
+            ctx.strokeStyle = '#8b5cf6';
+            ctx.lineWidth = 3;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(139, 92, 246, 0.5)';
+
+            for (let x = 0; x < width; x++) {
+                const y = centerY + combinedWave[x];
+                if (x === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+
+            // Draw particle positions (probability density)
+            for (let x = 0; x < width; x += 20) {
+                const y = centerY + combinedWave[x];
+                const intensity = Math.abs(combinedWave[x]) / amplitude;
+                const size = 2 + intensity * 4;
+
+                ctx.fillStyle = `rgba(139, 92, 246, ${intensity * 0.8})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Update time
+            time += 0.05;
+
+            requestAnimationFrame(animate);
+        }
+
+        // Start animation
+        animate();
+    </script>
+</body>
+</html>

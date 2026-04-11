@@ -52,9 +52,9 @@ themes.forEach((colors, i) => {
     const theme = {
       primary: colors[0],
       secondary: colors[1],
-      accent: colors[2],
-      dark: colors[3],
-      light: colors[4]
+      tertiary: colors[2],
+      accent2: colors[3],
+      accent1: colors[4]
     };
 
     window.parent.postMessage({

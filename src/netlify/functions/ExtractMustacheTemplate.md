@@ -263,14 +263,14 @@ CONVERSION RULES
 9. OUTPUT a single complete HTML file. No markdown. No explanation.
 
 10. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
-   <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "dark": "<hex>", "light": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
+   <!-- { "default_color_scheme": { "primary": "<hex>", "secondary": "<hex>", "tertiary": "<hex>", "accent1": "<hex>", "accent2": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
    Populate it with:
    - default_color_scheme: the original hardcoded hex values from the template's CSS :root block in strict slot order:
      - primary   → slot 1, the most dominant color in the header / masthead (foreground or background)
      - secondary → slot 2, the second most dominant masthead color that is clearly distinct from slot 1
-     - accent    → slot 3, the third most dominant distinct color
-     - dark      → slot 4, the fourth distinct supporting color
-     - light     → slot 5, the fifth distinct supporting color
+     - tertiary    → slot 3, the third most dominant distinct color
+     - accent1      → slot 4, the fourth distinct supporting color
+     - accent2     → slot 5, the fifth distinct supporting color
      The five slots are ordered by visual prominence and distinctness, not by old semantic categories like background/accent/text.
      This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
    - about_word_count: the exact word count of the original about/summary text that you replaced with {{about}}.
@@ -322,11 +322,11 @@ Example:
 <style>
     :root {
       /* Five main theme colors */
-      --color-dominant:   #150b2d;   /* 1. Dominant    — deepest, most prominent masthead color */
-      --color-secondary:  #072e3d;   /* 2. Secondary   — second prominent masthead/panel color  */
-      --color-tertiary:   #2563eb;   /* 3. Tertiary    — third distinct CTA/highlight color      */
-      --color-quaternary: #94a3b8;   /* 4. Quaternary  — lower-prominence supporting color       */
-      --color-quinary:    #e5e7eb;   /* 5. Quinary     — least-prominent supporting contrast     */
+      --dominant:   #150b2d;   /* 1. Dominant    — deepest, most prominent masthead color */
+      --secondary:  #072e3d;   /* 2. Secondary   — second prominent masthead/panel color  */
+      --tertiary:   #2563eb;   /* 3. Tertiary    — third distinct CTA/highlight color      */
+      --quaternary: #94a3b8;   /* 4. Quaternary  — lower-prominence supporting color       */
+      --quinary:    #e5e7eb;   /* 5. Quinary     — least-prominent supporting contrast     */
 
       /* Theme-independent hard-coded neutrals */
       --white:   #ffffff;

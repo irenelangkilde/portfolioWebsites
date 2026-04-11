@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8"/>
+        <title>Jordan Ellis – History Graduate Portfolio</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link href="css/theme.css" rel="stylesheet" type="text/css">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <style>
+            :root {
+                /* Five main theme colors */
+                --dominant:   #f3e5d8;   /* 1. Dominant    — warm parchment page background */
+                --secondary:  #171515;   /* 2. Secondary   — deep near-black for buttons, contact card, brand */
+                --tertiary:   #e3c0af;   /* 3. Tertiary    — muted rose accent for shapes, bubbles, hero circle */
+                --quaternary: #9b8579;   /* 4. Quaternary  — warm taupe for muted/supporting text */
+                --quinary:    #2a211c;   /* 5. Quinary     — dark espresso for primary body text */
+
+                /* Theme-independent hard-coded neutrals */
+                --white: #ffffff;
+                --black: #000000;
+
+                /* Derived tokens */
+                --bg-main:       var(--dominant);
+                --bg-card:       color-mix(in srgb, var(--dominant) 60%, var(--white));
+                --accent-soft:   var(--tertiary);
+                --accent-dark:   var(--secondary);
+                --text-muted:    var(--quaternary);
+                --text-main:     var(--quinary);
+                --button-dark:   var(--black);
+                --button-light:  color-mix(in srgb, var(--white) 99%, var(--dominant));
+                --card-surface:  color-mix(in srgb, var(--white) 50%, transparent);
+                --card-border:   color-mix(in srgb, var(--white) 65%, transparent);
+                --hero-text-col: color-mix(in srgb, var(--quinary) 70%, var(--tertiary));
+                --section-sub:   color-mix(in srgb, var(--quinary) 70%, var(--tertiary));
+                --list-text:     color-mix(in srgb, var(--quinary) 80%, var(--tertiary));
+                --btn-ghost-col: color-mix(in srgb, var(--quinary) 85%, var(--tertiary));
+                --contact-body:  color-mix(in srgb, var(--dominant) 55%, var(--tertiary));
+                --contact-link:  color-mix(in srgb, var(--dominant) 80%, var(--tertiary));
+                --input-bg:      color-mix(in srgb, var(--white) 70%, transparent);
+                --input-border:  color-mix(in srgb, var(--black) 8%, transparent);
+                --input-focus:   color-mix(in srgb, var(--black) 40%, transparent);
+                --input-focus-bg:color-mix(in srgb, var(--white) 95%, transparent);
+                --shadow-warm:   color-mix(in srgb, var(--quinary) 8%, transparent);
+                --bubble-light1: color-mix(in srgb, var(--tertiary) 55%, var(--white));
+                --bubble-light2: color-mix(in srgb, var(--tertiary) 40%, var(--white));
+                --bubble-mid:    color-mix(in srgb, var(--tertiary) 70%, var(--quinary));
+                --bubble-dark:   color-mix(in srgb, var(--tertiary) 80%, var(--quinary));
+                --bubble-s1:     color-mix(in srgb, var(--tertiary) 65%, var(--white));
+                --bubble-s2:     color-mix(in srgb, var(--tertiary) 75%, var(--quinary));
+                --shape-circle:  color-mix(in srgb, var(--tertiary) 80%, var(--quinary));
+                --shape-block:   color-mix(in srgb, var(--tertiary) 70%, var(--quinary));
+                --figure-grad1:  color-mix(in srgb, var(--quinary) 60%, #2a3c55);
+                --figure-grad2:  color-mix(in srgb, var(--secondary) 80%, var(--quinary));
+                --figure-text:   color-mix(in srgb, var(--dominant) 90%, var(--white));
+                --footer-text:   var(--quaternary);
+                --skill-bg:      color-mix(in srgb, var(--white) 70%, transparent);
+                --skill-border:  color-mix(in srgb, var(--black) 4%, transparent);
+                --overlay1:      color-mix(in srgb, var(--white) 3%, transparent);
+                --overlay2:      color-mix(in srgb, var(--quinary) 2%, transparent);
+                --max-width: 1120px;
+                --radius-lg: 32px;
+            }
+
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                background: var(--bg-main);
+                font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                color: var(--text-main);
+                line-height: 1.6;
+                -webkit-font-smoothing: antialiased;
+                position: relative;
+            }
+
+            body::before {
+                content: "";
+                position: fixed;
+                inset: 0;
+                background-image:
+                    repeating-linear-gradient(45deg, transparent, transparent 10px, var(--overlay1) 10px, var(--overlay1) 20px),
+                    repeating-linear-gradient(-45deg, transparent, transparent 10px, var(--overlay2) 10px, var(--overlay2) 20px);
+                pointer-events: none;
+                z-index: 0;
+            }
+
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
+
+            .page-wrapper {
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                position: relative;
+                z-index: 1;
+            }
+
+            header {
+                padding: 24px 32px 0;
+            }
+
+            .nav {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+
+            .brand {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-weight: 600;
+                font-size: 18px;
+            }
+
+            .brand-mark {
+                width: 24px;
+                height: 24px;
+                border-radius: 999px;
+                background: radial-gradient(circle at 25% 25%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 75% 25%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 25% 75%, var(--black) 35%, transparent 36%),
+                    radial-gradient(circle at 75% 75%, var(--black) 35%, transparent 36%);
+            }
+
+            nav ul {
+                display: flex;
+                align-items: center;
+                gap: 32px;
+                list-style: none;
+                font-size: 14px;
+            }
+
+            nav a {
+                opacity: 0.85;
+            }
+
+            nav a:hover {
+                opacity: 1;
+            }
+
+            .nav-cta {
+                padding: 8px 20px;
+                border-radius: 999px;
+                background: var(--button-dark);
+                color: var(--white);
+                font-size: 14px;
+                border: none;
+                cursor: pointer;
+            }
+
+            .nav-cta:hover {
+                opacity: 0.9;
+            }
+
+            /* Hero */
+            .hero {
+                max-width: var(--max-width);
+                margin: 40px auto 80px;
+                padding: 40px 32px 0;
+                display: grid;
+                grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+                gap: 48px;
+                align-items: center;
+            }
+
+            .hero-media {
+                position: relative;
+                background: var(--bg-card);
+                border-radius: 32px;
+                padding: 20px 24px 12px;
+                max-width: 440px;
+                margin-inline: auto;
+                overflow: visible;
+            }
+
+            .hero-media-inner {
+                position: relative;
+                height: 100%;
+                min-height: 320px;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+            }
+
+            .hero-circle {
+                position: absolute;
+                width: 320px;
+                height: 320px;
+                border-radius: 50%;
+                background: var(--accent-soft);
+                left: -8%;
+                top: 12%;
+                opacity: 0.85;
+            }
+
+            .hero-figure {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-end;
+            }
+
+            .hero-photo-card {
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-photo-card img {
+                width: 170px;
+                height: 220px;
+                border-radius: 15px;
+                object-fit: cover;
+                margin-bottom: 16px;
+                position: relative;
+                z-index: 2;
+                box-shadow: 0 8px 20px color-mix(in srgb, var(--black) 15%, transparent);
+            }
+
+            .hero-figure {
+                position: relative;
+                width: 160px;
+                height: 210px;
+                border-radius: 18px;
+                background: linear-gradient(160deg, var(--figure-grad1) 10%, var(--figure-grad2) 90%);
+                overflow: hidden;
+                display: flex;
+                align-items: flex-end;
+                justify-content: center;
+                padding: 14px;
+                color: var(--figure-text);
+            }
+
+            .hero-figure::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                background: radial-gradient(circle at 20% 10%, color-mix(in srgb, var(--white) 35%, transparent), transparent 60%),
+                    radial-gradient(circle at 80% 90%, color-mix(in srgb, var(--white) 10%, transparent), transparent 55%);
+                mix-blend-mode: screen;
+            }
+
+            .hero-figure-content {
+                position: relative;
+                text-align: center;
+                z-index: 2;
+            }
+
+            .hero-figure-name {
+                font-weight: 600;
+                margin-bottom: 6px;
+                letter-spacing: 0.02em;
+            }
+
+            .hero-figure-tag {
+                font-size: 12px;
+                opacity: 0.9;
+            }
+
+            .hero-figure-line {
+                margin-top: 16px;
+                height: 1px;
+                width: 60%;
+                background: color-mix(in srgb, var(--white) 30%, transparent);
+            }
+
+            .hero-shapes {
+                position: absolute;
+                right: -60px;
+                bottom: -22px;
+                display: flex;
+                align-items: flex-end;
+                gap: 12px;
+            }
+
+            .hero-balls {
+                position: absolute;
+                bottom: -32px;
+                left: 6%;
+                right: 10%;
+                display: flex;
+                justify-content: space-between;
+                pointer-events: none;
+            }
+
+            .hero-ball {
+                display: block;
+                border-radius: 50%;
+                opacity: 0.75;
+                box-shadow: 0 10px 25px color-mix(in srgb, var(--secondary) 12%, transparent);
+            }
+
+            .hero-bubbles {
+                position: absolute;
+                inset: -72px;
+                pointer-events: none;
+                z-index: 1;
+            }
+
+            .hero-bubble {
+                position: absolute;
+                border-radius: 50%;
+                box-shadow: 0 10px 30px color-mix(in srgb, var(--secondary) 14%, transparent);
+            }
+
+            .bubble-g1 {
+                width: 54px;
+                height: 54px;
+                background: radial-gradient(circle at 30% 30%, var(--bubble-light1) 0%, var(--accent-soft) 70%);
+                top: -6px;
+                left: 22%;
+            }
+
+            .bubble-g2 {
+                width: 42px;
+                height: 42px;
+                background: radial-gradient(circle at 40% 25%, var(--bubble-light2) 0%, var(--bubble-mid) 75%);
+                top: -18px;
+                right: 26%;
+            }
+
+            .bubble-g3 {
+                width: 38px;
+                height: 38px;
+                background: radial-gradient(circle at 50% 45%, color-mix(in srgb, var(--white) 90%, var(--tertiary)) 0%, var(--bubble-dark) 80%);
+                bottom: 2px;
+                left: 12%;
+            }
+
+            .bubble-s1 {
+                width: 24px;
+                height: 24px;
+                background: var(--bubble-s1);
+                top: 32%;
+                left: -10px;
+                opacity: 0.8;
+            }
+
+            .bubble-s2 {
+                width: 30px;
+                height: 30px;
+                background: var(--bubble-s2);
+                bottom: -8px;
+                right: 12%;
+                opacity: 0.72;
+            }
+
+            .bubble-s4 {
+                width: 26px;
+                height: 26px;
+                background: var(--bubble-dark);
+                bottom: 8%;
+                left: 46%;
+                opacity: 0.7;
+            }
+
+            .ball-1 {
+                width: 58px;
+                height: 58px;
+                background: radial-gradient(circle at 35% 35%, var(--bubble-light1) 0%, var(--accent-soft) 70%);
+                transform: translateY(12px);
+            }
+
+            .ball-2 {
+                width: 42px;
+                height: 42px;
+                background: radial-gradient(circle at 40% 30%, var(--bubble-light2) 0%, var(--bubble-s2) 70%);
+                transform: translateY(4px);
+            }
+
+            .ball-3 {
+                width: 30px;
+                height: 30px;
+                background: radial-gradient(circle at 45% 40%, color-mix(in srgb, var(--white) 85%, var(--tertiary)) 0%, var(--bubble-dark) 75%);
+                transform: translateY(-2px);
+            }
+
+            .ball-4 {
+                width: 52px;
+                height: 52px;
+                background: radial-gradient(circle at 40% 45%, color-mix(in srgb, var(--dominant) 70%, var(--tertiary)) 0%, var(--bubble-mid) 70%);
+                transform: translateY(-4px);
+            }
+
+            .ball-5 {
+                width: 22px;
+                height: 22px;
+                background: radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--white) 92%, var(--tertiary)) 0%, color-mix(in srgb, var(--tertiary) 90%, var(--quinary)) 75%);
+                transform: translateY(10px);
+            }
+
+            .shape-rect {
+                width: 80px;
+                height: 70px;
+                border-radius: 999px;
+                background: var(--accent-soft);
+            }
+
+            .shape-rect-tall {
+                height: 110px;
+            }
+
+            .shape-circle {
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                background: var(--shape-circle);
+                transform: translateY(-18px);
+            }
+
+            .shape-block {
+                width: 50px;
+                height: 32px;
+                border-radius: 16px;
+                background: var(--shape-block);
+                transform: translateY(8px);
+            }
+
+            .hero-copy {
+                padding-top: 32px;
+                max-width: 460px;
+                justify-self: flex-start;
+            }
+
+            .kicker {
+                font-size: 13px;
+                text-transform: uppercase;
+                letter-spacing: 0.16em;
+                color: var(--text-muted);
+                margin-bottom: 10px;
+            }
+
+            h1 {
+                font-family: "Playfair Display", "Times New Roman", serif;
+                font-size: 46px;
+                line-height: 1.1;
+                margin-bottom: 18px;
+            }
+
+            .hero-text {
+                font-size: 15px;
+                color: var(--hero-text-col);
+                margin-bottom: 26px;
+                max-width: 34rem;
+            }
+
+            .hero-actions {
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .btn-primary {
+                background: var(--button-dark);
+                color: var(--white);
+                border-radius: 999px;
+                padding: 12px 28px;
+                border: none;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+
+            .btn-primary:hover {
+                opacity: 0.9;
+            }
+
+            .btn-ghost {
+                background: transparent;
+                border: 1px solid color-mix(in srgb, var(--black) 22%, transparent);
+                border-radius: 999px;
+                padding: 10px 20px;
+                font-size: 13px;
+                cursor: pointer;
+                color: var(--btn-ghost-col);
+            }
+
+            .btn-ghost:hover {
+                background: color-mix(in srgb, var(--white) 50%, transparent);
+            }
+
+            /* Sections */
+            main {
+                flex: 1;
+            }
+
+            section {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                padding: 56px 32px 72px;
+            }
+
+            .section-header {
+                max-width: 620px;
+                margin-bottom: 28px;
+            }
+
+            .section-title {
+                font-family: "Playfair Display", serif;
+                font-size: 28px;
+                margin-bottom: 8px;
+            }
+
+            .section-subtitle {
+                font-size: 14px;
+                color: var(--section-sub);
+            }
+
+            .two-col {
+                display: grid;
+                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+                gap: 40px;
+            }
+
+            .card {
+                background: var(--card-surface);
+                border-radius: var(--radius-lg);
+                padding: 24px 26px;
+                border: 1px solid var(--card-border);
+                box-shadow: 0 14px 45px color-mix(in srgb, var(--quinary) 8%, transparent);
+            }
+
+            .meta-label {
+                text-transform: uppercase;
+                letter-spacing: 0.18em;
+                font-size: 11px;
+                color: var(--text-muted);
+                margin-bottom: 12px;
+            }
+
+            .list {
+                list-style: none;
+                display: grid;
+                gap: 18px;
+                font-size: 14px;
+                color: var(--list-text);
+            }
+
+            .list-item-title {
+                font-weight: 600;
+            }
+
+            .list-item-meta {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.12em;
+                color: var(--text-muted);
+                margin-top: 4px;
+            }
+
+            .skills-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                font-size: 13px;
+            }
+
+            .skill-pill {
+                padding: 8px 12px;
+                border-radius: 999px;
+                background: var(--skill-bg);
+                border: 1px solid var(--skill-border);
+                text-align: center;
+            }
+
+            /* Contact */
+            .contact-layout {
+                display: grid;
+                grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+                gap: 36px;
+            }
+
+            .contact-card {
+                border-radius: var(--radius-lg);
+                padding: 26px 26px 24px;
+                background: var(--black);
+                color: var(--contact-link);
+            }
+
+            .contact-card h3 {
+                font-family: "Playfair Display", serif;
+                font-size: 24px;
+                margin-bottom: 10px;
+            }
+
+            .contact-card p {
+                font-size: 14px;
+                color: var(--contact-body);
+                margin-bottom: 20px;
+            }
+
+            .contact-meta {
+                font-size: 14px;
+                display: grid;
+                gap: 6px;
+            }
+
+            .contact-meta span {
+                opacity: 0.9;
+            }
+
+            .contact-meta a {
+                color: var(--contact-link);
+                text-decoration: underline;
+                text-decoration-thickness: 1px;
+            }
+
+            .contact-form {
+                display: grid;
+                gap: 16px;
+                font-size: 14px;
+            }
+
+            .field label {
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.14em;
+                color: var(--text-muted);
+                margin-bottom: 4px;
+                display: block;
+            }
+
+            .field input,
+            .field textarea {
+                width: 100%;
+                border-radius: 999px;
+                border: 1px solid var(--input-border);
+                background: var(--input-bg);
+                padding: 10px 14px;
+                font-family: inherit;
+                font-size: 14px;
+                outline: none;
+            }
+
+            .field textarea {
+                border-radius: 18px;
+                min-height: 96px;
+                resize: vertical;
+                padding: 12px 14px;
+            }
+
+            .field input:focus,
+            .field textarea:focus {
+                border-color: var(--input-focus);
+                background: var(--input-focus-bg);
+            }
+
+            footer {
+                padding: 24px 32px 40px;
+                font-size: 12px;
+                color: var(--footer-text);
+            }
+
+            .footer-inner {
+                max-width: var(--max-width);
+                margin: 0 auto;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 20px;
+                flex-wrap: wrap;
+            }
+
+            .footer-links {
+                display: flex;
+                gap: 14px;
+            }
+
+            /* Responsive */
+            @media (max-width: 960px) {
+                .hero {
+                    grid-template-columns: minmax(0, 1fr);
+                    margin-top: 20px;
+                }
+
+                .hero-copy {
+                    order: -1;
+                    padding-top: 10px;
+                }
+
+                .hero-media-inner {
+                    min-height: 300px;
+                }
+
+                .two-col,
+                .contact-layout {
+                    grid-template-columns: minmax(0, 1fr);
+                }
+
+                header {
+                    padding-inline: 20px;
+                }
+
+                section {
+                    padding-inline: 20px;
+                }
+            }
+
+            @media (max-width: 700px) {
+                nav ul {
+                    gap: 18px;
+                    font-size: 13px;
+                }
+
+                .hero {
+                    padding-inline: 20px;
+                }
+
+                h1 {
+                    font-size: 36px;
+                }
+            }
+
+            @media (max-width: 520px) {
+                nav ul li:not(:last-child) {
+                    display: none;
+                }
+
+                .hero-media {
+                    padding-inline: 20px;
+                }
+
+                .hero-figure {
+                    width: 220px;
+                    height: 300px;
+                }
+
+                .hero-photo-card {
+                    height: 150px;
+                    width: auto;
+                    object-fit: contain;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="page-wrapper">
+            <header id="top">
+                <div class="nav">
+                    <div class="brand">
+                        <div class="brand-mark" aria-hidden="true"></div><span>Bygone</span>
+                    </div>
+                    <nav aria-label="Primary">
+                        <ul>
+                            <li>
+                                <a href="#about">About</a>
+                            </li>
+                            <li>
+                                <a href="#experience">Experience</a>
+                            </li>
+                            <li>
+                                <a href="#projects">Projects</a>
+                            </li>
+                            <li>
+                                <a href="#contact">Contact</a>
+                            </li>
+                            <li><a href="#contact"> <button class="nav-cta">Hire Me</button> </a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </header>
+            <main>
+                <!-- Hero -->
+                <section class="hero" aria-labelledby="hero-heading">
+                    <div class="hero-media" aria-hidden="true">
+                        <div class="hero-media-inner">
+                            <div class="hero-photo-card">
+                                <div class="hero-bubbles" aria-hidden="true">
+                                    <span class="hero-bubble bubble-g1"></span>
+                                    <span class="hero-bubble bubble-g2"></span>
+                                    <span class="hero-bubble bubble-g3"></span>
+                                    <span class="hero-bubble bubble-s1"></span>
+                                    <span class="hero-bubble bubble-s2"></span>
+                                    <span class="hero-bubble bubble-s4"></span>
+                                </div>
+                                <img src="https://images.pexels.com/photos/1181695/pexels-photo-1181695.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Student headshot">
+                                <div class="hero-figure-content">
+                                    <div class="hero-figure-name">Jordan Wellis</div>
+                                    <div class="hero-figure-tag">History Major • Class of 2026</div>
+                                    <div class="hero-figure-line"></div>
+                                </div>
+                            </div>
+                            <div class="hero-shapes">
+                                <div class="shape-rect shape-rect-tall"></div>
+                                <div class="shape-circle"></div>
+                                <div class="shape-rect"></div>
+                                <div class="shape-block"></div>
+                            </div>
+                            <div class="hero-balls" aria-hidden="true">
+                                <span class="hero-ball ball-1"></span>
+                                <span class="hero-ball ball-2"></span>
+                                <span class="hero-ball ball-3"></span>
+                                <span class="hero-ball ball-4"></span>
+                                <span class="hero-ball ball-5"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="hero-copy">
+                        <p class="kicker">A student's portfolio</p>
+                        <h1 id="hero-heading">Exploring History,<br>Shaping Tomorrow</h1>
+                        <p class="hero-text">
+          I'm a graduating history major with a passion for research, storytelling,
+          and making the past relevant to today's audiences. I'm seeking roles in
+          research, education, museums, and content creation where I can bring
+          context, curiosity, and clarity to complex stories. </p>
+                        <div class="hero-actions"><a href="#contact"> <button class="btn-primary">Apply to Work With Me</button> </a><a href="#projects"> <button class="btn-ghost">View Selected Projects</button> </a>
+                        </div>
+                    </div>
+                </section>
+                <!-- About -->
+                <section id="about">
+                    <div class="section-header">
+                        <h2 class="section-title">About Me</h2>
+                        <p class="section-subtitle">
+          Curious, detail-oriented, and driven by stories that connect people across time. </p>
+                    </div>
+                    <div class="two-col">
+                        <div>
+                            <p>
+            Hi, I'm <strong>Jordan Ellis</strong>, a senior history major focusing on
+            modern social movements and public memory. My academic work has taught me how
+            to research deeply, synthesize large amounts of information, and present it
+            in clear, engaging ways—skills that translate directly into roles in
+            research, education, writing, and public-facing storytelling. </p><br>
+                            <p>
+            Whether I'm analyzing archival documents, curating a digital exhibit, or
+            scripting a podcast episode, I care about accuracy, nuance, and accessibility.
+            I'm especially interested in roles where I can combine historical thinking
+            with digital tools—museum tech, educational platforms, editorial teams, and
+            mission-driven organizations. </p>
+                        </div>
+                        <div class="card">
+                            <p class="meta-label">Snapshot</p>
+                            <ul class="list">
+                                <li>
+                                    <div class="list-item-title">B.A. in History</div>
+                                    <div class="list-item-meta">Expected Graduation • May 2026</div>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Focus Areas</div>
+                                    <div class="list-item-meta">
+                                        Social movements, African American history, public memory
+</div>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Location</div>
+                                    <div class="list-item-meta">Salt Lake City, UT • Open to relocation</div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <!-- Experience -->
+                <section id="experience">
+                    <div class="section-header">
+                        <h2 class="section-title">Experience</h2>
+                        <p class="section-subtitle">
+          Research, teaching support, and public-facing storytelling that bring history to life. </p>
+                    </div>
+                    <div class="two-col">
+                        <div class="card">
+                            <p class="meta-label">Academic &amp; Campus Roles</p>
+                            <ul class="list">
+                                <li>
+                                    <div class="list-item-title">Research Assistant, Department of History</div>
+                                    <div class="list-item-meta">2024 – Present</div>
+                                    <p>
+                Assisted with archival and secondary-source research for a book on
+                twentieth-century civil rights movements. Organized notes, created
+                annotated bibliographies, and drafted chapter summaries. </p>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Teaching Assistant, "Introduction to U.S. History"</div>
+                                    <div class="list-item-meta">2023 – 2024</div>
+                                    <p>
+                Led weekly discussion sections, graded essays, and designed short
+                primary-source activities to help first-year students analyze documents
+                and develop their own interpretations. </p>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Student Ambassador, History Department</div>
+                                    <div class="list-item-meta">2022 – 2023</div>
+                                    <p>
+                Represented the department at open houses, talked with prospective
+                students, and created a "Why Study History?" digital handout for advising. </p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <p class="meta-label">Related Experience</p>
+                            <ul class="list">
+                                <li>
+                                    <div class="list-item-title">Digital Exhibits Intern, City History Museum</div>
+                                    <div class="list-item-meta">Summer 2024</div>
+                                    <p>
+                Researched local oral histories and designed captions and object labels
+                for a small online exhibit about neighborhood change. Collaborated with
+                staff on content review and accessibility. </p>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Freelance Writer &amp; Editor</div>
+                                    <div class="list-item-meta">2022 – Present</div>
+                                    <p>
+                Wrote blog posts and short articles on culture and history for student
+                publications and community organizations. Edited pieces for clarity,
+                accuracy, and tone. </p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <!-- Projects -->
+                <section id="projects">
+                    <div class="section-header">
+                        <h2 class="section-title">Selected Projects</h2>
+                        <p class="section-subtitle">
+          A few examples of how I research, interpret, and present history for different audiences. </p>
+                    </div>
+                    <div class="two-col">
+                        <div class="card">
+                            <p class="meta-label">Research &amp; Writing</p>
+                            <ul class="list">
+                                <li>
+                                    <div class="list-item-title">Honors Thesis: "Echoes of Protest"</div>
+                                    <div class="list-item-meta">In progress</div>
+                                    <p>
+                A comparative study of student activism in the 1960s and today, using
+                archival newspapers, oral histories, and university records to trace
+                continuities in student demands and institutional responses. </p>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">Primary Source Portfolio</div>
+                                    <div class="list-item-meta">2024</div>
+                                    <p>
+                Curated and analyzed ten primary sources related to housing
+                discrimination, creating short interpretive essays and discussion
+                questions for high-school classrooms. </p>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card">
+                            <p class="meta-label">Digital &amp; Public History</p>
+                            <ul class="list">
+                                <li>
+                                    <div class="list-item-title">"Streets We Walk" Digital Map</div>
+                                    <div class="list-item-meta">ArcGIS StoryMap • 2023</div>
+                                    <p>
+                Interactive story map tracing how one city block has changed since 1900
+                using maps, photographs, and census records. Designed with non-experts
+                in mind, emphasizing visual storytelling. </p>
+                                </li>
+                                <li>
+                                    <div class="list-item-title">History Podcast Mini-Series</div>
+                                    <div class="list-item-meta">3 episodes • 2022</div>
+                                    <p>
+                Wrote scripts and co-hosted a student podcast exploring lesser-known
+                local histories. Responsibilities included research, interviewing,
+                episode outlines, and show notes. </p>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                <!-- Skills -->
+                <section id="skills">
+                    <div class="section-header">
+                        <h2 class="section-title">Skills &amp; Tools</h2>
+                        <p class="section-subtitle">
+          Combining historical thinking with clear communication and modern tools. </p>
+                    </div>
+                    <div class="card">
+                        <div class="skills-grid">
+                            <div class="skill-pill">Archival &amp; library research</div>
+                            <div class="skill-pill">Primary &amp; secondary source analysis</div>
+                            <div class="skill-pill">Academic &amp; popular writing</div>
+                            <div class="skill-pill">Public speaking &amp; discussion facilitation</div>
+                            <div class="skill-pill">Curriculum &amp; activity design</div>
+                            <div class="skill-pill">Copyediting &amp; fact-checking</div>
+                            <div class="skill-pill">Google Suite &amp; Microsoft Office</div>
+                            <div class="skill-pill">Zotero citation management</div>
+                            <div class="skill-pill">ArcGIS StoryMaps (beginner)</div>
+                            <div class="skill-pill">Podcast scripting &amp; planning</div>
+                        </div>
+                    </div>
+                </section>
+                <!-- Contact -->
+                <section id="contact">
+                    <div class="section-header">
+                        <h2 class="section-title">Let's Work Together</h2>
+                        <p class="section-subtitle">
+          I'm currently looking for full-time roles and internships starting Summer/Fall 2026. </p>
+                    </div>
+                    <div class="contact-layout">
+                        <div class="contact-card">
+                            <h3>Hire a Historian-Storyteller</h3>
+                            <p>
+            If you're looking for someone who can research deeply, write clearly, and
+            present complex stories in human terms, I'd love to talk. I'm especially
+            interested in research, museum, education, editorial, or mission-driven
+            nonprofit roles. </p>
+                            <div class="contact-meta"><span><strong>Email</strong> &mdash; <a href="mailto:jordan.ellis.history@email.com">
+              jordan.ellis.history@email.com</a></span><span><strong>LinkedIn</strong> &mdash; <a href="#">linkedin.com/in/jordan-ellis-history</a></span><span><strong>Download Resume</strong> &mdash; <a href="#">PDF resume</a></span>
+                            </div>
+                        </div>
+                        <form class="contact-form" action="#" method="post">
+                            <div class="field">
+                                <label for="name">Name</label>
+                                <input id="name" name="name" type="text" placeholder="Your name"/>
+                            </div>
+                            <div class="field">
+                                <label for="email">Email</label>
+                                <input id="email" name="email" type="email" placeholder="you@example.com"/>
+                            </div>
+                            <div class="field">
+                                <label for="message">Message</label>
+                                <textarea id="message" name="message" placeholder="Tell me about the role, project, or opportunity."></textarea>
+                            </div>
+                            <button class="btn-primary" type="submit">Send Message</button>
+                        </form>
+                    </div>
+                </section>
+            </main>
+            <footer>
+                <div class="footer-inner"><span>© 2026 Jordan Ellis. All rights reserved.</span>
+                    <div class="footer-links"><a href="#top">Back to top</a><a href="#projects">Projects</a><a href="#contact">Contact</a>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </body>
+</html>
