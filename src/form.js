@@ -479,11 +479,48 @@
         const el = document.getElementById(id);
         if (el) { el.textContent = text; el.style.color = color; }
       });
+      forwardEditorProcessStatus();
     }
 
     function setHeaderStatus(id, text, color = "rgba(234,240,255,.6)") {
       const el = document.getElementById(id);
       if (el) { el.textContent = text; el.style.color = color; }
+      forwardEditorProcessStatus();
+    }
+
+    function currentEditorProcessStatus() {
+      const candidates = [
+        "generatingWebsiteStatus",
+        "braidStatus",
+        "colorsChosenStatus",
+        "templateExtractStatus",
+        "jobAnalysisStatus",
+        "resumeAnalysisStatus",
+        "editorAutoOpenStatus"
+      ];
+      for (const id of candidates) {
+        const el = document.getElementById(id);
+        const text = el?.textContent?.trim() || "";
+        if (!text) continue;
+        if (/^(✓|⚠)/.test(text)) continue;
+        if (/not needed|credit limit reached/i.test(text)) continue;
+        return { text, color: el?.style?.color || "rgba(234,240,255,.6)" };
+      }
+      return null;
+    }
+
+    function forwardEditorProcessStatus() {
+      const editorWin = window.__portfolioEditorWindow;
+      if (!editorWin || editorWin.closed) return;
+      const status = currentEditorProcessStatus();
+      try {
+        editorWin.postMessage(
+          status
+            ? { type: "editor_process_status", text: status.text, color: status.color }
+            : { type: "editor_process_status_clear" },
+          location.origin
+        );
+      } catch {}
     }
 
     function restorePersistentHeaderStatuses() {
@@ -898,6 +935,48 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
     }
 
+    function editorLoadingHtml() {
+      return `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Preparing Editor…</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0f172a;
+      color: #eaf0ff;
+      font: 600 18px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    .card {
+      padding: 18px 22px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">Preparing editor…</div>
+</body>
+</html>`;
+    }
+
+    function ensureEditorWindow() {
+      const existing = window.__portfolioEditorWindow;
+      if (existing && !existing.closed) return existing;
+      cachePreviewHtml(editorLoadingHtml());
+      const win = window.open("editor.html", "_blank");
+      window.__portfolioEditorWindow = win;
+      return win;
+    }
+
     function populateResumeDebugPanel(json) {
       const facts    = json?.resume_facts    ?? json;
       const strategy = json?.resume_strategy ?? null;
@@ -942,75 +1021,165 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (!text) return [
           {
             how_used: "Fallback professional palette with navy structure and bright accent.",
-            colors: ["#0f172a", "#2563eb", "#22c55e", "#f8fafc", "#94a3b8"]
+            base_colors: {
+              background: "#0f172a",
+              foreground: "#f8fafc",
+              primary: "#2563eb",
+              secondary: "#94a3b8",
+              accent: "#22c55e"
+            }
           },
           {
             how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
-            colors: ["#1f2937", "#ea580c", "#f59e0b", "#fff7ed", "#cbd5e1"]
+            base_colors: {
+              background: "#1f2937",
+              foreground: "#fff7ed",
+              primary: "#ea580c",
+              secondary: "#cbd5e1",
+              accent: "#f59e0b"
+            }
           }
         ];
         if (/bio|chem|health|medical|nurs|clinic|pharma|environment|ecolog|lab|science/.test(text)) return [
           {
             how_used: "Science-forward palette with deep slate, clinical blue, and laboratory green.",
-            colors: ["#102a43", "#2c7be5", "#2bb673", "#f8fbff", "#9fb3c8"]
+            base_colors: {
+              background: "#102a43",
+              foreground: "#f8fbff",
+              primary: "#2c7be5",
+              secondary: "#9fb3c8",
+              accent: "#2bb673"
+            }
           },
           {
             how_used: "Natural research palette with evergreen depth and mineral teal accents.",
-            colors: ["#163a34", "#1f8a70", "#8fd694", "#f6fff8", "#a7b8a5"]
+            base_colors: {
+              background: "#163a34",
+              foreground: "#f6fff8",
+              primary: "#1f8a70",
+              secondary: "#a7b8a5",
+              accent: "#8fd694"
+            }
           }
         ];
         if (/engineer|electrical|mechanical|computer|software|data|ai|robot|technical|hardware|systems|cyber/.test(text)) return [
           {
             how_used: "Technical palette with navy canvas, electric blue interaction, and mint accent.",
-            colors: ["#0b132b", "#3a86ff", "#2ec4b6", "#f5faff", "#98a7c1"]
+            base_colors: {
+              background: "#0b132b",
+              foreground: "#f5faff",
+              primary: "#3a86ff",
+              secondary: "#98a7c1",
+              accent: "#2ec4b6"
+            }
           },
           {
             how_used: "Hardware-inspired palette with graphite structure and signal-amber highlights.",
-            colors: ["#1f2937", "#2563eb", "#f59e0b", "#f9fafb", "#94a3b8"]
+            base_colors: {
+              background: "#1f2937",
+              foreground: "#f9fafb",
+              primary: "#2563eb",
+              secondary: "#94a3b8",
+              accent: "#f59e0b"
+            }
           },
           {
             how_used: "Data-tech palette with deep indigo base and vivid cyan emphasis.",
-            colors: ["#111827", "#4f46e5", "#06b6d4", "#eef2ff", "#9ca3af"]
+            base_colors: {
+              background: "#111827",
+              foreground: "#eef2ff",
+              primary: "#4f46e5",
+              secondary: "#9ca3af",
+              accent: "#06b6d4"
+            }
           }
         ];
         if (/business|finance|account|econom|market|consult|admin|operations|sales/.test(text)) return [
           {
             how_used: "Corporate palette with navy credibility and gold confidence cues.",
-            colors: ["#14213d", "#1d4ed8", "#d4a017", "#fffdf7", "#9ca3af"]
+            base_colors: {
+              background: "#14213d",
+              foreground: "#fffdf7",
+              primary: "#1d4ed8",
+              secondary: "#9ca3af",
+              accent: "#d4a017"
+            }
           },
           {
             how_used: "Finance palette with charcoal structure and emerald growth accents.",
-            colors: ["#1f2933", "#0f766e", "#22c55e", "#f8fafc", "#a7b0bb"]
+            base_colors: {
+              background: "#1f2933",
+              foreground: "#f8fafc",
+              primary: "#0f766e",
+              secondary: "#a7b0bb",
+              accent: "#22c55e"
+            }
           }
         ];
         if (/design|art|media|film|architecture|creative|illustration|fashion/.test(text)) return [
           {
             how_used: "Creative palette with rich plum foundation and vivid coral energy.",
-            colors: ["#2d1e2f", "#c026d3", "#fb7185", "#fff7fb", "#b8a3b9"]
+            base_colors: {
+              background: "#2d1e2f",
+              foreground: "#fff7fb",
+              primary: "#c026d3",
+              secondary: "#b8a3b9",
+              accent: "#fb7185"
+            }
           },
           {
             how_used: "Editorial palette with warm charcoal, sand neutrals, and citrus pop.",
-            colors: ["#2f2a24", "#d97706", "#facc15", "#fffbeb", "#b9afa1"]
+            base_colors: {
+              background: "#2f2a24",
+              foreground: "#fffbeb",
+              primary: "#d97706",
+              secondary: "#b9afa1",
+              accent: "#facc15"
+            }
           }
         ];
         if (/education|teaching|psych|social|history|english|policy|community|public/.test(text)) return [
           {
             how_used: "Warm professional palette with indigo structure and approachable amber accents.",
-            colors: ["#243b53", "#4f46e5", "#f59e0b", "#fffdf7", "#a8b2c1"]
+            base_colors: {
+              background: "#243b53",
+              foreground: "#fffdf7",
+              primary: "#4f46e5",
+              secondary: "#a8b2c1",
+              accent: "#f59e0b"
+            }
           },
           {
             how_used: "Human-centered palette with deep teal grounding and soft coral highlights.",
-            colors: ["#164e63", "#0ea5e9", "#fb7185", "#fffaf7", "#b6c2c9"]
+            base_colors: {
+              background: "#164e63",
+              foreground: "#fffaf7",
+              primary: "#0ea5e9",
+              secondary: "#b6c2c9",
+              accent: "#fb7185"
+            }
           }
         ];
         return [
           {
             how_used: "Fallback professional palette with navy structure and bright accent.",
-            colors: ["#0f172a", "#2563eb", "#22c55e", "#f8fafc", "#94a3b8"]
+            base_colors: {
+              background: "#0f172a",
+              foreground: "#f8fafc",
+              primary: "#2563eb",
+              secondary: "#94a3b8",
+              accent: "#22c55e"
+            }
           },
           {
             how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
-            colors: ["#1f2937", "#ea580c", "#f59e0b", "#fff7ed", "#cbd5e1"]
+            base_colors: {
+              background: "#1f2937",
+              foreground: "#fff7ed",
+              primary: "#ea580c",
+              secondary: "#cbd5e1",
+              accent: "#f59e0b"
+            }
           }
         ];
       })();
@@ -1379,7 +1548,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     const templateScreenshotInput   = document.getElementById("templateScreenshot");
     const templateScreenshotPreview = document.getElementById("templateScreenshotPreview");
     const templateScreenshotImg     = document.getElementById("templateScreenshotImg");
-    templateScreenshotInput?.addEventListener("change", () => {
+    templateScreenshotInput?.addEventListener("change", async () => {
       const file = templateScreenshotInput.files?.[0];
       if (file && file.type.startsWith("image/")) {
         const reader = new FileReader();
@@ -1388,10 +1557,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           templateScreenshotPreview.style.display = "block";
         };
         reader.readAsDataURL(file);
+        uploadedImagePalette = await inferPaletteFromImageFile(file);
       } else {
         templateScreenshotPreview.style.display = "none";
         templateScreenshotImg.src = "";
+        uploadedImagePalette = null;
       }
+      renderSuggestedPalettes();
     });
 
     // ----------------------------
@@ -1471,6 +1643,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       lastExtractedTemplate   = "";
       normalizedTemplateResult = null;
       normalizeTemplatePending = null;
+      uploadedImagePalette = null;
       ++_normalizeRunId;
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
@@ -1514,6 +1687,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
     let displayedSuggestedPalettes = []; // current visible palette rows, preserved when late arrivals appear
     let selectedSuggestedPaletteKey = ""; // selected suggested palette, preserved across rerenders
+    let uploadedImagePalette = null;     // semantic palette inferred directly from an uploaded screenshot/template image
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
@@ -1628,7 +1802,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     async function waitForTemplateExtraction(statusId) {
       if (!extractTemplatePending || !templateExtractionRequired()) return;
-      setHeaderStatus(statusId, "Waiting for template…", "rgba(141,224,255,.6)");
+      setHeaderStatus(statusId, "Website drafter waiting for design…", "rgba(141,224,255,.6)");
       try {
         await extractTemplatePending;
       } catch {
@@ -1815,10 +1989,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       clearInterval(extractTicker); // cancel any previous countdown
       let seconds = 300;
-      setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
+      setTemplateExtractStatus(`Drafting design… ${seconds}s`, "rgba(141,224,255,.75)");
       extractTicker = setInterval(() => {
         seconds = Math.max(1, seconds - 1);
-        setTemplateExtractStatus(`Building template… ${seconds}s`, "rgba(141,224,255,.75)");
+        setTemplateExtractStatus(`Drafting design… ${seconds}s`, "rgba(141,224,255,.75)");
       }, 1000);
 
       // Submit to background function (returns 202 immediately)
@@ -1884,7 +2058,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode, templateInputKind };
         extractedTemplateCache = data;
-        setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
+        setTemplateExtractStatus("✓ Design ready", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
         renderSuggestedPalettes();
         return;
@@ -1934,6 +2108,30 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!/^#[0-9a-f]{3,8}$/.test(h)) return h;
       if (h.length === 4) return "#" + h.slice(1).split("").map(ch => ch + ch).join("");
       return h.slice(0, 7);
+    }
+
+    function rgbToHex(r, g, b) {
+      return "#" + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+    }
+
+    function hexToRgb(hex) {
+      const n = normalizeHex(hex);
+      if (!n || n.length !== 7) return null;
+      return {
+        r: parseInt(n.slice(1, 3), 16),
+        g: parseInt(n.slice(3, 5), 16),
+        b: parseInt(n.slice(5, 7), 16)
+      };
+    }
+
+    function colorDistance(a, b) {
+      const ra = typeof a === "string" ? hexToRgb(a) : a;
+      const rb = typeof b === "string" ? hexToRgb(b) : b;
+      if (!ra || !rb) return 0;
+      const dr = ra.r - rb.r;
+      const dg = ra.g - rb.g;
+      const db = ra.b - rb.b;
+      return Math.sqrt(dr * dr + dg * dg + db * db);
     }
 
     function hexMetrics(hex) {
@@ -1996,6 +2194,102 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       };
     }
 
+    function inferPaletteFromImageFile(file) {
+      return new Promise(resolve => {
+        if (!file || !file.type?.startsWith("image/")) return resolve(null);
+        const reader = new FileReader();
+        reader.onerror = () => resolve(null);
+        reader.onload = () => {
+          const img = new Image();
+          img.onerror = () => resolve(null);
+          img.onload = () => {
+            try {
+              const maxDim = 160;
+              const scale = Math.min(1, maxDim / Math.max(img.naturalWidth || img.width || 1, img.naturalHeight || img.height || 1));
+              const width = Math.max(24, Math.round((img.naturalWidth || img.width) * scale));
+              const height = Math.max(24, Math.round((img.naturalHeight || img.height) * scale));
+              const canvas = document.createElement("canvas");
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext("2d", { willReadFrequently: true });
+              if (!ctx) return resolve(null);
+              ctx.drawImage(img, 0, 0, width, height);
+              const { data } = ctx.getImageData(0, 0, width, height);
+              const buckets = new Map();
+              let totalLum = 0;
+              let totalCount = 0;
+              for (let i = 0; i < data.length; i += 16) {
+                const a = data[i + 3];
+                if (a < 180) continue;
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                const qr = Math.round(r / 24) * 24;
+                const qg = Math.round(g / 24) * 24;
+                const qb = Math.round(b / 24) * 24;
+                const key = `${qr},${qg},${qb}`;
+                const entry = buckets.get(key) || { r: 0, g: 0, b: 0, count: 0 };
+                entry.r += r;
+                entry.g += g;
+                entry.b += b;
+                entry.count += 1;
+                buckets.set(key, entry);
+                totalLum += 0.2126 * r + 0.7152 * g + 0.0722 * b;
+                totalCount += 1;
+              }
+              if (!buckets.size || !totalCount) return resolve(null);
+              const avgLum = totalLum / totalCount;
+              const candidates = Array.from(buckets.values()).map(entry => {
+                const r = entry.r / entry.count;
+                const g = entry.g / entry.count;
+                const b = entry.b / entry.count;
+                const hex = rgbToHex(r, g, b);
+                const metrics = hexMetrics(hex);
+                return { hex, count: entry.count, chroma: metrics.chroma, luminance: metrics.luminance, neutral: isNeutralHex(hex) };
+              }).sort((a, b) => b.count - a.count);
+
+              const background = candidates.slice().sort((a, b) => {
+                const scoreA = a.count * (avgLum < 145 ? (a.luminance < 150 ? 1.25 : 0.55) : (a.luminance > 110 ? 1.25 : 0.65));
+                const scoreB = b.count * (avgLum < 145 ? (b.luminance < 150 ? 1.25 : 0.55) : (b.luminance > 110 ? 1.25 : 0.65));
+                return scoreB - scoreA;
+              })[0];
+              if (!background) return resolve(null);
+
+              const foreground = candidates
+                .filter(c => c.hex !== background.hex)
+                .sort((a, b) => {
+                  const scoreA = colorDistance(a.hex, background.hex) * (a.neutral ? 1.25 : 0.9) * (1 + a.count / 2500);
+                  const scoreB = colorDistance(b.hex, background.hex) * (b.neutral ? 1.25 : 0.9) * (1 + b.count / 2500);
+                  return scoreB - scoreA;
+                })[0] || { hex: background.luminance < 140 ? "#f2f5fb" : "#111827" };
+
+              const accents = candidates
+                .filter(c => c.hex !== background.hex && c.hex !== foreground.hex && colorDistance(c.hex, background.hex) > 42 && colorDistance(c.hex, foreground.hex) > 36)
+                .sort((a, b) => (b.count * (1 + b.chroma / 120)) - (a.count * (1 + a.chroma / 120)));
+
+              const chosen = [];
+              for (const candidate of accents) {
+                if (chosen.every(existing => colorDistance(existing.hex, candidate.hex) > 38)) {
+                  chosen.push(candidate);
+                }
+                if (chosen.length >= 3) break;
+              }
+
+              const primary = chosen[0]?.hex || candidates.find(c => ![background.hex, foreground.hex].includes(c.hex))?.hex || foreground.hex;
+              const secondary = chosen[1]?.hex || candidates.find(c => ![background.hex, foreground.hex, primary].includes(c.hex))?.hex || background.hex;
+              const accent = chosen[2]?.hex || candidates.find(c => ![background.hex, foreground.hex, primary, secondary].includes(c.hex))?.hex || primary;
+
+              resolve(themeWithAliases({ background: background.hex, foreground: foreground.hex, primary, secondary, accent }));
+            } catch {
+              resolve(null);
+            }
+          };
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     function updateColorRoleLabels() {
       Object.entries(THEME_ROLE_LABELS).forEach(([role, label]) => {
         const el = document.getElementById(`${ROLE_TO_INPUT_ID[role]}-label`);
@@ -2007,22 +2301,22 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!Array.isArray(roleColors) || !roleColors.length) return null;
       const ordered = roleColors.map(item => normalizeHex(item?.hex) || null);
       return themeWithAliases({
-        primary: ordered[0],
-        secondary: ordered[1],
-        accent: ordered[2],
-        foreground: ordered[3],
-        background: ordered[4]
+        background: ordered[0],
+        foreground: ordered[1],
+        primary: ordered[2],
+        secondary: ordered[3],
+        accent: ordered[4]
       });
     }
 
     function mapAiPaletteToUiSlots(colorsArray) {
       if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
       return themeWithAliases({
-        primary: normalizeToHex(colorsArray[0]) || null,
-        secondary: normalizeToHex(colorsArray[1]) || null,
-        accent: normalizeToHex(colorsArray[2]) || null,
-        foreground: normalizeToHex(colorsArray[3]) || null,
-        background: normalizeToHex(colorsArray[4]) || null
+        background: normalizeToHex(colorsArray[0]) || null,
+        foreground: normalizeToHex(colorsArray[1]) || null,
+        primary: normalizeToHex(colorsArray[2]) || null,
+        secondary: normalizeToHex(colorsArray[3]) || null,
+        accent: normalizeToHex(colorsArray[4]) || null
       });
     }
 
@@ -2116,7 +2410,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     function buildUploadedImagePalette(cache) {
       if (!cache || cache.templateInputKind !== "image-upload") return null;
-      const palette = themeWithAliases(cache.embeddedJson?.default_color_scheme || {});
+      const palette = themeWithAliases(uploadedImagePalette || cache.embeddedJson?.default_color_scheme || {});
       if (!THEME_ROLE_KEYS.some(role => palette[role])) return null;
       return { label: "Uploaded image palette", colors: palette };
     }
@@ -2750,6 +3044,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       generationError  = null;
       setOpenEditorReady(false);
       setApplyBtnState(false);
+      setHeaderStatus("generatingWebsiteStatus", "");
       greyRendererButtons(true);
 
       await waitForTemplateExtraction("braidStatus");
@@ -2847,7 +3142,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             if (isDebugMode()) mergeTokenReport(data?.token_report);
             pushPreviewHtmlUpdate(generationResult.site_html || "");
             setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
-            setHeaderStatus("bridgeStatus", "Bridge not needed.", "rgba(234,240,255,.28)");
+            setHeaderStatus("bridgeStatus", "");
             greyRendererButtons(false);
             return;
           }
@@ -3283,7 +3578,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
             templateHtml:         extractedTemplateCache?.templateHtml || null,
             strategyJson:         jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null,
-            bridgeJson:           bridgeResult?.bridge_json || null,
+            bridgeJson:           isDebugMode() ? (bridgeResult?.bridge_json || null) : null,
             provider:             getAnalysisProvider(),
             userId:               currentUserId()
           })
@@ -3397,7 +3692,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const p4Colors = getPage3Colors().theme;
       cachePage4Colors(p4Colors);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: p4Colors });
-      const editorWin = window.open("editor.html", "_blank");
+      const existingEditorWin = window.__portfolioEditorWindow;
+      const editorWin = existingEditorWin && !existingEditorWin.closed
+        ? existingEditorWin
+        : window.open("editor.html", "_blank");
       window.__portfolioEditorWindow = editorWin;
 
       // Collect visuals and inject them (client-side, may be instant or async).
@@ -3431,7 +3729,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // ── Debug panel — re-wire payload with visuals included now that generation ran ──
       if (isDebugMode()) wirePayloadDebug();
 
-      setHeaderStatus("bridgeStatus", "Bridge not needed.", "rgba(234,240,255,.28)");
+      setHeaderStatus("bridgeStatus", "");
       if (data.truncated) {
         setHeaderStatus("generatingWebsiteStatus", "✓ Portfolio ready — output cut short, try regenerating", "rgba(251,171,156,.8)");
       } else {
@@ -3876,6 +4174,18 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         rows.appendChild(row);
       });
 
+      const selectedVisiblePalette = selectedSuggestedPaletteKey
+        ? visible.find(palette => palette && paletteKey(palette) === selectedSuggestedPaletteKey)
+        : null;
+
+      // If a palette is already selected and the list rerendered (for example when an
+      // uploaded-image palette arrives late), re-apply that palette to the actual
+      // picker inputs so the radio state and left-side swatches stay in sync.
+      if (selectedVisiblePalette) {
+        applyColors(selectedVisiblePalette.colors);
+        return;
+      }
+
       // Auto-select the first available suggested palette the first time it arrives,
       // but only if the user hasn't already made an active palette or theme choice.
       if (!userHasSelectedPalette && visible.length > 0) {
@@ -3930,8 +4240,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
-      setHeaderStatus("editorAutoOpenStatus", "Editor will open automatically when HTML is ready.", "rgba(141,224,255,.75)");
-
+      ensureEditorWindow();
       if (isDirectDesignMode() || isMustacheMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
@@ -3978,25 +4287,6 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     document.getElementById("dbgSubmit5")?.addEventListener("click", doPreview);
 
     // Debug recompute buttons
-    document.getElementById("recomputeStage4")?.addEventListener("click", () => {
-      if (braidInProgress || bridgeInProgress || generationInProgress) return;
-      bridgeResult     = null;
-      generationResult = null;
-      autoMastheadImageTriggered = false;
-      ++_braidRunId; ++_bridgeRunId; ++_generationRunId;
-      greyRendererButtons(true);
-      setApplyBtnState(false);
-      if (isDirectDesignMode()) {
-        setHeaderStatus("braidStatus", "Portfolio generated", "rgba(234,240,255,.35)");
-        doGenerateWebsite();
-      } else if (isMustacheMode()) {
-        setHeaderStatus("braidStatus", "Portfolio generated", "rgba(234,240,255,.35)");
-        doGenerateWebsite();
-      } else {
-        page3Submitted = true; page4Submitted = true;
-        doBraidWebsite();
-      }
-    });
     document.getElementById("recomputeStage5")?.addEventListener("click", () => {
       if (generationInProgress) return;
       generationResult = null;
@@ -4016,6 +4306,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!e.data || e.data.type !== "colorThemesHeight") return;
       const f = document.getElementById("colorThemesFrame");
       if (f) f.style.height = e.data.height + "px";
+    });
+
+    window.addEventListener("message", e => {
+      if (!e.data || e.data.type !== "editor_process_status_request") return;
+      forwardEditorProcessStatus();
     });
 
     // Single color pick from iframe — fills whichever field is active

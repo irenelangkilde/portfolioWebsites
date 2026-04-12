@@ -92,6 +92,7 @@
       flex: 1; min-width: 0; position: relative;
       display: flex; align-items: center;
       margin-left: 24px;
+      cursor: pointer;
     }
     #sbTicker {
       font-size: 11px; color: rgba(234,240,255,.45);
@@ -2307,6 +2308,40 @@
     document.getElementById("btnCode").onclick   = () => setViewMode("code");
 
     // ── execCommand toolbar ────────────────────────────────────────────────────
+    function unwrapFontWrapper(el) {
+      if (!el) return el;
+      let current = el;
+      while (current.parentElement && current.parentElement.tagName === "FONT") {
+        const font = current.parentElement;
+        const parent = font.parentNode;
+        if (!parent) break;
+        parent.insertBefore(current, font);
+        if (!font.textContent.trim() || !font.children.length) font.remove();
+      }
+      return current;
+    }
+
+    function getSelectionElement() {
+      try {
+        const sel = frame.contentWindow?.getSelection?.();
+        if (!sel || !sel.rangeCount) return null;
+        let node = sel.getRangeAt(0).startContainer;
+        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        return node?.nodeType === Node.ELEMENT_NODE ? node : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getDirectColorTarget() {
+      const node = getSelectionElement();
+      if (!node) return null;
+      const target = node.closest?.(
+        ".hero-badge, .badge, .chip, .pill, [class*='badge'], [class*='chip'], [class*='pill']"
+      );
+      return target ? unwrapFontWrapper(target) : null;
+    }
+
     function exec(cmd, val = null) {
       try { frame.contentDocument.execCommand(cmd, false, val); frame.contentWindow.focus(); } catch {}
       scheduleVisualToCodeSync();
@@ -2326,8 +2361,24 @@
     };
 
     // Color
-    document.getElementById("etForeColor").oninput = function() { exec("foreColor", this.value); };
-    document.getElementById("etBackColor").oninput = function() { exec("backColor", this.value); };
+    document.getElementById("etForeColor").oninput = function() {
+      const target = getDirectColorTarget();
+      if (target) {
+        target.style.color = this.value;
+        scheduleVisualToCodeSync();
+        return;
+      }
+      exec("foreColor", this.value);
+    };
+    document.getElementById("etBackColor").oninput = function() {
+      const target = getDirectColorTarget();
+      if (target) {
+        target.style.backgroundColor = this.value;
+        scheduleVisualToCodeSync();
+        return;
+      }
+      exec("backColor", this.value);
+    };
 
     // Alignment
     document.getElementById("etAlignL").onclick = () => exec("justifyLeft");
@@ -3123,6 +3174,17 @@
       cachePreviewHtml(e.data.html);
       loadIframe(e.data.html);
       setCodeContent(e.data.html);
+      window.__editorTickerClearProcess?.();
+    });
+
+    window.addEventListener("message", e => {
+      if (e.data?.type === "editor_process_status") {
+        window.__editorTickerShowProcess?.(e.data.text || "", e.data.color || "rgba(141,224,255,.75)");
+        return;
+      }
+      if (e.data?.type === "editor_process_status_clear") {
+        window.__editorTickerClearProcess?.();
+      }
     });
 
     // ── Load CodeMirror from CDN (optional enhancement — plain textarea fallback) ──
@@ -3180,7 +3242,6 @@
       "Sometimes you can also double-click a placeholder to replace it.",
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
-      
     ];
 
     const ticker  = document.getElementById("sbTicker");
@@ -3193,6 +3254,9 @@
 
     let idx = 0;
     let intervalId = null;
+    let tickerDismissed = false;
+    let processStatusActive = false;
+    const defaultTickerColor = "rgba(234,240,255,.45)";
 
     if (listEl) {
       listEl.innerHTML = "";
@@ -3207,24 +3271,58 @@
       return `${i + 1}. ${tips[i]}`;
     }
 
-    function updateTicker() {
+    function setTickerText(text, color = defaultTickerColor, animate = false) {
       ticker.classList.remove("animating");
       void ticker.offsetWidth;
-      ticker.textContent = tickerText(idx);
-      ticker.classList.add("animating");
+      ticker.textContent = text || "";
+      ticker.style.color = color || defaultTickerColor;
+      if (animate) ticker.classList.add("animating");
     }
 
-    ticker.textContent = tickerText(0);
-    intervalId = setInterval(() => {
-      idx = (idx + 1) % tips.length;
-      updateTicker();
-    }, 5000);
+    function startTipsCarousel() {
+      if (tickerDismissed || processStatusActive) return;
+      if (intervalId) clearInterval(intervalId);
+      idx = idx % tips.length;
+      setTickerText(tickerText(idx));
+      intervalId = setInterval(() => {
+        if (processStatusActive || tickerDismissed) return;
+        idx = (idx + 1) % tips.length;
+        setTickerText(tickerText(idx), defaultTickerColor, true);
+      }, 5000);
+      if (sbWrap) sbWrap.style.display = "";
+      if (btnTips) btnTips.style.display = "none";
+    }
+
+    function stopTipsCarousel() {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    function showProcessStatus(text, color) {
+      processStatusActive = true;
+      stopTipsCarousel();
+      if (sbWrap) sbWrap.style.display = "";
+      if (btnTips) btnTips.style.display = tickerDismissed ? "" : "none";
+      setTickerText(text || "", color || "rgba(141,224,255,.75)");
+    }
+
+    function clearProcessStatus() {
+      processStatusActive = false;
+      if (!tickerDismissed) startTipsCarousel();
+    }
+
+    function updateTicker() {
+      setTickerText(tickerText(idx), defaultTickerColor, true);
+    }
+
+    startTipsCarousel();
 
     function openModal() { modal?.classList.add("open"); }
     function closeModal() { modal?.classList.remove("open"); }
 
-    // Click on ticker → open modal
+    // Click on any visible tip area → open modal
     ticker.addEventListener("click", openModal);
+    sbWrap?.addEventListener("click", openModal);
 
     // Tips button (shown after dismiss) → open modal
     btnTips?.addEventListener("click", openModal);
@@ -3232,14 +3330,28 @@
     // Dismiss → stop carousel, hide ticker area, show Tips button
     dismiss?.addEventListener("click", () => {
       closeModal();
-      if (intervalId) clearInterval(intervalId);
-      intervalId = null;
+      tickerDismissed = true;
+      stopTipsCarousel();
       if (sbWrap)  sbWrap.style.display  = "none";
       if (btnTips) btnTips.style.display = "";
     });
 
     // Click outside modal box to close
     modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    window.__editorTickerShowProcess = showProcessStatus;
+    window.__editorTickerClearProcess = clearProcessStatus;
+
+    function requestInitialProcessStatus() {
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: "editor_process_status_request" }, location.origin);
+        }
+      } catch {}
+    }
+
+    requestInitialProcessStatus();
+    setTimeout(requestInitialProcessStatus, 150);
   })();
   </script>
 
