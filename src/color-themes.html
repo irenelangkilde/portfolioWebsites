@@ -71,38 +71,18 @@
 
         .color-box {
             flex: 1;
-            height: 16px;
+            height: 18px;
             border-radius: 2px;
             cursor: pointer;
             transition: transform 0.2s ease;
             position: relative;
+            border: 2px solid rgba(255,255,255,.9);
+            box-shadow: 0 0 0 1px rgba(0,0,0,.18);
         }
 
         .color-box:hover {
             transform: scale(1.1);
             z-index: 10;
-        }
-
-        .color-codes {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-        }
-
-        .color-code {
-            display: flex;
-            align-items: center;
-            font-size: 9px;
-            color: #666;
-        }
-
-        .color-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            margin-right: 3px;
-            flex-shrink: 0;
-            border: 1px solid #ddd;
         }
 
         .copy-btn {
@@ -134,7 +114,7 @@
     </div>
 
     <script>
-        const themes = [
+        const rawThemes = [
             {
                 name: "Ocean Breeze",
                 colors: ["#0077BE", "#00A8E8", "#E0F4FF", "#003B5C", "#FFFFFF"]
@@ -217,6 +197,18 @@
             }
         ];
 
+        const ROLE_ORDER = ["background", "foreground", "primary", "secondary", "accent"];
+        const themes = rawThemes.map(theme => ({
+            name: theme.name,
+            palette: {
+                background: theme.colors[4],
+                foreground: theme.colors[3],
+                primary: theme.colors[0],
+                secondary: theme.colors[1],
+                accent: theme.colors[2]
+            }
+        }));
+
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 return navigator.clipboard.writeText(text);
@@ -246,7 +238,8 @@
             const colorBoxes = document.createElement('div');
             colorBoxes.className = 'color-boxes';
 
-            theme.colors.forEach(color => {
+            ROLE_ORDER.forEach(role => {
+                const color = theme.palette[role];
                 const box = document.createElement('div');
                 box.className = 'color-box';
                 box.style.backgroundColor = color;
@@ -268,18 +261,12 @@
             copyBtn.className = 'copy-btn';
             copyBtn.textContent = 'Copy All';
             copyBtn.addEventListener('click', () => {
-                const allColors = theme.colors.join(', ');
+                const allColors = ROLE_ORDER.map(role => theme.palette[role]).join(', ');
                 copyToClipboard(allColors);
                 window.parent.postMessage({
                     type: 'colorThemeSelected',
                     number: index + 1,
-                    theme: {
-                        primary:   theme.colors[0],
-                        secondary: theme.colors[1],
-                        tertiary:  theme.colors[2],
-                        accent2:   theme.colors[3],
-                        accent1:   theme.colors[4]
-                    }
+                    theme: { ...theme.palette }
                 }, '*');
                 copyBtn.textContent = 'Copied! ✓';
                 copyBtn.style.background = '#4CAF50';

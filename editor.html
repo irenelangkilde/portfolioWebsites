@@ -134,6 +134,7 @@
     }
     #tipsModalBox ol { margin: 0 0 16px; padding-left: 18px; font-size: 11.5px; line-height: 1.65; }
     #tipsModalBox li { margin-bottom: 6px; }
+    #tipsModalBox li b { color: rgba(255,255,255,.96); }
     #btnTipsDismiss {
       display: block; margin-left: auto; padding: 5px 16px;
       background: rgba(103,126,234,.25); border: 1px solid rgba(103,126,234,.4);
@@ -214,7 +215,7 @@
 
     /* ── Color panel ──────────────────────────────────────────────── */
     #colorPanel {
-      width: 120px; flex-shrink: 0; background: #16213e;
+      width: 150px; flex-shrink: 0; background: #16213e;
       border-left: 1px solid rgba(255,255,255,.1);
       display: flex; flex-direction: column; overflow-y: auto;
       transition: width .2s, opacity .2s;
@@ -226,21 +227,32 @@
       font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
       color: rgba(255,255,255,.45); padding: 14px 14px 8px;
     }
-    .color-row { display: flex; align-items: center; gap: 4px; padding: 5px 14px; }
+    .color-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; }
     .color-row label {
       font-size: 12px;
       color: rgba(234,240,255,.7);
-      flex: 0 0 auto;
-      min-width: 10px;
+      flex: 1 1 auto;
+      min-width: 0;
     }
     .color-row input[type="color"] {
-      width: 32px; height: 24px; border: none; border-radius: 4px;
-      cursor: pointer; padding: 1px; background: none;
+      width: 44px; height: 23px; border: none; border-radius: 4px;
+      cursor: pointer; padding: 0; background: transparent; flex: 0 0 44px;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(0,0,0,.2);
+      overflow: hidden;
+    }
+    .color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-row input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .color-row input[type="color"]::-moz-color-swatch {
+      border: none;
+      border-radius: 4px;
     }
     .drag-handle {
       color: rgba(234,240,255,.25); font-size: 13px; cursor: grab;
       user-select: none; line-height: 1; flex-shrink: 0;
-      margin-left: -2px;
+      margin-right: 2px;
     }
     .drag-handle:active { cursor: grabbing; }
     .color-row.drag-over,
@@ -580,11 +592,11 @@
     </div>
     <div id="colorPanel" class="hidden">
       <h2>Colors</h2>
-      <div class="color-row" data-slot="background"><input type="color" id="cp-background"><label>Background</label><span class="drag-handle">⠿</span></div>
-      <div class="color-row" data-slot="foreground"><input type="color" id="cp-foreground"><label>Foreground</label><span class="drag-handle">⠿</span></div>
-      <div class="color-row" data-slot="primary"><input type="color" id="cp-primary"><label>Primary</label><span class="drag-handle">⠿</span></div>
-      <div class="color-row" data-slot="secondary"><input type="color" id="cp-secondary"><label>Secondary</label><span class="drag-handle">⠿</span></div>
-      <div class="color-row" data-slot="accent"><input type="color" id="cp-accent"><label>Accent</label><span class="drag-handle">⠿</span></div>
+      <div class="color-row" data-slot="background"><span class="drag-handle">⠿</span><input type="color" id="cp-background"><label>Background</label></div>
+      <div class="color-row" data-slot="foreground"><span class="drag-handle">⠿</span><input type="color" id="cp-foreground"><label>Foreground</label></div>
+      <div class="color-row" data-slot="primary"><span class="drag-handle">⠿</span><input type="color" id="cp-primary"><label>Primary</label></div>
+      <div class="color-row" data-slot="secondary"><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"><label>Secondary</label></div>
+      <div class="color-row" data-slot="accent"><span class="drag-handle">⠿</span><input type="color" id="cp-accent"><label>Accent</label></div>
       <hr>
       <div style="padding: 4px 14px 10px;">
         <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
@@ -660,7 +672,7 @@
   <!-- Image replace dialog -->
   <div id="imgReplaceOverlay">
     <div id="imgReplaceBox">
-      <h3>Media</h3>
+      <h3>Add/replace media</h3>
       <div class="img-preview-wrap hidden" id="imgPreviewWrap">
         <img id="imgReplacePreview" src="" alt="current image" />
       </div>
@@ -1534,9 +1546,6 @@
       });
       const nudge = document.getElementById("imgSourceNudge");
       if (nudge) nudge.style.display = mode ? "none" : "";
-      // Background checkbox only relevant when source is an image (url or upload)
-      const bgCheck = document.querySelector(".img-replace-check");
-      if (bgCheck) bgCheck.style.display = (mode === "url" || mode === "upload") ? "" : "none";
       setImageDialogError("");
       if (!imgRegenerateInProgress) setImageDialogStatus("");
     }
@@ -3166,30 +3175,46 @@
   // ── Suggestions carousel + Tips modal ───────────────────────────────────
   (function () {
     const tips = [
-      "Add a headshot by double-clicking a placeholder, or use the Image button.",
-      "Insert project images (graphs, charts) by clicking a location then Image.",
-      "Link artifacts or YouTube videos: highlight text, click Link, enter a URL.",
+      "Add images such as a headshot and project graphs/charts to really make an impact.",
+      "Add/replace images by clicking a location first, then the Media button.",
+      "Sometimes you can also double-click a placeholder to replace it.",
+      "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
+      
     ];
 
     const ticker  = document.getElementById("sbTicker");
     const sbWrap  = document.getElementById("sbWrap");
     const btnTips = document.getElementById("btnTips");
     const modal   = document.getElementById("tipsModal");
+    const listEl  = document.getElementById("tipsList");
     const dismiss = document.getElementById("btnTipsDismiss");
     if (!ticker) return;
 
     let idx = 0;
     let intervalId = null;
 
+    if (listEl) {
+      listEl.innerHTML = "";
+      tips.forEach((tip) => {
+        const li = document.createElement("li");
+        li.textContent = tip;
+        listEl.appendChild(li);
+      });
+    }
+
+    function tickerText(i) {
+      return `${i + 1}. ${tips[i]}`;
+    }
+
     function updateTicker() {
       ticker.classList.remove("animating");
       void ticker.offsetWidth;
-      ticker.textContent = "Tip — " + tips[idx];
+      ticker.textContent = tickerText(idx);
       ticker.classList.add("animating");
     }
 
-    ticker.textContent = "Tip — " + tips[0];
+    ticker.textContent = tickerText(0);
     intervalId = setInterval(() => {
       idx = (idx + 1) % tips.length;
       updateTicker();
@@ -3207,7 +3232,7 @@
     // Dismiss → stop carousel, hide ticker area, show Tips button
     dismiss?.addEventListener("click", () => {
       closeModal();
-      clearInterval(intervalId);
+      if (intervalId) clearInterval(intervalId);
       intervalId = null;
       if (sbWrap)  sbWrap.style.display  = "none";
       if (btnTips) btnTips.style.display = "";
@@ -3222,12 +3247,7 @@
   <div id="tipsModal" role="dialog" aria-modal="true" aria-label="Tips">
     <div id="tipsModalBox">
       <strong>Tips</strong>
-      <ol>
-        <li>Add a headshot image by double-clicking a placeholder if there is one, otherwise use the <b>Image</b> button to insert one.</li>
-        <li>Insert images related to projects or work experience, such as graphs or charts, by clicking at the desired point of insertion and then clicking the <b>Image</b> button.</li>
-        <li>Link other artifacts, including YouTube videos, by highlighting a word or phrase, clicking <b>Link</b> and entering a URL.</li>
-        <li>Use <b>+ Card</b> / <b>− Card</b> to add or delete a section or subsection element. A popup menu lets you choose the level to operate on.</li>
-      </ol>
+      <ol id="tipsList"></ol>
       <button id="btnTipsDismiss">Dismiss</button>
     </div>
   </div>

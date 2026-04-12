@@ -1508,7 +1508,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     // ----------------------------
     // Template extraction cache
     // ----------------------------
-    let extractedTemplateCache = null;   // { templateHtml, rawTemplateHtml, mastheadMeta, embeddedJson, templateMode }
+    let extractedTemplateCache = null;   // { templateHtml, rawTemplateHtml, mastheadMeta, embeddedJson, templateMode, templateInputKind }
     let templatePaletteRendered = false; // true once template palette has been auto-applied; resets on template clear
     let userHasSelectedPalette  = false; // true once user actively picks any palette/theme; resets on template clear
     let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
@@ -1648,6 +1648,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const extractMode = document.getElementById("extractTemplateMode")?.value || "analysis";
 
       let key = "";
+      let templateInputKind = "template";
       let requestBody = { provider: getAnalysisProvider(), templateMode: extractMode };
 
       if (source === "keyword") {
@@ -1710,7 +1711,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           }
           rawTemplateHtml = rawTemplateHtml || html;
           mastheadMeta = mastheadMeta || normalizedTemplateResult?.mastheadMeta || null;
-          extractedTemplateCache = { templateHtml: html, rawTemplateHtml, mastheadMeta, embeddedJson: null, templateMode: "braid" };
+          extractedTemplateCache = { templateHtml: html, rawTemplateHtml, mastheadMeta, embeddedJson: null, templateMode: "braid", templateInputKind: "template" };
           setTemplateExtractStatus(
             usedKey === normalizedKey ? "✓ Sample website loaded (pre-normalized)" : "✓ Sample website loaded",
             "rgba(118,176,34,.9)"
@@ -1736,7 +1737,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
             lastExtractedTemplate = candidateKey;
-            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: null, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis" };
+            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: null, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis", templateInputKind: "template" };
             const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
@@ -1768,9 +1769,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         try {
           const b64 = await readFileAsBase64(file);
           if (file.type.startsWith("image/")) {
+            templateInputKind = "image-upload";
             requestBody.templateImageBase64 = b64;
             requestBody.templateImageMime   = file.type;
           } else {
+            templateInputKind = "html-upload";
             // HTML file — for braid mode, skip AI extraction and cache raw HTML directly,
             // then kick off color normalization in background.
             if (isBraidMode()) {
@@ -1782,7 +1785,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
                 rawTemplateHtml: rawHtml,
                 mastheadMeta: analyzeSampleMastheadLocal(rawHtml),
                 embeddedJson: null,
-                templateMode: "braid"
+                templateMode: "braid",
+                templateInputKind
               };
               setTemplateExtractStatus("✓ Sample website loaded — normalizing colors…", "rgba(118,176,34,.9)");
               renderSuggestedPalettes();
@@ -1878,7 +1882,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           return;
         }
 
-        const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode };
+        const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode, templateInputKind };
         extractedTemplateCache = data;
         setTemplateExtractStatus("✓ Template extracted", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
@@ -2108,6 +2112,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       if (!Object.values(palette).some(Boolean)) return null;
       return { label: "Template palette", colors: themeWithAliases(palette) };
+    }
+
+    function buildUploadedImagePalette(cache) {
+      if (!cache || cache.templateInputKind !== "image-upload") return null;
+      const palette = themeWithAliases(cache.embeddedJson?.default_color_scheme || {});
+      if (!THEME_ROLE_KEYS.some(role => palette[role])) return null;
+      return { label: "Uploaded image palette", colors: palette };
     }
 
     function applyColors(colors) {
@@ -3723,7 +3734,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
       };
 
-      // Slot 0: template palette — sanitize extracted colors so duplicate neutrals
+      // Slot 0: uploaded image palette — use the AI-inferred semantic colors from the
+      // image extraction result so page 4 can offer it explicitly above the others.
+      const uploadedImagePalette = buildUploadedImagePalette(extractedTemplateCache);
+
+      // Slot 1: template palette — sanitize extracted colors so duplicate neutrals
       // do not crowd out salient accent hues from the source design.
       let tplPalette = buildTemplatePalette(extractedTemplateCache);
       if (!tplPalette && extractedTemplateCache?.templateHtml) {
@@ -3742,7 +3757,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
       }
 
-      // Slots 1-3: up to 3 AI palettes from resume analysis
+      // Following slots: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
       const aiPalettes = getCompatibleColorSchemes(resolvedData);
       const aiRows = aiPalettes
@@ -3757,8 +3772,18 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           return { label: p.how_used || `AI palette ${i + 1}`, colors };
         });
 
-      const MAX = 4;
-      const incoming = [...(tplPalette ? [tplPalette] : []), ...aiRows];
+      const dedupePalettes = list => {
+        const seen = new Set();
+        return list.filter(palette => {
+          const key = paletteKey(palette);
+          if (!key || seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      };
+
+      const MAX = uploadedImagePalette ? 5 : 4;
+      const incoming = dedupePalettes([...(uploadedImagePalette ? [uploadedImagePalette] : []), ...(tplPalette ? [tplPalette] : []), ...aiRows]);
       let visible;
       if (paletteSuggestionsLocked && displayedSuggestedPalettes.length) {
         const merged = [...displayedSuggestedPalettes];
