@@ -91,6 +91,16 @@ Usage constraints:
   - Large-area backgrounds and major panels should derive from `background`, sometimes mixed with `primary` or `secondary`.
   - Do not let `accent` become a page-wide wash or the default surface color.
   - Preserve the sample's hierarchy of prominence even after recoloring.
+  - Within any one repeated section pattern, keep card styling systematic.
+    Sibling cards in the same section should share the same surface/background treatment,
+    border treatment, title color role, and chip/tag styling unless there is a real semantic reason not to.
+  - Distinguish titles from chips intentionally.
+    If card titles in a section use one role, keep that role stable across the section.
+    If chips/tags use another role family, keep that role stable across the section.
+    Do not mix title colors and chip colors arbitrarily from card to card.
+  - Prefer one reusable section recipe:
+    section heading role, card title role, body text role, chip role, border role.
+    Apply that recipe uniformly across all sibling cards.
   - If the sample contains a raster masthead image, keep that image visibly legible under the overlay; do not bury it beneath opaque white, cream, or pale-gray layers.
 
 ═══════════════════════════════════════════════════
@@ -135,6 +145,9 @@ SVG icons — Experience entries:
 
 SVG icons — Project entries:
   Every project card MUST contain a unique inline SVG icon (approx. 2 inches wide).  Never repeat the same icon/emoji.
+  Project cards must also include a real project image area, not just an icon. Use an inline SVG illustration,
+  data URI image, screenshot-style panel, mockup, chart, diagram, or other image-like visual that feels specific
+  to that project. Do not render projects as icon-only cards.
 
 Masthead illustration:
   Domain context for this candidate: {{DOMAIN_CONTEXT}}

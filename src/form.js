@@ -1727,7 +1727,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       // Apply colors from the embedded JSON default_color_scheme (overrides resume colors)
       const colors = result.embeddedJson?.default_color_scheme;
-      if (Array.isArray(colors) && colors.length >= 1) {
+      if (shouldUseInputPalette() && Array.isArray(colors) && colors.length >= 1) {
         const mapped = mapAiPaletteToUiSlots(colors);
         if (Object.keys(mapped).length) {
           sampleColors = { ...sampleColors, ...mapped };
@@ -1941,12 +1941,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (fileKey === lastExtractedTemplate) return;
         key = fileKey;
         try {
-          const b64 = await readFileAsBase64(file);
           if (file.type.startsWith("image/")) {
+            setTemplateExtractStatus("Optimizing screenshot…", "rgba(141,224,255,.75)");
+            const optimized = await optimizeImageForAiUpload(file);
             templateInputKind = "image-upload";
-            requestBody.templateImageBase64 = b64;
-            requestBody.templateImageMime   = file.type;
+            requestBody.templateImageBase64 = optimized.base64;
+            requestBody.templateImageMime   = optimized.mime;
           } else {
+            const b64 = await readFileAsBase64(file);
             templateInputKind = "html-upload";
             // HTML file — for braid mode, skip AI extraction and cache raw HTML directly,
             // then kick off color normalization in background.
@@ -2320,6 +2322,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       });
     }
 
+    function getPaletteKey(palette) {
+      if (!palette?.colors) return "";
+      return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
+    }
+
     function buildTemplatePalette(cache) {
       if (!cache) return null;
       const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
@@ -2409,10 +2416,53 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     function buildUploadedImagePalette(cache) {
-      if (!cache || cache.templateInputKind !== "image-upload") return null;
-      const palette = themeWithAliases(uploadedImagePalette || cache.embeddedJson?.default_color_scheme || {});
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (source !== "file") return null;
+      const isImageUpload = uploadedImagePalette || cache?.templateInputKind === "image-upload";
+      if (!isImageUpload) return null;
+      const palette = themeWithAliases(uploadedImagePalette || cache?.embeddedJson?.default_color_scheme || {});
       if (!THEME_ROLE_KEYS.some(role => palette[role])) return null;
       return { label: "Uploaded image palette", colors: palette };
+    }
+
+    function getInputPaletteSuggestion() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (source !== "keyword" && source !== "file") return null;
+
+      if (source === "file") {
+        const uploadedPalette = buildUploadedImagePalette(extractedTemplateCache);
+        if (uploadedPalette) {
+          return { ...uploadedPalette, label: "Input palette", sourceKind: "input" };
+        }
+
+        const htmlUploadPalette = buildTemplatePalette(extractedTemplateCache);
+        if (htmlUploadPalette) {
+          return { ...htmlUploadPalette, label: "Input palette", sourceKind: "input" };
+        }
+
+        return null;
+      }
+
+      let tplPalette = buildTemplatePalette(extractedTemplateCache);
+      if (!tplPalette && extractedTemplateCache?.templateHtml) {
+        const rootMatch = extractedTemplateCache.templateHtml.match(/:root\s*\{([^}]+)\}/);
+        if (rootMatch) {
+          const css = rootMatch[1];
+          const cssVar = name => css.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{3,8})`))?.[1] || null;
+          const primary = cssVar("accent");
+          const secondary = cssVar("accent-2");
+          const dark = cssVar("bg");
+          const light = cssVar("light") || cssVar("panel");
+          if (primary || secondary) {
+            tplPalette = {
+              label: "Template palette",
+              colors: themeWithAliases({ background: light, foreground: dark, primary, secondary, accent: null })
+            };
+          }
+        }
+      }
+
+      return tplPalette ? { ...tplPalette, label: "Template palette", sourceKind: "input" } : null;
     }
 
     function applyColors(colors) {
@@ -2441,6 +2491,17 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
       wrap.style.display = show ? "block" : "none";
       if (!show) document.querySelectorAll('input[name="templateCopyrightMode"]').forEach(r => r.checked = false);
+    }
+
+    function shouldUseInputPalette() {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (!source || source === "none") return false;
+      const inputPalette = getInputPaletteSuggestion();
+      if (!inputPalette) return false;
+      const inputKey = getPaletteKey(inputPalette);
+      if (!inputKey) return false;
+      if (selectedSuggestedPaletteKey) return selectedSuggestedPaletteKey === inputKey;
+      return !userHasSelectedPalette;
     }
 
     function updateTemplateUI() {
@@ -2540,7 +2601,6 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }));
     document.getElementById("modelTemplate")?.addEventListener("input", updateTemplateCopyrightVisibility);
     document.getElementById("modelTemplate")?.addEventListener("blur", extractTemplateInBackground);
-
     // Also trigger extraction when a file is selected while source=file
     templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
 
@@ -2721,6 +2781,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         template_source: templateSource,
         model_template: templateSource === "keyword" ? (document.getElementById("modelTemplate")?.value?.trim() || "") : "",
         template_copyright_mode: document.querySelector('input[name="templateCopyrightMode"]:checked')?.value || "",
+        use_input_palette: shouldUseInputPalette(),
         design_composition:  document.getElementById("designComposition")?.value  || "",
         design_style:        styleVal === "other" ? (document.getElementById("designStyleOther")?.value?.trim() || "other") : styleVal,
         design_render_mode:  document.getElementById("designRenderMode")?.value   || "",
@@ -2758,6 +2819,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     // ----------------------------
     // Helpers
     // ----------------------------
+    const MAX_AI_IMAGE_BYTES = 5 * 1024 * 1024;
+    const TARGET_AI_IMAGE_BYTES = Math.floor(MAX_AI_IMAGE_BYTES * 0.92);
+
+    function estimateBase64Bytes(base64) {
+      return String(base64 || "").replace(/\s+/g, "").length;
+    }
+
     async function readFileAsBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -2765,6 +2833,70 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
+    }
+
+    async function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function optimizeImageForAiUpload(file, maxBytes = TARGET_AI_IMAGE_BYTES) {
+      const originalBase64 = await readFileAsBase64(file);
+      const originalBytes = estimateBase64Bytes(originalBase64);
+      const originalMime = file.type || "image/png";
+      if (originalBytes <= maxBytes) {
+        return { base64: originalBase64, mime: originalMime, bytes: originalBytes, optimized: false };
+      }
+
+      const dataUrl = await readFileAsDataUrl(file);
+      const img = await new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("Could not decode uploaded image."));
+        image.src = dataUrl;
+      });
+
+      const naturalWidth = img.naturalWidth || img.width || 1;
+      const naturalHeight = img.naturalHeight || img.height || 1;
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not optimize uploaded image.");
+
+      const attempts = [
+        { scale: 1.00, quality: 0.88 },
+        { scale: 0.92, quality: 0.82 },
+        { scale: 0.84, quality: 0.76 },
+        { scale: 0.76, quality: 0.70 },
+        { scale: 0.68, quality: 0.64 },
+        { scale: 0.60, quality: 0.58 },
+        { scale: 0.52, quality: 0.52 },
+        { scale: 0.44, quality: 0.46 }
+      ];
+
+      let best = null;
+      for (const attempt of attempts) {
+        const width = Math.max(320, Math.round(naturalWidth * attempt.scale));
+        const height = Math.max(180, Math.round(naturalHeight * attempt.scale));
+        canvas.width = width;
+        canvas.height = height;
+        ctx.clearRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const attemptDataUrl = canvas.toDataURL("image/jpeg", attempt.quality);
+        const attemptBase64 = attemptDataUrl.split(",")[1] || "";
+        const attemptBytes = estimateBase64Bytes(attemptBase64);
+        if (!best || attemptBytes < best.bytes) {
+          best = { base64: attemptBase64, mime: "image/jpeg", bytes: attemptBytes, optimized: true };
+        }
+        if (attemptBytes <= maxBytes) return best;
+      }
+
+      if (best && best.bytes <= MAX_AI_IMAGE_BYTES) return best;
+      throw new Error("Image is still too large after optimization. Please upload a smaller screenshot.");
     }
 
     // ----------------------------
@@ -3094,7 +3226,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Prefer the user's chosen semantic palette so the braid generates color-mix()
       // expressions calibrated to those colors. Fall back to the sample's own palette
       // only when the user hasn't picked anything yet.
-      const samplePalette = buildTemplatePalette(extractedTemplateCache);
+      const samplePalette = shouldUseInputPalette() ? buildTemplatePalette(extractedTemplateCache) : null;
       const userColors    = getPage3Colors().theme;
       const colorSpec     = (userColors?.primary ? userColors : null) ?? samplePalette?.colors;
 
@@ -3111,7 +3243,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 	            sampleHtml,
               mastheadMeta,
 	            colorSpec,
-            templateColorSlots: normalizedTemplateResult?.colorSlots || null,
+            templateColorSlots: shouldUseInputPalette() ? (normalizedTemplateResult?.colorSlots || null) : null,
             headshotName: headshotInput?.files?.[0]?.name || "",
             provider:     getAnalysisProvider(),
             userId:       currentUserId()
@@ -3708,10 +3840,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       let finalHtml = data.site_html;
       if (allVisuals.length > 0) {
         finalHtml = injectArtifacts(finalHtml, allVisuals);
-        // Update localStorage with artifact-injected version and push it to the
-        // already-open editor window via postMessage (no reload needed).
-        pushPreviewHtmlUpdate(finalHtml);
       }
+      // Push the final HTML to the already-open editor window via postMessage
+      // even when there were no artifact edits; otherwise the editor can stay
+      // stuck on the pre-opened "Preparing editor…" placeholder.
+      pushPreviewHtmlUpdate(finalHtml);
 
       const resumeData = getPage1();
       const designData = getPage2Template();
@@ -4027,33 +4160,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const container = document.getElementById("suggestedPalettes");
       const rows      = document.getElementById("suggestedPalettesRows");
       if (!container || !rows) return;
-      const paletteKey = palette => {
-        if (!palette?.colors) return "";
-        return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
-      };
-
-      // Slot 0: uploaded image palette — use the AI-inferred semantic colors from the
-      // image extraction result so page 4 can offer it explicitly above the others.
-      const uploadedImagePalette = buildUploadedImagePalette(extractedTemplateCache);
-
-      // Slot 1: template palette — sanitize extracted colors so duplicate neutrals
-      // do not crowd out salient accent hues from the source design.
-      let tplPalette = buildTemplatePalette(extractedTemplateCache);
-      if (!tplPalette && extractedTemplateCache?.templateHtml) {
-        // Legacy fallback: old CSS var names (pre-color-role-comment templates)
-        const rootMatch = extractedTemplateCache.templateHtml.match(/:root\s*\{([^}]+)\}/);
-        if (rootMatch) {
-          const css = rootMatch[1];
-          const cssVar = name => css.match(new RegExp(`--${name}\\s*:\\s*(#[0-9a-fA-F]{3,8})`))?.[ 1] || null;
-          const primary   = cssVar("accent");
-          const secondary = cssVar("accent-2");
-          const dark      = cssVar("bg");
-          const light     = cssVar("light") || cssVar("panel");
-          if (primary || secondary) {
-            tplPalette = { label: "Template palette", colors: themeWithAliases({ background: light, foreground: dark, primary, secondary, accent: null }) };
-          }
-        }
-      }
+      const inputPalette = getInputPaletteSuggestion();
 
       // Following slots: up to 3 AI palettes from resume analysis
       const resolvedData = analysisData ?? lastAnalysisData;
@@ -4073,21 +4180,21 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const dedupePalettes = list => {
         const seen = new Set();
         return list.filter(palette => {
-          const key = paletteKey(palette);
+          const key = getPaletteKey(palette);
           if (!key || seen.has(key)) return false;
           seen.add(key);
           return true;
         });
       };
 
-      const MAX = uploadedImagePalette ? 5 : 4;
-      const incoming = dedupePalettes([...(uploadedImagePalette ? [uploadedImagePalette] : []), ...(tplPalette ? [tplPalette] : []), ...aiRows]);
+      const MAX = inputPalette ? 5 : 4;
+      const incoming = dedupePalettes([...(inputPalette ? [inputPalette] : []), ...aiRows]);
       let visible;
       if (paletteSuggestionsLocked && displayedSuggestedPalettes.length) {
         const merged = [...displayedSuggestedPalettes];
-        const seen = new Set(merged.map(paletteKey).filter(Boolean));
+        const seen = new Set(merged.map(getPaletteKey).filter(Boolean));
         incoming.forEach(palette => {
-          const key = paletteKey(palette);
+          const key = getPaletteKey(palette);
           if (!key || seen.has(key) || merged.length >= MAX) return;
           seen.add(key);
           merged.push(palette);
@@ -4130,12 +4237,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         cb.disabled = empty;
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
-        if (!empty && selectedSuggestedPaletteKey && paletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
+        if (!empty && selectedSuggestedPaletteKey && getPaletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
         cb.addEventListener("change", () => {
           if (cb.checked) {
             userHasSelectedPalette = true;
             paletteSuggestionsLocked = true;
-            selectedSuggestedPaletteKey = paletteKey(palette);
+            selectedSuggestedPaletteKey = getPaletteKey(palette);
             applyColors(palette.colors);
           }
         });
@@ -4175,7 +4282,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       });
 
       const selectedVisiblePalette = selectedSuggestedPaletteKey
-        ? visible.find(palette => palette && paletteKey(palette) === selectedSuggestedPaletteKey)
+        ? visible.find(palette => palette && getPaletteKey(palette) === selectedSuggestedPaletteKey)
         : null;
 
       // If a palette is already selected and the list rerendered (for example when an
@@ -4193,7 +4300,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (firstRadio) {
           firstRadio.checked = true;
           applyColors(visible[0].colors);
-          if (tplPalette) templatePaletteRendered = true;
+          selectedSuggestedPaletteKey = getPaletteKey(visible[0]);
+          if (inputPalette && getPaletteKey(visible[0]) === getPaletteKey(inputPalette)) templatePaletteRendered = true;
         }
       }
     }

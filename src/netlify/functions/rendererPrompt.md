@@ -79,11 +79,29 @@ Avoid generic stock visuals.
 STYLE REQUIREMENTS
 
 - Apply the provided color theme throughout using CSS custom properties
+- Declare these five semantic base variables in `:root` and use them as the only palette foundation:
+  `--background`, `--foreground`, `--primary`, `--secondary`, `--accent`.
+- Build reusable derived tokens from those base variables for surfaces, borders, muted text, overlays,
+  shadows, chips, and hover states. Use `color-mix()` to derive those tokens rather than scattering
+  unrelated hardcoded colors across the stylesheet.
+- Organize repeated section styling with mixin-like reusable CSS recipes: shared card classes, utility
+  classes, or component tokens that keep section surfaces, titles, chips, and borders systematic.
 - Use gradients combining at least 2 of the 5 palette colors
 - Treat --background as the canvas / surface base and --foreground as the main readable text color.
 - Treat --primary as the strongest action / emphasis color, --secondary as a distinct supporting brand color, and --accent as an orthogonal highlight.
 - Use subtle visual enhancements: glow effects, card depth, section dividers
 - Maintain readability and professionalism
+- Keep color semantics consistent within each repeated section pattern.
+  If multiple cards belong to the same section, they should share the same surface/background,
+  border treatment, card-title color role, and chip/tag styling unless the content has a real
+  semantic distinction.
+- Keep title text and chip/tag text intentionally differentiated.
+  Do not randomly assign one card title to `--primary` and another sibling title to `--accent`
+  if both titles play the same role. Likewise, chips in the same section should use one
+  consistent styling family instead of mixing unrelated palette roles.
+- Use one stable recipe for repeated components in a section:
+  section heading role, card heading role, body text role, chip role, and border role.
+  Repeat that recipe across sibling cards.
 - ALWAYS declare `--hero-bg-image: none` in `:root` and apply it on the hero section as `background-image: var(--hero-bg-image)` (layered over the gradient). This property will be overridden client-side if the user supplies a background image.
 - If visual_direction.use_emoji_icons is true: use emoji (e.g. 🎓 📊 🔬) or Font Awesome for section icons and skill badges. If false: do not use any icons.
 - If visual_direction.alternate_sections is true: alternate background between dark and light for consecutive sections, making sure that the text color is complementary and contrasting. If false: use a consistent background treatment throughout.
@@ -95,6 +113,11 @@ CONTENT REQUIREMENTS
 - Use bullet points where helpful
 - Emphasize measurable or concrete impact where available
 - Echo job-relevant keywords naturally
+- Projects must include image-like visuals, not icon-only treatments. Each project card should contain a
+  meaningful visual area such as a screenshot-style panel, mockup, diagram, chart, device frame, UI panel,
+  lab/technical illustration, or other project-specific inline SVG/data-URI image treatment.
+- Do not render project cards as just text plus an emoji/icon. The icon/emoji may remain as a secondary accent,
+  but every project needs a substantial visual block that reads as an image.
 - Each project card MUST display a large centered emoji (font-size: 3.5rem–5rem) that is thematically specific to that project's subject matter. Every project must use a DIFFERENT emoji — never repeat the same one. Choose from the domain table below based on the project's technologies and description. Do NOT use stock photo URLs (picsum, unsplash, etc.).
 
   Domain → suggested emoji (pick the single most fitting one per project):
