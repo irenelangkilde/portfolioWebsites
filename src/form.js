@@ -206,9 +206,12 @@
           linkEl.textContent = "Redirecting…";
           linkEl.style.opacity = "0.6";
           try {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), 15000);
             const res = await fetch("/.netlify/functions/createCheckoutSession", {
               method: "POST",
               headers: { "content-type": "application/json" },
+              signal: controller.signal,
               body: JSON.stringify({
                 tier:       UPGRADE_TIER_KEY[tier] || "basic",
                 userId:     user.id,
@@ -217,13 +220,22 @@
                 quantity
               })
             });
-            const data = await res.json();
-            if (data.url) { location.href = data.url; }
-            else { linkEl.textContent = "Upgrade →"; linkEl.style.opacity = ""; alert(data.error || "Could not start checkout."); }
+            clearTimeout(timer);
+            const text = await res.text();
+            let data = null;
+            try { data = JSON.parse(text); } catch {}
+            if (!res.ok || !data?.url) {
+              throw new Error(data?.error || `Could not start checkout.${text ? ` ${text.slice(0, 200)}` : ""}`);
+            }
+            location.href = data.url;
           } catch (err) {
             linkEl.textContent = "Upgrade →";
             linkEl.style.opacity = "";
-            alert("Checkout error: " + err.message);
+            const message = err?.name === "AbortError"
+              ? "Checkout request timed out after 15 seconds. The checkout function may be hanging or Stripe may be unreachable."
+              : `Checkout error: ${err.message}`;
+            console.error("Checkout error:", err);
+            alert(message);
           }
         };
       }
@@ -1751,14 +1763,18 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return !!source && source !== "none";
     }
 
+    function hasUsableExtractedTemplate() {
+      return !!extractedTemplateCache?.templateHtml;
+    }
+
     // Converts parseColorRoles() output [{index, label, hex}] → semantic role object
     function colorRolesToSlots(colorRoles) {
       return themeWithAliases({
-        primary: (colorRoles || []).find(r => r.index === 1)?.hex || null,
-        secondary: (colorRoles || []).find(r => r.index === 2)?.hex || null,
-        accent: (colorRoles || []).find(r => r.index === 3)?.hex || null,
-        foreground: (colorRoles || []).find(r => r.index === 4)?.hex || null,
-        background: (colorRoles || []).find(r => r.index === 5)?.hex || null
+        background: (colorRoles || []).find(r => r.index === 1)?.hex || null,
+        foreground: (colorRoles || []).find(r => r.index === 2)?.hex || null,
+        primary: (colorRoles || []).find(r => r.index === 3)?.hex || null,
+        secondary: (colorRoles || []).find(r => r.index === 4)?.hex || null,
+        accent: (colorRoles || []).find(r => r.index === 5)?.hex || null
       });
     }
 
@@ -1844,7 +1860,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (isBraidMode()) {
           const normalizedKey = srcPath.replace(/\.html$/, "_normalized.html");
           const cacheKey = normalizedKey; // use normalized path as dedup key
-          if (cacheKey === lastExtractedTemplate) return;
+          if (cacheKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
           let html = null;
           let usedKey = srcPath;
           let rawTemplateHtml = "";
@@ -1894,7 +1910,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           return;
         }
 
-        if (compiledKey === lastExtractedTemplate) return;
+        if (compiledKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
 
         // Try pre-compiled version (fast path, no API call).
         // If mustache file is missing, fall back to the _template.html variant.
@@ -1922,7 +1938,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         // No pre-compiled file — fetch source HTML and send to AI extraction
         const apiKey = srcPath + "#" + extractMode;
-        if (apiKey === lastExtractedTemplate) return;
+        if (apiKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
         try {
           const res = await fetch(srcPath);
           if (!res.ok) throw new Error(`"${srcPath}" not found (HTTP ${res.status})`);
@@ -1938,7 +1954,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (!file) return;
         // Files have no pre-compiled version — include mode in key so switching re-extracts
         const fileKey = file.name + "_" + file.size + "#" + extractMode;
-        if (fileKey === lastExtractedTemplate) return;
+        if (fileKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
         key = fileKey;
         try {
           if (file.type.startsWith("image/")) {
@@ -2030,6 +2046,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         }
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
           clearInterval(extractTicker);
+          if (lastExtractedTemplate === key && !hasUsableExtractedTemplate()) lastExtractedTemplate = "";
           setTemplateExtractStatus("Template extraction timed out — try a smaller page or upload the HTML file instead.", "rgba(251,171,156,.8)");
           return;
         }
@@ -2050,6 +2067,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         clearInterval(extractTicker);
 
         if (result.status === "error") {
+          if (lastExtractedTemplate === key && !hasUsableExtractedTemplate()) lastExtractedTemplate = "";
           const isNetworkErr = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed/i.test(result.error || "");
           const msg = isNetworkErr
             ? "Can't reach that URL from the server (DNS/network error). Save the page as HTML and use the \"Upload\" option instead."
@@ -2327,6 +2345,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
     }
 
+    function hasNormalizedTemplatePalette(cache) {
+      if (!cache) return false;
+      if (cache.templateInputKind !== "html-upload") return false;
+      if (normalizedTemplateResult?.colorSlots && Object.values(normalizedTemplateResult.colorSlots).some(Boolean)) return true;
+      const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
+      return Array.isArray(roleColors) && roleColors.length > 0;
+    }
+
     function buildTemplatePalette(cache) {
       if (!cache) return null;
       const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
@@ -2437,7 +2463,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         const htmlUploadPalette = buildTemplatePalette(extractedTemplateCache);
         if (htmlUploadPalette) {
-          return { ...htmlUploadPalette, label: "Input palette", sourceKind: "input" };
+          const label = extractedTemplateCache?.templateInputKind === "html-upload" && !hasNormalizedTemplatePalette(extractedTemplateCache)
+            ? "Preliminary Input Palette"
+            : "Input palette";
+          return { ...htmlUploadPalette, label, sourceKind: "input" };
+        }
+
+        if (extractedTemplateCache?.templateInputKind === "html-upload" && !hasNormalizedTemplatePalette(extractedTemplateCache)) {
+          return { label: "Input palette", colors: null, sourceKind: "input-pending", pending: true };
         }
 
         return null;
@@ -3217,7 +3250,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return;
       }
 
-      const braidCountdown = startCountdown("braidStatus", "Generating portfolio…", 720);
+      const braidCountdown = startCountdown("braidStatus", "Generating portfolio…", 420);
       const jobId = crypto.randomUUID();
 
       const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
@@ -3254,7 +3287,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
         }
 
-        const maxWaitMs = 720000;
+        const maxWaitMs = 420000;
         const startTime = Date.now();
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 4000));
@@ -4180,6 +4213,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const dedupePalettes = list => {
         const seen = new Set();
         return list.filter(palette => {
+          if (palette?.pending) return true;
           const key = getPaletteKey(palette);
           if (!key || seen.has(key)) return false;
           seen.add(key);
@@ -4228,6 +4262,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       rows.innerHTML = "";
       visible.slice(0, MAX).forEach(palette => {
         const empty = !palette;
+        const pending = !!palette?.pending;
         const row = document.createElement("label");
         row.style.cssText = `display:flex; flex-direction:column; gap:5px; padding:7px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15); cursor:${empty ? "default" : "pointer"};`;
 
@@ -4237,9 +4272,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         cb.disabled = empty;
         cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
         if (!empty) cb.style.cursor = "pointer";
-        if (!empty && selectedSuggestedPaletteKey && getPaletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
+        if (!empty && !pending && selectedSuggestedPaletteKey && getPaletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
         cb.addEventListener("change", () => {
           if (cb.checked) {
+            if (pending) return;
             userHasSelectedPalette = true;
             paletteSuggestionsLocked = true;
             selectedSuggestedPaletteKey = getPaletteKey(palette);
@@ -4249,28 +4285,31 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         const swatches = document.createElement("div");
         swatches.style.cssText = "display:flex; gap:3px; flex-shrink:0; margin-left:10px;";
-        PALETTE_SLOTS.forEach(slot => {
-          const s = document.createElement("span");
-          const color = empty ? "rgba(255,255,255,.07)" : (palette.colors[slot] || "#888");
-          s.style.cssText = `width:44px; height:23px; border-radius:4px; background:${color}; border:2px solid rgba(255,255,255,.85); display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.25);${empty ? "" : " cursor:pointer;"}`;
-          if (!empty) {
-            // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
-            const applySwatchColor = e => {
-              e.stopPropagation();
-              e.preventDefault();
-              const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
-              const input = document.getElementById(targetId);
-              if (input) input.value = palette.colors[slot] || "#000000";
-            };
-            s.addEventListener("click", applySwatchColor);
-            s.addEventListener("dblclick", applySwatchColor);
-          }
-          swatches.appendChild(s);
-        });
+        if (!pending) {
+          PALETTE_SLOTS.forEach(slot => {
+            const s = document.createElement("span");
+            const color = empty ? "rgba(255,255,255,.07)" : (palette.colors[slot] || "#888");
+            s.style.cssText = `width:44px; height:23px; border-radius:4px; background:${color}; border:2px solid rgba(255,255,255,.85); display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.25);${empty ? "" : " cursor:pointer;"}`;
+            if (!empty) {
+              // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
+              const applySwatchColor = e => {
+                e.stopPropagation();
+                e.preventDefault();
+                const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
+                const input = document.getElementById(targetId);
+                if (input) input.value = palette.colors[slot] || "#000000";
+              };
+              s.addEventListener("click", applySwatchColor);
+              s.addEventListener("dblclick", applySwatchColor);
+            }
+            swatches.appendChild(s);
+          });
+        }
 
         const topRow = document.createElement("div");
         topRow.style.cssText = "display:flex; align-items:center; gap:10px;";
-        topRow.append(cb, swatches);
+        topRow.append(cb);
+        if (!pending) topRow.append(swatches);
 
         const lbl = document.createElement("span");
         lbl.style.cssText = "font-size:12px; font-weight:400; line-height:1.4; white-space:normal; width:100%;";

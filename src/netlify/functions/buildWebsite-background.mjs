@@ -213,7 +213,7 @@ function cleanHtml(rawHtml) {
 
 // ─── Color slot parser for pre-normalized templates ──────────────────────────
 // Reads the five --color-* hex values from a :root block that already has numbered
-// role comments (e.g. /* 1. Dominant — ... */). Returns { slot1: "#...", ... }.
+// role comments (e.g. /* 1. Background — ... */). Returns { slot1: "#...", ... }.
 function parseNormalizedColorSlots(html) {
   const rootMatch = (html || "").match(/:root\s*\{([\s\S]*?)\}/);
   if (!rootMatch) return {};
@@ -257,21 +257,21 @@ const COLOR_ROLE_KEYS = ["background", "foreground", "primary", "secondary", "ac
 
 function normalizeColorSpec(colorSpec = {}) {
   const normalized = { use_sample_colors: !!colorSpec?.use_sample_colors };
-  normalized.background = colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot5 ?? null;
-  normalized.foreground = colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot4 ?? null;
-  normalized.primary = colorSpec?.primary ?? colorSpec?.slot1 ?? null;
-  normalized.secondary = colorSpec?.secondary ?? colorSpec?.slot2 ?? null;
-  normalized.accent = colorSpec?.accent ?? colorSpec?.tertiary ?? colorSpec?.slot3 ?? null;
+  normalized.background = colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot1 ?? null;
+  normalized.foreground = colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot2 ?? null;
+  normalized.primary = colorSpec?.primary ?? colorSpec?.slot3 ?? null;
+  normalized.secondary = colorSpec?.secondary ?? colorSpec?.slot4 ?? null;
+  normalized.accent = colorSpec?.accent ?? colorSpec?.tertiary ?? colorSpec?.slot5 ?? null;
 
   // Backward-compatible aliases for older prompts/templates/editor code.
   normalized.tertiary = normalized.accent;
   normalized.accent1 = normalized.background;
   normalized.accent2 = normalized.foreground;
-  normalized.slot1 = normalized.primary;
-  normalized.slot2 = normalized.secondary;
-  normalized.slot3 = normalized.accent;
-  normalized.slot4 = normalized.foreground;
-  normalized.slot5 = normalized.background;
+  normalized.slot1 = normalized.background;
+  normalized.slot2 = normalized.foreground;
+  normalized.slot3 = normalized.primary;
+  normalized.slot4 = normalized.secondary;
+  normalized.slot5 = normalized.accent;
   if (colorSpec?.note) normalized.note = colorSpec.note;
   return normalized;
 }
@@ -568,7 +568,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   if (!normalizedColorSpec || normalizedColorSpec.use_sample_colors) return html;
   // Parse --color-* variable declarations with their adjacent numbered role comments.
   // Numbered sample slots map to semantic roles:
-  // 1→primary, 2→secondary, 3→accent, 4→foreground, 5→background.
+  // 1→background, 2→foreground, 3→primary, 4→secondary, 5→accent.
   const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
   if (!rootMatch) return html;
   const colorVars = [];
@@ -579,7 +579,7 @@ function injectCssColors(html, colorSpec, templateHtml) {
   }
   if (!colorVars.length) return html;
   colorVars.sort((a, b) => a.index - b.index);
-  const slots = ["primary", "secondary", "accent", "foreground", "background"];
+  const slots = ["background", "foreground", "primary", "secondary", "accent"];
   const varToSlot = {};
   colorVars.forEach((cv, i) => {
     if (i < slots.length) varToSlot[cv.varName] = slots[i];
