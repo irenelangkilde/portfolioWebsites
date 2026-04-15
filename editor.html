@@ -721,12 +721,91 @@
   <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
 
   <script>
-  (function () {
+  (async function () {
     const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
     const supabaseClient = window.supabase?.createClient
       ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
       : null;
+    const EDITOR_BASE_TAG_ID = "iw-editor-base";
+
+    function setNoPreviewMessage(message) {
+      const host = document.getElementById("no-preview");
+      const p = host?.querySelector("p");
+      if (p) p.textContent = message;
+    }
+
+    function getRequestedHtmlFileSpec() {
+      try {
+        const params = new URLSearchParams(window.location.search || "");
+        const raw = (params.get("file") || params.get("html") || "").trim();
+        if (!raw) return null;
+
+        let value = raw;
+        try { value = decodeURIComponent(value); } catch {}
+        value = value.replace(/\\/g, "/").trim();
+
+        if (/^[a-z]+:/i.test(value) && !/^https?:/i.test(value)) {
+          throw new Error("Only same-site HTML paths are supported.");
+        }
+
+        if (/^https?:/i.test(value)) {
+          const parsed = new URL(value, window.location.href);
+          if (parsed.origin !== window.location.origin) {
+            throw new Error("Only same-origin HTML files can be loaded into the editor.");
+          }
+          value = parsed.pathname + parsed.search;
+        }
+
+        if (!value.startsWith("/")) value = "/" + value.replace(/^\.?\//, "");
+        const pathname = value.split(/[?#]/)[0];
+        if (!/\.html?$/i.test(pathname)) {
+          throw new Error("The file parameter must point to an .html file.");
+        }
+        if (pathname.includes("..")) {
+          throw new Error("Parent-directory segments are not allowed in the file parameter.");
+        }
+
+        const dir = pathname.replace(/[^/]*$/, "");
+        return {
+          requestPath: value,
+          pathname,
+          baseHref: dir || "/",
+          label: pathname.replace(/^\//, "")
+        };
+      } catch (err) {
+        console.error("Invalid editor file parameter:", err);
+        setNoPreviewMessage(err?.message || "Invalid HTML file parameter.");
+        return { error: err?.message || "Invalid HTML file parameter." };
+      }
+    }
+
+    async function loadRequestedHtml(spec) {
+      if (!spec || spec.error) return "";
+      const res = await fetch(spec.requestPath, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Could not load ${spec.label} (${res.status}).`);
+      }
+      return await res.text();
+    }
+
+    function injectEditorBaseTag(html, baseHref) {
+      if (!baseHref) return String(html || "");
+      const clean = String(html || "");
+      const baseTag = `<base id="${EDITOR_BASE_TAG_ID}" href="${baseHref}">`;
+      if (new RegExp(`<base[^>]+id=["']${EDITOR_BASE_TAG_ID}["']`, "i").test(clean)) {
+        return clean.replace(new RegExp(`<base([^>]+id=["']${EDITOR_BASE_TAG_ID}["'][^>]*)>`, "i"), baseTag);
+      }
+      if (/<head\b[^>]*>/i.test(clean)) {
+        return clean.replace(/<head\b([^>]*)>/i, `<head$1>\n${baseTag}`);
+      }
+      return `${baseTag}\n${clean}`;
+    }
+
+    function stripEditorBaseTag(html) {
+      return String(html || "").replace(new RegExp(`\\s*<base[^>]+id=["']${EDITOR_BASE_TAG_ID}["'][^>]*>\\s*`, "gi"), "\n");
+    }
+
     function getPreviewHtml() {
       try {
         const stored = localStorage.getItem("portfolio_preview_html");
@@ -786,8 +865,26 @@
       try { localStorage.setItem("anon_credits_used", String(getAnonCreditsUsed() + 1)); } catch {}
     }
 
-    const fullHtml = getPreviewHtml();
+    const requestedFileSpec = getRequestedHtmlFileSpec();
+    let loadedHtml = "";
+    let loadedFileBaseHref = "";
+    let loadedFileLabel = "";
+
+    if (requestedFileSpec && !requestedFileSpec.error) {
+      try {
+        loadedHtml = await loadRequestedHtml(requestedFileSpec);
+        loadedFileBaseHref = requestedFileSpec.baseHref;
+        loadedFileLabel = requestedFileSpec.label;
+        cachePreviewHtml(loadedHtml);
+      } catch (err) {
+        console.error("Failed to load requested HTML file:", err);
+        setNoPreviewMessage(err?.message || "Failed to load the requested HTML file.");
+      }
+    }
+
+    const fullHtml = loadedHtml || getPreviewHtml();
     const page4Colors = getPage4Colors();
+    let currentDocumentBaseHref = loadedFileBaseHref;
 
     if (!fullHtml) {
       document.getElementById("no-preview").style.display = "flex";
@@ -2050,7 +2147,7 @@
     frame.addEventListener("load", attachIframeSelectionTracker);
 
     function loadIframe(html) {
-      frame.srcdoc = html;
+      frame.srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
     }
 
     frame.addEventListener("load", () => {
@@ -2196,7 +2293,7 @@
     // ── Sync helpers ───────────────────────────────────────────────────────────
     function getVisualContent() {
       try {
-        return frame.contentDocument?.documentElement?.outerHTML || currentHtml;
+        return stripEditorBaseTag(frame.contentDocument?.documentElement?.outerHTML || currentHtml);
       } catch {
         return currentHtml;
       }
@@ -2264,6 +2361,7 @@
     function importHtmlIntoEditor(html, sourceLabel = "Imported HTML") {
       const nextHtml = String(html || "").trim();
       if (!nextHtml) throw new Error("The selected file was empty.");
+      currentDocumentBaseHref = "";
       currentHtml = nextHtml;
       setCodeContent(nextHtml);
       loadIframe(nextHtml);
@@ -2685,6 +2783,7 @@
       } else {
         html = getVisualContent();
       }
+      html = stripEditorBaseTag(html);
       const overrides = Object.entries(currentColors)
         .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
         .join(" ");
@@ -2700,6 +2799,12 @@
         kind === "error" ? "rgba(255,166,166,.88)" :
         kind === "ok" ? "rgba(170,240,190,.88)" :
         "rgba(234,240,255,.55)";
+    }
+
+    if (loadedFileLabel) {
+      const heading = document.querySelector("#toolbar h1");
+      if (heading) heading.textContent = `Irene's Webworks — Visual Editor v2.0 — ${loadedFileLabel}`;
+      setEditStatus(`${loadedFileLabel} loaded from URL.`, "ok");
     }
 
     function formatQuotaValue(used, limit) {

@@ -42,6 +42,12 @@ function sanitizeSlug(value) {
     .replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
 }
 
+function isStaticPassThroughPath(pathname) {
+  return /^\/(?:users|html|assets)\//i.test(pathname)
+    || /^\/(?:editor|overview|subscriptions|index)\.html$/i.test(pathname)
+    || pathname === "/";
+}
+
 export default async function handler(request, context) {
   const host = request.headers.get("host") || "";
   const url  = new URL(request.url);
@@ -74,6 +80,12 @@ export default async function handler(request, context) {
       return new Response(html, { status: 200,
         headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=60" } });
     }
+    return context.next();
+  }
+
+  // Allow selected real static files/pages on custom domains to fall through to
+  // Netlify's normal static asset handling instead of forcing blob-backed portfolio routing.
+  if (isStaticPassThroughPath(url.pathname)) {
     return context.next();
   }
 
