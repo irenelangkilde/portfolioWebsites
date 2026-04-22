@@ -203,6 +203,7 @@
           const quantity = isPremiumUpgrade
             ? Math.max(1, parseInt(qtyInput?.value || "1", 10))
             : 1;
+          window.umami?.track("checkout-start", { tier: UPGRADE_TIER_KEY[tier] || "basic" });
           linkEl.textContent = "Redirecting…";
           linkEl.style.opacity = "0.6";
           try {
@@ -3300,6 +3301,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             generationResult    = { ...data, base_site_html: data.site_html || "" };
             braidInProgress     = false;
             generationInProgress = false;
+            window.umami?.track("portfolio-generated");
             if (!currentUserId()) incrementAnonCredits();
             generationResult.site_html = page4Submitted ? composeBraidPreviewHtml(generationResult) : generationResult.base_site_html;
             setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
@@ -4091,29 +4093,45 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!validateField("major",          true)) errs.push("major");
       if (!validateField("specialization", true)) errs.push("specialization");
       if (!resumeUpload.files?.length) {
+        const dropzone = resumeUpload.closest(".dropzone");
         const msg = document.getElementById("_msg_resumeUpload") || (() => {
           const m = document.createElement("div");
           m.id = "_msg_resumeUpload";
-          m.style.cssText = "font-size:11.5px; margin-top:3px; min-height:14px;";
-          resumeUpload.closest(".dropzone")?.after(m);
+          m.style.cssText = "font-size:13px; font-weight:600; margin-top:6px; min-height:16px;";
+          dropzone?.after(m);
           return m;
         })();
-        msg.textContent = "Please upload your resume.";
-        msg.style.color = "rgba(251,171,156,.9)";
+        msg.textContent = "⚠ Please upload your resume to continue.";
+        msg.style.color = "#fbab9c";
+        if (dropzone) {
+          dropzone.style.borderColor = "#fbab9c";
+          dropzone.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
         errs.push("resume");
+      } else {
+        const dropzone = resumeUpload.closest(".dropzone");
+        if (dropzone) dropzone.style.borderColor = "";
+        const msg = document.getElementById("_msg_resumeUpload");
+        if (msg) msg.textContent = "";
       }
       return errs.length === 0; // returns true if valid
     }
 
     document.getElementById("next1")?.addEventListener("click", () => {
       if (!page1Action()) return;
+      window.umami?.track("form-step-complete", { step: 1 });
       if (resumeUpload.files?.[0] && hasCreditsRemaining()) analyzeResumeInBackground(resumeUpload.files[0]);
       setStep(2);
     });
     document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
 
     // Page 3 (Design / Template)
-    document.getElementById("back2")?.addEventListener("click", () => setStep(2));
+    document.getElementById("back2")?.addEventListener("click", () => setStep(1));
+    document.getElementById("next2")?.addEventListener("click", () => {
+      if (!page3Action()) return;
+      window.umami?.track("form-step-complete", { step: 2 });
+      setStep(3);
+    });
 
     function onEnterPage2() {
       applyDesignDefaults();
@@ -4351,19 +4369,24 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     // Page 2 (Job)
     function page2Action() { page2Submitted = true; onEnterPage2(); doAnalyzeAndExtractJobAd(); }
     document.getElementById("back5")?.addEventListener("click", () => setStep(1));
-    document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); setStep(3); });
+    document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); window.umami?.track("form-step-complete", { step: 2 }); setStep(3); });
     document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
 
     // Page 3 (Design) — Back returns to Job; Next validates then advances to Colors
     document.getElementById("back3_bottom")?.addEventListener("click", () => setStep(2));
-    document.getElementById("next3_bottom")?.addEventListener("click", () => {
+    document.getElementById("back3")?.addEventListener("click", () => setStep(2));
+    document.getElementById("back3_from_preview")?.addEventListener("click", () => setStep(2));
+    const _next3Handler = () => {
       if (!page3Action()) return;
+      window.umami?.track("form-step-complete", { step: 3 });
       if (isBraidMode()) {
         page3Submitted = true;
         doBraidWebsite();
       }
       setStep(4);
-    });
+    };
+    document.getElementById("next3_bottom")?.addEventListener("click", _next3Handler);
+    document.getElementById("next3")?.addEventListener("click", _next3Handler);
 
     // Page 4 (Colors)
     function isMustacheMode() { return extractedTemplateCache?.templateMode === "mustache"; }
@@ -4388,6 +4411,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
       ensureEditorWindow();
+      window.umami?.track("form-step-complete", { step: 4 });
       if (isDirectDesignMode() || isMustacheMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
