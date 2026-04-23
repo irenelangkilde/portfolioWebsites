@@ -4420,6 +4420,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           startMastheadImageGeneration();
         }
         await doGenerateWebsite();
+        setHeaderStatus("braidStatus", "");
         while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
         doPreview();
         setOpenEditorReady(true);

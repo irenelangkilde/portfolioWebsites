@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Irene's Webworks | Turn Your Resume Into a Portfolio Website</title>
+  <meta name="description" content="Turn your resume into a standout portfolio website designed to help you win more interviews, more offers, and better opportunities." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-2: #111a2f;
+      --panel: rgba(16, 24, 42, 0.88);
+      --panel-2: rgba(21, 31, 54, 0.92);
+      --text: #eef4ff;
+      --muted: #b8c6e4;
+      --primary: #4E70F1;
+      --secondary: #FBAB9C;
+      --accent: #8DE0FF;
+      --border: rgba(255,255,255,0.10);
+      --shadow: 0 24px 70px rgba(0,0,0,0.34);
+      --radius: 26px;
+      --maxw: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(78,112,241,0.20), transparent 26%),
+        radial-gradient(circle at 85% 10%, rgba(251,171,156,0.14), transparent 20%),
+        radial-gradient(circle at 72% 42%, rgba(141,224,255,0.08), transparent 18%),
+        linear-gradient(180deg, #09101d 0%, #0b1220 38%, #0d1529 100%);
+    }
+
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+
+    .container {
+      width: min(var(--maxw), calc(100% - 32px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(16px);
+      background: rgba(11,18,32,0.74);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding: 16px 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), #7f97ff 58%, var(--secondary));
+      box-shadow: 0 12px 28px rgba(78,112,241,0.34);
+      position: relative;
+      overflow: hidden;
+      flex: 0 0 46px;
+    }
+
+    .brand-mark::before {
+      content: "";
+      position: absolute;
+      inset: 8px 10px 10px 8px;
+      border-radius: 999px 999px 60% 70%;
+      background: rgba(255,255,255,0.92);
+      clip-path: polygon(0 62%, 38% 33%, 66% 0, 100% 9%, 61% 49%, 100% 100%, 49% 84%);
+    }
+
+    .brand strong {
+      display: block;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+    }
+
+    .brand span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 0.95rem;
+      justify-content: flex-end;
+    }
+
+    .nav-links a:hover { color: #fff; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 50px;
+      padding: 0 22px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      font-weight: 700;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+      cursor: pointer;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), #7f97ff);
+      color: #fff;
+      box-shadow: 0 16px 34px rgba(78,112,241,0.36);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(255,255,255,0.13);
+      color: var(--text);
+    }
+
+    .hero {
+      padding: 78px 0 38px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 28px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: rgba(141,224,255,0.08);
+      border: 1px solid rgba(141,224,255,0.22);
+      color: var(--accent);
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .hero h1 {
+      margin: 18px 0 16px;
+      font-size: clamp(2.5rem, 5.1vw, 5.1rem);
+      line-height: 0.96;
+      letter-spacing: -0.055em;
+      max-width: 10.5ch;
+    }
+
+    .hero h1 .highlight {
+      display: block;
+      background: linear-gradient(135deg, #ffffff 0%, #dbe7ff 46%, var(--secondary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-copy p {
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.84;
+      margin: 0 0 18px;
+      max-width: 64ch;
+    }
+
+    .hero-actions,
+    .section-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 24px;
+    }
+
+    .proof-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .proof-pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 38px;
+      padding: 0 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .hero-card,
+    .section-card,
+    .demo-card,
+    .compare-card {
+      background: linear-gradient(180deg, rgba(21,31,54,0.94), rgba(11,18,32,0.94));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before,
+    .section-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(251,171,156,0.14), transparent 24%),
+        radial-gradient(circle at 18% 30%, rgba(78,112,241,0.16), transparent 28%);
+      pointer-events: none;
+    }
+
+    .hero-card-inner,
+    .section-card-inner {
+      position: relative;
+      z-index: 1;
+      padding: 24px;
+    }
+
+    .mini-browser-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+    }
+
+    .dot:nth-child(1) { background: #ff8e86; }
+    .dot:nth-child(2) { background: #ffd37a; }
+    .dot:nth-child(3) { background: #79d89f; }
+
+    .mini-label {
+      margin-left: 10px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .mini-preview {
+      display: grid;
+      grid-template-columns: 112px 1fr;
+      gap: 18px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .mini-avatar {
+      width: 112px;
+      height: 112px;
+      border-radius: 24px;
+      background: linear-gradient(145deg, rgba(78,112,241,0.24), rgba(141,224,255,0.18));
+      border: 1px solid rgba(255,255,255,0.12);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .mini-avatar::before {
+      content: "";
+      position: absolute;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      left: 27px;
+      top: 18px;
+      background: rgba(255,255,255,0.92);
+    }
+
+    .mini-avatar::after {
+      content: "";
+      position: absolute;
+      width: 84px;
+      height: 50px;
+      left: 14px;
+      bottom: 10px;
+      border-radius: 50px 50px 18px 18px;
+      background: rgba(255,255,255,0.92);
+    }
+
+    .mini-preview h3 {
+      margin: 0;
+      font-size: 1.45rem;
+    }
+
+    .mini-preview p {
+      margin: 6px 0 0;
+      color: var(--accent);
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .mini-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .mini-panel,
+    .info-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .mini-panel h4,
+    .info-card h4 {
+      margin: 0 0 8px;
+      font-size: 0.96rem;
+    }
+
+    .mini-panel p,
+    .mini-panel li,
+    .info-card p,
+    .info-card li {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.68;
+    }
+
+    .mini-panel ul,
+    .info-card ul {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .section {
+      padding: 36px 0;
+    }
+
+    .section-head {
+      margin-bottom: 22px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-head h2 {
+      margin: 0 0 10px;
+      font-size: clamp(1.8rem, 3vw, 2.9rem);
+      letter-spacing: -0.045em;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: 1rem;
+      max-width: 72ch;
+    }
+
+    .steps,
+    .demo-grid,
+    .why-grid,
+    .compare-grid,
+    .faq-grid {
+      display: grid;
+      gap: 16px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .steps { grid-template-columns: repeat(3, 1fr); }
+    .demo-grid { grid-template-columns: repeat(3, 1fr); }
+    .why-grid { grid-template-columns: repeat(3, 1fr); }
+    .compare-grid { grid-template-columns: 1fr 1fr; }
+    .faq-grid { grid-template-columns: 1fr 1fr; }
+
+    .step-card,
+    .why-card,
+    .faq-card {
+      padding: 22px;
+      border-radius: 22px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .step-number {
+      width: 38px;
+      height: 38px;
+      border-radius: 14px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(78,112,241,0.28), rgba(251,171,156,0.2));
+      border: 1px solid rgba(255,255,255,0.08);
+      font-weight: 800;
+      margin-bottom: 14px;
+    }
+
+    .step-card h3,
+    .why-card h3,
+    .faq-card h3,
+    .demo-card h3,
+    .compare-card h3 {
+      margin: 0 0 10px;
+      font-size: 1.05rem;
+    }
+
+    .step-card p,
+    .why-card p,
+    .faq-card p,
+    .demo-card p,
+    .compare-card p,
+    .compare-card li {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 0.95rem;
+    }
+
+    .demo-card {
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .demo-thumb {
+      aspect-ratio: 4 / 3;
+      border-radius: 18px;
+      background:
+        radial-gradient(circle at 20% 18%, rgba(78,112,241,0.24), transparent 20%),
+        radial-gradient(circle at 78% 22%, rgba(251,171,156,0.18), transparent 18%),
+        linear-gradient(145deg, #13203b, #0d1629 55%, #101b30);
+      border: 1px solid rgba(255,255,255,0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demo-thumb::before {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 18px;
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+    }
+
+    .demo-thumb::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      height: 82px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.07);
+    }
+
+    .demo-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .compare-card {
+      padding: 22px;
+    }
+
+    .compare-card ul {
+      margin: 14px 0 0;
+      padding-left: 18px;
+    }
+
+    .quote-box {
+      padding: 26px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(78,112,241,0.14), rgba(251,171,156,0.14));
+      border: 1px solid rgba(255,255,255,0.10);
+      position: relative;
+      z-index: 1;
+      margin-top: 18px;
+    }
+
+    .quote-box strong {
+      display: block;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      margin-bottom: 10px;
+    }
+
+    .quote-box p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.76;
+    }
+
+    .footer {
+      padding: 38px 0 60px;
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      padding-top: 22px;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 980px) {
+      .hero-grid,
+      .steps,
+      .demo-grid,
+      .why-grid,
+      .compare-grid,
+      .faq-grid,
+      .mini-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .nav-links {
+        gap: 14px;
+      }
+
+      .hero {
+        padding-top: 48px;
+      }
+
+      .hero-card-inner,
+      .section-card-inner,
+      .step-card,
+      .demo-card,
+      .why-card,
+      .faq-card,
+      .compare-card,
+      .info-card,
+      .mini-panel,
+      .quote-box {
+        padding: 20px;
+      }
+
+      .mini-preview {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-avatar {
+        margin: 0 auto;
+      }
+
+      .hero-actions,
+      .section-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav">
+      <a href="#top" class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <strong>Irene's Webworks</strong>
+          <span>Resume-to-portfolio websites for job seekers</span>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#examples">Examples</a>
+        <a href="#why-it-works">Why It Works</a>
+        <a href="#pricing">Pricing</a>
+        <a class="btn btn-secondary" href="https://irenes-ventures.shop/collections/all">Shop Templates</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">For students, graduates, and professionals who want to stand out</span>
+          <h1>
+            Turn your resume into a
+            <span class="highlight">portfolio website that gets attention.</span>
+          </h1>
+          <p>
+            Irene's Webworks helps job seekers convert a résumé into a polished personal website designed to
+            showcase skills, projects, publications, presentations, and experience in a format hiring managers will remember.
+          </p>
+          <p>
+            Browse ready-made example portfolio websites, generate a new personalized site in minutes, and optionally refine in an editor.
+            Demonstrate your value via images, charts, videos, etc., not just text.
+          </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="https://demos.irenes-ventures.com/overview">Build Your Own Portfolio Website</a>
+            <a class="btn btn-secondary" href="https://demos.irenes-ventures.com/html/grad-gallery.html">View Live Demo Sites</a>
+          </div>
+
+          <div class="proof-row">
+            <span class="proof-pill">Built for resume/portfolio websites</span>
+            <span class="proof-pill">Examples by major</span>
+            <span class="proof-pill">Editable HTML deliverables</span>
+            <span class="proof-pill">Optional done-for-you help</span>
+          </div>
+        </div>
+
+        <div class="hero-card" aria-label="Preview of a portfolio website">
+          <div class="mini-browser-bar">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="mini-label">job-winning portfolio preview</span>
+          </div>
+          <div class="hero-card-inner">
+            <div class="mini-preview">
+              <div class="mini-avatar"></div>
+              <div>
+                <h3>Your Name Here</h3>
+                <p>Professional portfolio website · built from your resume</p>
+              </div>
+            </div>
+            <div class="mini-grid">
+              <div class="mini-panel">
+                <h4>Projects & Proof</h4>
+                <p>Show real work instead of only listing claims and job titles.</p>
+              </div>
+              <div class="mini-panel">
+                <h4>Clean Structure</h4>
+                <p>Give recruiters an easier way to scan experience, skills, and accomplishments.</p>
+              </div>
+              <div class="mini-panel">
+                <h4>Expandable Sections</h4>
+                <ul>
+                  <li>Publications</li>
+                  <li>Presentations</li>
+                  <li>Demos</li>
+                </ul>
+              </div>
+              <div class="mini-panel">
+                <h4>Career-Focused</h4>
+                <p>Built to support interviews, offers, and stronger first impressions.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how-it-works" class="section">
+      <div class="container section-card">
+        <div class="section-card-inner">
+          <div class="section-head">
+            <h2>What I’m selling — clearly</h2>
+            <p>
+              I help job-seekers stand out from the crowd and earn more interviews, offers, and salary with automatically generated and personalized portfolio websites, plus optional done-for-you services to help personalize, edit, and host them.
+            </p>
+          </div>
+
+          <div class="steps">
+            <div class="step-card">
+              <div class="step-number">1</div>
+              <h3>Choose a portfolio website</h3>
+              <p>Pick a website style from the shop and start with a design tailored to your tastes. (No need to limit yourself by major.)</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number">2</div>
+              <h3>Use your resume as the source</h3>
+              <p>All your education, experience, projects, research, and other accomplishments are imported and analyzed automatically.</p>
+            </div>
+            <div class="step-card">
+              <div class="step-number">3</div>
+              <h3>Customize and launch</h3>
+              <p>Edit it yourself and publish with the press of a button, or add done-for-you services if you want support with polishing, hosting, or deeper customization.</p>
+            </div>
+          </div>
+
+          <div class="quote-box">
+            <strong>Most candidates submit resumes. Stronger candidates show their work.</strong>
+            <p>A portfolio website doesn’t replace your resume. It gives your resume a more memorable, credible, and expandable form.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="examples" class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Build your website BEFORE you buy</h2>
+          <p>
+            Go beyond templates, previews or demos: get a finished personalized portfolio website in minutes. Choose from our designs or upload your own.
+          </p>
+        </div>
+
+        <div class="demo-grid">
+          <article class="demo-card">
+            <div class="demo-thumb"><img src="assets/images/biologyGrad_B.png" alt="Biology Portfolio demo"></div>
+            <h3>Biology Portfolio</h3>
+            <p>Structured for research projects, lab work, field studies, and publications.</p>
+            <div class="demo-tags">
+              <span class="tag">Projects</span>
+              <span class="tag">Research</span>
+              <span class="tag">Technical Skills</span>
+            </div>
+          </article>
+
+          <article class="demo-card">
+            <div class="demo-thumb"><img src="assets/images/psychologyGrad.png" alt="Psychology Portfolio demo"></div>
+            <h3>Psychology Portfolio</h3>
+            <p>Built for coursework, research, service, communication strengths, and career readiness.</p>
+            <div class="demo-tags">
+              <span class="tag">Research</span>
+              <span class="tag">Experience</span>
+              <span class="tag">Professional Profile</span>
+            </div>
+          </article>
+
+          <article class="demo-card">
+            <div class="demo-thumb"><img src="assets/images/data-scienceGrad.png" alt="Data Science Portfolio demo"></div>
+            <h3>Business / Data Portfolio</h3>
+            <p>Great for internships, dashboards, case studies, leadership, and real-world results.</p>
+            <div class="demo-tags">
+              <span class="tag">Case Studies</span>
+              <span class="tag">Results</span>
+              <span class="tag">Leadership</span>
+            </div>
+          </article>
+        </div>
+
+        <div class="section-actions">
+          <a class="btn btn-primary" href="https://demos.irenes-ventures.com">Build A Personalized Portfolio Website</a>
+          <a class="btn btn-secondary" href="https://demos.irenes-ventures.com/html/grad-gallery.html">Explore Demo Websites</a>
+          <!--a class="btn btn-secondary" href="https://irenes-ventures.shop/collections/all">Shop by Major</a-->
+        </div>
+      </div>
+    </section>
+
+    <section id="why-it-works" class="section">
+      <div class="container section-card">
+        <div class="section-card-inner">
+          <div class="section-head">
+            <h2>Why a portfolio website works better than a resume alone</h2>
+            <p>
+              Hiring managers often scan quickly. A personal website gives them a fuller picture of what you’ve done, what you can do, and what makes you memorable.
+            </p>
+          </div>
+
+          <div class="compare-grid">
+            <div class="compare-card">
+              <h3>Resume Alone</h3>
+              <ul>
+                <li>Compressed into a page or two</li>
+                <li>Limited room for projects and proof</li>
+                <li>Often looks similar to everyone else</li>
+                <li>Harder to express range and depth</li>
+              </ul>
+            </div>
+            <div class="compare-card">
+              <h3>Portfolio Website</h3>
+              <ul>
+                <li>Can expand to fit your real accomplishments</li>
+                <li>Lets you show projects, demos, presentations, and publications</li>
+                <li>Creates a more distinctive first impression</li>
+                <li>Gives recruiters a stronger reason to remember you</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="why-grid" style="margin-top:16px;">
+            <div class="why-card">
+              <h3>Stand out visually</h3>
+              <p>Instead of blending into a stack of résumés, you give viewers a clearer and more engaging presentation of your experience.</p>
+            </div>
+            <div class="why-card">
+              <h3>Show real proof</h3>
+              <p>Add projects, research, code, presentations, demos, and other concrete evidence of your strengths.</p>
+            </div>
+            <div class="why-card">
+              <h3>Stay editable</h3>
+              <p>Update your site as you gain internships, publish work, change goals, or tailor your applications.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="pricing" class="section">
+      <div class="container section-card">
+        <div class="section-card-inner">
+          <div class="section-head">
+            <h2>What you can buy</h2>
+            <p>
+              Start for free, then add help only if you want it. The current shop includes low-cost personalized website generation and optional done-for-you services.
+            </p>
+          </div>
+
+          <div class="why-grid">
+            <div class="info-card">
+              <h4>Automatically Generated Portfolio Website</h4>
+              <p>Major-themed website templates that give you a head start with design, layout, and structure.</p>
+            </div>
+            <div class="info-card">
+              <h4>Done-For-You Editing</h4>
+              <p>Optional support for personalizing content, adjusting layouts, and polishing the final result.</p>
+            </div>
+            <div class="info-card">
+              <h4>Hosting Help</h4>
+              <p>Optional website hosting support if you want help getting your portfolio online and accessible.</p>
+            </div>
+          </div>
+
+          <div class="section-actions">
+            <a class="btn btn-primary" href="https://irenes-ventures.com/html/grad-gallery.html">Start Building</a>
+            <a class="btn btn-secondary" href="https://irenes-ventures.shop/pages/contact">Ask a Question</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="section-head">
+          <h2>Frequently needed clarity</h2>
+          <p>These are the questions visitors usually need answered.</p>
+        </div>
+
+        <div class="faq-grid">
+          <div class="faq-card">
+            <h3>Who is this for?</h3>
+            <p>Students, recent graduates, and professionals who want a better way to present themselves than a resume alone.</p>
+          </div>
+          <div class="faq-card">
+            <h3>What am I buying?</h3>
+            <p>A portfolio website designed for landing jobs, plus deployment to make it accessible on the internet. Optional done-for-you services for editing and hosting are also available.</p>
+          </div>
+          <div class="faq-card">
+            <h3>Do I need to know web design?</h3>
+            <p>No. You can edit the site yourself with guidance, or add services if you want hands-on help.</p>
+          </div>
+          <div class="faq-card">
+            <h3>What should I do next?</h3>
+            <p>View live examples, choose an example that suits your taste, and use our tool to generate a personalized website that you can freely edit.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container footer-bar">
+      <span>© 2026 Irene's Webworks</span>
+      <span>Portfolio website templates, demos, and optional done-for-you support</span>
+    </div>
+  </footer>
+</body>
+</html>
