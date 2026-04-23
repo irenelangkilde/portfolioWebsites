@@ -135,6 +135,10 @@
     </div>
   `;
 
+  const SESSION_ID = typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2) + Date.now().toString(36);
+
   function init() {
     const style = document.createElement("style");
     style.textContent = CSS;
@@ -206,7 +210,7 @@
         const res  = await fetch(API_URL, {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: history })
+          body: JSON.stringify({ messages: history, sessionId: SESSION_ID, pageUrl: location.href })
         });
         const data = await res.json();
         const reply = data.reply || data.error || "Sorry, something went wrong.";

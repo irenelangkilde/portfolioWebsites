@@ -1,4 +1,12 @@
 import Anthropic from "@anthropic-ai/sdk";
+import { createClient } from "@supabase/supabase-js";
+
+function getSupabase() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return createClient(url, key);
+}
 
 const SYSTEM_PROMPT = `You are Annbot, the warm and knowledgeable assistant for Irene's Webworks (irenes-ventures.com). You are represented by an adorable Raggedy Ann robot with a glowing heart. Your two purposes are: (1) help visitors understand the service and answer their questions, and (2) warmly collect feedback.
 
@@ -73,7 +81,7 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) };
   }
 
-  const { messages } = body;
+  const { messages, sessionId, pageUrl } = body;
   if (!Array.isArray(messages) || messages.length === 0) {
     return { statusCode: 400, body: JSON.stringify({ error: "messages array required" }) };
   }
@@ -88,10 +96,24 @@ export async function handler(event) {
       messages
     });
 
+    const reply = response.content[0].text;
+
+    const supabase = getSupabase();
+    if (supabase) {
+      const turn = messages.filter(m => m.role === "user").length;
+      supabase.from("annbot_messages").insert({
+        session_id: sessionId ?? "unknown",
+        turn,
+        user_message: messages[messages.length - 1].content,
+        bot_reply: reply,
+        page_url: pageUrl ?? null
+      }).then(() => {}).catch(() => {});
+    }
+
     return {
       statusCode: 200,
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ reply: response.content[0].text })
+      body: JSON.stringify({ reply })
     };
   } catch (err) {
     console.error("Annbot error:", err);
