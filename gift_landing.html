@@ -525,6 +525,9 @@
       .hero-actions .btn, .header-actions .btn{ width:100%; }
       .footer{ flex-direction:column; align-items:flex-start; }
     }
+    /* ── Happiness Guarantee seal ───────────────── */
+    .hg-seal{ display:inline-flex; text-decoration:none!important; opacity:.88; transition:opacity .2s,transform .2s; align-items:center; }
+    .hg-seal:hover{ opacity:1; transform:scale(1.06) rotate(-4deg); }
   </style>
 </head>
 <body>
@@ -554,6 +557,9 @@
       </p>
       <div class="hero-actions">
         <a class="btn primary lg" href="#gift">🎁 Give this gift →</a>
+        <a href="privacy.html" class="hg-seal" title="Happiness Guaranteed — no-questions-asked refund policy">
+          <img src="satisfaction-guaranteed.png" width="88" height="88" alt="Happiness Guaranteed" style="display:block;"/>
+        </a>
         <a class="btn accent" href="html/grad-gallery.html">See example sites</a>
       </div>
     </div>
@@ -753,7 +759,7 @@
     </div-->
 
     <!-- ── Pricing ───────────────────────────── -->
-    <div class="card">
+    <!--div class="card">
       <div class="section-title">
         <h3 style="color:#74c0fc;">Choose a gift package</h3>
         <p>Both include a printable gift certificate and instant email delivery.</p>
@@ -781,7 +787,7 @@
           <div>
             <div class="roi-tag">💰 Pays back ~$9,851 on average salary gain</div>
           </div>
-          <a class="btn primary" href="mailto:irene@ireneswebworks.com?subject=Gift%20Code%20Request%20-%20Starter&body=Hi%20Irene%2C%20I%27d%20like%20to%20purchase%20a%20Starter%20gift%20package." style="text-align:center;">Purchase Starter Gift →</a>
+          <button class="btn primary" data-tier="starter_gift" style="width:100%;justify-content:center;" data-umami-event="gift-purchase" data-umami-event-tier="starter">Purchase Starter Gift →</button>
         </div>
 
         <div class="price-card featured-warm">
@@ -806,7 +812,7 @@
           <div>
             <div class="roi-tag">💰 Avg. reported salary impact: $10–20K</div>
           </div>
-          <a class="btn danger-btn" href="mailto:irene@ireneswebworks.com?subject=Gift%20Code%20Request%20-%20Pro&body=Hi%20Irene%2C%20I%27d%20like%20to%20purchase%20a%20Pro%20gift%20package." style="text-align:center;">Purchase Pro Gift →</a>
+          <button class="btn danger-btn" data-tier="pro_gift" style="width:100%;justify-content:center;" data-umami-event="gift-purchase" data-umami-event-tier="pro">Purchase Pro Gift →</button>
         </div>
 
       </div>
@@ -815,7 +821,7 @@
         <span style="font-size:20px; flex-shrink:0;">💬</span>
         <span>Not sure which to choose? <a href="mailto:irene@ireneswebworks.com">Email Irene</a> and she'll help you pick the right fit for your person — no pressure, no sales pitch.</span>
       </div>
-    </div>
+    </div-->
 
     <!-- ── CTA band ──────────────────────────── -->
     <section class="card cta-band">
@@ -854,6 +860,30 @@
 </main>
 <script>
   document.getElementById && (document.title = "Give the Gift of a Career Edge — Irene's Webworks");
+</script>
+<script>
+  document.querySelectorAll("[data-tier]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const tier = btn.getAttribute("data-tier");
+      const original = btn.textContent;
+      btn.textContent = "Redirecting…";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/.netlify/functions/createCheckoutSession", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tier, returnUrl: window.location.href })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.");
+        window.location.href = data.url;
+      } catch (err) {
+        alert(err.message || "Checkout failed. Please try again.");
+        btn.textContent = original;
+        btn.disabled = false;
+      }
+    });
+  });
 </script>
 </body>
 </html>

@@ -9,7 +9,8 @@ import { resolve } from "path";
 // 1 unit = 5 credits + 1 download/deploy.
 // premium_monthly_new / premium_monthly_sub use Stripe graduated pricing;
 // the caller passes `quantity` = number of units the user wants to purchase.
-const SUBSCRIPTION_TIERS = new Set(["premium_monthly_new", "premium_monthly_sub", "premium_annual"]);
+const SUBSCRIPTION_TIERS = new Set(["premium_monthly_new", "premium_monthly_sub", "premium_annual", "care"]);
+const GUEST_TIERS        = new Set(["starter_gift", "pro_gift"]);
 
 let localEnvCache = null;
 
@@ -55,8 +56,9 @@ export async function handler(event) {
 
   const { tier, userId, userEmail, returnUrl, quantity = 1 } = body;
 
-  if (!tier || !userId || !userEmail) {
-    return { statusCode: 400, body: JSON.stringify({ error: "tier, userId, and userEmail are required" }) };
+  const isGuest = GUEST_TIERS.has(tier);
+  if (!tier || (!isGuest && (!userId || !userEmail))) {
+    return { statusCode: 400, body: JSON.stringify({ error: isGuest ? "tier is required" : "tier, userId, and userEmail are required" }) };
   }
 
   const PRICE_IDS = {
@@ -64,6 +66,9 @@ export async function handler(event) {
     premium_monthly_new: getEnv("STRIPE_PRICE_PREMIUM_NEW"),    // graduated $19/11/7/5/4/2.95 per unit; subscription, cancel_at_period_end
     premium_monthly_sub: getEnv("STRIPE_PRICE_PREMIUM_SUB"),    // graduated 50% off per unit; auto-renewing subscription (month 2+)
     premium_annual:      getEnv("STRIPE_PRICE_PREMIUM_ANNUAL"), // $99/year; unlimited credits & downloads
+    care:                getEnv("STRIPE_PRICE_CARE_PKG"),       // $49/month; support subscription
+    starter_gift:        getEnv("STRIPE_PRICE_STARTER_GIFT"),   // $149 one-time; gift purchase, no account required
+    pro_gift:            getEnv("STRIPE_PRICE_PRO_GIFT"),       // $299 one-time; gift purchase, no account required
   };
 
   const priceId = PRICE_IDS[tier];
@@ -86,12 +91,12 @@ export async function handler(event) {
   try {
     const session = await stripe.checkout.sessions.create({
       mode: isSubscription ? "subscription" : "payment",
-      customer_email: userEmail,
+      ...(userEmail ? { customer_email: userEmail } : {}),
       line_items: [{ price: priceId, quantity }],
       success_url: `${origin}?checkout=success&tier=${tier}`,
       cancel_url:  `${origin}?checkout=cancelled`,
       metadata: {
-        user_id:    userId,
+        user_id:    userId || "guest",
         tier_key:   tier,
         quantity:   String(quantity),
       },
