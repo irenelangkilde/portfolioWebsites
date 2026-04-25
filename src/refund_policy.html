@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Refund Policy — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow:0 10px 26px rgba(0,0,0,.35);
+      --font:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%,   color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%,   color-mix(in oklab, var(--danger)  18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent)  14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.6;
+    }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:860px; margin:0 auto; padding:18px 14px 72px; }
+
+    /* ── Header ───────────────────────────── */
+    .site-header{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      position:sticky;
+      top:14px;
+      z-index:10;
+      backdrop-filter:blur(8px);
+    }
+    .brand h1{ margin:0; font-size:20px; font-weight:900; letter-spacing:.2px; }
+    .brand p{ margin:3px 0 0; color:var(--muted); font-size:13px; }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:40px;
+      padding:9px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      font-weight:800;
+      font-size:13.5px;
+      cursor:pointer;
+      text-decoration:none;
+      transition:transform .18s, background .18s;
+    }
+    .btn:hover{ transform:translateY(-1px); text-decoration:none; }
+    .btn.ghost{ background:rgba(0,0,0,.15); }
+
+    /* ── Cards ────────────────────────────── */
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px 28px 24px;
+      backdrop-filter:blur(8px);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:auto -40px -40px auto;
+      width:140px; height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle, color-mix(in oklab, var(--accent) 18%, transparent), transparent 70%);
+      pointer-events:none;
+    }
+
+    /* ── Page intro ───────────────────────── */
+    .page-intro{
+      margin-top:14px;
+    }
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:5px 11px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.2);
+      color:rgba(234,240,255,.80);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      margin-bottom:16px;
+    }
+    .eyebrow::before{
+      content:"";
+      width:7px; height:7px;
+      border-radius:50%;
+      background:var(--ok);
+      box-shadow:0 0 14px color-mix(in oklab, var(--ok) 60%, transparent);
+    }
+    .page-intro h2{
+      margin:0 0 12px;
+      font-size:clamp(1.8rem, 4vw, 2.8rem);
+      font-weight:900;
+      line-height:1.08;
+      letter-spacing:-.03em;
+    }
+    .page-intro .lead{
+      font-size:16px;
+      color:var(--muted);
+      line-height:1.75;
+      max-width:62ch;
+      padding-left:16px;
+      border-left:3px solid color-mix(in oklab, var(--ok) 60%, white);
+    }
+    .updated{
+      margin-top:14px;
+      font-size:12.5px;
+      color:rgba(234,240,255,.40);
+    }
+    .sat-badge{
+      position:absolute;
+      bottom:18px;
+      right:20px;
+      width:96px;
+      z-index:1;
+    }
+    @media(max-width:480px){ .sat-badge{ display:none; } }
+
+    /* ── Policy sections ──────────────────── */
+    .policy-stack{
+      margin-top:14px;
+      display:grid;
+      gap:10px;
+    }
+
+    .policy-section{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:22px 24px;
+      backdrop-filter:blur(8px);
+    }
+
+    .policy-section h3{
+      margin:0 0 10px;
+      font-size:17px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+
+    .policy-section p{
+      margin:0 0 10px;
+      color:rgba(234,240,255,.84);
+      font-size:14.5px;
+      line-height:1.75;
+    }
+    .policy-section p:last-child{ margin-bottom:0; }
+
+    /* Section accent border colors */
+    .ps-green { border-left:3px solid color-mix(in oklab, var(--ok)      70%, transparent); }
+    .ps-blue  { border-left:3px solid color-mix(in oklab, var(--primary)  70%, transparent); }
+    .ps-warm  { border-left:3px solid color-mix(in oklab, var(--danger)   65%, transparent); }
+    .ps-cyan  { border-left:3px solid color-mix(in oklab, var(--accent)   65%, transparent); }
+    .ps-dim   { border-left:3px solid rgba(255,255,255,.18); }
+
+    /* ── Scenario table ───────────────────── */
+    .scenario-grid{
+      display:grid;
+      gap:8px;
+      margin-top:10px;
+    }
+    .scenario{
+      display:grid;
+      grid-template-columns:20px 1fr auto;
+      gap:10px 12px;
+      align-items:start;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;
+      padding:12px 14px;
+    }
+    .scenario-icon{ font-size:16px; line-height:1.6; }
+    .scenario-body{ font-size:13.5px; color:rgba(234,240,255,.84); line-height:1.6; }
+    .scenario-body strong:first-of-type{ display:block; color:#fff; margin-bottom:2px; font-size:14px; }
+    .scenario-verdict{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:999px;
+      font-size:11.5px;
+      font-weight:800;
+      white-space:nowrap;
+      flex-shrink:0;
+      margin-top:2px;
+    }
+    .verdict-yes{
+      background:rgba(118,176,34,.16);
+      border:1px solid rgba(118,176,34,.35);
+      color:color-mix(in oklab, var(--ok) 85%, white);
+    }
+    .verdict-partial{
+      background:rgba(141,224,255,.12);
+      border:1px solid rgba(141,224,255,.30);
+      color:var(--accent);
+    }
+    .verdict-no{
+      background:rgba(251,171,156,.12);
+      border:1px solid rgba(251,171,156,.30);
+      color:color-mix(in oklab, var(--danger) 85%, white);
+    }
+
+    /* ── Steps list ───────────────────────── */
+    .steps-list{
+      margin:10px 0 0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:8px;
+      counter-reset:refund-steps;
+    }
+    .steps-list li{
+      counter-increment:refund-steps;
+      display:grid;
+      grid-template-columns:28px 1fr;
+      gap:10px;
+      align-items:start;
+      font-size:14px;
+      color:rgba(234,240,255,.84);
+      line-height:1.65;
+    }
+    .steps-list li::before{
+      content:counter(refund-steps);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:28px; height:28px;
+      border-radius:50%;
+      background:color-mix(in oklab, var(--primary) 28%, rgba(0,0,0,.18));
+      border:1px solid color-mix(in oklab, var(--primary) 50%, rgba(255,255,255,.12));
+      font-weight:900;
+      font-size:12px;
+      flex-shrink:0;
+      color:rgba(234,240,255,.9);
+      margin-top:1px;
+    }
+
+    /* ── Notes ────────────────────────────── */
+    .note{
+      background:linear-gradient(180deg, rgba(141,224,255,.09), rgba(0,0,0,.18));
+      border:1px solid color-mix(in oklab, var(--accent) 35%, rgba(255,255,255,.12));
+      border-radius:12px;
+      padding:12px 14px;
+      color:rgba(234,240,255,.85);
+      font-size:13.5px;
+      line-height:1.65;
+      margin-top:10px;
+      display:flex;
+      align-items:flex-start;
+      gap:10px;
+    }
+    .note.ok-note{
+      background:linear-gradient(180deg, rgba(118,176,34,.11), rgba(0,0,0,.18));
+      border-color:color-mix(in oklab, var(--ok) 38%, rgba(255,255,255,.12));
+    }
+    .note.warm-note{
+      background:linear-gradient(180deg, rgba(251,171,156,.09), rgba(0,0,0,.18));
+      border-color:color-mix(in oklab, var(--danger) 38%, rgba(255,255,255,.12));
+    }
+    .note-icon{ font-size:18px; flex-shrink:0; margin-top:1px; }
+
+    /* ── Footer ───────────────────────────── */
+    .footer{
+      margin-top:18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color:rgba(234,240,255,.42);
+      font-size:12.5px;
+    }
+
+    @media(max-width:680px){
+      .site-header{ grid-template-columns:1fr; }
+      .card, .policy-section{ padding:18px; }
+      .scenario{ grid-template-columns:20px 1fr; }
+      .scenario-verdict{ grid-column:2; }
+    }
+  </style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- ── Header ───────────────────────────── -->
+  <header class="site-header">
+    <div class="brand">
+      <h1>Irene's Webworks</h1>
+      <p>Refund Policy</p>
+    </div>
+    <a class="btn ghost" href="../index.html">← Back to home</a>
+  </header>
+
+  <!-- ── Page intro ────────────────────────── -->
+  <div class="page-intro card" style="margin-top:14px;">
+    <span class="eyebrow">Our commitment to you</span>
+    <h2>We want you to be happy. Full stop.</h2>
+    <p class="lead">
+      We put real care into every website and chatbot we build.
+      If something isn't right, we will fix it — and if we can't make it right,
+      we will give you your money back. No runaround. No fine print designed to trap you.
+      That's a promise.
+    </p>
+    <p class="updated">Last updated: <span id="policy-date"></span></p>
+    <img class="sat-badge" src="satisfaction-guaranteed.png" alt="Satisfaction Guaranteed">
+  </div>
+
+  <!-- ── Policy sections ───────────────────── -->
+  <div class="policy-stack">
+
+    <!-- Guarantee -->
+    <div class="policy-section ps-green">
+      <h3>😊 Our Happiness Guarantee</h3>
+      <p>
+        Every product and service sold by Irene's Webworks is backed by a
+        <strong>satisfaction guarantee</strong>. If you are not satisfied with what you received,
+        contact us and we will work with you — through revisions, replacements, or a full refund —
+        until the situation is resolved fairly.
+      </p>
+      <p>
+        We are a small business built on trust and word-of-mouth. Your satisfaction matters more
+        to us than protecting any single transaction.
+      </p>
+    </div>
+
+    <!-- Portfolio websites -->
+    <div class="policy-section ps-blue">
+      <h3>🌐 Portfolio Websites</h3>
+      <p>
+        Our portfolio website business has required significant time and craft to develop and market. Our refund terms are tied to where we are in the process when you reach out.
+      </p>
+      <div class="scenario-grid">
+        <div class="scenario">
+          <div class="scenario-icon">📋</div>
+          <div class="scenario-body">
+            <strong>You purchased less than three days ago and haven't submitted your intake form yet</strong>
+            Full refund, no questions asked. Nothing has been started.
+          </div>
+          <span class="scenario-verdict verdict-yes">Full refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">🚧</div>
+          <div class="scenario-body">
+            <strong>Work is in progress and you'd like to cancel</strong>
+            We will discuss a fair partial refund based on work completed.
+            We will always err on the side of generosity.
+          </div>
+          <span class="scenario-verdict verdict-partial">Partial refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">✅</div>
+          <div class="scenario-body">
+            <strong>Site is delivered but you're not satisfied with the result</strong>
+            We will revise until you're happy. If after revisions you're still not satisfied,
+            a full refund is available within <strong>30 days of delivery</strong>.
+          </div>
+          <span class="scenario-verdict verdict-yes">Full refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">⏰</div>
+          <div class="scenario-body">
+            <strong>More than 30 days after delivery, no issues were raised</strong>
+            Refunds are not available after 30 days of accepted delivery with no reported issues.
+            If something comes up after that window, contact us — we'll still try to help.
+          </div>
+          <span class="scenario-verdict verdict-no">Not eligible</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gift codes -->
+    <div class="policy-section ps-warm">
+      <h3>🎁 Gift Codes &amp; Gift Purchases</h3>
+      <p>
+        Gift codes are valid for <strong>12 months</strong> from the date of purchase.
+        If a gift code is purchased and never redeemed, a refund is available
+        within <strong>90 days of purchase</strong>.
+      </p>
+      <p>
+        Once a gift code has been redeemed and work has begun, the standard
+        portfolio website refund terms above apply to the recipient's project.
+      </p>
+      <div class="note warm-note">
+        <span class="note-icon">💬</span>
+        <span>
+          Bought a gift for someone who ended up not needing it?
+          <a href="mailto:irene@irenes-ventures.com">Email us</a> — we'll work something out.
+          We're reasonable people.
+        </span>
+      </div>
+    </div>
+
+    <!-- Small business websites & chatbots -->
+    <div class="policy-section ps-cyan">
+      <h3>🏪 Small Business Websites &amp; Chatbots</h3>
+      <p>
+        Small business projects are scoped individually. Refund eligibility depends on the
+        project agreement, but our general approach is the same:
+      </p>
+
+      <div class="scenario-grid">
+        <div class="scenario">
+          <div class="scenario-icon">📝</div>
+          <div class="scenario-body">
+            <strong>Project not yet started (deposit paid)</strong>
+            Full deposit refund if work has not begun and you cancel within
+            <strong>3 days of payment</strong>.
+          </div>
+          <span class="scenario-verdict verdict-yes">Full refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">🔨</div>
+          <div class="scenario-body">
+            <strong>Project underway and you'd like to cancel</strong>
+            A pro-rated refund of any unearned portion of the project fee, minus work completed
+            to date. We will provide an itemized accounting.
+          </div>
+          <span class="scenario-verdict verdict-partial">Pro-rated refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">🚀</div>
+          <div class="scenario-body">
+            <strong>Project delivered and you're not satisfied</strong>
+            We will revise within the agreed scope. If the deliverable genuinely doesn't meet
+            the agreed specifications after good-faith revisions, a full refund is available.
+          </div>
+          <span class="scenario-verdict verdict-yes">Full refund</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">🔁</div>
+          <div class="scenario-body">
+            <strong>Monthly retainer or ongoing service</strong>
+            Cancel anytime. You will not be charged for the next billing cycle.
+            No refund is issued for the current period already in service.
+          </div>
+          <span class="scenario-verdict verdict-partial">Cancel anytime</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- How to request -->
+    <div class="policy-section ps-dim">
+      <h3>📬 How to Request a Refund</h3>
+      <p>
+        We keep this simple on purpose. No forms, no ticket queues, no automated responses.
+        Just email Irene directly:
+      </p>
+      <ol class="steps-list">
+        <li><span>Email <a href="mailto:irene@irenes-ventures.com">irene@irenes-ventures.com</a> with
+          your name, the product or service you purchased, and a brief description of the issue.</span></li>
+        <li><span>We will respond within <strong>2 business days</strong> — usually much sooner.</span></li>
+        <li><span>We'll discuss the situation and agree on the right resolution: revision, replacement,
+          partial refund, or full refund.</span></li>
+        <li><span>Approved refunds are processed within <strong>5–7 business days</strong> back to
+          your original payment method.</span></li>
+      </ol>
+      <div class="note">
+        <span class="note-icon">💡</span>
+        <span>
+          The more detail you share about what didn't meet your expectations, the faster we can
+          find a resolution. Screenshots, examples, and specific feedback are all welcome.
+        </span>
+      </div>
+    </div>
+
+    <!-- What we don't refund -->
+    <div class="policy-section ps-warm">
+      <h3>⚠️ What Is Not Covered</h3>
+      <p>
+        In the interest of transparency, here are situations where refunds do not apply:
+      </p>
+      <div class="scenario-grid">
+        <div class="scenario">
+          <div class="scenario-icon">🔗</div>
+          <div class="scenario-body">
+            <strong>Third-party services</strong>
+            Domain registration, hosting, or other third-party tools purchased on your behalf
+            are subject to those providers' own refund policies and are not refundable through us.
+          </div>
+          <span class="scenario-verdict verdict-no">Not covered</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">✏️</div>
+          <div class="scenario-body">
+            <strong>Change of mind after accepted delivery (30+ days)</strong>
+            If you approved the deliverable and more than 30 days have passed without raising
+            any issues, refunds are no longer available. Contact us anyway — we may still help.
+          </div>
+          <span class="scenario-verdict verdict-no">Not covered</span>
+        </div>
+        <div class="scenario">
+          <div class="scenario-icon">📄</div>
+          <div class="scenario-body">
+            <strong>Content you provided that caused problems</strong>
+            If an issue arose from inaccurate, incomplete, or copyrighted content you supplied,
+            we're happy to fix it, but the fix is billable.
+          </div>
+          <span class="scenario-verdict verdict-no">Not covered</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Philosophy note -->
+    <div class="policy-section ps-green">
+      <h3>🤝 Our Philosophy on Disputes</h3>
+      <p>
+        We don't write refund policies to protect ourselves from customers. We write them
+        so you know what to expect — and so we can hold ourselves to a clear standard.
+        If you feel a situation isn't covered fairly by these terms, tell us. We will listen.
+      </p>
+      <p>
+        Irene's Webworks exists because we believe everyone deserves access to professional
+        technology — and that includes being treated fairly when something goes wrong.
+      </p>
+      <div class="note ok-note">
+        <span class="note-icon">😊</span>
+        <span>
+          <strong>Your happiness is guaranteed.</strong> If you are not satisfied,
+          we will replace or refund your purchase. Always.
+          <a href="mailto:irene@irenes-ventures.com">Reach out anytime.</a>
+        </span>
+      </div>
+    </div>
+
+  </div><!-- /.policy-stack -->
+
+  <!-- ── Footer ─────────────────────────────── -->
+  <footer class="footer">
+    <span>© <span id="yr"></span> Irene's Webworks</span>
+    <span>
+      <a href="../index.html">Home</a> ·
+      <a href="terms.html">Terms &amp; Conditions</a> ·
+      <a href="privacy.html">Privacy Policy</a> ·
+      <a href="mailto:irene@irenes-ventures.com">Contact</a>
+    </span>
+  </footer>
+
+</main>
+<script>
+  const yr = new Date().getFullYear();
+  document.getElementById('yr').textContent = yr;
+  document.getElementById('policy-date').textContent =
+    new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+</script>
+</body>
+</html>

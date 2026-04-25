@@ -1,0 +1,3474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Edit Portfolio — Irene's Webworks</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
+    body.code-mode { padding-top: 48px; }
+
+    /* ── Main toolbar ─────────────────────────────────────────────── */
+    #toolbar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 14px; background: #16213e; color: white; height: 48px;
+      border-bottom: 1px solid rgba(255,255,255,.1);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 9999;
+    }
+    #toolbar h1 { font-size: 14px; font-weight: 600; flex: 0 0 auto; opacity: .9; }
+    .tbtn {
+      padding: 5px 12px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+    }
+    .tbtn-ghost   { background: rgba(255,255,255,.12); color: #fff; }
+    .tbtn-ghost:hover  { background: rgba(255,255,255,.22); }
+    .tbtn-primary { background: #667eea; color: #fff; }
+    .tbtn-primary:hover { background: #5568d4; }
+    .tbtn-success { background: #2f8f5b; color: #fff; }
+    .tbtn-success:hover { background: #28794d; }
+    .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
+    #editorAccount {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      margin-left: 4px;
+      min-width: 0;
+      max-width: 290px;
+      text-align: right;
+      line-height: 1.2;
+    }
+    #editorAccountUser {
+      font-size: 11px;
+      font-weight: 700;
+      color: rgba(255,255,255,.92);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    #editorAccountQuota {
+      font-size: 10px;
+      color: rgba(234,240,255,.62);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #viewToggle { display: flex; gap: 2px; background: rgba(0,0,0,.3); border-radius: 7px; padding: 2px; }
+    #viewToggle .tbtn { border-radius: 5px; padding: 4px 10px; }
+
+    /* ── Edit toolbar ─────────────────────────────────────────────── */
+    #editToolbar {
+      position: fixed; top: 48px; left: 0; right: 0; z-index: 9998;
+      display: flex; align-items: center; gap: 3px;
+      padding: 4px 14px; background: #1a2744;
+      border-bottom: 1px solid rgba(255,255,255,.07); height: 36px;
+    }
+    body.code-mode #editToolbar { display: none; }
+    #editToolbar {
+      height: auto; min-height: 36px; flex-wrap: wrap; row-gap: 3px;
+    }
+    #editToolbar button {
+      padding: 3px 9px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.1); color: #eaf0ff;
+      font-size: 12px; font-weight: 600; cursor: pointer; line-height: 1.4;
+    }
+    #editToolbar button:hover { background: rgba(255,255,255,.2); }
+    #editToolbar button.et-active { background: rgba(103,126,234,.45); }
+    #editToolbar .sep { width: 1px; height: 16px; background: rgba(255,255,255,.15); margin: 0 4px; flex-shrink: 0; }
+    #editToolbar select {
+      padding: 2px 4px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.1); color: #eaf0ff;
+      font-size: 12px; cursor: pointer; height: 24px;
+    }
+    #editToolbar select option { background: #1a2744; }
+    #editToolbar input[type="color"] {
+      width: 24px; height: 24px; border: none; border-radius: 4px;
+      padding: 1px; cursor: pointer; background: rgba(255,255,255,.1);
+    }
+    /* ── Suggestions carousel (inline in top toolbar) ───────────────── */
+    #sbWrap {
+      flex: 1; min-width: 0; position: relative;
+      display: flex; align-items: center;
+      margin-left: 24px;
+      cursor: pointer;
+    }
+    #sbTicker {
+      font-size: 11px; color: rgba(234,240,255,.45);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; max-width: 100%;
+    }
+    #sbTicker:hover { color: rgba(234,240,255,.7); }
+    @keyframes sbSlide {
+      0%   { opacity: 1; transform: translateY(0); }
+      20%  { opacity: 0; transform: translateY(-8px); }
+      21%  { opacity: 0; transform: translateY(8px); }
+      40%  { opacity: 1; transform: translateY(0); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    #sbTicker.animating { animation: sbSlide .8s ease forwards; }
+
+    /* Tips button (shown after carousel is dismissed) */
+    #btnTips {
+      display: none; font-size: 11px; padding: 3px 9px;
+      background: rgba(103,126,234,.18); border: 1px solid rgba(103,126,234,.35);
+      color: rgba(234,240,255,.65); border-radius: 5px; cursor: pointer;
+      white-space: nowrap; margin-left: 12px;
+    }
+    #btnTips:hover { background: rgba(103,126,234,.32); color: rgba(234,240,255,.9); }
+
+    /* Tips modal */
+    #tipsModal {
+      display: none; position: fixed; inset: 0; z-index: 20000;
+      background: rgba(0,0,0,.55); align-items: center; justify-content: center;
+    }
+    #tipsModal.open { display: flex; }
+    #tipsModalBox {
+      background: #0f1a35; border: 1px solid rgba(103,126,234,.4);
+      border-radius: 10px; padding: 18px 22px 20px; min-width: 380px; max-width: 520px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.6); color: rgba(234,240,255,.85);
+    }
+    #tipsModalBox strong {
+      display: block; font-size: 10px; color: rgba(234,240,255,.45);
+      letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px;
+    }
+    #tipsModalBox ol { margin: 0 0 16px; padding-left: 18px; font-size: 11.5px; line-height: 1.65; }
+    #tipsModalBox li { margin-bottom: 6px; }
+    #tipsModalBox li b { color: rgba(255,255,255,.96); }
+    #btnTipsDismiss {
+      display: block; margin-left: auto; padding: 5px 16px;
+      background: rgba(103,126,234,.25); border: 1px solid rgba(103,126,234,.4);
+      border-radius: 6px; color: rgba(234,240,255,.85); font-size: 12px; cursor: pointer;
+    }
+    #btnTipsDismiss:hover { background: rgba(103,126,234,.45); }
+
+    /* Find & replace bar */
+    #findBar {
+      display: none; position: fixed; top: 84px; right: 14px; z-index: 9999;
+      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; padding: 6px 10px;
+      display: none; align-items: center; gap: 6px; box-shadow: 0 4px 16px rgba(0,0,0,.4);
+    }
+    #findBar.open { display: flex; }
+    #findBar input {
+      padding: 4px 8px; border-radius: 5px; border: 1px solid rgba(255,255,255,.2);
+      background: rgba(0,0,0,.3); color: #eaf0ff; font-size: 12px; width: 140px; outline: none;
+    }
+    #findBar label { font-size: 11px; color: rgba(234,240,255,.5); }
+    #findBar button {
+      padding: 3px 8px; border: none; border-radius: 4px;
+      background: rgba(255,255,255,.12); color: #eaf0ff; font-size: 12px; cursor: pointer;
+    }
+    #findBar button:hover { background: rgba(255,255,255,.22); }
+    #findBar .find-count { font-size: 11px; color: rgba(234,240,255,.45); min-width: 36px; text-align:center; }
+
+    #editStatus a {
+      color: #ffd7a6;
+      font-weight: 700;
+      text-decoration: underline;
+    }
+    #editStatus a:hover { color: #ffe6bf; }
+
+    /* ── Main layout ──────────────────────────────────────────────── */
+    #editorLayout {
+      display: flex;
+      height: calc(100vh - 84px);
+    }
+    body.code-mode #editorLayout { height: calc(100vh - 48px); }
+
+    /* Visual pane */
+    #visualPane { flex: 1; min-width: 0; overflow: hidden; }
+    body.code-mode #visualPane { display: none; }
+    #visualFrame { width: 100%; height: 100%; border: none; display: block; }
+
+    /* Resizable divider */
+    #divider {
+      width: 5px; flex-shrink: 0; background: rgba(255,255,255,.07); cursor: col-resize;
+      transition: background .15s;
+    }
+    #divider:hover, #divider.dragging { background: #667eea; }
+    body.visual-mode #divider { display: none; }
+    body.code-mode   #divider { display: none; }
+
+    /* Code pane */
+    #codePane { flex: 1; min-width: 0; overflow: hidden; display: flex; flex-direction: column; }
+    body.visual-mode #codePane { display: none; }
+    #cmContainer { flex: 1; overflow: auto; height: 100%; background: #1e2a3a; }
+    #codeTextarea {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #1e2a3a;
+      color: #c9d1e3;
+      border: none;
+      outline: none;
+      padding: 14px 18px;
+      font-family: 'Fira Code', 'Consolas', monospace;
+      font-size: 12.5px;
+      line-height: 1.6;
+      resize: none;
+      box-sizing: border-box;
+      white-space: pre;
+    }
+    .cm-editor { height: 100%; font-size: 12.5px; }
+    .cm-scroller { overflow: auto; }
+
+    /* ── Color panel ──────────────────────────────────────────────── */
+    #colorPanel {
+      width: 150px; flex-shrink: 0; background: #16213e;
+      border-left: 1px solid rgba(255,255,255,.1);
+      display: flex; flex-direction: column; overflow-y: auto;
+      transition: width .2s, opacity .2s;
+    }
+    #colorPanel.hidden { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
+    body.code-mode   #colorPanel { display: none; }
+    body.split-mode  #colorPanel { display: none; }
+    #colorPanel h2 {
+      font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(255,255,255,.45); padding: 14px 14px 8px;
+    }
+    .color-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; }
+    .color-row label {
+      font-size: 12px;
+      color: rgba(234,240,255,.7);
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+    .color-row input[type="color"] {
+      width: 44px; height: 23px; border: none; border-radius: 4px;
+      cursor: pointer; padding: 0; background: transparent; flex: 0 0 44px;
+      box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(0,0,0,.2);
+      overflow: hidden;
+    }
+    .color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-row input[type="color"]::-webkit-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .color-row input[type="color"]::-moz-color-swatch {
+      border: none;
+      border-radius: 4px;
+    }
+    .drag-handle {
+      color: rgba(234,240,255,.25); font-size: 13px; cursor: grab;
+      user-select: none; line-height: 1; flex-shrink: 0;
+      margin-right: 2px;
+    }
+    .drag-handle:active { cursor: grabbing; }
+    .color-row.drag-over,
+    .color-row.cp-source { outline: 2px solid rgba(102,126,234,.8); border-radius: 4px; }
+    .color-row.cp-dragging { opacity: .35; }
+    #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
+    #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
+
+    /* ── Unified portfolio panel ─────────────────────────────── */
+    #portfolioPanelOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200001;
+      background: rgba(0,0,0,.65); align-items: flex-start; justify-content: center;
+      padding-top: 80px;
+    }
+    #portfolioPanelOverlay.open { display: flex; }
+    #portfolioPanelBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; width: min(520px, 94vw);
+      display: flex; flex-direction: column; gap: 0;
+      max-height: calc(100vh - 110px); overflow-y: auto;
+    }
+    .pp-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 20px 12px; border-bottom: 1px solid rgba(255,255,255,.08);
+      position: sticky; top: 0; background: #0f1929; z-index: 1;
+    }
+    .pp-header span { font-size: 14px; font-weight: 700; color: rgba(234,240,255,.9); }
+    #ppClose {
+      background: none; border: none; color: rgba(234,240,255,.5);
+      font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 4px; line-height: 1;
+    }
+    #ppClose:hover { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    .pp-status-strip {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 20px; background: rgba(102,126,234,.08);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .pp-spin { display: inline-block; animation: ppSpin 1s linear infinite; font-size: 16px; color: #7eb8ff; }
+    @keyframes ppSpin { to { transform: rotate(360deg); } }
+    #ppPublishMsg { font-size: 13px; color: rgba(234,240,255,.85); }
+    .pp-status-ok    { color: #aef7c8 !important; }
+    .pp-status-error { color: rgba(255,166,166,.9) !important; }
+    #ppUrlSection { padding: 14px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .pub-row { display: flex; flex-direction: column; gap: 3px; }
+    .pub-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: rgba(234,240,255,.4);
+    }
+    .pub-link { font-size: 12px; color: #7eb8ff; word-break: break-all; text-decoration: underline; cursor: pointer; }
+    .pub-link:hover { color: #a8d0ff; }
+    .pp-url-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    #ppBtnOpen {
+      padding: 6px 18px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      background: #667eea; color: #fff;
+    }
+    #ppBtnOpen:hover { background: #5568d4; }
+    .pp-divider { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 0; }
+    .pp-hidden { display: none !important; }
+    .manage-section { display: flex; flex-direction: column; gap: 8px; padding: 14px 20px; }
+    #portfolioPanelBox h4 { font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: rgba(234,240,255,.4); margin-bottom: 2px; }
+    /* Domain row */
+    .manage-domain-row { display: flex; gap: 6px; }
+    .manage-domain-row input {
+      flex: 1; padding: 7px 10px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none;
+    }
+    .manage-domain-row button {
+      padding: 6px 14px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    #manageDomainApply { background: #667eea; color: #fff; }
+    #manageDomainApply:hover { background: #5568d4; }
+    .manage-domain-version-row {
+      display: flex; align-items: center; gap: 8px; margin-top: 4px;
+    }
+    .manage-domain-version-row label {
+      font-size: 11px; color: rgba(234,240,255,.45); white-space: nowrap;
+    }
+    #manageDomainVersion {
+      flex: 1; padding: 5px 8px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none; cursor: pointer;
+    }
+    #manageDomainVersion option { background: #1a2744; }
+    #manageDomainList { display: flex; flex-direction: column; gap: 4px; }
+    .domain-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 6px; background: rgba(255,255,255,.04);
+    }
+    .domain-row-name { font-size: 12px; color: #eaf0ff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .domain-row-slug { font-size: 10px; color: rgba(234,240,255,.35); white-space: nowrap; }
+    .domain-row-delete {
+      padding: 2px 9px; border: none; border-radius: 4px;
+      background: rgba(255,100,100,.15); color: rgba(255,160,160,.8);
+      font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .domain-row-delete:hover { background: rgba(255,100,100,.3); color: #ffaaaa; }
+    .domain-row-delete:disabled { opacity: .4; cursor: default; }
+    .manage-domain-hint { font-size: 11px; color: rgba(234,240,255,.35); line-height: 1.5; }
+    /* Deploy list */
+    #manageDeployList { display: flex; flex-direction: column; gap: 6px; }
+    .manage-deploy-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 6px; background: rgba(255,255,255,.04);
+    }
+    .manage-deploy-row.is-latest { background: rgba(102,126,234,.12); }
+    .manage-deploy-num { font-size: 12px; font-weight: 700; color: #7eb8ff; min-width: 22px; }
+    .manage-deploy-link { font-size: 11px; color: #7eb8ff; text-decoration: underline; flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .manage-deploy-link:hover { color: #a8d0ff; }
+    .manage-deploy-date { font-size: 10px; color: rgba(234,240,255,.3); white-space: nowrap; }
+    .manage-deploy-latest { font-size: 10px; font-weight: 700; color: #aef7c8; }
+    .manage-deploy-delete {
+      padding: 3px 10px; border: none; border-radius: 4px;
+      background: rgba(255,100,100,.15); color: rgba(255,160,160,.8);
+      font-size: 11px; font-weight: 600; cursor: pointer; flex-shrink: 0;
+    }
+    .manage-deploy-delete:hover { background: rgba(255,100,100,.3); color: #ffaaaa; }
+    .manage-deploy-delete:disabled { opacity: .4; cursor: default; }
+    #manageDeployStatus { font-size: 11px; color: rgba(234,240,255,.45); min-height: 16px; }
+
+    #no-preview {
+      display: none; position: fixed; inset: 0; background: #1a1a2e; color: white;
+      align-items: center; justify-content: center; flex-direction: column; gap: 16px; font-size: 16px;
+    }
+
+    /* ── Card picker popover ─────────────────────────────────────── */
+    #cardPicker {
+      display: none; position: fixed; z-index: 10000;
+      background: #1a2744; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; padding: 8px 0; box-shadow: 0 4px 16px rgba(0,0,0,.5);
+      min-width: 200px; max-width: 320px;
+    }
+    #cardPicker.open { display: block; }
+    #cardPicker .cp-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+      color: rgba(234,240,255,.4); padding: 4px 14px 6px;
+    }
+    #cardPicker .cp-item {
+      padding: 7px 14px; font-size: 12px; color: #eaf0ff; cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    #cardPicker .cp-item:hover { background: rgba(102,126,234,.35); }
+    #cardPicker .cp-item .cp-tag { color: #7eb8ff; font-weight: 700; margin-right: 5px; }
+    #cardPicker .cp-item .cp-cls { color: rgba(234,240,255,.45); font-size: 11px; }
+
+    /* ── Image replace dialog ─────────────────────────────────────── */
+    #imgReplaceOverlay {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #imgReplaceOverlay.open { display: flex; }
+    #imgReplaceBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 20px 24px; width: min(420px, 94vw);
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #imgReplaceBox h3 { font-size: 13px; font-weight: 700; color: rgba(234,240,255,.9); }
+    #imgReplaceBox .img-preview-wrap {
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(255,255,255,.04); border-radius: 6px; overflow: hidden; height: 100px;
+    }
+    #imgReplaceBox .img-preview-wrap.hidden { display: none; }
+    #imgReplacePreview { max-height: 100px; max-width: 100%; object-fit: cover; }
+    .img-replace-check {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: rgba(234,240,255,.82);
+    }
+    .img-replace-check input { accent-color: #667eea; }
+    /* "+" add button + dropdown */
+    .img-source-add-row { position: relative; display: flex; align-items: center; }
+    #imgSourceAddBtn {
+      width: 38px; height: 38px; border-radius: 50%;
+      border: none;
+      background: none; color: #4caf50;
+      font-size: 30px; line-height: 1; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    #imgSourceAddBtn:hover { color: #76b022; }
+    #imgSourceDropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: #1a2a42; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; overflow: hidden; z-index: 10; min-width: 210px;
+    }
+    #imgSourceDropdown.open { display: block; }
+    #imgSourceDropdown button {
+      display: block; width: 100%; padding: 9px 14px; text-align: left;
+      background: none; border: none; border-bottom: 1px solid rgba(255,255,255,.06);
+      color: rgba(234,240,255,.86); font-size: 12px; cursor: pointer;
+    }
+    #imgSourceDropdown button:last-child { border-bottom: none; }
+    #imgSourceDropdown button:hover { background: rgba(255,255,255,.08); }
+    /* source panels */
+    .img-source-panel { display: none; }
+    .img-source-panel.active { display: block; }
+    #imgReplaceError {
+      min-height: 16px;
+      font-size: 11.5px;
+      color: rgba(251,171,156,.92);
+    }
+    #imgReplacePrompt {
+      min-height: 42px; resize: vertical;
+      padding: 7px 10px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none; width: 100%;
+      font-family: inherit;
+    }
+    #imgReplaceUrl, #imgInsertWidth {
+      padding: 7px 10px; border-radius: 6px;
+      border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.35);
+      color: #eaf0ff; font-size: 12px; outline: none; width: 100%;
+    }
+    #imgReplaceFile { display: none; }
+    #imgReplaceUploadBtn {
+      padding: 6px 14px; border: 1px dashed rgba(255,255,255,.25); border-radius: 6px;
+      background: rgba(255,255,255,.06); color: rgba(234,240,255,.7);
+      font-size: 12px; cursor: pointer; text-align: center; width: 100%;
+    }
+    #imgReplaceUploadBtn:hover { background: rgba(255,255,255,.12); }
+    .img-replace-actions { display: flex; gap: 8px; justify-content: flex-end; }
+    .img-replace-actions button {
+      padding: 6px 16px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 600; cursor: pointer;
+    }
+    #imgReplaceCancel { background: rgba(255,255,255,.1); color: #eaf0ff; }
+    #imgReplaceCancel:hover { background: rgba(255,255,255,.2); }
+    #imgReplaceApply  { background: #667eea; color: #fff; }
+    #imgReplaceApply:hover  { background: #5568d4; }
+    #imgReplaceApply[disabled] { opacity: .45; cursor: not-allowed; }
+  </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
+</head>
+<body class="visual-mode">
+
+  <div id="toolbar">
+    <h1>Irene's Webworks — Visual Editor v2.0</h1>
+    <button class="tbtn tbtn-ghost" id="btnTips">Tips</button>
+    <div id="sbWrap">
+      <span id="sbTicker"></span>
+    </div>
+    <button class="tbtn tbtn-ghost" id="btnBack" data-umami-event="editor-close">← Close Editor</button>
+    <div id="viewToggle">
+      <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
+      <button class="tbtn"             id="btnSplit">Split</button>
+      <button class="tbtn"             id="btnCode">Code</button>
+    </div>
+    <button class="tbtn tbtn-primary" id="btnDownload" data-umami-event="editor-download">Download HTML</button>
+    <button class="tbtn tbtn-success" id="btnPublish" data-umami-event="editor-publish">Publish</button>
+    <div id="editorAccount" aria-live="polite">
+      <div id="editorAccountUser">Signed out</div>
+      <div id="editorAccountQuota">Credits: - · Downloads: - · Deploys: -</div>
+    </div>
+  </div>
+
+  <div id="editToolbar">
+    <!-- Undo/redo -->
+    <button id="etUndo" title="Undo (Ctrl+Z)">↩ Undo</button>
+    <button id="etRedo" title="Redo (Ctrl+Y)">↪ Redo</button>
+    <span class="sep"></span>
+    <!-- Block format -->
+    <select id="etBlock" title="Paragraph style">
+      <option value="p">Paragraph</option>
+      <option value="h1">Heading 1</option>
+      <option value="h2">Heading 2</option>
+      <option value="h3">Heading 3</option>
+      <option value="h4">Heading 4</option>
+      <option value="pre">Code block</option>
+      <option value="blockquote">Blockquote</option>
+    </select>
+    <span class="sep"></span>
+    <!-- Inline formatting -->
+    <button id="etBold"          title="Bold (Ctrl+B)"><b>B</b></button>
+    <button id="etItalic"        title="Italic (Ctrl+I)"><i>I</i></button>
+    <button id="etUnderline"     title="Underline (Ctrl+U)"><u>U</u></button>
+    <button id="etStrike"        title="Strikethrough"><s>S</s></button>
+    <span class="sep"></span>
+    <!-- Color -->
+    <label title="Text color" style="display:flex;align-items:center;gap:3px;font-size:11px;color:rgba(234,240,255,.55);cursor:pointer;">A <input type="color" id="etForeColor" value="#ffffff" title="Text color"></label>
+    <label title="Highlight color" style="display:flex;align-items:center;gap:3px;font-size:11px;color:rgba(234,240,255,.55);cursor:pointer;">▐ <input type="color" id="etBackColor" value="#ffff00" title="Highlight color"></label>
+    <button id="etClearFormat" title="Remove all formatting from selection">✕ Clear</button>
+    <span class="sep"></span>
+    <!-- Alignment -->
+    <button id="etAlignL" title="Align left">⬤≡</button>
+    <button id="etAlignC" title="Align center">≡⬤≡</button>
+    <button id="etAlignR" title="Align right">≡⬤</button>
+    <span class="sep"></span>
+    <!-- Lists & indent -->
+    <button id="etUl"      title="Bullet list">• List</button>
+    <button id="etOl"      title="Numbered list">1. List</button>
+    <button id="etIndent"  title="Indent">→</button>
+    <button id="etOutdent" title="Outdent">←</button>
+    <span class="sep"></span>
+    <!-- Link -->
+    <button id="etLink"   title="Highlight text or image, press Link, then type the target URL in the box.">🔗 Link</button>
+    <button id="etUnlink" title="Remove link">✂ Unlink</button>
+    <!-- Image -->
+    <button id="etImage"  title="Insert image">🖼 Media</button>
+    <span class="sep"></span>
+    <!-- Add / delete repeating element -->
+    <button id="etAddElement"    title="Duplicate the card or item the cursor is in">+ Card</button>
+    <button id="etDeleteElement" title="Delete the card or item the cursor is in">− Card</button>
+    <span class="sep"></span>
+    <!-- Find & replace -->
+    <button id="etFind" title="Find and replace (Ctrl+H)">🔍 Find</button>
+    <span style="flex:1"></span>
+    <span id="editStatus" style="font-size:11px; color:rgba(234,240,255,.35); padding-right:4px;"></span>
+  </div>
+
+  <!-- Card candidate picker -->
+  <div id="cardPicker">
+    <div class="cp-title" id="cardPickerTitle">Choose element</div>
+  </div>
+
+  <!-- Find & replace bar -->
+  <div id="findBar">
+    <label>Find</label>
+    <input type="text" id="findInput" placeholder="Search…" />
+    <span class="find-count" id="findCount"></span>
+    <button id="findPrev" title="Previous match">↑</button>
+    <button id="findNext" title="Next match">↓</button>
+    <label>Replace</label>
+    <input type="text" id="replaceInput" placeholder="Replace with…" />
+    <button id="replaceOne" title="Replace this match">Replace</button>
+    <button id="replaceAll" title="Replace all matches">All</button>
+    <button id="findClose" title="Close">✕</button>
+  </div>
+
+  <div id="editorLayout">
+    <div id="visualPane">
+      <iframe id="visualFrame"></iframe>
+    </div>
+    <div id="divider"></div>
+    <div id="codePane">
+      <div id="cmContainer"></div>
+    </div>
+    <div id="colorPanel" class="hidden">
+      <h2>Colors</h2>
+      <div class="color-row" data-slot="background"><span class="drag-handle">⠿</span><input type="color" id="cp-background"><label>Background</label></div>
+      <div class="color-row" data-slot="foreground"><span class="drag-handle">⠿</span><input type="color" id="cp-foreground"><label>Foreground</label></div>
+      <div class="color-row" data-slot="primary"><span class="drag-handle">⠿</span><input type="color" id="cp-primary"><label>Primary</label></div>
+      <div class="color-row" data-slot="secondary"><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"><label>Secondary</label></div>
+      <div class="color-row" data-slot="accent"><span class="drag-handle">⠿</span><input type="color" id="cp-accent"><label>Accent</label></div>
+      <hr>
+      <div style="padding: 4px 14px 10px;">
+        <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
+      </div>
+      <p class="hint">Changes apply live. Download to save.</p>
+    </div>
+  </div>
+
+  <!-- Unified publish / manage panel -->
+  <div id="portfolioPanelOverlay">
+    <div id="portfolioPanelBox">
+
+      <!-- Header -->
+      <div class="pp-header">
+        <span id="ppTitle">Publish Portfolio</span>
+        <button id="ppClose" title="Close">✕</button>
+      </div>
+
+      <!-- Publish status strip (visible during / after publish) -->
+      <div id="ppPublishStrip" class="pp-status-strip pp-hidden">
+        <span id="ppPublishIcon" class="pp-spin">⟳</span>
+        <span id="ppPublishMsg">Publishing…</span>
+      </div>
+
+      <!-- URLs (shown after successful publish) -->
+      <div id="ppUrlSection" class="pp-hidden">
+        <div class="pub-row">
+          <span class="pub-label">Latest (always current)</span>
+          <a id="ppUrlLatest" class="pub-link" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="pub-row">
+          <span class="pub-label">Permanent snapshot</span>
+          <a id="ppUrlVersioned" class="pub-link" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="pp-url-actions">
+          <button id="ppBtnOpen" data-umami-event="editor-open-deployed">Open latest ↗</button>
+        </div>
+      </div>
+
+      <hr class="pp-divider">
+
+      <!-- Custom domains -->
+      <div class="manage-section">
+        <h4>Custom Domains</h4>
+        <div id="manageDomainList"></div>
+        <div class="manage-domain-row" style="margin-top:6px">
+          <input type="text" id="manageDomainInput" placeholder="janesmith.com" autocomplete="off" />
+          <button id="manageDomainApply" data-umami-event="editor-add-domain">Add domain</button>
+        </div>
+        <div class="manage-domain-version-row">
+          <label for="manageDomainVersion">Point to</label>
+          <select id="manageDomainVersion">
+            <option value="">— loading deploys… —</option>
+          </select>
+        </div>
+        <div class="manage-domain-hint" id="manageDomainHint">
+          Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.
+        </div>
+      </div>
+
+      <hr class="pp-divider">
+
+      <!-- Deploys list -->
+      <div class="manage-section">
+        <h4>All Deploys</h4>
+        <div id="manageDeployStatus"></div>
+        <div id="manageDeployList"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Image replace dialog -->
+  <div id="imgReplaceOverlay">
+    <div id="imgReplaceBox">
+      <h3>Add/replace media</h3>
+      <div class="img-preview-wrap hidden" id="imgPreviewWrap">
+        <img id="imgReplacePreview" src="" alt="current image" />
+      </div>
+      <div class="img-source-add-row">
+        <button id="imgSourceAddBtn" type="button" title="Choose source">+</button>
+        <span id="imgSourceNudge" style="font-size:12px;color:rgba(234,240,255,.45);margin-left:8px;">Paste a URL · Upload a file · Generate with AI</span>
+        <div id="imgSourceDropdown">
+          <button type="button" data-source="url">Paste URL</button>
+          <button type="button" data-source="upload">Upload a file</button>
+          <button type="button" data-source="regenerate">Generate / Regenerate with AI</button>
+        </div>
+      </div>
+      <div class="img-source-panel" data-panel="url">
+        <input type="text" id="imgReplaceUrl" placeholder="https://example.com/photo.jpg" autocomplete="off" />
+      </div>
+      <div class="img-source-panel" data-panel="upload">
+        <div id="imgReplaceUploadBtn">📁 Click to choose a file…</div>
+        <input type="file" id="imgReplaceFile" accept="image/*" />
+      </div>
+      <div class="img-source-panel" data-panel="regenerate">
+        <textarea id="imgReplacePrompt" placeholder="Describe the kind of image you want..."></textarea>
+      </div>
+      <div id="imgSizeField" style="display:none;">
+        <label style="font-size:12px;color:rgba(234,240,255,.6);margin-bottom:4px;display:block;">Width <span style="color:rgba(234,240,255,.32);font-weight:400;">— e.g. 120px · 50% · 100% · 2in</span> <span id="imgSizeHint" style="color:rgba(234,240,255,.45);font-weight:400;font-style:italic;"></span></label>
+        <input type="text" id="imgInsertWidth" placeholder="e.g. 120px, 50%, 100%" autocomplete="off" />
+      </div>
+      <label class="img-replace-check">
+        <input type="checkbox" id="imgReplaceAsBackground" />
+        <span>Insert/replace background image</span>
+      </label>
+      <div id="imgReplaceError" aria-live="polite"></div>
+      <div class="img-replace-actions">
+        <button id="imgReplaceCancel">Cancel</button>
+        <button id="imgReplaceApply">Apply</button>
+      </div>
+      <div id="imgReplaceStatus" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <div id="no-preview">
+    <p>No portfolio found. Please generate one on Page 5 first.</p>
+    <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
+  </div>
+
+  <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
+
+  <script>
+  (async function () {
+    const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+    const supabaseClient = window.supabase?.createClient
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+    const EDITOR_BASE_TAG_ID = "iw-editor-base";
+
+    function setNoPreviewMessage(message) {
+      const host = document.getElementById("no-preview");
+      const p = host?.querySelector("p");
+      if (p) p.textContent = message;
+    }
+
+    function getRequestedHtmlFileSpec() {
+      try {
+        const params = new URLSearchParams(window.location.search || "");
+        const raw = (params.get("file") || params.get("html") || "").trim();
+        if (!raw) return null;
+
+        let value = raw;
+        try { value = decodeURIComponent(value); } catch {}
+        value = value.replace(/\\/g, "/").trim();
+
+        if (/^[a-z]+:/i.test(value) && !/^https?:/i.test(value)) {
+          throw new Error("Only same-site HTML paths are supported.");
+        }
+
+        if (/^https?:/i.test(value)) {
+          const parsed = new URL(value, window.location.href);
+          if (parsed.origin !== window.location.origin) {
+            throw new Error("Only same-origin HTML files can be loaded into the editor.");
+          }
+          value = parsed.pathname + parsed.search;
+        }
+
+        if (!value.startsWith("/")) value = "/" + value.replace(/^\.?\//, "");
+        const pathname = value.split(/[?#]/)[0];
+        if (!/\.html?$/i.test(pathname)) {
+          throw new Error("The file parameter must point to an .html file.");
+        }
+        if (pathname.includes("..")) {
+          throw new Error("Parent-directory segments are not allowed in the file parameter.");
+        }
+
+        const dir = pathname.replace(/[^/]*$/, "");
+        return {
+          requestPath: value,
+          pathname,
+          baseHref: dir || "/",
+          label: pathname.replace(/^\//, "")
+        };
+      } catch (err) {
+        console.error("Invalid editor file parameter:", err);
+        setNoPreviewMessage(err?.message || "Invalid HTML file parameter.");
+        return { error: err?.message || "Invalid HTML file parameter." };
+      }
+    }
+
+    async function loadRequestedHtml(spec) {
+      if (!spec || spec.error) return "";
+      const res = await fetch(spec.requestPath, { cache: "no-store" });
+      if (!res.ok) {
+        throw new Error(`Could not load ${spec.label} (${res.status}).`);
+      }
+      return await res.text();
+    }
+
+    function injectEditorBaseTag(html, baseHref) {
+      if (!baseHref) return String(html || "");
+      const clean = String(html || "");
+      const baseTag = `<base id="${EDITOR_BASE_TAG_ID}" href="${baseHref}">`;
+      if (new RegExp(`<base[^>]+id=["']${EDITOR_BASE_TAG_ID}["']`, "i").test(clean)) {
+        return clean.replace(new RegExp(`<base([^>]+id=["']${EDITOR_BASE_TAG_ID}["'][^>]*)>`, "i"), baseTag);
+      }
+      if (/<head\b[^>]*>/i.test(clean)) {
+        return clean.replace(/<head\b([^>]*)>/i, `<head$1>\n${baseTag}`);
+      }
+      return `${baseTag}\n${clean}`;
+    }
+
+    function stripEditorBaseTag(html) {
+      return String(html || "").replace(new RegExp(`\\s*<base[^>]+id=["']${EDITOR_BASE_TAG_ID}["'][^>]*>\\s*`, "gi"), "\n");
+    }
+
+    function getPreviewHtml() {
+      try {
+        const stored = localStorage.getItem("portfolio_preview_html");
+        if (stored) return stored;
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && typeof window.opener.__portfolioPreviewHtml === "string") {
+          return window.opener.__portfolioPreviewHtml;
+        }
+      } catch {}
+      return window.__portfolioPreviewHtml || "";
+    }
+
+    function cachePreviewHtml(html) {
+      const value = String(html || "");
+      window.__portfolioPreviewHtml = value;
+      try {
+        localStorage.setItem("portfolio_preview_html", value);
+      } catch (err) {
+        try { localStorage.removeItem("portfolio_preview_html"); } catch {}
+        console.warn("Could not persist portfolio_preview_html in editor:", err?.message || err);
+      }
+    }
+
+    function getPage4Colors() {
+      try {
+        const stored = localStorage.getItem("portfolio_page4_colors");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && window.opener.__portfolioPage4Colors) {
+          return window.opener.__portfolioPage4Colors;
+        }
+      } catch {}
+      return window.__portfolioPage4Colors || null;
+    }
+
+    function getImageGenerationContext() {
+      try {
+        const stored = localStorage.getItem("portfolio_image_generation_context");
+        if (stored) return JSON.parse(stored);
+      } catch {}
+      try {
+        if (window.opener && !window.opener.closed && window.opener.__portfolioImageGenerationContext) {
+          return window.opener.__portfolioImageGenerationContext;
+        }
+      } catch {}
+      return window.__portfolioImageGenerationContext || null;
+    }
+
+    function getAnonCreditsUsed() {
+      try { return parseInt(localStorage.getItem("anon_credits_used") || "0", 10); }
+      catch { return 0; }
+    }
+
+    function incrementAnonCredits() {
+      try { localStorage.setItem("anon_credits_used", String(getAnonCreditsUsed() + 1)); } catch {}
+    }
+
+    const requestedFileSpec = getRequestedHtmlFileSpec();
+    let loadedHtml = "";
+    let loadedFileBaseHref = "";
+    let loadedFileLabel = "";
+
+    if (requestedFileSpec && !requestedFileSpec.error) {
+      try {
+        loadedHtml = await loadRequestedHtml(requestedFileSpec);
+        loadedFileBaseHref = requestedFileSpec.baseHref;
+        loadedFileLabel = requestedFileSpec.label;
+        cachePreviewHtml(loadedHtml);
+      } catch (err) {
+        console.error("Failed to load requested HTML file:", err);
+        setNoPreviewMessage(err?.message || "Failed to load the requested HTML file.");
+      }
+    }
+
+    const fullHtml = loadedHtml || getPreviewHtml();
+    const page4Colors = getPage4Colors();
+    let currentDocumentBaseHref = loadedFileBaseHref;
+
+    if (!fullHtml) {
+      document.getElementById("no-preview").style.display = "flex";
+      document.getElementById("editorLayout").style.display = "none";
+      document.getElementById("toolbar").style.display = "none";
+      document.getElementById("editToolbar").style.display = "none";
+      return;
+    }
+
+    // ── CSS variable extraction ────────────────────────────────────────────────
+    const CSS_VAR_NAMES = ["background", "foreground", "primary", "secondary", "accent"];
+    const SLOT_ALIAS_MAP = {
+      background: "slot5",
+      foreground: "slot4",
+      primary: "slot1",
+      secondary: "slot2",
+      accent: "slot3"
+    };
+    const LEGACY_ROLE_ALIAS_MAP = {
+      background: "accent1",
+      foreground: "accent2",
+      primary: "tertiary",
+      secondary: "secondary",
+      accent: "primary"
+    };
+    const SLOT_CSS_VAR_FAMILIES = {
+      background: ["--background", "--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"],
+      foreground: ["--foreground", "--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
+      primary: ["--primary", "--dominant", "--bp-slot1", "--bp-slot-1", "--slot1", "--slot-1", "--bp-primary"],
+      secondary: ["--secondary", "--bp-slot2", "--bp-slot-2", "--slot2", "--slot-2", "--bp-secondary"],
+      accent: ["--accent", "--tertiary", "--bp-slot3", "--bp-slot-3", "--slot3", "--slot-3", "--bp-tertiary"]
+    };
+    const cssVarMap = {};   // slot name → CSS variable name used for live overrides
+    const cssText = (fullHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/gi) || [])
+      .map(s => s.replace(/<\/?style[^>]*>/gi, "")).join("\n");
+
+    // Primary strategy: read --color-* vars ordered by semantic role comments.
+    function extractCssVarsByRoleComment(text) {
+      const rootMatch = text.match(/:root\s*\{([\s\S]*?)\}/);
+      if (!rootMatch) return {};
+      const found = [];
+      const re = /(--color-[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*\s*(\d+)\.\s*([\w]+)/g;
+      let m;
+      while ((m = re.exec(rootMatch[1])) !== null)
+        found.push({ varName: m[1], hex: m[2], index: parseInt(m[3]), roleWord: m[4] });
+      found.sort((a, b) => a.index - b.index);
+      const vars = {};
+      const commentRoleMap = {
+        background: "background",
+        foreground: "foreground",
+        primary: "primary",
+        secondary: "secondary",
+        accent: "accent"
+      };
+      found.forEach(cv => {
+        const role = commentRoleMap[String(cv.roleWord || "").toLowerCase()];
+        if (role) {
+          vars[role] = cv.hex;
+          cssVarMap[role] = cv.varName;
+        }
+      });
+      return vars;
+    }
+
+    // Fallback strategy: match by conventional slot-name patterns.
+    function extractCssVarsByName(text) {
+      const allVars = {};
+      for (const m of text.matchAll(/--([a-zA-Z0-9_-]+)\s*:\s*([^;}\n]+)/g))
+        allVars[m[1].trim().toLowerCase()] = m[2].trim().replace(/^['"]|['"]$/g, "");
+      const vars = {};
+      for (const name of CSS_VAR_NAMES) {
+        const slotAlias = SLOT_ALIAS_MAP[name];
+        const legacyAlias = LEGACY_ROLE_ALIAS_MAP[name];
+        for (const c of [
+          slotAlias,
+          `bp-${slotAlias}`,
+          `bp-slot-${slotAlias.slice(-1)}`,
+          `${slotAlias}-color`,
+          `color-${slotAlias}`,
+          name,
+          `bp-${name}`,
+          `${name}-color`,
+          `color-${name}`,
+          legacyAlias,
+          legacyAlias ? `bp-${legacyAlias}` : null,
+          legacyAlias ? `${legacyAlias}-color` : null,
+          legacyAlias ? `color-${legacyAlias}` : null
+        ].filter(Boolean)) {
+          if (allVars[c] !== undefined) { vars[name] = allVars[c]; cssVarMap[name] = `--${c}`; break; }
+        }
+      }
+      return vars;
+    }
+
+    function getOverrideVarNames(slotName) {
+      return Array.from(new Set([
+        ...(SLOT_CSS_VAR_FAMILIES[slotName] || []),
+        cssVarMap[slotName] || `--${slotName}`
+      ]));
+    }
+
+    function toHexColor(val) {
+      if (!val) return "#000000";
+      const clean = val.trim();
+      if (/^#[0-9a-f]{6}$/i.test(clean)) return clean;
+      if (/^#[0-9a-f]{3}$/i.test(clean)) return "#" + clean.slice(1).split("").map(c => c+c).join("");
+      const el = document.createElement("div");
+      el.style.color = clean; document.body.appendChild(el);
+      const comp = getComputedStyle(el).color; document.body.removeChild(el);
+      const m = comp.match(/\d+/g);
+      if (!m || m.length < 3) return "#000000";
+      return "#" + m.slice(0,3).map(n => (+n).toString(16).padStart(2,"0")).join("");
+    }
+
+    // ── State ──────────────────────────────────────────────────────────────────
+    const currentColors = {};
+    let currentHtml = fullHtml;
+    let viewMode = "visual";
+    let cmView = null; // set after CodeMirror loads
+    let suppressCodeSync = false;
+    let splitSyncTimer = null;
+
+    // ── Visual iframe (srcdoc — more reliable than doc.write) ─────────────────
+    const frame = document.getElementById("visualFrame");
+
+    let visualSyncTimer = null;
+
+    function scheduleVisualToCodeSync() {
+      if (viewMode !== "split") return;
+      if (visualSyncTimer) clearTimeout(visualSyncTimer);
+      visualSyncTimer = setTimeout(() => {
+        visualSyncTimer = null;
+        syncVisualToCode();
+      }, 300);
+    }
+
+    function attachIframeInputListener() {
+      try {
+        frame.contentDocument?.addEventListener("input", scheduleVisualToCodeSync);
+      } catch {}
+    }
+
+    // ── Image click-to-replace ─────────────────────────────────────────────────
+    let imgReplaceTarget  = null;
+    let imgReplaceIsNew   = false;  // true when dialog was opened for a freshly inserted placeholder
+    let imgReplacePending = null;   // data URI from a file upload, waiting for Apply
+    let imgInsertInferredSize = null; // { width, height, hint, confident } for new insertions
+    let imgRegenerateInProgress = false;
+    let imgRegenerateCountdownTimer = null;
+    let imgReplaceBackgroundTarget = null;
+    let imgReplaceBackgroundCandidates = [];
+    let highlightedBackgroundTarget = null;
+    let lastIframeActiveElement = null;
+    let lastIframeRange = null;
+    let lastIframePointerTarget = null;
+
+    function getImageSourceMode() {
+      return document.getElementById("imgReplaceBox")?.dataset.sourceMode || "";
+    }
+
+    function setImageSourceMode(mode) {
+      const box = document.getElementById("imgReplaceBox");
+      if (box) box.dataset.sourceMode = mode;
+      syncImageSourceModeUi();
+    }
+
+    function extractUrlFromBackgroundImage(value) {
+      const urls = [];
+      const re = /url\(\s*(?:'([^']*)'|"([^"]*)"|([^)]*))\s*\)/ig;
+      let match;
+      while ((match = re.exec(String(value || ""))) !== null) {
+        const raw = match[1] ?? match[2] ?? match[3] ?? "";
+        const cleaned = raw.trim().replace(/^['"]|['"]$/g, "");
+        if (cleaned) urls.push(cleaned);
+      }
+      return urls.length ? urls[urls.length - 1] : "";
+    }
+
+    function extractCurrentBackgroundSrc(el) {
+      if (!el) return "";
+      const computed = (el.ownerDocument?.defaultView || window).getComputedStyle(el);
+      return (
+        extractUrlFromBackgroundImage(el.style.backgroundImage) ||
+        extractUrlFromBackgroundImage(computed.backgroundImage) ||
+        extractUrlFromBackgroundImage(el.style.background) ||
+        extractUrlFromBackgroundImage(computed.background) ||
+        ""
+      );
+    }
+
+    function summarizeImageSource(src) {
+      const value = String(src || "");
+      if (!value) return { kind: "empty", length: 0, head: "" };
+      return {
+        kind: value.startsWith("data:") ? "data-uri" : "url",
+        length: value.length,
+        head: value.slice(0, 96)
+      };
+    }
+
+    function resolveBackgroundSource(el) {
+      try {
+        const doc = frame.contentDocument;
+        let node = el || null;
+        while (node && node.nodeType === Node.ELEMENT_NODE) {
+          const src = extractCurrentBackgroundSrc(node);
+          if (src) return { el: node, src };
+          if (node === doc?.body) break;
+          node = node.parentElement;
+        }
+      } catch {}
+      return { el: el || null, src: "" };
+    }
+
+    function getNodeDepth(el) {
+      let depth = 0;
+      let node = el;
+      while (node?.parentElement) {
+        depth += 1;
+        node = node.parentElement;
+      }
+      return depth;
+    }
+
+    function describeBackgroundTarget(el) {
+      if (!el) return { title: "Unknown target", meta: "" };
+      const tag = el.tagName.toLowerCase();
+      const id = el.id ? `#${el.id}` : "";
+      const classBits = String(el.className || "").trim().split(/\s+/).filter(Boolean).slice(0, 2);
+      const classText = classBits.length ? `.${classBits.join(".")}` : "";
+      const rect = el.getBoundingClientRect?.();
+      const sizeText = rect ? `${Math.round(rect.width)}×${Math.round(rect.height)}` : "";
+      const heading = el.querySelector?.("h1,h2,h3,h4,h5,h6")?.textContent?.replace(/\s+/g, " ").trim() || "";
+      return {
+        title: `${tag}${id}${classText}` || tag,
+        meta: [sizeText, heading ? `contains “${heading.slice(0, 42)}${heading.length > 42 ? "…" : ""}”` : ""].filter(Boolean).join(" · ")
+      };
+    }
+
+    function clearBackgroundTargetHighlight() {
+      if (!highlightedBackgroundTarget) return;
+      highlightedBackgroundTarget.style.outline = highlightedBackgroundTarget.dataset.iwPrevOutline || "";
+      highlightedBackgroundTarget.style.outlineOffset = highlightedBackgroundTarget.dataset.iwPrevOutlineOffset || "";
+      delete highlightedBackgroundTarget.dataset.iwPrevOutline;
+      delete highlightedBackgroundTarget.dataset.iwPrevOutlineOffset;
+      highlightedBackgroundTarget = null;
+    }
+
+    function highlightBackgroundTarget(el) {
+      clearBackgroundTargetHighlight();
+      if (!el) return;
+      highlightedBackgroundTarget = el;
+      el.dataset.iwPrevOutline = el.style.outline || "";
+      el.dataset.iwPrevOutlineOffset = el.style.outlineOffset || "";
+      el.style.outline = "2px solid rgba(141,224,255,.95)";
+      el.style.outlineOffset = "-2px";
+    }
+
+    function collectBackgroundTargetCandidates(baseEl) {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return [];
+        const seed = resolveBackgroundSource(baseEl)?.el || baseEl || findDocumentMastheadTarget() || doc.body;
+        const raw = [];
+        let node = seed;
+        while (node && node.nodeType === Node.ELEMENT_NODE) {
+          raw.push(node);
+          if (node === doc.body) break;
+          node = node.parentElement;
+        }
+        raw.push(
+          seed?.closest?.("header, section, article, main, aside, div") || null,
+          seed?.closest?.(".masthead, .hero, .banner, [class*='masthead'], [class*='hero']") || null,
+          doc.querySelector("header"),
+          doc.querySelector(".masthead, .hero, .banner, [class*='masthead'], [class*='hero']"),
+          findDocumentMastheadTarget()
+        );
+        raw.push(...Array.from(seed?.querySelectorAll?.("header, section, article, main, aside, div") || []));
+        const unique = Array.from(new Set(raw.filter(Boolean)));
+        const candidates = unique
+          .filter(el => {
+            if (!(el instanceof Element)) return false;
+            const rect = el.getBoundingClientRect?.();
+            if (!rect || rect.width < 80 || rect.height < 40) return false;
+            const hasBg = !!extractCurrentBackgroundSrc(el);
+            const classText = `${el.className || ""} ${el.id || ""}`;
+            const hasHeading = !!el.querySelector?.("h1,h2,h3");
+            const looksSemantic = /^(HEADER|SECTION|ARTICLE|MAIN|ASIDE|DIV)$/i.test(el.tagName);
+            const heroLike = /\b(hero|masthead|banner|lead)\b/i.test(classText);
+            return hasBg || el === seed || (looksSemantic && (heroLike || hasHeading));
+          })
+          .sort((a, b) => {
+            const score = el => {
+              const hasBg = !!extractCurrentBackgroundSrc(el);
+              const classText = `${el.className || ""} ${el.id || ""}`;
+              const hasHeading = !!el.querySelector?.("h1,h2,h3");
+              let s = 0;
+              if (hasBg) s += 30;
+              if (/\b(hero|masthead|banner|lead)\b/i.test(classText)) s += 20;
+              if (el.tagName === "HEADER") s += 15;
+              if (hasHeading) s += 10;
+              s -= getNodeDepth(el) * 0.1;
+              return s;
+            };
+            return score(b) - score(a);
+          })
+          .slice(0, 6);
+        if (candidates.length) return candidates;
+        const fallback = unique
+          .filter(el => {
+            if (!(el instanceof Element)) return false;
+            const rect = el.getBoundingClientRect?.();
+            return !!rect && rect.width >= 80 && rect.height >= 40;
+          })
+          .sort((a, b) => getNodeDepth(a) - getNodeDepth(b))
+          .slice(0, 6);
+        return fallback.length ? fallback : [seed].filter(Boolean);
+      } catch {
+        return baseEl ? [baseEl] : [];
+      }
+    }
+
+    function renderBackgroundTargetPicker() {
+      const picker = document.getElementById("imgReplaceTargetPicker");
+      if (!picker) return;
+      picker.innerHTML = "";
+      picker.classList.toggle("open", isBackgroundMode());
+      if (!isBackgroundMode()) {
+        clearBackgroundTargetHighlight();
+        return;
+      }
+      const title = document.createElement("div");
+      title.style.cssText = "font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:rgba(234,240,255,.55);";
+      title.textContent = "Background Target";
+      picker.appendChild(title);
+      if (!imgReplaceBackgroundCandidates.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "font-size:11.5px; color:rgba(234,240,255,.55);";
+        empty.textContent = "No specific target candidates found. The editor will use the current masthead selection.";
+        picker.appendChild(empty);
+        clearBackgroundTargetHighlight();
+        return;
+      }
+      imgReplaceBackgroundCandidates.forEach((candidate, idx) => {
+        const desc = describeBackgroundTarget(candidate);
+        const label = document.createElement("label");
+        label.className = "img-target-option";
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "imgBackgroundTarget";
+        radio.value = String(idx);
+        radio.checked = candidate === imgReplaceBackgroundTarget;
+        radio.addEventListener("change", () => {
+          imgReplaceBackgroundTarget = candidate;
+          highlightBackgroundTarget(candidate);
+          syncImageDialogModePreview();
+        });
+        const textWrap = document.createElement("span");
+        textWrap.innerHTML = `${desc.title}${desc.meta ? `<small>${desc.meta}</small>` : ""}`;
+        label.append(radio, textWrap);
+        label.addEventListener("mouseenter", () => highlightBackgroundTarget(candidate));
+        picker.appendChild(label);
+      });
+      highlightBackgroundTarget(imgReplaceBackgroundTarget || imgReplaceBackgroundCandidates[0]);
+    }
+
+    function debugBackgroundResolution(label, el) {
+      try {
+        const resolved = resolveBackgroundSource(el);
+        const target = resolved?.el || el || null;
+        const computed = target ? getComputedStyle(target) : null;
+        const before = target ? getComputedStyle(target, "::before") : null;
+        const after = target ? getComputedStyle(target, "::after") : null;
+        console.log("[editor] Replace Image background debug:", {
+          label,
+          initialTarget: el ? {
+            tag: el.tagName,
+            className: el.className || "",
+            id: el.id || ""
+          } : null,
+          resolvedTarget: target ? {
+            tag: target.tagName,
+            className: target.className || "",
+            id: target.id || ""
+          } : null,
+          resolvedSrc: resolved?.src || "",
+          inlineBackground: target?.style?.background || "",
+          inlineBackgroundImage: target?.style?.backgroundImage || "",
+          computedBackground: computed?.background || "",
+          computedBackgroundImage: computed?.backgroundImage || "",
+          heroBgVar: computed?.getPropertyValue("--hero-bg-image") || "",
+          beforeBackgroundImage: before?.backgroundImage || "",
+          afterBackgroundImage: after?.backgroundImage || ""
+        });
+      } catch (err) {
+        console.log("[editor] Replace Image background debug failed:", err);
+      }
+    }
+
+    function replaceLastBackgroundUrl(value, newSrc, preferredOldSrc = "") {
+      const source = String(value || "");
+      if (!source) return "";
+      const matches = [...source.matchAll(/url\(\s*(?:'([^']*)'|"([^"]*)"|([^)]*))\s*\)/ig)];
+      if (!matches.length) return "";
+      let chosen = null;
+      if (preferredOldSrc) {
+        chosen = matches.find(match => {
+          const raw = match[1] ?? match[2] ?? match[3] ?? "";
+          const cleaned = raw.trim().replace(/^['"]|['"]$/g, "");
+          return cleaned === preferredOldSrc;
+        }) || null;
+      }
+      chosen = chosen || matches[matches.length - 1];
+      return source.slice(0, chosen.index) + `url("${newSrc}")` + source.slice(chosen.index + chosen[0].length);
+    }
+
+    const LIGHT_TEXT_BG_OVERLAY = `linear-gradient(0deg, rgba(56,56,56,.42), rgba(56,56,56,.42))`;
+    const DARK_TEXT_BG_OVERLAY = `linear-gradient(0deg, rgba(18,18,18,.56), rgba(18,18,18,.56))`;
+
+    function parseColorLuminance(colorValue) {
+      const match = String(colorValue || "").match(/rgba?\(([^)]+)\)/i);
+      if (!match) return null;
+      const parts = match[1].split(",").map(part => parseFloat(part.trim()));
+      if (parts.length < 3 || parts.slice(0, 3).some(n => !Number.isFinite(n))) return null;
+      const [r, g, b] = parts;
+      return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    }
+
+    function selectReadableBackgroundOverlay(el) {
+      if (!el) return LIGHT_TEXT_BG_OVERLAY;
+      try {
+        const textNodes = Array.from(el.querySelectorAll("h1,h2,h3,h4,h5,h6,p,li,a,button,span,strong,em"))
+          .filter(node => (node.textContent || "").trim())
+          .slice(0, 24);
+        const luminances = textNodes
+          .map(node => parseColorLuminance(getComputedStyle(node).color))
+          .filter(n => Number.isFinite(n));
+        if (!luminances.length) {
+          const ownLum = parseColorLuminance(getComputedStyle(el).color);
+          if (Number.isFinite(ownLum)) return ownLum >= 150 ? DARK_TEXT_BG_OVERLAY : LIGHT_TEXT_BG_OVERLAY;
+          return LIGHT_TEXT_BG_OVERLAY;
+        }
+        const avgLum = luminances.reduce((sum, n) => sum + n, 0) / luminances.length;
+        return avgLum >= 150 ? DARK_TEXT_BG_OVERLAY : LIGHT_TEXT_BG_OVERLAY;
+      } catch {
+        return LIGHT_TEXT_BG_OVERLAY;
+      }
+    }
+
+    function selectReadableTextTone(el) {
+      if (!el) return "light";
+      try {
+        const textNodes = Array.from(el.querySelectorAll("h1,h2,h3,h4,h5,h6,p,li,a,button,span,strong,em"))
+          .filter(node => (node.textContent || "").trim())
+          .slice(0, 24);
+        const luminances = textNodes
+          .map(node => parseColorLuminance(getComputedStyle(node).color))
+          .filter(n => Number.isFinite(n));
+        if (!luminances.length) {
+          const ownLum = parseColorLuminance(getComputedStyle(el).color);
+          return Number.isFinite(ownLum) && ownLum < 150 ? "dark" : "light";
+        }
+        const avgLum = luminances.reduce((sum, n) => sum + n, 0) / luminances.length;
+        return avgLum < 150 ? "dark" : "light";
+      } catch {
+        return "light";
+      }
+    }
+
+    function applyReadableForegroundStyles(el) {
+      if (!el) return;
+      const tone = selectReadableTextTone(el);
+      const headingColor = tone === "light" ? "#f7f8fb" : "#101114";
+      const bodyColor = tone === "light" ? "rgba(247,248,251,.94)" : "rgba(16,17,20,.92)";
+      const headingShadow = tone === "light"
+        ? "0 2px 12px rgba(0,0,0,.45)"
+        : "0 1px 8px rgba(255,255,255,.18)";
+      const bodyShadow = tone === "light"
+        ? "0 1px 6px rgba(0,0,0,.28)"
+        : "0 1px 4px rgba(255,255,255,.12)";
+
+      el.querySelectorAll("h1,h2,h3,h4,h5,h6").forEach(node => {
+        node.style.color = headingColor;
+        node.style.textShadow = headingShadow;
+      });
+      el.querySelectorAll("p,li").forEach(node => {
+        node.style.color = bodyColor;
+        node.style.textShadow = bodyShadow;
+      });
+      el.querySelectorAll("a,button").forEach(node => {
+        node.style.textShadow = bodyShadow;
+      });
+    }
+
+    function ensureReadableBackgroundOverlay(value, overlay) {
+      const source = String(value || "").trim();
+      const chosenOverlay = overlay || LIGHT_TEXT_BG_OVERLAY;
+      const withoutKnownOverlay = source
+        .replace(new RegExp(`^\\s*${LIGHT_TEXT_BG_OVERLAY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*,\\s*`), "")
+        .replace(new RegExp(`^\\s*${DARK_TEXT_BG_OVERLAY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*,\\s*`), "");
+      if (!withoutKnownOverlay) return chosenOverlay;
+      if (withoutKnownOverlay.includes(chosenOverlay)) return withoutKnownOverlay;
+      return `${chosenOverlay}, ${withoutKnownOverlay}`;
+    }
+
+    function pickLastLayerValue(value, fallback = "") {
+      const parts = String(value || "").split(",").map(s => s.trim()).filter(Boolean);
+      return parts.length ? parts[parts.length - 1] : fallback;
+    }
+
+    function getBackgroundSizeOverride() {
+      return "";
+    }
+
+    function replaceBackgroundImageSource(el, newSrc) {
+      if (!el) return false;
+      const computed = getComputedStyle(el);
+      const currentSrc = extractCurrentBackgroundSrc(el);
+      const readabilityOverlay = selectReadableBackgroundOverlay(el);
+      const sizeOverride = getBackgroundSizeOverride();
+
+      const replacedBackground =
+        replaceLastBackgroundUrl(el.style.background, newSrc, currentSrc) ||
+        replaceLastBackgroundUrl(computed.background, newSrc, currentSrc);
+      if (replacedBackground) {
+        el.style.background = ensureReadableBackgroundOverlay(replacedBackground, readabilityOverlay);
+        if (sizeOverride) el.style.backgroundSize = sizeOverride;
+        return true;
+      }
+
+      const replacedBackgroundImage =
+        replaceLastBackgroundUrl(el.style.backgroundImage, newSrc, currentSrc) ||
+        replaceLastBackgroundUrl(computed.backgroundImage, newSrc, currentSrc);
+      if (replacedBackgroundImage) {
+        el.style.backgroundImage = ensureReadableBackgroundOverlay(replacedBackgroundImage, readabilityOverlay);
+        el.style.backgroundSize = sizeOverride || el.style.backgroundSize || computed.backgroundSize || "cover";
+        el.style.backgroundPosition = el.style.backgroundPosition || computed.backgroundPosition || "center";
+        el.style.backgroundRepeat = el.style.backgroundRepeat || computed.backgroundRepeat || "no-repeat";
+        return true;
+      }
+
+      return false;
+    }
+
+    function forceBackgroundImageSource(el, newSrc, overlay) {
+      if (!el) return;
+      const computed = getComputedStyle(el);
+      const readabilityOverlay = overlay || selectReadableBackgroundOverlay(el);
+      const size = getBackgroundSizeOverride() || pickLastLayerValue(el.style.backgroundSize || computed.backgroundSize, "").trim() || "cover";
+      const position = pickLastLayerValue(el.style.backgroundPosition || computed.backgroundPosition, "").trim() || "center";
+      const repeat = pickLastLayerValue(el.style.backgroundRepeat || computed.backgroundRepeat, "").trim() || "no-repeat";
+      const forcedBackgroundImage = ensureReadableBackgroundOverlay(`url("${newSrc}")`, readabilityOverlay);
+      const forcedBackground = ensureReadableBackgroundOverlay(`url("${newSrc}") ${position} / ${size} ${repeat}`, readabilityOverlay);
+      el.style.setProperty("background", forcedBackground, "important");
+      el.style.setProperty("background-image", forcedBackgroundImage, "important");
+      el.style.setProperty("background-size", size, "important");
+      el.style.setProperty("background-position", position, "important");
+      el.style.setProperty("background-repeat", repeat, "important");
+      el.style.setProperty("--hero-bg-image", `url("${newSrc}")`, "important");
+    }
+
+    function ensureEditorBackgroundLayer(el, newSrc, overlay) {
+      if (!el) return null;
+      const readabilityOverlay = overlay || selectReadableBackgroundOverlay(el);
+      const computed = getComputedStyle(el);
+      const size = getBackgroundSizeOverride() || pickLastLayerValue(el.style.backgroundSize || computed.backgroundSize, "").trim() || "cover";
+      const position = pickLastLayerValue(el.style.backgroundPosition || computed.backgroundPosition, "").trim() || "center";
+      const repeat = pickLastLayerValue(el.style.backgroundRepeat || computed.backgroundRepeat, "").trim() || "no-repeat";
+      const doc = el.ownerDocument;
+      let layer = el.querySelector(':scope > .iw-bg-replacement-layer');
+      if (!layer) {
+        layer = doc.createElement("div");
+        layer.className = "iw-bg-replacement-layer";
+        el.insertBefore(layer, el.firstChild || null);
+      }
+      const currentPosition = getComputedStyle(el).position;
+      if (!currentPosition || currentPosition === "static") {
+        el.style.position = "relative";
+      }
+      el.style.overflow = el.style.overflow || "hidden";
+      layer.style.position = "absolute";
+      layer.style.inset = "0";
+      layer.style.zIndex = "0";
+      layer.style.pointerEvents = "none";
+      layer.style.background = ensureReadableBackgroundOverlay(`url("${newSrc}") ${position} / ${size} ${repeat}`, readabilityOverlay);
+      Array.from(el.children).forEach(child => {
+        if (child === layer) return;
+        if (getComputedStyle(child).position === "static") child.style.position = "relative";
+        if (!child.style.zIndex) child.style.zIndex = "1";
+      });
+      return layer;
+    }
+
+    function setImageDialogPreviewSrc(src) {
+      const preview = document.getElementById("imgReplacePreview");
+      const wrap = document.getElementById("imgPreviewWrap");
+      if (!preview) return;
+      if (src) {
+        preview.src = src;
+        preview.style.display = "";
+        if (wrap) wrap.classList.remove("hidden");
+      } else {
+        preview.removeAttribute("src");
+        preview.style.display = "none";
+        if (wrap) wrap.classList.add("hidden");
+      }
+    }
+
+    function setImageDialogError(message = "") {
+      const el = document.getElementById("imgReplaceError");
+      if (el) el.textContent = message;
+    }
+
+    function setImageDialogStatus(message = "", kind = "") {
+      const el = document.getElementById("imgReplaceStatus");
+      if (!el) return;
+      el.textContent = message;
+      el.style.minHeight = "16px";
+      el.style.fontSize = "11.5px";
+      el.style.marginTop = "6px";
+      el.style.color =
+        kind === "error" ? "rgba(251,171,156,.92)" :
+        kind === "ok" ? "rgba(118,176,34,.92)" :
+        "rgba(234,240,255,.72)";
+    }
+
+    function stopImageDialogCountdown() {
+      if (imgRegenerateCountdownTimer) {
+        clearInterval(imgRegenerateCountdownTimer);
+        imgRegenerateCountdownTimer = null;
+      }
+    }
+
+    function startImageDialogCountdown(totalSeconds = 90) {
+      stopImageDialogCountdown();
+      let remaining = totalSeconds;
+      setImageDialogStatus(`Generating image… (${remaining}s)`, "ok");
+      imgRegenerateCountdownTimer = setInterval(() => {
+        remaining = Math.max(0, remaining - 1);
+        setImageDialogStatus(`Generating image… (${remaining}s)`, "ok");
+        if (remaining <= 0) stopImageDialogCountdown();
+      }, 1000);
+    }
+
+    function getSelectionImageContainer() {
+      try {
+        const doc = frame.contentDocument;
+        const sel = doc?.getSelection?.();
+        if (!doc) return null;
+        let node = null;
+        if (sel && sel.rangeCount) {
+          node = sel.getRangeAt(0).startContainer;
+        } else if (lastIframeRange) {
+          node = lastIframeRange.startContainer;
+        } else if (lastIframePointerTarget) {
+          node = lastIframePointerTarget;
+        } else if (lastIframeActiveElement) {
+          node = lastIframeActiveElement;
+        } else {
+          return doc.querySelector("header, section, article, main, aside, div") || doc.body || null;
+        }
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        if (!node) return doc.body || null;
+        return node.closest?.("header, section, article, main, aside, div") || doc.body || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function findDocumentMastheadTarget() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return null;
+        const candidates = Array.from(doc.querySelectorAll("header, section, article, main, aside, div"));
+        let best = null;
+        let bestScore = -1;
+
+        for (const el of candidates) {
+          const textHeading = el.querySelector?.("h1");
+          const computed = getComputedStyle(el);
+          const bgSrc = extractCurrentBackgroundSrc(el);
+          const heroBgVar = computed.getPropertyValue("--hero-bg-image") || "";
+          const classText = `${el.className || ""} ${el.id || ""}`;
+          let score = 0;
+          if (el.tagName === "HEADER") score += 40;
+          if (textHeading) score += 50;
+          if (/\bhero\b/i.test(classText)) score += 25;
+          if (bgSrc) score += 80;
+          if (heroBgVar && !/\bnone\b/i.test(heroBgVar)) score += 30;
+          if (computed.backgroundImage && computed.backgroundImage !== "none") score += 20;
+          if (score > bestScore) {
+            best = el;
+            bestScore = score;
+          }
+        }
+
+        return bestScore > 0 ? best : doc.querySelector("header") || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getPreferredBackgroundTarget(imgEl = null) {
+      try {
+        const doc = frame.contentDocument;
+        const selectionTarget = getSelectionImageContainer();
+        const pointerTarget = lastIframePointerTarget || null;
+        const activeTarget = lastIframeActiveElement || null;
+        const imageParentTarget = imgEl?.parentElement || null;
+        const mastheadTarget = findDocumentMastheadTarget() || null;
+        const genericTarget = doc?.querySelector("header, section, article, main, aside, div") || null;
+
+        const candidates = [
+          selectionTarget,
+          pointerTarget,
+          activeTarget,
+          imageParentTarget,
+          mastheadTarget,
+          genericTarget,
+          doc?.body || null
+        ].filter(Boolean);
+
+        const start = candidates.find(el => el !== doc?.body) || doc?.body || null;
+        if (!start) return null;
+
+        const ancestors = [];
+        let node = start;
+        while (node && node.nodeType === Node.ELEMENT_NODE) {
+          ancestors.push(node);
+          if (node === doc.body) break;
+          node = node.parentElement;
+        }
+
+        const semanticWithBg = ancestors.filter(el =>
+          /^(HEADER|SECTION|ARTICLE|MAIN|ASIDE|BODY)$/i.test(el.tagName) &&
+          !!extractCurrentBackgroundSrc(el)
+        );
+        if (semanticWithBg.length) return semanticWithBg[semanticWithBg.length - 1];
+
+        const anyWithBg = ancestors.filter(el => !!extractCurrentBackgroundSrc(el));
+        if (anyWithBg.length) return anyWithBg[anyWithBg.length - 1];
+
+        return ancestors.find(el => /^(HEADER|SECTION|ARTICLE|MAIN|ASIDE)$/i.test(el.tagName)) || mastheadTarget || start;
+      } catch {
+        return getSelectionImageContainer() || findDocumentMastheadTarget();
+      }
+    }
+
+    function isBackgroundMode() {
+      return !!document.getElementById("imgReplaceAsBackground")?.checked;
+    }
+
+    function syncImageSourceModeUi() {
+      const mode = getImageSourceMode();
+      document.querySelectorAll(".img-source-panel").forEach(p => {
+        p.classList.toggle("active", !!mode && p.dataset.panel === mode);
+      });
+      const nudge = document.getElementById("imgSourceNudge");
+      if (nudge) nudge.style.display = mode ? "none" : "";
+      setImageDialogError("");
+      if (!imgRegenerateInProgress) setImageDialogStatus("");
+    }
+
+    function syncImageDialogModePreview() {
+      const urlInput = document.getElementById("imgReplaceUrl");
+      const sizeField = document.getElementById("imgSizeField");
+      if (isBackgroundMode()) {
+        if (!imgReplaceBackgroundCandidates.length) {
+          imgReplaceBackgroundCandidates = collectBackgroundTargetCandidates(imgReplaceBackgroundTarget || getPreferredBackgroundTarget(imgReplaceTarget));
+          if (imgReplaceBackgroundCandidates.length && !imgReplaceBackgroundTarget) {
+            imgReplaceBackgroundTarget = imgReplaceBackgroundCandidates[0];
+          }
+        }
+        const resolvedBg = resolveBackgroundSource(imgReplaceBackgroundTarget);
+        if (resolvedBg?.el) imgReplaceBackgroundTarget = resolvedBg.el;
+        debugBackgroundResolution("syncImageDialogModePreview", imgReplaceBackgroundTarget);
+        const bgSrc = imgReplacePending || resolvedBg.src;
+        setImageDialogPreviewSrc(bgSrc);
+        if (urlInput) urlInput.value = imgReplacePending ? "" : (bgSrc && !bgSrc.startsWith("data:") ? bgSrc : "");
+        if (sizeField) sizeField.style.display = "none";
+      } else {
+        clearBackgroundTargetHighlight();
+        setImageDialogPreviewSrc(imgReplacePending || (imgReplaceTarget?.src || ""));
+        if (urlInput) urlInput.value = imgReplacePending ? "" : (((imgReplaceTarget?.src || "").startsWith("data:")) ? "" : (imgReplaceTarget?.src || ""));
+        if (sizeField) sizeField.style.display = "";
+      }
+      syncImageSourceModeUi();
+    }
+
+    function inferInsertionSize(placeholder) {
+      const parent = placeholder.parentElement;
+      if (!parent) return { width: "", height: "auto", hint: "", confident: false };
+
+      // 1. Sibling <img> in same container with rendered dimensions
+      const siblingImgs = Array.from(parent.querySelectorAll("img"))
+        .filter(el => el !== placeholder && el.offsetWidth > 0);
+      if (siblingImgs.length) {
+        const si = siblingImgs[0];
+        const w = si.offsetWidth, h = si.offsetHeight;
+        return { width: `${w}px`, height: h > 0 ? `${h}px` : "auto", hint: "matched sibling image", confident: true };
+      }
+
+      // 2. Class name hints on parent or nearby ancestors
+      const classHints = [
+        { pattern: /\b(avatar|profile[-_]?pic|headshot|portrait|monogram)\b/i, width: "120px", height: "120px", hint: "avatar size" },
+        { pattern: /\b(thumbnail|thumb)\b/i,                                   width: "160px", height: "auto",  hint: "thumbnail size" },
+        { pattern: /\b(logo)\b/i,                                              width: "140px", height: "auto",  hint: "logo size" },
+        { pattern: /\b(hero|masthead|banner)\b/i,                              width: "100%",  height: "auto",  hint: "hero width" },
+        { pattern: /\b(card|tile|panel)\b/i,                                   width: "100%",  height: "auto",  hint: "card width" },
+      ];
+      let el = parent;
+      for (let i = 0; i < 5; i++) {
+        if (!el || el === document.body) break;
+        const cls = Array.from(el.classList).join(" ");
+        for (const { pattern, width, height, hint } of classHints) {
+          if (pattern.test(cls)) return { width, height, hint, confident: true };
+        }
+        el = el.parentElement;
+      }
+
+      // 3. Narrow parent container → use its pixel width
+      const parentW = Math.round(parent.getBoundingClientRect().width);
+      if (parentW > 0 && parentW <= 240) {
+        return { width: `${parentW}px`, height: "auto", hint: "from container", confident: true };
+      }
+
+      // No confident inference — ask user
+      return { width: "100%", height: "auto", hint: "", confident: false };
+    }
+
+    function openImgReplaceDialog(imgEl, isNew = false) {
+      imgReplaceTarget = imgEl;
+      imgReplaceIsNew  = isNew;
+      imgReplaceBackgroundTarget = isNew ? getPreferredBackgroundTarget(null) : getPreferredBackgroundTarget(imgEl);
+      debugBackgroundResolution("openImgReplaceDialog", imgReplaceBackgroundTarget);
+      const overlay = document.getElementById("imgReplaceOverlay");
+      const urlInput = document.getElementById("imgReplaceUrl");
+      const promptInput = document.getElementById("imgReplacePrompt");
+      setImageDialogPreviewSrc(isNew ? "" : (imgEl.src || ""));
+      urlInput.value = (imgEl.src || "").startsWith("data:") ? "" : (isNew ? "" : (imgEl.src || ""));
+      promptInput.value = "";
+      document.getElementById("imgReplaceFile").value = "";
+      // Size field — available for foreground images, including existing ones
+      const sizeField  = document.getElementById("imgSizeField");
+      const sizeInput  = document.getElementById("imgInsertWidth");
+      const sizeHint   = document.getElementById("imgSizeHint");
+      if (isNew) {
+        imgInsertInferredSize = inferInsertionSize(imgEl);
+        sizeInput.value = imgInsertInferredSize.width;
+        sizeHint.textContent = imgInsertInferredSize.hint
+          ? `(${imgInsertInferredSize.hint})`
+          : "(enter a width — nothing inferred from context)";
+        if (sizeField) sizeField.style.display = "";
+      } else {
+        imgInsertInferredSize = null;
+        const computed = getComputedStyle(imgEl);
+        const currentWidth = imgEl.style.width || imgEl.style.maxWidth || `${Math.round(imgEl.getBoundingClientRect().width)}px`;
+        sizeInput.value = currentWidth;
+        sizeHint.textContent = "(current image width)";
+        if (sizeField) sizeField.style.display = "";
+      }
+      const resolvedBg = resolveBackgroundSource(imgReplaceBackgroundTarget);
+      if (resolvedBg?.el) imgReplaceBackgroundTarget = resolvedBg.el;
+      imgReplaceBackgroundCandidates = collectBackgroundTargetCandidates(imgReplaceBackgroundTarget);
+      if (imgReplaceBackgroundCandidates.length && !imgReplaceBackgroundCandidates.includes(imgReplaceBackgroundTarget)) {
+        imgReplaceBackgroundTarget = imgReplaceBackgroundCandidates[0];
+      }
+      const existingBgSrc = resolvedBg.src;
+      document.getElementById("imgReplaceAsBackground").checked = !!(isNew && existingBgSrc);
+      imgReplacePending = null;
+      setImageDialogError("");
+      setImageDialogStatus("");
+      // Always start with no mode selected so the nudge is visible and no panel is pre-shown.
+      setImageSourceMode("");
+      syncImageDialogModePreview();
+      overlay.classList.add("open");
+      if (!isNew) document.getElementById("imgReplaceUrl")?.focus();
+    }
+
+    function closeImgReplaceDialog(cancelled = false) {
+      document.getElementById("imgReplaceOverlay").classList.remove("open");
+      if (cancelled && imgReplaceIsNew && imgReplaceTarget?.parentNode) {
+        imgReplaceTarget.parentNode.removeChild(imgReplaceTarget);
+        scheduleVisualToCodeSync();
+      }
+      imgReplaceTarget = null;
+      imgReplaceIsNew  = false;
+      imgInsertInferredSize = null;
+      imgRegenerateInProgress = false;
+      imgReplaceBackgroundTarget = null;
+      imgReplaceBackgroundCandidates = [];
+      clearBackgroundTargetHighlight();
+      stopImageDialogCountdown();
+      setImageDialogStatus("");
+    }
+
+    function applyImgReplace(newSrc) {
+      if (!newSrc) {
+        setImageDialogError("No image source was provided.");
+        return false;
+      }
+      try {
+        if (isBackgroundMode()) {
+          const bgTarget = imgReplaceBackgroundTarget || getSelectionImageContainer();
+          if (!bgTarget) throw new Error("No background target found.");
+          const previousSrc = extractCurrentBackgroundSrc(bgTarget);
+          const readabilityOverlay = selectReadableBackgroundOverlay(bgTarget);
+          const subtreeTargets = [bgTarget, ...Array.from(bgTarget.querySelectorAll("*"))]
+            .filter((node, idx, arr) => {
+              if (!(node instanceof Element)) return false;
+              if (arr.indexOf(node) !== idx) return false;
+              const src = extractCurrentBackgroundSrc(node);
+              return !!src && (!previousSrc || src === previousSrc);
+            });
+          const layerTarget = subtreeTargets[subtreeTargets.length - 1] || bgTarget;
+          const replaced = replaceBackgroundImageSource(bgTarget, newSrc);
+          if (!replaced && subtreeTargets.length <= 1) {
+            forceBackgroundImageSource(bgTarget, newSrc, readabilityOverlay);
+          }
+          subtreeTargets.forEach(node => {
+            if (node !== layerTarget) forceBackgroundImageSource(node, newSrc, readabilityOverlay);
+          });
+          ensureEditorBackgroundLayer(layerTarget, newSrc, readabilityOverlay);
+          let appliedSrc = extractCurrentBackgroundSrc(layerTarget);
+          if (appliedSrc !== newSrc) {
+            forceBackgroundImageSource(layerTarget, newSrc, readabilityOverlay);
+            ensureEditorBackgroundLayer(layerTarget, newSrc, readabilityOverlay);
+            appliedSrc = extractCurrentBackgroundSrc(layerTarget);
+          }
+          if (appliedSrc !== newSrc || appliedSrc === previousSrc) {
+            throw new Error("The new background image did not apply.");
+          }
+          // Remove braid-injected forced CSS that overrides the replaced background with !important.
+          // Retain pseudo-element suppression in a lightweight replacement so ::before/::after
+          // decorative backgrounds from the generated CSS don't bleed through.
+          {
+            const _doc = layerTarget.ownerDocument;
+            const _forceStyle = _doc?.getElementById("braid-masthead-force");
+            const _fixStyle   = _doc?.getElementById("braid-masthead-fix");
+            const _tag = bgTarget?.tagName?.toLowerCase() || "header";
+            [_forceStyle, _fixStyle].forEach(s => s?.remove());
+            if (_doc && !_doc.getElementById("iw-masthead-clear")) {
+              const _s = _doc.createElement("style");
+              _s.id = "iw-masthead-clear";
+              _s.textContent = `${_tag}::before,${_tag}::after{background:none!important;background-image:none!important;content:none!important;box-shadow:none!important;}`;
+              _doc.head?.appendChild(_s);
+            }
+          }
+          applyReadableForegroundStyles(bgTarget);
+          if (imgReplaceIsNew && imgReplaceTarget?.parentNode) {
+            imgReplaceTarget.parentNode.removeChild(imgReplaceTarget);
+          }
+        } else {
+          if (!imgReplaceTarget) throw new Error("No image element selected.");
+          imgReplaceTarget.src = newSrc;
+          const w = document.getElementById("imgInsertWidth")?.value.trim() || imgInsertInferredSize?.width || "100%";
+          const h = imgReplaceIsNew ? (imgInsertInferredSize?.height || "auto") : "auto";
+          if (w.endsWith("%")) {
+            imgReplaceTarget.style.width = "";
+            imgReplaceTarget.style.maxWidth = w;
+          } else {
+            imgReplaceTarget.style.width = w;
+            imgReplaceTarget.style.maxWidth = "";
+          }
+          imgReplaceTarget.style.height = h;
+          if (imgReplaceIsNew) imgReplaceTarget.style.objectFit = "cover";
+        }
+        scheduleVisualToCodeSync();
+      } catch (err) {
+        setImageDialogError(err?.message || "Could not apply the image.");
+        return false;
+      }
+      closeImgReplaceDialog();
+      return true;
+    }
+
+    function collectActiveImageContext(imgEl) {
+      const container = isBackgroundMode()
+        ? (imgReplaceBackgroundTarget || getSelectionImageContainer())
+        : (imgEl?.closest("figure, article, section, header, main, aside, div, li") || imgEl?.parentElement);
+      const nearbyHeading = container?.querySelector?.("h1,h2,h3,h4,h5,h6")?.textContent?.replace(/\s+/g, " ").trim() || "";
+      const contextText = (container?.textContent || "")
+        .replace(/\s+/g, " ")
+        .trim()
+        .slice(0, 280);
+      return {
+        altText: isBackgroundMode() ? "background image" : (imgEl?.getAttribute("alt") || ""),
+        nearbyHeading,
+        contextText,
+        userPrompt: isBackgroundMode() ? "Create a background image suitable for this section." : ""
+      };
+    }
+
+    async function getEditorUserId() {
+      if (!supabaseClient) return null;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      return session?.user?.id || null;
+    }
+
+    async function regenerateActiveImage(customPrompt = "") {
+      if (!imgReplaceTarget || imgRegenerateInProgress) return;
+      const imageGenerationContext = getImageGenerationContext();
+      if (!imageGenerationContext?.page1 || !imageGenerationContext?.colorSpec) {
+        showLinkedError("Open the editor from the generator after choosing colors so image regeneration has the required context.");
+        return;
+      }
+      if (!supabaseClient && getAnonCreditsUsed() >= 5) {
+        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        return;
+      }
+
+      const userId = await getEditorUserId();
+      if (!userId && getAnonCreditsUsed() >= 5) {
+        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        return;
+      }
+
+      imgRegenerateInProgress = true;
+      setImageDialogError("");
+      startImageDialogCountdown(90);
+      const applyBtn = document.getElementById("imgReplaceApply");
+      const cancelBtn = document.getElementById("imgReplaceCancel");
+      if (applyBtn) {
+        applyBtn.disabled = true;
+      }
+      if (cancelBtn) cancelBtn.disabled = true;
+
+      try {
+        const jobId = crypto.randomUUID();
+        const imageContext = collectActiveImageContext(imgReplaceTarget);
+        if (customPrompt.trim()) imageContext.userPrompt = customPrompt.trim();
+        const startRes = await fetch("/.netlify/functions/buildWebsite-background", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "generateImage",
+            imageKind: "editor",
+            jobId,
+            page1: imageGenerationContext.page1,
+            colorSpec: imageGenerationContext.colorSpec,
+            imageContext,
+            provider: "openai",
+            userId
+          })
+        });
+        if (!startRes.ok && startRes.status !== 202) {
+          const text = await startRes.text().catch(() => "");
+          let parsed = null;
+          try { parsed = text ? JSON.parse(text) : null; } catch {}
+          throw new Error(parsed?.error || text || `Server error ${startRes.status}`);
+        }
+        const deadline = Date.now() + 12 * 60 * 1000;
+        while (Date.now() < deadline) {
+          await new Promise(r => setTimeout(r, 2500));
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const pollText = await pollRes.text().catch(() => "");
+          let data = null;
+          try { data = pollText ? JSON.parse(pollText) : null; } catch {}
+          if (data?.status === "done") {
+            if (!userId && !data.skipped) incrementAnonCredits();
+            const currentVisualSrc = isBackgroundMode()
+              ? extractCurrentBackgroundSrc(imgReplaceBackgroundTarget || getSelectionImageContainer())
+              : (imgReplaceTarget?.src || "");
+            const newVisualSrc = data.image_data_uri || "";
+            const sameImage = !!currentVisualSrc && !!newVisualSrc && currentVisualSrc === newVisualSrc;
+            console.log("[editor] Image regenerate compare:", {
+              sameImage,
+              current: summarizeImageSource(currentVisualSrc),
+              next: summarizeImageSource(newVisualSrc)
+            });
+            if (sameImage) {
+              stopImageDialogCountdown();
+              setImageDialogError("The generated image matches the current one.");
+              setImageDialogStatus("Generated image matched the current image.", "error");
+              return;
+            }
+            if (applyImgReplace(data.image_data_uri)) {
+              setEditStatus("Image regenerated.", "ok");
+            }
+            return;
+          }
+          if (!pollRes.ok || data?.status === "error") {
+            if (data?.quota) {
+              showLinkedError(data.error || "Credit limit reached. Upgrade to continue.");
+              return;
+            }
+            throw new Error(
+              data?.error ||
+              (pollText ? pollText.slice(0, 240) : "") ||
+              `Image generation failed (HTTP ${pollRes.status}).`
+            );
+          }
+        }
+        throw new Error("Image generation timed out.");
+      } catch (err) {
+        stopImageDialogCountdown();
+        const isNetworkFailure = err instanceof TypeError && /failed to fetch/i.test(err.message);
+        const displayMsg = isNetworkFailure
+          ? "Could not reach the image generation service. Make sure the Netlify dev server is running (netlify dev)."
+          : (err?.message || "Image generation failed.");
+        setImageDialogError(displayMsg);
+        setImageDialogStatus("Image generation failed.", "error");
+        showLinkedError(displayMsg);
+      } finally {
+        stopImageDialogCountdown();
+        imgRegenerateInProgress = false;
+        if (applyBtn) {
+          applyBtn.disabled = false;
+        }
+        if (cancelBtn) cancelBtn.disabled = false;
+        if (!document.getElementById("imgReplaceError")?.textContent?.trim()) {
+          setImageDialogStatus("");
+        }
+      }
+    }
+
+    document.getElementById("imgReplaceCancel").onclick = () => closeImgReplaceDialog(true);
+    document.getElementById("imgReplaceAsBackground").addEventListener("change", syncImageDialogModePreview);
+
+    // "+" button toggles source dropdown
+    document.getElementById("imgSourceAddBtn").onclick = e => {
+      e.stopPropagation();
+      document.getElementById("imgSourceDropdown").classList.toggle("open");
+    };
+    // Dropdown items set source mode
+    document.querySelectorAll("#imgSourceDropdown [data-source]").forEach(btn => {
+      btn.onclick = () => {
+        setImageSourceMode(btn.dataset.source);
+        document.getElementById("imgSourceDropdown").classList.remove("open");
+        const focusMap = { url: "imgReplaceUrl", regenerate: "imgReplacePrompt" };
+        const focusId = focusMap[btn.dataset.source];
+        if (focusId) document.getElementById(focusId)?.focus();
+      };
+    });
+    // Close dropdown when clicking outside
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".img-source-add-row")) {
+        document.getElementById("imgSourceDropdown")?.classList.remove("open");
+      }
+    });
+
+    document.getElementById("imgReplaceApply").onclick = async () => {
+      const mode = getImageSourceMode();
+      if (mode === "regenerate") {
+        const prompt = document.getElementById("imgReplacePrompt").value.trim();
+        await regenerateActiveImage(prompt);
+        return;
+      }
+      const src = mode === "upload"
+        ? imgReplacePending
+        : document.getElementById("imgReplaceUrl").value.trim();
+      if (!src) {
+        setImageDialogError(!mode ? "Click + to choose a source first." : mode === "upload" ? "Choose a file first." : "Enter an image URL first.");
+        return;
+      }
+      applyImgReplace(src);
+    };
+
+    document.getElementById("imgReplaceUrl").addEventListener("keydown", e => {
+      if (e.key === "Enter") document.getElementById("imgReplaceApply").click();
+      if (e.key === "Escape") closeImgReplaceDialog(true);
+    });
+    document.getElementById("imgReplaceOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("imgReplaceOverlay")) closeImgReplaceDialog(true);
+    });
+
+    // Preview URL as user types; typing clears any pending file upload
+    document.getElementById("imgReplaceUrl").addEventListener("input", e => {
+      const url = e.target.value.trim();
+      if (url) {
+        imgReplacePending = null;
+        setImageSourceMode("url");
+        document.getElementById("imgReplacePreview").src = url;
+      }
+    });
+
+    // Upload file → convert to data URI
+    document.getElementById("imgReplaceUploadBtn").onclick = () => {
+      setImageSourceMode("upload");
+      document.getElementById("imgReplaceFile").click();
+    };
+    const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
+
+    document.getElementById("imgReplaceFile").onchange = e => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (file.size > IMG_MAX_BYTES) {
+        alert(`Image is ${(file.size / 1024 / 1024).toFixed(1)} MB. Please use an image under 2 MB.`);
+        e.target.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const dataUrl = ev.target.result;
+        imgReplacePending = dataUrl;
+        setImageSourceMode("upload");
+        document.getElementById("imgReplacePreview").src = dataUrl;
+        document.getElementById("imgReplaceUrl").value = "";
+      };
+      reader.readAsDataURL(file);
+    };
+
+    function attachIframeImageClickHandler() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        doc.addEventListener("dblclick", e => {
+          const img = e.target.closest("img");
+          if (!img) return;
+          // Prevent designMode from placing a caret inside the double-click
+          e.preventDefault();
+          e.stopPropagation();
+          openImgReplaceDialog(img);
+        }, true); // capture phase so it fires before designMode handling
+      } catch {}
+    }
+
+    function rememberIframeSelectionState() {
+      try {
+        const doc = frame.contentDocument;
+        const sel = frame.contentWindow?.getSelection?.();
+        if (!doc) return;
+        if (sel && sel.rangeCount) {
+          const range = sel.getRangeAt(0);
+          lastIframeRange = range.cloneRange();
+          let node = range.startContainer;
+          if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+          if (node?.nodeType === Node.ELEMENT_NODE) lastIframeActiveElement = node;
+          return;
+        }
+        const active = doc.activeElement;
+        if (active && active !== doc.body) lastIframeActiveElement = active;
+      } catch {}
+    }
+
+    function rememberIframePointerTarget(event) {
+      try {
+        let node = event?.target || null;
+        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        if (node?.nodeType === Node.ELEMENT_NODE) lastIframePointerTarget = node;
+      } catch {}
+    }
+
+    function attachIframeSelectionTracker() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        ["mouseup", "keyup", "focusin"].forEach(evt => {
+          doc.addEventListener(evt, rememberIframeSelectionState, true);
+        });
+        ["mousedown", "click"].forEach(evt => {
+          doc.addEventListener(evt, rememberIframePointerTarget, true);
+        });
+        doc.addEventListener("selectionchange", rememberIframeSelectionState);
+      } catch {}
+    }
+
+    frame.addEventListener("load", attachIframeInputListener);
+    frame.addEventListener("load", attachIframeImageClickHandler);
+    frame.addEventListener("load", attachIframeSelectionTracker);
+
+    function loadIframe(html) {
+      frame.srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
+    }
+
+    frame.addEventListener("load", () => {
+      try {
+        if (frame.contentDocument) frame.contentDocument.designMode = "on";
+        applyColorOverrides();
+      } catch {}
+    });
+
+    function applyColorOverrides() {
+      try {
+        const root = frame.contentDocument?.documentElement;
+        if (!root) return;
+        for (const [k, v] of Object.entries(currentColors)) {
+          const vars = new Set(getOverrideVarNames(k));
+          vars.forEach(varName => {
+            if (varName) root.style.setProperty(varName, v);
+          });
+        }
+        currentHtml = getVisualContent();
+        setCodeContent(currentHtml);
+      } catch {}
+    }
+
+    loadIframe(fullHtml);
+
+    // ── Color panel ────────────────────────────────────────────────────────────
+    const byRole = extractCssVarsByRoleComment(cssText);
+    const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
+    for (const name of CSS_VAR_NAMES) {
+      const preferred = page4Colors?.[name] || page4Colors?.[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors?.[SLOT_ALIAS_MAP[name]];
+      const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
+      currentColors[name] = hex;
+      const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
+      if (row) {
+        const input = row.querySelector("input[type=color]");
+        if (input) {
+          input.value = hex;
+          input.addEventListener("input", () => { currentColors[name] = input.value; applyColorOverrides(); });
+        }
+      }
+    }
+    applyColorOverrides();
+    document.getElementById("colorPanel").classList.remove("hidden");
+
+    // ── Reset colors ───────────────────────────────────────────────────────────
+    // Reset should prefer the exact page-4 palette the user submitted.
+    const initialColors = page4Colors
+      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || page4Colors[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors[SLOT_ALIAS_MAP[name]] || currentColors[name] || "#000000")]))
+      : { ...currentColors };
+    document.getElementById("btnResetColors").onclick = () => {
+      for (const name of CSS_VAR_NAMES) {
+        const hex = initialColors[name];
+        if (!hex) continue;
+        currentColors[name] = hex;
+        const input = document.getElementById(`cp-${name}`);
+        if (input) input.value = hex;
+      }
+      applyColorOverrides();
+    };
+
+    // ── Color row swap interaction ─────────────────────────────────────────────
+    // The semantic role rows stay fixed in place. Dragging from a handle swaps only
+    // the swatch values between two roles, which avoids brittle native HTML
+    // drag-and-drop behavior in the editor.
+    (function () {
+      const panel = document.getElementById("colorPanel");
+      let dragSrc = null;
+      let activePointerId = null;
+
+      function clearSwapUi() {
+        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over", "cp-dragging", "cp-source"));
+      }
+
+      function swapRowColors(rowA, rowB) {
+        const slotA = rowA?.dataset.slot;
+        const slotB = rowB?.dataset.slot;
+        if (!slotA || !slotB || slotA === slotB) return;
+        const hexA = currentColors[slotA];
+        const hexB = currentColors[slotB];
+        currentColors[slotA] = hexB;
+        currentColors[slotB] = hexA;
+        const inputA = rowA.querySelector("input[type=color]");
+        const inputB = rowB.querySelector("input[type=color]");
+        if (inputA) inputA.value = hexB;
+        if (inputB) inputB.value = hexA;
+        applyColorOverrides();
+      }
+
+      panel.addEventListener("pointerdown", e => {
+        const handle = e.target.closest(".drag-handle");
+        if (!handle) return;
+        const row = handle.closest(".color-row");
+        if (!row) return;
+        e.preventDefault();
+        dragSrc = row;
+        activePointerId = e.pointerId;
+        clearSwapUi();
+        row.classList.add("cp-source", "cp-dragging");
+        try { handle.setPointerCapture(e.pointerId); } catch {}
+      });
+
+      panel.addEventListener("pointermove", e => {
+        if (!dragSrc || activePointerId !== e.pointerId) return;
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const row = hit?.closest?.(".color-row");
+        clearSwapUi();
+        dragSrc.classList.add("cp-source", "cp-dragging");
+        if (row && row !== dragSrc) row.classList.add("drag-over");
+      });
+
+      function finishPointerSwap(e) {
+        if (!dragSrc || activePointerId !== e.pointerId) return;
+        const hit = document.elementFromPoint(e.clientX, e.clientY);
+        const target = hit?.closest?.(".color-row");
+        if (target && target !== dragSrc) {
+          swapRowColors(dragSrc, target);
+        }
+        clearSwapUi();
+        dragSrc = null;
+        activePointerId = null;
+      }
+
+      panel.addEventListener("pointerup", finishPointerSwap);
+      panel.addEventListener("pointercancel", finishPointerSwap);
+    })();
+
+    // ── Resizable divider ──────────────────────────────────────────────────────
+    const dividerEl = document.getElementById("divider");
+    dividerEl.addEventListener("mousedown", e => {
+      e.preventDefault(); dividerEl.classList.add("dragging");
+      const startX = e.clientX, startW = document.getElementById("visualPane").offsetWidth;
+      const totalW = document.getElementById("editorLayout").offsetWidth;
+      const onMove = e => {
+        const w = Math.max(150, Math.min(totalW - 200, startW + e.clientX - startX));
+        document.getElementById("visualPane").style.cssText += ";flex:none;width:" + w + "px";
+      };
+      const onUp = () => { dividerEl.classList.remove("dragging"); document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+      document.addEventListener("mousemove", onMove);
+      document.addEventListener("mouseup", onUp);
+    });
+
+    // ── Sync helpers ───────────────────────────────────────────────────────────
+    function getVisualContent() {
+      try {
+        return stripEditorBaseTag(frame.contentDocument?.documentElement?.outerHTML || currentHtml);
+      } catch {
+        return currentHtml;
+      }
+    }
+
+    function getCodeContent() {
+      if (cmView) return cmView.state.doc.toString();
+      return document.getElementById("codeTextarea")?.value || currentHtml;
+    }
+
+    function setCodeContent(html) {
+      if (cmView) {
+        suppressCodeSync = true;
+        cmView.dispatch({ changes: { from: 0, to: cmView.state.doc.length, insert: html } });
+        suppressCodeSync = false;
+      } else {
+        const ta = document.getElementById("codeTextarea");
+        if (ta) ta.value = html;
+      }
+    }
+
+    // Returns the value of the nearest ancestor id= in the iframe at the current caret,
+    // or null if none found. Used to scroll CodeMirror to the right place after sync.
+    function getCaretAnchorId() {
+      try {
+        const sel = frame.contentWindow?.getSelection();
+        if (!sel || sel.rangeCount === 0) return null;
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        while (node && node !== frame.contentDocument.body) {
+          if (node.id) return node.id;
+          node = node.parentElement;
+        }
+      } catch {}
+      return null;
+    }
+
+    function syncVisualToCode() {
+      const anchorId = getCaretAnchorId();
+      currentHtml = getVisualContent();
+      setCodeContent(currentHtml);
+      if (anchorId) scrollCodeToId(anchorId);
+    }
+
+    function scrollCodeToId(id) {
+      if (!cmView) return;
+      const needle = `id="${id}"`;
+      const content = cmView.state.doc.toString();
+      const pos = content.indexOf(needle);
+      if (pos === -1) return;
+      const { EditorView } = cmModules || {};
+      if (!EditorView) return;
+      cmView.dispatch({
+        selection: { anchor: pos },
+        effects: EditorView.scrollIntoView(pos, { y: "center" })
+      });
+    }
+
+    function syncCodeToVisual() {
+      const html = getCodeContent();
+      currentHtml = html;
+      loadIframe(html);
+    }
+
+    function importHtmlIntoEditor(html, sourceLabel = "Imported HTML") {
+      const nextHtml = String(html || "").trim();
+      if (!nextHtml) throw new Error("The selected file was empty.");
+      currentDocumentBaseHref = "";
+      currentHtml = nextHtml;
+      setCodeContent(nextHtml);
+      loadIframe(nextHtml);
+      try {
+        cachePreviewHtml(nextHtml);
+        localStorage.setItem("portfolio_preview_html", nextHtml);
+      } catch {}
+      setEditStatus(`${sourceLabel} loaded.`, "ok");
+    }
+
+    function scheduleSplitPreviewSync() {
+      if (splitSyncTimer) clearTimeout(splitSyncTimer);
+      splitSyncTimer = setTimeout(() => {
+        splitSyncTimer = null;
+        if (viewMode === "split") syncCodeToVisual();
+      }, 180);
+    }
+
+    function handleCodeInput() {
+      if (suppressCodeSync) return;
+      currentHtml = getCodeContent();
+      if (viewMode === "split") scheduleSplitPreviewSync();
+    }
+
+    // ── View mode ──────────────────────────────────────────────────────────────
+    function setViewMode(mode) {
+      if (mode !== "code"   && viewMode === "code")   syncCodeToVisual();
+      if (mode !== "visual" && viewMode === "visual") syncVisualToCode();
+      if (mode === "split") syncCodeToVisual();
+      viewMode = mode;
+      document.body.className = mode + "-mode";
+      document.getElementById("btnVisual").className = "tbtn" + (mode === "visual" ? " tbtn-active" : "");
+      document.getElementById("btnSplit").className  = "tbtn" + (mode === "split"  ? " tbtn-active" : "");
+      document.getElementById("btnCode").className   = "tbtn" + (mode === "code"   ? " tbtn-active" : "");
+      document.getElementById("colorPanel").classList.toggle("hidden", mode !== "visual");
+      // Create CodeMirror only now that the pane is visible (lazy init avoids zero-height measurement)
+      if (mode !== "visual") ensureCmView();
+    }
+
+    document.getElementById("btnVisual").onclick = () => setViewMode("visual");
+    document.getElementById("btnSplit").onclick  = () => setViewMode("split");
+    document.getElementById("btnCode").onclick   = () => setViewMode("code");
+
+    // ── execCommand toolbar ────────────────────────────────────────────────────
+    function unwrapFontWrapper(el) {
+      if (!el) return el;
+      let current = el;
+      while (current.parentElement && current.parentElement.tagName === "FONT") {
+        const font = current.parentElement;
+        const parent = font.parentNode;
+        if (!parent) break;
+        parent.insertBefore(current, font);
+        if (!font.textContent.trim() || !font.children.length) font.remove();
+      }
+      return current;
+    }
+
+    function getSelectionElement() {
+      try {
+        const sel = frame.contentWindow?.getSelection?.();
+        if (!sel || !sel.rangeCount) return null;
+        let node = sel.getRangeAt(0).startContainer;
+        if (node?.nodeType === Node.TEXT_NODE) node = node.parentElement;
+        return node?.nodeType === Node.ELEMENT_NODE ? node : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function getDirectColorTarget() {
+      const node = getSelectionElement();
+      if (!node) return null;
+      const target = node.closest?.(
+        ".hero-badge, .badge, .chip, .pill, [class*='badge'], [class*='chip'], [class*='pill']"
+      );
+      return target ? unwrapFontWrapper(target) : null;
+    }
+
+    function exec(cmd, val = null) {
+      try { frame.contentDocument.execCommand(cmd, false, val); frame.contentWindow.focus(); } catch {}
+      scheduleVisualToCodeSync();
+    }
+
+    // Basic formatting
+    document.getElementById("etBold").onclick          = () => exec("bold");
+    document.getElementById("etItalic").onclick        = () => exec("italic");
+    document.getElementById("etUnderline").onclick     = () => exec("underline");
+    document.getElementById("etStrike").onclick        = () => exec("strikeThrough");
+    document.getElementById("etClearFormat").onclick   = () => exec("removeFormat");
+
+    // Block style
+    document.getElementById("etBlock").onchange = function() {
+      exec("formatBlock", this.value);
+      this.value = "p"; // reset dropdown so it can be re-triggered
+    };
+
+    // Color
+    document.getElementById("etForeColor").oninput = function() {
+      const target = getDirectColorTarget();
+      if (target) {
+        target.style.color = this.value;
+        scheduleVisualToCodeSync();
+        return;
+      }
+      exec("foreColor", this.value);
+    };
+    document.getElementById("etBackColor").oninput = function() {
+      const target = getDirectColorTarget();
+      if (target) {
+        target.style.backgroundColor = this.value;
+        scheduleVisualToCodeSync();
+        return;
+      }
+      exec("backColor", this.value);
+    };
+
+    // Alignment
+    document.getElementById("etAlignL").onclick = () => exec("justifyLeft");
+    document.getElementById("etAlignC").onclick = () => exec("justifyCenter");
+    document.getElementById("etAlignR").onclick = () => exec("justifyRight");
+
+    // Lists & indent
+    document.getElementById("etUl").onclick      = () => exec("insertUnorderedList");
+    document.getElementById("etOl").onclick      = () => exec("insertOrderedList");
+    document.getElementById("etIndent").onclick  = () => exec("indent");
+    document.getElementById("etOutdent").onclick = () => exec("outdent");
+
+    // Link / image
+    document.getElementById("etLink").onclick   = () => { const url = prompt("URL:", "https://"); if (url) exec("createLink", url); };
+    document.getElementById("etUnlink").onclick = () => exec("unlink");
+    document.getElementById("etImage").onclick  = () => {
+      // Insert a placeholder, then immediately open the replace dialog on it
+      // so the user can set URL/file and max-width in one step.
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return;
+        frame.contentWindow?.focus?.();
+        const sel = doc.getSelection?.();
+        if ((!sel || !sel.rangeCount) && lastIframeRange) {
+          sel?.removeAllRanges?.();
+          sel?.addRange?.(lastIframeRange.cloneRange());
+        }
+        const placeholder = doc.createElement("img");
+        placeholder.src = "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="; // 1×1 transparent
+        placeholder.alt = "";
+        placeholder.style.maxWidth = "100%";
+        placeholder.style.height = "auto";
+        const liveSel = doc.getSelection();
+        if (liveSel && liveSel.rangeCount) {
+          const range = liveSel.getRangeAt(0);
+          range.collapse(false);
+          range.insertNode(placeholder);
+          range.setStartAfter(placeholder);
+          range.setEndAfter(placeholder);
+          liveSel.removeAllRanges();
+          liveSel.addRange(range);
+          rememberIframeSelectionState();
+        } else if (lastIframePointerTarget?.nodeType === Node.ELEMENT_NODE) {
+          lastIframePointerTarget.appendChild(placeholder);
+          lastIframeActiveElement = lastIframePointerTarget;
+        } else {
+          (doc.body || doc.documentElement).appendChild(placeholder);
+        }
+        openImgReplaceDialog(placeholder, true);
+      } catch {}
+    };
+
+    // ── Add / Delete repeating element ────────────────────────────────────────
+
+    // Returns a human-readable label for a DOM element, e.g. "div .card"
+    function elementLabel(el) {
+      const tag = el.tagName.toLowerCase();
+      const cls = Array.from(el.classList).slice(0, 3).join(" ");
+      return cls ? `${tag} .${cls.replace(/ /g, " .")}` : tag;
+    }
+
+    // Walk up from the cursor node collecting every ancestor whose parent has
+    // at least 2 children sharing the same tag (or same first class). These are
+    // the "repeating unit" candidates. Stop at body.
+    function findRepeatCandidates() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return [];
+        const sel = doc.getSelection();
+        if (!sel || sel.rangeCount === 0) return [];
+        let node = sel.getRangeAt(0).startContainer;
+        if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+        const body = doc.body;
+        const candidates = [];
+        const seen = new Set();
+
+        while (node && node !== body && node !== doc.documentElement) {
+          const parent = node.parentElement;
+          if (parent && parent !== body) {
+            const siblings = Array.from(parent.children);
+            if (siblings.length >= 2) {
+              // Match by same tag
+              const sameTag = siblings.filter(s => s.tagName === node.tagName);
+              // Match by same first class
+              const firstCls = node.classList[0];
+              const sameCls  = firstCls
+                ? siblings.filter(s => s.classList.contains(firstCls))
+                : [];
+              if (sameTag.length >= 2 || sameCls.length >= 2) {
+                if (!seen.has(node)) {
+                  seen.add(node);
+                  candidates.push(node);
+                }
+              }
+            }
+          }
+          node = node.parentElement;
+        }
+        return candidates;
+      } catch { return []; }
+    }
+
+    // Close the picker if open
+    let cardPickerAction = null;
+    function closeCardPicker() {
+      document.getElementById("cardPicker").classList.remove("open");
+      cardPickerAction = null;
+    }
+
+    // Show picker anchored to a toolbar button, call action(element) on selection
+    function showCardPicker(anchorEl, candidates, action) {
+      const picker = document.getElementById("cardPicker");
+      const title  = document.getElementById("cardPickerTitle");
+      title.textContent = action === "add" ? "Duplicate which element?" : "Delete which element?";
+
+      // Clear old items
+      Array.from(picker.querySelectorAll(".cp-item")).forEach(i => i.remove());
+
+      candidates.forEach((el, i) => {
+        const item = document.createElement("div");
+        item.className = "cp-item";
+        const tag = document.createElement("span");
+        tag.className = "cp-tag";
+        tag.textContent = el.tagName.toLowerCase();
+        const cls = document.createElement("span");
+        cls.className = "cp-cls";
+        cls.textContent = Array.from(el.classList).slice(0,3).join(" ");
+        // Preview text snippet
+        const snippet = (el.textContent || "").trim().slice(0, 40);
+        const text = document.createTextNode((snippet ? " — " + snippet : ""));
+        item.appendChild(tag);
+        item.appendChild(cls);
+        item.appendChild(text);
+        item.title = elementLabel(el);
+        item.onclick = () => { closeCardPicker(); action === "add" ? doAddElement(el) : doDeleteElement(el); };
+        picker.appendChild(item);
+      });
+
+      // Position below the anchor button
+      const rect = anchorEl.getBoundingClientRect();
+      picker.style.top  = (rect.bottom + 4) + "px";
+      picker.style.left = Math.min(rect.left, window.innerWidth - 330) + "px";
+      picker.classList.add("open");
+      cardPickerAction = action;
+    }
+
+    function doAddElement(el) {
+      try {
+        const clone = el.cloneNode(true);
+        // Clear text inputs / textareas in clone so user can fill fresh content
+        el.parentNode.insertBefore(clone, el.nextSibling);
+        // Scroll clone into view inside the iframe
+        clone.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        scheduleVisualToCodeSync();
+      } catch {}
+    }
+
+    function doDeleteElement(el) {
+      try {
+        const siblings = Array.from(el.parentNode.children).filter(s => s.tagName === el.tagName);
+        if (siblings.length <= 1) {
+          alert("Can't delete the only remaining element of this type.");
+          return;
+        }
+        el.remove();
+        scheduleVisualToCodeSync();
+      } catch {}
+    }
+
+    function handleCardAction(action) {
+      const candidates = findRepeatCandidates();
+      if (candidates.length === 0) {
+        alert("No repeating card or list item found at the cursor position.\n\nClick inside a card, list item, or grid cell first.");
+        return;
+      }
+      const anchorId = action === "add" ? "etAddElement" : "etDeleteElement";
+      const anchor   = document.getElementById(anchorId);
+      if (candidates.length === 1) {
+        // No ambiguity — act immediately
+        action === "add" ? doAddElement(candidates[0]) : doDeleteElement(candidates[0]);
+      } else {
+        showCardPicker(anchor, candidates, action);
+      }
+    }
+
+    document.getElementById("etAddElement").onclick    = () => handleCardAction("add");
+    document.getElementById("etDeleteElement").onclick = () => handleCardAction("delete");
+
+    // Close picker on outside click
+    document.addEventListener("click", e => {
+      const picker = document.getElementById("cardPicker");
+      if (!picker.classList.contains("open")) return;
+      if (!picker.contains(e.target) &&
+          e.target.id !== "etAddElement" &&
+          e.target.id !== "etDeleteElement") closeCardPicker();
+    });
+
+    // Undo / redo
+    document.getElementById("etUndo").onclick = () => exec("undo");
+    document.getElementById("etRedo").onclick = () => exec("redo");
+
+    // ── Find & replace ──────────────────────────────────────────────────────────
+    (function() {
+      const bar          = document.getElementById("findBar");
+      const findInput    = document.getElementById("findInput");
+      const replaceInput = document.getElementById("replaceInput");
+      const findCount    = document.getElementById("findCount");
+      let matches = [], matchIdx = 0;
+
+      function closeFindBar() { bar.classList.remove("open"); clearHighlights(); }
+      document.getElementById("findClose").onclick = closeFindBar;
+
+      document.getElementById("etFind").onclick = e => {
+        e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        bar.style.top = (rect.bottom + 4) + "px";
+        bar.classList.toggle("open");
+        if (bar.classList.contains("open")) { findInput.focus(); findInput.select(); }
+      };
+
+      // Keyboard shortcut Ctrl+H in visual frame
+      frame.addEventListener("load", () => {
+        try {
+          frame.contentDocument.addEventListener("keydown", e => {
+            if ((e.ctrlKey || e.metaKey) && e.key === "h") { e.preventDefault(); bar.classList.add("open"); findInput.focus(); }
+          });
+        } catch {}
+      });
+
+      function clearHighlights() {
+        try {
+          const doc = frame.contentDocument;
+          doc.querySelectorAll("mark[data-find]").forEach(m => {
+            m.replaceWith(document.createTextNode(m.textContent));
+          });
+          doc.normalize();
+        } catch {}
+        matches = []; matchIdx = 0; findCount.textContent = "";
+      }
+
+      function doFind() {
+        clearHighlights();
+        const term = findInput.value;
+        if (!term) return;
+        try {
+          const doc  = frame.contentDocument;
+          const body = doc.body;
+          const walker = doc.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+          const lc = term.toLowerCase();
+          const nodes = [];
+          let node;
+          while ((node = walker.nextNode())) nodes.push(node);
+          nodes.forEach(n => {
+            const idx = n.textContent.toLowerCase().indexOf(lc);
+            if (idx === -1) return;
+            const before = doc.createTextNode(n.textContent.slice(0, idx));
+            const mark   = doc.createElement("mark");
+            mark.dataset.find = "1";
+            mark.style.cssText = "background:#ffeb3b;color:#000;border-radius:2px;";
+            mark.textContent   = n.textContent.slice(idx, idx + term.length);
+            const after  = doc.createTextNode(n.textContent.slice(idx + term.length));
+            n.replaceWith(before, mark, after);
+            matches.push(mark);
+          });
+          findCount.textContent = matches.length ? `${matchIdx+1}/${matches.length}` : "0";
+          if (matches.length) scrollToMatch(0);
+        } catch {}
+      }
+
+      function scrollToMatch(i) {
+        if (!matches.length) return;
+        matchIdx = (i + matches.length) % matches.length;
+        matches.forEach((m, j) => m.style.background = j === matchIdx ? "#ff9800" : "#ffeb3b");
+        matches[matchIdx].scrollIntoView({ block: "center" });
+        findCount.textContent = `${matchIdx+1}/${matches.length}`;
+      }
+
+      findInput.addEventListener("input", doFind);
+      findInput.addEventListener("keydown", e => { if (e.key === "Enter") scrollToMatch(matchIdx + 1); });
+      document.getElementById("findNext").onclick = () => scrollToMatch(matchIdx + 1);
+      document.getElementById("findPrev").onclick = () => scrollToMatch(matchIdx - 1);
+
+      document.getElementById("replaceOne").onclick = () => {
+        if (!matches[matchIdx]) return;
+        matches[matchIdx].replaceWith(document.createTextNode(replaceInput.value));
+        matches.splice(matchIdx, 1);
+        findCount.textContent = matches.length ? `${Math.min(matchIdx, matches.length-1)+1}/${matches.length}` : "0";
+        scheduleVisualToCodeSync();
+      };
+
+      document.getElementById("replaceAll").onclick = () => {
+        matches.forEach(m => m.replaceWith(document.createTextNode(replaceInput.value)));
+        matches = []; findCount.textContent = "0";
+        scheduleVisualToCodeSync();
+      };
+    })();
+
+    // ── Build final HTML ───────────────────────────────────────────────────────
+    function buildHtmlString() {
+      let html;
+      if (viewMode === "code" || viewMode === "split") {
+        html = getCodeContent();
+      } else {
+        html = getVisualContent();
+      }
+      html = stripEditorBaseTag(html);
+      const overrides = Object.entries(currentColors)
+        .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
+        .join(" ");
+      if (overrides) html = html.replace("</head>", `<style>:root{${overrides}}</style>\n</head>`);
+      return html;
+    }
+
+    function setEditStatus(message, kind = "") {
+      const el = document.getElementById("editStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.style.color =
+        kind === "error" ? "rgba(255,166,166,.88)" :
+        kind === "ok" ? "rgba(170,240,190,.88)" :
+        "rgba(234,240,255,.55)";
+    }
+
+    if (loadedFileLabel) {
+      const heading = document.querySelector("#toolbar h1");
+      if (heading) heading.textContent = `Irene's Webworks — Visual Editor v2.0 — ${loadedFileLabel}`;
+      setEditStatus(`${loadedFileLabel} loaded from URL.`, "ok");
+    }
+
+    function formatQuotaValue(used, limit) {
+      if (limit === -1) return "∞";
+      const safeUsed = Number.isFinite(used) ? used : 0;
+      const safeLimit = Number.isFinite(limit) ? limit : 0;
+      return `${safeUsed}/${safeLimit}`;
+    }
+
+    async function refreshEditorAccountStatus() {
+      const userEl = document.getElementById("editorAccountUser");
+      const quotaEl = document.getElementById("editorAccountQuota");
+      if (!userEl || !quotaEl) return;
+      if (!supabaseClient) {
+        userEl.textContent = "Account unavailable";
+        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+        return;
+      }
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const user = session?.user || null;
+        if (!user) {
+          userEl.textContent = "Signed out";
+          quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+          return;
+        }
+
+        const { data: membership } = await supabaseClient
+          .from("memberships")
+          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit, deploys_used, deploys_limit")
+          .eq("user_id", user.id)
+          .single();
+
+        const name = user.email || user.id || "Signed in";
+        if (!membership) {
+          userEl.textContent = name;
+          quotaEl.textContent = "Membership unavailable";
+          return;
+        }
+
+        const tier = membership.tier || "free";
+        const status = membership.status || "unknown";
+        const credits   = formatQuotaValue(membership.credits_used,  membership.credits_limit);
+        const downloads = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
+        const deploys   = formatQuotaValue(membership.deploys_used,   membership.deploys_limit);
+        userEl.textContent = `${name} · ${tier} · ${status}`;
+        quotaEl.textContent = `Credits: ${credits} · Downloads: ${downloads} · Deploys: ${deploys}`;
+      } catch {
+        userEl.textContent = "Account unavailable";
+        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+      }
+    }
+
+    function setEditStatusHtml(message, kind = "") {
+      const el = document.getElementById("editStatus");
+      if (!el) return;
+      el.innerHTML = message || "";
+      el.style.color =
+        kind === "error" ? "rgba(255,166,166,.88)" :
+        kind === "ok" ? "rgba(170,240,190,.88)" :
+        "rgba(234,240,255,.55)";
+    }
+
+    function upgradeLinkedMessage(message) {
+      const text = String(message || "");
+      if (!/\bupgrade\b/i.test(text)) return text;
+      return text.replace(/\bupgrade\b/i, '<a href="subscriptions.html" target="_blank" rel="noopener">UPGRADE</a>');
+    }
+
+    function showLinkedError(message) {
+      const linked = upgradeLinkedMessage(message);
+      if (linked !== String(message || "")) {
+        setEditStatusHtml(linked, "error");
+      } else {
+        setEditStatus(message || "Action failed.", "error");
+      }
+    }
+
+    async function getMembership() {
+      if (!supabaseClient) return null;
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      const userId = session?.user?.id || null;
+      if (!userId) return null;
+      const { data } = await supabaseClient
+        .from("memberships")
+        .select("downloads_used, downloads_limit, deploys_used, deploys_limit, status")
+        .eq("user_id", userId)
+        .single();
+      return data || null;
+    }
+
+    async function ensureDownloadAllowed(actionLabel) {
+      if (!supabaseClient) {
+        throw new Error(`${actionLabel} is unavailable because the Supabase client failed to load.`);
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error(`Sign in first. ${actionLabel} requires an authenticated account.`);
+      }
+      const membership = await getMembership();
+      if (!membership) {
+        throw new Error("No active membership record found for this account.");
+      }
+      if (membership.status !== "active") {
+        throw new Error(`Membership is ${membership.status}. ${actionLabel} is disabled.`);
+      }
+      if (membership.downloads_limit !== -1 && membership.downloads_used >= membership.downloads_limit) {
+        throw new Error("Please UPGRADE to publish or download with this account.");
+      }
+      return membership;
+    }
+
+    async function ensureDeployAllowed() {
+      if (!supabaseClient) {
+        throw new Error("Supabase client failed to load. Publish is unavailable.");
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) {
+        throw new Error("Sign in first. Publish requires an authenticated account.");
+      }
+      const membership = await getMembership();
+      if (!membership) {
+        throw new Error("No active membership record found for this account.");
+      }
+      if (membership.status !== "active") {
+        throw new Error(`Membership is ${membership.status}. Publishing is disabled.`);
+      }
+      const deploysUsed  = membership.deploys_used  ?? 0;
+      const deploysLimit = membership.deploys_limit ?? 0;
+      if (deploysLimit !== -1 && deploysUsed >= deploysLimit) {
+        throw new Error("Please UPGRADE to publish or download with this account.");
+      }
+      return membership;
+    }
+
+    refreshEditorAccountStatus();
+    supabaseClient?.auth?.onAuthStateChange?.(() => {
+      refreshEditorAccountStatus();
+    });
+
+    // ── Unified portfolio panel ────────────────────────────────────────────────
+    function openPortfolioPanel() {
+      document.getElementById("portfolioPanelOverlay").classList.add("open");
+    }
+    function closePortfolioPanel() {
+      document.getElementById("portfolioPanelOverlay").classList.remove("open");
+    }
+    function ppSetPublishing() {
+      document.getElementById("ppPublishStrip").classList.remove("pp-hidden");
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = "pp-spin"; icon.textContent = "⟳";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = "Publishing…"; msg.className = "";
+      document.getElementById("ppUrlSection").classList.add("pp-hidden");
+    }
+    function ppSetSuccess(verb, deployNumber, url, versionedUrl) {
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = ""; icon.textContent = "✓";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = `${verb} successfully — deploy #${deployNumber}`;
+      msg.className = "pp-status-ok";
+      const latestEl = document.getElementById("ppUrlLatest");
+      latestEl.textContent = url; latestEl.href = url;
+      const verEl = document.getElementById("ppUrlVersioned");
+      verEl.textContent = versionedUrl; verEl.href = versionedUrl;
+      document.getElementById("ppBtnOpen").onclick = () => window.open(url, "_blank", "noopener");
+      document.getElementById("ppUrlSection").classList.remove("pp-hidden");
+    }
+    function ppSetError(message) {
+      const icon = document.getElementById("ppPublishIcon");
+      icon.className = ""; icon.textContent = "✕";
+      const msg = document.getElementById("ppPublishMsg");
+      msg.textContent = message; msg.className = "pp-status-error";
+    }
+    document.getElementById("ppClose").onclick = closePortfolioPanel;
+    document.getElementById("portfolioPanelOverlay").addEventListener("click", e => {
+      if (e.target === document.getElementById("portfolioPanelOverlay")) closePortfolioPanel();
+    });
+
+    // ── Manage deploys & domain modal ──────────────────────────────────────────
+    async function manageRequest(body) {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) throw new Error("Sign in first.");
+      const res = await fetch("/.netlify/functions/managePortfolio", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify(body)
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload?.error || `Request failed (${res.status})`);
+      return payload;
+    }
+
+    function populateVersionPicker(slug, deploys) {
+      const sel = document.getElementById("manageDomainVersion");
+      sel.innerHTML = "";
+      // "Latest (always current)" option maps to the bare slug
+      const latestOpt = document.createElement("option");
+      latestOpt.value = slug;
+      latestOpt.textContent = "Latest (always current)";
+      sel.appendChild(latestOpt);
+      // One option per versioned deploy, newest first
+      deploys.slice().reverse().forEach(d => {
+        const opt = document.createElement("option");
+        opt.value = d.versionedSlug;
+        const dateStr = d.updated_at ? ` · ${new Date(d.updated_at).toLocaleDateString()}` : "";
+        opt.textContent = `Deploy #${d.deployNumber}${d.isLatest ? " (latest)" : ""}${dateStr}`;
+        sel.appendChild(opt);
+      });
+    }
+
+    async function loadDomainList(slug) {
+      const listEl = document.getElementById("manageDomainList");
+      listEl.innerHTML = "";
+      try {
+        const data = await manageRequest({ action: "listDomains", slug });
+        if (!data.domains?.length) return;
+        data.domains.forEach(d => {
+          const row = document.createElement("div");
+          row.className = "domain-row";
+
+          const name = document.createElement("span");
+          name.className = "domain-row-name";
+          name.textContent = d.domain;
+
+          const slugBadge = document.createElement("span");
+          slugBadge.className = "domain-row-slug";
+          slugBadge.textContent = d.slug === slug ? "latest" : `v${d.slug.split("-").pop()}`;
+
+          const del = document.createElement("button");
+          del.className = "domain-row-delete";
+          del.textContent = "Remove";
+          del.onclick = async () => {
+            if (!confirm(`Remove domain ${d.domain}?\n\nYour DNS records will still point here until you update them.`)) return;
+            del.disabled = true; del.textContent = "Removing…";
+            try {
+              await manageRequest({ action: "deleteDomain", slug, domain: d.domain });
+              row.remove();
+            } catch (err) {
+              del.disabled = false; del.textContent = "Remove";
+              alert(`Error: ${err.message}`);
+            }
+          };
+
+          row.appendChild(name);
+          row.appendChild(slugBadge);
+          row.appendChild(del);
+          listEl.appendChild(row);
+        });
+      } catch { /* non-fatal — list stays empty */ }
+    }
+
+    async function loadDeployList(slug) {
+      const statusEl = document.getElementById("manageDeployStatus");
+      const listEl   = document.getElementById("manageDeployList");
+      statusEl.textContent = "Loading deploys…";
+      listEl.innerHTML = "";
+      try {
+        const data = await manageRequest({ action: "list", slug });
+        if (!data.deploys?.length) {
+          statusEl.textContent = "No versioned deploys found.";
+          populateVersionPicker(slug, []);
+          return;
+        }
+        statusEl.textContent = "";
+        populateVersionPicker(slug, data.deploys);
+        data.deploys.slice().reverse().forEach(d => {
+          const row = document.createElement("div");
+          row.className = "manage-deploy-row" + (d.isLatest ? " is-latest" : "");
+          row.dataset.vslug = d.versionedSlug;
+
+          const num = document.createElement("span");
+          num.className = "manage-deploy-num";
+          num.textContent = `#${d.deployNumber}`;
+
+          const link = document.createElement("a");
+          link.className = "manage-deploy-link";
+          link.href = d.url; link.target = "_blank"; link.rel = "noopener";
+          link.textContent = d.url;
+
+          const date = document.createElement("span");
+          date.className = "manage-deploy-date";
+          date.textContent = d.updated_at ? new Date(d.updated_at).toLocaleDateString() : "";
+
+          const badge = document.createElement("span");
+          badge.className = "manage-deploy-latest";
+          badge.textContent = d.isLatest ? "latest" : "";
+
+          const del = document.createElement("button");
+          del.className = "manage-deploy-delete";
+          del.textContent = "Delete";
+          if (d.isLatest) {
+            del.disabled = true;
+            del.title = "Cannot delete the latest deploy";
+          } else {
+            del.onclick = async () => {
+              if (!confirm(`Delete deploy #${d.deployNumber}?\n${d.url}\n\nThis cannot be undone.`)) return;
+              del.disabled = true;
+              del.textContent = "Deleting…";
+              try {
+                await manageRequest({ action: "delete", slug, versionedSlug: d.versionedSlug });
+                row.remove();
+                statusEl.textContent = `Deploy #${d.deployNumber} deleted.`;
+              } catch (err) {
+                del.disabled = false;
+                del.textContent = "Delete";
+                statusEl.textContent = `Error: ${err.message}`;
+              }
+            };
+          }
+
+          row.appendChild(num);
+          row.appendChild(link);
+          row.appendChild(date);
+          row.appendChild(badge);
+          row.appendChild(del);
+          listEl.appendChild(row);
+        });
+      } catch (err) {
+        statusEl.textContent = `Error loading deploys: ${err.message}`;
+      }
+    }
+
+    async function openManageModal() {
+      const slug = localStorage.getItem("portfolio_publish_slug");
+      if (!slug) { alert("Publish your portfolio first."); return; }
+      try { await ensureDeployAllowed(); } catch (err) {
+        showLinkedError(err.message); return;
+      }
+      document.getElementById("ppTitle").textContent = "Manage Portfolio";
+      document.getElementById("ppPublishStrip").classList.add("pp-hidden");
+      document.getElementById("ppUrlSection").classList.add("pp-hidden");
+      document.getElementById("manageDomainInput").value = "";
+      document.getElementById("manageDomainHint").textContent =
+        "Enter a domain you own. After saving, add a DNS CNAME record at your registrar pointing to your Netlify site.";
+      document.getElementById("manageDomainHint").style.color = "";
+      openPortfolioPanel();
+      loadDeployList(slug);
+      loadDomainList(slug);
+    }
+
+    document.getElementById("manageDomainApply").onclick = async () => {
+      const bareSlug   = localStorage.getItem("portfolio_publish_slug");
+      const targetSlug = document.getElementById("manageDomainVersion").value || bareSlug;
+      const domain = document.getElementById("manageDomainInput").value.trim();
+      const hint   = document.getElementById("manageDomainHint");
+      const btn    = document.getElementById("manageDomainApply");
+      if (!domain) { hint.textContent = "Please enter a domain."; return; }
+      btn.disabled = true;
+      btn.textContent = "Registering…";
+      try {
+        const body = { action: "domain", slug: bareSlug, domain };
+        if (targetSlug && targetSlug !== bareSlug) body.targetSlug = targetSlug;
+        const data = await manageRequest(body);
+        hint.textContent = data.alreadyRegistered
+          ? `✓ ${domain} was already registered.`
+          : `✓ Registered! DNS instructions:\n${data.dnsInstructions}\n\nSSL provisions automatically once DNS propagates.`;
+        hint.style.whiteSpace = "pre-wrap";
+        hint.style.color = "rgba(174,247,200,.8)";
+        document.getElementById("manageDomainInput").value = "";
+        loadDomainList(bareSlug);
+      } catch (err) {
+        hint.textContent = `Error: ${err.message}`;
+        hint.style.color = "rgba(255,166,166,.88)";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Set domain";
+      }
+    };
+
+    // ── Download ───────────────────────────────────────────────────────────────
+    const htmlImportInput = document.getElementById("htmlImportInput");
+    htmlImportInput?.addEventListener("change", async e => {
+      const file = e.target?.files?.[0];
+      if (!file) return;
+      try {
+        const html = await file.text();
+        importHtmlIntoEditor(html, file.name || "HTML file");
+      } catch (err) {
+        console.error("HTML import failed:", err);
+        showLinkedError(err?.message || "Failed to load HTML file.");
+      } finally {
+        e.target.value = "";
+      }
+    });
+
+    document.getElementById("btnDownload").onclick = async (e) => {
+      if (e.shiftKey) {
+        htmlImportInput?.click();
+        return;
+      }
+      try {
+        setEditStatus("Checking download access...");
+        await ensureDownloadAllowed("Download");
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
+        a.download = "portfolio.html";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        setEditStatus("Downloaded.", "ok");
+      } catch (err) {
+        console.error("Download failed:", err);
+        showLinkedError(err?.message || "Download failed.");
+      }
+    };
+
+    document.getElementById("btnPublish").onclick = async () => {
+      const publishBtn = document.getElementById("btnPublish");
+      const originalLabel = publishBtn.textContent;
+      publishBtn.disabled = true;
+
+      // Open panel immediately with spinner
+      document.getElementById("ppTitle").textContent = "Publish Portfolio";
+      ppSetPublishing();
+      openPortfolioPanel();
+
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        await ensureDeployAllowed();
+
+        const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
+        const res = await fetch("/.netlify/functions/publishPortfolio", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            html: buildHtmlString(),
+            slug: storedSlug || undefined
+          })
+        });
+
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload?.error || `Publish failed (${res.status})`);
+
+        if (payload.slug) localStorage.setItem("portfolio_publish_slug", payload.slug);
+        if (payload.url)  localStorage.setItem("portfolio_publish_url",  payload.url);
+        if (payload.versionedUrl) localStorage.setItem("portfolio_publish_versioned_url", payload.versionedUrl);
+
+        const verb = payload.republished ? "Republished" : "Published";
+        setEditStatus(`${verb} as deploy #${payload.deployNumber}.`, "ok");
+        refreshEditorAccountStatus();
+        ppSetSuccess(verb, payload.deployNumber, payload.url, payload.versionedUrl);
+        loadDeployList(payload.slug);
+        loadDomainList(payload.slug);
+      } catch (err) {
+        console.error("Publish failed:", err);
+        ppSetError(err?.message || "Publish failed.");
+        showLinkedError(err?.message || "Publish failed.");
+      } finally {
+        publishBtn.disabled = false;
+        publishBtn.textContent = originalLabel;
+      }
+    };
+
+
+    // ── Back ───────────────────────────────────────────────────────────────────
+    document.getElementById("btnBack").onclick = () => {
+      if (window.opener && !window.opener.closed) {
+        window.close(); // closes editor tab; form tab comes back into view
+      } else {
+        window.location.href = "/";
+      }
+    };
+
+    // ── Live update from form window ───────────────────────────────────────────
+    window.addEventListener("message", e => {
+      if (e.data?.type !== "portfolio_html" || !e.data.html) return;
+      currentHtml = e.data.html;
+      cachePreviewHtml(e.data.html);
+      loadIframe(e.data.html);
+      setCodeContent(e.data.html);
+      window.__editorTickerClearProcess?.();
+    });
+
+    window.addEventListener("message", e => {
+      if (e.data?.type === "editor_process_status") {
+        window.__editorTickerShowProcess?.(e.data.text || "", e.data.color || "rgba(141,224,255,.75)");
+        return;
+      }
+      if (e.data?.type === "editor_process_status_clear") {
+        window.__editorTickerClearProcess?.();
+      }
+    });
+
+    // ── Load CodeMirror from CDN (optional enhancement — plain textarea fallback) ──
+    const cmContainer = document.getElementById("cmContainer");
+    const ta = document.createElement("textarea");
+    ta.id = "codeTextarea";
+    ta.value = currentHtml;
+    ta.spellcheck = false;
+    ta.addEventListener("input", handleCodeInput);
+    cmContainer.appendChild(ta);
+
+    // Store modules once loaded; create EditorView lazily when pane first becomes visible.
+    let cmModules = null;
+    import("https://esm.sh/codemirror@6").then(({ EditorView, basicSetup }) =>
+      Promise.all([
+        import("https://esm.sh/@codemirror/lang-html"),
+        import("https://esm.sh/@codemirror/theme-one-dark")
+      ]).then(([{ html: htmlLang }, { oneDark }]) => {
+        cmModules = { EditorView, basicSetup, htmlLang, oneDark };
+      })
+    ).catch(() => {}); // textarea stays if CDN fails
+
+    function ensureCmView() {
+      if (cmView || !cmModules) return;
+      const fallback = document.getElementById("codeTextarea");
+      const content = fallback?.value ?? currentHtml;
+      const host = document.createElement("div");
+      cmContainer.appendChild(host);
+      try {
+        cmView = new cmModules.EditorView({
+          doc: content,
+          extensions: [
+            cmModules.basicSetup,
+            cmModules.htmlLang(),
+            cmModules.oneDark,
+            cmModules.EditorView.updateListener.of(update => {
+              if (update.docChanged) handleCodeInput();
+            })
+          ],
+          parent: host
+        });
+        fallback?.remove();
+      } catch (err) {
+        host.remove();
+        console.error("Failed to initialize code editor; leaving textarea fallback in place.", err);
+      }
+    }
+  })();
+
+  // ── Suggestions carousel + Tips modal ───────────────────────────────────
+  (function () {
+    const tips = [
+      "Add images such as a headshot and project graphs/charts to really make an impact.",
+      "Add/replace images by clicking a location first, then the Media button.",
+      "Sometimes you can also double-click a placeholder to replace it.",
+      "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
+      "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
+    ];
+
+    const ticker  = document.getElementById("sbTicker");
+    const sbWrap  = document.getElementById("sbWrap");
+    const btnTips = document.getElementById("btnTips");
+    const modal   = document.getElementById("tipsModal");
+    const listEl  = document.getElementById("tipsList");
+    const dismiss = document.getElementById("btnTipsDismiss");
+    if (!ticker) return;
+
+    let idx = 0;
+    let intervalId = null;
+    let tickerDismissed = false;
+    let processStatusActive = false;
+    const defaultTickerColor = "rgba(234,240,255,.45)";
+
+    if (listEl) {
+      listEl.innerHTML = "";
+      tips.forEach((tip) => {
+        const li = document.createElement("li");
+        li.textContent = tip;
+        listEl.appendChild(li);
+      });
+    }
+
+    function tickerText(i) {
+      return `${i + 1}. ${tips[i]}`;
+    }
+
+    function setTickerText(text, color = defaultTickerColor, animate = false) {
+      ticker.classList.remove("animating");
+      void ticker.offsetWidth;
+      ticker.textContent = text || "";
+      ticker.style.color = color || defaultTickerColor;
+      if (animate) ticker.classList.add("animating");
+    }
+
+    function startTipsCarousel() {
+      if (tickerDismissed || processStatusActive) return;
+      if (intervalId) clearInterval(intervalId);
+      idx = idx % tips.length;
+      setTickerText(tickerText(idx));
+      intervalId = setInterval(() => {
+        if (processStatusActive || tickerDismissed) return;
+        idx = (idx + 1) % tips.length;
+        setTickerText(tickerText(idx), defaultTickerColor, true);
+      }, 5000);
+      if (sbWrap) sbWrap.style.display = "";
+      if (btnTips) btnTips.style.display = "none";
+    }
+
+    function stopTipsCarousel() {
+      if (intervalId) clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    function showProcessStatus(text, color) {
+      processStatusActive = true;
+      stopTipsCarousel();
+      if (sbWrap) sbWrap.style.display = "";
+      if (btnTips) btnTips.style.display = tickerDismissed ? "" : "none";
+      setTickerText(text || "", color || "rgba(141,224,255,.75)");
+    }
+
+    function clearProcessStatus() {
+      processStatusActive = false;
+      if (!tickerDismissed) startTipsCarousel();
+    }
+
+    function updateTicker() {
+      setTickerText(tickerText(idx), defaultTickerColor, true);
+    }
+
+    startTipsCarousel();
+
+    function openModal() { modal?.classList.add("open"); }
+    function closeModal() { modal?.classList.remove("open"); }
+
+    // Click on any visible tip area → open modal
+    ticker.addEventListener("click", openModal);
+    sbWrap?.addEventListener("click", openModal);
+
+    // Tips button (shown after dismiss) → open modal
+    btnTips?.addEventListener("click", openModal);
+
+    // Dismiss → stop carousel, hide ticker area, show Tips button
+    dismiss?.addEventListener("click", () => {
+      closeModal();
+      tickerDismissed = true;
+      stopTipsCarousel();
+      if (sbWrap)  sbWrap.style.display  = "none";
+      if (btnTips) btnTips.style.display = "";
+    });
+
+    // Click outside modal box to close
+    modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+
+    window.__editorTickerShowProcess = showProcessStatus;
+    window.__editorTickerClearProcess = clearProcessStatus;
+
+    function requestInitialProcessStatus() {
+      try {
+        if (window.opener && !window.opener.closed) {
+          window.opener.postMessage({ type: "editor_process_status_request" }, location.origin);
+        }
+      } catch {}
+    }
+
+    requestInitialProcessStatus();
+    setTimeout(requestInitialProcessStatus, 150);
+  })();
+  </script>
+
+  <!-- Tips modal -->
+  <div id="tipsModal" role="dialog" aria-modal="true" aria-label="Tips">
+    <div id="tipsModalBox">
+      <strong>Tips</strong>
+      <ol id="tipsList"></ol>
+      <button id="btnTipsDismiss">Dismiss</button>
+    </div>
+  </div>
+  <script src="/src/annbot-widget.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(0,0,0,.25);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow:0 10px 26px rgba(0,0,0,.35);
+      --font:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+
+    html{
+      scroll-behavior:smooth;
+    }
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, color-mix(in oklab, var(--danger) 18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent) 14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.55;
+    }
+
+    a{
+      color:var(--accent);
+      text-decoration:none;
+    }
+
+    a:hover{
+      text-decoration:underline;
+    }
+
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:18px 14px 56px;
+    }
+
+    .site-header{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      position:sticky;
+      top:14px;
+      z-index:10;
+      backdrop-filter:blur(8px);
+    }
+
+    .brand{
+      min-width:0;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:22px;
+      font-weight:900;
+      letter-spacing:.2px;
+    }
+
+    .brand p{
+      margin:4px 0 0;
+      color:var(--muted);
+      font-size:13.5px;
+    }
+
+    .header-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:flex-end;
+    }
+
+    .hero{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:minmax(0, 1.2fr) minmax(320px, .8fr);
+      gap:14px;
+    }
+
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:18px;
+      backdrop-filter:blur(8px);
+      position:relative;
+      overflow:hidden;
+    }
+
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:auto -40px -40px auto;
+      width:140px;
+      height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%);
+      pointer-events:none;
+    }
+
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.2);
+      color:rgba(234,240,255,.86);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+
+    .eyebrow::before{
+      content:"";
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background:var(--accent);
+      box-shadow:0 0 18px color-mix(in oklab, var(--accent) 55%, transparent);
+    }
+
+    .hero-copy h2{
+      margin:14px 0 0;
+      font-size:clamp(2.2rem, 5vw, 4rem);
+      line-height:1.02;
+      letter-spacing:-.04em;
+      font-weight:900;
+      max-width:10ch;
+      text-wrap:balance;
+    }
+
+    .lead{
+      margin:18px 0 0;
+      font-size:18px;
+      line-height:1.8;
+      color:rgba(234,240,255,.86);
+      max-width:58ch;
+      padding-left:16px;
+      border-left:3px solid color-mix(in oklab, var(--danger) 58%, white);
+    }
+
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:22px;
+    }
+
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 14px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.1);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+      text-decoration:none;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .btn:hover{
+      text-decoration:none;
+      transform:translateY(-1px);
+    }
+
+    .btn.primary{
+      background:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+
+    .btn.ghost{
+      background:rgba(0,0,0,.15);
+    }
+
+    .btn.accent{
+      background:color-mix(in oklab, var(--accent) 24%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--accent) 45%, rgba(255,255,255,.14));
+    }
+
+    .stat-grid{
+      display:grid;
+      gap:12px;
+    }
+
+    .stat-box{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
+        rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:12px;
+      padding:14px 14px 12px;
+    }
+
+    .stat-box:nth-child(1){
+      border-color:color-mix(in oklab, var(--accent) 40%, rgba(255,255,255,.1));
+    }
+
+    .stat-box:nth-child(2){
+      border-color:color-mix(in oklab, var(--primary) 42%, rgba(255,255,255,.1));
+    }
+
+    .stat-box:nth-child(3){
+      border-color:color-mix(in oklab, var(--danger) 42%, rgba(255,255,255,.1));
+    }
+
+    .stat-box strong{
+      display:block;
+      font-size:13px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.58);
+    }
+
+    .stat-box .big{
+      margin-top:8px;
+      font-size:clamp(1.7rem, 4vw, 2.6rem);
+      font-weight:900;
+      line-height:1.05;
+      background:linear-gradient(135deg, #ffffff 0%, color-mix(in oklab, var(--accent) 58%, white) 55%, color-mix(in oklab, var(--danger) 52%, white) 100%);
+      -webkit-background-clip:text;
+      background-clip:text;
+      color:transparent;
+    }
+
+    .stat-box p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.7;
+    }
+
+    .steps{
+      margin-top:14px;
+      display:grid;
+      gap:14px;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+
+    .section-title h3{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+
+    .section-title p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0, 1fr));
+      gap:14px;
+    }
+
+    .feature{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:15px;
+    }
+
+    .feature:nth-child(1){
+      background:linear-gradient(180deg, rgba(78,112,241,.12), rgba(255,255,255,.03));
+    }
+
+    .feature:nth-child(2){
+      background:linear-gradient(180deg, rgba(141,224,255,.11), rgba(255,255,255,.03));
+    }
+
+    .feature:nth-child(3){
+      background:linear-gradient(180deg, rgba(251,171,156,.12), rgba(255,255,255,.03));
+    }
+
+    .feature h4{
+      margin:0;
+      font-size:15px;
+      color:#fff;
+    }
+
+    .feature p{
+      margin:8px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.75;
+    }
+
+    .split{
+      display:grid;
+      grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);
+      gap:14px;
+      margin-top:14px;
+    }
+
+    .richtext{
+      color:rgba(234,240,255,.86);
+      font-size:16px;
+      line-height:1.9;
+    }
+
+    .richtext p{
+      margin:0 0 14px;
+    }
+
+    .richtext p:last-child{
+      margin-bottom:0;
+    }
+
+    .note{
+      background:linear-gradient(180deg, rgba(141,224,255,.1), rgba(0,0,0,.18));
+      border:1px solid color-mix(in oklab, var(--accent) 38%, rgba(255,255,255,.12));
+      border-radius:12px;
+      padding:12px 14px;
+      color:rgba(234,240,255,.85);
+      font-size:13px;
+    }
+
+    .checklist{
+      margin:0;
+      padding:0;
+      list-style:none;
+      display:grid;
+      gap:10px;
+    }
+
+    .checklist li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      color:rgba(234,240,255,.86);
+      font-size:14px;
+      line-height:1.8;
+    }
+
+    .checklist li::before{
+      content:"";
+      width:10px;
+      height:10px;
+      margin-top:8px;
+      flex:0 0 10px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), var(--primary));
+    }
+
+    .cta-band{
+      margin-top:14px;
+      text-align:center;
+      padding:24px 18px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.12)),
+        linear-gradient(135deg, color-mix(in oklab, var(--primary) 22%, transparent), color-mix(in oklab, var(--danger) 16%, transparent) 55%, color-mix(in oklab, var(--accent) 18%, transparent));
+    }
+
+    .cta-band h3{
+      margin:0;
+      font-size:clamp(1.8rem, 4vw, 2.8rem);
+      line-height:1.08;
+      letter-spacing:-.03em;
+    }
+
+    .cta-band p{
+      max-width:60ch;
+      margin:14px auto 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.8;
+    }
+
+    .footer{
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color:rgba(234,240,255,.58);
+      font-size:13px;
+    }
+
+    .accent-word{
+      color:color-mix(in oklab, var(--accent) 70%, white);
+    }
+
+    @media (max-width: 920px){
+      .hero,
+      .split,
+      .feature-grid{
+        grid-template-columns:1fr;
+      }
+
+      .hero-copy h2{
+        max-width:none;
+      }
+    }
+
+    @media (max-width: 720px){
+      .site-header{
+        grid-template-columns:1fr;
+      }
+
+      .header-actions{
+        justify-content:flex-start;
+      }
+
+      .hero-actions{
+        flex-direction:column;
+      }
+
+      .hero-actions .btn,
+      .header-actions .btn{
+        width:100%;
+      }
+
+      .footer{
+        flex-direction:column;
+        align-items:flex-start;
+      }
+    }
+    /* ── Happiness Guarantee seal ───────────────── */
+    .hg-seal{ display:inline-flex; text-decoration:none!important; opacity:.88; transition:opacity .2s,transform .2s; align-items:center; }
+    .hg-seal:hover{ opacity:1; transform:scale(1.06) rotate(-4deg); }
+  </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
+</head>
+<body>
+  <main class="wrap">
+    <header class="site-header">
+      <div class="brand">
+        <h1>Irene's Webworks</h1>
+        <p>Modern portfolio and resume websites designed to help candidates look credible, memorable, and proficient.</p>
+      </div>
+      <div class="header-actions">
+        <a class="btn primary" href="overview.html" data-umami-event="cta-start-form" data-umami-event-location="header">Start the Form</a>
+        <a class="btn ghost" href="../html/grad-gallery.html" data-umami-event="cta-browse-gallery" data-umami-event-location="header">Browse Model Websites</a>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="card hero-copy">
+        <span class="eyebrow">Career Upgrade</span>
+        <h2>Invest in a website, boost your salary by 10-20K!</h2>
+        <p class="lead">Irene's Webworks--- Elevate your career prospects with our modern, personalizable, and expertly crafted resume/portfolio websites—perfect for recent graduates and seasoned professionals alike. Designed for maximum impact, each website will make a lasting impression.</p>
+        <div class="hero-actions">
+          <a class="btn primary" href="overview.html" data-umami-event="cta-start-form" data-umami-event-location="hero">Build My Website</a>
+          <a href="privacy.html" class="hg-seal" title="Happiness Guaranteed — no-questions-asked refund policy">
+            <img src="satisfaction-guaranteed.png" width="88" height="88" alt="Happiness Guaranteed" style="display:block;"/>
+          </a>
+          <a class="btn accent" href="../html/grad-gallery.html" data-umami-event="cta-browse-gallery" data-umami-event-location="hero">See Example Layouts</a>
+        </div>
+      </div>
+
+      <aside class="card stat-grid">
+        <div class="stat-box">
+          <strong>Make a Strong First Impression</strong>
+          <div class="big" style="color:#ff6b6b;">Look polished immediately</div>
+          <p>Give employers a clean, credible snapshot of who you are before they ever open your resume or LinkedIn profile.</p>
+        </div>
+        <div class="stat-box">
+          <strong>Built for Hiring</strong>
+          <div class="big" style="color:#ffe066;">Proof over claims</div>
+          <p>Move beyond a plain resume by showing employers your work, your personality, and the range of what you can do.</p>
+        </div>
+        <div class="stat-box">
+          <strong>Fast Start</strong>
+          <div class="big" style="color:#74c0fc;">Form + model gallery</div>
+          <p>Pick a direction, fill out the form, and use the gallery to anchor your layout and style preferences.</p>
+        </div>
+      </aside>
+    </section>
+
+    <section class="steps">
+      <div class="card">
+        <div class="section-title">
+          <h3 style="color:#ff6b6b;">Why this works</h3>
+          <p>Built to look polished while giving you room to show real substance.</p>
+        </div>
+        <div class="feature-grid">
+          <div class="feature">
+            <h4>Stronger first impression</h4>
+            <p>A modern site makes your application feel more complete, intentional, and memorable than a resume alone.</p>
+          </div>
+          <div class="feature">
+            <h4>Easy to personalize</h4>
+            <p>Choose a model layout, tailor sections to your field, and keep the final site editable as your experience grows.</p>
+          </div>
+          <div class="feature">
+            <h4>Useful across industries</h4>
+            <p>Recent graduates, researchers, engineers, creatives, and established professionals can all use the same framework well.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="split">
+        <section class="card">
+          <div class="section-title">
+            <h3 style="color:#ffa94d;">About Irene's Webworks</h3>
+            <p>Professional presence, without a generic template feel.</p>
+          </div>
+          <div class="richtext">
+            <p>Irene's Webworks--- Elevate your career prospects with our modern, personalizable, and expertly crafted resume/portfolio websites—perfect for recent graduates and seasoned professionals alike. Designed for maximum impact, each website will make a lasting impression.</p>
+            <p>Use the intake form to upload your resume, enter a target job, and choose your preferred style.</p>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <h3 style="color:#ffe066;">What your website can highlight</h3>
+            <p>More room than a one-page resume.</p>
+          </div>
+          <div class="richtext">
+            <p>Highlight <span class="accent-word">YOUR unique accomplishments</span>. Featuring fully customizable sections, our resume/portfolio websites may include not only basic elements like contact details, education, work experience, skills, and research experience; but also space-expansive components such as publications, presentations, demos, projects, and more! It will <span class="accent-word">STAND OUT</span> in any industry. Fully editable and easy to use, this is the perfect first step toward landing your dream job.</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="split">
+        <section class="card">
+          <div class="section-title">
+            <h3 style="color:#69db7c;">Common sections</h3>
+            <p>Organized for clarity and scanning.</p>
+          </div>
+          <ul class="checklist">
+            <li>Contact details, summary, education, work experience, and technical or professional skills.</li>
+            <li>Research experience, publications, presentations, class projects, independent projects, and demos.</li>
+            <li>Custom sections tuned to your field, from lab work and teaching to engineering builds and case studies.</li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <h3 style="color:#74c0fc;">How to get started</h3>
+            <p>A straightforward flow.</p>
+          </div>
+          <ul class="checklist">
+            <li>Browse model websites in the gallery and note the majors, layout patterns, or section structures you like.</li>
+            <li>Open the form and describe your experience, target role, accomplishments, and preferred visual direction.</li>
+            <li>Use the finished site as a polished companion to your resume, LinkedIn profile, and job applications.</li>
+          </ul>
+          <div class="note" style="margin-top:14px;">
+            Best results come from being specific about your projects, measurable accomplishments, and the kind of work you want next.
+          </div>
+        </section>
+      </div>
+
+      <section class="card cta-band">
+        <h3>Make your experience easier to see and harder to forget.</h3>
+        <p>Your resume lists what you have done. Your website gives employers a reason to remember it. Start with the form or browse the model gallery first if you want visual direction.</p>
+        <div class="hero-actions" style="justify-content:center; margin-top:20px;">
+          <a class="btn primary" href="overview.html" data-umami-event="cta-start-form" data-umami-event-location="cta-band">Start the Intake Form</a>
+          <a class="btn ghost" href="../html/grad-gallery.html" data-umami-event="cta-browse-gallery" data-umami-event-location="cta-band">Open the Gallery</a>
+        </div>
+      </section>
+    </section>
+
+    <div class="note" style="margin-top:14px; display:flex; align-items:center; gap:12px;">
+      <span style="font-size:20px; flex-shrink:0;">🔒</span>
+      <span>We respect your privacy. We will never sell, share, or train on your personal information. <a href="privacy.html">Read our Privacy Policy.</a></span>
+    </div>
+
+    <div class="note" style="margin-top:10px; display:flex; align-items:center; gap:12px; background:linear-gradient(180deg, rgba(118,176,34,.12), rgba(0,0,0,.18)); border-color:color-mix(in oklab, var(--ok) 38%, rgba(255,255,255,.12));">
+      <span style="font-size:20px; flex-shrink:0;">😊</span>
+      <span>Your happiness is guaranteed. If you are not satisfied, we will replace or refund your purchase — no questions asked.</span>
+    </div>
+
+    <footer class="footer">
+      <span>Irene's Webworks</span>
+      <span><a href="overview.html">Form</a> · <a href="../html/grad-gallery.html">Gallery</a> · <a href="terms.html">Terms &amp; Conditions</a> · <a href="privacy.html">Privacy Policy</a></span>
+    </footer>
+  </main>
+  <script src="/src/annbot-widget.js" defer></script>
+</body>
+</html>

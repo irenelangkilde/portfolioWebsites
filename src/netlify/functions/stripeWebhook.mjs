@@ -1,11 +1,129 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { Resend } from "resend";
+import { randomBytes } from "crypto";
 
 // ── Credits / downloads / deploys per unit purchased ─────────────────────────
 // 1 unit = 5 credits + 1 download + 1 deploy  (applies to all premium tiers)
 const CREDITS_PER_UNIT   = 5;
 const DOWNLOADS_PER_UNIT = 1;
 const DEPLOYS_PER_UNIT   = 1;
+
+// ── Gift tiers ───────────────────────────────────────────────────────────────
+const GIFT_TIERS = new Set(["starter_gift", "pro_gift"]);
+const GIFT_TIER_NAMES = { starter_gift: "Starter", pro_gift: "Pro" };
+
+function generateGiftCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars (I/1/O/0)
+  const bytes = randomBytes(8);
+  return "GIFT-" + Array.from(bytes).map(b => chars[b % chars.length]).join("");
+}
+
+async function handleGiftPurchase(obj) {
+  const tierKey   = obj.metadata?.tier_key;
+  const buyerEmail = obj.customer_details?.email;
+  const sessionId  = obj.id;
+
+  if (!buyerEmail) { console.error("Gift purchase missing buyer email"); return; }
+
+  const code = generateGiftCode();
+  const supabase = getSupabaseAdmin();
+
+  const { error: dbErr } = await supabase.from("gift_codes").insert({
+    code,
+    tier: tierKey,
+    stripe_session_id: sessionId,
+    buyer_email: buyerEmail,
+  });
+  if (dbErr) { console.error("Failed to store gift code:", dbErr.message); return; }
+
+  const resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) { console.error("RESEND_API_KEY not set"); return; }
+
+  const resend = new Resend(resendKey);
+  const tierName = GIFT_TIER_NAMES[tierKey];
+
+  const { error: emailErr } = await resend.emails.send({
+    from: "Irene's Webworks <gifts@emails.irenes-ventures.com>",
+    to:   buyerEmail,
+    subject: `🎁 Your ${tierName} Gift Code is here — Irene's Webworks`,
+    html: buildGiftEmail(code, tierName),
+  });
+
+  if (emailErr) console.error("Failed to send gift email:", emailErr.message);
+  else console.log(`Gift code ${code} (${tierKey}) emailed to ${buyerEmail}`);
+}
+
+function buildGiftEmail(code, tierName) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0b1220;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;color:#eaf0ff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1220;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr><td style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px 14px 0 0;padding:24px 28px;">
+          <p style="margin:0;font-size:20px;font-weight:900;letter-spacing:.2px;">Irene's Webworks</p>
+          <p style="margin:4px 0 0;color:rgba(234,240,255,.65);font-size:13px;">Professional portfolio websites</p>
+        </td></tr>
+
+        <!-- Hero -->
+        <tr><td style="background:rgba(78,112,241,.14);border-left:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.14);padding:32px 28px;text-align:center;">
+          <p style="margin:0;font-size:36px;">🎁</p>
+          <h1 style="margin:12px 0 0;font-size:26px;font-weight:900;line-height:1.1;letter-spacing:-.03em;">Your ${tierName} Gift Code is ready.</h1>
+          <p style="margin:14px 0 0;font-size:15px;color:rgba(234,240,255,.78);line-height:1.75;max-width:48ch;margin-left:auto;margin-right:auto;">
+            Pass this code along to the lucky person in your life. When they're ready,
+            they'll redeem it to get their professionally built portfolio website.
+          </p>
+        </td></tr>
+
+        <!-- Code block -->
+        <tr><td style="background:rgba(0,0,0,.35);border-left:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.14);padding:28px;text-align:center;">
+          <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,240,255,.5);">Gift Code</p>
+          <p style="margin:0;font-size:34px;font-weight:900;letter-spacing:.12em;color:#fff;font-family:ui-monospace,monospace;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:10px;padding:14px 22px;display:inline-block;">${code}</p>
+          <p style="margin:14px 0 0;font-size:13px;color:rgba(234,240,255,.5);">Valid for 12 months from today</p>
+        </td></tr>
+
+        <!-- How to redeem -->
+        <tr><td style="background:rgba(255,255,255,.04);border-left:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.14);padding:28px;">
+          <p style="margin:0 0 16px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:rgba(234,240,255,.55);">How to redeem</p>
+          <table cellpadding="0" cellspacing="0" width="100%">
+            <tr>
+              <td style="padding:0 0 12px;font-size:14px;color:rgba(234,240,255,.82);line-height:1.7;">
+                <strong style="color:#fff;">1.</strong> Visit <a href="https://irenes-ventures.com" style="color:#8DE0FF;">irenes-ventures.com</a> and click <strong style="color:#fff;">Redeem a gift code</strong>.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 0 12px;font-size:14px;color:rgba(234,240,255,.82);line-height:1.7;">
+                <strong style="color:#fff;">2.</strong> Enter the code above when prompted. Create a free account to get started.
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0;font-size:14px;color:rgba(234,240,255,.82);line-height:1.7;">
+                <strong style="color:#fff;">3.</strong> Upload a résumé, describe your goals, pick a style — Irene handles the rest.
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="background:rgba(0,0,0,.25);border:1px solid rgba(255,255,255,.14);border-top:none;border-radius:0 0 14px 14px;padding:20px 28px;">
+          <p style="margin:0;font-size:13px;color:rgba(234,240,255,.42);line-height:1.7;">
+            Questions? Reply to this email or contact
+            <a href="mailto:irene@irenes-ventures.com" style="color:#8DE0FF;">irene@irenes-ventures.com</a>.
+            Your purchase is covered by our satisfaction guarantee —
+            <a href="https://irenes-ventures.com/src/refund_policy.html" style="color:#8DE0FF;">read our refund policy</a>.
+          </p>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
 
 // ── Static limits for tiers with a fixed unit count ──────────────────────────
 const TIER_LIMITS = {
@@ -121,7 +239,9 @@ export async function handler(event) {
         } catch {}
       }
 
-      if (tierKey === "basic" || tierKey === "premium_annual") {
+      if (GIFT_TIERS.has(tierKey)) {
+        await handleGiftPurchase(obj);
+      } else if (tierKey === "basic" || tierKey === "premium_annual") {
         await upgradeMembership(userId, tierKey, extra);
       } else if (tierKey === "premium_monthly_new" || tierKey === "premium_monthly_sub") {
         await upgradePremiumMonthly(userId, qty, extra);

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Give the Gift of a Career Edge — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(0,0,0,.25);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow:0 10px 26px rgba(0,0,0,.35);
+      --font:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%,   color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%,   color-mix(in oklab, var(--danger)  18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent)  14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.55;
+    }
+
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:1100px; margin:0 auto; padding:18px 14px 56px; }
+
+    /* ── Header ───────────────────────────────── */
+    .site-header{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      position:sticky;
+      top:14px;
+      z-index:10;
+      backdrop-filter:blur(8px);
+    }
+    .brand h1{ margin:0; font-size:22px; font-weight:900; letter-spacing:.2px; }
+    .brand p{ margin:4px 0 0; color:var(--muted); font-size:13.5px; }
+    .header-actions{ display:flex; flex-wrap:wrap; gap:10px; justify-content:flex-end; }
+
+    /* ── Buttons ──────────────────────────────── */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.1);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      user-select:none;
+      text-decoration:none;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+      font-size:14px;
+    }
+    .btn:hover{ text-decoration:none; transform:translateY(-1px); }
+    .btn.primary{
+      background:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.ghost{ background:rgba(0,0,0,.15); }
+    .btn.accent{
+      background:color-mix(in oklab, var(--accent) 24%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--accent) 45%, rgba(255,255,255,.14));
+    }
+    .btn.danger-btn{
+      background:color-mix(in oklab, var(--danger) 30%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--danger) 55%, rgba(255,255,255,.14));
+    }
+    .btn.lg{ min-height:52px; padding:13px 24px; font-size:16px; border-radius:14px; }
+
+    /* ── Cards ────────────────────────────────── */
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:24px;
+      backdrop-filter:blur(8px);
+      position:relative;
+      overflow:hidden;
+    }
+    .card::after{
+      content:"";
+      position:absolute;
+      inset:auto -40px -40px auto;
+      width:140px; height:140px;
+      border-radius:50%;
+      background:radial-gradient(circle, color-mix(in oklab, var(--accent) 22%, transparent), transparent 70%);
+      pointer-events:none;
+    }
+
+    /* ── Eyebrow pill ─────────────────────────── */
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(0,0,0,.2);
+      color:rgba(234,240,255,.86);
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+    }
+    .eyebrow::before{
+      content:"";
+      width:8px; height:8px;
+      border-radius:50%;
+      background:var(--danger);
+      box-shadow:0 0 18px color-mix(in oklab, var(--danger) 55%, transparent);
+      animation:heartbeat 1.6s ease-in-out infinite;
+    }
+    @keyframes heartbeat{
+      0%,100%{ transform:scale(1); opacity:1; }
+      40%     { transform:scale(1.3); opacity:.8; }
+      60%     { transform:scale(.95); opacity:1; }
+    }
+
+    /* ── Gift eyebrow variant ─────────────────── */
+    .eyebrow.gift::before{
+      background:color-mix(in oklab, var(--danger) 80%, white);
+      box-shadow:0 0 18px color-mix(in oklab, var(--danger) 55%, transparent);
+    }
+
+    /* ── Hero ─────────────────────────────────── */
+    .hero{
+      margin-top:14px;
+      display:grid;
+      grid-template-columns:minmax(0,1.2fr) minmax(300px,.8fr);
+      gap:14px;
+      align-items:start;
+    }
+    .hero-copy h2{
+      margin:14px 0 0;
+      font-size:clamp(2rem, 4.5vw, 3.6rem);
+      line-height:1.04;
+      letter-spacing:-.04em;
+      font-weight:900;
+      text-wrap:balance;
+    }
+    .hero-copy h2 em{
+      font-style:normal;
+      color:color-mix(in oklab, var(--danger) 80%, white);
+    }
+    .lead{
+      margin:18px 0 0;
+      font-size:17px;
+      line-height:1.8;
+      color:rgba(234,240,255,.86);
+      max-width:58ch;
+      padding-left:16px;
+      border-left:3px solid color-mix(in oklab, var(--danger) 58%, white);
+    }
+    .hero-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:22px;
+    }
+
+    /* ── Stat boxes ───────────────────────────── */
+    .stat-grid{ display:grid; gap:12px; }
+    .stat-box{
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03)),
+        rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:12px;
+      padding:16px 14px 14px;
+    }
+    .stat-box:nth-child(1){ border-color:color-mix(in oklab, var(--danger)  40%, rgba(255,255,255,.1)); }
+    .stat-box:nth-child(2){ border-color:color-mix(in oklab, var(--accent)  40%, rgba(255,255,255,.1)); }
+    .stat-box:nth-child(3){ border-color:color-mix(in oklab, var(--primary) 40%, rgba(255,255,255,.1)); }
+    .stat-box strong{
+      display:block;
+      font-size:12px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.55);
+    }
+    .stat-box .big{
+      margin-top:8px;
+      font-size:clamp(1.6rem, 4vw, 2.4rem);
+      font-weight:900;
+      line-height:1.05;
+    }
+    .stat-box p{ margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.7; }
+
+    /* ── Grid layouts ─────────────────────────── */
+    .steps{ margin-top:14px; display:grid; gap:14px; }
+    .split{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:14px;
+    }
+    .feature-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+    .feature{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:12px;
+      padding:15px;
+    }
+    .feature:nth-child(1){ background:linear-gradient(180deg, rgba(251,171,156,.13), rgba(255,255,255,.03)); }
+    .feature:nth-child(2){ background:linear-gradient(180deg, rgba(141,224,255,.11), rgba(255,255,255,.03)); }
+    .feature:nth-child(3){ background:linear-gradient(180deg, rgba(78,112,241,.12),  rgba(255,255,255,.03)); }
+    .feature h4{ margin:0; font-size:15px; color:#fff; }
+    .feature p{ margin:8px 0 0; color:var(--muted); font-size:14px; line-height:1.75; }
+
+    /* ── Gift occasion chips ──────────────────── */
+    .occasion-grid{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:14px;
+    }
+    .occasion{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 16px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.05);
+      font-size:14px;
+      font-weight:700;
+      color:rgba(234,240,255,.88);
+    }
+    .occasion.hot{
+      border-color:color-mix(in oklab, var(--danger) 45%, rgba(255,255,255,.12));
+      background:color-mix(in oklab, var(--danger) 12%, rgba(0,0,0,.18));
+      color:color-mix(in oklab, var(--danger) 80%, white);
+    }
+    .occasion.cool{
+      border-color:color-mix(in oklab, var(--accent) 40%, rgba(255,255,255,.12));
+      background:color-mix(in oklab, var(--accent) 10%, rgba(0,0,0,.18));
+      color:var(--accent);
+    }
+    .occasion.ok{
+      border-color:color-mix(in oklab, var(--ok) 45%, rgba(255,255,255,.12));
+      background:color-mix(in oklab, var(--ok) 12%, rgba(0,0,0,.18));
+      color:color-mix(in oklab, var(--ok) 80%, white);
+    }
+
+    /* ── Recipient row ────────────────────────── */
+    .recipient-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .recipient-card{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:12px;
+      padding:16px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .recipient-card .icon{ font-size:22px; }
+    .recipient-card strong{ font-size:14px; color:#fff; }
+    .recipient-card p{ margin:0; font-size:13px; color:var(--muted); line-height:1.6; }
+
+    /* ── How it works numbered list ──────────── */
+    .how-list{
+      margin:0; padding:0; list-style:none;
+      display:grid; gap:14px;
+      counter-reset:steps;
+    }
+    .how-list li{
+      counter-increment:steps;
+      display:grid;
+      grid-template-columns:40px 1fr;
+      gap:14px;
+      align-items:start;
+    }
+    .how-list li::before{
+      content:counter(steps);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:40px; height:40px;
+      border-radius:50%;
+      background:color-mix(in oklab, var(--primary) 30%, rgba(0,0,0,.18));
+      border:1px solid color-mix(in oklab, var(--primary) 55%, rgba(255,255,255,.12));
+      font-weight:900;
+      font-size:18px;
+      flex-shrink:0;
+      color:rgba(234,240,255,.9);
+    }
+    .how-list li .step-body{ padding-top:8px; }
+    .how-list li strong{ display:block; font-size:15px; color:#fff; margin-bottom:4px; }
+    .how-list li p{ margin:0; color:var(--muted); font-size:14px; line-height:1.7; }
+
+    /* ── Pricing cards ────────────────────────── */
+    .pricing-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(260px,1fr));
+      gap:14px;
+      margin-top:14px;
+    }
+    .price-card{
+      border-radius:14px;
+      padding:24px 22px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.04);
+    }
+    .price-card.featured{
+      border-color:color-mix(in oklab, var(--primary) 58%, rgba(255,255,255,.14));
+      background:color-mix(in oklab, var(--primary) 12%, rgba(0,0,0,.20));
+    }
+    .price-card.featured-warm{
+      border-color:color-mix(in oklab, var(--danger) 50%, rgba(255,255,255,.14));
+      background:color-mix(in oklab, var(--danger) 10%, rgba(0,0,0,.20));
+    }
+    .price-label{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:var(--muted);
+    }
+    .price-name{ font-size:20px; font-weight:900; color:#fff; }
+    .price-amount{
+      font-size:clamp(2rem, 5vw, 3rem);
+      font-weight:900;
+      line-height:1;
+      color:#fff;
+    }
+    .price-amount sup{ font-size:1.1rem; vertical-align:super; }
+    .price-amount small{ font-size:.9rem; font-weight:500; color:var(--muted); }
+    .price-desc{ font-size:14px; color:var(--muted); line-height:1.65; }
+    .price-features{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+    .price-features li{
+      font-size:14px;
+      color:rgba(234,240,255,.84);
+      display:flex;
+      align-items:flex-start;
+      gap:8px;
+      line-height:1.5;
+    }
+    .price-features li::before{
+      content:"✓";
+      color:var(--ok);
+      font-weight:900;
+      flex-shrink:0;
+      margin-top:1px;
+    }
+    .roi-tag{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:5px 11px;
+      border-radius:999px;
+      font-size:11.5px;
+      font-weight:800;
+      background:rgba(118,176,34,.14);
+      border:1px solid rgba(118,176,34,.32);
+      color:color-mix(in oklab, var(--ok) 80%, white);
+    }
+
+    /* ── Richtext ─────────────────────────────── */
+    .richtext{ color:rgba(234,240,255,.86); font-size:15px; line-height:1.85; }
+    .richtext p{ margin:0 0 12px; }
+    .richtext p:last-child{ margin-bottom:0; }
+    .accent-word{ color:color-mix(in oklab, var(--accent) 70%, white); }
+
+    /* ── Section title ─────────────────────────── */
+    .section-title{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+    .section-title h3{ margin:0; font-size:18px; letter-spacing:.2px; }
+    .section-title p{ margin:0; color:var(--muted); font-size:13px; }
+
+    /* ── Checklist ────────────────────────────── */
+    .checklist{ margin:0; padding:0; list-style:none; display:grid; gap:10px; }
+    .checklist li{
+      display:flex; gap:10px; align-items:flex-start;
+      color:rgba(234,240,255,.86); font-size:14px; line-height:1.8;
+    }
+    .checklist li::before{
+      content:"";
+      width:10px; height:10px;
+      margin-top:7px;
+      flex:0 0 10px;
+      border-radius:50%;
+      background:linear-gradient(135deg, var(--accent), var(--primary));
+    }
+
+    /* ── Notes ────────────────────────────────── */
+    .note{
+      background:linear-gradient(180deg, rgba(141,224,255,.1), rgba(0,0,0,.18));
+      border:1px solid color-mix(in oklab, var(--accent) 38%, rgba(255,255,255,.12));
+      border-radius:12px;
+      padding:12px 14px;
+      color:rgba(234,240,255,.85);
+      font-size:13px;
+    }
+    .note.warm{
+      background:linear-gradient(180deg, rgba(251,171,156,.10), rgba(0,0,0,.18));
+      border-color:color-mix(in oklab, var(--danger) 40%, rgba(255,255,255,.12));
+    }
+    .note.ok-note{
+      background:linear-gradient(180deg, rgba(118,176,34,.12), rgba(0,0,0,.18));
+      border-color:color-mix(in oklab, var(--ok) 38%, rgba(255,255,255,.12));
+    }
+
+    /* ── CTA band ─────────────────────────────── */
+    .cta-band{
+      margin-top:14px;
+      text-align:center;
+      padding:32px 22px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(0,0,0,.12)),
+        linear-gradient(135deg,
+          color-mix(in oklab, var(--primary) 22%, transparent),
+          color-mix(in oklab, var(--danger)  16%, transparent) 55%,
+          color-mix(in oklab, var(--accent)  18%, transparent));
+      border-radius:var(--radius);
+      border:1px solid var(--border);
+    }
+    .cta-band h3{
+      margin:0;
+      font-size:clamp(1.7rem, 4vw, 2.6rem);
+      line-height:1.08;
+      letter-spacing:-.03em;
+    }
+    .cta-band p{
+      max-width:58ch;
+      margin:14px auto 0;
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.8;
+    }
+
+    /* ── Testimonial ──────────────────────────── */
+    .testimonial-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit, minmax(280px,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .testimonial{
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.09);
+      border-radius:12px;
+      padding:18px;
+    }
+    .testimonial p{
+      margin:0 0 12px;
+      font-size:14.5px;
+      color:rgba(234,240,255,.88);
+      line-height:1.75;
+      font-style:italic;
+    }
+    .testimonial .attrib{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-style:normal;
+    }
+    .avatar-circle{
+      width:36px; height:36px; border-radius:50%;
+      display:flex; align-items:center; justify-content:center;
+      font-weight:900; font-size:14px; flex-shrink:0;
+    }
+    .testimonial .attrib strong{ display:block; font-size:13px; color:#fff; }
+    .testimonial .attrib span{ font-size:12px; color:var(--muted); }
+
+    /* ── Footer ───────────────────────────────── */
+    .footer{
+      margin-top:14px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+      color:rgba(234,240,255,.48);
+      font-size:13px;
+    }
+
+    /* ── Responsive ───────────────────────────── */
+    @media(max-width:920px){
+      .hero, .split, .feature-grid{ grid-template-columns:1fr; }
+      .hero-copy h2{ max-width:none; }
+    }
+    @media(max-width:720px){
+      .site-header{ grid-template-columns:1fr; }
+      .header-actions{ justify-content:flex-start; }
+      .hero-actions{ flex-direction:column; }
+      .hero-actions .btn, .header-actions .btn{ width:100%; }
+      .footer{ flex-direction:column; align-items:flex-start; }
+    }
+    /* ── Happiness Guarantee seal ───────────────── */
+    .hg-seal{ display:inline-flex; text-decoration:none!important; opacity:.88; transition:opacity .2s,transform .2s; align-items:center; }
+    .hg-seal:hover{ opacity:1; transform:scale(1.06) rotate(-4deg); }
+  </style>
+</head>
+<body>
+<main class="wrap">
+
+  <!-- ── Header ───────────────────────────────── -->
+  <header class="site-header">
+    <div class="brand">
+      <h1>Irene's Webworks</h1>
+      <p>Professional portfolio websites that help job-hunters stand out — and get hired.</p>
+    </div>
+    <div class="header-actions">
+      <a class="btn primary" href="#gift">🎁 Send a Gift</a>
+      <a class="btn ghost" href="../index.html">Main site</a>
+    </div>
+  </header>
+
+  <!-- ── Hero ─────────────────────────────────── -->
+  <section class="hero">
+    <div class="card hero-copy">
+      <span class="eyebrow gift">The gift that changes careers</span>
+      <h2>Give them the <em>edge</em> they deserve.</h2>
+      <p class="lead">
+        Your graduate, your kid, your partner, your best friend — they're working so hard.
+        A professionally built portfolio website could be the one thing standing between them
+        and their dream job. Give the gift that pays for itself on day one.
+      </p>
+      <div class="hero-actions">
+        <a class="btn primary lg" href="#gift">🎁 Give this gift</a>
+        <a href="privacy.html" class="hg-seal" title="Happiness Guaranteed — no-questions-asked refund policy">
+          <img src="satisfaction-guaranteed.png" width="88" height="88" alt="Happiness Guaranteed" style="display:block;"/>
+        </a>
+        <a class="btn accent" href="../html/grad-gallery.html">See example sites</a>
+      </div>
+    </div>
+
+    <aside class="stat-grid">
+      <div class="stat-box">
+        <strong>Potential salary boost</strong>
+        <div class="big" style="color:#FBAB9C;">$10–20K</div>
+        <p>Candidates with a polished portfolio website consistently negotiate higher offers. One website. One conversation. Real money.</p>
+      </div>
+      <div class="stat-box">
+        <strong>What it replaces</strong>
+        <div class="big" style="color:#8DE0FF;">The blur</div>
+        <p>Employers scan hundreds of résumés. A portfolio website makes your person unforgettable — a personality that sticks.</p>
+      </div>
+      <div class="stat-box">
+        <strong>Time to meaningful gift</strong>
+        <div class="big" style="color:#a5b4fc;">Minutes</div>
+        <p>They don't need to know anything about websites. Purchase a gift code and we'll walk them through everything.</p>
+      </div>
+    </aside>
+  </section>
+
+  <!-- ── Occasions ─────────────────────────────── -->
+  <div class="steps">
+    <div class="card">
+      <div class="section-title">
+        <h3 style="color:color-mix(in oklab, var(--danger) 80%, white);">Perfect for any occasion</h3>
+        <p>A gift they'll actually use — one that lasts longer than flowers.</p>
+      </div>
+      <div class="occasion-grid">
+        <div class="occasion cool">🎓 Graduation</div>
+        <div class="occasion cool">🎂 Birthday</div>
+        <div class="occasion cool">🎄 Holiday gift</div>
+        <div class="occasion cool">💼 New job search</div>
+        <div class="occasion cool">🏆 You're proud of them</div>
+        <div class="occasion cool">✨ Just because</div>
+        <div class="occasion cool">💍 Engagement / life change</div>
+        <div class="occasion cool">🎁 No occasion needed</div>
+      </div>
+    </div>
+
+    <!-- ── Who it's for ──────────────────────── -->
+    <div class="card">
+      <div class="section-title">
+        <h3 style="color:var(--accent);">Who's in your life right now?</h3>
+        <p>Every one of these people can benefit immediately.</p>
+      </div>
+      <div class="recipient-grid">
+        <div class="recipient-card">
+          <div class="icon">🎓</div>
+          <strong>The new graduate</strong>
+          <p>Just finished college and entering a competitive job market with no experience showing — a portfolio changes that instantly.</p>
+        </div>
+        <div class="recipient-card">
+          <div class="icon">🔄</div>
+          <strong>The career changer</strong>
+          <p>Pivoting industries and needing to show transferable skills and projects that a traditional résumé buries.</p>
+        </div>
+        <div class="recipient-card">
+          <div class="icon">🔬</div>
+          <strong>The researcher</strong>
+          <p>Publications, presentations, and lab work deserve a home that a one-page résumé simply can't contain.</p>
+        </div>
+        <div class="recipient-card">
+          <div class="icon">💻</div>
+          <strong>The technologist</strong>
+          <p>Engineers, developers, and data scientists thrive when their projects are visible, linked, and live online.</p>
+        </div>
+        <div class="recipient-card">
+          <div class="icon">📈</div>
+          <strong>The experienced pro</strong>
+          <p>Decades of work — and no single place to point people to. A polished portfolio fixes that in minutes.</p>
+        </div>
+        <div class="recipient-card">
+          <div class="icon">🏥</div>
+          <strong>Any field, really</strong>
+          <p>Healthcare, business, education, the arts — a professional web presence helps in every industry.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Why it works ──────────────────────── -->
+    <div class="card">
+      <div class="section-title">
+        <h3 style="color:#ff6b6b;">Why this gift actually matters</h3>
+        <p>It's not just a website. It's a professional presence.</p>
+      </div>
+      <div class="feature-grid">
+        <div class="feature">
+          <h4>Employers remember it</h4>
+          <p>A link in an email or a LinkedIn bio turns a name into a person. Hiring managers notice — and remember — candidates with portfolios.</p>
+        </div>
+        <div class="feature">
+          <h4>It shows real work</h4>
+          <p>Projects, publications, demos, and research live on the site — proof of capability that no résumé line-item can replicate.</p>
+        </div>
+        <div class="feature">
+          <h4>It lasts as long as they need it</h4>
+          <p>Fully editable. As their career grows, their site grows. This isn't a one-time thing — it's a career-long asset.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── How gifting works ─────────────────── -->
+    <div class="split" id="gift">
+      <div class="card">
+        <div class="section-title">
+          <h3 style="color:#ffa94d;">How gifting works</h3>
+          <p>You don't need to know anything about websites.</p>
+        </div>
+        <ol class="how-list">
+          <li>
+            <div class="step-body">
+              <strong>Choose a package below</strong>
+              <p>Pick the tier that fits your budget. Both include a fully custom, professionally crafted portfolio website.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-body">
+              <strong>Complete your purchase</strong>
+              <p>You'll receive a printable gift certificate and a personal gift code by email — usually within minutes.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-body">
+              <strong>Pass it along</strong>
+              <p>Email it, print it, slip it in a card. The code is theirs to redeem whenever they're ready.</p>
+            </div>
+          </li>
+          <li>
+            <div class="step-body">
+              <strong>They fill out a quick form</strong>
+              <p>Upload a résumé, paste in a job description, choose a style — and we automatically generate a website that they can visually edit. They'll love it.</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+
+      <div class="card">
+        <div class="section-title">
+          <h3 style="color:#ffe066;">What their website can include</h3>
+          <p>More room than any résumé.</p>
+        </div>
+        <ul class="checklist">
+          <li>Contact details, summary, education, and work experience — the essentials, beautifully formatted.</li>
+          <li>Technical skills, research experience, and certifications — credibility on every scroll.</li>
+          <li>Publications, presentations, and demos — for the high-achiever who has more to show.</li>
+          <li>Class projects, independent builds, case studies — proof that they don't just claim skills, they use them.</li>
+          <li>Custom sections and media tuned to their exact field and the type of job they want next.</li>
+        </ul>
+        <div class="note warm" style="margin-top:16px;">
+          🌟 &nbsp;<strong>It will STAND OUT in any industry.</strong>
+          Fully editable and easy to use — the perfect first step toward landing their dream job.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Testimonials ──────────────────────── -->
+    <!--div class="card">
+      <div class="section-title">
+        <h3 style="color:#69db7c;">Gifts that made a difference</h3>
+        <p>From families who've been right where you are.</p>
+      </div>
+      <div class="testimonial-grid">
+        <div class="testimonial">
+          <p>"My daughter graduated in May and was struggling to stand out. I got her the Pro package as a graduation gift. She had three interviews within two weeks of her site going live."</p>
+          <div class="attrib">
+            <div class="avatar-circle" style="background:color-mix(in oklab, var(--danger) 30%, rgba(0,0,0,.3)); color:color-mix(in oklab, var(--danger) 80%, white);">M</div>
+            <div>
+              <strong>Margaret T.</strong>
+              <span>Mother of a Biology graduate</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p>"I gave this to my son as a birthday gift when he was switching careers. He said it was the most useful thing anyone had ever bought him. His words, not mine."</p>
+          <div class="attrib">
+            <div class="avatar-circle" style="background:color-mix(in oklab, var(--primary) 30%, rgba(0,0,0,.3)); color:color-mix(in oklab, var(--accent) 80%, white);">R</div>
+            <div>
+              <strong>Robert K.</strong>
+              <span>Father of an engineer</span>
+            </div>
+          </div>
+        </div>
+        <div class="testimonial">
+          <p>"We pooled it as a group gift for our friend's graduation. Honestly the best group gift we've ever done. She got a job offer and mentioned the website in her thank-you note."</p>
+          <div class="attrib">
+            <div class="avatar-circle" style="background:color-mix(in oklab, var(--ok) 25%, rgba(0,0,0,.3)); color:color-mix(in oklab, var(--ok) 80%, white);">A</div>
+            <div>
+              <strong>Aisha &amp; friends</strong>
+              <span>Group gift for a classmate</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div-->
+
+    <!-- ── Pricing ───────────────────────────── -->
+    <div class="card">
+      <div class="section-title">
+        <h3 style="color:#74c0fc;">Choose a gift package</h3>
+        <p>Both include a printable gift certificate and instant email delivery.</p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <div class="price-card">
+          <div>
+            <div class="price-label">Gift tier</div>
+            <div class="price-name">Starter</div>
+            <div class="price-amount" style="margin-top:8px;"><sup>$</sup>149<small> one-time</small></div>
+            <p class="price-desc" style="margin-top:10px;">
+              A complete, polished portfolio that makes a strong first impression — ideal for undergrads and early-career job-seekers.
+            </p>
+          </div>
+          <ul class="price-features">
+            <li>Single-page responsive portfolio website</li>
+            <li>Up to 6 sections of their choice</li>
+            <li>Designed around their résumé and goals</li>
+            <li>Mobile &amp; desktop optimized</li>
+            <li>5 design revision rounds included</li>
+            <li>Printable gift certificate + gift code</li>
+          </ul>
+          <div>
+            <div class="roi-tag">💰 Pays back ~$9,851 on average salary gain</div>
+          </div>
+          <button class="btn primary" data-tier="starter_gift" style="width:100%;justify-content:center;" data-umami-event="gift-purchase" data-umami-event-tier="starter">Purchase Starter Gift →</button>
+        </div>
+
+        <div class="price-card featured-warm">
+          <div>
+            <div class="price-label" style="color:color-mix(in oklab, var(--danger) 80%, white);">Most meaningful gift · Pro tier</div>
+            <div class="price-name">Pro</div>
+            <div class="price-amount" style="margin-top:8px;"><sup>$</sup>299<small> one-time</small></div>
+            <p class="price-desc" style="margin-top:10px;">
+              The complete package — for the person in your life who deserves every possible advantage. Unlimited sections, editorial direction, and ongoing support.
+            </p>
+          </div>
+          <ul class="price-features">
+            <li>Multi-section full-scroll portfolio</li>
+            <li>Unlimited sections &amp; components</li>
+            <li>Publications, demos, research, projects</li>
+            <li>Job-targeting editorial direction</li>
+            <li>20 design revision rounds</li>
+            <li>Custom domain setup assistance</li>
+            <li>60-day post-launch support</li>
+            <li>Printable gift certificate + gift code</li>
+          </ul>
+          <div>
+            <div class="roi-tag">💰 Avg. reported salary impact: $10–20K</div>
+          </div>
+          <button class="btn danger-btn" data-tier="pro_gift" style="width:100%;justify-content:center;" data-umami-event="gift-purchase" data-umami-event-tier="pro">Purchase Pro Gift →</button>
+        </div>
+
+      </div>
+
+      <div class="note" style="margin-top:14px; display:flex; align-items:center; gap:12px;">
+        <span style="font-size:20px; flex-shrink:0;">💬</span>
+        <span>Not sure which to choose? <a href="mailto:irene@irenes-ventures.com">Email Irene</a> and she'll help you pick the right fit for your person — no pressure, no sales pitch.</span>
+      </div>
+    </div>
+
+    <!-- ── CTA band ──────────────────────────── -->
+    <section class="card cta-band">
+      <h3>The best gifts solve real problems.</h3>
+      <p>They're working hard. You can give them something that works hard for them — a professional website that opens doors, every time they share it.</p>
+      <div class="hero-actions" style="justify-content:center; margin-top:22px;">
+        <a class="btn primary lg" href="mailto:irene@irenes-ventures.com?subject=Gift%20Package%20Question">🎁 Get a gift code today</a>
+        <a class="btn ghost" href="../html/grad-gallery.html">Browse example sites first</a>
+      </div>
+    </section>
+
+    <!-- ── Trust notes ───────────────────────── -->
+    <div class="note" style="margin-top:14px; display:flex; align-items:center; gap:12px;">
+      <span style="font-size:20px; flex-shrink:0;">🔒</span>
+      <span>We respect your privacy. We will never sell, share, or train on your personal information or your gift recipient's. <a href="privacy.html">Read our Privacy Policy.</a></span>
+    </div>
+
+    <div class="note ok-note" style="margin-top:10px; display:flex; align-items:center; gap:12px;">
+      <span style="font-size:20px; flex-shrink:0;">😊</span>
+      <span>Your happiness is guaranteed. If they're not satisfied, we will replace or refund the purchase — no questions asked.</span>
+    </div>
+
+  </div><!-- /.steps -->
+
+  <footer class="footer">
+    <span>Irene's Webworks — Gift Page</span>
+    <span>
+      <a href="../index.html">Home</a> ·
+      <a href="../html/grad-gallery.html">Gallery</a> ·
+      <a href="mailto:irene@irenes-ventures.com">Contact Irene</a> ·
+      <a href="terms.html">Terms</a> ·
+      <a href="privacy.html">Privacy</a>
+    </span>
+  </footer>
+
+</main>
+<script>
+  document.getElementById && (document.title = "Give the Gift of a Career Edge — Irene's Webworks");
+</script>
+<script>
+  document.querySelectorAll("[data-tier]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const tier = btn.getAttribute("data-tier");
+      const original = btn.textContent;
+      btn.textContent = "Redirecting…";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/.netlify/functions/createCheckoutSession", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tier, returnUrl: window.location.href })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.");
+        window.location.href = data.url;
+      } catch (err) {
+        alert(err.message || "Checkout failed. Please try again.");
+        btn.textContent = original;
+        btn.disabled = false;
+      }
+    });
+  });
+</script>
+</body>
+</html>

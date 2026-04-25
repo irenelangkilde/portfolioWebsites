@@ -201,3 +201,31 @@ alter table public.memberships
 update public.memberships
   set deploys_limit = downloads_limit
   where deploys_limit = 0 and downloads_limit != 0;
+
+
+-- ── 7. gift_codes ────────────────────────────────────────────
+-- One row per gift purchase. Code is emailed to the buyer;
+-- redeemed_by / redeemed_at are set when the recipient claims it.
+
+create table if not exists public.gift_codes (
+  id                uuid primary key default gen_random_uuid(),
+  code              text not null unique,
+  tier              text not null check (tier in ('starter_gift', 'pro_gift')),
+  stripe_session_id text not null,
+  buyer_email       text not null,
+  redeemed_by       uuid references auth.users(id),
+  redeemed_at       timestamptz,
+  expires_at        timestamptz not null default now() + interval '12 months',
+  created_at        timestamptz not null default now()
+);
+
+create index if not exists gift_codes_code_idx      on public.gift_codes (code);
+create index if not exists gift_codes_redeemed_idx  on public.gift_codes (redeemed_by);
+
+alter table public.gift_codes enable row level security;
+
+-- Service role (Netlify functions) bypasses RLS.
+-- Authenticated users can look up their own redemption.
+create policy "users read own gift redemption"
+  on public.gift_codes for select
+  using (auth.uid() = redeemed_by);
