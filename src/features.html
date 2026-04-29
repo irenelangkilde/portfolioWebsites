@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Feature Comparison — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0a1220;
+      --bg2:#101b31;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#ecf3ff;
+      --muted:rgba(236,243,255,.65);
+      --primary:#4E70F1;
+      --accent:#8DE0FF;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --gold:#c9a227;
+      --shadow:0 22px 50px rgba(0,0,0,.35);
+      --radius:20px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    body{
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 8% 0%, color-mix(in oklab, var(--primary) 24%, transparent), transparent 60%),
+        radial-gradient(780px 540px at 100% 8%, color-mix(in oklab, var(--danger) 18%, transparent), transparent 58%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+      min-height:100vh;
+    }
+    .wrap{ max-width:1260px; margin:0 auto; padding:32px 18px 64px; }
+    .topbar{
+      display:flex; align-items:baseline; justify-content:space-between;
+      gap:12px; margin-bottom:28px; flex-wrap:wrap;
+    }
+    .eyebrow{
+      font-size:11px; font-weight:800; letter-spacing:.16em;
+      text-transform:uppercase; color:rgba(236,243,255,.5); margin-bottom:6px;
+    }
+    h1{ font-size:clamp(24px,3.5vw,40px); line-height:1.05; letter-spacing:-.03em; }
+    .back{
+      display:inline-flex; align-items:center; gap:6px;
+      font-size:13px; font-weight:700; color:var(--muted);
+      text-decoration:none; padding:8px 14px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.06);
+    }
+    .back:hover{ color:var(--text); background:rgba(255,255,255,.1); }
+
+    /* ── Table shell ── */
+    .tableWrap{
+      overflow-x:auto;
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      border:1px solid var(--border);
+      backdrop-filter:blur(14px);
+    }
+    table{
+      width:100%; border-collapse:collapse;
+      background:var(--panel);
+      font-size:14px;
+    }
+
+    /* ── Column widths ── */
+    col.feat    { width:210px; }
+    col.val-col { width:88px; }
+    col.plan    { width:1fr; }
+
+    /* ── Group header row ── */
+    tr.group-head th{
+      padding:8px 16px 6px;
+      font-size:9px; font-weight:900; letter-spacing:.16em; text-transform:uppercase;
+      color:rgba(236,243,255,.38);
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+    tr.group-head th.group-core{
+      background:rgba(78,112,241,.07);
+      border-right:2px solid rgba(201,162,39,.3);
+      text-align:center;
+    }
+    tr.group-head th.group-gift{
+      background:rgba(201,162,39,.07);
+      text-align:center;
+      color:color-mix(in oklab, var(--gold) 60%, rgba(236,243,255,.38));
+    }
+    tr.group-head th.feat-head{ border-bottom:1px solid rgba(255,255,255,.08); }
+    tr.group-head th.val-head{ background:rgba(0,0,0,.12); border-right:1px solid rgba(255,255,255,.07); }
+
+    /* ── Plan header row ── */
+    thead tr.plan-head{ border-bottom:2px solid var(--border); }
+    th{
+      padding:18px 14px; text-align:center;
+      font-size:13px; font-weight:800; letter-spacing:-.01em;
+      vertical-align:bottom;
+    }
+    th.feat-head{
+      text-align:left;
+      font-size:11px; font-weight:800; letter-spacing:.14em;
+      text-transform:uppercase; color:rgba(236,243,255,.45);
+    }
+    th.val-head{
+      background:rgba(0,0,0,.12);
+      border-right:1px solid rgba(255,255,255,.07);
+      font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
+      color:rgba(236,243,255,.35); vertical-align:middle;
+    }
+    .th-alacarte{
+      display:block; font-size:13px; font-weight:700;
+      color:rgba(236,243,255,.32);
+      text-decoration:line-through;
+      text-decoration-color:rgba(236,243,255,.38);
+      letter-spacing:-.01em; margin-bottom:1px;
+    }
+    .th-incr{
+      display:block; font-size:11px; font-weight:700;
+      color:rgba(236,243,255,.22);
+      text-decoration:line-through;
+      text-decoration-color:rgba(236,243,255,.28);
+      letter-spacing:-.01em; margin-bottom:2px;
+    }
+    .th-incr-label{
+      display:block; font-size:9px; font-weight:800; letter-spacing:.08em;
+      text-transform:uppercase; color:rgba(236,243,255,.18); margin-bottom:1px;
+    }
+    .th-tag{
+      display:inline-block; font-size:9px; font-weight:900;
+      letter-spacing:.08em; text-transform:uppercase;
+      padding:3px 7px; border-radius:999px;
+      background:rgba(255,255,255,.1); color:rgba(236,243,255,.7);
+      margin-bottom:6px;
+    }
+    .th-name{ display:block; font-size:16px; margin-bottom:3px; }
+    .th-price{ display:block; font-size:22px; font-weight:900; letter-spacing:-.03em; }
+    .th-sub{ display:block; font-size:11px; color:var(--muted); font-weight:600; margin-top:2px; }
+
+    /* highlighted column — Premium */
+    th.featured{
+      background:rgba(78,112,241,.12);
+      border-left:1px solid color-mix(in oklab,var(--primary) 40%,rgba(255,255,255,.1));
+      border-right:2px solid rgba(201,162,39,.3);
+    }
+    td.featured{
+      background:rgba(78,112,241,.07);
+      border-left:1px solid color-mix(in oklab,var(--primary) 25%,rgba(255,255,255,.08));
+      border-right:2px solid rgba(201,162,39,.2);
+    }
+
+    /* gift columns */
+    th.gift{ background:rgba(201,162,39,.05); }
+    td.gift{ background:rgba(201,162,39,.03); }
+    th.gift-warm{ background:rgba(201,162,39,.1); }
+    td.gift-warm{ background:rgba(201,162,39,.06); }
+
+    /* divider between core and gift in group header */
+    th.pre-gift{ border-right:2px solid rgba(201,162,39,.3); }
+    td.pre-gift{ border-right:2px solid rgba(201,162,39,.2); }
+
+    /* ── Value column ── */
+    td.val-col{
+      font-size:12px; font-weight:700;
+      color:rgba(236,243,255,.4);
+      background:rgba(0,0,0,.1);
+      border-right:1px solid rgba(255,255,255,.06);
+      white-space:nowrap;
+    }
+    .val-unit{ font-size:10px; font-weight:600; color:rgba(236,243,255,.28); }
+    tr.section-head td.val-col{ background:rgba(0,0,0,.22); }
+    tbody tr:hover td.val-col{ background:rgba(0,0,0,.16); }
+
+    /* ── Section header rows ── */
+    tr.section-head td{
+      padding:10px 16px 6px;
+      font-size:10px; font-weight:900; letter-spacing:.14em; text-transform:uppercase;
+      color:rgba(236,243,255,.42);
+      background:rgba(0,0,0,.14);
+      border-top:1px solid rgba(255,255,255,.08);
+    }
+    tr.section-head td.featured{ background:rgba(78,112,241,.1); }
+    tr.section-head td.pre-gift{ border-right:2px solid rgba(201,162,39,.2); }
+    tr.section-head td.gift{ background:rgba(201,162,39,.04); }
+    tr.section-head td.gift-warm{ background:rgba(201,162,39,.09); }
+
+    /* ── Data rows ── */
+    td{
+      padding:11px 14px;
+      border-top:1px solid rgba(255,255,255,.06);
+      text-align:center; vertical-align:middle;
+      color:var(--muted);
+    }
+    td.feat-label{
+      text-align:left; color:var(--text);
+      font-weight:600; font-size:13px;
+    }
+    td.feat-label .sublabel{
+      display:block; font-size:11px; color:var(--muted); font-weight:400; margin-top:1px;
+    }
+    tbody tr:hover td{ background:rgba(255,255,255,.03); }
+    tbody tr:hover td.featured{ background:rgba(78,112,241,.1); }
+    tbody tr:hover td.gift{ background:rgba(201,162,39,.06); }
+    tbody tr:hover td.gift-warm{ background:rgba(201,162,39,.1); }
+
+    /* ── Cell values ── */
+    .yes{ color:var(--accent); font-size:16px; font-weight:900; }
+    .no { color:rgba(236,243,255,.22); font-size:15px; }
+    .val{ color:var(--text); font-weight:700; }
+    .val-muted{ color:var(--muted); font-weight:600; font-size:13px; }
+    .badge{
+      display:inline-block; padding:2px 8px; border-radius:999px;
+      font-size:11px; font-weight:800;
+      background:rgba(255,255,255,.1); color:rgba(236,243,255,.8);
+    }
+    .badge.opt{ background:rgba(141,224,255,.12); color:var(--accent); }
+    .badge.gift{ background:rgba(201,162,39,.18); color:color-mix(in oklab, var(--gold) 80%, white); }
+
+    @media(max-width:860px){
+      th, td{ padding:10px 8px; font-size:12px; }
+      td.feat-label{ font-size:12px; }
+      .th-price{ font-size:18px; }
+      col.feat{ width:140px; }
+      col.val-col{ width:64px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">Irene's Webworks</div>
+        <h1>Feature Comparison</h1>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="back" href="pricing.html">← Core Plans</a>
+        <a class="back" href="landing_gift.html" style="background:rgba(201,162,39,.12);border-color:rgba(201,162,39,.3);color:color-mix(in oklab,var(--gold) 75%,var(--text));">← Gift Packages</a>
+      </div>
+    </div>
+
+    <div class="tableWrap">
+      <table>
+        <colgroup>
+          <col class="feat" />
+          <col class="val-col" />
+          <col class="plan" />
+          <col class="plan" />
+          <col class="plan" />
+          <col class="plan" />
+          <col class="plan" />
+        </colgroup>
+        <thead>
+          <!-- Group labels -->
+          <tr class="group-head">
+            <th class="feat-head"></th>
+            <th class="val-head"></th>
+            <th class="group-core" colspan="2">Core Plans</th>
+            <th class="group-core pre-gift"><!-- Premium --></th>
+            <th class="group-gift" colspan="2">🎁 Care Packages</th>
+          </tr>
+          <!-- Plan headers -->
+          <tr class="plan-head">
+            <th class="feat-head"></th>
+            <th class="val-head">À la carte</th>
+            <th>
+              <span class="th-tag">One-Time</span>
+              <span class="th-name">Free Trial</span>
+              <span class="th-alacarte">$15+</span>
+              <span class="th-incr-label">vs nothing</span>
+              <span class="th-incr">$15+</span>
+              <span class="th-price">$0</span>
+              <span class="th-sub">one-time</span>
+            </th>
+            <th>
+              <span class="th-tag">One-Time or Renewing</span>
+              <span class="th-name">Graduate</span>
+              <span class="th-alacarte">$25+</span>
+              <span class="th-incr-label">vs Free Trial</span>
+              <span class="th-incr">$10+</span>
+              <span class="th-price">$19</span>
+              <span class="th-sub">per month</span>
+            </th>
+            <th class="featured pre-gift">
+              <span class="th-tag">One-Time or Renewing</span>
+              <span class="th-name">Premium</span>
+              <span class="th-alacarte">$110+</span>
+              <span class="th-incr-label">vs Graduate</span>
+              <span class="th-incr">$104+</span>
+              <span class="th-price">$99</span>
+              <span class="th-sub">for six months</span>
+            </th>
+            <th class="gift">
+              <span class="th-tag badge gift">One-Time or Renewing</span>
+              <span class="th-name">Starter</span>
+              <span class="th-alacarte">$159+</span>
+              <span class="th-incr-label">vs Premium</span>
+              <span class="th-incr">$148+</span>
+              <span class="th-price">$149</span>
+              <span class="th-sub">for six months</span>
+            </th>
+            <th class="gift-warm">
+              <span class="th-tag badge gift">One-Time or Renewing</span>
+              <span class="th-name">Pro</span>
+              <span class="th-alacarte">$343+</span>
+              <span class="th-incr-label">vs Starter</span>
+              <span class="th-incr">$333+</span>
+              <span class="th-price">$299</span>
+              <span class="th-sub">one year</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- CREDITS & OUTPUT -->
+          <tr class="section-head">
+            <td>Credits &amp; Output</td>
+            <td class="val-col"></td>
+            <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Credits included</td>
+            <td class="val-col">$5<span class="val-unit">/credit</span></td>
+            <td><span class="val">3</span></td>
+            <td><span class="val">3</span></td>
+            <td class="featured pre-gift"><span class="val">10</span></td>
+            <td class="gift"><span class="val">10</span></td>
+            <td class="gift-warm"><span class="val">25</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Portfolio websites (downloads/deploys)</td>
+            <td class="val-col"></td>
+            <td><span class="val">1</span> <span class="val-muted">preview only</span></td>
+            <td><span class="val">1</span></td>
+            <td class="featured pre-gift"><span class="val">5</span></td>
+            <td class="gift"><span class="val">1</span></td>
+            <td class="gift-warm"><span class="val">5</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Hosting included</td>
+            <td class="val-col">$10<span class="val-unit">/mo</span></td>
+            <td class="no">—</td>
+            <td><span class="val">1 month</span></td>
+            <td class="featured pre-gift"><span class="val">6 months</span></td>
+            <td class="gift"><span class="val">6 months</span></td>
+            <td class="gift-warm"><span class="val">12 months</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Support included</td>
+            <td class="val-col">$49<span class="val-unit">/mo</span></td>
+            <td class="no">—</td>
+            <td class="no">—</td>
+            <td class="featured pre-gift no">—</td>
+            <td class="gift"><span class="val">1 month</span></td>
+            <td class="gift-warm"><span class="val">2 months</span> <span class="val-muted">priority</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Renewal (always optional, cancel anytime)</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="badge opt">Monthly optional</span></td>
+            <td class="featured pre-gift"><span class="badge opt">Semi-annual optional</span></td>
+            <td class="gift"><span class="badge opt">Semi-annual optional</span></td>
+            <td class="gift-warm"><span class="badge opt">Annual optional</span></td>
+          </tr>
+
+          <!-- PORTFOLIO FEATURES -->
+          <tr class="section-head">
+            <td>Portfolio Features</td>
+            <td class="val-col"></td>
+            <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Resume analysis &amp; job targeting</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Customized design variety</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Unlimited text &amp; color edits</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Single-page responsive portfolio</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Up to 6 sections of choice</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">-</span></td>
+            <td class="gift"><span class="yes">-</span></td>
+            <td class="gift-warm"><span class="yes">-</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Up to 10 sections of choice</td>
+            <td class="val-col"></td>
+            <td><span class="yes">-</span></td>
+            <td><span class="yes">-</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Resume PDF/DOCX &amp; headshot embedded</td>
+            <td class="val-col"></td>
+            <td><span class="yes">✓</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Publications, demos, research<span class="sublabel">Projects &amp; extended sections</span></td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Multiple versions<span class="sublabel">A/B, new job targets, resume updates</span></td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td class="no">—</td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift no">—</td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+
+          <!-- HOSTING & DOMAIN -->
+          <tr class="section-head">
+            <td>Hosting &amp; Domain</td>
+            <td class="val-col"></td>
+            <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Published on Irene's Ventures domain</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">HTTPS / SSL certificate</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Global content delivery (CDN)</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Strong uptime (99.9%)</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Custom domain setup</td>
+            <td class="val-col"></td>
+            <td class="no">—</td>
+            <td class="no">—</td>
+            <td class="featured pre-gift"><span class="yes">✓</span></td>
+            <td class="gift"><span class="yes">✓</span></td>
+            <td class="gift-warm"><span class="yes">✓</span></td>
+          </tr>
+          <tr>
+            <td class="feat-label">Guide to DIY (free) hosting</td>
+            <td class="val-col"></td>
+            <td><span class="yes">-</span></td>
+            <td><span class="yes">✓</span></td>
+            <td class="featured pre-gift"><span class="yes">-</span></td>
+            <td class="gift"><span class="yes">-</span></td>
+            <td class="gift-warm"><span class="yes">-</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gift Purchased — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --gold:#c9a227;
+      --radius:14px;
+      --shadow:0 10px 26px rgba(0,0,0,.35);
+      --font:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15%   0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85%   0%, color-mix(in oklab, var(--danger)  18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent)  14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.55;
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:720px; margin:0 auto; padding:18px 14px 56px; flex:1; }
+
+    /* ── Header ───────────────────────────────── */
+    .site-header{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      position:sticky;
+      top:14px;
+      z-index:10;
+      backdrop-filter:blur(8px);
+    }
+    .brand h1{ margin:0; font-size:22px; font-weight:900; letter-spacing:.2px; }
+    .brand p{ margin:4px 0 0; color:var(--muted); font-size:13.5px; }
+
+    /* ── Buttons ──────────────────────────────── */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      min-height:44px;
+      padding:10px 18px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.1);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      text-decoration:none;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+      font-size:14px;
+    }
+    .btn:hover{ text-decoration:none; transform:translateY(-1px); }
+    .btn.primary{
+      background:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.ghost{ background:rgba(0,0,0,.15); }
+    .btn.print-btn{
+      background:color-mix(in oklab, var(--gold) 22%, rgba(255,255,255,.06));
+      border-color:color-mix(in oklab, var(--gold) 45%, rgba(255,255,255,.1));
+      color:color-mix(in oklab, var(--gold) 85%, white);
+    }
+
+    /* ── Confirmation card ────────────────────── */
+    .confirm-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:28px 28px 24px;
+      backdrop-filter:blur(8px);
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      margin-top:32px;
+    }
+    .confirm-icon{
+      flex-shrink:0;
+      width:52px; height:52px;
+      border-radius:50%;
+      background:color-mix(in oklab, var(--ok) 18%, rgba(255,255,255,.04));
+      border:2px solid color-mix(in oklab, var(--ok) 50%, rgba(255,255,255,.1));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:24px;
+      box-shadow:0 0 24px color-mix(in oklab, var(--ok) 22%, transparent);
+    }
+    .confirm-body h2{ margin:0 0 6px; font-size:20px; font-weight:900; }
+    .confirm-body p{ margin:0; font-size:14px; color:var(--muted); line-height:1.7; }
+
+    /* ── Next steps ───────────────────────────── */
+    .next-steps{
+      background:color-mix(in oklab, var(--primary) 12%, rgba(255,255,255,.03));
+      border:1px solid color-mix(in oklab, var(--primary) 35%, rgba(255,255,255,.08));
+      border-radius:10px;
+      padding:14px 18px;
+      margin-top:12px;
+      font-size:13.5px;
+      color:var(--muted);
+      line-height:1.75;
+    }
+    .next-steps strong{
+      display:block;
+      color:var(--text);
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+
+    /* ── Certificate wrapper ──────────────────── */
+    .cert-section{ margin-top:28px; }
+    .cert-toolbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+    }
+    .cert-toolbar-label{
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.45);
+    }
+
+    /* ── Certificate card ─────────────────────── */
+    .certificate{
+      background:
+        linear-gradient(135deg, rgba(201,162,39,.08) 0%, rgba(78,112,241,.06) 100%),
+        rgba(255,255,255,.045);
+      border:1px solid rgba(201,162,39,.28);
+      border-radius:16px;
+      box-shadow:0 0 0 4px rgba(201,162,39,.06), var(--shadow);
+      padding:36px 36px 32px;
+      position:relative;
+      overflow:hidden;
+    }
+    .certificate::before{
+      content:"";
+      position:absolute;
+      inset:6px;
+      border:1px solid rgba(201,162,39,.14);
+      border-radius:11px;
+      pointer-events:none;
+    }
+
+    .cert-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:20px;
+      padding-bottom:16px;
+      border-bottom:1px solid rgba(201,162,39,.2);
+    }
+    .cert-brand{
+      font-size:13px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:color-mix(in oklab, var(--gold) 75%, white);
+    }
+    .cert-label{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.4);
+    }
+
+    .cert-tier-row{
+      text-align:center;
+      margin-bottom:22px;
+    }
+    .cert-gift-icon{
+      font-size:38px;
+      line-height:1;
+      margin-bottom:10px;
+    }
+    .cert-tier-name{
+      font-size:clamp(1.4rem, 3.5vw, 2rem);
+      font-weight:900;
+      letter-spacing:-.02em;
+      color:var(--text);
+      margin:0 0 6px;
+    }
+    .cert-entitlement{
+      font-size:13.5px;
+      color:rgba(234,240,255,.55);
+      letter-spacing:.04em;
+    }
+
+    .cert-features{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 24px;
+      justify-content:center;
+      list-style:none;
+      margin:0 0 24px;
+      padding:0;
+    }
+    .cert-features li{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:13.5px;
+      color:var(--muted);
+    }
+    .cert-features li::before{
+      content:"✦";
+      font-size:9px;
+      color:color-mix(in oklab, var(--gold) 70%, white);
+    }
+
+    .cert-code-wrap{
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(201,162,39,.3);
+      border-radius:10px;
+      padding:20px 24px;
+      text-align:center;
+      margin-bottom:20px;
+    }
+    .cert-code-label{
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.18em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.4);
+      margin-bottom:10px;
+    }
+    .cert-code{
+      font-family:ui-monospace, "Cascadia Code", "Fira Code", monospace;
+      font-size:clamp(1.5rem, 5vw, 2.2rem);
+      font-weight:700;
+      letter-spacing:.18em;
+      color:color-mix(in oklab, var(--gold) 85%, white);
+      word-break:break-all;
+      min-height:2.6rem;
+    }
+    .cert-code.loading{
+      opacity:.4;
+      animation:pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0%,100%{ opacity:.4; }
+      50%     { opacity:.75; }
+    }
+    .code-error{
+      font-size:13px;
+      color:var(--danger);
+      margin-top:6px;
+    }
+
+    .cert-footer-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:12px;
+      justify-content:space-between;
+      align-items:center;
+      padding-top:16px;
+      border-top:1px solid rgba(201,162,39,.15);
+      font-size:12px;
+      color:rgba(234,240,255,.4);
+    }
+    .cert-redeem-url{ font-weight:700; color:rgba(234,240,255,.55); }
+
+    /* ── Page actions ─────────────────────────── */
+    .page-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+      margin-top:24px;
+    }
+
+    /* ── Footer ───────────────────────────────── */
+    footer{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 20px;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 18px;
+      font-size:12.5px;
+      color:rgba(234,240,255,.4);
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    footer a{ color:rgba(234,240,255,.45); }
+    footer a:hover{ color:var(--accent); text-decoration:none; }
+
+    /* ── Print ────────────────────────────────── */
+    @media print{
+      *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+
+      body{ background:#fff !important; color:#1a1a2e !important; min-height:unset; }
+
+      .site-header,
+      .confirm-card,
+      .cert-toolbar,
+      .page-actions,
+      footer{ display:none !important; }
+
+      .wrap{ max-width:100%; padding:0; }
+      .cert-section{ margin-top:0; }
+
+      .certificate{
+        background:#fffdf5 !important;
+        border:2px solid #c9a227 !important;
+        box-shadow:none !important;
+        border-radius:12px;
+        padding:40px 48px 36px;
+        page-break-inside:avoid;
+      }
+      .certificate::before{ border-color:rgba(201,162,39,.3) !important; }
+
+      .cert-brand{ color:#1a1a2e !important; }
+      .cert-tier-name{ color:#1a1a2e !important; }
+      .cert-label,
+      .cert-entitlement,
+      .cert-code-label{ color:#888 !important; }
+      .cert-features li{ color:#444 !important; }
+      .cert-features li::before{ color:#c9a227 !important; }
+      .cert-code-wrap{ background:#f5f0e8 !important; border-color:#c9a227 !important; }
+      .cert-code{ color:#8a6800 !important; }
+      .cert-footer-row{ color:#888 !important; border-color:rgba(201,162,39,.3) !important; }
+      .cert-redeem-url{ color:#555 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <header class="site-header">
+    <div class="brand">
+      <h1>Irene's Webworks</h1>
+      <p>Professional portfolio websites</p>
+    </div>
+    <a href="../index.html" class="btn ghost">Home</a>
+  </header>
+
+  <div class="confirm-card">
+    <div class="confirm-icon">🎁</div>
+    <div class="confirm-body">
+      <h2 id="confirmHeadline">Your gift is on its way!</h2>
+      <p>We've emailed your gift code and redemption instructions to your inbox. You can also print or save the certificate below to share directly.</p>
+      <div class="next-steps">
+        <strong>What happens next</strong>
+        Forward the email or hand over the printed certificate. When the recipient is ready,
+        they'll create a free account at Irene's Webworks and enter the code to unlock their package.
+        Codes are valid for 12 months.
+      </div>
+    </div>
+  </div>
+
+  <div class="cert-section">
+
+    <div class="cert-toolbar">
+      <span class="cert-toolbar-label">Gift Certificate</span>
+      <button class="btn print-btn" onclick="window.print()">⎙ Print / Save as PDF</button>
+    </div>
+
+    <div class="certificate">
+
+      <div class="cert-top">
+        <span class="cert-brand">Irene's Webworks</span>
+        <span class="cert-label">Gift Certificate</span>
+      </div>
+
+      <div class="cert-tier-row">
+        <div class="cert-gift-icon">🎁</div>
+        <h2 class="cert-tier-name" id="certTierName">Gift Package</h2>
+        <div class="cert-entitlement">The bearer of this certificate is entitled to:</div>
+      </div>
+
+      <ul class="cert-features" id="certFeatures"></ul>
+
+      <div class="cert-code-wrap">
+        <div class="cert-code-label">Gift Code</div>
+        <div class="cert-code loading" id="certCode">Retrieving…</div>
+        <div class="code-error" id="codeError" style="display:none;">
+          Code not found — check your email for the gift code.
+        </div>
+      </div>
+
+      <div class="cert-footer-row">
+        <span>Valid for 12 months from date of purchase.</span>
+        <span>Redeem at: <span class="cert-redeem-url">irenes-ventures.com</span></span>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="page-actions">
+    <a href="landing_gift.html" class="btn primary">Give another gift</a>
+    <a href="../index.html" class="btn ghost">Back to home</a>
+  </div>
+
+</main>
+
+<footer>
+  <span>Irene's Webworks</span>
+  <span>
+    <a href="../index.html">Home</a> ·
+    <a href="mailto:irene@irenes-ventures.com">Contact Irene</a> ·
+    <a href="terms.html">Terms</a> ·
+    <a href="privacy.html">Privacy</a>
+  </span>
+</footer>
+
+<script>
+  const TIERS = {
+    starter_gift: {
+      name: "Starter Gift Package",
+      features: [
+        "1 custom portfolio website",
+        "10 revision credits",
+        "1 download/deploy of the finished site",
+        "6 months of hosting",
+        "1 month of support"
+
+      ],
+    },
+    pro_gift: {
+      name: "Pro Gift Package",
+      features: [
+        "5 custom portfolio websites",
+        "25 credits",
+        "5 downloads/deploys of the finished site",
+        "12 months of hosting",
+        "2 months of priority support"
+      ],
+    },
+  };
+
+  const params    = new URLSearchParams(window.location.search);
+  const tier      = params.get("tier");
+  const sessionId = params.get("session_id");
+  const info      = TIERS[tier];
+
+  if (info) {
+    document.getElementById("certTierName").textContent = info.name;
+    if (tier === "pro_gift") document.getElementById("confirmHeadline").textContent = "Your Pro gift is on its way!";
+    const ul = document.getElementById("certFeatures");
+    info.features.forEach(text => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      ul.appendChild(li);
+    });
+  }
+
+  // Delays (ms) between attempts — gives the Stripe webhook time to complete
+  const RETRY_DELAYS = [2000, 4000, 6000, 10000, 15000];
+
+  async function loadCode(attempt = 0) {
+    if (!sessionId) { showCodeError(); return; }
+    try {
+      const res  = await fetch(`/.netlify/functions/getGiftCode?sessionId=${encodeURIComponent(sessionId)}`);
+      const data = await res.json();
+      if (res.ok && data.code) {
+        const el = document.getElementById("certCode");
+        el.textContent = data.code;
+        el.classList.remove("loading");
+      } else if (attempt < RETRY_DELAYS.length) {
+        document.getElementById("certCode").textContent = `Retrieving… (${attempt + 1})`;
+        setTimeout(() => loadCode(attempt + 1), RETRY_DELAYS[attempt]);
+      } else {
+        showCodeError();
+      }
+    } catch {
+      if (attempt < RETRY_DELAYS.length) {
+        setTimeout(() => loadCode(attempt + 1), RETRY_DELAYS[attempt]);
+      } else {
+        showCodeError();
+      }
+    }
+  }
+
+  function showCodeError() {
+    document.getElementById("certCode").style.display = "none";
+    document.getElementById("codeError").style.display = "block";
+  }
+
+  // Start after 2 s — the Stripe webhook needs time to fire and insert the row
+  setTimeout(loadCode, 2000);
+</script>
+
+</body>
+</html>

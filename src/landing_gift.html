@@ -763,6 +763,7 @@
       <div class="section-title">
         <h3 style="color:#74c0fc;">Choose a gift package</h3>
         <p>Both include a printable gift certificate and instant email delivery.</p>
+        <a href="features.html" style="display:inline-block;margin-top:8px;font-size:13px;font-weight:700;color:#74c0fc;text-decoration:none;">Compare all features →</a>
       </div>
 
       <div class="pricing-grid">
@@ -774,14 +775,20 @@
             <div class="price-amount" style="margin-top:8px;"><sup>$</sup>149<small> one-time</small></div>
             <p class="price-desc" style="margin-top:10px;">
               A complete, polished portfolio that makes a strong first impression — ideal for undergrads and early-career job-seekers.
+              Includes six months of hosting and one month of support.
             </p>
           </div>
           <ul class="price-features">
-            <li>Single-page responsive portfolio website</li>
-            <li>Up to 6 sections of their choice</li>
-            <li>Designed around their résumé and goals</li>
+            <li>A responsive portfolio website</li>
+            <li>Unlimited sections &amp; components</li>
+            <li>Designed around their résumé</li>
+            <li>Job-targeting editorial direction</li>
             <li>Mobile &amp; desktop optimized</li>
-            <li>5 design revision rounds included</li>
+            <li>5 design revision credits included</li>
+            <li>1 download/deploy</li>
+            <li>30 day pre- and post-launch support period</li>
+            <li>Hosting for 6 months</li>
+            <li>Custom domain setup assistance</li>
             <li>Printable gift certificate + gift code</li>
           </ul>
           <div>
@@ -796,17 +803,21 @@
             <div class="price-name">Pro</div>
             <div class="price-amount" style="margin-top:8px;"><sup>$</sup>299<small> one-time</small></div>
             <p class="price-desc" style="margin-top:10px;">
-              The complete package — for the person in your life who deserves every possible advantage. Unlimited sections, editorial direction, and ongoing support.
+              The ultimate package — for the person in your life who deserves every possible advantage. Unlimited sections, editorial direction, full year of support and support.
             </p>
           </div>
           <ul class="price-features">
             <li>Multi-section full-scroll portfolio</li>
             <li>Unlimited sections &amp; components</li>
             <li>Publications, demos, research, projects</li>
-            <li>Job-targeting editorial direction</li>
-            <li>20 design revision rounds</li>
+              <ul>Up to 10 versions for <li>new job targets</li>
+              <li>resume updates</li>
+              <li>A-B variations</li>
+            </ul>
+            <li>30 design revision credits</li>
             <li>Custom domain setup assistance</li>
-            <li>60-day post-launch support</li>
+            <li>One year of hosting</li>
+            <li>One month pre- and post-launch support period</li>
             <li>Printable gift certificate + gift code</li>
           </ul>
           <div>
@@ -872,7 +883,7 @@
         const res = await fetch("/.netlify/functions/createCheckoutSession", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ tier, returnUrl: window.location.href })
+          body: JSON.stringify({ tier, returnUrl: window.location.origin + "/src/gift_purchased.html" })
         });
         const data = await res.json();
         if (!res.ok || !data.url) throw new Error(data.error || "Could not start checkout.");
@@ -885,5 +896,6 @@
     });
   });
 </script>
+  <script src="/src/annbot-widget.js" defer></script>
 </body>
 </html>

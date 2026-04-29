@@ -217,7 +217,7 @@
                 tier:       UPGRADE_TIER_KEY[tier] || "basic",
                 userId:     user.id,
                 userEmail:  user.email,
-                returnUrl:  location.origin + location.pathname,
+                returnUrl:  location.origin + "/src/purchased.html",
                 quantity
               })
             });

@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Plans & Billing</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <style>
+    :root{
+      --bg:#0a1220;
+      --bg2:#101b31;
+      --panel:rgba(255,255,255,.06);
+      --panel-strong:rgba(255,255,255,.09);
+      --border:rgba(255,255,255,.14);
+      --text:#ecf3ff;
+      --muted:rgba(236,243,255,.7);
+      --primary:#4E70F1;
+      --accent:#8DE0FF;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --shadow:0 22px 50px rgba(0,0,0,.35);
+      --radius:20px;
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family:var(--font);
+      color:var(--text);
+      background:
+        radial-gradient(900px 520px at 8% 0%, color-mix(in oklab, var(--primary) 24%, transparent), transparent 60%),
+        radial-gradient(780px 540px at 100% 8%, color-mix(in oklab, var(--danger) 18%, transparent), transparent 58%),
+        linear-gradient(180deg, var(--bg2), var(--bg));
+    }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+    .wrap{ max-width:1180px; margin:0 auto; padding:24px 18px 64px; }
+    .topbar{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:14px; margin-bottom:22px; flex-wrap:wrap;
+    }
+    .brand{ display:flex; flex-direction:column; gap:4px; }
+    .eyebrow{
+      font-size:11px; font-weight:800; letter-spacing:.16em;
+      text-transform:uppercase; color:rgba(236,243,255,.58);
+    }
+    h1{ margin:0; font-size:clamp(28px, 4vw, 48px); line-height:1.02; letter-spacing:-.03em; }
+    .sub{ max-width:760px; margin:10px 0 0; color:var(--muted); font-size:16px; }
+    .btn, button{ appearance:none; border:none; cursor:pointer; font:inherit; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:11px 16px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
+      color:var(--text); font-weight:800;
+    }
+    .btn.primary{
+      background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 75%, #fff 4%), color-mix(in oklab, var(--accent) 42%, var(--primary)));
+      color:white; border-color:transparent; box-shadow:0 10px 26px rgba(78,112,241,.34);
+    }
+    .btn.primary:disabled{ opacity:.5; cursor:not-allowed; box-shadow:none; }
+    .btn.ghost{ background:rgba(0,0,0,.16); }
+    .planCard, .faqCard, .authCard{
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(14px);
+    }
+    /* ── Account bar ── */
+    .accountBar{
+      display:flex; align-items:center; gap:28px; padding:16px 22px;
+      background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
+      box-shadow:var(--shadow); backdrop-filter:blur(14px); flex-wrap:wrap; margin-bottom:28px;
+    }
+    .acctGroup{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .acctPlanRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .acctActions{ margin-left:auto; display:flex; gap:8px; align-items:center; }
+    .statusLabel{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgba(236,243,255,.45); }
+    .statusValue{ font-size:16px; font-weight:800; }
+    #tierStatus{ text-transform:capitalize; }
+    .statusMeta{ color:var(--muted); font-size:13px; }
+    /* ── Section headers ── */
+    .sectionHead{ display:flex; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+    .sectionTitle{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:rgba(236,243,255,.55); }
+    .sectionNote{ font-size:13px; color:rgba(236,243,255,.38); margin:0; }
+    /* ── Plan grid ── */
+    .plans{
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:16px; align-items:stretch; margin-bottom:32px;
+    }
+    /* ── Add-ons strip ── */
+    .addons{
+      display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:16px; align-items:start;
+    }
+    .planCard.small{ padding:14px; gap:12px; }
+    .planCard.small .planBlurb{ min-height:auto; }
+    .planCard{
+      padding:18px; display:flex; flex-direction:column; gap:16px;
+      position:relative; overflow:hidden;
+    }
+    .planCard.featured{
+      background: linear-gradient(180deg, rgba(78,112,241,.14), rgba(255,255,255,.06)), var(--panel);
+      border-color:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.12));
+      transform:translateY(-6px);
+    }
+    .planTag{
+      align-self:flex-start; padding:5px 9px; border-radius:999px;
+      font-size:10px; font-weight:900; letter-spacing:.08em; text-transform:uppercase;
+      background:rgba(255,255,255,.1); color:rgba(236,243,255,.78);
+    }
+    .planName{ margin:0; font-size:21px; letter-spacing:-.02em; }
+    .price{ display:flex; align-items:flex-end; gap:6px; flex-wrap:wrap; }
+    .price strong{ font-size:36px; line-height:1; letter-spacing:-.04em; background:transparent !important; -webkit-text-fill-color:var(--text); }
+    .price span{ color:var(--muted); font-size:14px; padding-bottom:4px; }
+    .planBlurb{ color:var(--muted); font-size:14px; min-height:60px; }
+    .featureList{
+      margin:0; padding:0; list-style:none; display:flex; flex-direction:column;
+      gap:8px; color:rgba(236,243,255,.88); font-size:14px;
+    }
+    .featureList > li::before{ content:"•"; color:var(--accent); margin-right:8px; }
+    .qtyWrap{
+      display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+      padding:12px; border-radius:14px; background:rgba(0,0,0,.16);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .qtyWrap input{
+      width:84px; padding:10px 12px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
+      color:var(--text); font:inherit;
+    }
+    .qtyTotal{ font-weight:800; color:rgba(236,243,255,.9); }
+    .muted{ color:var(--muted); }
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:auto; align-items:center; }
+    /* ── Pipeline strip ── */
+    .pipeline{
+      display:flex; gap:0; align-items:stretch;
+      background:var(--panel); border:2px solid #c9a227;
+      border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(14px);
+      margin-bottom:20px; overflow:hidden;
+    }
+    .pStep{
+      flex:1; display:flex; flex-direction:column; gap:4px;
+      padding:14px 16px; position:relative;
+    }
+    .pStep+.pStep{ border-left:1px solid var(--border); }
+    .pNum{
+      font-size:10px; font-weight:900; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--accent); margin-bottom:2px;
+    }
+    .pLabel{ font-size:13px; font-weight:800; }
+    .pDesc{ font-size:12px; color:var(--muted); line-height:1.35; }
+    .pStep:nth-child(1){ background:rgba(141,224,255,.18); }
+    .pStep:nth-child(1) .pNum{ color:#b8eeff; }
+    .pStep:nth-child(2){ background:rgba(141,224,255,.09); }
+    .pStep:nth-child(2) .pNum{ color:#9ad8f0; }
+    .pStep:nth-child(3){ background:rgba(141,224,255,.03); }
+    .pStep:nth-child(3) .pNum{ color:#7bbbd8; }
+    .pStep:nth-child(4){ background:transparent; }
+    .pStep:nth-child(4) .pNum{ color:#6aadca; }
+    .pStep:nth-child(5){ background:rgba(141,224,255,.03); }
+    .pStep:nth-child(5) .pNum{ color:#7bbbd8; }
+    .pStep:nth-child(6){ background:rgba(141,224,255,.09); }
+    .pStep:nth-child(6) .pNum{ color:#9ad8f0; }
+    .pStep:nth-child(7){ background:rgba(141,224,255,.18); }
+    .pStep:nth-child(7) .pNum{ color:#b8eeff; }
+    .alaCartePrice{
+      font-size:22px; font-weight:700; letter-spacing:-.02em;
+      color:rgba(236,243,255,.32); text-decoration:line-through;
+      text-decoration-color:rgba(236,243,255,.38);
+      align-self:flex-end; padding-bottom:5px;
+    }
+    .pOptional{
+      font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+      color:rgba(236,243,255,.35); margin-left:3px;
+    }
+    @media(max-width:780px){
+      .pipeline{ flex-wrap:wrap; }
+      .pStep{ flex:1 1 30%; }
+    }
+    @media(max-width:480px){
+      .pStep{ flex:1 1 45%; }
+    }
+    /* ── Per-card status message ── */
+    .planMsg{ font-size:12px; min-height:16px; margin-top:2px; }
+    .planMsg.err{ color:var(--danger); }
+    .planMsg.ok{ color:var(--ok); }
+    /* ── Confirm slide-out panel ── */
+    .confirmOverlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:199;
+      opacity:0; pointer-events:none; transition:opacity .2s;
+    }
+    .confirmOverlay.open{ opacity:1; pointer-events:auto; }
+    .confirmPanel{
+      position:fixed; right:0; top:0; bottom:0; width:320px; max-width:100vw;
+      background:var(--bg2); border-left:1px solid var(--border);
+      box-shadow:-16px 0 48px rgba(0,0,0,.45); z-index:200;
+      display:flex; flex-direction:column;
+      transform:translateX(100%); transition:transform .25s cubic-bezier(.4,0,.2,1);
+    }
+    .confirmPanel.open{ transform:translateX(0); }
+    .confirmHeader{
+      padding:18px 20px; border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+    }
+    .confirmBody{
+      flex:1; padding:24px 20px; display:flex; flex-direction:column; gap:16px;
+    }
+    .confirmPlanName{ font-size:22px; font-weight:800; letter-spacing:-.02em; }
+    .confirmPlanPrice{ font-size:15px; color:var(--muted); }
+    .giftCheck{
+      display:inline-flex; align-items:center; gap:8px;
+      font-size:14px; color:var(--text); cursor:pointer; user-select:none;
+      padding:14px 16px; border-radius:14px;
+      border:1px solid var(--border); background:var(--panel);
+    }
+    .giftCheck input{ accent-color:var(--primary); cursor:pointer; width:16px; height:16px; }
+    .confirmFooter{
+      padding:16px 20px; border-top:1px solid var(--border);
+      display:flex; flex-direction:column; gap:8px; flex-shrink:0;
+    }
+    /* ── Add-ons total footer ── */
+    .addonsFooter{
+      margin-top:16px; padding:16px 20px;
+      background:var(--panel); border:1px solid var(--border);
+      border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(14px);
+      display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+    }
+    .addonsTotalLines{
+      flex:1; min-width:180px; font-size:13px; color:var(--muted);
+      display:flex; flex-wrap:wrap; gap:4px 16px;
+    }
+    .addonsTotalRow{
+      display:flex; align-items:baseline; gap:8px;
+      font-size:15px; white-space:nowrap;
+    }
+    .addonsTotalRow strong{ font-size:22px; letter-spacing:-.02em; }
+    .addonsTotalActions{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .finePrint{ color:rgba(236,243,255,.56); font-size:12px; line-height:1.45; }
+    /* ── FAQ / Auth ── */
+    .bottomGrid{ display:grid; grid-template-columns:1.1fr .9fr; gap:16px; margin-top:22px; }
+    .faqCard, .authCard{ padding:20px; }
+    .faqList{ display:grid; gap:12px; }
+    .faqItem{
+      padding:14px 16px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04);
+    }
+    .faqItem strong{ display:block; margin-bottom:5px; font-size:14px; }
+    .authCard form{ display:flex; flex-direction:column; gap:10px; margin-top:14px; }
+    .authCard input{
+      width:100%; padding:12px 13px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
+      color:var(--text); font:inherit;
+    }
+    .authMsg{ min-height:18px; font-size:13px; color:var(--muted); }
+    .authMsg.err{ color:var(--danger); }
+    .authMsg.ok{ color:var(--ok); }
+    .linkRow{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; }
+    .plan-stack{ display:flex; flex-direction:column; gap:16px; }
+    .plan-stack .planCard{ flex:1; }
+    .planCard.care{
+      background:#7a8db0; color:#000; border:4px solid #c9a227;
+      box-shadow:0 0 0 1px #c9a22755, 0 8px 32px rgba(201,162,39,.25), var(--shadow);
+    }
+    .planCard.care .planTag{ background:rgba(0,0,0,.12); color:rgba(0,0,0,.75); }
+    .planCard.care .planName, .planCard.care .price strong{ color:#000; }
+    .planCard.care .price span, .planCard.care .planBlurb, .planCard.care .featureList{ color:rgba(0,0,0,.7); }
+    .planCard.care .featureList > li::before{ color:#000; font-weight:900; }
+    @media(max-width:1024px){
+      .plans, .addons{ grid-template-columns:repeat(2, minmax(0,1fr)); }
+      .bottomGrid{ grid-template-columns:1fr; }
+      .accountBar{ gap:16px; }
+    }
+    @media(max-width:680px){
+      .plans, .addons{ grid-template-columns:1fr; }
+      .planCard, .faqCard, .authCard{ border-radius:16px; }
+      .accountBar{ flex-direction:column; align-items:flex-start; }
+      .acctActions{ margin-left:0; }
+    }
+  </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="brand">
+        <div class="eyebrow">Plans & Billing</div>
+        <h1>Pricing</h1><h2>Professional portfolio websites that help job-hunters stand out — and get hired.</h2>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" type="button" onclick="closePricingPage()" data-umami-event="pricing-back">Back To Builder</button>
+      </div>
+    </div>
+
+    <!-- Account bar -->
+    <div class="accountBar">
+      <div class="acctGroup">
+        <div class="statusLabel">Account</div>
+        <div class="statusValue" id="accountStatus">Signed out</div>
+        <div class="statusMeta" id="accountMeta">Sign in below to purchase.</div>
+      </div>
+      <div class="acctGroup">
+        <div class="statusLabel">Plan &amp; Quota</div>
+        <div class="acctPlanRow">
+          <div class="statusValue" id="tierStatus">free</div>
+          <div class="statusMeta" id="quotaStatus"></div>
+          <div class="statusMeta" id="hostingUntil"></div>
+        </div>
+      </div>
+      <div class="acctActions">
+        <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
+        <button class="btn ghost" id="signOutBtn" type="button" style="display:none;">Sign Out</button>
+      </div>
+    </div>
+
+    <!-- Pipeline -->
+    <div class="sectionHead">
+      <span class="sectionTitle">Pipeline</span>
+      <span class="sectionNote">One full pipeline pass = 1-5 credits · One major revision = 1 credit</span>
+    </div>
+
+    <div class="pipeline">
+      <div class="pStep">
+        <div class="pNum">Step 1</div>
+        <div class="pLabel">Resume</div>
+        <div class="pDesc">Upload your resume, major, and specialization.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 2 <span class="pOptional">optional</span></div>
+        <div class="pLabel">Job</div>
+        <div class="pDesc">Paste a target job posting to tailor the site.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 3</div>
+        <div class="pLabel">Design</div>
+        <div class="pDesc">Choose a composition, style, and render mode.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 4</div>
+        <div class="pLabel">Colors</div>
+        <div class="pDesc">Pick a color scheme — or let the AI infer one.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 5 <span class="pOptional">optional</span></div>
+        <div class="pLabel">Edit</div>
+        <div class="pDesc">Preview your portfolio and refine it to taste.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 6</div>
+        <div class="pLabel">Publish</div>
+        <div class="pDesc">Download the HTML or deploy it live.</div>
+      </div>
+      <div class="pStep">
+        <div class="pNum">Step 7 <span class="pOptional">optional</span></div>
+        <div class="pLabel">Domain</div>
+        <div class="pDesc">Point a custom domain at your live site.</div>
+      </div>
+    </div>
+
+    <!-- Plans -->
+    <div class="sectionHead">
+      <span class="sectionTitle">Plans</span>
+      <a href="features.html" class="sectionNote" style="color:var(--accent);text-decoration:none;font-size:13px;font-weight:700;">Compare all features →</a>
+    </div>
+
+    <section class="plans">
+
+      <article class="planCard">
+        <div class="planTag">One-Time</div>
+        <h2 class="planName">FREE Trial</h2>
+        <div class="price"><strong>$0</strong><span>one-time</span></div>
+        <div class="planBlurb">A single serious pass through the pipeline and an editable preview.</div>
+        <ul class="featureList">
+          <li>Resume analysis &amp; job targeting</li>
+          <li>Customized design variety</li>
+          <li>Unlimited text &amp; color edits</li>
+          <li>Single-page responsive portfolio</li>
+          <li>Up to 6 sections of their choice</li>
+          <li>Resume PDF/DOCX &amp; headshot embedded</li>
+          <li>No download · No deploy · No hosting
+          <li>No renewal</li>
+        </ul>
+        <div class="actions">
+          <button class="btn primary" type="button" id="btn_basic"
+                  onclick="checkoutPlan('basic')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="basic">Choose Basic →</button>
+        </div>
+        <div class="planMsg" id="msg_basic"></div>
+      </article>
+
+      <article class="planCard featured">
+        <div class="planTag">One-Time or Renewing</div>
+        <h2 class="planName">Graduate</h2>
+        <div class="price"><strong>$19</strong><span>flat rate</span></div>
+        <div class="planBlurb">Everything in the Basic Plan, plus additional credits, DFY deploy and a month of hosting.</div>
+        <ul class="featureList">
+          <li>Publications, demos, research, projects</li>
+          <li>3 credits · 1 download/deploy per unit</li>
+          <li>First month of hosting</li>
+          <li>Guide to DIY (free) external hosting</li>
+          <li>Published on Irene's Ventures domain</li>
+          <li>(Optional) Monthly auto-renewal</li>
+        </ul>
+        <div class="actions">
+          <button class="btn primary" type="button" id="btn_premium_monthly_new"
+                  onclick="checkoutPlan('premium_monthly_new')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="premium-units">Choose Graduate →</button>
+        </div>
+        <div class="planMsg" id="msg_premium_monthly_new"></div>
+      </article>
+
+      <article class="planCard">
+        <div class="planTag">Semi-Annual</div>
+        <h2 class="planName">Premium</h2>
+        <div class="price"><strong>$99</strong><span>for six months</span></div>
+        <div class="planBlurb">Everything in the Graduate Plan times 5 — at a 50% discount. Ideal for ongoing career development.</div>
+        <ul class="featureList">
+          <li>Up to 10 webpage sections</li>
+          <li>Multiple versions for
+            <ul>
+              <li>new job targets</li>
+              <li>resume updates</li>
+              <li>A-B variations</li>
+            </ul>
+          </li>
+          <li>10 credits · 5 downloads/deploys</li>
+          <li>Hosting for six months</li>
+          <li>Custom domain setup support</li>
+          <li>(Optional) Semi-annual renewal</li>
+        </ul>
+        <div class="actions">
+          <button class="btn primary" type="button" id="btn_premium_annual"
+                  onclick="checkoutPlan('premium_annual')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="annual">Choose Premium →</button>
+        </div>
+        <div class="planMsg" id="msg_premium_annual"></div>
+      </article>
+
+    </section>
+
+    <!-- Add-ons -->
+    <div class="sectionHead" style="margin-top:8px;">
+      <span class="sectionTitle">À la carte add-ons</span>
+      <span class="sectionNote">Only available with the purchase of a plan. Can be combined with any paid plan · Set quantity to 0 to skip</span>
+    </div>
+    <section class="addons">
+
+      <article class="planCard small">
+        <div class="planTag">Add-on</div>
+        <h2 class="planName" style="font-size:18px;">Hosting</h2>
+        <div class="price"><strong>$10</strong><span>per month</span></div>
+        <div class="planBlurb">Keep your site live after the included hosting period expires.</div>
+        <ul class="featureList">
+          <li>Global content delivery</li>
+          <li>HTTPS security</li>
+          <li>Strong uptime (99.9%)</li>
+          <li>SSL certificate</li>
+          <li>Irene's Ventures subdomain option</li>
+        </ul>
+        <div class="qtyWrap">
+          <label for="hostingMonths" class="muted" style="font-size:13px;font-weight:700;">Months</label>
+          <input id="hostingMonths" type="number" min="0" max="24" value="0" oninput="updateAddonsTotal()" />
+          <div class="qtyTotal" id="hostingTotal">= $0.00</div>
+        </div>
+      </article>
+
+      <article class="planCard small">
+        <div class="planTag">Add-on</div>
+        <h2 class="planName" style="font-size:18px;">Extra Credits</h2>
+        <div class="price"><strong>$5</strong><span>per credit</span></div>
+        <div class="planBlurb">Top up your credits for building, revising, and deploying your website.</div>
+        <ul class="featureList">
+          <li>Resume analysis</li>
+          <li>Job posting analysis (if provided)</li>
+          <li>Template/style analysis (if provided)</li>
+          <li>Professional portfolio website generation</li>
+          <li>AI-powered revisions and refinement</li>
+          <li>Custom domain setup assistance</li>
+        </ul>
+        <div class="qtyWrap">
+          <label for="creditsQty" class="muted" style="font-size:13px;font-weight:700;">Credits</label>
+          <input id="creditsQty" type="number" min="0" max="50" value="0" oninput="updateAddonsTotal()" />
+          <div class="qtyTotal" id="creditsTotal">= $0.00</div>
+        </div>
+      </article>
+
+      <article class="planCard small care">
+        <div class="planTag">Add-on</div>
+        <h2 class="planName" style="font-size:18px;">Care Package</h2>
+        <div class="price"><strong>$49</strong><span>per month</span></div>
+        <div class="planBlurb">Hands-on pre- and post-launch support.</div>
+        <ul class="featureList">
+          <li>Done-for-you editing &amp; polishing</li>
+          <li>Guidance before and after launch</li>
+          <li>Custom domain setup assistance</li>
+        </ul>
+        <div class="qtyWrap">
+          <label for="careMonths" class="muted" style="font-size:13px;font-weight:700;">Months</label>
+          <input id="careMonths" type="number" min="0" max="12" value="0" oninput="updateAddonsTotal()" />
+          <div class="qtyTotal" id="careTotal">= $0.00</div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- Add-ons total bar -->
+    <div class="addonsFooter">
+      <div class="addonsTotalLines" id="addonsTotalLines">
+        <span style="color:rgba(236,243,255,.3);">Set a quantity above to add items.</span>
+      </div>
+      <div class="addonsTotalRow">
+        <span class="muted" style="font-size:13px;">À La Carte Total</span>
+        <strong id="addonsTotalAmt">$0.00</strong>
+      </div>
+      <div class="addonsTotalActions">
+        <button class="btn primary" id="addonsBuyBtn" onclick="checkoutAddons()" disabled>Buy Add-ons →</button>
+        <div class="authMsg" id="addonsMsg"></div>
+      </div>
+    </div>
+
+    <!-- FAQ + Auth -->
+    <section class="bottomGrid" style="margin-top:32px;">
+      <div class="faqCard">
+        <div class="eyebrow" style="margin-bottom:10px;">How It Works</div>
+        <div class="faqList">
+          <div class="faqItem">
+            <strong>What is a credit?</strong>
+            A credit = one chunk of AI processing. 3 credits power one full pipeline pass; revisions cost 0–3 depending on scope.
+          </div>
+          <div class="faqItem">
+            <strong>Download vs. deploy?</strong>
+            A download saves the site to your computer. A deploy publishes it live to the internet.
+          </div>
+          <div class="faqItem">
+            <strong>Why host with Irene's Webworks vs self-host?</strong>
+            Irene's Webworks includes global content delivery, fast load times, HTTPS security, and strong uptime performance.
+          </div>
+          <div class="faqItem">
+            <strong>Can I mix plans and add-ons?</strong>
+            Yes — choose a plan above, then set quantities in the add-ons section and buy them separately.
+          </div>
+          <div class="faqItem">
+            <strong>What if I need more credits later?</strong>
+            Buy Extra Credits any time from this page. Graduate subscribers pay $5/credit; Premium subscribers pay $4/credit.
+          </div>
+        </div>
+      </div>
+
+      <aside class="authCard" id="authCardSection">
+        <div class="eyebrow">Sign In to Purchase</div>
+        <div class="linkRow" style="margin-top:8px;">
+          <strong id="authCardTitle">Sign in to purchase</strong>
+          <span class="muted" id="authCardMeta">Your current plan and quota appear here after login.</span>
+        </div>
+        <form id="authForm">
+          <input id="authEmail" type="email" placeholder="Email" autocomplete="email" />
+          <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
+          <button class="btn primary" id="authSubmitBtn" type="submit">Sign In</button>
+        </form>
+        <div style="text-align:right;margin-top:2px;">
+          <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(120,140,180,.6);text-decoration:underline;">Forgot password?</a>
+        </div>
+        <div class="authMsg" id="authMsg"></div>
+      </aside>
+    </section>
+
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://ssnjjojacxalnwpbzprx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let _currentUser = null;
+    let _membership = null;
+
+    function calcGraduatedTotal(qty, multiplier = 1) {
+      let total = 0;
+      for (let i = 0; i < qty; i++) {
+        const unit = i < PREMIUM_UNIT_PRICES.length ? PREMIUM_UNIT_PRICES[i] : PREMIUM_UNIT_PRICE_EXTRA;
+        total += unit * multiplier;
+      }
+      return total;
+    }
+
+    function currentUserId() { return _currentUser?.id || null; }
+
+    function formatMoney(value) { return `$${value.toFixed(2)}`; }
+
+    function formatPrice(value) { return value % 1 === 0 ? `$${value}` : formatMoney(value); }
+
+    function closePricingPage() {
+      if (window.opener && !window.opener.closed) { window.close(); return; }
+      if (document.referrer && !document.referrer.includes("pricing.html")) {
+        window.location.href = document.referrer;
+      } else {
+        window.location.href = "overview.html";
+      }
+    }
+
+    function updatePremiumCard(prefix, qty, multiplier) {
+      const total = calcGraduatedTotal(qty, multiplier);
+      const firstUnit = calcGraduatedTotal(1, multiplier);
+      const priceEl = document.getElementById(prefix + "Price");
+      const totalEl = document.getElementById(prefix + "Total");
+      if (priceEl) priceEl.textContent = formatPrice(firstUnit);
+      if (totalEl) totalEl.textContent = `= ${formatMoney(total)} total`;
+    }
+
+    function updateAddonsTotal() {
+      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
+      const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
+      const careQty = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
+
+      const hTotal    = hQty * 9;
+      const cTotal    = cQty * 5;
+      const careTotal = careQty * 49;
+      const grand     = hTotal + cTotal + careTotal;
+
+      document.getElementById("hostingTotal").textContent = `= ${formatMoney(hTotal)}`;
+      document.getElementById("creditsTotal").textContent  = `= ${formatMoney(cTotal)}`;
+      document.getElementById("careTotal").textContent     = `= ${formatMoney(careTotal)}`;
+
+      const lines = [];
+      if (hQty > 0)    lines.push(`${hQty} mo hosting × $9`);
+      if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × $5`);
+      if (careQty > 0) lines.push(`${careQty} mo care × $49`);
+
+      const linesEl = document.getElementById("addonsTotalLines");
+      linesEl.innerHTML = lines.length
+        ? lines.map(l => `<span>${l}</span>`).join(`<span style="color:rgba(236,243,255,.25)"> · </span>`)
+        : `<span style="color:rgba(236,243,255,.3);">Set a quantity above to add items.</span>`;
+
+      document.getElementById("addonsTotalAmt").textContent = formatMoney(grand);
+      document.getElementById("addonsBuyBtn").disabled = grand === 0;
+    }
+
+    async function checkoutItems(items, isGift, msgEl, btnEl) {
+      if (!currentUserId()) {
+        msgEl.className = "planMsg err";
+        msgEl.textContent = "Sign in below to purchase.";
+        document.getElementById("authEmail").focus();
+        return;
+      }
+      const origText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = "Redirecting…";
+      msgEl.className = "planMsg";
+      msgEl.textContent = "Starting checkout…";
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 15000);
+        const res = await fetch("/.netlify/functions/createCheckoutSession", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            items,
+            isGift,
+            userId: _currentUser.id,
+            userEmail: _currentUser.email,
+            returnUrl: `${window.location.origin}/src/purchased.html`,
+          })
+        });
+        clearTimeout(timer);
+        const text = await res.text();
+        let data = null;
+        try { data = JSON.parse(text); } catch {}
+        if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout.");
+        msgEl.className = "planMsg ok";
+        msgEl.textContent = "Redirecting to Stripe…";
+        window.location.href = data.url;
+      } catch (err) {
+        const msg = err?.name === "AbortError" ? "Checkout timed out. Try again." : (err.message || "Checkout failed.");
+        msgEl.className = "planMsg err";
+        msgEl.textContent = msg;
+        btnEl.disabled = false;
+        btnEl.textContent = origText;
+      }
+    }
+
+    const PLAN_LABELS = {
+      basic:               { name: "Basic",    price: "$7 one-time" },
+      premium_monthly_new: { name: "Graduate", price: "$19 per unit" },
+      premium_annual:      { name: "Premium",  price: "$99 for six months" },
+    };
+    let _pendingTier = null;
+
+    function checkoutPlan(tier) {
+      const def = PLAN_LABELS[tier];
+      _pendingTier = tier;
+      document.getElementById("confirmPlanName").textContent  = def.name;
+      document.getElementById("confirmPlanPrice").textContent = def.price;
+      document.getElementById("confirmGift").checked = false;
+      document.getElementById("confirmMsg").textContent = "";
+      document.getElementById("confirmMsg").className  = "authMsg";
+      document.getElementById("confirmCheckoutBtn").disabled = false;
+      document.getElementById("confirmCheckoutBtn").textContent = "Checkout →";
+      document.getElementById("confirmPanel").classList.add("open");
+      document.getElementById("confirmOverlay").classList.add("open");
+    }
+
+    function closeConfirm() {
+      document.getElementById("confirmPanel").classList.remove("open");
+      document.getElementById("confirmOverlay").classList.remove("open");
+    }
+
+    function confirmCheckout() {
+      if (!_pendingTier) return;
+      const isGift = document.getElementById("confirmGift").checked;
+      const msgEl  = document.getElementById("confirmMsg");
+      const btnEl  = document.getElementById("confirmCheckoutBtn");
+      checkoutItems([{ tier: _pendingTier, qty: 1 }], isGift, msgEl, btnEl);
+    }
+
+    async function checkoutAddons() {
+      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
+      const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
+      const careQty = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
+      const msgEl   = document.getElementById("addonsMsg");
+      const btnEl   = document.getElementById("addonsBuyBtn");
+
+      const items = [];
+      if (hQty > 0)    items.push({ tier: "hosting",       qty: hQty });
+      if (cQty > 0)    items.push({ tier: "extra_credits", qty: cQty });
+      if (careQty > 0) items.push({ tier: "care",          qty: careQty });
+
+      if (!items.length) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "Set at least one quantity above 0.";
+        return;
+      }
+      await checkoutItems(items, false, msgEl, btnEl);
+    }
+
+    async function refreshMembership(user) {
+      if (!user) { _membership = null; return; }
+      const { data } = await _supabase
+        .from("memberships")
+        .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until")
+        .eq("user_id", user.id)
+        .single();
+      _membership = data || null;
+    }
+
+    function renderAuthState() {
+      const signedIn = !!_currentUser;
+      const accountStatus   = document.getElementById("accountStatus");
+      const accountMeta     = document.getElementById("accountMeta");
+      const tierStatus      = document.getElementById("tierStatus");
+      const quotaStatus     = document.getElementById("quotaStatus");
+      const hostingUntil    = document.getElementById("hostingUntil");
+      const authActionBtn   = document.getElementById("authActionBtn");
+      const signOutBtn      = document.getElementById("signOutBtn");
+      const authCardSection = document.getElementById("authCardSection");
+      const authCardTitle   = document.getElementById("authCardTitle");
+      const authCardMeta    = document.getElementById("authCardMeta");
+      const authForm        = document.getElementById("authForm");
+      const bottomGrid      = authCardSection?.closest(".bottomGrid");
+
+      if (!signedIn) {
+        accountStatus.textContent = "Signed out";
+        accountMeta.textContent   = "Sign in below to purchase.";
+        tierStatus.textContent    = "free";
+        quotaStatus.textContent   = "";
+        hostingUntil.textContent  = "";
+        authActionBtn.textContent = "Sign In";
+        signOutBtn.style.display  = "none";
+        authCardTitle.textContent = "Sign in to purchase";
+        authCardMeta.textContent  = "Your current plan and quota appear here after login.";
+        authForm.style.display    = "";
+        if (authCardSection) authCardSection.style.display = "";
+        if (bottomGrid) bottomGrid.style.gridTemplateColumns = "";
+        return;
+      }
+
+      const tier = _membership?.tier || "free";
+      const cUnlimited = _membership?.credits_limit === -1;
+      const dUnlimited = _membership?.deploys_limit === -1;
+      const cStr = _membership
+        ? (cUnlimited ? "∞" : `${_membership.credits_limit - (_membership.credits_used || 0)}/${_membership.credits_limit}`)
+        : "—";
+      const dStr = _membership
+        ? (dUnlimited ? "∞" : `${_membership.deploys_limit - (_membership.deploys_used || 0)}/${_membership.deploys_limit}`)
+        : "—";
+
+      accountStatus.textContent = _currentUser.email;
+      accountMeta.textContent   = _membership?.status ? `Status: ${_membership.status}` : "Signed in";
+      tierStatus.textContent    = tier;
+      quotaStatus.textContent   = `Credits: ${cStr}  ·  Deploys: ${dStr}`;
+      hostingUntil.textContent  = _membership?.hosting_until
+        ? `Hosting until: ${new Date(_membership.hosting_until).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })}`
+        : "";
+      authActionBtn.textContent = "Refresh";
+      signOutBtn.style.display  = "";
+      if (authCardSection) authCardSection.style.display = "none";
+      if (bottomGrid) bottomGrid.style.gridTemplateColumns = "1fr";
+    }
+
+    async function onSignIn(user) {
+      _currentUser = user;
+      await refreshMembership(user);
+      renderAuthState();
+    }
+
+    function onSignOut() {
+      _currentUser = null;
+      _membership  = null;
+      renderAuthState();
+    }
+
+    document.getElementById("authActionBtn").addEventListener("click", async () => {
+      if (!_currentUser) { document.getElementById("authEmail").focus(); return; }
+      const btn   = document.getElementById("authActionBtn");
+      const msgEl = document.getElementById("authMsg");
+      btn.disabled = true;
+      btn.textContent = "Refreshing…";
+      try {
+        await refreshMembership(_currentUser);
+        renderAuthState();
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = "Account refreshed.";
+        setTimeout(() => { msgEl.textContent = ""; }, 2500);
+      } catch (err) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = err?.message || "Refresh failed.";
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    document.getElementById("signOutBtn").addEventListener("click", async () => {
+      await _supabase.auth.signOut();
+    });
+
+    document.getElementById("forgotPasswordLink").addEventListener("click", async e => {
+      e.preventDefault();
+      const email = document.getElementById("authEmail").value.trim();
+      const msgEl = document.getElementById("authMsg");
+      msgEl.className = "authMsg";
+      if (!email) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "Enter your email address above, then click Forgot password.";
+        return;
+      }
+      msgEl.textContent = "Sending reset email…";
+      const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/overview.html?reset=1`
+      });
+      if (error) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = "Password reset email sent. Check your inbox.";
+      }
+    });
+
+    document.getElementById("authForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email    = document.getElementById("authEmail").value.trim();
+      const password = document.getElementById("authPassword").value;
+      const msgEl    = document.getElementById("authMsg");
+      msgEl.className  = "authMsg";
+      msgEl.textContent = "";
+
+      if (!email || !password) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "Email and password required.";
+        return;
+      }
+      const { error } = await _supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = "Signed in.";
+      }
+    });
+
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) onSignIn(session.user);
+      else renderAuthState();
+    });
+    _supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) onSignIn(session.user);
+      else onSignOut();
+    });
+
+    const params  = new URLSearchParams(window.location.search);
+    const authMsg = document.getElementById("authMsg");
+    if (params.get("checkout") === "success") {
+      authMsg.className = "authMsg ok";
+      authMsg.textContent = "Checkout completed. Refreshing account status…";
+    } else if (params.get("checkout") === "cancelled") {
+      authMsg.className = "authMsg err";
+      authMsg.textContent = "Checkout was cancelled.";
+    }
+  </script>
+
+  <div class="confirmOverlay" id="confirmOverlay" onclick="closeConfirm()"></div>
+  <aside class="confirmPanel" id="confirmPanel">
+    <div class="confirmHeader">
+      <strong style="font-size:15px;">Confirm Order</strong>
+      <button class="btn ghost" onclick="closeConfirm()" style="padding:5px 14px;font-size:13px;border-radius:8px;">✕</button>
+    </div>
+    <div class="confirmBody">
+      <div>
+        <div class="confirmPlanName" id="confirmPlanName"></div>
+        <div class="confirmPlanPrice" id="confirmPlanPrice"></div>
+      </div>
+      <label class="giftCheck">
+        <input type="checkbox" id="confirmGift"> Is this a gift?
+      </label>
+    </div>
+    <div class="confirmFooter">
+      <button class="btn primary" id="confirmCheckoutBtn" onclick="confirmCheckout()" style="width:100%;padding:14px;">Checkout →</button>
+      <div class="authMsg" id="confirmMsg"></div>
+    </div>
+  </aside>
+
+  <script src="/src/annbot-widget.js" defer></script>
+</body>
+</html>

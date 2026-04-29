@@ -579,14 +579,24 @@
         <div id="authLoggedIn" class="hidden">
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
             <div class="avatar" style="width:36px;height:36px;font-size:16px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:900;" id="authAvatarLarge">?</div>
-            <div>
+            <div style="flex:1; min-width:0;">
               <div style="font-weight:700;font-size:14px;" id="authUserEmail"></div>
-              <span class="tierBadge" id="authTierBadge">free</span>
+              <div style="display:flex; align-items:center; gap:8px; margin-top:3px; overflow:hidden;">
+                <span class="tierBadge" id="authTierBadge">free</span>
+                <span id="authQuotaBar" style="font-size:11px; color:var(--muted); white-space:nowrap;"></span>
+              </div>
             </div>
           </div>
-          <div class="quotaBar" id="authQuotaBar"></div>
-          <div style="margin-top:16px;">
-            <a class="btn ghost mini" href="subscriptions.html" style="width:100%; text-decoration:none; justify-content:center; margin-bottom:8px;">Plans &amp; Billing</a>
+          <div style="margin-top:16px; display:flex; flex-direction:column; gap:8px;">
+            <a class="btn ghost mini" href="pricing.html" style="width:100%; text-decoration:none; justify-content:center;">Plans &amp; Billing</a>
+            <div>
+              <div style="display:flex; gap:6px;">
+                <input type="text" id="giftRedeemInput" placeholder="🎁 Gift code" autocomplete="off"
+                  style="flex:1; min-width:0; text-transform:uppercase; letter-spacing:.05em; font-family:ui-monospace,monospace;" />
+                <button class="btn ghost mini" onclick="redeemGiftCodeUI()">Redeem</button>
+              </div>
+              <div id="giftRedeemMsg" style="font-size:12px; margin-top:5px; display:none;"></div>
+            </div>
             <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
           </div>
         </div>
@@ -1087,18 +1097,32 @@
   window.getSupabaseUser = () => _currentUser;
   window.getSupabaseMembership = () => _membership;
 
-  let _currentUser   = null;
-  let _membership    = null;
-  let _authTab       = "login";
+  let _currentUser        = null;
+  let _membership         = null;
+  let _authTab            = "login";
+  let _isResettingPassword = false;
 
   // ── Session bootstrap ────────────────────────────────────────────────────
   _supabase.auth.getSession().then(({ data: { session } }) => {
+    if (_isResettingPassword) return; // recovery flow takes priority
     if (session?.user) onSignIn(session.user);
   });
 
   _supabase.auth.onAuthStateChange((_event, session) => {
-    if (session?.user) onSignIn(session.user);
-    else               onSignOut();
+    if (_event === "PASSWORD_RECOVERY") {
+      _isResettingPassword = true;
+      openAuthModal("reset");
+    } else if (_isResettingPassword && _event === "SIGNED_IN") {
+      // suppress — this is the temporary recovery session, not a real sign-in
+    } else if (_event === "USER_UPDATED") {
+      _isResettingPassword = false;
+      if (session?.user) onSignIn(session.user);
+    } else if (session?.user) {
+      onSignIn(session.user);
+    } else {
+      _isResettingPassword = false;
+      onSignOut();
+    }
   });
 
   async function onSignIn(user) {
@@ -1114,8 +1138,8 @@
           body: JSON.stringify({ code: pendingCode, userId: user.id }),
         });
         const data = await res.json();
-        if (!res.ok) console.warn("Gift code redemption failed:", data.error);
-        else console.log("Gift code redeemed:", data.tier);
+        if (!res.ok) showGiftMsg(data.error || "Gift code redemption failed.", "err");
+        else         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
       } catch (err) {
         console.warn("Gift code redemption error:", err);
       }
@@ -1123,7 +1147,7 @@
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status")
+      .select("tier, credits_used, credits_limit, deploys_used, deploys_limit, status")
       .eq("user_id", user.id)
       .single();
     _membership = data;
@@ -1134,6 +1158,52 @@
     _currentUser = null;
     _membership  = null;
     updateAuthUI();
+  }
+
+  // ── Gift code redemption (logged-in path) ────────────────────────────────
+  async function redeemGiftCodeUI() {
+    if (!_currentUser) return;
+    const input = document.getElementById("giftRedeemInput");
+    const btn   = input.nextElementSibling;
+    const code  = input.value.trim().toUpperCase();
+    if (!code) return;
+    btn.disabled    = true;
+    btn.textContent = "Redeeming…";
+    try {
+      const res  = await fetch("/.netlify/functions/redeemGiftCode", {
+        method:  "POST",
+        headers: { "content-type": "application/json" },
+        body:    JSON.stringify({ code, userId: _currentUser.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showGiftMsg(data.error || "Redemption failed.", "err");
+      } else {
+        input.value = "";
+        showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
+        const { data: m } = await _supabase
+          .from("memberships")
+          .select("tier, credits_used, credits_limit, deploys_used, deploys_limit, status")
+          .eq("user_id", _currentUser.id)
+          .single();
+        _membership = m;
+        updateAuthUI();
+      }
+    } catch {
+      showGiftMsg("Something went wrong. Please try again.", "err");
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = "Redeem";
+    }
+  }
+
+  function showGiftMsg(msg, type) {
+    const el = document.getElementById("giftRedeemMsg");
+    if (!el) return;
+    el.textContent   = msg;
+    el.style.color   = type === "ok" ? "var(--ok)" : "var(--danger)";
+    el.style.display = "block";
+    if (type === "ok") setTimeout(() => { el.style.display = "none"; }, 6000);
   }
 
   // ── UI helpers ───────────────────────────────────────────────────────────
@@ -1160,11 +1230,11 @@
       const m = _membership;
       if (m) {
         const cUnlimited = m.credits_limit   === -1;
-        const dUnlimited = m.downloads_limit === -1;
-        const cStr = cUnlimited ? "∞" : `${m.credits_used}/${m.credits_limit}`;
-        const dStr = dUnlimited ? "∞" : `${m.downloads_used}/${m.downloads_limit}`;
+        const dUnlimited = m.deploys_limit === -1;
+        const cStr = cUnlimited ? "∞" : `${m.credits_limit - m.credits_used}/${m.credits_limit}`;
+        const dStr = dUnlimited ? "∞" : `${m.deploys_limit - m.deploys_used}/${m.deploys_limit}`;
         document.getElementById("authQuotaBar").textContent =
-          `Credits: ${cStr}  ·  Downloads: ${dStr}`;
+          `Remaining Credits: ${cStr}  ·  Deploys: ${dStr}`;
 
         const creditsEl = document.getElementById("creditsDisplay");
         if (creditsEl) {
@@ -1230,17 +1300,7 @@
     }
   }
 
-  // On page load, check if we're returning from a password reset link
-  (function checkPasswordResetRedirect() {
-    const params = new URLSearchParams(window.location.search);
-    if (!params.get("reset")) return;
-    // Supabase puts the session tokens in the URL hash after a reset redirect
-    _supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") {
-        openAuthModal("reset");
-      }
-    });
-  })();
+  // PASSWORD_RECOVERY is handled in the top-level onAuthStateChange listener above.
 
   function closeAuthModal() {
     document.getElementById("authModal").style.display = "none";

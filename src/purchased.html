@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Purchase Confirmed — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --gold:#c9a227;
+      --radius:14px;
+      --shadow:0 10px 26px rgba(0,0,0,.35);
+      --font:ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    *{ box-sizing:border-box; }
+    html{ scroll-behavior:smooth; }
+
+    body{
+      margin:0;
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15%   0%, color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85%   0%, color-mix(in oklab, var(--danger)  18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent)  14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.55;
+      min-height:100dvh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:680px; margin:0 auto; padding:18px 14px 56px; flex:1; }
+
+    /* ── Header ───────────────────────────────── */
+    .site-header{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:16px;
+      align-items:center;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      position:sticky;
+      top:14px;
+      z-index:10;
+      backdrop-filter:blur(8px);
+    }
+    .brand h1{ margin:0; font-size:22px; font-weight:900; letter-spacing:.2px; }
+    .brand p{ margin:4px 0 0; color:var(--muted); font-size:13.5px; }
+
+    /* ── Buttons ──────────────────────────────── */
+    .btn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-height:44px;
+      padding:10px 18px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.1);
+      color:var(--text);
+      font-weight:900;
+      cursor:pointer;
+      text-decoration:none;
+      transition:transform .18s ease, border-color .18s ease, background .18s ease;
+      font-size:14px;
+    }
+    .btn:hover{ text-decoration:none; transform:translateY(-1px); }
+    .btn.primary{
+      background:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.ghost{ background:rgba(0,0,0,.15); }
+
+    /* ── Card ─────────────────────────────────── */
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:36px 32px;
+      backdrop-filter:blur(8px);
+      text-align:center;
+    }
+
+    /* ── Tier badge ───────────────────────────── */
+    .tier-badge{
+      display:inline-block;
+      padding:4px 12px;
+      border-radius:999px;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      margin-bottom:16px;
+      background:color-mix(in oklab, var(--primary) 22%, rgba(255,255,255,.05));
+      border:1px solid color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.1));
+      color:color-mix(in oklab, var(--accent) 80%, white);
+    }
+    .tier-badge.care{
+      background:color-mix(in oklab, var(--gold) 18%, rgba(255,255,255,.04));
+      border-color:color-mix(in oklab, var(--gold) 40%, rgba(255,255,255,.1));
+      color:color-mix(in oklab, var(--gold) 85%, white);
+    }
+
+    /* ── Success icon ─────────────────────────── */
+    .success-ring{
+      width:80px; height:80px;
+      border-radius:50%;
+      background:color-mix(in oklab, var(--ok) 18%, rgba(255,255,255,.04));
+      border:2px solid color-mix(in oklab, var(--ok) 55%, rgba(255,255,255,.14));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      margin:0 auto 20px;
+      font-size:36px;
+      box-shadow:0 0 32px color-mix(in oklab, var(--ok) 28%, transparent);
+    }
+
+    h2{
+      margin:0 0 12px;
+      font-size:clamp(1.6rem, 4vw, 2.4rem);
+      font-weight:900;
+      line-height:1.1;
+      letter-spacing:-.03em;
+    }
+
+    .subhead{
+      margin:0 auto 28px;
+      font-size:16px;
+      color:var(--muted);
+      line-height:1.75;
+      max-width:44ch;
+    }
+
+    /* ── Includes list ────────────────────────── */
+    .includes{
+      background:rgba(0,0,0,.2);
+      border:1px solid rgba(255,255,255,.08);
+      border-radius:10px;
+      padding:18px 20px;
+      text-align:left;
+      margin:0 0 20px;
+    }
+    .includes p{
+      margin:0 0 10px;
+      font-size:12px;
+      font-weight:800;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.45);
+    }
+    .includes ul{
+      margin:0; padding:0;
+      list-style:none;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .includes li{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      font-size:14.5px;
+      color:var(--muted);
+    }
+    .includes li::before{
+      content:"✓";
+      flex-shrink:0;
+      width:20px; height:20px;
+      border-radius:50%;
+      background:color-mix(in oklab, var(--ok) 22%, rgba(255,255,255,.04));
+      border:1px solid color-mix(in oklab, var(--ok) 45%, rgba(255,255,255,.1));
+      color:color-mix(in oklab, var(--ok) 80%, white);
+      font-size:11px;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* ── Next-steps note ──────────────────────── */
+    .next-steps{
+      background:color-mix(in oklab, var(--primary) 12%, rgba(255,255,255,.03));
+      border:1px solid color-mix(in oklab, var(--primary) 35%, rgba(255,255,255,.08));
+      border-radius:10px;
+      padding:16px 20px;
+      text-align:left;
+      margin:0 0 28px;
+      font-size:14px;
+      color:var(--muted);
+      line-height:1.75;
+    }
+    .next-steps strong{
+      display:block;
+      color:var(--text);
+      font-size:13px;
+      font-weight:800;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      margin-bottom:6px;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      justify-content:center;
+    }
+
+    /* ── Footer ───────────────────────────────── */
+    footer{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px 20px;
+      justify-content:space-between;
+      align-items:center;
+      padding:14px 18px;
+      font-size:12.5px;
+      color:rgba(234,240,255,.4);
+      border-top:1px solid rgba(255,255,255,.06);
+    }
+    footer a{ color:rgba(234,240,255,.45); }
+    footer a:hover{ color:var(--accent); text-decoration:none; }
+  </style>
+</head>
+<body>
+
+<main class="wrap">
+
+  <header class="site-header">
+    <div class="brand">
+      <h1>Irene's Webworks</h1>
+      <p>Professional portfolio websites</p>
+    </div>
+    <a href="../index.html" class="btn ghost">Home</a>
+  </header>
+
+  <div style="margin-top:48px;">
+    <div class="card">
+
+      <div class="success-ring" id="successIcon">✓</div>
+      <div class="tier-badge" id="tierBadge"></div>
+
+      <h2 id="headline">You're all set!</h2>
+      <p class="subhead" id="subhead"></p>
+
+      <div class="includes" id="includesList">
+        <p>What's included</p>
+        <ul id="includesItems"></ul>
+      </div>
+
+      <div class="next-steps" id="nextSteps">
+        <strong>What happens next</strong>
+        <span id="nextStepsBody"></span>
+      </div>
+
+      <div class="actions" id="actions"></div>
+
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Irene's Webworks</span>
+  <span>
+    <a href="../index.html">Home</a> ·
+    <a href="mailto:irene@irenes-ventures.com">Contact Irene</a> ·
+    <a href="terms.html">Terms</a> ·
+    <a href="privacy.html">Privacy</a>
+  </span>
+</footer>
+
+<script>
+  const TIERS = {
+    basic: {
+      badge:     "Basic",
+      icon:      "✓",
+      headline:  "Your Basic plan is active.",
+      subhead:   "Your account has been upgraded. Head to the intake form whenever you're ready to build.",
+      includes: [
+        "5 AI generation credits",
+        "1 finished website download",
+        "1 Netlify deploy",
+      ],
+      nextSteps: "Sign in and open the intake form. Fill in your details, choose a style, and your portfolio will be generated. You have 1 download and 1 deploy to use when you're happy with the result.",
+      actions: [
+        { label: "Start the intake form →", href: "overview.html", cls: "primary" },
+        { label: "Back to home",            href: "../index.html", cls: "ghost"   },
+      ],
+    },
+
+    premium_monthly_new: {
+      badge:    "Premium",
+      icon:     "✓",
+      headline: "Your Premium credits are ready.",
+      subhead:  "Your purchased units have been added to your account. Credits and downloads scale with the number of units you bought.",
+      includes: [
+        "5 credits per unit purchased",
+        "1 download per unit purchased",
+        "1 deploy per unit purchased",
+        "Graduated pricing — each additional unit this month costs less",
+      ],
+      nextSteps: "Sign in and open the intake form. Your full credit and download balance is available immediately — no waiting.",
+      actions: [
+        { label: "Start the intake form →", href: "overview.html", cls: "primary" },
+        { label: "Back to home",            href: "../index.html", cls: "ghost"   },
+      ],
+    },
+
+    premium_monthly_sub: {
+      badge:    "Premium Subscriber",
+      icon:     "✓",
+      headline: "Welcome back — subscriber pricing applied.",
+      subhead:  "Your auto-renewing subscriber units have been added. From next month onward you'll pay the 50% subscriber rate automatically.",
+      includes: [
+        "5 credits per unit purchased",
+        "1 download per unit purchased",
+        "1 deploy per unit purchased",
+        "50% off the non-renewing rate, every month",
+        "Auto-renews monthly — cancel any time",
+      ],
+      nextSteps: "Sign in and open the intake form. Your credits and downloads are ready to use. You can adjust your unit quantity or cancel the subscription from the Plans & Billing page at any time.",
+      actions: [
+        { label: "Start the intake form →", href: "overview.html",     cls: "primary" },
+        { label: "Plans & Billing",         href: "pricing.html", cls: "ghost"   },
+      ],
+    },
+
+    premium_annual: {
+      badge:    "Premium Annual",
+      icon:     "✓",
+      headline: "A full year of Premium — unlocked.",
+      subhead:  "Your annual plan is active. You have 120 credits and unlimited downloads for the next 12 months.",
+      includes: [
+        "120 credits (60 units × 5 credits)",
+        "Unlimited downloads",
+        "Unlimited deploys",
+        "Best per-credit price of any plan",
+        "No monthly billing",
+      ],
+      nextSteps: "Sign in and open the intake form. Build as many iterations as you like — your credits reset when your annual plan renews.",
+      actions: [
+        { label: "Start the intake form →", href: "overview.html", cls: "primary" },
+        { label: "Back to home",            href: "../index.html", cls: "ghost"   },
+      ],
+    },
+
+    care: {
+      badge:     "Care Package",
+      badgeCls:  "care",
+      icon:      "★",
+      headline:  "Your Care Package is active.",
+      subhead:   "Irene will be in touch shortly to schedule your onboarding and walk through next steps together.",
+      includes: [
+        "Hands-on guidance before and after launch",
+        "Done-for-you editing and polishing",
+        "Direct access to Irene",
+        "Billed monthly — cancel any time",
+      ],
+      nextSteps: "Keep an eye on your inbox. Irene will reach out within one business day to get started. In the meantime, feel free to begin the intake form on your own — or wait and do it together.",
+      actions: [
+        { label: "Start the intake form →", href: "overview.html",                    cls: "primary" },
+        { label: "Email Irene",             href: "mailto:irene@irenes-ventures.com", cls: "ghost"   },
+      ],
+    },
+  };
+
+  const params = new URLSearchParams(window.location.search);
+  const tier   = params.get("tier");
+  const info   = TIERS[tier];
+
+  if (info) {
+    document.getElementById("successIcon").textContent = info.icon;
+    document.getElementById("tierBadge").textContent   = info.badge;
+    if (info.badgeCls) document.getElementById("tierBadge").classList.add(info.badgeCls);
+    document.getElementById("headline").textContent    = info.headline;
+    document.getElementById("subhead").textContent     = info.subhead;
+    document.getElementById("nextStepsBody").textContent = info.nextSteps;
+
+    const ul = document.getElementById("includesItems");
+    info.includes.forEach(text => {
+      const li = document.createElement("li");
+      li.textContent = text;
+      ul.appendChild(li);
+    });
+
+    const actionsEl = document.getElementById("actions");
+    info.actions.forEach(a => {
+      const el = document.createElement("a");
+      el.href = a.href;
+      el.className = `btn ${a.cls}`;
+      el.textContent = a.label;
+      actionsEl.appendChild(el);
+    });
+  } else {
+    document.getElementById("tierBadge").style.display   = "none";
+    document.getElementById("includesList").style.display = "none";
+    document.getElementById("nextSteps").style.display   = "none";
+    document.getElementById("subhead").textContent = "Your purchase is confirmed. Sign in to see your updated account balance.";
+    const actionsEl = document.getElementById("actions");
+    actionsEl.innerHTML = `
+      <a href="overview.html" class="btn primary">Start the intake form →</a>
+      <a href="../index.html" class="btn ghost">Back to home</a>
+    `;
+  }
+</script>
+
+</body>
+</html>
