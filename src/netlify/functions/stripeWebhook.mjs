@@ -4,14 +4,20 @@ import { Resend } from "resend";
 import { randomBytes } from "crypto";
 
 // ── Credits / downloads / deploys per unit purchased ─────────────────────────
-// 1 unit = 5 credits + 1 download + 1 deploy  (applies to all premium tiers)
-const CREDITS_PER_UNIT   = 5;
+// 1 unit = 3 credits + 1 download + 1 deploy  (Graduate plan)
+const CREDITS_PER_UNIT   = 3;
 const DOWNLOADS_PER_UNIT = 1;
 const DEPLOYS_PER_UNIT   = 1;
 
+function monthsFromNow(n) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString();
+}
+
 // ── Gift tiers ───────────────────────────────────────────────────────────────
-const GIFT_TIERS = new Set(["starter_gift", "pro_gift"]);
-const GIFT_TIER_NAMES = { starter_gift: "Starter", pro_gift: "Pro" };
+const GIFT_TIERS = new Set(["starter_care", "premium_care"]);
+const GIFT_TIER_NAMES = { starter_care: "Starter", premium_care: "Premium" };
 
 function generateGiftCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // no ambiguous chars (I/1/O/0)
@@ -127,10 +133,10 @@ function buildGiftEmail(code, tierName) {
 
 // ── Static limits for tiers with a fixed unit count ──────────────────────────
 const TIER_LIMITS = {
-  basic: { tier: "basic", credits_limit: 5, downloads_limit: 1, deploys_limit: 1 },
-  // premium tiers: limits are computed dynamically from quantity (see checkout handler)
-  // premium_annual is the exception — unlimited
-  premium_annual: { tier: "premium", credits_limit: 120, downloads_limit: -1, deploys_limit: -1 },
+  free:    { tier: "free",    credits_limit: 3,  sites_limit: 0 },
+  // graduate: limits computed dynamically from quantity (see upgradeGraduate)
+  // prime: 4-month hosting, 10 credits, 5 sites
+  prime: { tier: "prime", credits_limit: 10, sites_limit: 5 },
 };
 
 function getSupabaseAdmin() {
@@ -159,22 +165,21 @@ async function upgradeMembership(userId, tierKey, extraFields = {}) {
   else       console.log(`Upgraded user ${userId} to ${limits.tier} (${tierKey})`);
 }
 
-async function upgradePremiumMonthly(userId, quantity, extraFields = {}) {
+async function upgradeGraduate(userId, quantity, extraFields = {}) {
   const supabase = getSupabaseAdmin();
   const { error } = await supabase
     .from("memberships")
     .update({
-      tier:            "premium",
-      status:          "active",
-      credits_limit:   quantity * CREDITS_PER_UNIT,
-      downloads_limit: quantity * DOWNLOADS_PER_UNIT,
-      deploys_limit:   quantity * DEPLOYS_PER_UNIT,
+      tier:          "graduate",
+      status:        "active",
+      credits_limit: quantity * CREDITS_PER_UNIT,
+      sites_limit:   quantity * DOWNLOADS_PER_UNIT,
       ...extraFields
     })
     .eq("user_id", userId);
 
   if (error) console.error("Supabase update error:", error.message);
-  else       console.log(`Upgraded user ${userId} to premium (${quantity} units)`);
+  else       console.log(`Upgraded user ${userId} to graduate (${quantity} units)`);
 }
 
 async function cancelMembership(userId) {
@@ -231,20 +236,17 @@ export async function handler(event) {
         try {
           const sub = await stripe.subscriptions.retrieve(obj.subscription);
           extra.current_period_end = new Date(sub.current_period_end * 1000).toISOString();
-
-          // premium_monthly_new: user opted out of auto-renewal — cancel at period end
-          if (tierKey === "premium_monthly_new") {
-            await stripe.subscriptions.update(obj.subscription, { cancel_at_period_end: true });
-          }
         } catch {}
       }
 
       if (GIFT_TIERS.has(tierKey)) {
         await handleGiftPurchase(obj);
-      } else if (tierKey === "basic" || tierKey === "premium_annual") {
+      } else if (tierKey === "free" || tierKey === "prime") {
+        if (tierKey === "prime") extra.hosting_until = monthsFromNow(4);
         await upgradeMembership(userId, tierKey, extra);
-      } else if (tierKey === "premium_monthly_new" || tierKey === "premium_monthly_sub") {
-        await upgradePremiumMonthly(userId, qty, extra);
+      } else if (tierKey === "graduate") {
+        extra.hosting_until = monthsFromNow(qty);
+        await upgradeGraduate(userId, qty, extra);
       }
       break;
     }
@@ -262,29 +264,26 @@ export async function handler(event) {
 
         const supabase = getSupabaseAdmin();
 
-        if (tierKey === "premium_monthly_sub") {
+        if (tierKey === "graduate") {
           // Reset usage and extend period; re-apply graduated limits for the renewed quantity
           await supabase
             .from("memberships")
             .update({
-              status:          "active",
-              credits_used:    0,
-              downloads_used:  0,
-              deploys_used:    0,
-              credits_limit:   qty * CREDITS_PER_UNIT,
-              downloads_limit: qty * DOWNLOADS_PER_UNIT,
-              deploys_limit:   qty * DEPLOYS_PER_UNIT,
+              status:        "active",
+              credits_used:  0,
+              sites_used:    0,
+              credits_limit: qty * CREDITS_PER_UNIT,
+              sites_limit:   qty * DOWNLOADS_PER_UNIT,
               current_period_end: new Date(sub.current_period_end * 1000).toISOString()
             })
             .eq("user_id", userId);
-        } else if (tierKey === "premium_annual") {
+        } else if (tierKey === "prime") {
           await supabase
             .from("memberships")
             .update({
-              status:         "active",
-              credits_used:   0,
-              downloads_used: 0,
-              deploys_used:   0,
+              status:        "active",
+              credits_used:  0,
+              sites_used:    0,
               current_period_end: new Date(sub.current_period_end * 1000).toISOString()
             })
             .eq("user_id", userId);

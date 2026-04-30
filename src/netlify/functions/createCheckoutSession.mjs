@@ -3,8 +3,8 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 // Subscription tiers → recurring Stripe prices; one-time tiers → payment mode or add_invoice_items
-const SUBSCRIPTION_TIERS = new Set(["premium_monthly_new", "premium_monthly_sub", "premium_annual", "care", "hosting"]);
-const GUEST_TIERS        = new Set(["starter_gift", "pro_gift"]);
+const SUBSCRIPTION_TIERS = new Set(["graduate", "prime", "care", "hosting"]);
+const GUEST_TIERS        = new Set(["starter_care", "premium_care"]);
 
 let localEnvCache = null;
 
@@ -48,7 +48,7 @@ export async function handler(event) {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) }; }
 
-  const { items, tier, userId, userEmail, returnUrl, quantity = 1 } = body;
+  const { items, tier, userId, userEmail, returnUrl, quantity = 1, autoRenew = false } = body;
 
   // Normalise to items array — backwards-compatible with single-tier callers (form.js, gift pages)
   const cartItems = Array.isArray(items)
@@ -66,15 +66,14 @@ export async function handler(event) {
   }
 
   const PRICE_IDS = {
-    basic:               getEnv("STRIPE_PRICE_BASIC"),
-    premium_monthly_new: getEnv("STRIPE_PRICE_PREMIUM_NEW"),
-    premium_monthly_sub: getEnv("STRIPE_PRICE_PREMIUM_SUB"),
-    premium_annual:      getEnv("STRIPE_PRICE_PREMIUM_ANNUAL"),
-    care:                getEnv("STRIPE_PRICE_CARE_PKG"),
-    hosting:             getEnv("STRIPE_PRICE_HOSTING"),
-    extra_credits:       getEnv("STRIPE_PRICE_EXTRA_CREDITS"),
-    starter_gift:        getEnv("STRIPE_PRICE_STARTER_GIFT"),
-    pro_gift:            getEnv("STRIPE_PRICE_PRO_GIFT"),
+    free:          getEnv("STRIPE_PRICE_BASIC"),
+    graduate:      getEnv("STRIPE_PRICE_GRADUATE"),
+    prime:         getEnv("STRIPE_PRICE_PRIME"),
+    care:          getEnv("STRIPE_PRICE_CARE_PKG"),
+    hosting:       getEnv("STRIPE_PRICE_HOSTING"),
+    extra_credits: getEnv("STRIPE_PRICE_EXTRA_CREDITS"),
+    starter_care:  getEnv("STRIPE_PRICE_STARTER"),
+    premium_care:      getEnv("STRIPE_PRICE_PREMIUM"),
   };
 
   for (const item of cartItems) {
@@ -121,6 +120,7 @@ export async function handler(event) {
   if (hasSubscription) {
     sessionParams.subscription_data = {
       metadata: sessionMeta,
+      cancel_at_period_end: !autoRenew,
       ...(onetItems.length ? {
         add_invoice_items: onetItems.map(i => ({ price: PRICE_IDS[i.tier], quantity: i.qty }))
       } : {})

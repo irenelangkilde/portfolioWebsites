@@ -116,6 +116,15 @@
       gap:8px; color:rgba(236,243,255,.88); font-size:14px;
     }
     .featureList > li::before{ content:"•"; color:var(--accent); margin-right:8px; }
+    .priceCompare{
+      font-size:12px; color:rgba(236,243,255,.45); margin-top:-6px;
+    }
+    .priceCompare s{ color:rgba(236,243,255,.3); }
+    .priceSave{
+      display:inline-block; padding:2px 7px; border-radius:999px;
+      background:rgba(118,176,34,.18); color:#a8d660;
+      font-size:11px; font-weight:800; margin-left:4px;
+    }
     .qtyWrap{
       display:flex; align-items:center; gap:10px; flex-wrap:wrap;
       padding:12px; border-radius:14px; background:rgba(0,0,0,.16);
@@ -219,7 +228,7 @@
     /* ── Add-ons total footer ── */
     .addonsFooter{
       margin-top:16px; padding:16px 20px;
-      background:var(--panel); border:1px solid var(--border);
+      background:var(--panel); border:2px solid var(--accent);
       border-radius:var(--radius); box-shadow:var(--shadow); backdrop-filter:blur(14px);
       display:flex; flex-wrap:wrap; align-items:center; gap:14px;
     }
@@ -364,73 +373,70 @@
 
       <article class="planCard">
         <div class="planTag">One-Time</div>
-        <h2 class="planName">FREE Trial</h2>
+        <h2 class="planName">Free Trial</h2>
         <div class="price"><strong>$0</strong><span>one-time</span></div>
+        <div class="priceCompare">vs <s>$15+</s> à la carte <span class="priceSave">save $15+</span></div>
         <div class="planBlurb">A single serious pass through the pipeline and an editable preview.</div>
         <ul class="featureList">
+          <li>3 AI generation credits</li>
           <li>Resume analysis &amp; job targeting</li>
           <li>Customized design variety</li>
           <li>Unlimited text &amp; color edits</li>
           <li>Single-page responsive portfolio</li>
-          <li>Up to 6 sections of their choice</li>
-          <li>Resume PDF/DOCX &amp; headshot embedded</li>
-          <li>No download · No deploy · No hosting
+          <li>Up to 6 sections of choice</li>
+          <li>Preview only — no download · no deploy · no hosting</li>
           <li>No renewal</li>
         </ul>
         <div class="actions">
-          <button class="btn primary" type="button" id="btn_basic"
-                  onclick="checkoutPlan('basic')"
-                  data-umami-event="pricing-choose" data-umami-event-tier="basic">Choose Basic →</button>
+          <button class="btn primary" type="button" id="btn_free"
+                  onclick="checkoutPlan('free')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="free">Start Free Trial →</button>
         </div>
-        <div class="planMsg" id="msg_basic"></div>
+        <div class="planMsg" id="msg_free"></div>
       </article>
 
       <article class="planCard featured">
         <div class="planTag">One-Time or Renewing</div>
         <h2 class="planName">Graduate</h2>
-        <div class="price"><strong>$19</strong><span>flat rate</span></div>
-        <div class="planBlurb">Everything in the Basic Plan, plus additional credits, DFY deploy and a month of hosting.</div>
+        <div class="price"><strong>$19</strong><span>per month</span></div>
+        <div class="priceCompare">vs <s>$25+</s> à la carte <span class="priceSave">save $10+</span></div>
+        <div class="planBlurb">Full pipeline with hosting included. Graduated pricing — each additional unit costs less.</div>
         <ul class="featureList">
+          <li>3 credits · 1 site per unit</li>
+          <li>1 month of hosting per unit</li>
           <li>Publications, demos, research, projects</li>
-          <li>3 credits · 1 download/deploy per unit</li>
-          <li>First month of hosting</li>
-          <li>Guide to DIY (free) external hosting</li>
           <li>Published on Irene's Ventures domain</li>
+          <li>Guide to DIY (free) external hosting</li>
           <li>(Optional) Monthly auto-renewal</li>
         </ul>
         <div class="actions">
-          <button class="btn primary" type="button" id="btn_premium_monthly_new"
-                  onclick="checkoutPlan('premium_monthly_new')"
-                  data-umami-event="pricing-choose" data-umami-event-tier="premium-units">Choose Graduate →</button>
+          <button class="btn primary" type="button" id="btn_graduate"
+                  onclick="checkoutPlan('graduate')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="graduate">Choose Graduate →</button>
         </div>
-        <div class="planMsg" id="msg_premium_monthly_new"></div>
+        <div class="planMsg" id="msg_graduate"></div>
       </article>
 
       <article class="planCard">
-        <div class="planTag">Semi-Annual</div>
-        <h2 class="planName">Premium</h2>
-        <div class="price"><strong>$99</strong><span>for six months</span></div>
-        <div class="planBlurb">Everything in the Graduate Plan times 5 — at a 50% discount. Ideal for ongoing career development.</div>
+        <div class="planTag">Trimester</div>
+        <h2 class="planName">Prime</h2>
+        <div class="price"><strong>$99</strong><span>for four months</span></div>
+        <div class="priceCompare">vs <s>$110+</s> à la carte <span class="priceSave">save $11+</span></div>
+        <div class="planBlurb">10× the credits and sites of Graduate — best per-credit price. Ideal for active career development.</div>
         <ul class="featureList">
-          <li>Up to 10 webpage sections</li>
-          <li>Multiple versions for
-            <ul>
-              <li>new job targets</li>
-              <li>resume updates</li>
-              <li>A-B variations</li>
-            </ul>
-          </li>
-          <li>10 credits · 5 downloads/deploys</li>
-          <li>Hosting for six months</li>
+          <li>10 credits · 5 sites</li>
+          <li>Hosting for four months</li>
+          <li>Multiple versions — new targets, A/B, updates</li>
           <li>Custom domain setup support</li>
-          <li>(Optional) Semi-annual renewal</li>
+          <li>Best per-credit price of any direct plan</li>
+          <li>(Optional) Trimester auto-renewal</li>
         </ul>
         <div class="actions">
-          <button class="btn primary" type="button" id="btn_premium_annual"
-                  onclick="checkoutPlan('premium_annual')"
-                  data-umami-event="pricing-choose" data-umami-event-tier="annual">Choose Premium →</button>
+          <button class="btn primary" type="button" id="btn_prime"
+                  onclick="checkoutPlan('prime')"
+                  data-umami-event="pricing-choose" data-umami-event-tier="prime">Choose Prime →</button>
         </div>
-        <div class="planMsg" id="msg_premium_annual"></div>
+        <div class="planMsg" id="msg_prime"></div>
       </article>
 
     </section>
@@ -445,7 +451,7 @@
       <article class="planCard small">
         <div class="planTag">Add-on</div>
         <h2 class="planName" style="font-size:18px;">Hosting</h2>
-        <div class="price"><strong>$10</strong><span>per month</span></div>
+        <div class="price"><strong>$9</strong><span>per month</span></div>
         <div class="planBlurb">Keep your site live after the included hosting period expires.</div>
         <ul class="featureList">
           <li>Global content delivery</li>
@@ -471,6 +477,7 @@
           <li>Job posting analysis (if provided)</li>
           <li>Template/style analysis (if provided)</li>
           <li>Professional portfolio website generation</li>
+          <li>Extra website sections</li>
           <li>AI-powered revisions and refinement</li>
           <li>Custom domain setup assistance</li>
         </ul>
@@ -483,7 +490,7 @@
 
       <article class="planCard small care">
         <div class="planTag">Add-on</div>
-        <h2 class="planName" style="font-size:18px;">Care Package</h2>
+        <h2 class="planName" style="font-size:18px;">Support</h2>
         <div class="price"><strong>$49</strong><span>per month</span></div>
         <div class="planBlurb">Hands-on pre- and post-launch support.</div>
         <ul class="featureList">
@@ -506,7 +513,7 @@
         <span style="color:rgba(236,243,255,.3);">Set a quantity above to add items.</span>
       </div>
       <div class="addonsTotalRow">
-        <span class="muted" style="font-size:13px;">À La Carte Total</span>
+        <span class="muted" style="font-size:13px;">Total</span>
         <strong id="addonsTotalAmt">$0.00</strong>
       </div>
       <div class="addonsTotalActions">
@@ -538,7 +545,7 @@
           </div>
           <div class="faqItem">
             <strong>What if I need more credits later?</strong>
-            Buy Extra Credits any time from this page. Graduate subscribers pay $5/credit; Premium subscribers pay $4/credit.
+            Buy Extra Credits any time from this page. Graduate subscribers pay $5/credit; Prime subscribers pay $4/credit.
           </div>
         </div>
       </div>
@@ -562,6 +569,30 @@
     </section>
 
   </div>
+
+  <div class="confirmOverlay" id="confirmOverlay" onclick="closeConfirm()"></div>
+  <aside class="confirmPanel" id="confirmPanel">
+    <div class="confirmHeader">
+      <strong style="font-size:15px;">Confirm Order</strong>
+      <button class="btn ghost" onclick="closeConfirm()" style="padding:5px 14px;font-size:13px;border-radius:8px;">✕</button>
+    </div>
+    <div class="confirmBody">
+      <div>
+        <div class="confirmPlanName" id="confirmPlanName"></div>
+        <div class="confirmPlanPrice" id="confirmPlanPrice"></div>
+      </div>
+      <label class="giftCheck" id="confirmAutoRenewWrap">
+        <input type="checkbox" id="confirmAutoRenew"> <span id="confirmAutoRenewLabel">Auto-renew</span>
+      </label>
+      <label class="giftCheck" id="confirmGiftWrap">
+        <input type="checkbox" id="confirmGift"> Is this a gift?
+      </label>
+    </div>
+    <div class="confirmFooter">
+      <button class="btn primary" id="confirmCheckoutBtn" onclick="confirmCheckout()" style="width:100%;padding:14px;">Checkout →</button>
+      <div class="authMsg" id="confirmMsg"></div>
+    </div>
+  </aside>
 
   <script>
     const SUPABASE_URL = "https://ssnjjojacxalnwpbzprx.supabase.co";
@@ -632,7 +663,7 @@
       document.getElementById("addonsBuyBtn").disabled = grand === 0;
     }
 
-    async function checkoutItems(items, isGift, msgEl, btnEl) {
+    async function checkoutItems(items, isGift, autoRenew, msgEl, btnEl) {
       if (!currentUserId()) {
         msgEl.className = "planMsg err";
         msgEl.textContent = "Sign in below to purchase.";
@@ -654,6 +685,7 @@
           body: JSON.stringify({
             items,
             isGift,
+            autoRenew: !!autoRenew,
             userId: _currentUser.id,
             userEmail: _currentUser.email,
             returnUrl: `${window.location.origin}/src/purchased.html`,
@@ -677,18 +709,34 @@
     }
 
     const PLAN_LABELS = {
-      basic:               { name: "Basic",    price: "$7 one-time" },
-      premium_monthly_new: { name: "Graduate", price: "$19 per unit" },
-      premium_annual:      { name: "Premium",  price: "$99 for six months" },
+      free:     { name: "FREE Trial", price: "$0 one-time" },
+      graduate: { name: "Graduate",   price: "$19 per unit" },
+      prime:    { name: "Prime",       price: "$99 for four months" },
     };
     let _pendingTier = null;
+
+    const AUTO_RENEW_LABEL = {
+      graduate: "Auto-renew monthly — cancel any time",
+      prime:    "Auto-renew every trimester (four months) — cancel any time",
+    };
+
+    function syncAutoRenewVisibility() {
+      const isGift = document.getElementById("confirmGift").checked;
+      const wrap   = document.getElementById("confirmAutoRenewWrap");
+      const isSubscriptionTier = _pendingTier === "graduate" || _pendingTier === "prime";
+      wrap.style.display = (isSubscriptionTier && !isGift) ? "" : "none";
+    }
 
     function checkoutPlan(tier) {
       const def = PLAN_LABELS[tier];
       _pendingTier = tier;
       document.getElementById("confirmPlanName").textContent  = def.name;
       document.getElementById("confirmPlanPrice").textContent = def.price;
+      document.getElementById("confirmAutoRenew").checked = false;
+      document.getElementById("confirmAutoRenewLabel").textContent = AUTO_RENEW_LABEL[tier] || "Auto-renew";
       document.getElementById("confirmGift").checked = false;
+      document.getElementById("confirmGiftWrap").style.display = tier === "free" ? "none" : "";
+      syncAutoRenewVisibility();
       document.getElementById("confirmMsg").textContent = "";
       document.getElementById("confirmMsg").className  = "authMsg";
       document.getElementById("confirmCheckoutBtn").disabled = false;
@@ -697,6 +745,8 @@
       document.getElementById("confirmOverlay").classList.add("open");
     }
 
+    document.getElementById("confirmGift").addEventListener("change", syncAutoRenewVisibility);
+
     function closeConfirm() {
       document.getElementById("confirmPanel").classList.remove("open");
       document.getElementById("confirmOverlay").classList.remove("open");
@@ -704,10 +754,46 @@
 
     function confirmCheckout() {
       if (!_pendingTier) return;
-      const isGift = document.getElementById("confirmGift").checked;
-      const msgEl  = document.getElementById("confirmMsg");
-      const btnEl  = document.getElementById("confirmCheckoutBtn");
-      checkoutItems([{ tier: _pendingTier, qty: 1 }], isGift, msgEl, btnEl);
+      const msgEl = document.getElementById("confirmMsg");
+      const btnEl = document.getElementById("confirmCheckoutBtn");
+      if (_pendingTier === "free") {
+        provisionFree(msgEl, btnEl);
+        return;
+      }
+      const isGift     = document.getElementById("confirmGift").checked;
+      const autoRenew  = document.getElementById("confirmAutoRenew").checked;
+      checkoutItems([{ tier: _pendingTier, qty: 1 }], isGift, autoRenew, msgEl, btnEl);
+    }
+
+    async function provisionFree(msgEl, btnEl) {
+      if (!currentUserId()) {
+        msgEl.className = "planMsg err";
+        msgEl.textContent = "Sign in below to activate your free trial.";
+        document.getElementById("authEmail").focus();
+        return;
+      }
+      const origText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = "Activating…";
+      msgEl.className = "planMsg";
+      msgEl.textContent = "Setting up your free trial…";
+      try {
+        const res = await fetch("/.netlify/functions/provisionFreeTier", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ userId: _currentUser.id, userEmail: _currentUser.email }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || "Could not activate free trial.");
+        msgEl.className = "planMsg ok";
+        msgEl.textContent = "Free trial activated! Redirecting…";
+        setTimeout(() => { closeConfirm(); window.location.href = `${window.location.origin}/src/purchased.html?tier=free`; }, 1200);
+      } catch (err) {
+        msgEl.className = "planMsg err";
+        msgEl.textContent = err.message || "Activation failed.";
+        btnEl.disabled = false;
+        btnEl.textContent = origText;
+      }
     }
 
     async function checkoutAddons() {
@@ -727,14 +813,14 @@
         msgEl.textContent = "Set at least one quantity above 0.";
         return;
       }
-      await checkoutItems(items, false, msgEl, btnEl);
+      await checkoutItems(items, false, false, msgEl, btnEl);
     }
 
     async function refreshMembership(user) {
       if (!user) { _membership = null; return; }
       const { data } = await _supabase
         .from("memberships")
-        .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until")
+        .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, hosting_until")
         .eq("user_id", user.id)
         .single();
       _membership = data || null;
@@ -773,18 +859,18 @@
 
       const tier = _membership?.tier || "free";
       const cUnlimited = _membership?.credits_limit === -1;
-      const dUnlimited = _membership?.deploys_limit === -1;
+      const dUnlimited = _membership?.sites_limit === -1;
       const cStr = _membership
         ? (cUnlimited ? "∞" : `${_membership.credits_limit - (_membership.credits_used || 0)}/${_membership.credits_limit}`)
         : "—";
       const dStr = _membership
-        ? (dUnlimited ? "∞" : `${_membership.deploys_limit - (_membership.deploys_used || 0)}/${_membership.deploys_limit}`)
+        ? (dUnlimited ? "∞" : `${_membership.sites_limit - (_membership.sites_used || 0)}/${_membership.sites_limit}`)
         : "—";
 
       accountStatus.textContent = _currentUser.email;
       accountMeta.textContent   = _membership?.status ? `Status: ${_membership.status}` : "Signed in";
       tierStatus.textContent    = tier;
-      quotaStatus.textContent   = `Credits: ${cStr}  ·  Deploys: ${dStr}`;
+      quotaStatus.textContent   = `Credits: ${cStr}  ·  Sites: ${dStr}`;
       hostingUntil.textContent  = _membership?.hosting_until
         ? `Hosting until: ${new Date(_membership.hosting_until).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })}`
         : "";
@@ -895,27 +981,6 @@
       authMsg.textContent = "Checkout was cancelled.";
     }
   </script>
-
-  <div class="confirmOverlay" id="confirmOverlay" onclick="closeConfirm()"></div>
-  <aside class="confirmPanel" id="confirmPanel">
-    <div class="confirmHeader">
-      <strong style="font-size:15px;">Confirm Order</strong>
-      <button class="btn ghost" onclick="closeConfirm()" style="padding:5px 14px;font-size:13px;border-radius:8px;">✕</button>
-    </div>
-    <div class="confirmBody">
-      <div>
-        <div class="confirmPlanName" id="confirmPlanName"></div>
-        <div class="confirmPlanPrice" id="confirmPlanPrice"></div>
-      </div>
-      <label class="giftCheck">
-        <input type="checkbox" id="confirmGift"> Is this a gift?
-      </label>
-    </div>
-    <div class="confirmFooter">
-      <button class="btn primary" id="confirmCheckoutBtn" onclick="confirmCheckout()" style="width:100%;padding:14px;">Checkout →</button>
-      <div class="authMsg" id="confirmMsg"></div>
-    </div>
-  </aside>
 
   <script src="/src/annbot-widget.js" defer></script>
 </body>

@@ -517,7 +517,7 @@
       text-transform: uppercase;
     }
     .tierBadge.basic    { background: rgba(118,176,34,.18); color: #76b022; }
-    .tierBadge.premium { background: rgba(251,171,156,.18); color: #fbab9c; }
+    .tierBadge.prime { background: rgba(251,171,156,.18); color: #fbab9c; }
     .quotaBar { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
@@ -1147,7 +1147,7 @@
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, deploys_used, deploys_limit, status")
+      .select("tier, credits_used, credits_limit, sites_used, sites_limit, status")
       .eq("user_id", user.id)
       .single();
     _membership = data;
@@ -1183,7 +1183,7 @@
         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
         const { data: m } = await _supabase
           .from("memberships")
-          .select("tier, credits_used, credits_limit, deploys_used, deploys_limit, status")
+          .select("tier, credits_used, credits_limit, sites_used, sites_limit, status")
           .eq("user_id", _currentUser.id)
           .single();
         _membership = m;
@@ -1230,11 +1230,11 @@
       const m = _membership;
       if (m) {
         const cUnlimited = m.credits_limit   === -1;
-        const dUnlimited = m.deploys_limit === -1;
+        const dUnlimited = m.sites_limit === -1;
         const cStr = cUnlimited ? "∞" : `${m.credits_limit - m.credits_used}/${m.credits_limit}`;
-        const dStr = dUnlimited ? "∞" : `${m.deploys_limit - m.deploys_used}/${m.deploys_limit}`;
+        const dStr = dUnlimited ? "∞" : `${m.sites_limit - m.sites_used}/${m.sites_limit}`;
         document.getElementById("authQuotaBar").textContent =
-          `Remaining Credits: ${cStr}  ·  Deploys: ${dStr}`;
+          `Remaining Credits: ${cStr}  ·  Sites: ${dStr}`;
 
         const creditsEl = document.getElementById("creditsDisplay");
         if (creditsEl) {

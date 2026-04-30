@@ -59,7 +59,7 @@
     function currentUserId() { return window.getSupabaseUser?.()?.id || null; }
     function isPaidUser() {
       const tier = window.getSupabaseMembership?.()?.tier;
-      return tier === "basic" || tier === "premium";
+      return tier === "graduate" || tier === "prime";
     }
     const ANON_CREDIT_LIMIT = 5;
     const ANON_CREDITS_KEY  = "anon_credits_used";
@@ -126,11 +126,11 @@
 
     // Maps the user's CURRENT tier → which Stripe tier to upgrade them to
     const UPGRADE_TIER_KEY = {
-      free:    "basic",
-      basic:   "premium_monthly_new",
+      free:     "graduate",
+      graduate: "prime",
     };
 
-    // Graduated unit prices for premium_monthly_new: index 0 = unit 1, index 4 = unit 5, 6+ = $2.95
+    // Graduated unit prices for graduate: index 0 = unit 1, index 4 = unit 5, 6+ = $2.95
     const PREMIUM_UNIT_PRICES = [19, 11, 7, 5, 4];
     const PREMIUM_UNIT_PRICE_EXTRA = 2.95;
 
@@ -159,8 +159,8 @@
       const used  = data.used  ?? "?";
       const limit = data.limit ?? "?";
 
-      const nextTier = tier === "free" ? "basic" : "premium_monthly_new";
-      const tierLabels = { basic: "Basic ($7)", premium_monthly_new: "Premium (from $19/unit)" };
+      const nextTier = tier === "free" ? "graduate" : "prime";
+      const tierLabels = { graduate: "Graduate (from $19/unit)", prime: "Prime ($99)" };
 
       const prompt      = document.getElementById("upgradePrompt");
       const msgEl       = document.getElementById("upgradePromptMsg");
@@ -185,8 +185,8 @@
       if (msgEl) msgEl.textContent =
         `You've used ${used} of ${limit} credits on the ${tier} plan. Upgrade to ${tierLabels[nextTier] || nextTier} for more.`;
 
-      // Show unit picker only for premium (graduated pricing requires a quantity)
-      const isPremiumUpgrade = nextTier === "premium_monthly_new";
+      // Show unit picker only for graduate (graduated pricing requires a quantity)
+      const isPremiumUpgrade = nextTier === "graduate";
       if (pickerWrap) pickerWrap.classList.toggle("hidden", !isPremiumUpgrade);
       if (isPremiumUpgrade) {
         if (qtyInput) qtyInput.value = "1";
@@ -203,7 +203,7 @@
           const quantity = isPremiumUpgrade
             ? Math.max(1, parseInt(qtyInput?.value || "1", 10))
             : 1;
-          window.umami?.track("checkout-start", { tier: UPGRADE_TIER_KEY[tier] || "basic" });
+          window.umami?.track("checkout-start", { tier: UPGRADE_TIER_KEY[tier] || "graduate" });
           linkEl.textContent = "Redirecting…";
           linkEl.style.opacity = "0.6";
           try {
@@ -214,7 +214,7 @@
               headers: { "content-type": "application/json" },
               signal: controller.signal,
               body: JSON.stringify({
-                tier:       UPGRADE_TIER_KEY[tier] || "basic",
+                tier:       UPGRADE_TIER_KEY[tier] || "graduate",
                 userId:     user.id,
                 userEmail:  user.email,
                 returnUrl:  location.origin + "/src/purchased.html",
@@ -255,7 +255,7 @@
         btn.disabled      = !allow;
         btn.style.opacity = allow ? "" : "0.35";
         btn.style.cursor  = allow ? "" : "not-allowed";
-        btn.title         = !paid ? "Upgrade to access downloads" : (!hasHtml ? "Generate a site first" : "");
+        btn.title         = !paid ? "Upgrade to access sites" : (!hasHtml ? "Generate a site first" : "");
       });
     }
 
@@ -576,7 +576,7 @@
         btn.disabled      = !allow;
         btn.style.opacity = allow ? "" : "0.35";
         btn.style.cursor  = allow ? "" : "not-allowed";
-        btn.title         = !isPaidUser() ? "Upgrade to access downloads" : (grey ? "Generate a site first" : "");
+        btn.title         = !isPaidUser() ? "Upgrade to access sites" : (grey ? "Generate a site first" : "");
       });
     }
 
@@ -1686,9 +1686,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (variantMatch) {
         const base = variantMatch[1].trim().toLowerCase().replace(/\s+/g, "-");
         const variant = variantMatch[2].toUpperCase();
-        return `html/${base}Grad_${variant}.html`;
+        return `/html/${base}Grad_${variant}.html`;
       }
-      return `html/${val.trim().toLowerCase().replace(/\s+/g, "-")}Grad.html`;
+      return `/html/${val.trim().toLowerCase().replace(/\s+/g, "-")}Grad.html`;
     }
 
     // ----------------------------

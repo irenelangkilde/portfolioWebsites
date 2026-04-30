@@ -28,6 +28,25 @@
     .tbtn-primary:hover { background: #5568d4; }
     .tbtn-success { background: #2f8f5b; color: #fff; }
     .tbtn-success:hover { background: #28794d; }
+
+    /* ── Save dropdown ──────────────────────────────────────────────── */
+    #saveWrap { position: relative; flex-shrink: 0; }
+    #btnSave { background: #667eea; color: #fff; }
+    #btnSave:hover { background: #5568d4; }
+    #saveMenu {
+      display: none; position: absolute; top: calc(100% + 4px); right: 0;
+      background: #1e2d54; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; overflow: hidden; min-width: 160px; z-index: 99999;
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    #saveMenu.open { display: block; }
+    #saveMenu button {
+      display: block; width: 100%; text-align: left;
+      padding: 10px 14px; background: none; border: none;
+      color: #eaf0ff; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    #saveMenu button:hover { background: rgba(255,255,255,.1); }
+    #saveMenu .save-sep { height: 1px; background: rgba(255,255,255,.1); margin: 2px 0; }
     .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
     #editorAccount {
       display: flex;
@@ -486,6 +505,36 @@
     #imgReplaceApply  { background: #667eea; color: #fff; }
     #imgReplaceApply:hover  { background: #5568d4; }
     #imgReplaceApply[disabled] { opacity: .45; cursor: not-allowed; }
+
+    /* ── Sign-in modal ── */
+    .authModalOverlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:1100; display:none; align-items:center; justify-content:center;
+    }
+    .authModalOverlay.open{ display:flex; }
+    .authModalBox{
+      background:#101b31; border:1px solid rgba(255,255,255,.16);
+      border-radius:18px; box-shadow:0 24px 60px rgba(0,0,0,.5);
+      padding:28px 28px 24px; width:100%; max-width:360px;
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .authModalBox h3{ margin:0; font-size:17px; letter-spacing:-.02em; }
+    .authModalBox p{ margin:0; font-size:13px; color:rgba(236,243,255,.6); }
+    .authModalBox input{
+      width:100%; padding:10px 13px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07);
+      color:#ecf3ff; font:inherit; font-size:14px;
+    }
+    .authModalBox input:focus{ outline:none; border-color:rgba(141,224,255,.5); }
+    .authModalActions{ display:flex; gap:8px; }
+    .authModalActions .btn{ flex:1; padding:11px; border-radius:10px; font-size:14px; }
+    .authModalMsg{ min-height:16px; font-size:12px; color:rgba(236,243,255,.55); }
+    .authModalMsg.err{ color:#FBAB9C; }
+    .authModalMsg.ok{ color:#76b022; }
+    .authModalForgot{
+      font-size:11px; color:rgba(141,224,255,.55); text-decoration:underline;
+      background:none; border:none; cursor:pointer; padding:0; font:inherit; align-self:flex-end;
+    }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
@@ -503,11 +552,17 @@
       <button class="tbtn"             id="btnSplit">Split</button>
       <button class="tbtn"             id="btnCode">Code</button>
     </div>
-    <button class="tbtn tbtn-primary" id="btnDownload" data-umami-event="editor-download">Download HTML</button>
-    <button class="tbtn tbtn-success" id="btnPublish" data-umami-event="editor-publish">Publish</button>
+    <div id="saveWrap">
+      <button class="tbtn" id="btnSave" data-umami-event="editor-save">Save ▾</button>
+      <div id="saveMenu" role="menu">
+        <button id="menuDownload" data-umami-event="editor-download" role="menuitem">⬇ Download HTML</button>
+        <div class="save-sep"></div>
+        <button id="menuPublish" data-umami-event="editor-publish" role="menuitem">🌐 Publish to Web</button>
+      </div>
+    </div>
     <div id="editorAccount" aria-live="polite">
-      <div id="editorAccountUser">Signed out</div>
-      <div id="editorAccountQuota">Credits: - · Downloads: - · Deploys: -</div>
+      <div id="editorAccountUser"><a href="#" onclick="event.preventDefault();openAuthModal()" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Signed out</a></div>
+      <div id="editorAccountQuota">Credits: - · Saves: -</div>
     </div>
   </div>
 
@@ -613,7 +668,7 @@
 
       <!-- Header -->
       <div class="pp-header">
-        <span id="ppTitle">Publish Portfolio</span>
+        <span id="ppTitle">Save Portfolio</span>
         <button id="ppClose" title="Close">✕</button>
       </div>
 
@@ -2821,7 +2876,7 @@
       if (!userEl || !quotaEl) return;
       if (!supabaseClient) {
         userEl.textContent = "Account unavailable";
-        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+        quotaEl.textContent = "Credits: - · Saves: -";
         return;
       }
 
@@ -2829,14 +2884,14 @@
         const { data: { session } } = await supabaseClient.auth.getSession();
         const user = session?.user || null;
         if (!user) {
-          userEl.textContent = "Signed out";
-          quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+          userEl.innerHTML = '<a href="#" onclick="event.preventDefault();openAuthModal()" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Sign in</a>';
+          quotaEl.textContent = "Credits: - · Saves: -";
           return;
         }
 
         const { data: membership } = await supabaseClient
           .from("memberships")
-          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit, deploys_used, deploys_limit")
+          .select("tier, status, credits_used, credits_limit, sites_used, sites_limit")
           .eq("user_id", user.id)
           .single();
 
@@ -2850,13 +2905,12 @@
         const tier = membership.tier || "free";
         const status = membership.status || "unknown";
         const credits   = formatQuotaValue(membership.credits_used,  membership.credits_limit);
-        const downloads = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
-        const deploys   = formatQuotaValue(membership.deploys_used,   membership.deploys_limit);
+        const sites = formatQuotaValue(membership.sites_used, membership.sites_limit);
         userEl.textContent = `${name} · ${tier} · ${status}`;
-        quotaEl.textContent = `Credits: ${credits} · Downloads: ${downloads} · Deploys: ${deploys}`;
+        quotaEl.textContent = `Credits: ${credits} · Saves: ${sites}`;
       } catch {
         userEl.textContent = "Account unavailable";
-        quotaEl.textContent = "Credits: - · Downloads: - · Deploys: -";
+        quotaEl.textContent = "Credits: - · Saves: -";
       }
     }
 
@@ -2892,7 +2946,7 @@
       if (!userId) return null;
       const { data } = await supabaseClient
         .from("memberships")
-        .select("downloads_used, downloads_limit, deploys_used, deploys_limit, status")
+        .select("sites_used, sites_limit, status")
         .eq("user_id", userId)
         .single();
       return data || null;
@@ -2913,34 +2967,15 @@
       if (membership.status !== "active") {
         throw new Error(`Membership is ${membership.status}. ${actionLabel} is disabled.`);
       }
-      if (membership.downloads_limit !== -1 && membership.downloads_used >= membership.downloads_limit) {
-        throw new Error("Please UPGRADE to publish or download with this account.");
+      const sitesUsed  = membership.sites_used  ?? 0;
+      const sitesLimit = membership.sites_limit ?? 0;
+      if (sitesLimit !== -1 && sitesUsed >= sitesLimit) {
+        throw new Error("Save limit reached. Please UPGRADE to save more sites.");
       }
       return membership;
     }
 
-    async function ensureDeployAllowed() {
-      if (!supabaseClient) {
-        throw new Error("Supabase client failed to load. Publish is unavailable.");
-      }
-      const { data: { session } } = await supabaseClient.auth.getSession();
-      if (!session?.access_token) {
-        throw new Error("Sign in first. Publish requires an authenticated account.");
-      }
-      const membership = await getMembership();
-      if (!membership) {
-        throw new Error("No active membership record found for this account.");
-      }
-      if (membership.status !== "active") {
-        throw new Error(`Membership is ${membership.status}. Publishing is disabled.`);
-      }
-      const deploysUsed  = membership.deploys_used  ?? 0;
-      const deploysLimit = membership.deploys_limit ?? 0;
-      if (deploysLimit !== -1 && deploysUsed >= deploysLimit) {
-        throw new Error("Please UPGRADE to publish or download with this account.");
-      }
-      return membership;
-    }
+    const ensureDeployAllowed = ensureDownloadAllowed.bind(null, "Publish");
 
     refreshEditorAccountStatus();
     supabaseClient?.auth?.onAuthStateChange?.(() => {
@@ -2966,7 +3001,7 @@
       const icon = document.getElementById("ppPublishIcon");
       icon.className = ""; icon.textContent = "✓";
       const msg = document.getElementById("ppPublishMsg");
-      msg.textContent = `${verb} successfully — deploy #${deployNumber}`;
+      msg.textContent = `${verb} successfully — save #${deployNumber}`;
       msg.className = "pp-status-ok";
       const latestEl = document.getElementById("ppUrlLatest");
       latestEl.textContent = url; latestEl.href = url;
@@ -3193,33 +3228,45 @@
       }
     });
 
-    document.getElementById("btnDownload").onclick = async (e) => {
+    // ── Save dropdown toggle ───────────────────────────────────────────────────
+    const saveMenu = document.getElementById("saveMenu");
+    document.getElementById("btnSave").onclick = (e) => {
+      e.stopPropagation();
+      saveMenu.classList.toggle("open");
+    };
+    document.addEventListener("click", () => saveMenu.classList.remove("open"));
+    saveMenu.addEventListener("click", (e) => e.stopPropagation());
+
+    // ── Download ──────────────────────────────────────────────────────────────
+    document.getElementById("menuDownload").onclick = async (e) => {
+      saveMenu.classList.remove("open");
       if (e.shiftKey) {
         htmlImportInput?.click();
         return;
       }
       try {
-        setEditStatus("Checking download access...");
+        setEditStatus("Checking save access...");
         await ensureDownloadAllowed("Download");
         const a = document.createElement("a");
         a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
         a.download = "portfolio.html";
         a.click();
         URL.revokeObjectURL(a.href);
-        setEditStatus("Downloaded.", "ok");
+        setEditStatus("Saved (downloaded).", "ok");
       } catch (err) {
         console.error("Download failed:", err);
-        showLinkedError(err?.message || "Download failed.");
+        showLinkedError(err?.message || "Save failed.");
       }
     };
 
-    document.getElementById("btnPublish").onclick = async () => {
-      const publishBtn = document.getElementById("btnPublish");
-      const originalLabel = publishBtn.textContent;
-      publishBtn.disabled = true;
+    // ── Publish to Web ────────────────────────────────────────────────────────
+    document.getElementById("menuPublish").onclick = async () => {
+      saveMenu.classList.remove("open");
+      const saveBtn = document.getElementById("btnSave");
+      saveBtn.disabled = true;
 
       // Open panel immediately with spinner
-      document.getElementById("ppTitle").textContent = "Publish Portfolio";
+      document.getElementById("ppTitle").textContent = "Save Portfolio";
       ppSetPublishing();
       openPortfolioPanel();
 
@@ -3241,25 +3288,24 @@
         });
 
         const payload = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(payload?.error || `Publish failed (${res.status})`);
+        if (!res.ok) throw new Error(payload?.error || `Save failed (${res.status})`);
 
         if (payload.slug) localStorage.setItem("portfolio_publish_slug", payload.slug);
         if (payload.url)  localStorage.setItem("portfolio_publish_url",  payload.url);
         if (payload.versionedUrl) localStorage.setItem("portfolio_publish_versioned_url", payload.versionedUrl);
 
         const verb = payload.republished ? "Republished" : "Published";
-        setEditStatus(`${verb} as deploy #${payload.deployNumber}.`, "ok");
+        setEditStatus(`Saved (${verb.toLowerCase()} #${payload.deployNumber}).`, "ok");
         refreshEditorAccountStatus();
         ppSetSuccess(verb, payload.deployNumber, payload.url, payload.versionedUrl);
         loadDeployList(payload.slug);
         loadDomainList(payload.slug);
       } catch (err) {
         console.error("Publish failed:", err);
-        ppSetError(err?.message || "Publish failed.");
-        showLinkedError(err?.message || "Publish failed.");
+        ppSetError(err?.message || "Save failed.");
+        showLinkedError(err?.message || "Save failed.");
       } finally {
-        publishBtn.disabled = false;
-        publishBtn.textContent = originalLabel;
+        saveBtn.disabled = false;
       }
     };
 
@@ -3469,6 +3515,86 @@
       <button id="btnTipsDismiss">Dismiss</button>
     </div>
   </div>
+  <!-- Sign-in modal -->
+  <div class="authModalOverlay" id="authModalOverlay" onclick="if(event.target===this)closeAuthModal()">
+    <div class="authModalBox">
+      <h3>Sign in to continue</h3>
+      <p>Sign in to download or publish your portfolio.</p>
+      <form id="authModalForm" style="display:contents;">
+        <input id="authModalEmail" type="email" placeholder="Email" autocomplete="email" />
+        <input id="authModalPassword" type="password" placeholder="Password" autocomplete="current-password" />
+        <div class="authModalActions">
+          <button class="btn" type="button" onclick="closeAuthModal()">Cancel</button>
+          <button class="btn primary" type="submit" id="authModalSubmit">Sign In</button>
+        </div>
+      </form>
+      <button class="authModalForgot" id="authModalForgot" type="button">Forgot password?</button>
+      <div class="authModalMsg" id="authModalMsg"></div>
+    </div>
+  </div>
+
+  <script>
+    function openAuthModal() {
+      document.getElementById("authModalOverlay").classList.add("open");
+      document.getElementById("authModalEmail").focus();
+    }
+    function closeAuthModal() {
+      document.getElementById("authModalOverlay").classList.remove("open");
+      document.getElementById("authModalMsg").textContent = "";
+      document.getElementById("authModalMsg").className = "authModalMsg";
+    }
+
+    document.getElementById("authModalForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const email    = document.getElementById("authModalEmail").value.trim();
+      const password = document.getElementById("authModalPassword").value;
+      const msgEl    = document.getElementById("authModalMsg");
+      const btn      = document.getElementById("authModalSubmit");
+      msgEl.className = "authModalMsg";
+      msgEl.textContent = "";
+      if (!email || !password) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = "Email and password required.";
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Signing in…";
+      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      btn.disabled = false;
+      btn.textContent = "Sign In";
+      if (error) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.className = "authModalMsg ok";
+        msgEl.textContent = "Signed in!";
+        setTimeout(closeAuthModal, 800);
+      }
+    });
+
+    document.getElementById("authModalForgot").addEventListener("click", async () => {
+      const email = document.getElementById("authModalEmail").value.trim();
+      const msgEl = document.getElementById("authModalMsg");
+      msgEl.className = "authModalMsg";
+      if (!email) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = "Enter your email above first.";
+        return;
+      }
+      msgEl.textContent = "Sending reset email…";
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/src/editor.html`
+      });
+      if (error) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = error.message;
+      } else {
+        msgEl.className = "authModalMsg ok";
+        msgEl.textContent = "Reset email sent — check your inbox.";
+      }
+    });
+  </script>
+
   <script src="/src/annbot-widget.js" defer></script>
 </body>
 </html>

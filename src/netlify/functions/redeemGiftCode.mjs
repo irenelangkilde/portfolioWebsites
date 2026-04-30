@@ -1,15 +1,21 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
+function monthsFromNow(n) {
+  const d = new Date();
+  d.setMonth(d.getMonth() + n);
+  return d.toISOString();
+}
+
 // What each gift tier grants when redeemed.
 const GIFT_GRANTS = {
-  starter_gift: { tier: "basic",   credits_limit: 10, downloads_limit: 1, deploys_limit: 1 },
-  pro_gift:     { tier: "premium", credits_limit: 25, downloads_limit: 5, deploys_limit: 5 },
+  starter_care: { tier: "prime", credits_limit: 10, sites_limit: 2,  hosting_until: monthsFromNow(6) },
+  premium_care:     { tier: "prime", credits_limit: 25, sites_limit: 10, hosting_until: monthsFromNow(12) },
 };
 
 const GIFT_TIER_NAMES = {
-  starter_gift: "Starter",
-  pro_gift:     "Pro",
+  starter_care: "Starter",
+  premium_care:     "Premium",
 };
 
 function getSupabaseAdmin() {
@@ -21,8 +27,8 @@ function getSupabaseAdmin() {
 }
 
 function buildRedemptionEmail(tierName, grants) {
-  const cStr = grants.credits_limit  === -1 ? "∞" : grants.credits_limit;
-  const dStr = grants.downloads_limit === -1 ? "∞" : grants.downloads_limit;
+  const cStr = grants.credits_limit === -1 ? "∞" : grants.credits_limit;
+  const dStr = grants.sites_limit   === -1 ? "∞" : grants.sites_limit;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -58,12 +64,7 @@ function buildRedemptionEmail(tierName, grants) {
             </tr>
             <tr>
               <td style="padding:10px 14px;background:rgba(255,255,255,.05);border-top:none;border:1px solid rgba(255,255,255,.08);font-size:14px;color:rgba(234,240,255,.8);">
-                ⬇️ &nbsp;<strong>${dStr} website download${grants.downloads_limit !== 1 ? "s" : ""}</strong>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:10px 14px;background:rgba(255,255,255,.05);border-top:none;border:1px solid rgba(255,255,255,.08);border-radius:0 0 8px 8px;font-size:14px;color:rgba(234,240,255,.8);">
-                🚀 &nbsp;<strong>${dStr} Netlify deploy${grants.deploys_limit !== 1 ? "s" : ""}</strong>
+                🌐 &nbsp;<strong>${dStr} portfolio site${grants.sites_limit !== 1 ? "s" : ""}</strong>
               </td>
             </tr>
           </table>
