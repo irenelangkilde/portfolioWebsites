@@ -388,11 +388,9 @@
           <li>No renewal</li>
         </ul>
         <div class="actions">
-          <button class="btn primary" type="button" id="btn_free"
-                  onclick="checkoutPlan('free')"
-                  data-umami-event="pricing-choose" data-umami-event-tier="free">Start Free Trial →</button>
+          <a class="btn primary" href="overview.html"
+             data-umami-event="pricing-choose" data-umami-event-tier="free">Start Free Trial →</a>
         </div>
-        <div class="planMsg" id="msg_free"></div>
       </article>
 
       <article class="planCard featured">
@@ -787,7 +785,7 @@
         if (!res.ok) throw new Error(data?.error || "Could not activate free trial.");
         msgEl.className = "planMsg ok";
         msgEl.textContent = "Free trial activated! Redirecting…";
-        setTimeout(() => { closeConfirm(); window.location.href = `${window.location.origin}/src/purchased.html?tier=free`; }, 1200);
+        setTimeout(() => { closeConfirm(); window.location.href = `${window.location.origin}/src/overview.html`; }, 1200);
       } catch (err) {
         msgEl.className = "planMsg err";
         msgEl.textContent = err.message || "Activation failed.";

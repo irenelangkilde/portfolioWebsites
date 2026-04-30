@@ -2458,8 +2458,8 @@
     }
 
     document.getElementById("btnVisual").onclick = () => setViewMode("visual");
-    document.getElementById("btnSplit").onclick  = () => setViewMode("split");
-    document.getElementById("btnCode").onclick   = () => setViewMode("code");
+    document.getElementById("btnSplit").onclick  = async () => { if (await requirePaidSession("Split view")) setViewMode("split"); };
+    document.getElementById("btnCode").onclick   = async () => { if (await requirePaidSession("Code view"))  setViewMode("code");  };
 
     // ── execCommand toolbar ────────────────────────────────────────────────────
     function unwrapFontWrapper(el) {
@@ -2977,6 +2977,25 @@
 
     const ensureDeployAllowed = ensureDownloadAllowed.bind(null, "Publish");
 
+    async function requirePaidSession(actionLabel) {
+      if (!supabaseClient) {
+        showLinkedError(`${actionLabel} requires an account. Sign in and UPGRADE to continue.`);
+        return false;
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.user) {
+        showLinkedError(`${actionLabel} requires a paid plan. Sign in and UPGRADE to continue.`);
+        openAuthModal();
+        return false;
+      }
+      const membership = await getMembership();
+      if (!membership || (membership.sites_limit !== -1 && membership.sites_limit < 1)) {
+        showLinkedError(`${actionLabel} requires a paid plan. Please UPGRADE to continue.`);
+        return false;
+      }
+      return true;
+    }
+
     refreshEditorAccountStatus();
     supabaseClient?.auth?.onAuthStateChange?.(() => {
       refreshEditorAccountStatus();
@@ -3230,9 +3249,9 @@
 
     // ── Save dropdown toggle ───────────────────────────────────────────────────
     const saveMenu = document.getElementById("saveMenu");
-    document.getElementById("btnSave").onclick = (e) => {
+    document.getElementById("btnSave").onclick = async (e) => {
       e.stopPropagation();
-      saveMenu.classList.toggle("open");
+      if (await requirePaidSession("Save")) saveMenu.classList.toggle("open");
     };
     document.addEventListener("click", () => saveMenu.classList.remove("open"));
     saveMenu.addEventListener("click", (e) => e.stopPropagation());
