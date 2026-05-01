@@ -420,9 +420,16 @@
       </article>
 
       <article class="planCard featured">
-        <div class="planTag">One-Time or Renewing</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <div class="planTag">One-Time or Renewing</div>
+          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg,#c9a227,#f0c94a); color:#0a1220; padding:4px 10px; border-radius:999px; white-space:nowrap;">⚡ Limited Time</div>
+        </div>
         <h2 class="planName">Graduate</h2>
-        <div class="price"><strong>$19</strong><span>per month</span></div>
+        <div class="price">
+          <span style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;">$29</span>
+          <strong>$19</strong><span>per unit</span>
+        </div>
+        <div style="font-size:11.5px; color:#f0c94a; font-weight:700; margin-top:-8px;">Special offer — renewal price $29/unit</div>
         <div class="planBlurb">Full pipeline with hosting included. Graduated pricing — each additional unit costs less.</div>
         <ul class="featureList">
           <li>Publications, demos, research, projects</li>
@@ -446,7 +453,10 @@
       </article>
 
       <article class="planCard">
-        <div class="planTag">One-Time or Renewing</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
+          <div class="planTag">One-Time or Renewing</div>
+          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 75%, #fff 4%), color-mix(in oklab, var(--accent) 42%, var(--primary))); color:white; padding:4px 10px; border-radius:999px; white-space:nowrap;">★ Recommended</div>
+        </div>
         <h2 class="planName">Prime</h2>
         <div class="price"><strong>$99</strong><span>for four months</span></div>
         <div class="planBlurb">10× the credits and sites of Graduate — best per-credit price. Ideal for active career development.</div>
@@ -629,8 +639,8 @@
     let _currentUser = null;
     let _membership  = null;
 
-    const PREMIUM_UNIT_PRICES     = [19];
-    const PREMIUM_UNIT_PRICE_EXTRA = 19;
+    const PREMIUM_UNIT_PRICES     = [299];
+    const PREMIUM_UNIT_PRICE_EXTRA = 299;
     let _selectedPlan = null;
     let _pendingItems = null;
 
@@ -779,7 +789,7 @@
       prime:    "Auto-renew every trimester (four months) — cancel any time",
     };
 
-    const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "hosting"]);
+    const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "hosting", "extra_credits"]);
 
     function syncAutoRenewVisibility() {
       const wrap = document.getElementById("confirmAutoRenewWrap");
