@@ -62,7 +62,7 @@
       display:flex;
       flex-direction:column;
       align-items:flex-end;
-      gap: 8px;
+      gap: 6px;
     }
     .headerAccountBar{
       display:flex;
@@ -71,6 +71,15 @@
       justify-content:flex-start;
       gap:4px;
       flex-wrap:nowrap;
+    }
+    #statusSlotPage1{
+      align-items:flex-end;
+    }
+    #statusSlotPage1 .sharedStatusPanel{
+      align-items:flex-end;
+    }
+    #statusSlotPage1 .sharedStatusPanel span{
+      text-align:right;
     }
     .statusNavRow{
       display:grid !important;
@@ -538,7 +547,22 @@
             <span class="avatar" id="authAvatar">?</span>
             <span id="authBtnLabel">Sign in</span>
           </button>
-          <span id="creditsDisplay" style="display:none; font-size:11px; color:var(--muted);"></span>
+          <div id="membershipPill" style="display:none; font-size:11px; color:var(--muted); text-align:right; line-height:1.6;">
+            <span id="creditsDisplay"></span>
+            <span id="savesDisplay"></span>
+            <span id="hostingDisplay"></span>
+          </div>
+        </div>
+        <div class="statusNavSlot" id="statusSlotPage1" style="width:100%;">
+          <div id="headerStatusPanel" class="sharedStatusPanel">
+            <span id="resumeAnalysisStatus"></span>
+            <span id="jobAnalysisStatus"></span>
+            <span id="templateExtractStatus"></span>
+            <span id="braidStatus"></span>
+            <span id="colorsChosenStatus"></span>
+            <span id="editorAutoOpenStatus"></span>
+            <span id="generatingWebsiteStatus"></span>
+          </div>
         </div>
       </div>
     </header>
@@ -598,6 +622,8 @@
               <div id="giftRedeemMsg" style="font-size:12px; margin-top:5px; display:none;"></div>
             </div>
             <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
+            <button class="btn danger mini" style="width:100%;" onclick="handleDeleteAccount()">Delete account</button>
+            <div id="deleteAccountMsg" style="font-size:12px; min-height:14px;"></div>
           </div>
         </div>
       </div>
@@ -685,19 +711,8 @@
       <div class="dbg-submit-row hidden" style="display:none; justify-content:flex-end; margin-top:10px;">
         <button class="btn" type="button" id="dbgSubmit1">Submit</button>
       </div>
-      <div class="btnRow statusNavRow">
+      <div class="btnRow" style="margin-top:8px;">
         <button class="btn danger" type="button" id="reset1" style="margin-right:auto; display:none;">Reset (double-click)</button>
-        <div class="statusNavSlot" id="statusSlotPage1">
-          <div id="headerStatusPanel" class="sharedStatusPanel">
-            <span id="resumeAnalysisStatus"></span>
-            <span id="jobAnalysisStatus"></span>
-            <span id="templateExtractStatus"></span>
-            <span id="braidStatus"></span>
-            <span id="colorsChosenStatus"></span>
-            <span id="editorAutoOpenStatus"></span>
-            <span id="generatingWebsiteStatus"></span>
-          </div>
-        </div>
         <button class="btn primary" type="button" id="next1">Next</button>
       </div>
     </section>
@@ -1147,7 +1162,7 @@
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, sites_used, sites_limit, status")
+      .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, renews_at")
       .eq("user_id", user.id)
       .single();
     _membership = data;
@@ -1183,7 +1198,7 @@
         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
         const { data: m } = await _supabase
           .from("memberships")
-          .select("tier, credits_used, credits_limit, sites_used, sites_limit, status")
+          .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, renews_at")
           .eq("user_id", _currentUser.id)
           .single();
         _membership = m;
@@ -1218,7 +1233,8 @@
 
     document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
     document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
-    if (!loggedIn) document.getElementById("creditsDisplay").style.display = "none";
+    const pillEl = document.getElementById("membershipPill");
+    if (pillEl) pillEl.style.display = loggedIn ? "" : "none";
 
     if (loggedIn) {
       document.getElementById("authUserEmail").textContent   = email;
@@ -1229,8 +1245,8 @@
 
       const m = _membership;
       if (m) {
-        const cUnlimited = m.credits_limit   === -1;
-        const dUnlimited = m.sites_limit === -1;
+        const cUnlimited = m.credits_limit === -1;
+        const dUnlimited = m.sites_limit   === -1;
         const cStr = cUnlimited ? "∞" : `${m.credits_limit - m.credits_used}/${m.credits_limit}`;
         const dStr = dUnlimited ? "∞" : `${m.sites_limit - m.sites_used}/${m.sites_limit}`;
         document.getElementById("authQuotaBar").textContent =
@@ -1238,13 +1254,24 @@
 
         const creditsEl = document.getElementById("creditsDisplay");
         if (creditsEl) {
-          if (cUnlimited) {
-            creditsEl.textContent = "unlimited credits";
-          } else {
-            const remaining = (m.credits_limit ?? 0) - (m.credits_used ?? 0);
-            creditsEl.textContent = `${remaining} credit${remaining === 1 ? "" : "s"} remaining`;
-          }
-          creditsEl.style.display = "";
+          creditsEl.textContent = cUnlimited
+            ? "Unlimited credits"
+            : `${(m.credits_limit ?? 0) - (m.credits_used ?? 0)} credit${((m.credits_limit ?? 0) - (m.credits_used ?? 0)) === 1 ? "" : "s"} remaining`;
+          creditsEl.style.display = "block";
+        }
+        const savesEl = document.getElementById("savesDisplay");
+        if (savesEl) {
+          savesEl.textContent = dUnlimited ? "Unlimited saves" : `${(m.sites_limit ?? 0) - (m.sites_used ?? 0)} save${((m.sites_limit ?? 0) - (m.sites_used ?? 0)) === 1 ? "" : "s"} remaining`;
+          savesEl.style.display = "block";
+        }
+        const hostingEl = document.getElementById("hostingDisplay");
+        if (hostingEl && m.renews_at) {
+          const d = new Date(m.renews_at);
+          const fmt = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+          hostingEl.textContent = `Hosting renews ${fmt}`;
+          hostingEl.style.display = "block";
+        } else if (hostingEl) {
+          hostingEl.style.display = "none";
         }
       }
     }
@@ -1363,6 +1390,30 @@
   async function handleSignOut() {
     await _supabase.auth.signOut();
     closeAuthModal();
+  }
+
+  async function handleDeleteAccount() {
+    const msgEl = document.getElementById("deleteAccountMsg");
+    msgEl.style.color = "var(--danger)";
+    msgEl.textContent = "";
+    if (!confirm("Permanently delete your account and all data? This cannot be undone.")) return;
+    const { data: { session } } = await _supabase.auth.getSession();
+    if (!session) { msgEl.textContent = "Not signed in."; return; }
+    msgEl.style.color = "var(--muted)";
+    msgEl.textContent = "Deleting…";
+    try {
+      const res  = await fetch("/.netlify/functions/deleteAccount", {
+        method: "POST",
+        headers: { authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Deletion failed.");
+      await _supabase.auth.signOut();
+      closeAuthModal();
+    } catch (err) {
+      msgEl.style.color = "var(--danger)";
+      msgEl.textContent = err.message;
+    }
   }
 
   async function handleForgotPassword(e) {

@@ -535,6 +535,23 @@
       font-size:11px; color:rgba(141,224,255,.55); text-decoration:underline;
       background:none; border:none; cursor:pointer; padding:0; font:inherit; align-self:flex-end;
     }
+    /* ── Upgrade dialog ── */
+    .upgradeModalOverlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:1100; display:none; align-items:center; justify-content:center;
+    }
+    .upgradeModalOverlay.open{ display:flex; }
+    .upgradeModalBox{
+      background:#101b31; border:1px solid rgba(78,112,241,.35);
+      border-radius:18px; box-shadow:0 24px 60px rgba(0,0,0,.5);
+      padding:28px 28px 24px; width:100%; max-width:360px;
+      display:flex; flex-direction:column; gap:14px; text-align:center;
+    }
+    .upgradeModalIcon{ font-size:32px; line-height:1; }
+    .upgradeModalBox h3{ margin:0; font-size:17px; letter-spacing:-.02em; }
+    .upgradeModalBox p{ margin:0; font-size:13px; color:rgba(236,243,255,.6); line-height:1.5; }
+    .upgradeModalActions{ display:flex; gap:8px; }
+    .upgradeModalActions .btn{ flex:1; padding:11px; border-radius:10px; font-size:14px; }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
@@ -1948,13 +1965,13 @@
         return;
       }
       if (!supabaseClient && getAnonCreditsUsed() >= 5) {
-        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        openUpgradeModal("You've used all your free image credits. Sign in and upgrade to keep regenerating images.");
         return;
       }
 
       const userId = await getEditorUserId();
       if (!userId && getAnonCreditsUsed() >= 5) {
-        showLinkedError("Anonymous image regeneration limit reached. Upgrade to continue.");
+        openUpgradeModal("You've used all your free image credits. Sign in and upgrade to keep regenerating images.");
         return;
       }
 
@@ -2024,7 +2041,7 @@
           }
           if (!pollRes.ok || data?.status === "error") {
             if (data?.quota) {
-              showLinkedError(data.error || "Credit limit reached. Upgrade to continue.");
+              openUpgradeModal(data.error || "You've used all your credits. Upgrade your plan to continue.");
               return;
             }
             throw new Error(
@@ -3534,6 +3551,19 @@
       <button id="btnTipsDismiss">Dismiss</button>
     </div>
   </div>
+  <!-- Upgrade dialog -->
+  <div class="upgradeModalOverlay" id="upgradeModalOverlay" onclick="if(event.target===this)closeUpgradeModal()">
+    <div class="upgradeModalBox">
+      <div class="upgradeModalIcon">✦</div>
+      <h3 id="upgradeModalTitle">Credit limit reached</h3>
+      <p id="upgradeModalMsg">You've used all your available credits. Upgrade your plan to keep building.</p>
+      <div class="upgradeModalActions">
+        <button class="btn" type="button" onclick="closeUpgradeModal()">Dismiss</button>
+        <a class="btn primary" href="pricing.html" target="_blank" rel="noopener" onclick="closeUpgradeModal()">View Plans →</a>
+      </div>
+    </div>
+  </div>
+
   <!-- Sign-in modal -->
   <div class="authModalOverlay" id="authModalOverlay" onclick="if(event.target===this)closeAuthModal()">
     <div class="authModalBox">
@@ -3553,6 +3583,14 @@
   </div>
 
   <script>
+    function openUpgradeModal(message) {
+      if (message) document.getElementById("upgradeModalMsg").textContent = message;
+      document.getElementById("upgradeModalOverlay").classList.add("open");
+    }
+    function closeUpgradeModal() {
+      document.getElementById("upgradeModalOverlay").classList.remove("open");
+    }
+
     function openAuthModal() {
       document.getElementById("authModalOverlay").classList.add("open");
       document.getElementById("authModalEmail").focus();

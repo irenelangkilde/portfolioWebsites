@@ -13,8 +13,9 @@
     // ----------------------------
     let resumeAnalysisCache = null;   // parsed JSON from analyzeResume (debug mode only)
     let lastAnalysisData    = null;   // always set after analysis — used for palette rendering
-    let resumeAnalysisPending = false; // true while request in flight
-    let _resumeAnalysisRunId  = 0;    // incremented on each new call; polling loop checks for staleness
+    let resumeAnalysisPending   = false; // true while request in flight
+    let _resumeAnalysisRunId    = 0;    // incremented on each new call; polling loop checks for staleness
+    let _analysisCountdownTimer = null; // single shared timer — cleared synchronously on each new run
 
     // ----------------------------
     // Generation state
@@ -72,7 +73,17 @@
     }
 
     function showAnonCreditPrompt() {
-      showUpgradePrompt({ tier: "free", used: getAnonCreditsUsed(), limit: ANON_CREDIT_LIMIT, anon: true });
+      if (typeof openAuthModal === "function") {
+        openAuthModal();
+        const msgEl = document.getElementById("authMsg");
+        if (msgEl) {
+          msgEl.className = "authMsg";
+          msgEl.style.color = "#f5a623";
+          msgEl.textContent = `You've used all ${ANON_CREDIT_LIMIT} free credits. Sign in or create an account to keep going.`;
+        }
+      } else {
+        showUpgradePrompt({ tier: "free", used: getAnonCreditsUsed(), limit: ANON_CREDIT_LIMIT, anon: true });
+      }
     }
 
     function cachePreviewHtml(html) {
@@ -488,10 +499,14 @@
 
     // ----------------------------
     function setResumeAnalysisStatus(text, color = "rgba(234,240,255,.6)") {
-      ["resumeAnalysisStatus", "resumeAnalysisStatusInline"].forEach(id => {
-        const el = document.getElementById(id);
+      // Inline element (Page 1, beside upload): always updated
+      const inlineEl = document.getElementById("resumeAnalysisStatusInline");
+      if (inlineEl) { inlineEl.textContent = text; inlineEl.style.color = color; }
+      // Nav-bar element: only updated for completion/error states so it persists across pages
+      if (!text || /^[✓⚠]/.test(text)) {
+        const el = document.getElementById("resumeAnalysisStatus");
         if (el) { el.textContent = text; el.style.color = color; }
-      });
+      }
       forwardEditorProcessStatus();
     }
 
@@ -1243,8 +1258,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return;
       }
 
-      // Bump run ID — any in-flight poll loop will see its ID is stale and exit
+      // Bump run ID — any in-flight poll loop will see its ID is stale and exit.
+      // Clear the previous countdown immediately (synchronous — before any await)
+      // so only one timer is ever running.
       const myRunId = ++_resumeAnalysisRunId;
+      clearInterval(_analysisCountdownTimer);
+      _analysisCountdownTimer = null;
 
       // Check localStorage cache before hitting the API
       let cachedData = null;
@@ -1277,11 +1296,15 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       try {
         base64 = await readFileAsBase64(file);
       } catch (e) {
+        if (myRunId !== _resumeAnalysisRunId) return;
         resumeAnalysisPending = false;
         updateSubmitReadiness();
         setResumeAnalysisStatus("Could not read resume file.", "rgba(251,171,156,.8)");
         return;
       }
+
+      // Another run may have started while the file was being read
+      if (myRunId !== _resumeAnalysisRunId) return;
 
       const major          = document.getElementById("major")?.value?.trim() || "";
       const specialization = document.getElementById("specialization")?.value?.trim() || "";
@@ -1290,7 +1313,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       // Generate a unique jobId for this analysis run
       const jobId = "resume_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      const countdownTimer = startAnalysisCountdown(180);
+      _analysisCountdownTimer = startAnalysisCountdown(180);
 
       // Submit to background function (returns 202 immediately)
       try {
@@ -1300,14 +1323,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           body: JSON.stringify({ jobId, resumePdfBase64: base64, resumeMime: file.type || "application/pdf", major, specialization, provider, userId: currentUserId() })
         });
         if (!submitRes.ok) {
-          clearInterval(countdownTimer);
+          if (myRunId !== _resumeAnalysisRunId) return;
+          clearInterval(_analysisCountdownTimer); _analysisCountdownTimer = null;
           resumeAnalysisPending = false;
           updateSubmitReadiness();
           setResumeAnalysisStatus("Resume analysis failed (could not start).", "rgba(251,171,156,.8)");
           return;
         }
       } catch (e) {
-        clearInterval(countdownTimer);
+        if (myRunId !== _resumeAnalysisRunId) return;
+        clearInterval(_analysisCountdownTimer); _analysisCountdownTimer = null;
         resumeAnalysisPending = false;
         updateSubmitReadiness();
         setResumeAnalysisStatus("Resume analysis failed (network error).", "rgba(251,171,156,.8)");
@@ -1320,10 +1345,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const pollStart = Date.now();
 
       const poll = async () => {
-        if (myRunId !== _resumeAnalysisRunId) { clearInterval(countdownTimer); return; } // superseded by newer call
+        if (myRunId !== _resumeAnalysisRunId) return; // superseded — new run already cleared the timer
         if (!resumeAnalysisPending) return; // cancelled externally (e.g. new file uploaded)
         if (Date.now() - pollStart > POLL_TIMEOUT_MS) {
-          clearInterval(countdownTimer);
+          clearInterval(_analysisCountdownTimer); _analysisCountdownTimer = null;
           resumeAnalysisPending = false;
           updateSubmitReadiness();
           setResumeAnalysisStatus("Resume analysis timed out — try again.", "rgba(251,171,156,.8)");
@@ -1346,7 +1371,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           return;
         }
 
-        clearInterval(countdownTimer);
+        clearInterval(_analysisCountdownTimer); _analysisCountdownTimer = null;
         resumeAnalysisPending = false;
         updateSubmitReadiness();
 

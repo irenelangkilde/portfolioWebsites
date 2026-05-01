@@ -65,7 +65,6 @@
 
     /* ── Column widths ── */
     col.feat    { width:210px; }
-    col.val-col { width:88px; }
     col.plan    { width:1fr; }
 
     /* ── Group header row ── */
@@ -86,7 +85,6 @@
       color:color-mix(in oklab, var(--gold) 60%, rgba(236,243,255,.38));
     }
     tr.group-head th.feat-head{ border-bottom:1px solid rgba(255,255,255,.08); }
-    tr.group-head th.val-head{ background:rgba(0,0,0,.12); border-right:1px solid rgba(255,255,255,.07); }
 
     /* ── Plan header row ── */
     thead tr.plan-head{ border-bottom:2px solid var(--border); }
@@ -99,30 +97,6 @@
       text-align:left;
       font-size:11px; font-weight:800; letter-spacing:.14em;
       text-transform:uppercase; color:rgba(236,243,255,.45);
-    }
-    th.val-head{
-      background:rgba(0,0,0,.12);
-      border-right:1px solid rgba(255,255,255,.07);
-      font-size:10px; font-weight:800; letter-spacing:.1em; text-transform:uppercase;
-      color:rgba(236,243,255,.35); vertical-align:middle;
-    }
-    .th-alacarte{
-      display:block; font-size:13px; font-weight:700;
-      color:rgba(236,243,255,.32);
-      text-decoration:line-through;
-      text-decoration-color:rgba(236,243,255,.38);
-      letter-spacing:-.01em; margin-bottom:1px;
-    }
-    .th-incr{
-      display:block; font-size:11px; font-weight:700;
-      color:rgba(236,243,255,.22);
-      text-decoration:line-through;
-      text-decoration-color:rgba(236,243,255,.28);
-      letter-spacing:-.01em; margin-bottom:2px;
-    }
-    .th-incr-label{
-      display:block; font-size:9px; font-weight:800; letter-spacing:.08em;
-      text-transform:uppercase; color:rgba(236,243,255,.18); margin-bottom:1px;
     }
     .th-tag{
       display:inline-block; font-size:9px; font-weight:900;
@@ -156,18 +130,6 @@
     /* divider between core and gift in group header */
     th.pre-gift{ border-right:2px solid rgba(201,162,39,.3); }
     td.pre-gift{ border-right:2px solid rgba(201,162,39,.2); }
-
-    /* ── Value column ── */
-    td.val-col{
-      font-size:12px; font-weight:700;
-      color:rgba(236,243,255,.4);
-      background:rgba(0,0,0,.1);
-      border-right:1px solid rgba(255,255,255,.06);
-      white-space:nowrap;
-    }
-    .val-unit{ font-size:10px; font-weight:600; color:rgba(236,243,255,.28); }
-    tr.section-head td.val-col{ background:rgba(0,0,0,.22); }
-    tbody tr:hover td.val-col{ background:rgba(0,0,0,.16); }
 
     /* ── Section header rows ── */
     tr.section-head td{
@@ -219,7 +181,6 @@
       td.feat-label{ font-size:12px; }
       .th-price{ font-size:18px; }
       col.feat{ width:140px; }
-      col.val-col{ width:64px; }
     }
   </style>
 </head>
@@ -240,7 +201,6 @@
       <table>
         <colgroup>
           <col class="feat" />
-          <col class="val-col" />
           <col class="plan" />
           <col class="plan" />
           <col class="plan" />
@@ -251,7 +211,6 @@
           <!-- Group labels -->
           <tr class="group-head">
             <th class="feat-head"></th>
-            <th class="val-head"></th>
             <th class="group-core" colspan="2">Core Plans</th>
             <th class="group-core pre-gift"> Signature </th>
             <th class="group-gift" colspan="2">🎁 Care Packages</th>
@@ -259,49 +218,33 @@
           <!-- Plan headers -->
           <tr class="plan-head">
             <th class="feat-head"></th>
-            <th class="val-head">À la carte</th>
             <th>
               <span class="th-tag">One-Time</span>
               <span class="th-name">Free Trial</span>
-              <span class="th-alacarte">$15+</span>
-              <span class="th-incr-label">vs nothing</span>
-              <span class="th-incr">$15+</span>
               <span class="th-price">$0</span>
               <span class="th-sub">one-time</span>
             </th>
             <th>
               <span class="th-tag">One-Time or Renewing</span>
               <span class="th-name">Graduate</span>
-              <span class="th-alacarte">$25+</span>
-              <span class="th-incr-label">vs Free Trial</span>
-              <span class="th-incr">$10+</span>
               <span class="th-price">$19</span>
               <span class="th-sub">per month</span>
             </th>
             <th class="featured pre-gift">
               <span class="th-tag">One-Time or Renewing</span>
               <span class="th-name">Prime</span>
-              <span class="th-alacarte">$110+</span>
-              <span class="th-incr-label">vs Graduate</span>
-              <span class="th-incr">$104+</span>
               <span class="th-price">$99</span>
               <span class="th-sub">for four months</span>
             </th>
             <th class="gift">
               <span class="th-tag badge gift">One-Time or Renewing</span>
               <span class="th-name">Starter</span>
-              <span class="th-alacarte">$159+</span>
-              <span class="th-incr-label">vs Prime</span>
-              <span class="th-incr">$148+</span>
               <span class="th-price">$149</span>
               <span class="th-sub">for six months</span>
             </th>
             <th class="gift-warm">
               <span class="th-tag badge gift">One-Time or Renewing</span>
               <span class="th-name">Premium</span>
-              <span class="th-alacarte">$343+</span>
-              <span class="th-incr-label">vs Starter</span>
-              <span class="th-incr">$333+</span>
               <span class="th-price">$299</span>
               <span class="th-sub">one year</span>
             </th>
@@ -312,12 +255,10 @@
           <!-- CREDITS & OUTPUT -->
           <tr class="section-head">
             <td>Credits &amp; Output</td>
-            <td class="val-col"></td>
             <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
           </tr>
           <tr>
             <td class="feat-label">Credits included</td>
-            <td class="val-col">$5<span class="val-unit">/credit</span></td>
             <td><span class="val">3</span></td>
             <td><span class="val">3</span></td>
             <td class="featured pre-gift"><span class="val">10</span></td>
@@ -326,7 +267,6 @@
           </tr>
           <tr>
             <td class="feat-label">Portfolio site saves<span class="sublabel">downloads/deploys</span></td>
-            <td class="val-col"></td>
             <td><span class="val">1</span> <span class="val-muted">preview only</span></td>
             <td><span class="val">1</span></td>
             <td class="featured pre-gift"><span class="val">5</span></td>
@@ -335,7 +275,6 @@
           </tr>
           <tr>
             <td class="feat-label">Hosting included</td>
-            <td class="val-col">$10<span class="val-unit">/mo</span></td>
             <td class="no">—</td>
             <td><span class="val">1 month</span></td>
             <td class="featured pre-gift"><span class="val">4 months</span></td>
@@ -344,7 +283,6 @@
           </tr>
           <tr>
             <td class="feat-label">Support included</td>
-            <td class="val-col">$49<span class="val-unit">/mo</span></td>
             <td class="no">—</td>
             <td class="no">—</td>
             <td class="featured pre-gift no">—</td>
@@ -353,7 +291,6 @@
           </tr>
           <tr>
             <td class="feat-label">Renewal<span class="sublabel">always optional, cancel anytime</span></td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="badge opt">Monthly, optional</span></td>
             <td class="featured pre-gift"><span class="badge opt">Trimester, optional</span></td>
@@ -364,12 +301,10 @@
           <!-- PORTFOLIO FEATURES -->
           <tr class="section-head">
             <td>Portfolio Features</td>
-            <td class="val-col"></td>
             <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
           </tr>
           <tr>
             <td class="feat-label">Resume analysis &amp; job targeting</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -378,7 +313,6 @@
           </tr>
           <tr>
             <td class="feat-label">Customized design variety</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -387,7 +321,6 @@
           </tr>
           <tr>
             <td class="feat-label">Unlimited text &amp; color edits</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -396,7 +329,6 @@
           </tr>
           <tr>
             <td class="feat-label">Single-page responsive portfolio</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -405,7 +337,6 @@
           </tr>
           <tr>
             <td class="feat-label">Up to 6 sections of choice</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">-</span></td>
@@ -414,7 +345,6 @@
           </tr>
           <tr>
             <td class="feat-label">Up to 10 sections of choice</td>
-            <td class="val-col"></td>
             <td><span class="yes">-</span></td>
             <td><span class="yes">-</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -423,7 +353,6 @@
           </tr>
           <tr>
             <td class="feat-label">Resume PDF/DOCX &amp; headshot embedded</td>
-            <td class="val-col"></td>
             <td><span class="yes">✓</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -432,7 +361,6 @@
           </tr>
           <tr>
             <td class="feat-label">Publications, demos, research<span class="sublabel">Projects &amp; extended sections</span></td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -441,7 +369,6 @@
           </tr>
           <tr>
             <td class="feat-label">Multiple versions<span class="sublabel">A/B, new job targets, resume updates</span></td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td class="no">—</td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -452,12 +379,10 @@
           <!-- HOSTING & DOMAIN -->
           <tr class="section-head">
             <td>Hosting &amp; Domain</td>
-            <td class="val-col"></td>
             <td></td><td></td><td class="featured pre-gift"></td><td class="gift"></td><td class="gift-warm"></td>
           </tr>
           <tr>
             <td class="feat-label">Published on Irene's Ventures domain</td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -466,7 +391,6 @@
           </tr>
           <tr>
             <td class="feat-label">HTTPS / SSL certificate</td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -475,7 +399,6 @@
           </tr>
           <tr>
             <td class="feat-label">Global content delivery (CDN)</td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -484,7 +407,6 @@
           </tr>
           <tr>
             <td class="feat-label">Strong uptime (99.9%)</td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -493,7 +415,6 @@
           </tr>
           <tr>
             <td class="feat-label">Custom domain setup</td>
-            <td class="val-col"></td>
             <td class="no">—</td>
             <td class="no">—</td>
             <td class="featured pre-gift"><span class="yes">✓</span></td>
@@ -502,7 +423,6 @@
           </tr>
           <tr>
             <td class="feat-label">Guide to DIY (free) hosting</td>
-            <td class="val-col"></td>
             <td><span class="yes">-</span></td>
             <td><span class="yes">✓</span></td>
             <td class="featured pre-gift"><span class="yes">-</span></td>

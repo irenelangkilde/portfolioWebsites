@@ -70,7 +70,7 @@ export async function handler(event) {
     graduate:      getEnv("STRIPE_PRICE_GRADUATE"),
     prime:         getEnv("STRIPE_PRICE_PRIME"),
     care:          getEnv("STRIPE_PRICE_CARE_PKG"),
-    hosting:       getEnv("STRIPE_PRICE_HOSTING"),
+    hosting:       getEnv("STRIPE_PRICE_HOSTING_ADDON"),
     extra_credits: getEnv("STRIPE_PRICE_EXTRA_CREDITS"),
     starter_care:  getEnv("STRIPE_PRICE_STARTER"),
     premium_care:      getEnv("STRIPE_PRICE_PREMIUM"),
@@ -90,15 +90,13 @@ export async function handler(event) {
   const stripe = new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" });
 
   // When the cart has any subscription, use subscription mode.
-  // Recurring items → line_items; one-time items → subscription_data.add_invoice_items.
+  // Both recurring and one-time items go in line_items; Stripe bills one-time items on the first invoice.
   // When all items are one-time, use payment mode.
   const hasSubscription = cartItems.some(i => SUBSCRIPTION_TIERS.has(i.tier));
   const mode = hasSubscription ? "subscription" : "payment";
 
-  const subItems  = cartItems.filter(i =>  SUBSCRIPTION_TIERS.has(i.tier));
-  const onetItems = cartItems.filter(i => !SUBSCRIPTION_TIERS.has(i.tier) && !GUEST_TIERS.has(i.tier));
-  const lineItems = (hasSubscription ? subItems : cartItems)
-    .map(i => ({ price: PRICE_IDS[i.tier], quantity: i.qty }));
+  const billableItems = cartItems.filter(i => !GUEST_TIERS.has(i.tier));
+  const lineItems = billableItems.map(i => ({ price: PRICE_IDS[i.tier], quantity: i.qty }));
 
   const origin = returnUrl || "https://yoursite.netlify.app";
   const sessionMeta = {
@@ -120,10 +118,6 @@ export async function handler(event) {
   if (hasSubscription) {
     sessionParams.subscription_data = {
       metadata: sessionMeta,
-      cancel_at_period_end: !autoRenew,
-      ...(onetItems.length ? {
-        add_invoice_items: onetItems.map(i => ({ price: PRICE_IDS[i.tier], quantity: i.qty }))
-      } : {})
     };
   } else {
     sessionParams.payment_intent_data = { metadata: sessionMeta };
