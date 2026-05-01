@@ -42,7 +42,7 @@
     .brand{ display:flex; flex-direction:column; gap:4px; }
     .eyebrow{
       font-size:11px; font-weight:800; letter-spacing:.16em;
-      text-transform:uppercase; color:rgba(236,243,255,.58);
+      text-transform:uppercase; color:rgba(236,243,255,.78);
     }
     h1{ margin:0; font-size:clamp(28px, 4vw, 48px); line-height:1.02; letter-spacing:-.03em; }
     .sub{ max-width:760px; margin:10px 0 0; color:var(--muted); font-size:16px; }
@@ -77,14 +77,14 @@
     .acctGroup{ display:flex; flex-direction:column; gap:2px; min-width:0; }
     .acctPlanRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .acctActions{ margin-left:auto; display:flex; gap:8px; align-items:center; }
-    .statusLabel{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgba(236,243,255,.45); }
+    .statusLabel{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgba(236,243,255,.7); }
     .statusValue{ font-size:16px; font-weight:800; }
     #tierStatus{ text-transform:capitalize; }
     .statusMeta{ color:var(--muted); font-size:13px; }
     /* ── Section headers ── */
     .sectionHead{ display:flex; align-items:baseline; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
-    .sectionTitle{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:rgba(236,243,255,.55); }
-    .sectionNote{ font-size:13px; color:rgba(236,243,255,.38); margin:0; }
+    .sectionTitle{ font-size:11px; font-weight:800; letter-spacing:.14em; text-transform:uppercase; color:rgba(236,243,255,.75); }
+    .sectionNote{ font-size:13px; color:rgba(236,243,255,.65); margin:0; }
     /* ── Plan grid ── */
     .plans{
       display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
@@ -174,7 +174,7 @@
     }
     .pOptional{
       font-size:9px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
-      color:rgba(236,243,255,.35); margin-left:3px;
+      color:rgba(236,243,255,.6); margin-left:3px;
     }
     @media(max-width:780px){
       .pipeline{ flex-wrap:wrap; }
@@ -309,6 +309,16 @@
       border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
       color:var(--text); font:inherit;
     }
+    /* ── Accessibility ── */
+    .sr-only{
+      position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+      overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+    }
+    *:focus-visible{
+      outline:2px solid var(--accent);
+      outline-offset:3px;
+      border-radius:4px;
+    }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
@@ -317,7 +327,8 @@
     <div class="topbar">
       <div class="brand">
         <div class="eyebrow">Plans & Billing</div>
-        <h1>Pricing</h1><h2>Professional portfolio websites that help job-hunters stand out — and get hired.</h2>
+        <h1>Pricing</h1>
+        <p class="sub">Professional portfolio websites that help job-hunters stand out — and get hired.</p>
       </div>
       <div class="actions">
         <button class="btn ghost" type="button" onclick="closePricingPage()" data-umami-event="pricing-back">Back To Builder</button>
@@ -328,7 +339,7 @@
     <div class="accountBar">
       <div class="acctGroup">
         <div class="statusLabel">Account</div>
-        <div class="statusValue" id="accountStatus">Signed out</div>
+        <div class="statusValue" id="accountStatus" aria-live="polite">Signed out</div>
         <div class="statusMeta" id="accountMeta">Sign in below to purchase.</div>
       </div>
       <div class="acctGroup">
@@ -396,7 +407,7 @@
       <a href="features.html" class="sectionNote" style="color:var(--accent);text-decoration:none;font-size:13px;font-weight:700;">Compare all features →</a>
     </div>
 
-    <section class="plans">
+    <section class="plans" aria-label="Plans">
 
       <article class="planCard">
         <div class="planTag">One-Time</div>
@@ -422,12 +433,12 @@
       <article class="planCard featured">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
           <div class="planTag">One-Time or Renewing</div>
-          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg,#c9a227,#f0c94a); color:#0a1220; padding:4px 10px; border-radius:999px; white-space:nowrap;">⚡ Limited Time</div>
+          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg,#c9a227,#f0c94a); color:#0a1220; padding:4px 10px; border-radius:999px; white-space:nowrap;"><span aria-hidden="true">⚡</span> Limited Time</div>
         </div>
         <h2 class="planName">Graduate</h2>
-        <div class="price">
-          <span style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;">$29</span>
-          <strong>$19</strong><span>per unit</span>
+        <div class="price" aria-label="$19 per unit, on sale from $29">
+          <span aria-hidden="true" style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;">$29</span>
+          <strong aria-hidden="true">$19</strong><span aria-hidden="true">per unit</span>
         </div>
         <div style="font-size:11.5px; color:#f0c94a; font-weight:700; margin-top:-8px;">Special offer — renewal price $29/unit</div>
         <div class="planBlurb">Full pipeline with hosting included. Graduated pricing — each additional unit costs less.</div>
@@ -455,7 +466,7 @@
       <article class="planCard">
         <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;">
           <div class="planTag">One-Time or Renewing</div>
-          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 75%, #fff 4%), color-mix(in oklab, var(--accent) 42%, var(--primary))); color:white; padding:4px 10px; border-radius:999px; white-space:nowrap;">★ Recommended</div>
+          <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 75%, #fff 4%), color-mix(in oklab, var(--accent) 42%, var(--primary))); color:white; padding:4px 10px; border-radius:999px; white-space:nowrap;"><span aria-hidden="true">★</span> Recommended</div>
         </div>
         <h2 class="planName">Prime</h2>
         <div class="price"><strong>$99</strong><span>for four months</span></div>
@@ -483,7 +494,7 @@
       <span class="sectionTitle">Add-ons</span>
       <span class="sectionNote">Only available with the purchase of a plan. Can be combined with any paid plan · Set quantity to 0 to skip</span>
     </div>
-    <section class="addons">
+    <section class="addons" aria-label="Add-ons">
 
       <article class="planCard small">
         <div class="planTag">Add-on</div>
@@ -555,7 +566,7 @@
       </div>
       <div class="addonsTotalActions">
         <button class="btn primary" id="addonsBuyBtn" onclick="openPurchaseConfirm()" disabled>Purchase →</button>
-        <div class="authMsg" id="addonsMsg"></div>
+        <div class="authMsg" id="addonsMsg" aria-live="polite"></div>
       </div>
     </div>
 
@@ -587,31 +598,33 @@
         </div>
       </div>
 
-      <aside class="authCard" id="authCardSection">
+      <aside class="authCard" id="authCardSection" aria-label="Sign in">
         <div class="eyebrow">Sign In to Purchase</div>
         <div class="linkRow" style="margin-top:8px;">
           <strong id="authCardTitle">Sign in to purchase</strong>
-          <span class="muted" id="authCardMeta">Your current plan and quota appear here after login.</span>
+          <span class="muted" id="authCardMeta" aria-live="polite">Your current plan and quota appear here after login.</span>
         </div>
         <form id="authForm">
+          <label for="authEmail" class="sr-only">Email address</label>
           <input id="authEmail" type="email" placeholder="Email" autocomplete="email" />
+          <label for="authPassword" class="sr-only">Password</label>
           <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
           <button class="btn primary" id="authSubmitBtn" type="submit">Sign In</button>
         </form>
         <div style="text-align:right;margin-top:2px;">
-          <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(120,140,180,.6);text-decoration:underline;">Forgot password?</a>
+          <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(141,224,255,.8);text-decoration:underline;">Forgot password?</a>
         </div>
-        <div class="authMsg" id="authMsg"></div>
+        <div class="authMsg" id="authMsg" aria-live="polite"></div>
       </aside>
     </section>
 
   </div>
 
-  <div class="confirmOverlay" id="confirmOverlay" onclick="closeConfirm()"></div>
-  <aside class="confirmPanel" id="confirmPanel">
+  <div class="confirmOverlay" id="confirmOverlay" onclick="closeConfirm()" aria-hidden="true"></div>
+  <aside class="confirmPanel" id="confirmPanel" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
     <div class="confirmHeader">
-      <strong style="font-size:15px;">Confirm Order</strong>
-      <button class="btn ghost" onclick="closeConfirm()" style="padding:5px 14px;font-size:13px;border-radius:8px;">✕</button>
+      <strong id="confirmDialogTitle" style="font-size:15px;">Confirm Order</strong>
+      <button class="btn ghost" onclick="closeConfirm()" aria-label="Close order panel" style="padding:5px 14px;font-size:13px;border-radius:8px;">✕</button>
     </div>
     <div class="confirmBody">
       <div>
@@ -627,7 +640,7 @@
     </div>
     <div class="confirmFooter">
       <button class="btn primary" id="confirmCheckoutBtn" onclick="confirmCheckout()" style="width:100%;padding:14px;">Checkout →</button>
-      <div class="authMsg" id="confirmMsg"></div>
+      <div class="authMsg" id="confirmMsg" aria-live="polite"></div>
     </div>
   </aside>
 
@@ -813,16 +826,45 @@
       document.getElementById("confirmMsg").className  = "authMsg";
       document.getElementById("confirmCheckoutBtn").disabled = false;
       document.getElementById("confirmCheckoutBtn").textContent = "Checkout →";
-      document.getElementById("confirmPanel").classList.add("open");
-      document.getElementById("confirmOverlay").classList.add("open");
+      openConfirmPanel();
     }
 
     document.getElementById("confirmGift").addEventListener("change", syncAutoRenewVisibility);
 
+    let _confirmOpener = null;
+
     function closeConfirm() {
       document.getElementById("confirmPanel").classList.remove("open");
       document.getElementById("confirmOverlay").classList.remove("open");
+      if (_confirmOpener) { _confirmOpener.focus(); _confirmOpener = null; }
     }
+
+    function openConfirmPanel() {
+      _confirmOpener = document.activeElement;
+      document.getElementById("confirmPanel").classList.add("open");
+      document.getElementById("confirmOverlay").classList.add("open");
+      setTimeout(() => document.getElementById("confirmCheckoutBtn").focus(), 50);
+    }
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && document.getElementById("confirmPanel").classList.contains("open")) {
+        closeConfirm();
+      }
+    });
+
+    document.getElementById("confirmPanel").addEventListener("keydown", e => {
+      if (e.key !== "Tab") return;
+      const focusable = Array.from(document.getElementById("confirmPanel").querySelectorAll(
+        'a[href], button:not([disabled]), input, [tabindex]:not([tabindex="-1"])'
+      ));
+      if (!focusable.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    });
 
     function confirmCheckout() {
       const items  = _pendingItems || (_pendingTier ? [{ tier: _pendingTier, qty: 1 }] : null);
@@ -940,8 +982,7 @@
       document.getElementById("confirmMsg").className   = "authMsg";
       document.getElementById("confirmCheckoutBtn").disabled    = false;
       document.getElementById("confirmCheckoutBtn").textContent = "Checkout →";
-      document.getElementById("confirmPanel").classList.add("open");
-      document.getElementById("confirmOverlay").classList.add("open");
+      openConfirmPanel();
     }
 
     async function refreshMembership(user) {

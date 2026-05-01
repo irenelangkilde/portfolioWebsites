@@ -16,15 +16,42 @@ const PUBLISHED_SITES_STORE = "published-sites";
 // Hosts that should never be treated as custom portfolio domains
 const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
 
+function apexAndWww(hostname) {
+  // Given any hostname, return its apex domain and www variant.
+  const parts = hostname.split(".");
+  if (parts.length < 2) return [];
+  const apex = parts.slice(-2).join(".");
+  return [apex, `www.${apex}`];
+}
+
 function isSystemHost(host, primaryDomain) {
   if (SYSTEM_HOST_PATTERN.test(host)) return true;
-  // Also pass through the site's own primary/alias domains
+  const bare = host.replace(/:\d+$/, "").toLowerCase();
+
+  // Collect all known site hostnames from explicit config and Netlify's auto env vars.
+  const candidates = new Set();
+
   if (primaryDomain) {
-    const primaries = primaryDomain.split(",").map(d => d.trim().toLowerCase());
-    const bare = host.replace(/:\d+$/, "").toLowerCase();
-    if (primaries.includes(bare)) return true;
+    for (const d of primaryDomain.split(",")) {
+      const h = d.trim().toLowerCase();
+      if (h) {
+        candidates.add(h);
+        for (const v of apexAndWww(h)) candidates.add(v);
+      }
+    }
   }
-  return false;
+
+  // Netlify always sets URL = primary site URL. Use it as a reliable fallback.
+  const siteUrl = Netlify.env.get("URL") || "";
+  if (siteUrl) {
+    try {
+      const siteHost = new URL(siteUrl).hostname.toLowerCase();
+      candidates.add(siteHost);
+      for (const v of apexAndWww(siteHost)) candidates.add(v);
+    } catch {}
+  }
+
+  return candidates.has(bare);
 }
 
 function html404(domain, message) {
