@@ -62,7 +62,7 @@
       const tier = window.getSupabaseMembership?.()?.tier;
       return tier === "graduate" || tier === "prime";
     }
-    const ANON_CREDIT_LIMIT = 5;
+    const ANON_CREDIT_LIMIT = 3;
     const ANON_CREDITS_KEY  = "anon_credits_used";
 
     function getAnonCreditsUsed() {
@@ -70,6 +70,11 @@
     }
     function incrementAnonCredits() {
       localStorage.setItem(ANON_CREDITS_KEY, String(getAnonCreditsUsed() + 1));
+    }
+    function onCreditUsed(condition = true) {
+      if (!condition) return;
+      if (!currentUserId()) incrementAnonCredits();
+      window.refreshMembershipDisplay?.();
     }
 
     function showAnonCreditPrompt() {
@@ -129,8 +134,35 @@
       return (m.credits_used ?? 0) < (m.credits_limit ?? 0);
     }
 
+    // Pre-flight gate: shows the right upgrade prompt and returns false if blocked.
+    // Use this instead of bare hasCreditsRemaining() so auth'd users also get the popup.
+    function requireCredits(cost = 1) {
+      if (!currentUserId()) {
+        if (getAnonCreditsUsed() >= ANON_CREDIT_LIMIT) { showAnonCreditPrompt(); return false; }
+        return true;
+      }
+      const m = window.getSupabaseMembership?.();
+      if (!m) return true; // membership not yet loaded — let server enforce
+      if (m.credits_limit === -1) return true; // unlimited
+      const remaining = (m.credits_limit ?? 0) - (m.credits_used ?? 0);
+      if (remaining < cost) {
+        showUpgradePrompt({ tier: m.tier, used: m.credits_used ?? 0, limit: m.credits_limit ?? 0 });
+        return false;
+      }
+      return true;
+    }
+
     // Called by the auth script in index.html whenever login state changes
     window.onAuthStateUpdated = function() {
+      // When signing in, clear only the anonymous-path "No credits remaining" message
+      // from the resume slot — it no longer applies now that the account is loaded.
+      // "Credit limit reached" messages are left intact as they may still be accurate.
+      if (currentUserId()) {
+        const resumeEl = document.getElementById("resumeAnalysisStatus");
+        if (resumeEl && /no credits remaining/i.test(resumeEl.textContent)) {
+          setResumeAnalysisStatus("");
+        }
+      }
       updateSubmitReadiness();
       applyTierGating();
     };
@@ -384,21 +416,15 @@
       jobAdResult = null; // job_resolved depends on resume — clear so it reruns
       document.getElementById("reanalyzeResume").style.display = hasFile ? "inline" : "none";
       if (hasFile) {
-        if (!hasCreditsRemaining()) {
-          setResumeAnalysisStatus("No credits remaining — upgrade to analyze your resume.", "rgba(251,171,156,.8)");
-          if (!currentUserId()) showAnonCreditPrompt();
-        } else {
-          analyzeResumeInBackground(input.files[0]);
-        }
+        analyzeResumeInBackground(input.files[0]);
       } else {
         setResumeAnalysisStatus("");
       }
     });
 
     document.getElementById("reanalyzeResume")?.addEventListener("click", () => {
-      if (!hasCreditsRemaining()) {
+      if (!requireCredits()) {
         setResumeAnalysisStatus("No credits remaining — upgrade to re-analyze.", "rgba(251,171,156,.8)");
-        if (!currentUserId()) showAnonCreditPrompt();
         return;
       }
       const input = document.getElementById("resumeUpload");
@@ -502,11 +528,9 @@
       // Inline element (Page 1, beside upload): always updated
       const inlineEl = document.getElementById("resumeAnalysisStatusInline");
       if (inlineEl) { inlineEl.textContent = text; inlineEl.style.color = color; }
-      // Nav-bar element: only updated for completion/error states so it persists across pages
-      if (!text || /^[✓⚠]/.test(text)) {
-        const el = document.getElementById("resumeAnalysisStatus");
-        if (el) { el.textContent = text; el.style.color = color; }
-      }
+      // Nav-bar element: always updated so the editor ticker sees countdown text too
+      const el = document.getElementById("resumeAnalysisStatus");
+      if (el) { el.textContent = text; el.style.color = color; }
       forwardEditorProcessStatus();
     }
 
@@ -1289,6 +1313,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return;
       }
 
+      // No cache — a credit will be consumed; check before calling the API
+      if (!requireCredits()) {
+        setResumeAnalysisStatus("No credits remaining — upgrade to analyze your resume.", "rgba(251,171,156,.8)");
+        return;
+      }
+
       resumeAnalysisPending = true;
       updateSubmitReadiness();
 
@@ -1377,6 +1407,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         if (result.status === "error") {
           if (result.quota) {
+            setResumeAnalysisStatus("");
             showUpgradePrompt(result);
             return;
           }
@@ -1401,7 +1432,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
         // Persist to localStorage for reuse after refresh
         try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
-        if (!currentUserId()) incrementAnonCredits();
+        onCreditUsed();
 
         lastAnalysisData = data;
         if (isDebugMode()) resumeAnalysisCache = data;
@@ -3081,9 +3112,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         setHeaderStatus("jobAnalysisStatus", "✓ Job skipped", "rgba(234,240,255,.4)");
         return;
       }
-      if (!currentUserId() && !hasCreditsRemaining()) {
+      if (!requireCredits()) {
         setHeaderStatus("jobAnalysisStatus", "Credit limit reached.", "rgba(251,171,156,.8)");
-        showAnonCreditPrompt();
         return;
       }
 
@@ -3154,7 +3184,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             jobAdResult = lastPollData;
             populateJobAdDebug(lastPollData);
             try { localStorage.setItem(jobAdCacheKey(rawText), JSON.stringify(lastPollData)); } catch {}
-            if (!currentUserId()) incrementAnonCredits();
+            onCreditUsed();
             break;
           }
           if (lastPollData.status === "error") {
@@ -3327,7 +3357,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             braidInProgress     = false;
             generationInProgress = false;
             window.umami?.track("portfolio-generated");
-            if (!currentUserId()) incrementAnonCredits();
+            onCreditUsed();
             generationResult.site_html = page4Submitted ? composeBraidPreviewHtml(generationResult) : generationResult.base_site_html;
             setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
@@ -3363,10 +3393,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const sampleHtml = extractedTemplateCache?.templateHtml || "";
       const mastheadMeta = normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
       if (!sampleHtml) return;
-      if (!currentUserId() && !hasCreditsRemaining()) {
-        showUpgradePrompt({ tier: "free", used: ANON_CREDIT_LIMIT, limit: ANON_CREDIT_LIMIT, anon: true });
-        return;
-      }
+      if (!requireCredits()) return;
 
       const myRunId = ++_mastheadImageRunId;
       mastheadImageInProgress = true;
@@ -3416,7 +3443,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             clearInterval(mastheadImageTicker);
             mastheadImageInProgress = false;
             mastheadImageResult = data;
-            if (!currentUserId() && !data.skipped) incrementAnonCredits();
+            onCreditUsed(!data.skipped);
             if (generationResult?.base_site_html && data.image_data_uri) {
               generationResult.site_html = composeBraidPreviewHtml(generationResult);
               pushPreviewHtmlUpdate(generationResult.site_html || "");
@@ -3801,7 +3828,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             clearInterval(renderCountdown);
             generationResult    = data;
             generationInProgress = false;
-            if (!currentUserId()) incrementAnonCredits();
+            onCreditUsed();
             setHeaderStatus("generatingWebsiteStatus", "✓ Website generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             populateGenerationDebug(data);
@@ -3860,10 +3887,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     async function doPreview() {
-      if (!currentUserId() && !hasCreditsRemaining()) {
-        showUpgradePrompt({ tier: "free", used: ANON_CREDIT_LIMIT, limit: ANON_CREDIT_LIMIT, anon: true });
-        return;
-      }
+      if (!requireCredits()) return;
       if (generationInProgress) {
         setHeaderStatus("generatingWebsiteStatus", "Still generating… please wait.", "rgba(141,224,255,.75)");
         return;

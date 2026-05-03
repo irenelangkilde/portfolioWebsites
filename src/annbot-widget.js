@@ -17,10 +17,10 @@
       font-size: 13px; line-height: 1.5;
       box-shadow: 0 4px 20px rgba(0,0,0,.13);
       border: 1px solid rgba(232,49,90,.2);
-      cursor: pointer;
+      pointer-events: none;
       transition: opacity .3s, transform .3s;
     }
-    #annbot-bubble.ab-hidden { opacity: 0; pointer-events: none; transform: translateY(6px); }
+    #annbot-bubble.ab-hidden { opacity: 0; transform: translateY(6px); }
     #annbot-fab {
       width: 64px; height: 64px; border-radius: 50%;
       border: 3px solid #1a8cff; padding: 0; cursor: pointer;
@@ -189,7 +189,6 @@
     }
 
     fab.addEventListener("click", () => isOpen ? closePanel() : openPanel());
-    bubble.addEventListener("click", openPanel);
     closeBtn.addEventListener("click", closePanel);
 
     async function send() {

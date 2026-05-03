@@ -528,6 +528,33 @@
     .tierBadge.basic    { background: rgba(118,176,34,.18); color: #76b022; }
     .tierBadge.prime { background: rgba(251,171,156,.18); color: #fbab9c; }
     .quotaBar { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+
+    /* ── Credit cost badges ─────────────────────────────────────── */
+    .cr-badge {
+      font-size: 10px; font-weight: 800; letter-spacing: .02em;
+      background: rgba(201,162,39,.14); border: 1px solid rgba(201,162,39,.32);
+      color: #f0c94a; border-radius: 4px; padding: 1px 6px;
+      margin-left: 7px; white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 3px;
+      vertical-align: middle; line-height: 1.5;
+    }
+    .cr-info {
+      cursor: help; position: relative;
+      font-size: 11px; font-style: normal; opacity: .75;
+      transition: opacity .15s;
+    }
+    .cr-info:hover { opacity: 1; }
+    .cr-info::after {
+      content: attr(data-tooltip);
+      position: absolute; bottom: calc(100% + 8px); right: -4px;
+      background: rgba(10,17,30,.97); border: 1px solid rgba(255,255,255,.16);
+      border-radius: 8px; padding: 8px 12px;
+      font-size: 11.5px; font-weight: 400; line-height: 1.55;
+      width: 230px; color: #eaf0ff; text-align: left;
+      pointer-events: none; opacity: 0; transition: opacity .15s;
+      z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.45);
+    }
+    .cr-info:hover::after { opacity: 1; }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
@@ -548,6 +575,7 @@
             <span id="authBtnLabel">Sign in</span>
           </button>
           <div id="membershipPill" style="display:none; font-size:11px; color:var(--muted); text-align:right; line-height:1.6;">
+            <span id="planStatusDisplay" style="display:none;"></span>
             <span id="creditsDisplay"></span>
             <span id="savesDisplay"></span>
             <span id="hostingDisplay"></span>
@@ -605,9 +633,9 @@
             <div class="avatar" style="width:36px;height:36px;font-size:16px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:900;" id="authAvatarLarge">?</div>
             <div style="flex:1; min-width:0;">
               <div style="font-weight:700;font-size:14px;" id="authUserEmail"></div>
-              <div style="display:flex; align-items:center; gap:8px; margin-top:3px; overflow:hidden;">
+              <div style="margin-top:3px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
                 <span class="tierBadge" id="authTierBadge">free</span>
-                <span id="authQuotaBar" style="font-size:11px; color:var(--muted); white-space:nowrap;"></span>
+                <span id="authQuotaBar" style="font-size:11px; color:var(--muted);"></span>
               </div>
             </div>
           </div>
@@ -1108,9 +1136,19 @@
 
   const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Exposed for form.js to read
+  // Exposed for form.js to read / refresh
   window.getSupabaseUser = () => _currentUser;
   window.getSupabaseMembership = () => _membership;
+  window.refreshMembershipDisplay = async function() {
+    if (!_currentUser) { updateAuthUI(); return; }
+    const { data } = await _supabase
+      .from("memberships")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
+      .eq("user_id", _currentUser.id)
+      .single();
+    if (data) _membership = data;
+    updateAuthUI();
+  };
 
   let _currentUser        = null;
   let _membership         = null;
@@ -1162,10 +1200,29 @@
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, renews_at")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
       .eq("user_id", user.id)
       .single();
     _membership = data;
+
+    // Migrate anonymous credits into the DB on first sign-in
+    const anonUsed = parseInt(localStorage.getItem("anon_credits_used") || "0", 10);
+    if (anonUsed > 0 && (_membership?.credits_used ?? 0) === 0) {
+      const lim      = _membership?.credits_limit ?? 3;
+      const migrated = lim === -1 ? anonUsed : Math.min(anonUsed, lim);
+      const op = _membership
+        ? _supabase.from("memberships").update({ credits_used: migrated }).eq("user_id", user.id)
+        : _supabase.from("memberships").insert({ user_id: user.id, tier: "free", status: "active",
+            credits_used: migrated, credits_limit: 3, downloads_used: 0, downloads_limit: 0 });
+      const { error: migErr } = await op;
+      if (!migErr) {
+        _membership = _membership
+          ? { ..._membership, credits_used: migrated }
+          : { tier: "free", status: "active", credits_used: migrated, credits_limit: 3, downloads_used: 0, downloads_limit: 0 };
+        localStorage.removeItem("anon_credits_used");
+      }
+    }
+
     updateAuthUI();
   }
 
@@ -1198,7 +1255,7 @@
         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
         const { data: m } = await _supabase
           .from("memberships")
-          .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, renews_at")
+          .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
           .eq("user_id", _currentUser.id)
           .single();
         _membership = m;
@@ -1223,6 +1280,7 @@
 
   // ── UI helpers ───────────────────────────────────────────────────────────
   function updateAuthUI() {
+    if (_isResettingPassword) return; // keep reset modal visible until password is saved
     const loggedIn  = !!_currentUser;
     const email     = _currentUser?.email || "";
     const initial   = email ? email[0].toUpperCase() : "?";
@@ -1234,7 +1292,7 @@
     document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
     document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
     const pillEl = document.getElementById("membershipPill");
-    if (pillEl) pillEl.style.display = loggedIn ? "" : "none";
+    if (pillEl) pillEl.style.display = "";   // always visible
 
     if (loggedIn) {
       document.getElementById("authUserEmail").textContent   = email;
@@ -1242,37 +1300,74 @@
       const badge = document.getElementById("authTierBadge");
       badge.textContent = tier;
       badge.className   = "tierBadge " + (tier !== "free" ? tier : "");
+    }
 
-      const m = _membership;
-      if (m) {
-        const cUnlimited = m.credits_limit === -1;
-        const dUnlimited = m.sites_limit   === -1;
-        const cStr = cUnlimited ? "∞" : `${m.credits_limit - m.credits_used}/${m.credits_limit}`;
-        const dStr = dUnlimited ? "∞" : `${m.sites_limit - m.sites_used}/${m.sites_limit}`;
-        document.getElementById("authQuotaBar").textContent =
-          `Remaining Credits: ${cStr}  ·  Sites: ${dStr}`;
+    // Show status for signed-in users (real data) or signed-out users (anon localStorage state)
+    const m = loggedIn ? _membership : null;
+    const effectiveTier    = m?.tier           ?? "free";
+    const effectiveCredits = m?.credits_limit  ?? 3;
+    const anonUsedLocal = Math.min(3, parseInt(localStorage.getItem("anon_credits_used") || "0", 10));
+    const effectiveUsed = loggedIn
+      // For free tier, guard against a failed migration by taking whichever is higher
+      ? (effectiveCredits <= 3 && effectiveCredits !== -1
+          ? Math.max(m?.credits_used ?? 0, anonUsedLocal)
+          : (m?.credits_used ?? 0))
+      : anonUsedLocal;
+    const effectiveDl      = m?.downloads_limit ?? 0;
+    const effectiveDlUsed  = m?.downloads_used  ?? 0;
 
-        const creditsEl = document.getElementById("creditsDisplay");
-        if (creditsEl) {
-          creditsEl.textContent = cUnlimited
-            ? "Unlimited credits"
-            : `${(m.credits_limit ?? 0) - (m.credits_used ?? 0)} credit${((m.credits_limit ?? 0) - (m.credits_used ?? 0)) === 1 ? "" : "s"} remaining`;
-          creditsEl.style.display = "block";
-        }
-        const savesEl = document.getElementById("savesDisplay");
-        if (savesEl) {
-          savesEl.textContent = dUnlimited ? "Unlimited saves" : `${(m.sites_limit ?? 0) - (m.sites_used ?? 0)} save${((m.sites_limit ?? 0) - (m.sites_used ?? 0)) === 1 ? "" : "s"} remaining`;
-          savesEl.style.display = "block";
-        }
-        const hostingEl = document.getElementById("hostingDisplay");
-        if (hostingEl && m.renews_at) {
-          const d = new Date(m.renews_at);
-          const fmt = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-          hostingEl.textContent = `Hosting renews ${fmt}`;
-          hostingEl.style.display = "block";
-        } else if (hostingEl) {
-          hostingEl.style.display = "none";
-        }
+    let expirySuffix = "";
+    if (m?.current_period_end) {
+      const d = new Date(m.current_period_end);
+      expirySuffix = `until ${d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+    } else if (m?.hosting_until) {
+      const d = new Date(m.hosting_until);
+      expirySuffix = `hosting until ${d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+    } else if (m?.status && m.status !== "active") {
+      expirySuffix = m.status;
+    }
+
+    const planStatusEl = document.getElementById("planStatusDisplay");
+    if (planStatusEl) {
+      planStatusEl.textContent = effectiveTier + (expirySuffix ? ` · ${expirySuffix}` : "");
+      planStatusEl.style.display = "block";
+    }
+
+    const cUnlimited = effectiveCredits === -1;
+    const dUnlimited = effectiveDl === -1;
+    const cRem = cUnlimited ? Infinity : effectiveCredits - effectiveUsed;
+    const dRem = dUnlimited ? Infinity : effectiveDl - effectiveDlUsed;
+
+    const cStr = cUnlimited ? "∞" : `${cRem}/${effectiveCredits}`;
+    const dStr = dUnlimited ? "∞" : `${dRem}/${effectiveDl}`;
+    const quotaBar = document.getElementById("authQuotaBar");
+    if (quotaBar) {
+      const parts = [];
+      if (expirySuffix) parts.push(expirySuffix);
+      const cLabel = cUnlimited ? "∞" : cStr;
+      const dLabel = dUnlimited ? "∞" : dStr;
+      parts.push(`Remaining: ${cLabel} credits, ${dLabel} saves`);
+      quotaBar.textContent = parts.join("  ·  ");
+    }
+
+    const creditsEl = document.getElementById("creditsDisplay");
+    if (creditsEl) {
+      const cLabel = cUnlimited ? "∞" : cStr;
+      const dLabel = dUnlimited ? "∞" : `${dRem}/${effectiveDl}`;
+      creditsEl.textContent = `Remaining: ${cLabel} credits, ${dLabel} sites`;
+      creditsEl.style.display = "block";
+    }
+    const savesEl = document.getElementById("savesDisplay");
+    if (savesEl) savesEl.style.display = "none";
+    const hostingEl = document.getElementById("hostingDisplay");
+    if (hostingEl) {
+      if (m?.hosting_until) {
+        const d = new Date(m.hosting_until);
+        const fmt = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        hostingEl.textContent = `Hosting until ${fmt}`;
+        hostingEl.style.display = "block";
+      } else {
+        hostingEl.style.display = "none";
       }
     }
 
@@ -1296,32 +1391,62 @@
     const modal = document.getElementById("authModal");
     modal.style.display = "flex";
     if (mode === "reset") {
-      // Switch to login tab and show the new-password UI
-      switchAuthTab("login");
+      // Force logged-out panel visible (recovery session may have triggered onSignIn)
+      document.getElementById("authLoggedOut").classList.remove("hidden");
+      document.getElementById("authLoggedIn").classList.add("hidden");
+      // Hide elements not needed for password reset
+      document.getElementById("authEmail").style.display = "none";
+      document.getElementById("authEmail").value = "";
+      document.querySelector(".authTabs").style.display = "none";
+      document.getElementById("forgotPasswordLink").style.display = "none";
+      document.getElementById("authPasswordConfirmWrap").classList.remove("hidden");
+      document.getElementById("authGiftCodeWrap").classList.add("hidden");
+      document.getElementById("authPassword").placeholder = "New password";
+      document.getElementById("authPassword").autocomplete = "new-password";
+      document.getElementById("authPassword").value = "";
+      document.getElementById("authPasswordConfirm").value = "";
+      document.getElementById("authModalTitle").textContent = "Set new password";
       const msgEl = document.getElementById("authMsg");
-      const pwEl  = document.getElementById("authPassword");
       msgEl.className = "authMsg ok";
-      msgEl.textContent = "Enter your new password below, then click Set new password.";
-      document.getElementById("authSubmitBtn").textContent = "Set new password";
-      document.getElementById("authSubmitBtn").onclick = async () => {
-        const newPw = pwEl.value;
-        msgEl.className = "authMsg";
+      msgEl.textContent = "Enter and confirm your new password.";
+      const btn = document.getElementById("authSubmitBtn");
+      btn.textContent = "Save Password";
+      btn.onclick = async () => {
+        const newPw      = document.getElementById("authPassword").value;
+        const confirmPw  = document.getElementById("authPasswordConfirm").value;
+        msgEl.className  = "authMsg";
         msgEl.textContent = "";
-        if (!newPw || newPw.length < 6) {
+        if (!newPw || newPw.length < 8) {
           msgEl.className = "authMsg err";
-          msgEl.textContent = "Password must be at least 6 characters.";
+          msgEl.textContent = "Password must be at least 8 characters.";
           return;
         }
+        if (newPw !== confirmPw) {
+          msgEl.className = "authMsg err";
+          msgEl.textContent = "Passwords don't match.";
+          return;
+        }
+        btn.disabled = true; btn.textContent = "Saving…";
         const { error } = await _supabase.auth.updateUser({ password: newPw });
+        btn.disabled = false; btn.textContent = "Save Password";
         if (error) {
           msgEl.className = "authMsg err";
           msgEl.textContent = error.message;
         } else {
           msgEl.className = "authMsg ok";
-          msgEl.textContent = "Password updated. You are now signed in.";
-          document.getElementById("authSubmitBtn").textContent = "Sign in";
-          document.getElementById("authSubmitBtn").onclick = handleAuthSubmit;
-          setTimeout(closeAuthModal, 2000);
+          msgEl.textContent = "Password updated — you are now signed in.";
+          _isResettingPassword = false;
+          // Restore modal to normal state before closing
+          document.getElementById("authEmail").style.display = "";
+          document.querySelector(".authTabs").style.display = "";
+          document.getElementById("forgotPasswordLink").style.display = "";
+          document.getElementById("authPassword").placeholder = "Password";
+          document.getElementById("authPassword").autocomplete = "current-password";
+          document.getElementById("authPasswordConfirmWrap").classList.add("hidden");
+          document.getElementById("authModalTitle").textContent = "Account";
+          btn.textContent = "Sign in";
+          btn.onclick = handleAuthSubmit;
+          setTimeout(closeAuthModal, 1500);
         }
       };
     }
@@ -1438,6 +1563,53 @@
       msgEl.textContent = "Password reset email sent. Check your inbox.";
     }
   }
+
+  // ── Credit cost badges ────────────────────────────────────────────────────
+  function crBadge(cost, tip) {
+    return `<span class="cr-badge">${cost}&thinsp;<span class="cr-info" data-tooltip="${tip}">ⓘ</span></span>`;
+  }
+
+  function setupCreditBadges() {
+    const defs = [
+      {
+        id:   "submit_bottom",
+        cost: "1 cr",
+        tip:  "1 credit to analyze the job description. Skipped at no charge if the field is left blank.",
+      },
+      {
+        id:   "next2_bottom",
+        cost: "1–2 cr",
+        tip:  "1 credit to generate your website. +1 credit if a masthead image style is selected — so 1 or 2 total.",
+      },
+      {
+        id:   "reanalyzeResume",
+        cost: "1 cr",
+        tip:  "1 credit to re-extract and re-analyze your resume.",
+      },
+    ];
+
+    defs.forEach(({ id, cost, tip }) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.insertAdjacentHTML("beforeend", crBadge(cost, tip));
+    });
+
+    // Resume dropzone label (no for= attribute — find it as the sibling above the dropzone)
+    const dropLabel = document.getElementById("resumeDropzone")?.previousElementSibling;
+    if (dropLabel?.tagName === "LABEL") {
+      dropLabel.insertAdjacentHTML("beforeend",
+        crBadge("1 cr", "1 credit to extract and analyze your resume."));
+    }
+
+    // Template upload option — badge goes on the "Upload a screenshot or HTML file" label
+    const tplFileLabel = document.querySelector("label[for='tplFile'] strong, #tplFile + div strong");
+    if (tplFileLabel) {
+      tplFileLabel.insertAdjacentHTML("beforeend",
+        crBadge("1 cr", "1 credit to extract the template from your screenshot or HTML file."));
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", setupCreditBadges);
 
 </script>
 <script src="/src/annbot-widget.js" defer></script>

@@ -2,9 +2,17 @@ import Stripe from "stripe";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
-// Subscription tiers → recurring Stripe prices; one-time tiers → payment mode or add_invoice_items
-const SUBSCRIPTION_TIERS = new Set(["graduate", "prime", "care", "hosting"]);
-const GUEST_TIERS        = new Set(["starter_care", "premium_care"]);
+// Plan tiers drive the subscription interval and go in line_items as recurring prices.
+// Add-ons are always rendered as one-time price_data charges so they never conflict
+// with the plan's billing interval (e.g. Prime is 4-month, Hosting is monthly).
+const PLAN_TIERS  = new Set(["graduate", "prime"]);
+const GUEST_TIERS = new Set(["starter_care", "premium_care"]);
+
+const ADDON_PRICE_DATA = {
+  hosting:       { name: "Hosting (per month)",  unit_amount: 900  },
+  extra_credits: { name: "Extra Credits",         unit_amount: 500  },
+  care:          { name: "Support (per month)",   unit_amount: 4900 },
+};
 
 let localEnvCache = null;
 
@@ -48,7 +56,7 @@ export async function handler(event) {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) }; }
 
-  const { items, tier, userId, userEmail, returnUrl, quantity = 1, autoRenew = false } = body;
+  const { items, tier, userId, userEmail, returnUrl, quantity = 1, autoRenew = false, isGift = false, giftDetails = null } = body;
 
   // Normalise to items array — backwards-compatible with single-tier callers (form.js, gift pages)
   const cartItems = Array.isArray(items)
@@ -76,7 +84,15 @@ export async function handler(event) {
     premium_care:      getEnv("STRIPE_PRICE_PREMIUM"),
   };
 
+  // Plan tiers → subscription mode, recurring price IDs in line_items.
+  // Add-ons → inline price_data (one-time) so they never conflict with the plan interval.
+  // No plan → payment mode, everything uses price IDs.
+  const hasSubscription = cartItems.some(i => PLAN_TIERS.has(i.tier));
+  const mode = hasSubscription ? "subscription" : "payment";
+
   for (const item of cartItems) {
+    // Addon tiers billed via inline price_data when a subscription is present — no price ID required.
+    if (hasSubscription && ADDON_PRICE_DATA[item.tier]) continue;
     if (!PRICE_IDS[item.tier]) {
       return { statusCode: 400, body: JSON.stringify({ error: `Unknown or unconfigured tier: ${item.tier}` }) };
     }
@@ -89,14 +105,28 @@ export async function handler(event) {
 
   const stripe = new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" });
 
-  // When the cart has any subscription, use subscription mode.
-  // Both recurring and one-time items go in line_items; Stripe bills one-time items on the first invoice.
-  // When all items are one-time, use payment mode.
-  const hasSubscription = cartItems.some(i => SUBSCRIPTION_TIERS.has(i.tier));
-  const mode = hasSubscription ? "subscription" : "payment";
+  // Product IDs for add-ons — when set, Stripe uses the product's name/images from the dashboard
+  const ADDON_PRODUCT_IDS = {
+    hosting:       getEnv("STRIPE_PRODUCT_HOSTING"),
+    extra_credits: getEnv("STRIPE_PRODUCT_EXTRA_CREDITS"),
+    care:          getEnv("STRIPE_PRODUCT_CARE"),
+  };
 
-  const billableItems = cartItems.filter(i => !GUEST_TIERS.has(i.tier));
-  const lineItems = billableItems.map(i => ({ price: PRICE_IDS[i.tier], quantity: i.qty }));
+  const billableItems = cartItems;
+  const lineItems = billableItems.map(i => {
+    if (hasSubscription && ADDON_PRICE_DATA[i.tier]) {
+      const pd        = ADDON_PRICE_DATA[i.tier];
+      const productId = ADDON_PRODUCT_IDS[i.tier];
+      const productSpec = productId
+        ? { product: productId }
+        : { product_data: { name: pd.name } };
+      return {
+        price_data: { currency: "usd", ...productSpec, unit_amount: pd.unit_amount },
+        quantity: i.qty,
+      };
+    }
+    return { price: PRICE_IDS[i.tier], quantity: i.qty };
+  });
 
   const origin = returnUrl || "https://yoursite.netlify.app";
   const sessionMeta = {
@@ -104,21 +134,26 @@ export async function handler(event) {
     cart:     JSON.stringify(cartItems),
     tier_key: firstTier,               // legacy field for webhook
     quantity: String(cartItems[0]?.qty || 1),
+    is_gift:  isGift ? "true" : "false",
   };
+
+  if (isGift && giftDetails) {
+    if (giftDetails.recipientEmail) sessionMeta.gift_recipient_email = String(giftDetails.recipientEmail).slice(0, 256);
+    if (giftDetails.recipientName)  sessionMeta.gift_recipient_name  = String(giftDetails.recipientName).slice(0, 128);
+    if (giftDetails.message)        sessionMeta.gift_message         = String(giftDetails.message).slice(0, 500);
+  }
 
   const sessionParams = {
     mode,
     ...(userEmail ? { customer_email: userEmail } : {}),
     line_items: lineItems,
-    success_url: `${origin}?checkout=success&tier=${firstTier}&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${origin}?checkout=success&tier=${firstTier}&cart=${encodeURIComponent(JSON.stringify(cartItems))}&session_id={CHECKOUT_SESSION_ID}${isGift ? "&is_gift=true" : ""}`,
     cancel_url:  `${origin}?checkout=cancelled`,
     metadata:    sessionMeta,
   };
 
   if (hasSubscription) {
-    sessionParams.subscription_data = {
-      metadata: sessionMeta,
-    };
+    sessionParams.subscription_data = { metadata: sessionMeta };
   } else {
     sessionParams.payment_intent_data = { metadata: sessionMeta };
   }

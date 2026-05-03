@@ -87,7 +87,7 @@ export async function handler(event) {
   // Check deploy access (same paywall as Publish)
   const { data: membership } = await supabase
     .from("memberships")
-    .select("sites_used, sites_limit, status")
+    .select("downloads_used, downloads_limit, status")
     .eq("user_id", user.id)
     .single();
   if (!membership) return json(403, { error: "No membership record found." });

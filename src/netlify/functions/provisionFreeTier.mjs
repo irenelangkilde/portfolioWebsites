@@ -72,8 +72,8 @@ export async function handler(event) {
     tier:          "free",
     credits_limit: 3,
     credits_used:  existing?.credits_used ?? 0,
-    sites_limit:   0,
-    sites_used:    existing?.sites_used ?? 0,
+    downloads_limit:   0,
+    downloads_used:    existing?.downloads_used ?? 0,
     status:        "active",
     hosting_until: null,
   }, { onConflict: "user_id" });

@@ -89,11 +89,13 @@
     .plans{
       display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
       gap:16px; align-items:stretch; margin-bottom:32px;
+      position:relative; z-index:0;
     }
     /* ── Add-ons strip ── */
     .addons{
       display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
       gap:16px; align-items:start;
+      position:relative; z-index:1;
     }
     .planCard.small{ padding:14px; gap:12px; }
     .planCard.small .planBlurb{ min-height:auto; }
@@ -199,8 +201,9 @@
       box-shadow:-16px 0 48px rgba(0,0,0,.45); z-index:200;
       display:flex; flex-direction:column;
       transform:translateX(100%); transition:transform .25s cubic-bezier(.4,0,.2,1);
+      pointer-events:none;
     }
-    .confirmPanel.open{ transform:translateX(0); }
+    .confirmPanel.open{ transform:translateX(0); pointer-events:auto; }
     .confirmHeader{
       padding:18px 20px; border-bottom:1px solid var(--border);
       display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
@@ -217,6 +220,21 @@
       border:1px solid var(--border); background:var(--panel);
     }
     .giftCheck input{ accent-color:var(--primary); cursor:pointer; width:16px; height:16px; }
+    #giftDetailsForm{
+      display:none; flex-direction:column; gap:10px;
+      padding:14px 16px; border-radius:12px;
+      border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.03);
+    }
+    #giftDetailsForm.visible{ display:flex; }
+    .giftField{ display:flex; flex-direction:column; gap:4px; }
+    .giftField > span{ font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:rgba(234,240,255,.45); }
+    .giftField input, .giftField textarea{
+      width:100%; padding:9px 12px; border-radius:9px; box-sizing:border-box;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.08);
+      color:var(--text); font:inherit; outline:none;
+    }
+    .giftField textarea{ resize:vertical; min-height:56px; }
+    .giftDetailsNote{ font-size:12px; color:rgba(234,240,255,.38); line-height:1.6; margin:0; }
     .confirmFooter{
       padding:16px 20px; border-top:1px solid var(--border);
       display:flex; flex-direction:column; gap:8px; flex-shrink:0;
@@ -331,7 +349,8 @@
         <p class="sub">Professional portfolio websites that help job-hunters stand out — and get hired.</p>
       </div>
       <div class="actions">
-        <button class="btn ghost" type="button" onclick="closePricingPage()" data-umami-event="pricing-back">Back To Builder</button>
+        <button class="btn ghost" type="button" onclick="closePricingPage()" data-umami-event="pricing-back">Back</button>
+        <a class="btn primary" href="overview.html" data-umami-event="pricing-build-now">Build Now →</a>
       </div>
     </div>
 
@@ -347,8 +366,9 @@
         <div class="acctPlanRow">
           <div class="statusValue" id="tierStatus">free</div>
           <div class="statusMeta" id="quotaStatus"></div>
-          <div class="statusMeta" id="hostingUntil"></div>
         </div>
+        <div class="statusMeta" id="hostingUntil"></div>
+        <div class="statusMeta" id="supportUntil"></div>
       </div>
       <div class="acctActions">
         <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
@@ -421,7 +441,7 @@
           <li>Single-page responsive portfolio</li>
           <li>Up to 6 sections of choice</li>
           <li>3 AI generation credits</li>
-          <li>Preview only — no download · no deploy · no hosting</li>
+          <li>Preview only — no download · no deploy</li>
           <li>No renewal</li>
         </ul>
         <div class="actions">
@@ -436,29 +456,26 @@
           <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg,#c9a227,#f0c94a); color:#0a1220; padding:4px 10px; border-radius:999px; white-space:nowrap;"><span aria-hidden="true">⚡</span> Limited Time</div>
         </div>
         <h2 class="planName">Graduate</h2>
-        <div class="price" aria-label="$19 per unit, on sale from $29">
+        <div class="price" aria-label="$19, on sale from $29">
           <span aria-hidden="true" style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;">$29</span>
-          <strong aria-hidden="true">$19</strong><span aria-hidden="true">per unit</span>
+          <strong aria-hidden="true">$19</strong><span aria-hidden="true">flat rate</span>
         </div>
-        <div style="font-size:11.5px; color:#f0c94a; font-weight:700; margin-top:-8px;">Special offer — renewal price $29/unit</div>
-        <div class="planBlurb">Full pipeline with hosting included. Graduated pricing — each additional unit costs less.</div>
+        <div style="font-size:11.5px; font-weight:700; margin-top:-8px;"><span style="color:#f0c94a;">Special offer</span><span style="color:rgba(236,243,255,.35);"> — renewal price $29/unit</span></div>
+        <div class="planBlurb">Complete editable website which can be downloaded or deployed.</div>
         <ul class="featureList">
           <li>Publications, demos, research, projects</li>
-          <li>3 credits · 1 site per unit</li>
-          <li>1 month of hosting per unit</li>
+          <li>3 credits · 1 site</li>
+          <li>1 download or deploy</li>
+          <li>1 month of hosting</li>
           <li>Published on Irene's Ventures domain</li>
           <li>Guide to DIY (free) external hosting</li>
           <li>(Optional) Monthly auto-renewal</li>
         </ul>
         <div class="actions" style="flex-direction:column;align-items:stretch;gap:8px;">
-          <label class="planSelectWrap" data-umami-event="pricing-choose" data-umami-event-tier="graduate">
-            <input type="checkbox" class="planSelectCb" id="select_graduate" onchange="onPlanCheckboxChange('graduate',this)">
-            <span class="planSelectLabel" id="lbl_graduate">Add to Order</span>
-          </label>
-          <div class="gradQtyWrap" id="gradQtyWrap" style="display:none;">
+          <div class="gradQtyWrap" id="gradQtyWrap">
             <label for="graduateQty" class="muted" style="font-size:13px;font-weight:700;">Units</label>
-            <input id="graduateQty" type="number" min="1" max="20" value="1" oninput="updateAddonsTotal()" />
-            <div class="qtyTotal" id="graduateTotal">= $19.00</div>
+            <input id="graduateQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('graduate')" />
+            <div class="qtyTotal" id="graduateTotal">= $0.00</div>
           </div>
         </div>
       </article>
@@ -470,20 +487,20 @@
         </div>
         <h2 class="planName">Prime</h2>
         <div class="price"><strong>$99</strong><span>for four months</span></div>
-        <div class="planBlurb">10× the credits and sites of Graduate — best per-credit price. Ideal for active career development.</div>
+        <div class="planBlurb">5× the sites and value of the Graduate Plan. Ideal for active career development.</div>
         <ul class="featureList">
+          <li>Multiple versions — new targets, A/B, updates</li>
           <li>10 credits · 5 sites</li>
           <li>Hosting for four months</li>
-          <li>Multiple versions — new targets, A/B, updates</li>
           <li>Custom domain setup support</li>
-          <li>Best per-credit price of any direct plan</li>
           <li>(Optional) Trimester auto-renewal</li>
         </ul>
         <div class="actions">
-          <label class="planSelectWrap" data-umami-event="pricing-choose" data-umami-event-tier="prime">
-            <input type="checkbox" class="planSelectCb" id="select_prime" onchange="onPlanCheckboxChange('prime',this)">
-            <span class="planSelectLabel" id="lbl_prime">Add to Order</span>
-          </label>
+          <div class="gradQtyWrap">
+            <label for="primeQty" class="muted" style="font-size:13px;font-weight:700;">Units</label>
+            <input id="primeQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('prime')" />
+            <div class="qtyTotal" id="primeTotal">= $0.00</div>
+          </div>
         </div>
       </article>
 
@@ -510,7 +527,7 @@
         </ul>
         <div class="qtyWrap">
           <label for="hostingMonths" class="muted" style="font-size:13px;font-weight:700;">Months</label>
-          <input id="hostingMonths" type="number" min="0" max="24" value="0" oninput="updateAddonsTotal()" />
+          <input id="hostingMonths" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="updateAddonsTotal()" />
           <div class="qtyTotal" id="hostingTotal">= $0.00</div>
         </div>
       </article>
@@ -531,7 +548,7 @@
         </ul>
         <div class="qtyWrap">
           <label for="creditsQty" class="muted" style="font-size:13px;font-weight:700;">Credits</label>
-          <input id="creditsQty" type="number" min="0" max="50" value="0" oninput="updateAddonsTotal()" />
+          <input id="creditsQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="updateAddonsTotal()" />
           <div class="qtyTotal" id="creditsTotal">= $0.00</div>
         </div>
       </article>
@@ -548,7 +565,7 @@
         </ul>
         <div class="qtyWrap">
           <label for="careMonths" class="muted" style="font-size:13px;font-weight:700;">Months</label>
-          <input id="careMonths" type="number" min="0" max="12" value="0" oninput="updateAddonsTotal()" />
+          <input id="careMonths" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="updateAddonsTotal()" />
           <div class="qtyTotal" id="careTotal">= $0.00</div>
         </div>
       </article>
@@ -565,7 +582,7 @@
         <strong id="addonsTotalAmt">$0.00</strong>
       </div>
       <div class="addonsTotalActions">
-        <button class="btn primary" id="addonsBuyBtn" onclick="openPurchaseConfirm()" disabled>Purchase →</button>
+        <button class="btn primary" type="button" id="addonsBuyBtn" onclick="openPurchaseConfirm()" disabled>Purchase →</button>
         <div class="authMsg" id="addonsMsg" aria-live="polite"></div>
       </div>
     </div>
@@ -577,7 +594,7 @@
         <div class="faqList">
           <div class="faqItem">
             <strong>What is a credit?</strong>
-            A credit = one chunk of AI processing. 3 credits power one full pipeline pass; revisions cost 0–3 depending on scope.
+            A credit = one chunk of processing such as an AI call. Three credits power one full pipeline pass; revisions cost 0–3 depending on scope.
           </div>
           <div class="faqItem">
             <strong>Download vs. deploy?</strong>
@@ -593,13 +610,13 @@
           </div>
           <div class="faqItem">
             <strong>What if I need more credits later?</strong>
-            Buy Extra Credits any time from this page. Graduate subscribers pay $5/credit; Prime subscribers pay $4/credit.
+            Buy Extra Credits any time from this page for $5/credit. <!--Graduate subscribers pay $5/credit; Prime subscribers pay $4/credit.-->
           </div>
         </div>
       </div>
 
-      <aside class="authCard" id="authCardSection" aria-label="Sign in">
-        <div class="eyebrow">Sign In to Purchase</div>
+      <aside class="authCard" id="authCardSection" aria-label="Sign in or create account">
+        <div class="eyebrow" id="authCardEyebrow">Sign In to Purchase</div>
         <div class="linkRow" style="margin-top:8px;">
           <strong id="authCardTitle">Sign in to purchase</strong>
           <span class="muted" id="authCardMeta" aria-live="polite">Your current plan and quota appear here after login.</span>
@@ -611,7 +628,8 @@
           <input id="authPassword" type="password" placeholder="Password" autocomplete="current-password" />
           <button class="btn primary" id="authSubmitBtn" type="submit">Sign In</button>
         </form>
-        <div style="text-align:right;margin-top:2px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px;">
+          <a href="#" id="authModeToggle" style="font-size:12px;color:rgba(141,224,255,.8);text-decoration:underline;">No account? Create one</a>
           <a href="#" id="forgotPasswordLink" style="font-size:11px;color:rgba(141,224,255,.8);text-decoration:underline;">Forgot password?</a>
         </div>
         <div class="authMsg" id="authMsg" aria-live="polite"></div>
@@ -637,6 +655,21 @@
       <label class="giftCheck" id="confirmGiftWrap">
         <input type="checkbox" id="confirmGift"> Is this a gift?
       </label>
+      <div id="giftDetailsForm" aria-live="polite">
+        <p class="giftDetailsNote">A gift certificate with the redemption code will be emailed to the recipient.</p>
+        <div class="giftField">
+          <span>Recipient's name</span>
+          <input type="text" id="giftRecipientName" placeholder="e.g. Alex Smith" autocomplete="off">
+        </div>
+        <div class="giftField">
+          <span>Recipient's email</span>
+          <input type="email" id="giftRecipientEmail" placeholder="e.g. alex@example.com" autocomplete="off">
+        </div>
+        <div class="giftField">
+          <span>Personal message <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></span>
+          <textarea id="giftMessage" placeholder="A short note for the recipient…" rows="2"></textarea>
+        </div>
+      </div>
     </div>
     <div class="confirmFooter">
       <button class="btn primary" id="confirmCheckoutBtn" onclick="confirmCheckout()" style="width:100%;padding:14px;">Checkout →</button>
@@ -652,15 +685,14 @@
     let _currentUser = null;
     let _membership  = null;
 
-    const PREMIUM_UNIT_PRICES     = [299];
-    const PREMIUM_UNIT_PRICE_EXTRA = 299;
-    let _selectedPlan = null;
+    const GRADUATE_UNIT_PRICES     = [19];
+    const GRADUATE_UNIT_PRICE_EXTRA = 19;
     let _pendingItems = null;
 
     function calcGraduatedTotal(qty, multiplier = 1) {
       let total = 0;
       for (let i = 0; i < qty; i++) {
-        const unit = i < PREMIUM_UNIT_PRICES.length ? PREMIUM_UNIT_PRICES[i] : PREMIUM_UNIT_PRICE_EXTRA;
+        const unit = i < GRADUATE_UNIT_PRICES.length ? GRADUATE_UNIT_PRICES[i] : GRADUATE_UNIT_PRICE_EXTRA;
         total += unit * multiplier;
       }
       return total;
@@ -690,48 +722,36 @@
       if (totalEl) totalEl.textContent = `= ${formatMoney(total)} total`;
     }
 
-    function onPlanCheckboxChange(tier, cb) {
-      const other   = tier === "graduate" ? "prime" : "graduate";
-      const otherCb = document.getElementById("select_" + other);
-      if (cb.checked) {
-        otherCb.checked = false;
-        document.getElementById("lbl_" + other).textContent = "Add to Order";
-        _selectedPlan = tier;
-        document.getElementById("lbl_" + tier).textContent = tier === "graduate" ? "Graduate Selected ✓" : "Prime Selected ✓";
-      } else {
-        _selectedPlan = null;
-        document.getElementById("lbl_" + tier).textContent = "Add to Order";
-      }
-      const gradQtyWrap = document.getElementById("gradQtyWrap");
-      if (gradQtyWrap) gradQtyWrap.style.display = _selectedPlan === "graduate" ? "" : "none";
+
+    function onPlanQtyChange() {
       updateAddonsTotal();
     }
 
     function updateAddonsTotal() {
-      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
-      const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
-      const careQty = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
-      const gradQty = _selectedPlan === "graduate"
-        ? Math.max(1, parseInt(document.getElementById("graduateQty")?.value || "1", 10))
-        : 0;
+      const hQty     = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
+      const cQty     = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
+      const careQty  = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
+      const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value  || "0", 10));
+      const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value     || "0", 10));
 
       const hTotal    = hQty * 9;
       const cTotal    = cQty * 5;
       const careTotal = careQty * 49;
-      const planTotal = _selectedPlan === "graduate"
-        ? calcGraduatedTotal(gradQty)
-        : _selectedPlan === "prime" ? 99 : 0;
-      const grand     = hTotal + cTotal + careTotal + planTotal;
+      const gradTotal = gradQty  > 0 ? calcGraduatedTotal(gradQty) : 0;
+      const primeTotal = primeQty * 99;
+      const grand      = hTotal + cTotal + careTotal + gradTotal + primeTotal;
 
       document.getElementById("hostingTotal").textContent = `= ${formatMoney(hTotal)}`;
       document.getElementById("creditsTotal").textContent  = `= ${formatMoney(cTotal)}`;
       document.getElementById("careTotal").textContent     = `= ${formatMoney(careTotal)}`;
       const gradTotalEl = document.getElementById("graduateTotal");
-      if (gradTotalEl) gradTotalEl.textContent = `= ${formatMoney(planTotal)}`;
+      if (gradTotalEl) gradTotalEl.textContent = `= ${formatMoney(gradTotal)}`;
+      const primeTotalEl = document.getElementById("primeTotal");
+      if (primeTotalEl) primeTotalEl.textContent = `= ${formatMoney(primeTotal)}`;
 
       const lines = [];
-      if (_selectedPlan === "graduate") lines.push(`${gradQty} Graduate unit${gradQty !== 1 ? "s" : ""}`);
-      if (_selectedPlan === "prime")    lines.push("Prime (4 months)");
+      if (gradQty  > 0) lines.push(`${gradQty} Graduate unit${gradQty   !== 1 ? "s" : ""}`);
+      if (primeQty > 0) lines.push(`${primeQty} Prime unit${primeQty !== 1 ? "s" : ""}`);
       if (hQty > 0)    lines.push(`${hQty} mo hosting × $9`);
       if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × $5`);
       if (careQty > 0) lines.push(`${careQty} mo care × $49`);
@@ -745,7 +765,7 @@
       document.getElementById("addonsBuyBtn").disabled = grand === 0;
     }
 
-    async function checkoutItems(items, isGift, autoRenew, msgEl, btnEl) {
+    async function checkoutItems(items, isGift, autoRenew, msgEl, btnEl, giftDetails = null) {
       if (!currentUserId()) {
         msgEl.className = "planMsg err";
         msgEl.textContent = "Sign in below to purchase.";
@@ -767,6 +787,7 @@
           body: JSON.stringify({
             items,
             isGift,
+            giftDetails,
             autoRenew: !!autoRenew,
             userId: _currentUser.id,
             userEmail: _currentUser.email,
@@ -797,10 +818,14 @@
     };
     let _pendingTier = null;
 
-    const AUTO_RENEW_LABEL = {
-      graduate: "Auto-renew monthly — cancel any time",
-      prime:    "Auto-renew every trimester (four months) — cancel any time",
-    };
+    function autoRenewLabel(tier, totalHostingMonths) {
+      const mo = totalHostingMonths > 0
+        ? ` — after ${totalHostingMonths} month${totalHostingMonths !== 1 ? "s" : ""} of hosting`
+        : "";
+      if (tier === "graduate") return `Auto-renew monthly${mo}`;
+      if (tier === "prime")    return `Auto-renew every four months${mo}`;
+      return "Auto-renew";
+    }
 
     const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "hosting", "extra_credits"]);
 
@@ -812,16 +837,36 @@
       wrap.style.display = hasSubTier ? "" : "none";
     }
 
+    const PLAN_GIFT_TIERS_SET = new Set(["graduate", "prime"]);
+
+    function syncGiftDetails() {
+      const isGift = document.getElementById("confirmGift").checked;
+      const hasPlanTier = _pendingItems
+        ? _pendingItems.some(i => PLAN_GIFT_TIERS_SET.has(i.tier))
+        : PLAN_GIFT_TIERS_SET.has(_pendingTier);
+      const show = isGift && hasPlanTier;
+      document.getElementById("giftDetailsForm").classList.toggle("visible", show);
+      if (!show) {
+        document.getElementById("giftRecipientName").value  = "";
+        document.getElementById("giftRecipientEmail").value = "";
+        document.getElementById("giftMessage").value        = "";
+      }
+    }
+
     function checkoutPlan(tier) {
       const def = PLAN_LABELS[tier];
       _pendingTier = tier;
+      _pendingItems = null;
       document.getElementById("confirmPlanName").textContent  = def.name;
       document.getElementById("confirmPlanPrice").textContent = def.price;
+      const _cpHQty = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
+      const _cpPlanMo = tier === "prime" ? 4 : 1;
       document.getElementById("confirmAutoRenew").checked = false;
-      document.getElementById("confirmAutoRenewLabel").textContent = AUTO_RENEW_LABEL[tier] || "Auto-renew";
+      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(tier, _cpPlanMo + _cpHQty);
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = tier === "free" ? "none" : "";
       syncAutoRenewVisibility();
+      syncGiftDetails();
       document.getElementById("confirmMsg").textContent = "";
       document.getElementById("confirmMsg").className  = "authMsg";
       document.getElementById("confirmCheckoutBtn").disabled = false;
@@ -829,7 +874,10 @@
       openConfirmPanel();
     }
 
-    document.getElementById("confirmGift").addEventListener("change", syncAutoRenewVisibility);
+    document.getElementById("confirmGift").addEventListener("change", () => {
+      syncAutoRenewVisibility();
+      syncGiftDetails();
+    });
 
     let _confirmOpener = null;
 
@@ -877,7 +925,22 @@
       }
       const isGift    = document.getElementById("confirmGift").checked;
       const autoRenew = document.getElementById("confirmAutoRenew").checked;
-      checkoutItems(items, isGift, autoRenew, msgEl, btnEl);
+
+      let giftDetails = null;
+      if (isGift && document.getElementById("giftDetailsForm").classList.contains("visible")) {
+        const recipientName  = document.getElementById("giftRecipientName").value.trim();
+        const recipientEmail = document.getElementById("giftRecipientEmail").value.trim();
+        const message        = document.getElementById("giftMessage").value.trim();
+        if (!recipientName || !recipientEmail) {
+          msgEl.className = "planMsg err";
+          msgEl.textContent = "Please enter the recipient's name and email.";
+          (recipientName ? document.getElementById("giftRecipientEmail") : document.getElementById("giftRecipientName")).focus();
+          return;
+        }
+        giftDetails = { recipientName, recipientEmail, message };
+      }
+
+      checkoutItems(items, isGift, autoRenew, msgEl, btnEl, giftDetails);
     }
 
     async function provisionFree(msgEl, btnEl) {
@@ -915,16 +978,23 @@
       const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
       const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
       const careQty = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
-      const gradQty = _selectedPlan === "graduate"
-        ? Math.max(1, parseInt(document.getElementById("graduateQty")?.value || "1", 10))
-        : 0;
-      const msgEl   = document.getElementById("addonsMsg");
+      const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value || "0", 10));
+      const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value    || "0", 10));
+      const msgEl    = document.getElementById("addonsMsg");
       msgEl.className = "authMsg";
       msgEl.textContent = "";
 
-      // Add-ons without a plan selected require an existing active plan
+      // Graduate and Prime have different billing intervals — can't be in the same order
+      if (gradQty > 0 && primeQty > 0) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "Graduate and Prime can't be purchased together — please choose one.";
+        return;
+      }
+
+      // Add-ons without a plan require an existing active plan
+      const hasPlan   = gradQty > 0 || primeQty > 0;
       const hasAddons = hQty > 0 || cQty > 0 || careQty > 0;
-      if (!_selectedPlan && hasAddons) {
+      if (!hasPlan && hasAddons) {
         if (!_currentUser) {
           msgEl.className = "authMsg err";
           msgEl.textContent = "Sign in to purchase add-ons.";
@@ -933,7 +1003,7 @@
         }
         if (!_membership || _membership.status !== "active" || _membership.tier === "free") {
           msgEl.className = "authMsg err";
-          msgEl.textContent = "Add-ons require an active paid plan (or select a plan above).";
+          msgEl.textContent = "Add-ons require an active paid plan (or set units above).";
           return;
         }
       }
@@ -947,37 +1017,39 @@
 
       // Build items array
       const items = [];
-      if (_selectedPlan === "graduate") items.push({ tier: "graduate",      qty: gradQty });
-      if (_selectedPlan === "prime")    items.push({ tier: "prime",         qty: 1       });
-      if (hQty > 0)                     items.push({ tier: "hosting",       qty: hQty    });
-      if (cQty > 0)                     items.push({ tier: "extra_credits", qty: cQty    });
-      if (careQty > 0)                  items.push({ tier: "care",          qty: careQty });
+      if (gradQty  > 0) items.push({ tier: "graduate",      qty: gradQty  });
+      if (primeQty > 0) items.push({ tier: "prime",         qty: primeQty });
+      if (hQty     > 0) items.push({ tier: "hosting",       qty: hQty     });
+      if (cQty     > 0) items.push({ tier: "extra_credits", qty: cQty     });
+      if (careQty  > 0) items.push({ tier: "care",          qty: careQty  });
 
       if (!items.length) return;
 
       _pendingItems = items;
-      _pendingTier  = _selectedPlan || items[0]?.tier;
+      _pendingTier  = gradQty > 0 ? "graduate" : primeQty > 0 ? "prime" : items[0]?.tier;
 
       // Summarize for confirm panel
       const summaryParts = [];
-      if (_selectedPlan === "graduate") summaryParts.push(`Graduate × ${gradQty} unit${gradQty !== 1 ? "s" : ""}`);
-      if (_selectedPlan === "prime")    summaryParts.push("Prime — 4 months");
-      if (hQty > 0)    summaryParts.push(`Hosting × ${hQty} mo`);
-      if (cQty > 0)    summaryParts.push(`${cQty} Extra Credit${cQty !== 1 ? "s" : ""}`);
-      if (careQty > 0) summaryParts.push(`Support × ${careQty} mo`);
+      if (gradQty  > 0) summaryParts.push(`Graduate × ${gradQty} unit${gradQty   !== 1 ? "s" : ""}`);
+      if (primeQty > 0) summaryParts.push(`Prime × ${primeQty} unit${primeQty !== 1 ? "s" : ""}`);
+      if (hQty     > 0) summaryParts.push(`Hosting × ${hQty} mo`);
+      if (cQty     > 0) summaryParts.push(`${cQty} Extra Credit${cQty !== 1 ? "s" : ""}`);
+      if (careQty  > 0) summaryParts.push(`Support × ${careQty} mo`);
 
-      const planTotal = _selectedPlan === "graduate" ? calcGraduatedTotal(gradQty) : (_selectedPlan === "prime" ? 99 : 0);
-      const grand     = planTotal + hQty * 9 + cQty * 5 + careQty * 49;
+      const gradTotal  = gradQty  > 0 ? calcGraduatedTotal(gradQty) : 0;
+      const primeTotal = primeQty * 99;
+      const grand      = gradTotal + primeTotal + hQty * 9 + cQty * 5 + careQty * 49;
 
       document.getElementById("confirmPlanName").textContent  = summaryParts.join(" + ");
       document.getElementById("confirmPlanPrice").textContent = `Total: ${formatMoney(grand)}`;
+      const _arTier   = gradQty > 0 ? "graduate" : primeQty > 0 ? "prime" : null;
+      const _arPlanMo = gradQty * 1 + primeQty * 4;
       document.getElementById("confirmAutoRenew").checked     = false;
-      document.getElementById("confirmAutoRenewLabel").textContent =
-        _selectedPlan === "graduate" ? AUTO_RENEW_LABEL.graduate :
-        _selectedPlan === "prime"    ? AUTO_RENEW_LABEL.prime    : "Auto-renew";
+      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(_arTier, _arPlanMo + hQty);
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = "";
       syncAutoRenewVisibility();
+      syncGiftDetails();
       document.getElementById("confirmMsg").textContent = "";
       document.getElementById("confirmMsg").className   = "authMsg";
       document.getElementById("confirmCheckoutBtn").disabled    = false;
@@ -989,7 +1061,7 @@
       if (!user) { _membership = null; return; }
       const { data } = await _supabase
         .from("memberships")
-        .select("tier, credits_used, credits_limit, sites_used, sites_limit, status, hosting_until, stripe_subscription_id")
+        .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, stripe_subscription_id, support_until")
         .eq("user_id", user.id)
         .single();
       _membership = data || null;
@@ -1002,6 +1074,7 @@
       const tierStatus      = document.getElementById("tierStatus");
       const quotaStatus     = document.getElementById("quotaStatus");
       const hostingUntil    = document.getElementById("hostingUntil");
+      const supportUntil    = document.getElementById("supportUntil");
       const authActionBtn   = document.getElementById("authActionBtn");
       const signOutBtn      = document.getElementById("signOutBtn");
       const authCardSection = document.getElementById("authCardSection");
@@ -1014,8 +1087,10 @@
         accountStatus.textContent = "Signed out";
         accountMeta.textContent   = "Sign in below to purchase.";
         tierStatus.textContent    = "free";
-        quotaStatus.textContent   = "";
+        const anonUsed = Math.min(3, parseInt(localStorage.getItem("anon_credits_used") || "0", 10));
+        quotaStatus.textContent   = `Remaining: ${3 - anonUsed}/3 credits, 0/0 saves`;
         hostingUntil.textContent  = "";
+        supportUntil.textContent  = "";
         authActionBtn.textContent = "Sign In";
         signOutBtn.style.display  = "none";
         document.getElementById("cancelSubBtn").style.display = "none";
@@ -1029,20 +1104,23 @@
 
       const tier = _membership?.tier || "free";
       const cUnlimited = _membership?.credits_limit === -1;
-      const dUnlimited = _membership?.sites_limit === -1;
+      const dUnlimited = _membership?.downloads_limit === -1;
       const cStr = _membership
         ? (cUnlimited ? "∞" : `${_membership.credits_limit - (_membership.credits_used || 0)}/${_membership.credits_limit}`)
         : "—";
       const dStr = _membership
-        ? (dUnlimited ? "∞" : `${_membership.sites_limit - (_membership.sites_used || 0)}/${_membership.sites_limit}`)
+        ? (dUnlimited ? "∞" : `${_membership.downloads_limit - (_membership.downloads_used || 0)}/${_membership.downloads_limit}`)
         : "—";
 
       accountStatus.textContent = _currentUser.email;
       accountMeta.textContent   = _membership?.status ? `Status: ${_membership.status}` : "Signed in";
       tierStatus.textContent    = tier;
-      quotaStatus.textContent   = `Credits: ${cStr}  ·  Sites: ${dStr}`;
+      quotaStatus.textContent   = `Remaining: ${cStr} credits, ${dStr} saves`;
       hostingUntil.textContent  = _membership?.hosting_until
         ? `Hosting until: ${new Date(_membership.hosting_until).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })}`
+        : "";
+      supportUntil.textContent  = _membership?.support_until
+        ? `Support until: ${new Date(_membership.support_until).toLocaleDateString(undefined, { year:'numeric', month:'short', day:'numeric' })}`
         : "";
       authActionBtn.textContent = "Refresh";
       signOutBtn.style.display  = "";
@@ -1138,6 +1216,22 @@
       }
     });
 
+    let _authMode = "signin"; // "signin" | "signup"
+
+    document.getElementById("authModeToggle").addEventListener("click", e => {
+      e.preventDefault();
+      _authMode = _authMode === "signin" ? "signup" : "signin";
+      const isSignup = _authMode === "signup";
+      document.getElementById("authCardEyebrow").textContent  = isSignup ? "Create Account" : "Sign In to Purchase";
+      document.getElementById("authCardTitle").textContent    = isSignup ? "Create a free account" : "Sign in to purchase";
+      document.getElementById("authSubmitBtn").textContent    = isSignup ? "Create Account" : "Sign In";
+      document.getElementById("authPassword").autocomplete   = isSignup ? "new-password" : "current-password";
+      document.getElementById("authModeToggle").textContent   = isSignup ? "Already have an account? Sign in" : "No account? Create one";
+      document.getElementById("forgotPasswordLink").style.display = isSignup ? "none" : "";
+      document.getElementById("authMsg").textContent = "";
+      document.getElementById("authMsg").className   = "authMsg";
+    });
+
     document.getElementById("authForm").addEventListener("submit", async e => {
       e.preventDefault();
       const email    = document.getElementById("authEmail").value.trim();
@@ -1151,13 +1245,26 @@
         msgEl.textContent = "Email and password required.";
         return;
       }
-      const { error } = await _supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        msgEl.className = "authMsg err";
-        msgEl.textContent = error.message;
+
+      if (_authMode === "signup") {
+        const { error } = await _supabase.auth.signUp({ email, password,
+          options: { emailRedirectTo: window.location.href } });
+        if (error) {
+          msgEl.className = "authMsg err";
+          msgEl.textContent = error.message;
+        } else {
+          msgEl.className = "authMsg ok";
+          msgEl.textContent = "Account created! Check your email to confirm, then sign in.";
+        }
       } else {
-        msgEl.className = "authMsg ok";
-        msgEl.textContent = "Signed in.";
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          msgEl.className = "authMsg err";
+          msgEl.textContent = error.message;
+        } else {
+          msgEl.className = "authMsg ok";
+          msgEl.textContent = "Signed in.";
+        }
       }
     });
 
@@ -1175,10 +1282,28 @@
     if (params.get("checkout") === "success") {
       authMsg.className = "authMsg ok";
       authMsg.textContent = "Checkout completed. Refreshing account status…";
+      // Re-fetch membership after a brief delay so the webhook has time to land
+      setTimeout(async () => {
+        if (_currentUser) {
+          await refreshMembership(_currentUser);
+          renderAuthState();
+          authMsg.textContent = "Account updated.";
+        }
+      }, 3000);
     } else if (params.get("checkout") === "cancelled") {
       authMsg.className = "authMsg err";
       authMsg.textContent = "Checkout was cancelled.";
     }
+
+    // Re-fetch when navigating back to this page (bfcache restore)
+    window.addEventListener("pageshow", async (e) => {
+      if (e.persisted && _currentUser) {
+        await refreshMembership(_currentUser);
+        renderAuthState();
+      }
+    });
+
+    document.getElementById("graduateQty").focus();
   </script>
 
   <script src="/src/annbot-widget.js" defer></script>

@@ -2908,7 +2908,7 @@
 
         const { data: membership } = await supabaseClient
           .from("memberships")
-          .select("tier, status, credits_used, credits_limit, sites_used, sites_limit")
+          .select("tier, status, credits_used, credits_limit, downloads_used, downloads_limit")
           .eq("user_id", user.id)
           .single();
 
@@ -2922,7 +2922,7 @@
         const tier = membership.tier || "free";
         const status = membership.status || "unknown";
         const credits   = formatQuotaValue(membership.credits_used,  membership.credits_limit);
-        const sites = formatQuotaValue(membership.sites_used, membership.sites_limit);
+        const sites = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
         userEl.textContent = `${name} · ${tier} · ${status}`;
         quotaEl.textContent = `Credits: ${credits} · Saves: ${sites}`;
       } catch {
@@ -2963,7 +2963,7 @@
       if (!userId) return null;
       const { data } = await supabaseClient
         .from("memberships")
-        .select("sites_used, sites_limit, status")
+        .select("downloads_used, downloads_limit, status")
         .eq("user_id", userId)
         .single();
       return data || null;
@@ -2984,8 +2984,8 @@
       if (membership.status !== "active") {
         throw new Error(`Membership is ${membership.status}. ${actionLabel} is disabled.`);
       }
-      const sitesUsed  = membership.sites_used  ?? 0;
-      const sitesLimit = membership.sites_limit ?? 0;
+      const sitesUsed  = membership.downloads_used  ?? 0;
+      const sitesLimit = membership.downloads_limit ?? 0;
       if (sitesLimit !== -1 && sitesUsed >= sitesLimit) {
         throw new Error("Save limit reached. Please UPGRADE to save more sites.");
       }
@@ -3006,7 +3006,7 @@
         return false;
       }
       const membership = await getMembership();
-      if (!membership || (membership.sites_limit !== -1 && membership.sites_limit < 1)) {
+      if (!membership || (membership.downloads_limit !== -1 && membership.downloads_limit < 1)) {
         showLinkedError(`${actionLabel} requires a paid plan. Please UPGRADE to continue.`);
         return false;
       }
@@ -3014,8 +3014,12 @@
     }
 
     refreshEditorAccountStatus();
-    supabaseClient?.auth?.onAuthStateChange?.(() => {
-      refreshEditorAccountStatus();
+    supabaseClient?.auth?.onAuthStateChange?.((_event) => {
+      if (_event === "PASSWORD_RECOVERY") {
+        openAuthModal("reset");
+      } else {
+        refreshEditorAccountStatus();
+      }
     });
 
     // ── Unified portfolio panel ────────────────────────────────────────────────
@@ -3567,17 +3571,21 @@
   <!-- Sign-in modal -->
   <div class="authModalOverlay" id="authModalOverlay" onclick="if(event.target===this)closeAuthModal()">
     <div class="authModalBox">
-      <h3>Sign in to continue</h3>
-      <p>Sign in to download or publish your portfolio.</p>
+      <h3 id="authModalTitle">Sign in to continue</h3>
+      <p id="authModalSubtitle">Sign in to download or publish your portfolio.</p>
       <form id="authModalForm" style="display:contents;">
         <input id="authModalEmail" type="email" placeholder="Email" autocomplete="email" />
         <input id="authModalPassword" type="password" placeholder="Password" autocomplete="current-password" />
+        <input id="authModalPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" style="display:none;" />
         <div class="authModalActions">
           <button class="btn" type="button" onclick="closeAuthModal()">Cancel</button>
           <button class="btn primary" type="submit" id="authModalSubmit">Sign In</button>
         </div>
       </form>
-      <button class="authModalForgot" id="authModalForgot" type="button">Forgot password?</button>
+      <div id="authModalFooterRow" style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;flex-wrap:wrap;gap:6px;">
+        <button class="authModalForgot" id="authModalModeToggle" type="button">No account? Create one</button>
+        <button class="authModalForgot" id="authModalForgot" type="button">Forgot password?</button>
+      </div>
       <div class="authModalMsg" id="authModalMsg"></div>
     </div>
   </div>
@@ -3591,15 +3599,51 @@
       document.getElementById("upgradeModalOverlay").classList.remove("open");
     }
 
-    function openAuthModal() {
+    let _authMode = "signin";
+
+    function openAuthModal(mode) {
+      if (mode) _setAuthMode(mode);
       document.getElementById("authModalOverlay").classList.add("open");
-      document.getElementById("authModalEmail").focus();
+      const focusEl = _authMode === "reset"
+        ? document.getElementById("authModalPassword")
+        : document.getElementById("authModalEmail");
+      focusEl.focus();
     }
     function closeAuthModal() {
       document.getElementById("authModalOverlay").classList.remove("open");
       document.getElementById("authModalMsg").textContent = "";
       document.getElementById("authModalMsg").className = "authModalMsg";
     }
+
+    function _setAuthMode(mode) {
+      _authMode = mode;
+      const isSignup = mode === "signup";
+      const isReset  = mode === "reset";
+      document.getElementById("authModalTitle").textContent    = isReset  ? "Set new password"
+                                                               : isSignup ? "Create an account"
+                                                               :            "Sign in to continue";
+      document.getElementById("authModalSubtitle").textContent = isReset  ? "Enter and confirm your new password."
+                                                               : isSignup ? "Verify your email to save and publish your portfolio."
+                                                               :            "Sign in to download or publish your portfolio.";
+      document.getElementById("authModalSubmit").textContent   = isReset  ? "Save Password"
+                                                               : isSignup ? "Create Account"
+                                                               :            "Sign In";
+      document.getElementById("authModalEmail").style.display          = isReset ? "none" : "";
+      document.getElementById("authModalPasswordConfirm").style.display = isReset ? "" : "none";
+      document.getElementById("authModalPassword").placeholder          = isReset ? "New password" : "Password";
+      document.getElementById("authModalPassword").autocomplete         = (isSignup || isReset) ? "new-password" : "current-password";
+      document.getElementById("authModalFooterRow").style.display       = isReset ? "none" : "";
+      document.getElementById("authModalMsg").textContent = "";
+      document.getElementById("authModalMsg").className = "authModalMsg";
+    }
+
+    document.getElementById("authModalModeToggle").addEventListener("click", () => {
+      const next = _authMode === "signin" ? "signup" : "signin";
+      _setAuthMode(next);
+      document.getElementById("authModalModeToggle").textContent = next === "signup"
+        ? "Already have an account? Sign in" : "No account? Create one";
+      document.getElementById("authModalForgot").style.display = next === "signup" ? "none" : "";
+    });
 
     document.getElementById("authModalForm").addEventListener("submit", async e => {
       e.preventDefault();
@@ -3614,18 +3658,84 @@
         msgEl.textContent = "Email and password required.";
         return;
       }
-      btn.disabled = true;
-      btn.textContent = "Signing in…";
-      const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-      btn.disabled = false;
-      btn.textContent = "Sign In";
-      if (error) {
+      if (!supabaseClient) {
         msgEl.className = "authModalMsg err";
-        msgEl.textContent = error.message;
+        msgEl.textContent = "Auth not available — please reload the page.";
+        return;
+      }
+      if (_authMode === "reset") {
+        const confirm = document.getElementById("authModalPasswordConfirm").value;
+        if (password !== confirm) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = "Passwords don't match.";
+          return;
+        }
+        if (password.length < 8) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = "Password must be at least 8 characters.";
+          return;
+        }
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+        try {
+          const { error } = await supabaseClient.auth.updateUser({ password });
+          if (error) {
+            msgEl.className = "authModalMsg err";
+            msgEl.textContent = error.message;
+          } else {
+            msgEl.className = "authModalMsg ok";
+            msgEl.textContent = "Password updated!";
+            setTimeout(closeAuthModal, 1200);
+          }
+        } catch (err) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = err.message || "Update failed — check your connection.";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save Password";
+        }
+      } else if (_authMode === "signup") {
+        btn.disabled = true;
+        btn.textContent = "Creating account…";
+        try {
+          const { error } = await supabaseClient.auth.signUp({
+            email, password,
+            options: { emailRedirectTo: window.location.href }
+          });
+          if (error) {
+            msgEl.className = "authModalMsg err";
+            msgEl.textContent = error.message;
+          } else {
+            msgEl.className = "authModalMsg ok";
+            msgEl.textContent = "Check your email to confirm your account.";
+          }
+        } catch (err) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = err.message || "Sign-up failed — check your connection.";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Create Account";
+        }
       } else {
-        msgEl.className = "authModalMsg ok";
-        msgEl.textContent = "Signed in!";
-        setTimeout(closeAuthModal, 800);
+        btn.disabled = true;
+        btn.textContent = "Signing in…";
+        try {
+          const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+          if (error) {
+            msgEl.className = "authModalMsg err";
+            msgEl.textContent = error.message;
+          } else {
+            msgEl.className = "authModalMsg ok";
+            msgEl.textContent = "Signed in!";
+            setTimeout(closeAuthModal, 800);
+          }
+        } catch (err) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = err.message || "Sign-in failed — check your connection.";
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Sign In";
+        }
       }
     });
 

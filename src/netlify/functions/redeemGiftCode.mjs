@@ -1,21 +1,52 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 
-function monthsFromNow(n) {
-  const d = new Date();
-  d.setMonth(d.getMonth() + n);
-  return d.toISOString();
+function stackMonths(existingIso, n) {
+  if (!n || n <= 0) return undefined;
+  const base = existingIso
+    ? new Date(Math.max(new Date(existingIso).getTime(), Date.now()))
+    : new Date();
+  base.setMonth(base.getMonth() + n);
+  return base.toISOString();
 }
 
-// What each gift tier grants when redeemed.
-const GIFT_GRANTS = {
-  starter_care: { tier: "prime", credits_limit: 10, sites_limit: 2,  hosting_until: monthsFromNow(6) },
-  premium_care:     { tier: "prime", credits_limit: 25, sites_limit: 10, hosting_until: monthsFromNow(12) },
+// Hosting months included per tier (for gift grants)
+const GIFT_HOSTING_MONTHS = {
+  starter_care: 6,
+  premium_care: 12,
+  graduate:     null, // qty-dependent — computed below
+  prime:        4,
 };
+
+function computeGiftGrants(gift, existingMembership) {
+  const qty           = Math.max(1, gift.quantity || 1);
+  const supportMonths = gift.support_months || 0;
+  const hostingMonths = gift.tier === "graduate" ? qty : (GIFT_HOSTING_MONTHS[gift.tier] ?? 0);
+
+  const BASE = {
+    starter_care: { tier: "prime",    credits_limit: 10,      downloads_limit: 2  },
+    premium_care: { tier: "prime",    credits_limit: 25,      downloads_limit: 10 },
+    graduate:     { tier: "graduate", credits_limit: qty * 3, downloads_limit: qty },
+    prime:        { tier: "prime",    credits_limit: 10,      downloads_limit: 5  },
+  }[gift.tier];
+
+  if (!BASE) return null;
+
+  const grants = {
+    ...BASE,
+    hosting_until: stackMonths(existingMembership?.hosting_until, hostingMonths),
+  };
+  if (supportMonths > 0) {
+    grants.support_until = stackMonths(existingMembership?.support_until, supportMonths);
+  }
+  return grants;
+}
 
 const GIFT_TIER_NAMES = {
   starter_care: "Starter",
-  premium_care:     "Premium",
+  premium_care: "Premium",
+  graduate:     "Graduate",
+  prime:        "Prime",
 };
 
 function getSupabaseAdmin() {
@@ -28,7 +59,7 @@ function getSupabaseAdmin() {
 
 function buildRedemptionEmail(tierName, grants) {
   const cStr = grants.credits_limit === -1 ? "∞" : grants.credits_limit;
-  const dStr = grants.sites_limit   === -1 ? "∞" : grants.sites_limit;
+  const dStr = grants.downloads_limit   === -1 ? "∞" : grants.downloads_limit;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -64,7 +95,7 @@ function buildRedemptionEmail(tierName, grants) {
             </tr>
             <tr>
               <td style="padding:10px 14px;background:rgba(255,255,255,.05);border-top:none;border:1px solid rgba(255,255,255,.08);font-size:14px;color:rgba(234,240,255,.8);">
-                🌐 &nbsp;<strong>${dStr} portfolio site${grants.sites_limit !== 1 ? "s" : ""}</strong>
+                🌐 &nbsp;<strong>${dStr} portfolio site${grants.downloads_limit !== 1 ? "s" : ""}</strong>
               </td>
             </tr>
           </table>
@@ -139,7 +170,13 @@ export async function handler(event) {
     return { statusCode: 500, body: JSON.stringify({ error: "Failed to redeem gift code." }) };
   }
 
-  const grants = GIFT_GRANTS[gift.tier];
+  const { data: existingMembership } = await supabase
+    .from("memberships")
+    .select("hosting_until, support_until")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const grants = computeGiftGrants(gift, existingMembership);
   if (!grants) {
     return { statusCode: 500, body: JSON.stringify({ error: `Unknown gift tier: ${gift.tier}` }) };
   }

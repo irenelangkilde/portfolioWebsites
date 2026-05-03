@@ -495,22 +495,39 @@
       const res  = await fetch(`/.netlify/functions/getGiftCode?sessionId=${encodeURIComponent(sessionId)}`);
       const data = await res.json();
       if (res.ok && data.code) {
-        const el = document.getElementById("certCode");
-        el.textContent = data.code;
-        el.classList.remove("loading");
+        displayCode(data.code);
       } else if (attempt < RETRY_DELAYS.length) {
         document.getElementById("certCode").textContent = `Retrieving… (${attempt + 1})`;
         setTimeout(() => loadCode(attempt + 1), RETRY_DELAYS[attempt]);
       } else {
-        showCodeError();
+        await provisionFallback();
       }
     } catch {
       if (attempt < RETRY_DELAYS.length) {
         setTimeout(() => loadCode(attempt + 1), RETRY_DELAYS[attempt]);
       } else {
-        showCodeError();
+        await provisionFallback();
       }
     }
+  }
+
+  async function provisionFallback() {
+    try {
+      const res  = await fetch("/.netlify/functions/provisionGuestGiftCode", {
+        method:  "POST",
+        headers: { "content-type": "application/json" },
+        body:    JSON.stringify({ sessionId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.code) { displayCode(data.code); return; }
+    } catch {}
+    showCodeError();
+  }
+
+  function displayCode(code) {
+    const el = document.getElementById("certCode");
+    el.textContent = code;
+    el.classList.remove("loading");
   }
 
   function showCodeError() {

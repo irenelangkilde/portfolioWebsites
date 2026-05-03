@@ -193,8 +193,17 @@ $$;
 -- Safe to re-run: IF NOT EXISTS / DO NOTHING guards.
 
 alter table public.memberships
-  add column if not exists deploys_used  integer not null default 0,
-  add column if not exists deploys_limit integer not null default 0;
+  add column if not exists deploys_used   integer not null default 0,
+  add column if not exists deploys_limit  integer not null default 0,
+  add column if not exists hosting_until  timestamptz;
+
+-- Widen tier constraint to match code values (graduate, prime)
+alter table public.memberships
+  drop constraint if exists memberships_tier_check;
+
+alter table public.memberships
+  add constraint memberships_tier_check
+  check (tier in ('free', 'graduate', 'prime'));
 
 -- Back-fill deploys_limit to match downloads_limit for existing rows
 -- (new rows will get the right value from handle_new_user or the webhook)
@@ -210,7 +219,7 @@ update public.memberships
 create table if not exists public.gift_codes (
   id                uuid primary key default gen_random_uuid(),
   code              text not null unique,
-  tier              text not null check (tier in ('starter_gift', 'pro_gift')),
+  tier              text not null check (tier in ('starter_care', 'premium_care', 'graduate', 'prime')),
   stripe_session_id text not null,
   buyer_email       text not null,
   redeemed_by       uuid references auth.users(id),
@@ -229,3 +238,33 @@ alter table public.gift_codes enable row level security;
 create policy "users read own gift redemption"
   on public.gift_codes for select
   using (auth.uid() = redeemed_by);
+
+
+-- ── 9. Support tracking ──────────────────────────────────────────────────────
+-- support_until on memberships: when hands-on support access expires.
+-- support_months on gift_codes: duration to grant at redemption time (not purchase time).
+-- Safe to re-run: IF NOT EXISTS guards.
+
+alter table public.memberships
+  add column if not exists support_until timestamptz;
+
+alter table public.gift_codes
+  add column if not exists support_months integer not null default 0;
+
+
+-- ── 8. Gift codes enhancements for plan gifts (graduate / prime) ─────────────
+-- Safe to re-run: IF NOT EXISTS / DO NOTHING guards.
+
+alter table public.gift_codes
+  add column if not exists quantity        integer not null default 1,
+  add column if not exists recipient_email text,
+  add column if not exists recipient_name  text,
+  add column if not exists gift_message    text;
+
+-- Widen tier constraint to include plan gift tiers
+alter table public.gift_codes
+  drop constraint if exists gift_codes_tier_check;
+
+alter table public.gift_codes
+  add constraint gift_codes_tier_check
+  check (tier in ('starter_care', 'premium_care', 'graduate', 'prime'));

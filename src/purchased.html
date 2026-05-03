@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Purchase Confirmed — Irene's Webworks</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     :root{
       --bg:#0b1220;
@@ -89,12 +90,11 @@
 
     /* ── Card ─────────────────────────────────── */
     .card{
-      background:var(--panel);
+      background:rgba(255,255,255,.07);
       border:1px solid var(--border);
       border-radius:var(--radius);
       box-shadow:var(--shadow);
       padding:36px 32px;
-      backdrop-filter:blur(8px);
       text-align:center;
     }
 
@@ -343,39 +343,71 @@
       ],
     },
 
+    graduate_gift: {
+      badge:    "Graduate Gift",
+      icon:     "🎁",
+      headline: "Your Graduate gift is on its way.",
+      subhead:  "A gift certificate with the redemption code is being emailed to the recipient.",
+      includes: [
+        "3 AI generation credits per unit purchased",
+        "1 portfolio site per unit purchased",
+        "Hosting included per unit",
+        "Recipient redeems the code to activate their plan",
+      ],
+      nextSteps: "The recipient will get an email from Irene's Webworks with their personal gift code and step-by-step instructions. They create a free account at irenes-ventures.com and redeem the code to unlock their plan.",
+      actions: [
+        { label: "Back to home", href: "../index.html", cls: "primary" },
+      ],
+    },
+
+    prime_gift: {
+      badge:    "Prime Gift",
+      icon:     "🎁",
+      headline: "Your Prime gift is on its way.",
+      subhead:  "A gift certificate with the redemption code is being emailed to the recipient.",
+      includes: [
+        "10 AI generation credits",
+        "5 portfolio sites",
+        "4 months of hosting",
+        "Recipient redeems the code to activate their plan",
+      ],
+      nextSteps: "The recipient will get an email from Irene's Webworks with their personal gift code and step-by-step instructions. They create a free account at irenes-ventures.com and redeem the code to unlock their plan.",
+      actions: [
+        { label: "Back to home", href: "../index.html", cls: "primary" },
+      ],
+    },
+
     starter_care: {
       badge:    "Starter Gift",
       icon:     "🎁",
-      headline: "Starter Gift redeemed.",
-      subhead:  "Your account has been upgraded with the Starter gift package. You have 10 credits, 2 sites, and 6 months of hosting.",
+      headline: "Your gift code is on its way.",
+      subhead:  "A Starter gift code has been sent to your email. Forward it to the lucky recipient — they'll redeem it to get their portfolio site.",
       includes: [
         "10 AI generation credits",
         "2 portfolio sites",
         "6 months of hosting",
         "1 month of support",
       ],
-      nextSteps: "Sign in and open the intake form. Your credits and sites are ready to use.",
+      nextSteps: "Check your inbox for an email from Irene's Webworks with the gift code. Forward the code to the recipient and let them know they can redeem it at irenes-ventures.com.",
       actions: [
-        { label: "Start the intake form →", href: "overview.html", cls: "primary" },
-        { label: "Back to home",            href: "../index.html", cls: "ghost"   },
+        { label: "Back to home", href: "../index.html", cls: "primary" },
       ],
     },
 
     premium_care: {
       badge:    "Premium Gift",
       icon:     "🎁",
-      headline: "Premium Gift redeemed.",
-      subhead:  "Your account has been upgraded with the Premium gift package. You have 25 credits, 10 sites, and a full year of hosting.",
+      headline: "Your gift code is on its way.",
+      subhead:  "A Premium gift code has been sent to your email. Forward it to the lucky recipient — they'll redeem it to get their portfolio site.",
       includes: [
         "25 AI generation credits",
         "10 portfolio sites",
         "12 months of hosting",
         "2 months of priority support",
       ],
-      nextSteps: "Sign in and open the intake form. You have a full year to build and iterate — your credits and sites are ready.",
+      nextSteps: "Check your inbox for an email from Irene's Webworks with the gift code. Forward the code to the recipient and let them know they can redeem it at irenes-ventures.com.",
       actions: [
-        { label: "Start the intake form →", href: "overview.html", cls: "primary" },
-        { label: "Back to home",            href: "../index.html", cls: "ghost"   },
+        { label: "Back to home", href: "../index.html", cls: "primary" },
       ],
     },
 
@@ -399,9 +431,23 @@
     },
   };
 
-  const params = new URLSearchParams(window.location.search);
-  const tier   = params.get("tier");
-  const info   = TIERS[tier];
+  const ADDON_LABELS = {
+    hosting:       qty => `${qty} month${qty !== 1 ? "s" : ""} of hosting`,
+    extra_credits: qty => `${qty} extra credit${qty !== 1 ? "s" : ""}`,
+    care:          qty => `${qty} month${qty !== 1 ? "s" : ""} of support`,
+  };
+
+  const params  = new URLSearchParams(window.location.search);
+  const tier    = params.get("tier");
+  const isGift  = params.get("is_gift") === "true";
+  const tierKey = isGift && (tier === "graduate" || tier === "prime") ? tier + "_gift" : tier;
+  const info    = TIERS[tierKey] || TIERS[tier];
+
+  let cartItems = [];
+  try {
+    const raw = params.get("cart");
+    if (raw) cartItems = JSON.parse(decodeURIComponent(raw));
+  } catch {}
 
   if (info) {
     document.getElementById("successIcon").textContent = info.icon;
@@ -418,6 +464,15 @@
       ul.appendChild(li);
     });
 
+    cartItems.forEach(item => {
+      const labelFn = ADDON_LABELS[item.tier];
+      if (!labelFn) return;
+      const qty = Math.max(1, Number(item.qty) || 1);
+      const li = document.createElement("li");
+      li.textContent = labelFn(qty);
+      ul.appendChild(li);
+    });
+
     const actionsEl = document.getElementById("actions");
     info.actions.forEach(a => {
       const el = document.createElement("a");
@@ -426,6 +481,64 @@
       el.textContent = a.label;
       actionsEl.appendChild(el);
     });
+
+    // Gift code display for graduate/prime gifts
+    if (isGift && (tier === "graduate" || tier === "prime")) {
+      const box = document.createElement("div");
+      box.style.cssText = "background:rgba(0,0,0,.3);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:22px 20px;text-align:center;margin:0 0 20px;";
+      box.innerHTML = `
+        <p style="margin:0 0 10px;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(234,240,255,.45);">Gift Code</p>
+        <p id="giftCodeDisplay" style="margin:0;font-size:28px;font-weight:900;letter-spacing:.1em;font-family:ui-monospace,monospace;color:rgba(234,240,255,.45);">—</p>
+        <p id="giftCodeNote" style="margin:10px 0 0;font-size:13px;color:rgba(234,240,255,.45);">Generating…</p>`;
+      document.getElementById("includesList").insertAdjacentElement("beforebegin", box);
+
+      // Poll for the gift code — webhook may not have fired yet when the page loads
+      (async () => {
+        const sessionId = params.get("session_id");
+        const note      = document.getElementById("giftCodeNote");
+        if (!sessionId) {
+          note.textContent = "Error: no session ID in URL.";
+          return;
+        }
+        const MAX = 8;
+        for (let attempt = 0; attempt < MAX; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 2500));
+          note.textContent = `Generating… (attempt ${attempt + 1}/${MAX})`;
+          let res, data;
+          try {
+            res  = await fetch(`/.netlify/functions/getGiftCode?sessionId=${encodeURIComponent(sessionId)}`);
+            data = await res.json().catch(() => ({}));
+          } catch (err) {
+            note.textContent = `Network error on attempt ${attempt + 1}: ${err.message}`;
+            continue;
+          }
+          if (res.status === 404) {
+            note.textContent = `Not ready yet (attempt ${attempt + 1}/${MAX})…`;
+            continue;
+          }
+          if (!res.ok) {
+            note.textContent = `Server error ${res.status} on attempt ${attempt + 1}: ${data?.error || "unknown"}`;
+            continue;
+          }
+          if (data.code) {
+            const display = document.getElementById("giftCodeDisplay");
+            display.textContent = data.code;
+            display.style.color = "#fff";
+            display.style.background = "rgba(255,255,255,.06)";
+            display.style.border = "1px solid rgba(255,255,255,.16)";
+            display.style.borderRadius = "10px";
+            display.style.padding = "12px 22px";
+            display.style.display = "inline-block";
+            display.style.marginTop = "4px";
+            note.textContent = "This code has been emailed to the recipient.";
+            note.style.color = "rgba(234,240,255,.55)";
+            return;
+          }
+          note.textContent = `Unexpected response on attempt ${attempt + 1}: ${JSON.stringify(data)}`;
+        }
+        note.textContent = "The gift email is on its way — check back shortly if the code doesn't appear.";
+      })();
+    }
   } else {
     document.getElementById("tierBadge").style.display   = "none";
     document.getElementById("includesList").style.display = "none";
@@ -437,6 +550,35 @@
       <a href="../index.html" class="btn ghost">Back to home</a>
     `;
   }
+
+  // Provision the membership directly from the Stripe session — fallback in case
+  // the webhook hasn't fired yet or isn't configured.
+  (async () => {
+    const sessionId = params.get("session_id");
+    const tierParam  = params.get("tier");
+    if (!sessionId || !tierParam || tierParam === "free" ||
+        tierParam === "starter_care" || tierParam === "premium_care") return;
+
+    const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session?.access_token) return; // not signed in — webhook will handle it
+
+    try {
+      const res = await fetch("/.netlify/functions/provisionFromSession", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId, authToken: session.access_token }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (data.ok) console.log("provisionFromSession:", data.alreadyProvisioned ? "already active" : `activated ${data.tier}`);
+      else console.warn("provisionFromSession error:", data.error);
+    } catch (err) {
+      console.warn("provisionFromSession fetch failed:", err.message);
+    }
+  })();
 </script>
 
 </body>

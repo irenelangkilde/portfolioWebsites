@@ -84,7 +84,7 @@ export async function handler(event) {
 
   const { data: membership, error: membershipError } = await supabase
     .from("memberships")
-    .select("sites_used, sites_limit, status")
+    .select("downloads_used, downloads_limit, status")
     .eq("user_id", user.id)
     .single();
 
@@ -95,8 +95,8 @@ export async function handler(event) {
     return json(403, { error: `Membership is ${membership.status}. Publishing is disabled.` });
   }
 
-  const sitesUsed  = membership.sites_used  ?? 0;
-  const sitesLimit = membership.sites_limit ?? 0;
+  const sitesUsed  = membership.downloads_used  ?? 0;
+  const sitesLimit = membership.downloads_limit ?? 0;
   if (sitesLimit !== -1 && sitesUsed >= sitesLimit) {
     return json(403, { error: "Please UPGRADE to publish or download with this account." });
   }
@@ -117,7 +117,7 @@ export async function handler(event) {
       return json(409, { error: "That publish URL is already taken." });
     }
 
-    // Each publish gets a versioned slug: {slug}-{N} where N = sites_used + 1
+    // Each publish gets a versioned slug: {slug}-{N} where N = downloads_used + 1
     const deployNumber   = sitesUsed + 1;
     const versionedSlug  = `${slug}-${deployNumber}`;
     const versionedHtmlKey = `html/${versionedSlug}.html`;
@@ -141,7 +141,7 @@ export async function handler(event) {
 
     const { error: updateError } = await supabase
       .from("memberships")
-      .update({ sites_used: deployNumber })
+      .update({ downloads_used: deployNumber })
       .eq("user_id", user.id);
     if (updateError) {
       return json(500, { error: "Published, but failed to update deploy quota." });
