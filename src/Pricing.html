@@ -585,6 +585,15 @@
         <button class="btn primary" type="button" id="addonsBuyBtn" onclick="openPurchaseConfirm()" disabled>Purchase →</button>
         <div class="authMsg" id="addonsMsg" aria-live="polite"></div>
       </div>
+      <div style="width:100%;display:flex;align-items:center;gap:8px;border-top:1px solid rgba(255,255,255,.08);padding-top:12px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:var(--muted);white-space:nowrap;">Have a gift code?</span>
+        <input type="text" id="pricingGiftInput" placeholder="GIFT-XXXXXXXX" autocomplete="off"
+          style="flex:1;min-width:140px;max-width:220px;font-family:ui-monospace,monospace;text-transform:uppercase;letter-spacing:.05em;font-size:13px;padding:6px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:inherit;"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')redeemGiftCodePricing()" />
+        <button class="btn ghost mini" type="button" id="pricingGiftBtn" onclick="redeemGiftCodePricing()">Redeem →</button>
+        <span id="pricingGiftMsg" style="font-size:13px;display:none;" aria-live="polite"></span>
+      </div>
     </div>
 
     <!-- FAQ + Auth -->
@@ -941,6 +950,54 @@
       }
 
       checkoutItems(items, isGift, autoRenew, msgEl, btnEl, giftDetails);
+    }
+
+    async function redeemGiftCodePricing() {
+      const input = document.getElementById("pricingGiftInput");
+      const btn   = document.getElementById("pricingGiftBtn");
+      const msg   = document.getElementById("pricingGiftMsg");
+      const code  = input.value.trim().toUpperCase();
+
+      if (!_currentUser) {
+        msg.textContent = "Sign in below to redeem a gift code.";
+        msg.style.color = "var(--danger)";
+        msg.style.display = "block";
+        document.getElementById("authEmail")?.focus();
+        return;
+      }
+      if (!code) return;
+
+      btn.disabled    = true;
+      btn.textContent = "Redeeming…";
+      msg.style.display = "none";
+      try {
+        const res  = await fetch("/.netlify/functions/redeemGiftCode", {
+          method:  "POST",
+          headers: { "content-type": "application/json" },
+          body:    JSON.stringify({ code, userId: _currentUser.id }),
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          msg.textContent   = data.error || "Redemption failed.";
+          msg.style.color   = "var(--danger)";
+          msg.style.display = "block";
+        } else {
+          input.value       = "";
+          msg.textContent   = "🎁 Gift redeemed! Your account has been upgraded.";
+          msg.style.color   = "var(--ok)";
+          msg.style.display = "block";
+          await refreshMembership(_currentUser);
+          renderAuthState();
+          setTimeout(() => { msg.style.display = "none"; }, 6000);
+        }
+      } catch {
+        msg.textContent   = "Something went wrong. Please try again.";
+        msg.style.color   = "var(--danger)";
+        msg.style.display = "block";
+      } finally {
+        btn.disabled    = false;
+        btn.textContent = "Redeem →";
+      }
     }
 
     async function provisionFree(msgEl, btnEl) {
