@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
 import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
+import { parallelCreativeFill } from "./parallelCreativeFill.mjs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
 // Extracts all resume content into a structured JSON object.
@@ -130,14 +131,49 @@ Your tasks:
 async function fetchSampleHtml(url) {
   if (!url) return "";
   try {
-    const res = await fetch(url, {
+    const parsedUrl = new URL(String(url));
+    if (!/^https?:$/.test(parsedUrl.protocol)) return "";
+    const res = await fetch(parsedUrl.toString(), {
       headers: { "User-Agent": "Mozilla/5.0 (compatible; PortfolioBuilder/1.0)" },
       signal: AbortSignal.timeout(8000)
     });
     if (!res.ok) return "";
     return (await res.text()).slice(0, 40000);
-  } catch {
+  } catch (err) {
+    if (/invalid url/i.test(err?.message || "")) {
+      console.warn(`[buildWebsite-background] Ignoring invalid sample URL: ${String(url).slice(0, 160)}`);
+    }
     return "";
+  }
+}
+
+function logBuildStage(stage, details = {}) {
+  try {
+    console.log(`[buildWebsite-background] ${stage}: ${JSON.stringify(details)}`);
+  } catch {
+    console.log(`[buildWebsite-background] ${stage}`);
+  }
+}
+
+function normalizeFunctionResponse(result) {
+  if (!result) return { statusCode: 202, body: "" };
+  if (typeof result.statusCode === "number" && result.body === undefined) {
+    return { ...result, body: "" };
+  }
+  return result;
+}
+
+async function writeFatalJobError(event, message) {
+  let jobId = "";
+  try {
+    jobId = JSON.parse(event?.body || "{}")?.jobId || "";
+  } catch {}
+  if (!jobId) return;
+  try {
+    const { store } = getPreviewResultsStore();
+    await store?.set(jobId, JSON.stringify({ status: "error", error: message }), { ttl: 3600 });
+  } catch (storeErr) {
+    console.error("[buildWebsite-background] Could not write fatal job error:", storeErr?.message || storeErr);
   }
 }
 
@@ -525,7 +561,7 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
     })}`
   );
 
-  const openaiImgClient = new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" });
+  const openaiImgClient = new OpenAI({ apiKey: openaiKey });
   let imgResp = null;
   let lastImgErr = null;
   const maxAttempts = 3;
@@ -843,7 +879,7 @@ function trimAboutToLength(text, targetWords) {
   return result || text;
 }
 
-function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null) {
+function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null, creativePack = null, augmentedProjects = null) {
   const personal = resumeJson?.personal || {};
   // resolved strategy (job_resolved or resume_resolved) has strategy.positioning.{headline,subheadline,value_proposition}
   const _coreStory = strategy?.editorial_direction?.core_story || "";
@@ -950,9 +986,19 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     : strategy?.desired_roles?.length ? strategy.desired_roles
     : (resumeStrategy?.desired_roles || [])).slice(0, 3);
   const open_to_items = buildOpenToItems(openToRaw, desiredRoles);
+  const open_to_roles = open_to_items; // renamed token — same data
   const open_to_display = open_to_items.map(item => item.label).join(" • ");
   const openToResolved = open_to_items.length ? open_to_display : "";
   const normalizedOpenToText = `${openToRaw} ${open_to_items.map(item => item.label).join(" ")}`.toLowerCase();
+  // work_domains: work settings/sectors the candidate wants to work in.
+  // Sourced from resumeJson.work_domains if the extractor produces it;
+  // falls back to professional_interests which overlap semantically.
+  const work_domains = (
+    resumeJson?.work_domains ||
+    strategy?.work_domains ||
+    resumeJson?.professional_interests ||
+    []
+  ).slice(0, 6).map(d => (typeof d === "string" ? { label: d } : d));
   const status_badges = (copySeed.status_badges || [])
     .map(label => String(label || "").trim())
     .filter(Boolean)
@@ -1033,6 +1079,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
     about:             trimAboutToLength(resumeJson?.summary || _coreStory || "", aboutWordCount),
+    about_full:        creativePack?.about_full || resumeJson?.summary || _coreStory || "",
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",
@@ -1046,15 +1093,31 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     desired_roles:     desiredRoles,
     desired_role:      desiredRoles[0] || "",
 
-    open_to:          openToResolved,
+    open_to:               openToResolved,
     open_to_display,
-    open_to_items,
-    has_open_to:      open_to_items.length > 0,
-    has_open_to_items:open_to_items.length > 0,
+    open_to_items,                                // legacy alias
+    open_to_roles,                                // renamed token
+    has_open_to:           open_to_items.length > 0,
+    has_open_to_items:     open_to_items.length > 0, // legacy alias
+    has_open_to_roles:     open_to_roles.length > 0,
+    work_domains,
+    has_work_domains:      work_domains.length > 0,
     status_badges,
     status_badges_inline,
-    has_status_badges:status_badges.length > 0,
-    has_status_badges_inline:status_badges.length > 0,
+    has_status_badges:     status_badges.length > 0,
+    has_status_badges_inline: status_badges.length > 0,
+
+    // ── Creative pack slots (from parallelCreativeFill) ──────────────────────
+    projects_section_title:   creativePack?.section_arc?.projects   || "Selected Projects",
+    skills_section_title:     creativePack?.section_arc?.skills     || "Skills",
+    experience_section_title: creativePack?.section_arc?.experience || "Experience",
+    contact_section_title:    creativePack?.section_arc?.contact    || "Contact",
+    about_section_title:      creativePack?.section_arc?.about      || "About",
+    projects_intro:           creativePack?.section_intros?.projects   || "",
+    experience_intro:         creativePack?.section_intros?.experience || "",
+    cta_tagline:              creativePack?.cta_tagline || openToResolved || "",
+    has_projects_intro:       !!(creativePack?.section_intros?.projects),
+    has_experience_intro:     !!(creativePack?.section_intros?.experience),
 
     has_github:   !!(personal.github),
     has_linkedin: !!(personal.linkedin),
@@ -1072,7 +1135,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       technologies:e.technologies || []
     })),
 
-    projects: assignProjectIcons(resumeJson?.projects || [], resumeJson).map((p) => ({
+    projects: assignProjectIcons(augmentedProjects || resumeJson?.projects || [], resumeJson).map((p) => ({
       name:        p.name        || "",
       description: p.description || "",
       role:        p.role        || "",
@@ -1221,6 +1284,128 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
     resume_json:   resumeJson,   // full object with resume_facts + resume_strategy + resume_resolved
     token_report:  tokenReport
   }), { ttl: 3600 });
+}
+
+// ─── Slot-fill pipeline ───────────────────────────────────────────────────────
+// Faster alternative to the braid: uses the pre-tokenized _mustache.html template,
+// fills deterministic slots via flattenToMustacheData(), and fires small parallel
+// LLM calls only for the creative slots (section arc, about, project augmentation).
+
+async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, userId) {
+  const {
+    page1            = {},
+    resumeFacts      = null,
+    resolvedStrategy = null,
+    sampleHtml       = "",          // expected to be a *_mustache.html template
+    mastheadMeta: providedMastheadMeta = null,
+    colorSpec        = {},
+    headshotName     = "",
+    templateColorSlots = null,
+  } = body;
+
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Generating portfolio content…"
+  }), { ttl: 3600 });
+
+  // Derive template metadata from the embedded JSON comment in the mustache file
+  const metaMatch  = sampleHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
+  const metaJson   = metaMatch ? (() => { try { return JSON.parse(metaMatch[1]); } catch { return {}; } })() : {};
+  const hasAbout   = /id=["']about["']/.test(sampleHtml);
+  const templateMeta = {
+    has_about:      hasAbout,
+    has_projects:   /\{\{#projects\}\}/.test(sampleHtml),
+    has_experience: /\{\{#experience\}\}/.test(sampleHtml),
+    about_word_count: metaJson.about_word_count || 0,
+    hero_card_map:    metaJson.hero_card_map    || [],
+  };
+
+  // Job context: brief summary for prompts (not the full job ad)
+  const strat = resolvedStrategy || {};
+  const jobContext = [
+    strat.role_title   ? `Role: ${strat.role_title}`   : "",
+    strat.company      ? `Company: ${strat.company}`    : "",
+    strat.industry     ? `Industry: ${strat.industry}`  : "",
+    (strat.target_keywords || []).slice(0, 8).join(", "),
+  ].filter(Boolean).join("\n");
+
+  const callAIFn = (opts) => callAI(provider, creds, opts);
+
+  // Parallel: creative pack LLM calls + color/masthead setup (no LLM)
+  const domainContext = [
+    strat.motifs?.broad_primary_domain,
+    (strat.motifs?.potential_visual_motifs || []).slice(0, 3).join(", "),
+  ].filter(Boolean).join(" — ");
+
+  const mastheadMeta = providedMastheadMeta || analyzeSampleMasthead(sampleHtml, domainContext);
+
+  const [{ creativePack, augmentedProjects, tokenReports }] = await Promise.all([
+    parallelCreativeFill(callAIFn, {
+      resolvedStrategy,
+      resumeFacts,
+      templateMeta,
+      jobContext,
+    }),
+  ]);
+
+  await store.set(jobId, JSON.stringify({
+    status: "pending", stage: "Assembling portfolio…"
+  }), { ttl: 3600 });
+
+  const theme = normalizeColorSpec({
+    background: colorSpec.background,
+    foreground: colorSpec.foreground,
+    primary:    colorSpec.primary,
+    secondary:  colorSpec.secondary,
+    accent:     colorSpec.accent,
+    use_sample_colors: colorSpec.use_sample_colors,
+  });
+
+  const mustacheData = flattenToMustacheData(
+    resolvedStrategy,
+    resumeFacts,
+    theme,
+    null,
+    templateMeta.about_word_count,
+    templateMeta.hero_card_map,
+    creativePack,
+    augmentedProjects,
+  );
+
+  let siteHtml;
+  try {
+    siteHtml = renderMustache(sampleHtml, mustacheData);
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: `Mustache render failed: ${err.message}` }), { ttl: 3600 });
+    return;
+  }
+
+  siteHtml = injectCssColors(siteHtml, theme, sampleHtml);
+
+  if (headshotName) {
+    siteHtml = siteHtml.replace(/src="[^"]*headshot[^"]*"/i, `src="${headshotName}"`);
+  }
+
+  siteHtml = embedMastheadMetaComment(siteHtml, mastheadMeta);
+
+  const truncated = !siteHtml.includes("</html>");
+  const tokenReport = [
+    { stage: "slot-fill · creative pack", ...tokenReports },
+  ];
+
+  await store.set(jobId, JSON.stringify({
+    status:       "done",
+    site_html:    siteHtml,
+    masthead_meta: mastheadMeta,
+    model:        "slot-fill",
+    truncated,
+    token_report: tokenReports,
+  }), { ttl: 3600 });
+
+  try {
+    await logUsageEvent(userId, { event_type: "generation", provider, model: "slot-fill", success: !!siteHtml });
+  } catch (e) {
+    console.error("Non-fatal slot-fill usage logging error:", e?.message);
+  }
 }
 
 // ─── Braid pipeline ──────────────────────────────────────────────────────────
@@ -1807,6 +1992,23 @@ async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
 }
 
 export async function handler(event) {
+  try {
+    return normalizeFunctionResponse(await handleBuildWebsiteBackground(event));
+  } catch (err) {
+    const msg = explainBlobStoreError(err);
+    console.error("[buildWebsite-background] top-level fatal:", msg, err?.stack);
+    await writeFatalJobError(event, msg);
+    return { statusCode: 202, body: JSON.stringify({ error: msg }) };
+  }
+}
+
+async function handleBuildWebsiteBackground(event) {
+  logBuildStage("handler entered", {
+    method: event?.httpMethod || event?.method || "",
+    path: event?.path || event?.rawUrl || "",
+    bodyLength: typeof event?.body === "string" ? event.body.length : 0,
+  });
+
   // Parse body and jobId FIRST so the catch block can always reference them
   let body, jobId, store;
   try {
@@ -1818,9 +2020,19 @@ export async function handler(event) {
   if (!jobId) {
     return { statusCode: 400, body: JSON.stringify({ error: "Missing jobId" }) };
   }
+  logBuildStage("body parsed", {
+    jobId,
+    mode: body.mode || "full",
+    provider: body.provider || "claude",
+    imageKind: body.imageKind || "",
+    sampleHtmlLength: typeof body.sampleHtml === "string" ? body.sampleHtml.length : 0,
+    resumePdfLength: typeof body.resumePdfBase64 === "string" ? body.resumePdfBase64.length : 0,
+    hasUserId: !!body.userId,
+  });
 
   try {
     const { store: previewStore, configError } = getPreviewResultsStore();
+    logBuildStage("preview store resolved", { jobId, hasStore: !!previewStore, configError: configError || "" });
     if (!previewStore) {
       return { statusCode: 500, body: JSON.stringify({ error: configError }) };
     }
@@ -1828,6 +2040,7 @@ export async function handler(event) {
 
     // Write pending status immediately so the poller knows the function started
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
+    logBuildStage("pending status written", { jobId });
 
     const {
       page1 = {}, page2 = {}, page3 = {},
@@ -1840,9 +2053,10 @@ export async function handler(event) {
       provider = "claude",    // "claude" (default) | "openai"
       userId = null           // Supabase user UUID — sent by client when logged in
     } = body;
+    logBuildStage("dispatching mode", { jobId, mode, provider });
 
     // ── Quota check (billable AI generation steps) ──
-    if (mode === "full" || mode === "braid") {
+    if (mode === "full" || mode === "braid" || mode === "slot-fill") {
       if (!userId) {
         // Anonymous user — soft limit enforced client-side via localStorage.
         // Log to aggregate counter so usage can be monitored.
@@ -1861,7 +2075,7 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-    } else if (mode === "braid" || mode === "normalizeTemplate") {
+    } else if (mode === "braid" || mode === "slot-fill" || mode === "normalizeTemplate") {
       if (!body.sampleHtml) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for this mode." }), { ttl: 3600 });
         return { statusCode: 202 };
@@ -1888,7 +2102,7 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-      creds = { openaiClient: new OpenAI({ apiKey: openaiKey, baseURL: "https://api.openai.com/v1" }) };
+      creds = { openaiClient: new OpenAI({ apiKey: openaiKey }) };
     } else {
       const claudeKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
       if (!claudeKey) {
@@ -1954,6 +2168,12 @@ export async function handler(event) {
     // normalizeTemplate mode: rewrite sample HTML with 5 named --color-* CSS variables
     if (mode === "normalizeTemplate") {
       await normalizeTemplateColorsJob(provider, creds, store, jobId, body);
+      return { statusCode: 202 };
+    }
+
+    // slot-fill: fast mustache-based pipeline with parallel creative LLM calls
+    if (mode === "slot-fill") {
+      await slotFillPortfolioWebsite(provider, creds, store, jobId, body, userId);
       return { statusCode: 202 };
     }
 

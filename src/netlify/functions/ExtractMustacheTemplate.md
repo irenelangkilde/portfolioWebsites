@@ -29,6 +29,29 @@ Top-level scalars
   {{open_to}}             "Open to / Seeking / Available for" text — prose fallback / footer display
                           (e.g. "Full-time roles in embedded systems, open to relocation")
 
+Section titles  (AI-generated per-candidate; replace every hardcoded section heading)
+  {{projects_section_title}}    e.g. "What I've Built", "Selected Work", "Research & Projects"
+  {{skills_section_title}}      e.g. "My Toolkit", "Technical Skills", "Core Competencies"
+  {{experience_section_title}}  e.g. "Where I've Worked", "Professional Journey", "My Path"
+  {{contact_section_title}}     e.g. "Let's Connect", "Get in Touch", "Start a Conversation"
+  {{about_section_title}}       e.g. "About Me", "My Story", "Who I Am"
+
+About section  (distinct from the hero {{about}} summary)
+  {{about_full}}          Rich 150–250 word about section body (2–3 paragraphs). Use this token
+                          in the dedicated About section. Reserve {{about}} for the hero lead.
+
+Section bridge copy  (1–2 sentence intros connecting each section to the candidate's story)
+  {{projects_intro}}      Bridge intro for the projects section
+  {{experience_intro}}    Bridge intro for the experience section
+
+  {{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
+  {{#has_experience_intro}}<p class="section-intro">{{experience_intro}}</p>{{/has_experience_intro}}
+
+CTA tagline  (short personalized footer line, max 12 words)
+  {{cta_tagline}}         e.g. "Seeking data science positions at mission-driven companies"
+  Wrap with Mustache conditional so it is omitted when empty:
+  {{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
+
 Conditional blocks (omit the section entirely when the array is empty)
   {{#has_github}}                  …  {{/has_github}}
   {{#has_linkedin}}                …  {{/has_linkedin}}
@@ -43,10 +66,19 @@ Conditional blocks (omit the section entirely when the array is empty)
   {{#has_status_badges}}           …  {{/has_status_badges}}
   {{#has_status_badges_inline}}    …  {{/has_status_badges_inline}}
 
-Open-to items  (short bullets/chips when the original template uses brief phrases rather than prose)
-  {{#has_open_to_items}}
-  {{#open_to_items}}<span class="chip">{{label}}</span>{{/open_to_items}}
-  {{/has_open_to_items}}
+Open-to roles  (short role-title chips when the original template uses brief role phrases rather than prose)
+  Use when the chips are role titles or employment targets: "Hardware/Embedded Internships", "Student teaching", etc.
+  {{#has_open_to_roles}}
+  {{#open_to_roles}}<span class="chip">{{label}}</span>{{/open_to_roles}}
+  {{/has_open_to_roles}}
+
+Work domains  (chips for work settings, sectors, or practice areas — NOT role titles)
+  Use when the chips are domains/environments the candidate wants to work in: "Research", "Museums/Archives",
+  "Field Methods", "Conservation", "UX Research", etc. Distinct from open_to_roles (role titles)
+  and from status_badges (qualifications/credentials).
+  {{#has_work_domains}}
+  {{#work_domains}}<span class="tag">{{label}}</span>{{/work_domains}}
+  {{/has_work_domains}}
 
 Status badges  (short hero chips: graduation date, availability, degree, honors, etc.)
   {{#has_status_badges}}
@@ -223,6 +255,21 @@ CONVERSION RULES
 1c. TYPOGRAPHIC NAME SPLIT: If the template hero displays the candidate's name across two separate elements (e.g., `<span class="first-line">LUCY</span><span class="second-line">ROSS</span>`), use `{{first_name}}` and `{{last_name}}` — NOT `{{headline}}` and `{{subheadline}}`. Reserve headline/subheadline for role-focused copy only.
 
 2. REPLACE every piece of candidate-specific text with the matching token. This includes:
+   - Section headings: replace hardcoded titles like "Selected Projects", "Technical Skills",
+     "Experience", "Get In Touch", "About Me" with {{projects_section_title}},
+     {{skills_section_title}}, {{experience_section_title}}, {{contact_section_title}},
+     {{about_section_title}} respectively. Apply only to the first <h2> inside the matching
+     section (identified by id="projects" / id="skills" / id="experience" / id="contact" /
+     id="about" or equivalent class). Do NOT replace headings for sub-sections (education,
+     certifications, publications, leadership) — only the five primary section headings.
+   - After the h2 in the projects section, insert:
+     {{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
+   - After the h2 in the experience section, insert:
+     {{#has_experience_intro}}<p class="section-intro">{{experience_intro}}</p>{{/has_experience_intro}}
+   - Inside the dedicated About section (id="about"), replace the body text with {{about_full}}.
+     The hero <p> that uses {{about}} is separate — do NOT replace the hero lead with {{about_full}}.
+   - Add {{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}} as the
+     first child of <footer>.
    - Names, job titles, company names, school names
    - Dates, locations, GPA values
    - Bullet point text
@@ -251,8 +298,27 @@ CONVERSION RULES
    Incorrect: {{#leadership}}<section>{{#leadership}}…{{/leadership}}</section>{{/leadership}}
    Apply this pattern to: has_leadership, has_certifications, has_publications, and any other optional array section.
 
-5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with dynamic availability tokens. Use `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}` for prose sentences/footers. Use `{{#has_open_to_items}}{{#open_to_items}}…{{label}}…{{/open_to_items}}{{/has_open_to_items}}` when the original design expects short bullets/chips of 1–3 words each. This includes hero sub-badges, footer taglines, and inline availability rows. Do NOT use `{{#desired_roles}}` for this — `desired_roles` is for explicit role lists only. Do NOT hardcode availability text.
-   Example: `Open to: Hardware Validation • Field Service • Test Engineering • Laser Systems` should become a short-item block with four `open_to_items`, not one long paragraph.
+5. OPEN TO / SEEKING / AVAILABILITY TEXT: Any element whose visible text begins with or is predominantly "Open to", "Seeking", "Looking for", "Available for", "Ready for", or similar availability/role-targeting phrasing must be replaced with dynamic availability tokens. Use the following discrimination rules:
+
+   a. PROSE positions (full sentence, contact subtitle, hero paragraph, footer tagline):
+      Use `{{#has_open_to}}…{{open_to}}…{{/has_open_to}}`.
+
+   b. ROLE CHIP positions (short role-title chips: "Hardware/Embedded Internships", "Student teaching",
+      "Early elementary aide", employment-level phrases): Use `{{#has_open_to_roles}}{{#open_to_roles}}…{{label}}…{{/open_to_roles}}{{/has_open_to_roles}}`.
+
+   c. WORK DOMAIN positions (chips representing work settings/sectors/practice areas, NOT role titles:
+      "Research", "Museums/Archives", "Field Methods", "Conservation", "UX Research", "Policy/NGO"):
+      Use `{{#has_work_domains}}{{#work_domains}}…{{label}}…{{/work_domains}}{{/has_work_domains}}`.
+      Work domain chips appear in contact card tag rows, hero sidebars listing interest areas, etc.
+
+   d. QUALIFICATION / CREDENTIAL positions (chips representing what the candidate has, not what they seek:
+      "CPA Eligible", "Big 4 Experience", professional competencies, honors):
+      These are NOT open_to items — use `{{#has_status_badges}}{{#status_badges}}…{{label}}…{{/status_badges}}{{/has_status_badges}}`.
+
+   Do NOT use `{{#desired_roles}}` for any of the above — `desired_roles` is for explicit role lists only.
+   Do NOT hardcode availability text.
+   Example: `Open to: Hardware Validation • FPGA/Verification • New-Grad EE Roles` → `{{#has_open_to_roles}}` block.
+   Example: contact card tags "Research • Field • Conservation" → `{{#has_work_domains}}` block.
 
 5a. STATUS BADGES: Any short factual hero metadata that shows graduation date, class year, degree label, GPA, honors, or similar profile facts may be rendered in one of two ways, depending on the source design. If the source clearly uses multiple discrete chips/pills, use `{{#has_status_badges}}{{#status_badges}}<span class="[original-badge-class]">{{label}}</span>{{/status_badges}}{{/has_status_badges}}`. If the source instead reads as a single compact hero kicker/meta line, render one combined string using `{{#has_status_badges_inline}}...{{status_badges_inline}}...{{/has_status_badges_inline}}` with literal separators such as `•` preserved in the template. Do NOT force one factual item per pill when the original composition reads as one line.
 
@@ -263,7 +329,7 @@ CONVERSION RULES
 9. OUTPUT a single complete HTML file. No markdown. No explanation.
 
 10. EMBED a JSON metadata comment as the very first line inside <head>, immediately after <meta charset>:
-   <!-- { "default_color_scheme": { "background": "<hex>", "foreground": "<hex>", "primary": "<hex>", "secondary": "<hex>", "accent": "<hex>" }, "about_word_count": N, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
+   <!-- { "default_color_scheme": { "background": "<hex>", "foreground": "<hex>", "primary": "<hex>", "secondary": "<hex>", "accent": "<hex>" }, "about_word_count": N, "has_about": true, "hero_card_map": [ { "original_label": "...", "type": "...", "display_label": "..." } ] } -->
    Populate it with:
    - default_color_scheme: the original hardcoded semantic palette from the template's CSS :root block:
      - background → page canvas or atmospheric base
@@ -272,9 +338,12 @@ CONVERSION RULES
      - secondary  → distinct supporting hierarchy color
      - accent     → orthogonal highlight color
      This comment is consumed by the palette picker UI and must use valid 3- or 6-digit hex values only.
-   - about_word_count: the exact word count of the original about/summary text that you replaced with {{about}}.
+   - about_word_count: the exact word count of the original hero about/summary text that you replaced
+     with {{about}} (the hero lead paragraph, NOT the full about section body).
      Count words by splitting the original text on whitespace. This is used at render time to trim the
-     candidate's about paragraph to approximately the same length as the template's about section.
+     candidate's about paragraph to approximately the same length as the template's hero lead.
+   - has_about: true if the template has a dedicated About section (id="about") with {{about_full}},
+     false otherwise. Used at render time to decide whether to generate the full about body.
    - hero_card_map: ordered array, one entry per hero sidebar card in the original template.
      Each entry has three fields:
        "original_label"  — the exact title/heading text from the source HTML (e.g. "Language Snapshot")

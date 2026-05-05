@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- { "default_color_scheme": { "primary": "#6b55ff", "secondary": "#4E70F1", "tertiary": "#ff7bbd", "dark": "#15141a", "light": "#fbfaf8" }, "about_word_count": 40, "hero_card_map": [] } -->
+  <!-- {"default_color_scheme":{"primary":"#6b55ff","secondary":"#4E70F1","tertiary":"#ff7bbd","dark":"#15141a","light":"#fbfaf8"},"about_word_count":40,"hero_card_map":[],"has_about":false} -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} — {{major}} Graduate Portfolio</title>
   <meta name="description" content="Portfolio for {{name}}: projects, writing, skills, and contact." />
@@ -477,7 +477,8 @@
       <!-- PROJECTS -->
       <section class="section" id="projects">
         <div class="container">
-          <h2>Projects</h2>
+          <h2>{{projects_section_title}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
           <p class="hint">{{subheadline}}</p>
 
           <div class="grid">
@@ -518,7 +519,7 @@
       <!-- SKILLS -->
       <section class="section" id="skills">
         <div class="container">
-          <h2>Skills</h2>
+          <h2>{{skills_section_title}}</h2>
           <p class="hint">{{value_proposition}}</p>
 
           <div class="grid">
@@ -537,7 +538,7 @@
       <!-- CONTACT -->
       <section class="section" id="contact">
         <div class="container">
-          <h2>Contact</h2>
+          <h2>{{contact_section_title}}</h2>
           <p class="hint">Reach out to discuss roles, projects, or collaboration.</p>
 
           <div class="contact">
@@ -575,6 +576,7 @@
     </main>
 
     <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
       <div class="container">
         <div class="foot">
           <span>© {{current_year}} {{name}} • {{major}} Portfolio</span>

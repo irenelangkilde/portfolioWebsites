@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- { "default_color_scheme": { "primary": "#4E70F1", "secondary": "#F28B86", "tertiary": "#4E70F1", "dark": "#0b1020", "light": "#ffffff0f" }, "about_word_count": 38, "hero_card_map": [] } -->
+  <!-- {"default_color_scheme":{"primary":"#4E70F1","secondary":"#F28B86","tertiary":"#4E70F1","dark":"#0b1020","light":"#ffffff0f"},"about_word_count":38,"hero_card_map":[],"has_about":false} -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} — {{major}} Portfolio</title>
   <meta name="description" content="Portfolio website for {{name}}: projects, skills, resume, and contact." />
@@ -443,7 +443,8 @@
       <!-- PROJECTS -->
       <section class="section" id="projects">
         <div class="container">
-          <h2>Featured Projects</h2>
+          <h2>{{projects_section_title}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
           <p class="hint">{{subheadline}}</p>
 
           <div class="grid">
@@ -467,7 +468,7 @@
       <!-- SKILLS -->
       <section class="section" id="skills">
         <div class="container">
-          <h2>Skills</h2>
+          <h2>{{skills_section_title}}</h2>
           <p class="hint">Aligned with the roles I'm targeting. Specific tools and methods I use in practice.</p>
 
           <div class="grid">
@@ -585,7 +586,7 @@
       <!-- CONTACT -->
       <section class="section" id="contact">
         <div class="container">
-          <h2>Contact</h2>
+          <h2>{{contact_section_title}}</h2>
           <p class="hint">I'm actively seeking {{desired_role}} roles. Let's connect.</p>
 
           <div class="contact">
@@ -624,6 +625,7 @@
     </main>
 
     <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
       <div class="container">
         <div class="foot">
           <span>© {{current_year}} {{name}} • {{major}} Portfolio</span>

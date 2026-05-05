@@ -2,7 +2,7 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <!-- { "default_color_scheme": { "primary": "#16a34a", "secondary": "#0ea5e9", "tertiary": "#84cc16", "dark": "#0f172a", "light": "#f1f5f9" }, "about_word_count": 97, "hero_card_map": [] } -->
+        <!-- {"default_color_scheme":{"primary":"#16a34a","secondary":"#0ea5e9","tertiary":"#84cc16","dark":"#0f172a","light":"#f1f5f9"},"about_word_count":97,"hero_card_map":[],"has_about":true} -->
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>BioLaunch - {{name}}'s Biology Portfolio</title>
         <link href="css/theme.css" rel="stylesheet" type="text/css">
@@ -180,11 +180,11 @@
         <!-- About Section -->
         <section id="about" class="about">
             <div class="container">
-                <h2>About Me</h2>
+                <h2>{{about_section_title}}</h2>
                 <p class="section-subtitle">{{value_proposition}}</p>
                 <div class="about-content">
                     <div class="about-text">
-                        <p>{{about}}</p>
+                        <p>{{about_full}}</p>
                         <div class="stats">
                             {{#education}}
                             <div class="stat-card">
@@ -256,7 +256,7 @@
         <!-- Skills Section -->
         <section id="skills" class="skills">
             <div class="container">
-                <h2>Technical Skills</h2>
+                <h2>{{skills_section_title}}</h2>
                 <p class="section-subtitle">Laboratory techniques and analytical expertise</p>
                 <div class="skills-grid">
                     {{#skill_groups}}
@@ -295,7 +295,7 @@
         <!-- Contact Section -->
         <section id="contact" class="contact">
             <div class="container">
-                <h2>Get In Touch</h2>
+                <h2>{{contact_section_title}}</h2>
                 <p class="section-subtitle">Let's collaborate on research or discuss opportunities</p>
                 <div class="contact-content">
                     <div class="contact-card">
@@ -337,6 +337,7 @@
 
         <!-- Footer -->
         <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
             <div class="container">
                 <p>&copy; {{current_year}} {{name}} | BioLaunch - Biology Portfolio</p>
                 <p style="margin-top: 10px; opacity: 0.7;">{{#has_open_to_items}}{{#open_to_items}}{{label}} {{/open_to_items}}{{/has_open_to_items}}</p>

@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- { "default_color_scheme": { "primary": "#0d7377", "secondary": "#14ffec", "accent": "#32e0c4", "dark": "#0a4d4e", "light": "#e8f5f4" } } -->
+    <!-- {"default_color_scheme":{"primary":"#0d7377","secondary":"#14ffec","accent":"#32e0c4","dark":"#0a4d4e","light":"#e8f5f4"},"has_about":true} -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{{name}} - {{major}} Portfolio</title>
     <link href="css/theme.css" rel="stylesheet" type="text/css" />
@@ -496,9 +496,9 @@
     <!-- About Section -->
     <section id="about" class="about">
       <div class="container">
-        <h2>About Me</h2>
+        <h2>{{about_section_title}}</h2>
         <div class="about-content">
-          <p>{{about}}</p>
+          <p>{{about_full}}</p>
           <p>{{value_proposition}}</p>
         </div>
       </div>
@@ -506,7 +506,7 @@
     <!-- Skills Section -->
     <section id="skills">
       <div class="container">
-        <h2>Technical Skills</h2>
+        <h2>{{skills_section_title}}</h2>
         <div class="skills-grid">
           {{#skill_groups}}
           <div class="skill-category">
@@ -526,7 +526,8 @@
     <!-- Projects Section -->
     <section id="projects" class="projects">
       <div class="container">
-        <h2>Featured Projects</h2>
+        <h2>{{projects_section_title}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
         <div class="projects-grid">
           {{#projects}}
           <div class="project-card">
@@ -605,7 +606,7 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
       <div class="container">
-        <h2>Get In Touch</h2>
+        <h2>{{contact_section_title}}</h2>
         <div class="contact-content">
           <p>
             I'm actively seeking {{desired_role}} positions. Let's connect!
@@ -640,6 +641,7 @@
     </section>
     <!-- Footer -->
     <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
       <div class="container">
         <p>&copy; {{current_year}} {{name}} | {{major}} Portfolio</p>
       </div>

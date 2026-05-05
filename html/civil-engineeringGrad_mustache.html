@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- { "default_color_scheme": { "primary": "#d97706", "secondary": "#059669", "tertiary": "#2563eb", "dark": "#1f2937", "light": "#f3f4f6" }, "about_word_count": 119, "hero_card_map": [] } -->
+    <!-- {"default_color_scheme":{"primary":"#d97706","secondary":"#059669","tertiary":"#2563eb","dark":"#1f2937","light":"#f3f4f6"},"about_word_count":119,"hero_card_map":[],"has_about":true} -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{name}} - {{major}} Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;600;700&family=Open+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -611,10 +611,10 @@
     <!-- About Section -->
     <section id="about" class="about">
         <div class="container">
-            <h2>About Me</h2>
+            <h2>{{about_section_title}}</h2>
             <p class="section-subtitle">{{value_proposition}}</p>
             <div class="about-content">
-                <p>{{about}}</p>
+                <p>{{about_full}}</p>
             </div>
         </div>
     </section>
@@ -622,7 +622,7 @@
     <!-- Skills Section -->
     <section id="skills">
         <div class="container">
-            <h2>Technical Skills</h2>
+            <h2>{{skills_section_title}}</h2>
             <p class="section-subtitle">Comprehensive engineering competencies and software proficiency</p>
             <div class="skills-grid">
                 {{#skill_groups}}
@@ -642,7 +642,8 @@
     <!-- Projects Section -->
     <section id="projects" class="projects">
         <div class="container">
-            <h2>Featured Projects</h2>
+            <h2>{{projects_section_title}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
             <p class="section-subtitle">Design and analysis work across multiple {{major}} disciplines</p>
             <div class="projects-grid">
                 {{#projects}}
@@ -755,7 +756,7 @@
     <!-- Contact Section -->
     <section id="contact" class="contact">
         <div class="container">
-            <h2>Get In Touch</h2>
+            <h2>{{contact_section_title}}</h2>
             {{#has_open_to}}
             <p class="section-subtitle">{{open_to}}</p>
             {{/has_open_to}}
@@ -799,6 +800,7 @@
 
     <!-- Footer -->
     <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
         <div class="container">
             <p>&copy; {{current_year}} {{name}} | {{major}} Portfolio</p>
             <p style="margin-top: 5px; font-size: 0.9rem;">{{value_proposition}}</p>

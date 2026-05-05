@@ -42,9 +42,13 @@
     let autoMastheadImageTriggered = false;
     let mastheadImageTicker = null;   // interval handle for the generating countdown
 
+    // Slot-fill (fast mustache path)
+    let slotFillInProgress = false;
+
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
     let _braidRunId      = 0;
+    let _slotFillRunId   = 0;
     let _mastheadImageRunId = 0;
     let _bridgeRunId     = 0;
     let _generationRunId = 0;
@@ -1815,6 +1819,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return extractTemplatePending;
     }
 
+    function buildWebsiteFunctionPath() {
+      const host = window.location.hostname;
+      return (host === "localhost" || host === "127.0.0.1" || host === "::1")
+        ? "/.netlify/functions/buildWebsite"
+        : "/.netlify/functions/buildWebsite-background";
+    }
+
     function templateExtractionRequired() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
       return !!source && source !== "none";
@@ -1842,7 +1853,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       normalizedTemplateResult = null;
       const jobId = "normalize_" + crypto.randomUUID();
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -1892,7 +1903,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         return;
       }
 
-      const extractMode = document.getElementById("extractTemplateMode")?.value || "analysis";
+      // Keyword source defaults to mustache (slot-fill path); file uploads stay on analysis/braid.
+      const extractMode = document.getElementById("extractTemplateMode")?.value
+        || (source === "keyword" ? "mustache" : "analysis");
 
       let key = "";
       let templateInputKind = "template";
@@ -1912,9 +1925,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
         if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
 
-        // Braid mode: prefer _normalized.html (pre-processed offline) over raw HTML.
-        // If normalized exists, color slots are already extracted — no in-flight AI call needed.
-        if (isBraidMode()) {
+        // Braid path: prefer _normalized.html (pre-processed offline) over raw HTML.
+        // Only taken when extractMode is explicitly set to analysis/braid (debug override).
+        if (extractMode !== "mustache") {
           const normalizedKey = srcPath.replace(/\.html$/, "_normalized.html");
           const cacheKey = normalizedKey; // use normalized path as dedup key
           if (cacheKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
@@ -1984,7 +1997,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
             lastExtractedTemplate = candidateKey;
-            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: null, embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis", templateInputKind: "template" };
+            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis", templateInputKind: "template" };
             const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
@@ -2595,7 +2608,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     function updateTemplateUI() {
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      let source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      if (!source) {
+        const defaultSource = document.getElementById("tplUrl");
+        if (defaultSource) {
+          defaultSource.checked = true;
+          source = "keyword";
+        }
+      }
+      const modeSelect = document.getElementById("extractTemplateMode");
+      if (modeSelect && !modeSelect.value) modeSelect.value = "mustache";
       document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "keyword");
       document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
       const modeRow = document.getElementById("templateModeRow");
@@ -3138,7 +3160,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       const jobId = "jobad_" + crypto.randomUUID();
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -3241,8 +3263,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       await doExtractJobAd();
       if (jobAdResult) wireStage2Debug();
       // If the pipeline was already triggered and job just re-completed, restart it
-      if (!braidInProgress && !bridgeInProgress && !generationInProgress) {
+      if (!braidInProgress && !slotFillInProgress && !bridgeInProgress && !generationInProgress) {
         if (page3Submitted && isBraidMode()) doBraidWebsite();
+        else if (page3Submitted && isMustacheMode()) doSlotFillWebsite();
         else if (page4Submitted) page4OpenEditorAction();
       }
     }
@@ -3320,7 +3343,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const colorSpec     = (userColors?.primary ? userColors : null) ?? samplePalette?.colors;
 
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
 	          body: JSON.stringify({
@@ -3389,6 +3412,142 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
     }
 
+    async function doSlotFillWebsite() {
+      const myRunId = ++_slotFillRunId;
+      slotFillInProgress = true;
+      autoMastheadImageTriggered = false;
+      clearInterval(mastheadImageTicker);
+      mastheadImageInProgress = false;
+      mastheadImageResult = null;
+      mastheadImageError = null;
+      _mastheadImageRunId += 1;
+      generationResult = null;
+      generationError = null;
+      setOpenEditorReady(false);
+      setApplyBtnState(false);
+      greyRendererButtons(true);
+
+      await waitForTemplateExtraction("braidStatus");
+      if (myRunId !== _slotFillRunId) {
+        slotFillInProgress = false;
+        return;
+      }
+      if (extractedTemplateCache?.templateMode !== "mustache") {
+        slotFillInProgress = false;
+        if (extractedTemplateCache?.templateHtml) {
+          setHeaderStatus("braidStatus", "Mustache template unavailable — using standard generator…", "rgba(141,224,255,.75)");
+          doBraidWebsite();
+        } else {
+          setHeaderStatus("braidStatus", "⚠ No mustache template loaded.", "rgba(251,171,156,.9)");
+          setApplyBtnState(true);
+        }
+        return;
+      }
+
+      setHeaderStatus("braidStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
+      const analysisWaitStart = Date.now();
+      while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - analysisWaitStart < 120000) {
+        await new Promise(r => setTimeout(r, 500));
+      }
+      if (!lastAnalysisData) {
+        setHeaderStatus("braidStatus", "⚠ Resume analysis did not complete.", "rgba(251,171,156,.9)");
+        slotFillInProgress = false;
+        setApplyBtnState(true);
+        return;
+      }
+
+      if (jobAdInProgress) {
+        setHeaderStatus("braidStatus", "Waiting for job analysis…", "rgba(141,224,255,.6)");
+        while (jobAdInProgress) await new Promise(r => setTimeout(r, 500));
+      }
+
+      const sampleHtml = extractedTemplateCache?.templateHtml || null;
+      if (!sampleHtml) {
+        setHeaderStatus("braidStatus", "⚠ No mustache template loaded.", "rgba(251,171,156,.9)");
+        slotFillInProgress = false;
+        setApplyBtnState(true);
+        return;
+      }
+
+      const slotFillCountdown = startCountdown("braidStatus", "Generating portfolio…", 120);
+      const jobId = crypto.randomUUID();
+
+      const resumeFacts      = lastAnalysisData?.resume_facts ?? lastAnalysisData ?? null;
+      const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
+      const userColors       = getPage3Colors().theme;
+      const colorSpec        = (userColors?.primary ? userColors : null) ?? null;
+
+      try {
+        const res = await fetch(buildWebsiteFunctionPath(), {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mode: "slot-fill",
+            jobId,
+            page1:            getPage1(),
+            resumeFacts,
+            resolvedStrategy,
+            sampleHtml,
+            mastheadMeta:     extractedTemplateCache?.mastheadMeta || null,
+            colorSpec,
+            headshotName:     headshotInput?.files?.[0]?.name || "",
+            provider:         getAnalysisProvider(),
+            userId:           currentUserId(),
+          })
+        });
+        if (!res.ok && res.status !== 202) {
+          const t = await res.text();
+          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+        }
+
+        const maxWaitMs = 120000;
+        const startTime = Date.now();
+        while (Date.now() - startTime < maxWaitMs) {
+          await new Promise(r => setTimeout(r, 3000));
+          if (myRunId !== _slotFillRunId) { clearInterval(slotFillCountdown); slotFillInProgress = false; return; }
+          const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
+          const parsed  = await readJsonResponseSafely(pollRes);
+          const data    = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
+          if (data.status === "done") {
+            clearInterval(slotFillCountdown);
+            generationResult     = { ...data, base_site_html: data.site_html || "" };
+            generationResult.site_html = mastheadImageResult?.image_data_uri
+              ? composeBraidPreviewHtml(generationResult)
+              : generationResult.base_site_html;
+            slotFillInProgress   = false;
+            generationInProgress = false;
+            window.umami?.track("portfolio-generated");
+            onCreditUsed();
+            setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
+            setApplyBtnState(true);
+            if (isDebugMode()) mergeTokenReport(data?.token_report);
+            pushPreviewHtmlUpdate(generationResult.site_html || "");
+            setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
+            greyRendererButtons(false);
+            return;
+          }
+          if (!pollRes.ok || data.status === "error") {
+            clearInterval(slotFillCountdown);
+            const errMsg = data.error || "Slot-fill failed.";
+            generationError    = errMsg;
+            slotFillInProgress = false;
+            setHeaderStatus("braidStatus", "⚠ " + errMsg, "rgba(251,171,156,.9)");
+            if (data.quota) showUpgradePrompt(data);
+            setApplyBtnState(true);
+            return;
+          }
+        }
+        clearInterval(slotFillCountdown);
+        setHeaderStatus("braidStatus", "⚠ Slot-fill timed out. Please try again.", "rgba(251,171,156,.9)");
+      } catch (err) {
+        clearInterval(slotFillCountdown);
+        setHeaderStatus("braidStatus", "⚠ " + (err?.message || "Slot-fill failed."), "rgba(251,171,156,.9)");
+      } finally {
+        slotFillInProgress = false;
+        setApplyBtnState(true);
+      }
+    }
+
     async function startMastheadImageGeneration() {
       const sampleHtml = extractedTemplateCache?.templateHtml || "";
       const mastheadMeta = normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
@@ -3404,10 +3563,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const page1 = getPage1();
 
       clearInterval(mastheadImageTicker);
-      mastheadImageTicker = startCountdown("colorsChosenStatus", "Generating masthead image…", 90);
+      const mastheadImageTimeoutSec = 720;
+      mastheadImageTicker = startCountdown("colorsChosenStatus", "Generating masthead image…", mastheadImageTimeoutSec);
 
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -3427,7 +3587,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
         }
 
-        const maxWaitMs = 720000;
+        const maxWaitMs = mastheadImageTimeoutSec * 1000;
         const startTime = Date.now();
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 2500));
@@ -3460,7 +3620,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             return;
           }
           if (!pollRes.ok || data.status === "error") {
-            if (data.quota) { showUpgradePrompt(data); return; }
+            if (data.quota) {
+              clearInterval(mastheadImageTicker);
+              mastheadImageInProgress = false;
+              mastheadImageError = data.error || "Credit limit reached.";
+              setHeaderStatus("colorsChosenStatus", `✓ Colors chosen • ${mastheadImageError}`, "rgba(251,171,156,.9)");
+              showUpgradePrompt(data);
+              return;
+            }
             throw new Error(data.error || "Image generation failed.");
           }
         }
@@ -3511,7 +3678,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const jobId = "bridge_" + crypto.randomUUID();
 
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -3787,7 +3954,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const jobId = crypto.randomUUID();
 
       try {
-        const res = await fetch("/.netlify/functions/buildWebsite-background", {
+        const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
@@ -3887,13 +4054,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     }
 
     async function doPreview() {
-      if (!requireCredits()) return;
       if (generationInProgress) {
         setHeaderStatus("generatingWebsiteStatus", "Still generating… please wait.", "rgba(141,224,255,.75)");
         return;
       }
 
       if (!generationResult) {
+        if (!requireCredits()) return;
         // Fallback: generation wasn't triggered automatically — run it now
         generationError = null;
         await doGenerateWebsite();
@@ -4431,6 +4598,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (isBraidMode()) {
         page3Submitted = true;
         doBraidWebsite();
+      } else if (isMustacheMode()) {
+        page3Submitted = true;
+        doSlotFillWebsite();
       }
       setStep(4);
     };
@@ -4438,12 +4608,23 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     document.getElementById("next3")?.addEventListener("click", _next3Handler);
 
     // Page 4 (Colors)
-    function isMustacheMode() { return extractedTemplateCache?.templateMode === "mustache"; }
+    function selectedTemplateSource() {
+      return document.querySelector('input[name="templateSource"]:checked')?.value || "";
+    }
+    function wantsMustacheMode() {
+      const source = selectedTemplateSource();
+      if (source !== "keyword") return false;
+      const mode = document.getElementById("extractTemplateMode")?.value || "mustache";
+      return mode === "mustache";
+    }
+    function isMustacheMode() {
+      return extractedTemplateCache?.templateMode === "mustache" || (!extractedTemplateCache && wantsMustacheMode());
+    }
     function isDirectDesignMode() {
-      return document.querySelector('input[name="templateSource"]:checked')?.value === "none";
+      return selectedTemplateSource() === "none";
     }
     function isBraidMode() {
-      const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      const source = selectedTemplateSource();
       return (source === "keyword" || source === "file") && !isMustacheMode() && !isDirectDesignMode();
     }
     function applyBraidColorOverrides(result) {
@@ -4461,7 +4642,39 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
       ensureEditorWindow();
       window.umami?.track("form-step-complete", { step: 4 });
-      if (isDirectDesignMode() || isMustacheMode()) {
+      if (isMustacheMode()) {
+        page4Submitted = true;
+        const mastheadMeta = extractedTemplateCache?.mastheadMeta;
+        const needsMastheadImage = !!(mastheadMeta?.sampleRasterCssUrl);
+        if (needsMastheadImage && !autoMastheadImageTriggered) {
+          autoMastheadImageTriggered = true;
+          startMastheadImageGeneration();
+        } else {
+          autoMastheadImageTriggered = true;
+        }
+        // Slot-fill kicked off on page 3 Next — wait for it to finish.
+        if (slotFillInProgress) {
+          setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+          while (slotFillInProgress) await new Promise(r => setTimeout(r, 500));
+        }
+        if (!generationResult) {
+          setOpenEditorReady(false);
+          return;
+        }
+        if (needsMastheadImage && mastheadImageResult?.image_data_uri && generationResult?.base_site_html) {
+          generationResult.site_html = applyGeneratedMastheadImageToHtml(
+            generationResult.base_site_html,
+            mastheadImageResult.image_data_uri,
+            mastheadMeta
+          );
+          pushPreviewHtmlUpdate(generationResult.site_html);
+        }
+        doPreview();
+        setOpenEditorReady(true);
+        return;
+      }
+
+      if (isDirectDesignMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
         if (!autoMastheadImageTriggered) {
@@ -4509,11 +4722,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     // Debug recompute buttons
     document.getElementById("recomputeStage5")?.addEventListener("click", () => {
-      if (generationInProgress) return;
+      if (generationInProgress || slotFillInProgress) return;
       generationResult = null;
       greyRendererButtons(true);
       setApplyBtnState(false);
-      doGenerateWebsite();
+      if (isMustacheMode()) doSlotFillWebsite();
+      else doGenerateWebsite();
     });
     // Track which color input last had focus
     const colorInputIds = THEME_INPUT_IDS;

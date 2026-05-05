@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <!-- { "default_color_scheme": { "primary": "#22c55e", "secondary": "#2563eb", "tertiary": "#fde047", "dark": "#0f172a", "light": "#1f2937" }, "about_word_count": 47, "hero_card_types": ["snapshot", "highlights"], "hero_card_skill_groups": 0 } -->
+  <!-- {"default_color_scheme":{"primary":"#22c55e","secondary":"#2563eb","tertiary":"#fde047","dark":"#0f172a","light":"#1f2937"},"about_word_count":47,"hero_card_types":["snapshot","highlights"],"hero_card_skill_groups":0,"has_about":false} -->
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{{name}} Portfolio</title>
   <meta name="description" content="Job-ready portfolio for {{name}}: skills, experience, projects, resume, and contact." />
@@ -246,7 +246,8 @@
   <!-- PROJECTS -->
   <section id="projects" class="section">
     <div class="container">
-      <h2 class="section-title">Selected Projects &amp; Work</h2>
+      <h2 class="section-title">{{projects_section_title}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
       <div class="grid grid-3">
         {{#projects}}
         <article class="card">
@@ -264,7 +265,7 @@
   <!-- SKILLS -->
   <section id="skills" class="section">
     <div class="container">
-      <h2 class="section-title">Skills</h2>
+      <h2 class="section-title">{{skills_section_title}}</h2>
       <div class="card">
         <div class="grid grid-3">
           {{#skill_groups}}
@@ -283,7 +284,8 @@
   <!-- EXPERIENCE -->
   <section id="experience" class="section">
     <div class="container">
-      <h2 class="section-title">Experience</h2>
+      <h2 class="section-title">{{experience_section_title}}</h2>
+{{#has_experience_intro}}<p class="section-intro">{{experience_intro}}</p>{{/has_experience_intro}}
       {{#experience}}
       <div class="card" style="margin-bottom:14px">
         <h3>{{title}} — {{company}}</h3>
@@ -361,7 +363,7 @@
   <!-- CONTACT -->
   <section id="contact" class="section">
     <div class="container">
-      <h2 class="section-title">Contact</h2>
+      <h2 class="section-title">{{contact_section_title}}</h2>
       <div class="card">
         <form class="form-grid" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply soon.');">
           <label>Name
@@ -384,6 +386,7 @@
 </main>
 
 <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
   &copy; <span id="year"></span> {{name}} · {{major}} · {{subheadline}}
 </footer>
 
