@@ -9,6 +9,7 @@
       position: fixed; bottom: 24px; left: 24px; z-index: 9999;
       display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      pointer-events: none;
     }
     #annbot-bubble {
       background: #fff; color: #1a1a2e;
@@ -28,6 +29,7 @@
       box-shadow: 0 4px 22px rgba(26,140,255,.35);
       transition: transform .2s, box-shadow .2s;
       flex-shrink: 0;
+      pointer-events: auto;
     }
     #annbot-fab:hover { transform: scale(1.08); box-shadow: 0 6px 30px rgba(26,140,255,.45); }
     #annbot-fab img { width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
