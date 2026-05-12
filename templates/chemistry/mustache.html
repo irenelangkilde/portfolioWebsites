@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- {"default_color_scheme":{"primary":"#6e76ff","secondary":"#8bdfc3","tertiary":"#ffd5b0","dark":"#111111","light":"#ffffffb8"},"about_word_count":89,"hero_card_map":[],"has_about":true} -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{{name}} | {{major}} Major</title>
+  <meta name="description" content="{{major}} major portfolio: research projects, lab skills, and career-ready highlights." />
+  <style>
+    :root{
+      /* Five main theme colors */
+      --color-accent:   #6e76ff;   /* 1. Interactive  — primary accent, pills, highlights */
+      --color-warm:     #ffd5b0;   /* 2. Signature    — warm gradient stop, card tints   */
+      --color-cool:     #8bdfc3;   /* 3. Analogous    — cool gradient stop, card tints   */
+      --color-ink:      #111111;   /* 4. Canvas       — primary text, dark foreground    */
+      --color-muted:    #5b5b5b;   /* 5. Subtle       — secondary text, de-emphasized    */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:    #ffffff;
+      --black:    #000000;
+
+      /* Derived tokens */
+      --card:         color-mix(in srgb, var(--white) 72%, transparent);
+      --glass:        color-mix(in srgb, var(--white) 66%, transparent);
+      --stroke:       color-mix(in srgb, var(--black) 7%, transparent);
+      --accent-ink:   #2e2a77;
+      --accent-soft:  color-mix(in srgb, var(--color-accent) 16%, transparent);
+      --tag-bg:       color-mix(in srgb, var(--white) 55%, transparent);
+      --mini-bg:      color-mix(in srgb, var(--white) 55%, transparent);
+      --btn-bg:       color-mix(in srgb, var(--white) 65%, transparent);
+      --btn-primary:  color-mix(in srgb, var(--color-accent) 22%, transparent);
+      --pillbar-bg:   color-mix(in srgb, var(--white) 55%, transparent);
+
+      --shadow:      0 18px 50px rgba(0,0,0,.10);
+      --shadow-soft: 0 12px 30px rgba(0,0,0,.08);
+      --radius:    24px;
+      --radius-sm: 18px;
+
+      --max: 1120px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      color:var(--color-ink);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing:-0.01em;
+      background:
+        radial-gradient(1200px 650px at 15% 10%, #526be5 0%, transparent 60%),
+        radial-gradient(1000px 600px at 60% 20%, #7c6810 0%, transparent 65%),
+        radial-gradient(1100px 700px at 90% 10%, #44b746 0%, transparent 60%),
+        radial-gradient(900px 600px at 35% 35%, #9b8b0f 0%, transparent 65%),
+        #f6f7fb;
+      overflow-x:hidden;
+    }
+
+    a{color:inherit; text-decoration:none}
+    a:hover{opacity:.92}
+
+    .wrap{
+      max-width:var(--max);
+      margin:0 auto;
+      padding:28px 22px 70px;
+    }
+
+    /* Top bar */
+    .top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      padding:8px 6px 18px;
+    }
+    .brand{
+      display:flex; align-items:center; gap:12px;
+      font-weight:500;
+      color:#1a1a1a;
+    }
+    .brand .mark{
+      width:28px; height:28px; border-radius:10px;
+      background:
+        radial-gradient(12px 12px at 30% 35%, var(--white) 0%, transparent 65%),
+        linear-gradient(135deg, var(--color-accent) 0%, var(--color-cool) 60%, var(--color-warm) 100%);
+      box-shadow: 0 10px 20px rgba(0,0,0,.08);
+      border: 1px solid var(--stroke);
+    }
+    .brand .name{font-size:18px}
+    .icons{display:flex; align-items:center; gap:14px}
+    .icon-btn{
+      width:34px; height:34px; border-radius:12px;
+      display:grid; place-items:center;
+      background:var(--glass);
+      border:1px solid var(--stroke);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      transition: transform .15s ease, box-shadow .15s ease;
+    }
+    .icon-btn:hover{transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.08)}
+    .icon{
+      width:18px; height:18px; opacity:.85;
+    }
+
+    /* Hero */
+    .hero{
+      padding:44px 10px 28px;
+      text-align:center;
+    }
+    .hero h1{
+      margin:0 auto;
+      font-size: clamp(28px, 4.2vw, 44px);
+      line-height:1.2;
+      font-weight:500;
+      max-width: 980px;
+    }
+    .hero .sub{
+      margin:14px auto 0;
+      max-width: 900px;
+      color:var(--color-muted);
+      font-size: clamp(15px, 2vw, 18px);
+      line-height:1.5;
+    }
+
+    /* Pill nav */
+    .pillbar{
+      margin: 24px auto 0;
+      width: min(720px, 100%);
+      background: var(--pillbar-bg);
+      border:1px solid var(--stroke);
+      border-radius: 999px;
+      padding: 10px;
+      display:flex;
+      gap:10px;
+      box-shadow: var(--shadow-soft);
+      backdrop-filter: blur(10px);
+    }
+    .pill{
+      flex:1;
+      border:0;
+      cursor:pointer;
+      padding: 14px 16px;
+      border-radius: 999px;
+      background: transparent;
+      color:#6a6a6a;
+      font-size: clamp(15px, 2vw, 20px);
+      font-weight:500;
+      transition: background .15s ease, color .15s ease, transform .15s ease;
+    }
+    .pill[aria-selected="true"]{
+      background: var(--accent-soft);
+      color: var(--accent-ink);
+      box-shadow: inset 0 0 0 1px rgba(110,118,255,.20);
+    }
+    .pill:hover{transform: translateY(-1px)}
+
+    /* Sections */
+    section{
+      margin-top: 46px;
+      display:none;
+    }
+    section.active{display:block}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 22px;
+      align-items:stretch;
+      margin-top: 28px;
+    }
+    @media (max-width: 900px){
+      .grid{grid-template-columns:1fr; gap:18px}
+    }
+
+    .card{
+      background: var(--card);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .media{
+      min-height: 320px;
+      background:
+        radial-gradient(180px 180px at 25% 55%, color-mix(in srgb, var(--color-accent) 35%, transparent) 0%, transparent 65%),
+        radial-gradient(180px 180px at 55% 45%, color-mix(in srgb, var(--color-warm) 45%, transparent) 0%, transparent 65%),
+        radial-gradient(260px 260px at 75% 70%, color-mix(in srgb, var(--color-cool) 40%, transparent) 0%, transparent 65%),
+        linear-gradient(135deg, rgba(255,255,255,.35), rgba(255,255,255,.10));
+      position:relative;
+    }
+    .bubble{
+      position:absolute; inset:auto;
+      width: 170px; height:170px; border-radius: 999px;
+      left: 26%;
+      top: 28%;
+      background: radial-gradient(circle at 30% 30%, var(--white) 0%, rgba(255,255,255,.2) 25%, transparent 55%),
+                  linear-gradient(140deg, color-mix(in srgb, var(--color-accent) 35%, transparent), color-mix(in srgb, var(--color-warm) 25%, transparent), color-mix(in srgb, var(--color-cool) 25%, transparent));
+      border:1px solid rgba(255,255,255,.35);
+      box-shadow: 0 24px 60px rgba(0,0,0,.10);
+      filter: saturate(1.05);
+    }
+    .bubble.sm{
+      width: 44px; height:44px;
+      left: 18%;
+      top: 40%;
+      opacity:.85;
+    }
+
+    .content{
+      padding: 26px 26px 24px;
+    }
+    .kicker{
+      display:flex; flex-wrap:wrap; gap:10px;
+      color:#2d2d2d;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .tag{
+      background: var(--tag-bg);
+      border:1px solid var(--stroke);
+      padding: 8px 10px;
+      border-radius: 999px;
+    }
+    h2{
+      margin: 0;
+      font-size: 34px;
+      letter-spacing:-0.02em;
+      font-weight:500;
+    }
+    .desc{
+      margin: 10px 0 0;
+      color: var(--color-muted);
+      line-height:1.55;
+      font-size: 17px;
+    }
+    .bullets{
+      margin: 16px 0 0;
+      padding-left: 18px;
+      color:#404040;
+      line-height:1.6;
+    }
+
+    .cta-row{
+      margin-top: 18px;
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border:1px solid var(--stroke);
+      background: var(--btn-bg);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+      transition: transform .15s ease, box-shadow .15s ease;
+      font-weight:600;
+    }
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 14px 30px rgba(0,0,0,.08)}
+    .btn.primary{
+      background: linear-gradient(135deg, color-mix(in srgb, var(--color-accent) 22%, transparent), color-mix(in srgb, var(--color-warm) 22%, transparent), color-mix(in srgb, var(--color-cool) 22%, transparent));
+      border-color: color-mix(in srgb, var(--color-accent) 20%, transparent);
+    }
+    .btn small{font-weight:600; opacity:.75}
+
+    /* Secondary cards list */
+    .stack{
+      display:grid;
+      gap:16px;
+    }
+    .mini{
+      padding: 18px 18px;
+      border-radius: var(--radius-sm);
+      border:1px solid var(--stroke);
+      background: var(--mini-bg);
+      box-shadow: 0 10px 24px rgba(0,0,0,.06);
+    }
+    .mini h3{
+      margin:0;
+      font-size: 20px;
+      font-weight:600;
+    }
+    .mini p{margin:8px 0 0; color:var(--color-muted); line-height:1.5}
+    .mini .meta{margin-top:10px; color:#444; font-size: 14px; display:flex; gap:10px; flex-wrap:wrap}
+    .mini .meta span{opacity:.85}
+
+    /* Footer */
+    footer{
+      margin-top: 70px;
+      color:#666;
+      font-size: 14px;
+      text-align:center;
+      opacity:.9;
+    }
+
+    /* Print-friendly */
+    @media print{
+      .pillbar, .icons{display:none !important}
+      body{background:var(--white)}
+      .card, .mini{box-shadow:none}
+      section{display:block !important}
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <!-- Top bar -->
+    <header class="top">
+      <div class="brand" aria-label="Site brand">
+        <div class="mark" aria-hidden="true"></div>
+        <div class="name">{{name}}</div>
+      </div>
+
+      <nav class="icons" aria-label="Social links">
+        {{#has_linkedin}}
+        <a class="icon-btn" href="{{linkedin}}" title="LinkedIn" aria-label="LinkedIn">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M6.5 9.5V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M6.5 5.5h.01" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><path d="M10.5 20v-6.2c0-1.8 1.2-3.3 3-3.3s3 1.5 3 3.3V20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M10.5 11v9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </a>
+        {{/has_linkedin}}
+        {{#has_github}}
+        <a class="icon-btn" href="{{github}}" title="GitHub" aria-label="GitHub or portfolio repository">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M9 19c-3 1-3-1-4-1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15 19v-3c0-.8.3-1.3.7-1.6-2.3-.3-4.7-1.1-4.7-5A3.9 3.9 0 0 1 12 6.6a3.6 3.6 0 0 1 .1-2.6s.9-.3 2.9 1.1a10 10 0 0 1 5.2 0C22.2 3.7 23 4 23 4a3.6 3.6 0 0 1 .1 2.6A3.9 3.9 0 0 1 24 9.4c0 3.9-2.4 4.7-4.7 5 .4.3.7 1 .7 2V19" stroke="currentColor" stroke-width="2" stroke-linecap="round" transform="translate(-1 -1)"/></svg>
+        </a>
+        {{/has_github}}
+        <a class="icon-btn" href="mailto:{{email}}" title="Email" aria-label="Email">
+          <svg class="icon" viewBox="0 0 24 24" fill="none"><path d="M4 6h16v12H4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M4 7l8 6 8-6" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+        </a>
+      </nav>
+    </header>
+
+    <!-- Hero -->
+    <div class="hero">
+      <h1>{{headline}}</h1>
+      <p class="sub">{{subheadline}}</p>
+
+      <!-- Pills -->
+      <div class="pillbar" role="tablist" aria-label="Primary navigation">
+        <button class="pill" id="tab-projects" role="tab" aria-selected="true" aria-controls="projects">Projects</button>
+        <button class="pill" id="tab-playground" role="tab" aria-selected="false" aria-controls="playground">Playground</button>
+        <button class="pill" id="tab-about" role="tab" aria-selected="false" aria-controls="about">About</button>
+      </div>
+    </div>
+
+    <!-- Projects -->
+    <section id="projects" class="active" role="tabpanel" aria-labelledby="tab-projects">
+      {{#projects}}
+      <div class="grid">
+        <div class="card" aria-label="Featured project visual">
+          <div class="media">
+            <div class="bubble" aria-hidden="true"></div>
+            <div class="bubble sm" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        <div class="content">
+          <div class="kicker">
+            <span class="tag">Featured</span>
+            {{#technologies}}<span class="tag">{{.}}</span>{{/technologies}}
+          </div>
+
+          <h2>{{name}}</h2>
+{{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
+          <p class="desc">{{description}}</p>
+          <ul class="bullets">
+            {{#bullets}}<li>{{.}}</li>{{/bullets}}
+          </ul>
+
+          <div class="cta-row">
+            {{#demo_link}}
+            <a class="btn primary" href="{{demo_link}}" aria-label="Open project write-up">
+              View write-up <small>(PDF)</small>
+            </a>
+            {{/demo_link}}
+            {{#github_link}}
+            <a class="btn" href="{{github_link}}" aria-label="Open project repository">
+              View data <small>(CSV)</small>
+            </a>
+            {{/github_link}}
+          </div>
+        </div>
+      </div>
+
+      <div style="height:18px"></div>
+      {{/projects}}
+
+      <div class="grid" style="align-items:start">
+        <div class="stack" aria-label="Additional projects list">
+          {{#experience}}
+          <div class="mini">
+            <h3>{{title}} — {{company}}</h3>
+            <p>{{description}}</p>
+            <div class="meta">
+              <span>{{start_date}} – {{end_date}}</span>
+              <span>{{location}}</span>
+            </div>
+          </div>
+          {{/experience}}
+        </div>
+
+        <div class="stack" aria-label="Quick highlights">
+          <div class="mini">
+            <h3>What I'm looking for</h3>
+            <p>
+              {{#has_open_to}}{{open_to}}{{/has_open_to}}
+            </p>
+          </div>
+
+          <div class="mini">
+            <h3>Top strengths</h3>
+            <p>{{value_proposition}}</p>
+          </div>
+
+          <div class="mini">
+            <h3>Availability</h3>
+            <p>
+              {{#has_status_badges}}{{#status_badges}}<span class="tag">{{label}}</span> {{/status_badges}}{{/has_status_badges}}
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Playground -->
+    <section id="playground" role="tabpanel" aria-labelledby="tab-playground">
+      <div class="grid">
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            {{#skill_groups}}<span class="tag">{{group_name}}</span>{{/skill_groups}}
+          </div>
+          <h2>Playground</h2>
+          <p class="desc">
+            Small, focused demonstrations of skills—useful for hiring managers who want proof of
+            method discipline and clear thinking.
+          </p>
+
+          <ul class="bullets">
+            {{#skill_groups}}
+            <li><strong>{{group_name}}:</strong> {{#skills}}{{.}}{{/skills}}</li>
+            {{/skill_groups}}
+          </ul>
+
+          <div class="cta-row">
+            <a class="btn primary" href="#">Download Resume <small>(PDF)</small></a>
+            {{#has_website}}<a class="btn" href="{{website}}">Portfolio PDF</a>{{/has_website}}
+          </div>
+        </div>
+
+        <div class="stack">
+          {{#has_certifications}}
+          {{#certifications}}
+          <div class="mini">
+            <h3>{{name}}</h3>
+            <p>{{issuer}}</p>
+            <div class="meta"><span>{{date}}</span></div>
+          </div>
+          {{/certifications}}
+          {{/has_certifications}}
+          {{#has_publications}}
+          {{#publications}}
+          <div class="mini">
+            <h3>{{title}}</h3>
+            <p>{{venue}}</p>
+            <div class="meta"><span>{{date}}</span></div>
+          </div>
+          {{/publications}}
+          {{/has_publications}}
+        </div>
+      </div>
+    </section>
+
+    <!-- About -->
+    <section id="about" role="tabpanel" aria-labelledby="tab-about">
+      <div class="grid">
+        <div class="content card" style="padding:26px">
+          <div class="kicker">
+            <span class="tag">{{major}}</span>
+            <span class="tag">Job Search</span>
+            <span class="tag">Contact</span>
+          </div>
+          <h2>{{about_section_title}}</h2>
+          <p class="desc">{{about_full}}</p>
+
+          <ul class="bullets">
+            {{#education}}
+            <li><strong>Education:</strong> {{degree}}, {{major}} ({{graduation_date}}), {{institution}}{{#honors}} — {{honors}}{{/honors}}</li>
+            {{/education}}
+            {{#has_professional_interests}}
+            <li><strong>Interests:</strong> {{#professional_interests}}{{.}} {{/professional_interests}}</li>
+            {{/has_professional_interests}}
+          </ul>
+
+          <div class="cta-row">
+            <a class="btn primary" href="mailto:{{email}}">{{email}}</a>
+            {{#has_linkedin}}<a class="btn" href="{{linkedin}}">LinkedIn</a>{{/has_linkedin}}
+            {{#has_website}}<a class="btn" href="{{website}}">Portfolio PDF</a>{{/has_website}}
+          </div>
+        </div>
+
+        <div class="stack">
+          <div class="mini">
+            <h3>Quick facts</h3>
+            <p>{{value_proposition}}</p>
+            <div class="meta">
+              <span>Location: {{location}}</span>
+              {{#has_open_to}}<span>Open to: {{open_to}}</span>{{/has_open_to}}
+            </div>
+          </div>
+
+          {{#has_leadership}}
+          {{#leadership}}
+          <div class="mini">
+            <h3>{{role}}</h3>
+            <p>{{description}}</p>
+            <div class="meta"><span>{{organization}}</span><span>{{dates}}</span></div>
+          </div>
+          {{/leadership}}
+          {{/has_leadership}}
+
+          <div class="mini">
+            <h3>References</h3>
+            <p>Available upon request.</p>
+            <div class="meta"><span>Format: PDF or on page</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+{{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
+      © <span id="y"></span> {{name}} • Built for clarity, readability, and quick hiring-manager scanning.
+    </footer>
+  </div>
+
+  <script>
+    const tabs = [
+      { btn: document.getElementById('tab-projects'), panel: document.getElementById('projects') },
+      { btn: document.getElementById('tab-playground'), panel: document.getElementById('playground') },
+      { btn: document.getElementById('tab-about'), panel: document.getElementById('about') }
+    ];
+
+    function activate(index){
+      tabs.forEach((t, i) => {
+        const active = i === index;
+        t.btn.setAttribute('aria-selected', active ? 'true' : 'false');
+        t.panel.classList.toggle('active', active);
+      });
+    }
+
+    tabs.forEach((t, i) => t.btn.addEventListener('click', () => activate(i)));
+
+    // Deep links via hash (#projects, #playground, #about)
+    function fromHash(){
+      const h = (location.hash || '#projects').replace('#','');
+      const idx = Math.max(0, tabs.findIndex(t => t.panel.id === h));
+      activate(idx === -1 ? 0 : idx);
+    }
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+
+    document.getElementById('y').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>

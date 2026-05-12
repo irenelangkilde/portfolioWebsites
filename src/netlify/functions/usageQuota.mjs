@@ -7,7 +7,12 @@ function getSupabaseAdmin() {
   return createClient(url, key, { auth: { persistSession: false } });
 }
 
+function skipUsageQuota() {
+  return process.env.PORTFOLIO_SKIP_USAGE_QUOTA === "true";
+}
+
 export async function checkAndIncrementCredits(userId) {
+  if (skipUsageQuota()) return { allowed: true };
   const supabase = getSupabaseAdmin();
   if (!supabase || !userId) return { allowed: true };
 
@@ -39,12 +44,14 @@ export async function checkAndIncrementCredits(userId) {
 }
 
 export async function logUsageEvent(userId, fields) {
+  if (skipUsageQuota()) return;
   const supabase = getSupabaseAdmin();
   if (!supabase || !userId) return;
   await supabase.from("usage_events").insert({ user_id: userId, ...fields });
 }
 
 export async function logAnonUsage() {
+  if (skipUsageQuota()) return;
   const supabase = getSupabaseAdmin();
   if (!supabase) return;
   try {

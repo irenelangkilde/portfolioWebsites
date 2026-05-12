@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <!-- { "default_color_scheme": { "background": "#0f172a", "foreground": "#e5e7eb", "primary": "#2563eb", "secondary": "#0b1220", "accent": "#22c55e" }, "about_word_count": 44, "has_about": false, "hero_card_map": [ { "original_label": "Core Focus", "type": "skill_group", "display_label": "Core Focus", "sample_items": ["Embedded C/C++ (ARM, STM32)", "FreeRTOS", "Altium/KiCad"] }, { "original_label": "Toolchain", "type": "skill_group", "display_label": "Toolchain", "sample_items": ["Python · NumPy", "MATLAB/Simulink", "LTspice · PLECS"] }, { "original_label": "Highlights", "type": "highlights", "display_label": "Highlights", "sample_items": ["Senior design: 48V → 5V synchronous buck @ 95% peak η", "STM32 wearable with BLE + low‑power sleep < 200µA", "Two internships: test automation & embedded driver dev"] }, { "original_label": "Links", "type": "links", "display_label": "Links", "sample_items": [] } ] } -->
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Job‑ready portfolio for an electrical engineering student graduating next spring: projects, skills, resume, and contact." />
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+  <title>{{name}} Electrical Engineering Portfolio</title>
+  <style>
+    :root {
+      /* Five main theme colors */
+      --color-background: #0f172a; /* 1. Background — deepest page canvas / atmospheric base */
+      --color-foreground: #e5e7eb; /* 2. Foreground — main readable text / ink */
+      --color-primary:    #2563eb; /* 3. Primary    — strongest CTA / emphasis color */
+      --color-secondary:  #0b1220; /* 4. Secondary  — deeper panel / supporting hierarchy */
+      --color-accent:     #22c55e; /* 5. Accent     — green highlight / badge color */
+
+      /* Theme-independent hard-coded neutrals */
+      --white:   #ffffff;
+      --black:   #000000;
+      --warning: #a3e635;
+
+      /* Derived tokens */
+      --bg-top:         color-mix(in srgb, var(--color-background) 100%, var(--black));
+      --bg-mid:         color-mix(in srgb, var(--color-background) 82%, var(--color-secondary));
+      --bg-bottom:      color-mix(in srgb, var(--color-secondary) 60%, var(--black));
+      --panel:          var(--color-secondary);
+      --muted:          #94a3b8;
+      --text:           var(--color-foreground);
+      --accent:         var(--color-primary);
+      --accent-2:       var(--color-accent);
+      --chip:           #1f2937;
+      --card-top:       color-mix(in srgb, var(--color-background) 65%, var(--color-secondary));
+      --card-btm:       color-mix(in srgb, var(--color-secondary) 70%, var(--black));
+      --hero-card-top:  color-mix(in srgb, var(--color-background) 90%, var(--white));
+      --hero-card-btm:  color-mix(in srgb, var(--black) 90%, var(--color-secondary));
+      --badge-bg:       color-mix(in srgb, var(--color-accent) 12%, transparent);
+      --badge-text:     #bbf7d0;
+      --badge-border:   color-mix(in srgb, var(--color-accent) 35%, transparent);
+      --logo-top:       #3b82f6;
+      --logo-btm:       #1d4ed8;
+      --timeline-dot:   #38bdf8;
+      --timeline-line:  color-mix(in srgb, var(--muted) 25%, transparent);
+      --timeline-ring:  color-mix(in srgb, #38bdf8 28%, transparent);
+      --input-bg:       #0a1324;
+      --border-subtle:  color-mix(in srgb, var(--muted) 35%, transparent);
+      --border-faint:   color-mix(in srgb, var(--muted) 15%, transparent);
+      --border-card:    color-mix(in srgb, var(--muted) 18%, transparent);
+      --nav-bg:         rgba(10,15,31,.6);
+      --link-muted:     #cbd5e1;
+      --link-hover:     var(--white);
+      --mono-color:     #a5b4fc;
+      --lead-color:     #cbd5e1;
+      --project-media-bg-top: color-mix(in srgb, var(--color-secondary) 90%, var(--color-background));
+      --project-media-fg:     #93c5fd;
+      --ready-color:    var(--warning);
+      --ring:           0 0 0 3px color-mix(in srgb, var(--color-primary) 35%, transparent);
+      --radius:         18px;
+      --shadow:         0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;background:linear-gradient(180deg,var(--bg-top),var(--bg-mid) 55%,var(--bg-bottom));color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    a{color:var(--accent);text-decoration:none}
+    a:hover{text-decoration:underline}
+    .container{max-width:1100px;margin:0 auto;padding:28px}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:var(--nav-bg);border-bottom:1px solid var(--border-faint);z-index:10}
+    nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%, var(--logo-top), var(--logo-btm));box-shadow:0 6px 18px color-mix(in srgb, var(--color-primary) 45%, transparent)}
+    .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
+    .links a{margin-left:18px;font-weight:600;color:var(--link-muted)}
+    .links a:hover{color:var(--link-hover)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--white);border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:0 8px 20px color-mix(in srgb, var(--color-primary) 35%, transparent);cursor:pointer}
+    .btn:hover{filter:brightness(1.05)}
+    .btn.secondary{background:transparent;border:1px solid var(--border-subtle);color:#e2e8f0}
+    .section{padding:64px 0}
+    .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:start}
+    .badge{display:inline-flex;align-items:center;gap:10px;background:var(--badge-bg);color:var(--badge-text);border:1px solid var(--badge-border);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
+    h2{font-size:34px;margin:12px 0 6px}
+    p.lead{color:var(--lead-color);font-size:18px;line-height:1.65}
+    .hero-card{background:linear-gradient(180deg, var(--hero-card-top), var(--hero-card-btm));border:1px solid var(--border-faint);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .hero-photo{display:block;margin:24px auto 12px;max-width:80px;width:100%;height:auto;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.12);}
+    .ee-class{color:#1ea472;margin-top:0;}
+    .grid{display:grid;gap:18px}
+    .grid.cols-3{grid-template-columns:repeat(3,1fr)}
+    .card{background:linear-gradient(180deg, var(--card-top), var(--card-btm));border:1px solid var(--border-card);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card h3{margin-top:2px;margin-bottom:6px}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid color-mix(in srgb, var(--muted) 20%, transparent);color:var(--lead-color);padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
+    .mono{font-family:"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;color:var(--mono-color)}
+    .timeline{position:relative;margin-top:6px}
+    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:var(--timeline-line)}
+    .t-item{position:relative;margin-left:36px;padding:12px 0}
+    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:var(--timeline-dot);border:2px solid var(--color-secondary);border-radius:50%;box-shadow:0 0 0 3px var(--timeline-ring)}
+    .resume{display:flex;gap:12px;flex-wrap:wrap}
+    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%, var(--project-media-bg-top) 0%, var(--bg-bottom) 60%);border-radius:12px;border:1px dashed var(--border-subtle);display:flex;align-items:center;justify-content:center;color:var(--project-media-fg);font-weight:700}
+    .project-icon{display:block;text-align:center;font-size:4rem;margin-bottom:0.5rem}
+    .section-intro{color:var(--lead-color);font-size:16px;margin-bottom:18px;line-height:1.6}
+    footer{border-top:1px solid color-mix(in srgb, var(--muted) 17%, transparent);padding:38px 0;color:var(--muted)}
+    .footer-tagline{margin:0;color:var(--muted)}
+    @media (max-width: 960px){ .hero{grid-template-columns:1fr} .grid.cols-3{grid-template-columns:1fr} }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <nav>
+        <div class="brand">
+          <img
+            src="../assets/images/stockphoto_youngman.png"
+            alt="{{name}} — Electrical Engineering"
+            class="hero-photo"
+          />
+          <h1>{{name}}</h1>
+        </div>
+        <div class="links">
+          <a href="#projects">Projects</a>
+          <a href="#skills">Skills</a>
+          <a href="#experience">Experience</a>
+          <a href="#contact">Contact</a>
+          <a class="btn secondary" href="#resume">Resume</a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- HERO -->
+    <section class="section">
+      <div class="container hero">
+        <div>
+          <span class="badge">{{major}} — Class of {{graduation_date}}</span>
+          <h2>{{headline}}</h2>
+          <p class="lead">I'm <strong>{{name}}</strong>, {{about}}</p>
+          <div class="resume" style="margin-top:14px">
+            <a class="btn" href="#contact">Hire Me</a>
+            <a class="btn secondary" href="#projects">See Projects</a>
+          </div>
+          {{#has_open_to_roles}}
+          <p style="margin-top:10px;color:var(--muted)">Open to:
+            {{#open_to_roles}}<span style="margin-right:4px">{{label}} •</span>{{/open_to_roles}}
+          </p>
+          {{/has_open_to_roles}}
+        </div>
+        <div class="hero-card" aria-label="At‑a‑glance">
+          <div class="grid" style="grid-template-columns:1fr 1fr;gap:12px">
+            <!-- hero-card-context:
+                 Core Focus (skill_group): "Embedded C/C++ (ARM, STM32)", "FreeRTOS", "Altium/KiCad"
+                 Toolchain (skill_group): "Python · NumPy", "MATLAB/Simulink", "LTspice · PLECS"
+                 Highlights (highlights): "Senior design: 48V → 5V synchronous buck @ 95% peak η", "STM32 wearable with BLE + low‑power sleep < 200µA"
+                 Links (links)
+            -->
+            {{#hero_cards}}
+            <div class="card">
+              <div class="mono">{{card_label}}</div>
+              {{#is_highlights}}
+              <ul style="margin:.3rem 0 0 .5rem;line-height:1.4;font-size:14px;padding-left:0">
+                {{#highlights}}<li>{{.}}</li>{{/highlights}}
+              </ul>
+              {{/is_highlights}}
+              {{#is_snapshot}}
+              <ul style="margin:.3rem 0 0 .5rem;line-height:1.4;font-size:14px;padding-left:0">
+                {{#snapshot}}<li>{{.}}</li>{{/snapshot}}
+              </ul>
+              {{/is_snapshot}}
+              {{#is_links}}
+              <p style="margin:.3rem 0 0">
+                {{#has_linkedin}}<a href="{{linkedin}}" target="_blank" rel="noopener">LinkedIn</a>{{/has_linkedin}}
+                {{#has_github}} · <a href="{{github}}" target="_blank" rel="noopener">GitHub</a>{{/has_github}}
+                {{#has_website}} · <a href="{{website}}" target="_blank" rel="noopener">Website</a>{{/has_website}}
+                · <a href="#resume">Resume (PDF)</a>
+              </p>
+              {{/is_links}}
+              {{#skills}}<div class="chip">{{.}}</div>{{/skills}}
+            </div>
+            {{/hero_cards}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects" class="section" aria-labelledby="projects-h">
+      <div class="container">
+        <h2 id="projects-h">{{projects_section_title}}</h2>
+        {{#has_projects_intro}}<p class="section-intro">{{projects_intro}}</p>{{/has_projects_intro}}
+        <div class="grid cols-3">
+          {{#projects}}
+          <article class="card" aria-label="{{name}}">
+            <div class="project-media" style="padding:0;overflow:hidden;">
+              <span class="project-icon">{{project_icon}}</span>
+            </div>
+            <h3>{{name}}</h3>
+            <p>{{description}}</p>
+            {{#bullets}}<p style="font-size:14px;margin:4px 0">{{.}}</p>{{/bullets}}
+            {{#technologies}}<div class="chip">{{.}}</div>{{/technologies}}
+          </article>
+          {{/projects}}
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills" class="section" aria-labelledby="skills-h">
+      <div class="container">
+        <h2 id="skills-h">{{skills_section_title}}</h2>
+        <div class="card">
+          <div class="grid" style="grid-template-columns:repeat(3,1fr)">
+            {{#skill_groups}}
+            <div>
+              <h3>{{group_name}}</h3>
+              <ul>
+                {{#skills}}<li>{{.}}</li>{{/skills}}
+              </ul>
+            </div>
+            {{/skill_groups}}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXPERIENCE / TIMELINE -->
+    <section id="experience" class="section" aria-labelledby="exp-h">
+      <div class="container">
+        <h2 id="exp-h">{{experience_section_title}}</h2>
+        {{#has_experience_intro}}<p class="section-intro">{{experience_intro}}</p>{{/has_experience_intro}}
+        <div class="card timeline">
+          {{#experience}}
+          <div class="t-item">
+            <h3>{{title}} — {{company}}</h3>
+            <p class="mono">{{start_date}}–{{end_date}} · {{location}}</p>
+            <ul>
+              {{#bullets}}<li>{{.}}</li>{{/bullets}}
+            </ul>
+          </div>
+          {{/experience}}
+        </div>
+      </div>
+    </section>
+
+    <!-- RESUME CTA -->
+    <section id="resume" class="section" aria-labelledby="resume-h">
+      <div class="container">
+        <h2 id="resume-h">Resume</h2>
+        <div class="card" style="display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
+          <p>Download a one‑page PDF with coursework, projects, and experience. <span class="mono">GPA, graduation: {{graduation_date}}.</span></p>
+          <a class="btn" href="#" download>Download PDF</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact" class="section" aria-labelledby="contact-h">
+      <div class="container">
+        <h2 id="contact-h">{{contact_section_title}}</h2>
+        <div class="card">
+          <form style="display:grid;gap:12px;grid-template-columns:1fr 1fr" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply shortly.');">
+            <label style="grid-column:span 1">Name
+              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--input-bg);color:var(--color-foreground)" />
+            </label>
+            <label style="grid-column:span 1">Email
+              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--input-bg);color:var(--color-foreground)" />
+            </label>
+            <label style="grid-column:1 / -1">Message
+              <textarea required rows="4" placeholder="Hi — we'd love to chat about our Embedded New‑Grad role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid var(--border-subtle);background:var(--input-bg);color:var(--color-foreground)"></textarea>
+            </label>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn" type="submit">Send</button>
+              <a class="btn secondary" href="mailto:{{email}}">Email Me</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      {{#cta_tagline}}<p class="footer-tagline">{{cta_tagline}}</p>{{/cta_tagline}}
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+        <span>© {{current_year}} {{name}}. All rights reserved.</span>
+        {{#has_open_to}}<span style="color:var(--ready-color)">{{open_to}}</span>{{/has_open_to}}
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('year') && (document.getElementById('year').textContent = new Date().getFullYear());
+  </script>
+</body>
+</html>

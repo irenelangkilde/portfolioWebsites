@@ -5,7 +5,7 @@ import https from "https";
 import http from "http";
 import { getStore } from "@netlify/blobs";
 
-function findProjectHtmlRoot() {
+function findProjectTemplatesRoot() {
   const startDirs = [];
   if (typeof process.cwd === "function") {
     try { startDirs.push(process.cwd()); } catch {}
@@ -19,7 +19,7 @@ function findProjectHtmlRoot() {
   for (const startDir of startDirs.filter(Boolean)) {
     let dir = startDir;
     for (let i = 0; i < 8; i += 1) {
-      const candidate = resolve(dir, "html");
+      const candidate = resolve(dir, "templates");
       if (existsSync(candidate)) return candidate;
       const parent = dirname(dir);
       if (parent === dir) break;
@@ -27,20 +27,20 @@ function findProjectHtmlRoot() {
     }
   }
 
-  throw new Error("Could not locate the project's html directory from extractTemplate-background.");
+  throw new Error("Could not locate the project's templates directory from extractTemplate-background.");
 }
 
 function resolveMustacheOutputPath(relPath) {
-  const normalized = String(relPath || "").replace(/\\/g, "/").trim();
+  const normalized = String(relPath || "").replace(/\\/g, "/").replace(/^\//, "").trim();
   if (!normalized) throw new Error("Missing targetOutputPath for mustache extraction.");
-  if (!/^html\/.+_mustache\.html$/i.test(normalized)) {
-    throw new Error("targetOutputPath must point to an html/*_mustache.html file.");
+  if (!/^templates\/.+\/mustache\.html$/i.test(normalized)) {
+    throw new Error("targetOutputPath must point to a templates/*/mustache.html file.");
   }
-  const htmlRoot = findProjectHtmlRoot();
-  const projectRoot = dirname(htmlRoot);
+  const templatesRoot = findProjectTemplatesRoot();
+  const projectRoot = dirname(templatesRoot);
   const abs = resolve(projectRoot, normalized);
-  if (!(abs === htmlRoot || abs.startsWith(htmlRoot + pathSep))) {
-    throw new Error("targetOutputPath must stay within the html directory.");
+  if (!(abs === templatesRoot || abs.startsWith(templatesRoot + pathSep))) {
+    throw new Error("targetOutputPath must stay within the templates directory.");
   }
   return abs;
 }

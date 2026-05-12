@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Portfolio — Irene's Webworks</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
@@ -2849,6 +2850,55 @@
     })();
 
     // ── Build final HTML ───────────────────────────────────────────────────────
+    async function downloadPortfolioAsZip(html, zipName = "portfolio") {
+      const urlPattern = /\/\.netlify\/functions\/getPreviewImage\?key=[^"') \n]+/g;
+      const imageUrls = [...new Set(html.match(urlPattern) || [])];
+
+      if (!imageUrls.length || typeof JSZip === "undefined") {
+        if (imageUrls.length) {
+          try {
+            const res = await fetch(imageUrls[0]);
+            if (res.ok) {
+              const blob = await res.blob();
+              const dataUri = await new Promise(r => { const fr = new FileReader(); fr.onloadend = () => r(fr.result); fr.readAsDataURL(blob); });
+              html = html.replaceAll(imageUrls[0], dataUri);
+            }
+          } catch {}
+        }
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+        a.download = `${zipName}.html`;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        return;
+      }
+
+      let imgBytes = null;
+      try {
+        const res = await fetch(imageUrls[0]);
+        if (res.ok) imgBytes = await res.arrayBuffer();
+      } catch {}
+
+      const heroFilename = "hero.png";
+      let indexHtml = html;
+      for (const url of imageUrls) {
+        indexHtml = indexHtml.replaceAll(url, `./${heroFilename}`);
+      }
+
+      const zip = new JSZip();
+      zip.file("index.html", indexHtml);
+      if (imgBytes) zip.file(heroFilename, imgBytes);
+
+      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `${zipName}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 600);
+    }
+
     function buildHtmlString() {
       let html;
       if (viewMode === "code" || viewMode === "split") {
@@ -2921,10 +2971,14 @@
 
         const tier = membership.tier || "free";
         const status = membership.status || "unknown";
-        const credits   = formatQuotaValue(membership.credits_used,  membership.credits_limit);
-        const sites = formatQuotaValue(membership.downloads_used, membership.downloads_limit);
+        const cLimit = membership.credits_limit;
+        const dLimit = membership.downloads_limit;
+        const cRem = cLimit === -1 ? -1 : (cLimit ?? 0) - (membership.credits_used ?? 0);
+        const dRem = dLimit === -1 ? -1 : (dLimit ?? 0) - (membership.downloads_used ?? 0);
+        const credits = formatQuotaValue(cRem, cLimit);
+        const sites   = formatQuotaValue(dRem, dLimit);
         userEl.textContent = `${name} · ${tier} · ${status}`;
-        quotaEl.textContent = `Credits: ${credits} · Saves: ${sites}`;
+        quotaEl.textContent = `Remaining: ${credits} credits · ${sites} saves`;
       } catch {
         userEl.textContent = "Account unavailable";
         quotaEl.textContent = "Credits: - · Saves: -";
@@ -3287,11 +3341,8 @@
       try {
         setEditStatus("Checking save access...");
         await ensureDownloadAllowed("Download");
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(new Blob([buildHtmlString()], { type: "text/html;charset=utf-8" }));
-        a.download = "portfolio.html";
-        a.click();
-        URL.revokeObjectURL(a.href);
+        setEditStatus("Saving…");
+        await downloadPortfolioAsZip(buildHtmlString(), "portfolio");
         setEditStatus("Saved (downloaded).", "ok");
       } catch (err) {
         console.error("Download failed:", err);

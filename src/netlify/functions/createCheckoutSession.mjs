@@ -86,13 +86,13 @@ export async function handler(event) {
 
   // Plan tiers → subscription mode, recurring price IDs in line_items.
   // Add-ons → inline price_data (one-time) so they never conflict with the plan interval.
-  // No plan → payment mode, everything uses price IDs.
+  // No plan → payment mode; standalone add-ons still use one-time inline price_data.
   const hasSubscription = cartItems.some(i => PLAN_TIERS.has(i.tier));
   const mode = hasSubscription ? "subscription" : "payment";
 
   for (const item of cartItems) {
-    // Addon tiers billed via inline price_data when a subscription is present — no price ID required.
-    if (hasSubscription && ADDON_PRICE_DATA[item.tier]) continue;
+    // Add-on tiers are billed via inline price_data — no dashboard price ID required.
+    if (ADDON_PRICE_DATA[item.tier]) continue;
     if (!PRICE_IDS[item.tier]) {
       return { statusCode: 400, body: JSON.stringify({ error: `Unknown or unconfigured tier: ${item.tier}` }) };
     }
@@ -114,7 +114,7 @@ export async function handler(event) {
 
   const billableItems = cartItems;
   const lineItems = billableItems.map(i => {
-    if (hasSubscription && ADDON_PRICE_DATA[i.tier]) {
+    if (ADDON_PRICE_DATA[i.tier]) {
       const pd        = ADDON_PRICE_DATA[i.tier];
       const productId = ADDON_PRODUCT_IDS[i.tier];
       const productSpec = productId

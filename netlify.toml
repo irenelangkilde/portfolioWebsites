@@ -1,12 +1,20 @@
 [build]
+  command = "cd blog && bundle exec jekyll build --destination ../blog-built"
   publish = "."
   functions = "src/netlify/functions"
   edge_functions = "netlify/edge-functions"
 
+# Serve the Jekyll-built blog under /blog/
+[[redirects]]
+  from = "/blog/*"
+  to = "/blog-built/:splat"
+  status = 200
+  force = true
+
 [functions]
   node_bundler = "esbuild"
   directory = "src/netlify/functions"
-  included_files = ["src/*.txt", "src/netlify/functions/*.md", "*.md"]
+  included_files = ["src/*.txt", "src/netlify/functions/*.md", "*.md", "templates/**"]
   external_node_modules = ["@anthropic-ai/sdk", "openai", "@supabase/supabase-js", "stripe"]
 
 # Edge function handles custom domain → portfolio routing

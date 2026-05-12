@@ -1,0 +1,20 @@
+---
+layout: default
+---
+<div class="blog-hero">
+  <h1>Irene's Webworks Blog</h1>
+  <p>Career advice, hiring insights, and portfolio tips for job-seekers and recent graduates.</p>
+</div>
+
+<div class="post-list">
+  {% for post in site.posts %}
+  <article class="post-card">
+    <div class="post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
+    <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
+    {% if post.excerpt %}
+    <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 40 }}</p>
+    {% endif %}
+    <a href="{{ post.url | relative_url }}" class="read-more">Read more →</a>
+  </article>
+  {% endfor %}
+</div>

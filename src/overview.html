@@ -63,6 +63,23 @@
       flex-direction:column;
       align-items:flex-end;
       gap: 6px;
+      position:relative;
+    }
+    .accountStatusControl{
+      padding:6px 8px;
+      margin:-6px -8px 0 0;
+      border:1px solid transparent;
+      border-radius:12px;
+      cursor:pointer;
+      transition:background .15s, border-color .15s, box-shadow .15s;
+      outline:none;
+    }
+    .accountStatusControl:hover,
+    .accountStatusControl:focus-within,
+    .accountStatusControl.menuOpen{
+      background:rgba(255,255,255,.055);
+      border-color:rgba(255,255,255,.14);
+      box-shadow:0 10px 24px rgba(0,0,0,.22);
     }
     .headerAccountBar{
       display:flex;
@@ -113,6 +130,138 @@
       min-height: 14px;
       font-variant-numeric: tabular-nums;
     }
+    .accountAddonsMenu{
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      width:min(380px, calc(100vw - 28px));
+      z-index:700;
+      background:rgba(9,16,30,.98);
+      border:1px solid rgba(255,255,255,.16);
+      border-radius:14px;
+      box-shadow:0 22px 54px rgba(0,0,0,.5);
+      padding:12px;
+      cursor:default;
+      text-align:left;
+    }
+    .accountAddonsMenu[hidden]{ display:none; }
+    .accountMenuTop{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+      padding-bottom:10px;
+      border-bottom:1px solid rgba(255,255,255,.1);
+    }
+    .accountMenuKicker{
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.52);
+    }
+    .accountMenuEmail{
+      max-width:240px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+      font-size:13px;
+      font-weight:900;
+      color:var(--text);
+    }
+    .accountMenuPlan{
+      font-size:12px;
+      color:rgba(234,240,255,.7);
+      margin-top:2px;
+      text-transform:capitalize;
+    }
+    .accountMenuStatusGrid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+      margin:10px 0;
+    }
+    .accountMenuStat{
+      padding:8px;
+      border-radius:10px;
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .accountMenuStat span{
+      display:block;
+      font-size:10px;
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(234,240,255,.48);
+      margin-bottom:2px;
+    }
+    .accountMenuStat strong{
+      display:block;
+      font-size:12px;
+      color:rgba(234,240,255,.9);
+      font-weight:800;
+      line-height:1.25;
+    }
+    .addonMenuList{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top:8px;
+    }
+    .addonMenuItem{
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      gap:10px;
+      align-items:center;
+      padding:9px;
+      border-radius:11px;
+      background:rgba(255,255,255,.045);
+      border:1px solid rgba(255,255,255,.08);
+    }
+    .addonMenuItem strong{
+      display:block;
+      font-size:13px;
+      color:var(--text);
+    }
+    .addonMenuItem span{
+      display:block;
+      margin-top:1px;
+      font-size:11.5px;
+      line-height:1.35;
+      color:rgba(234,240,255,.62);
+    }
+    .addonBuyBtn{
+      appearance:none;
+      border:1px solid rgba(141,224,255,.32);
+      background:rgba(141,224,255,.12);
+      color:var(--accent);
+      border-radius:999px;
+      padding:7px 10px;
+      font:inherit;
+      font-size:11.5px;
+      font-weight:900;
+      white-space:nowrap;
+      cursor:pointer;
+    }
+    .addonBuyBtn:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+    .accountMenuActions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,.1);
+    }
+    .accountMenuMsg{
+      min-height:15px;
+      margin-top:8px;
+      font-size:11.5px;
+      color:rgba(234,240,255,.62);
+    }
     @media (max-width: 760px){
       header{
         grid-template-columns: 1fr;
@@ -120,6 +269,14 @@
       .headerAside{
         min-width:0;
         align-items:flex-start;
+      }
+      .accountStatusControl{
+        width:100%;
+        margin:-6px 0 0 -8px;
+      }
+      .accountAddonsMenu{
+        left:0;
+        right:auto;
       }
       .headerAccountBar{
         align-items:flex-start;
@@ -559,6 +716,7 @@
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <body>
   <div class="wrap">
     <header>
@@ -568,9 +726,9 @@
           <p class="sub">Fill out a quick and easy form. Launch a striking personal website in minutes.</p>
         </div>
       </div>
-      <div class="headerAside">
+      <div class="headerAside accountStatusControl" id="accountStatusControl" role="button" tabindex="0" aria-haspopup="menu" aria-expanded="false" onclick="toggleAccountAddonsMenu(event)" onkeydown="handleAccountMenuKeydown(event)">
         <div class="headerAccountBar">
-          <button id="authBtn" onclick="openAuthModal()">
+          <button id="authBtn" type="button" aria-haspopup="menu" aria-expanded="false" onclick="toggleAccountAddonsMenu(event)">
             <span class="avatar" id="authAvatar">?</span>
             <span id="authBtnLabel">Sign in</span>
           </button>
@@ -579,6 +737,7 @@
             <span id="creditsDisplay"></span>
             <span id="savesDisplay"></span>
             <span id="hostingDisplay"></span>
+            <span id="supportDisplay"></span>
           </div>
         </div>
         <div class="statusNavSlot" id="statusSlotPage1" style="width:100%;">
@@ -591,6 +750,42 @@
             <span id="editorAutoOpenStatus"></span>
             <span id="generatingWebsiteStatus"></span>
           </div>
+        </div>
+        <div class="accountAddonsMenu" id="accountAddonsMenu" role="menu" hidden onclick="event.stopPropagation()">
+          <div class="accountMenuTop">
+            <div>
+              <div class="accountMenuKicker">Account</div>
+              <div class="accountMenuEmail" id="accountMenuEmail">Not signed in</div>
+              <div class="accountMenuPlan" id="accountMenuPlan">Free trial</div>
+            </div>
+            <button class="btn ghost mini" type="button" onclick="openAuthModalFromMenu(event)" id="accountMenuAccountBtn">Account</button>
+          </div>
+          <div class="accountMenuStatusGrid">
+            <div class="accountMenuStat"><span>Credits</span><strong id="accountMenuCredits">3/3</strong></div>
+            <div class="accountMenuStat"><span>Sites</span><strong id="accountMenuSites">0/0</strong></div>
+            <div class="accountMenuStat"><span>Hosting</span><strong id="accountMenuHosting">None</strong></div>
+            <div class="accountMenuStat"><span>Support</span><strong id="accountMenuSupport">None</strong></div>
+          </div>
+          <div class="accountMenuKicker">Add-ons</div>
+          <div class="addonMenuList">
+            <div class="addonMenuItem">
+              <div><strong>Hosting</strong><span>Keep a published portfolio online for 1 more month.</span></div>
+              <button class="addonBuyBtn" type="button" data-addon-tier="hosting" onclick="purchaseQuickAddon(event, 'hosting', 1, this)">Buy $9</button>
+            </div>
+            <div class="addonMenuItem">
+              <div><strong>Extra credit</strong><span>Add 1 more AI generation credit to your account.</span></div>
+              <button class="addonBuyBtn" type="button" data-addon-tier="extra_credits" onclick="purchaseQuickAddon(event, 'extra_credits', 1, this)">Buy $5</button>
+            </div>
+            <div class="addonMenuItem">
+              <div><strong>Support</strong><span>Add 1 month of hands-on portfolio support.</span></div>
+              <button class="addonBuyBtn" type="button" data-addon-tier="care" onclick="purchaseQuickAddon(event, 'care', 1, this)">Buy $49</button>
+            </div>
+          </div>
+          <div class="accountMenuActions">
+            <a class="btn ghost mini" href="pricing.html" onclick="event.stopPropagation()">Plans &amp; Billing</a>
+            <button class="btn ghost mini" type="button" onclick="closeAccountAddonsMenu()">Close</button>
+          </div>
+          <div class="accountMenuMsg" id="accountAddonMsg"></div>
         </div>
       </div>
     </header>
@@ -1127,7 +1322,7 @@
   </div>
 
 
-<script src="form.js?v=20260421b" defer></script>
+<script src="form.js?v=20260505k" defer></script>
 <script>
   // ── Supabase auth ─────────────────────────────────────────────────────────
   // SUPABASE_URL and SUPABASE_ANON_KEY are safe to expose in browser JS.
@@ -1143,7 +1338,7 @@
     if (!_currentUser) { updateAuthUI(); return; }
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
       .eq("user_id", _currentUser.id)
       .single();
     if (data) _membership = data;
@@ -1200,7 +1395,7 @@
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
       .eq("user_id", user.id)
       .single();
     _membership = data;
@@ -1255,7 +1450,7 @@
         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
         const { data: m } = await _supabase
           .from("memberships")
-          .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, current_period_end")
+          .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
           .eq("user_id", _currentUser.id)
           .single();
         _membership = m;
@@ -1277,6 +1472,163 @@
     el.style.display = "block";
     if (type === "ok") setTimeout(() => { el.style.display = "none"; }, 6000);
   }
+
+  function formatAccountDate(iso) {
+    if (!iso) return "None";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return "None";
+    return `Until ${d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`;
+  }
+
+  function isPaidActiveMembership() {
+    return !!(_currentUser && _membership && _membership.status === "active" && _membership.tier !== "free");
+  }
+
+  function setAccountAddonMsg(message = "", type = "") {
+    const el = document.getElementById("accountAddonMsg");
+    if (!el) return;
+    el.textContent = message;
+    el.style.color = type === "err" ? "var(--danger)" : type === "ok" ? "var(--ok)" : "rgba(234,240,255,.62)";
+  }
+
+  function updateAccountAddonsMenuUI(state = {}) {
+    const loggedIn = !!state.loggedIn;
+    const paidActive = isPaidActiveMembership();
+    const emailEl = document.getElementById("accountMenuEmail");
+    const planEl = document.getElementById("accountMenuPlan");
+    const creditsEl = document.getElementById("accountMenuCredits");
+    const sitesEl = document.getElementById("accountMenuSites");
+    const hostingEl = document.getElementById("accountMenuHosting");
+    const supportEl = document.getElementById("accountMenuSupport");
+    const accountBtn = document.getElementById("accountMenuAccountBtn");
+
+    if (emailEl) emailEl.textContent = loggedIn ? state.email : "Not signed in";
+    if (planEl) planEl.textContent = `${state.tier || "free"}${state.expirySuffix ? ` · ${state.expirySuffix}` : ""}`;
+    if (creditsEl) creditsEl.textContent = state.creditsText || "3/3";
+    if (sitesEl) sitesEl.textContent = state.sitesText || "0/0";
+    if (hostingEl) hostingEl.textContent = state.hostingText || "None";
+    if (supportEl) supportEl.textContent = state.supportText || "None";
+    if (accountBtn) accountBtn.textContent = loggedIn ? "Account" : "Sign in";
+
+    document.querySelectorAll("[data-addon-tier]").forEach(btn => {
+      btn.disabled = !paidActive;
+      btn.title = loggedIn
+        ? (paidActive ? "" : "Add-ons require an active paid plan.")
+        : "Sign in to purchase add-ons.";
+    });
+
+    setAccountAddonMsg(
+      loggedIn
+        ? (paidActive ? "Choose an add-on to start checkout." : "Add-ons require an active paid plan. Open Plans & Billing to upgrade.")
+        : "Sign in to purchase add-ons.",
+      loggedIn && !paidActive ? "err" : ""
+    );
+  }
+
+  function openAccountAddonsMenu() {
+    const menu = document.getElementById("accountAddonsMenu");
+    const control = document.getElementById("accountStatusControl");
+    const authBtn = document.getElementById("authBtn");
+    if (!menu || !control) return;
+    menu.hidden = false;
+    control.classList.add("menuOpen");
+    control.setAttribute("aria-expanded", "true");
+    authBtn?.setAttribute("aria-expanded", "true");
+  }
+
+  function closeAccountAddonsMenu() {
+    const menu = document.getElementById("accountAddonsMenu");
+    const control = document.getElementById("accountStatusControl");
+    const authBtn = document.getElementById("authBtn");
+    if (!menu || !control) return;
+    menu.hidden = true;
+    control.classList.remove("menuOpen");
+    control.setAttribute("aria-expanded", "false");
+    authBtn?.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleAccountAddonsMenu(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const menu = document.getElementById("accountAddonsMenu");
+    if (!menu) return;
+    if (menu.hidden) openAccountAddonsMenu();
+    else closeAccountAddonsMenu();
+  }
+
+  function handleAccountMenuKeydown(event) {
+    if (event.target !== event.currentTarget) return;
+    if (event.key === "Enter" || event.key === " ") {
+      toggleAccountAddonsMenu(event);
+    } else if (event.key === "Escape") {
+      event.stopPropagation();
+      closeAccountAddonsMenu();
+    }
+  }
+
+  function openAuthModalFromMenu(event) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    closeAccountAddonsMenu();
+    openAuthModal();
+  }
+
+  async function purchaseQuickAddon(event, tier, qty, btn) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    if (!_currentUser) {
+      setAccountAddonMsg("Sign in to purchase add-ons.", "err");
+      openAuthModal();
+      return;
+    }
+    if (!isPaidActiveMembership()) {
+      setAccountAddonMsg("Add-ons require an active paid plan. Open Plans & Billing to upgrade.", "err");
+      return;
+    }
+    const originalText = btn?.textContent || "Buy";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Starting…";
+    }
+    setAccountAddonMsg("Starting checkout…");
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 15000);
+      const res = await fetch("/.netlify/functions/createCheckoutSession", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          items: [{ tier, qty }],
+          userId: _currentUser.id,
+          userEmail: _currentUser.email,
+          returnUrl: `${window.location.origin}/src/purchased.html`,
+        })
+      });
+      clearTimeout(timer);
+      const text = await res.text();
+      let data = null;
+      try { data = JSON.parse(text); } catch {}
+      if (!res.ok || !data?.url) throw new Error(data?.error || "Could not start checkout.");
+      setAccountAddonMsg("Redirecting to Stripe…", "ok");
+      window.location.href = data.url;
+    } catch (err) {
+      const msg = err?.name === "AbortError" ? "Checkout timed out. Try again." : (err.message || "Checkout failed.");
+      setAccountAddonMsg(msg, "err");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = originalText;
+      }
+    }
+  }
+
+  document.addEventListener("click", event => {
+    const control = document.getElementById("accountStatusControl");
+    if (control && !control.contains(event.target)) closeAccountAddonsMenu();
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape") closeAccountAddonsMenu();
+  });
 
   // ── UI helpers ───────────────────────────────────────────────────────────
   function updateAuthUI() {
@@ -1337,36 +1689,60 @@
 
     const cStr = cUnlimited ? "∞" : `${cRem}/${effectiveCredits}`;
     const dStr = dUnlimited ? "∞" : `${dRem}/${effectiveDl}`;
+    const cLabel = cUnlimited ? "∞" : cStr;
+    const dLabel = dUnlimited ? "∞" : dStr;
     const quotaBar = document.getElementById("authQuotaBar");
     if (quotaBar) {
       const parts = [];
       if (expirySuffix) parts.push(expirySuffix);
-      const cLabel = cUnlimited ? "∞" : cStr;
-      const dLabel = dUnlimited ? "∞" : dStr;
       parts.push(`Remaining: ${cLabel} credits, ${dLabel} saves`);
       quotaBar.textContent = parts.join("  ·  ");
     }
 
     const creditsEl = document.getElementById("creditsDisplay");
     if (creditsEl) {
-      const cLabel = cUnlimited ? "∞" : cStr;
-      const dLabel = dUnlimited ? "∞" : `${dRem}/${effectiveDl}`;
       creditsEl.textContent = `Remaining: ${cLabel} credits, ${dLabel} sites`;
       creditsEl.style.display = "block";
     }
     const savesEl = document.getElementById("savesDisplay");
     if (savesEl) savesEl.style.display = "none";
     const hostingEl = document.getElementById("hostingDisplay");
+    let hostingText = "None";
     if (hostingEl) {
       if (m?.hosting_until) {
         const d = new Date(m.hosting_until);
         const fmt = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
         hostingEl.textContent = `Hosting until ${fmt}`;
         hostingEl.style.display = "block";
+        hostingText = `Until ${fmt}`;
       } else {
         hostingEl.style.display = "none";
       }
     }
+    const supportEl = document.getElementById("supportDisplay");
+    let supportText = "None";
+    if (supportEl) {
+      if (m?.support_until) {
+        const d = new Date(m.support_until);
+        const fmt = d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+        supportEl.textContent = `Support until ${fmt}`;
+        supportEl.style.display = "block";
+        supportText = `Until ${fmt}`;
+      } else {
+        supportEl.style.display = "none";
+      }
+    }
+
+    updateAccountAddonsMenuUI({
+      loggedIn,
+      email,
+      tier: effectiveTier,
+      expirySuffix,
+      creditsText: cLabel,
+      sitesText: dLabel,
+      hostingText,
+      supportText
+    });
 
     // Let form.js react to auth state changes (gates buttons, passes userId)
     if (typeof window.onAuthStateUpdated === "function") window.onAuthStateUpdated();

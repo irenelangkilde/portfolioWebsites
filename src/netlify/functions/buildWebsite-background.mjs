@@ -2,7 +2,7 @@ import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
-import { explainBlobStoreError, getPreviewResultsStore } from "./blobStore.mjs";
+import { explainBlobStoreError, getPreviewImagesStore, getPreviewResultsStore } from "./blobStore.mjs";
 import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 import { parallelCreativeFill } from "./parallelCreativeFill.mjs";
@@ -412,22 +412,35 @@ function findBalancedElementByTagContaining(html, tagNames, innerPattern, startI
 
 const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
 
+function isLikelyProfileOrBrandImage(imgTag = "", src = "") {
+  const haystack = `${imgTag} ${src}`.toLowerCase();
+  return /\b(headshot|profile|avatar|portrait|logo|brand|selfie|photo)\b|stockphoto|youngman|youngwoman|person/.test(haystack);
+}
+
+function isLikelyMastheadImageTag(imgTag = "", src = "") {
+  if (isLikelyProfileOrBrandImage(imgTag, src)) return false;
+  const haystack = `${imgTag} ${src}`.toLowerCase();
+  return /\b(masthead|banner|cover|splash|hero[-_\s]?(image|visual|media|art|bg|background)|featured[-_\s]?image)\b/.test(haystack);
+}
+
 function analyzeSampleMasthead(sampleHtml = "", domainContext = "") {
   let sampleHasRasterHeroImage = false;
   let sampleRasterCssUrl = "";
   let sampleRasterCssSelector = "";
   let sampleRasterBackgroundDecl = "";
+  let sampleRasterImgSrc = "";
   let sampleHeaderContainsHero = false;
 
   const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
-  const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)="[^"]*hero[^"]*"[^>]*>([\s\S]{0,5000})/i);
+  const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)=["'][^"']*hero[^"']*["'][^>]*>([\s\S]{0,5000})/i);
   const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
     .filter(Boolean)
     .join("\n");
   const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
-  const rasterImgMatch = searchRegions.match(
-    /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
-  );
+  const rasterImgMatch = [...searchRegions.matchAll(
+    /<img\b[^>]*src=["']((?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?)["'][^>]*>/ig
+  )].find(match => isLikelyMastheadImageTag(match[0], match[1]));
+  sampleRasterImgSrc = rasterImgMatch?.[1] || "";
   const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
   const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
     /(header|\bhero\b)/i.test(selector) &&
@@ -447,6 +460,7 @@ function analyzeSampleMasthead(sampleHtml = "", domainContext = "") {
     sampleRasterCssUrl,
     sampleRasterCssSelector,
     sampleRasterBackgroundDecl,
+    sampleRasterImgSrc,
     sampleHeaderContainsHero,
     mastheadPlaceholderUrl: MASTHEAD_PLACEHOLDER_URL,
     domainContext
@@ -459,6 +473,7 @@ function analyzeSampleMasthead(sampleHtml = "", domainContext = "") {
       sampleHeaderContainsHero,
       foundRasterImgTag: !!rasterImgMatch,
       foundRasterCssBackground: !!rasterBgMatch,
+      matchedRasterImgSrc: sampleRasterImgSrc,
       matchedRasterCssUrl: typeof rasterBgMatch === "string" ? rasterBgMatch : ""
     })}`
   );
@@ -476,6 +491,13 @@ function buildMastheadImageInstruction(meta = {}, domainContext = "") {
         `  Change only the raster image URL inside that masthead background declaration to:\n` +
         `    url("${meta.mastheadPlaceholderUrl || MASTHEAD_PLACEHOLDER_URL}")\n` +
         `  Do not add an <img> tag. Do not simplify or rewrite the masthead background styling.`
+      );
+    }
+    if (meta.sampleRasterImgSrc) {
+      return (
+        `The sample masthead contains a JPG/PNG image tag (detected server-side).\n` +
+        `  Preserve the existing image element, layout, sizing, radius, and alignment.\n` +
+        `  Change only that image src from "${meta.sampleRasterImgSrc}" to "${meta.mastheadPlaceholderUrl || MASTHEAD_PLACEHOLDER_URL}".`
       );
     }
     return (
@@ -518,7 +540,8 @@ function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
     `no large pale blank areas, and a visually distinct engineering/scientific subject. ` +
     `Avoid fog, haze, pastel washes, cloudy emptiness, cream backdrops, soft white gradients, or low-contrast atmospheric scenes. ` +
     `Use a darker full-bleed composition with clear subject matter spanning most of the frame, so the masthead does not look blank or faded. ` +
-    `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay.`
+    `Compose it as a wide cinematic masthead image that still looks visible under a semi-transparent dark gradient overlay. ` +
+    `The image must contain absolutely no text, words, letters, numbers, watermarks, captions, labels, or any written characters of any kind.`
   );
 }
 
@@ -544,10 +567,18 @@ function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
 }
 
 async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "Image" }) {
-  const openaiKey = process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
-  const imageModel = "gpt-image-1.5";
-  console.log(`[buildWebsite-background] ${stageLabel} API key present:`, !!openaiKey);
-  if (!openaiKey) {
+  const keyCandidates = [
+    ["OPENAI_API_KEY_LOCAL", process.env.OPENAI_API_KEY_LOCAL],
+    ["OPENAI_API_KEY", process.env.OPENAI_API_KEY],
+  ]
+    .map(([source, key]) => [source, String(key || "").trim()])
+    .filter(([, key], idx, arr) => key && arr.findIndex(([, seen]) => seen === key) === idx);
+  const imageModel = "chatgpt-image-latest";
+  console.log(
+    `[buildWebsite-background] ${stageLabel} API key candidates:`,
+    keyCandidates.map(([source]) => source).join(", ") || "none"
+  );
+  if (!keyCandidates.length) {
     throw new Error("OPENAI_API_KEY is not set.");
   }
 
@@ -561,31 +592,45 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
     })}`
   );
 
-  const openaiImgClient = new OpenAI({ apiKey: openaiKey });
   let imgResp = null;
   let lastImgErr = null;
   const maxAttempts = 3;
-  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-    try {
-      console.log(`[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts}`);
-      imgResp = await openaiImgClient.images.generate({
-        model: imageModel,
-        prompt,
-        n: 1,
-        size
-      });
-      lastImgErr = null;
-      break;
-    } catch (err) {
-      lastImgErr = err;
-      const status = err?.status ?? err?.response?.status ?? null;
-      const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
-      console.warn(
-        `[buildWebsite-background] ${stageLabel} generation attempt ${attempt} failed: ${status || "no-status"} ${err?.message || err}`
-      );
-      if (!shouldRetry) break;
-      await sleep(900 * attempt);
+  for (let keyIndex = 0; keyIndex < keyCandidates.length; keyIndex += 1) {
+    const [openaiKeySource, openaiKey] = keyCandidates[keyIndex];
+    const openaiImgClient = new OpenAI({ apiKey: openaiKey });
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        console.log(`[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts} using ${openaiKeySource}`);
+        imgResp = await openaiImgClient.images.generate({
+          model: imageModel,
+          prompt,
+          n: 1,
+          size
+        });
+        lastImgErr = null;
+        break;
+      } catch (err) {
+        lastImgErr = err;
+        const status = err?.status ?? err?.response?.status ?? null;
+        const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
+        console.warn(
+          `[buildWebsite-background] ${stageLabel} generation attempt ${attempt} failed with ${openaiKeySource}: ${status || "no-status"} ${err?.message || err}`
+        );
+        if ((status === 401 || status === 403) && keyIndex < keyCandidates.length - 1) {
+          console.warn(`[buildWebsite-background] ${openaiKeySource} failed with ${status}; trying ${keyCandidates[keyIndex + 1][0]}`);
+          break;
+        }
+        if (status === 401) {
+          throw new Error(`OpenAI authentication failed for image generation (401). Check ${openaiKeySource}; the key is missing, expired, revoked, or from the wrong project.`);
+        }
+        if (status === 403) {
+          throw new Error(`OpenAI image generation is not allowed for this key or project (403). Check access to ${imageModel} for ${openaiKeySource}.`);
+        }
+        if (!shouldRetry) break;
+        await sleep(900 * attempt);
+      }
     }
+    if (imgResp) break;
   }
   if (lastImgErr) throw lastImgErr;
   const b64 = imgResp?.data?.[0]?.b64_json || "";
@@ -823,6 +868,7 @@ function renderMustache(template, data) {
  */
 function toFlatResumeSchema(f) {
   if (!f) return {};
+  if (f.resume_facts) return toFlatResumeSchema(f.resume_facts);
   // Already flat schema (STAGE1_PROMPT output or old cache)
   if (f.personal !== undefined || f.education !== undefined) return f;
   // New split schema: identity + factual_profile
@@ -830,7 +876,10 @@ function toFlatResumeSchema(f) {
   const profile  = f.factual_profile || {};
   const contact  = identity.contact || {};
   const links    = contact.other_links || [];
-  const findLink = (pred) => links.find(l => pred(typeof l === "string" ? l : (l.url || l.href || ""))) || "";
+  const linkUrl = (link) => typeof link === "string" ? link : (link?.url || link?.href || "");
+  const findLink = (pred) => linkUrl(links.find(l => pred(linkUrl(l)))) || "";
+  const education = profile.education || [];
+  const firstEducation = education[0] || {};
   return {
     personal: {
       name:     identity.name     || "",
@@ -841,15 +890,26 @@ function toFlatResumeSchema(f) {
       website:  findLink(u => u && !/github|linkedin/i.test(u)),
       location: contact.location  || ""
     },
+    major:           identity.major || firstEducation.major || "",
+    specialization:  identity.specialization || firstEducation.minor || identity.major || firstEducation.major || "",
     summary:         profile.about          || "",
-    education:       profile.education      || [],
+    education,
     experience:      profile.experience     || [],
     projects:        profile.projects       || [],
     skills:          profile.skills         || {},
     certifications:         profile.certifications        || [],
     publications:           profile.publications           || [],
+    awards:                 profile.honors_and_awards      || [],
     volunteer:              profile.volunteer_experience   || [],
-    extracurricular:        [...(profile.leadership || []), ...(profile.organizations || [])],
+    extracurricular: [
+      ...(profile.leadership || []),
+      ...(profile.organizations || []).map(o => ({
+        organization: o.organization || o.name || "",
+        role: o.role || "",
+        dates: o.dates || "",
+        description: o.description || ""
+      }))
+    ],
     desired_roles:          profile.desired_roles          || [],
     professional_interests: profile.professional_interests || []
   };
@@ -892,6 +952,8 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
                        || _firstSentence || ""
   };
   const edu0 = (resumeJson?.education || [])[0] || {};
+  const major = resumeJson?.major || edu0.major || "";
+  const specialization = resumeJson?.specialization || edu0.minor || major;
 
   // Merged copy seed: prefer resolved strategy (job_resolved/resume_resolved) copy seed; fall back to resume_strategy options
   const copySeed = strategy?.website_copy_seed || resumeStrategy?.website_copy_seed || {};
@@ -961,6 +1023,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     { group_name: labelMap.programming_languages || "Programming Languages", arr: skills.programming_languages },
     { group_name: labelMap.technical             || "Technical Skills",      arr: skills.technical },
     { group_name: labelMap.tools                 || "Tools",                 arr: skills.tools },
+    { group_name: labelMap.domains               || "Domains",               arr: skills.domains },
     { group_name: labelMap.soft_skills           || "Soft Skills",           arr: skills.soft_skills },
     { group_name: labelMap.other                 || "Other",                 arr: skills.other }
   ];
@@ -1078,7 +1141,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             trimAboutToLength(resumeJson?.summary || _coreStory || "", aboutWordCount),
+    about:             trimAboutToLength(resumeJson?.summary || _coreStory || creativePack?.about_full || "", aboutWordCount),
     about_full:        creativePack?.about_full || resumeJson?.summary || _coreStory || "",
     email:             personal.email    || "",
     phone:             personal.phone    || "",
@@ -1086,9 +1149,9 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     github:            personal.github   || "",
     website:           personal.website  || "",
     location:          personal.location || "",
-    major:             edu0.major        || "",
+    major,
     graduation_date:   edu0.graduation_date || "",
-    specialization:    edu0.minor        || edu0.major || "",
+    specialization,
     current_year:      new Date().getFullYear(),
     desired_roles:     desiredRoles,
     desired_role:      desiredRoles[0] || "",
@@ -1307,6 +1370,8 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     status: "pending", stage: "Generating portfolio content…"
   }), { ttl: 3600 });
 
+  const flatResumeFacts = toFlatResumeSchema(resumeFacts);
+
   // Derive template metadata from the embedded JSON comment in the mustache file
   const metaMatch  = sampleHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
   const metaJson   = metaMatch ? (() => { try { return JSON.parse(metaMatch[1]); } catch { return {}; } })() : {};
@@ -1341,7 +1406,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
   const [{ creativePack, augmentedProjects, tokenReports }] = await Promise.all([
     parallelCreativeFill(callAIFn, {
       resolvedStrategy,
-      resumeFacts,
+      resumeFacts: flatResumeFacts,
       templateMeta,
       jobContext,
     }),
@@ -1362,7 +1427,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
 
   const mustacheData = flattenToMustacheData(
     resolvedStrategy,
-    resumeFacts,
+    flatResumeFacts,
     theme,
     null,
     templateMeta.about_word_count,
@@ -1603,10 +1668,21 @@ async function generateImageJob(store, jobId, body, userId) {
       }), { ttl: 3600 });
       return;
     }
+
+    // Store raw base64 bytes in a separate blob store so the job result stays small
+    // and the HTML can reference the image via a short URL instead of a data URI.
+    const b64 = dataUri.replace(/^data:[^;]+;base64,/, "");
+    const { store: imgStore } = getPreviewImagesStore();
+    if (imgStore) {
+      await imgStore.set(jobId, b64, { ttl: 2592000 }); // 30 days
+    }
+    const imageUrl = `/.netlify/functions/getPreviewImage?key=${encodeURIComponent(jobId)}`;
+
     await store.set(jobId, JSON.stringify({
       status: "done",
       image_kind: imageKind,
-      image_data_uri: dataUri,
+      image_url: imageUrl,
+      image_key: jobId,
       image_prompt: prompt,
       masthead_meta: mastheadMeta,
       model,

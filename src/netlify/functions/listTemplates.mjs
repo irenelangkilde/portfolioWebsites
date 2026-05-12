@@ -1,38 +1,34 @@
 /**
  * Netlify Function: listTemplates
  * GET /.netlify/functions/listTemplates
- * Scans the html/ directory and returns display labels for all *Grad.html
- * and *Grad_<letter>.html files.
- * Returns: { templates: string[] }  — sorted display labels, e.g. "Biology", "Biology A"
+ * Scans the templates/ directory and returns display labels for all template subdirectories.
+ * Returns: { templates: string[] }  — sorted display labels, e.g. "Biology", "Biology B"
  */
-import { readdirSync } from "fs";
-import { resolve } from "path";
+import { readdirSync, statSync } from "fs";
+import { resolve, join } from "path";
 
-function toLabel(keyword, variant) {
-  const words = keyword.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1));
-  return variant ? words.join(" ") + " " + variant.toUpperCase() : words.join(" ");
+function dirToLabel(dirName) {
+  // "biology"                 → "Biology"
+  // "biology-b"               → "Biology B"
+  // "electrical-engineering-b"→ "Electrical Engineering B"
+  return dirName.split("-").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" ");
 }
 
 export async function handler() {
-  let files = [];
+  let entries = [];
   try {
-    files = readdirSync(resolve(process.cwd(), "html"));
+    const templatesDir = resolve(process.cwd(), "templates");
+    entries = readdirSync(templatesDir).filter(name => {
+      try { return statSync(join(templatesDir, name)).isDirectory(); } catch { return false; }
+    });
   } catch {
-    // html/ dir not found — return empty list gracefully
+    // templates/ dir not found — return empty list gracefully
   }
 
-  const templates = [];
-  for (const f of files) {
-    // Pattern 1: <keyword>Grad_<letter>.html  (e.g. biologyGrad_A.html)
-    let m = f.match(/^(.+)Grad_([A-Za-z])\.html$/i);
-    if (m) { templates.push(toLabel(m[1], m[2])); continue; }
-
-    // Pattern 2: <keyword>Grad.html  (e.g. biologyGrad.html)
-    m = f.match(/^(.+)Grad\.html$/i);
-    if (m) { templates.push(toLabel(m[1], null)); }
-  }
-
-  templates.sort((a, b) => a.localeCompare(b));
+  const templates = entries
+    .filter(name => !/^\./.test(name))
+    .map(dirToLabel)
+    .sort((a, b) => a.localeCompare(b));
 
   return {
     statusCode: 200,

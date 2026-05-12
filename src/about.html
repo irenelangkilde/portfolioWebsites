@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>About Irene — Irene's Webworks</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:rgba(255,255,255,.06);
+      --panel2:rgba(0,0,0,.25);
+      --border:rgba(255,255,255,.14);
+      --text:#eaf0ff;
+      --muted:rgba(234,240,255,.72);
+      --accent:#8DE0FF;
+      --primary:#4E70F1;
+      --danger:#FBAB9C;
+      --ok:#76b022;
+      --radius:14px;
+      --shadow: 0 10px 26px rgba(0,0,0,.35);
+      --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+    *{ box-sizing:border-box; margin:0; padding:0; }
+    html{ scroll-behavior:smooth; }
+    body{
+      font-family:var(--font);
+      background:
+        radial-gradient(900px 520px at 15% 0%,   color-mix(in oklab, var(--primary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 85% 0%,   color-mix(in oklab, var(--danger)  18%, transparent), transparent 60%),
+        radial-gradient(900px 520px at 50% 100%, color-mix(in oklab, var(--accent)  14%, transparent), transparent 60%),
+        var(--bg);
+      color:var(--text);
+      line-height:1.6;
+      min-height:100vh;
+    }
+    a{ color:var(--accent); text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    .wrap{ max-width:980px; margin:0 auto; padding:18px 14px 72px; }
+
+    /* ── Nav ─────────────────────────────────── */
+    nav{
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:10px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:14px;
+      flex-wrap:wrap;
+    }
+    .nav-brand{ display:flex; align-items:center; gap:10px; }
+    .nav-logo{
+      width:34px; height:34px; border-radius:10px;
+      background: linear-gradient(135deg, var(--primary), color-mix(in oklab, var(--accent) 60%, var(--primary)));
+      display:flex; align-items:center; justify-content:center;
+      font-size:18px; font-weight:900; color:#fff;
+      box-shadow:0 4px 14px rgba(78,112,241,.4);
+      flex-shrink:0;
+    }
+    .nav-title{ font-size:17px; font-weight:900; letter-spacing:.2px; }
+    .nav-links{ display:flex; gap:6px; flex-wrap:wrap; }
+    .btn{
+      padding:9px 14px;
+      border-radius:11px;
+      border:1px solid rgba(255,255,255,.16);
+      background:rgba(255,255,255,.10);
+      color:var(--text);
+      font-weight:800;
+      font-size:13.5px;
+      cursor:pointer;
+      text-decoration:none !important;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      transition:background .15s, border-color .15s;
+    }
+    .btn:hover{ background:rgba(255,255,255,.16); }
+    .btn.primary{
+      background:color-mix(in oklab, var(--primary) 45%, rgba(255,255,255,.08));
+      border-color:color-mix(in oklab, var(--primary) 70%, rgba(255,255,255,.14));
+    }
+    .btn.primary:hover{ background:color-mix(in oklab, var(--primary) 62%, rgba(255,255,255,.08)); }
+    .btn.accent-btn{
+      background:color-mix(in oklab, var(--accent) 18%, rgba(255,255,255,.06));
+      border-color:color-mix(in oklab, var(--accent) 45%, rgba(255,255,255,.14));
+      color:var(--accent);
+    }
+    .btn.accent-btn:hover{ background:color-mix(in oklab, var(--accent) 28%, rgba(255,255,255,.06)); }
+    .btn.active{
+      background:color-mix(in oklab, var(--accent) 18%, rgba(255,255,255,.06));
+      border-color:color-mix(in oklab, var(--accent) 45%, rgba(255,255,255,.14));
+      color:var(--accent);
+    }
+
+    /* ── Profile card ────────────────────────── */
+    .profile-card{
+      margin-top:32px;
+      background:linear-gradient(180deg, rgba(255,255,255,.06), transparent 55%), var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:48px 48px 52px;
+      display:grid;
+      grid-template-columns:240px 1fr;
+      gap:48px;
+      align-items:start;
+      position:relative;
+      overflow:hidden;
+    }
+    .profile-card::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(500px 300px at 0% 0%, color-mix(in oklab, var(--primary) 14%, transparent), transparent 70%),
+        radial-gradient(400px 250px at 100% 100%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 70%);
+      pointer-events:none;
+    }
+    @media(max-width:640px){
+      .profile-card{ grid-template-columns:1fr; padding:32px 24px 36px; gap:28px; }
+      .photo-col{ display:flex; flex-direction:column; align-items:center; }
+    }
+    .photo-frame{
+      width:100%;
+      aspect-ratio:3/4;
+      border-radius:var(--radius);
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:var(--panel2);
+      position:relative;
+    }
+    .photo-frame img{
+      width:100%; height:100%; object-fit:cover; object-position:center top; display:block;
+    }
+    .photo-placeholder{
+      width:100%; height:100%;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      gap:10px;
+      color:var(--muted); font-size:13px; text-align:center; padding:20px;
+    }
+    .photo-placeholder svg{ opacity:.4; }
+
+    .bio-col{ position:relative; }
+    .bio-name{
+      font-size:32px; font-weight:900; letter-spacing:-.3px;
+      color:var(--text); line-height:1.15; margin-bottom:4px;
+    }
+    .bio-role{
+      font-size:15px; font-weight:700; color:var(--accent);
+      margin-bottom:24px; letter-spacing:.3px;
+    }
+    .bio-body{
+      display:flex; flex-direction:column; gap:16px;
+      font-size:15.5px; color:var(--muted); line-height:1.75;
+    }
+    .bio-body p strong{ color:var(--text); }
+
+    /* ── Values strip ────────────────────────── */
+    .values-strip{
+      margin-top:20px;
+      display:grid;
+      grid-template-columns:repeat(3, 1fr);
+      gap:14px;
+    }
+    @media(max-width:640px){ .values-strip{ grid-template-columns:1fr; } }
+    .value-card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:22px 20px;
+      position:relative;
+      overflow:hidden;
+    }
+    .value-card::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      background:radial-gradient(240px 120px at 50% -20%, color-mix(in oklab, var(--primary) 12%, transparent), transparent 70%);
+      pointer-events:none;
+    }
+    .value-icon{ font-size:26px; margin-bottom:10px; display:block; }
+    .value-title{ font-size:14px; font-weight:800; color:var(--text); margin-bottom:6px; }
+    .value-desc{ font-size:13.5px; color:var(--muted); line-height:1.6; }
+
+    /* ── CTA ─────────────────────────────────── */
+    .cta-band{
+      margin-top:20px;
+      background:linear-gradient(135deg,
+        color-mix(in oklab, var(--primary) 30%, rgba(255,255,255,.04)),
+        color-mix(in oklab, var(--accent) 15%, rgba(255,255,255,.03))
+      );
+      border:1px solid color-mix(in oklab, var(--primary) 40%, rgba(255,255,255,.14));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      padding:44px 48px;
+      text-align:center;
+    }
+    .cta-band h2{ font-size:24px; font-weight:900; margin-bottom:10px; }
+    .cta-band p{ color:var(--muted); font-size:15px; max-width:540px; margin:0 auto 24px; }
+    .btn-row{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+    footer{
+      margin-top:48px;
+      text-align:center;
+      font-size:13px;
+      color:var(--muted);
+      padding-top:20px;
+      border-top:1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav>
+    <a href="../index.html" class="nav-brand" style="text-decoration:none!important">
+      <div class="nav-logo">IW</div>
+      <span class="nav-title">Irene's Webworks</span>
+    </a>
+    <div class="nav-links">
+      <a href="../index.html#how" class="btn">How it works</a>
+      <a href="../index.html#sections" class="btn">What's included</a>
+      <a href="pricing.html" class="btn">Pricing</a>
+      <a href="landing_gift.html" class="btn">🎁 Give a gift</a>
+      <a href="about.html" class="btn active">About</a>
+      <a href="../blog/" class="btn">Blog</a>
+      <a href="overview.html" class="btn primary">Get started →</a>
+    </div>
+  </nav>
+
+  <!-- ── Profile ─────────────────────────────── -->
+  <div class="profile-card">
+    <div class="photo-col">
+      <div class="photo-frame">
+        <!-- Replace the src below with the actual photo path once uploaded -->
+        <img src="irene.jpg" alt="Irene Langkilde"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+        <div class="photo-placeholder" style="display:none;">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+          </svg>
+          <span>Add irene.jpg to src/</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bio-col">
+      <h1 class="bio-name">Irene Langkilde</h1>
+      <p class="bio-role">Founder · Irene's Webworks</p>
+
+      <div class="bio-body">
+        <p>
+          I started Irene's Webworks because I believe the benefits of a polished web presence shouldn't be a luxury
+          reserved for the wealthy or technically inclined. <strong>Every job-seeker
+          deserves a website that makes employers stop scrolling.</strong>
+        </p>
+        <p>
+          My background spans web development, AI engineering, and natural language processing.
+          Irene's Webworks uses AI to do the heavy lifting: pulling your resume details, matching
+          your field's aesthetic, and generating a site that looks like a senior designer built it —
+          in minutes, not weeks, at a fraction of the cost of a freelance developer or a laborious 
+          do-it-yourself approach.
+        </p>
+        <p>
+          My mission is straightforward: <strong>democratize the web.</strong> Small businesses, new
+          graduates, career-changers — everyone should be able to put their best foot forward online
+          without needing to spend thousands or learn to code. In recent weeks you would have found me 
+          deep in color theory, obsessing over typography, or helping someone figure out how to tell their
+          professional story in a way that actually lands.
+        </p>
+        <p>
+          When I'm not building tools that level the playing field, I'm spending time with my 5 
+          children, 10 siblings, 50 nieces and nephews, and/or 35 first-cousins and their families. 
+        </p>
+        <p>
+          Have a question, a project idea, or just want to say hello?
+          <a href="mailto:irene@irenes-ventures.com">irene@irenes-ventures.com</a>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Values ─────────────────────────────── -->
+  <div class="values-strip">
+    <div class="value-card">
+      <span class="value-icon">🌐</span>
+      <div class="value-title">Democratizing the web</div>
+      <div class="value-desc">
+        Professional-grade websites used to cost thousands and weeks. We make them accessible
+        to anyone with a resume and an internet connection.
+      </div>
+    </div>
+    <div class="value-card">
+      <span class="value-icon">🎓</span>
+      <div class="value-title">Built for job-seekers</div>
+      <div class="value-desc">
+        Each template is crafted for a specific field — so a biology grad's portfolio looks
+        nothing like an accounting grad's. Specificity earns attention.
+      </div>
+    </div>
+    <div class="value-card">
+      <span class="value-icon">💡</span>
+      <div class="value-title">AI with intention</div>
+      <div class="value-desc">
+        AI handles generation; you stay in control of the story. The goal is a site that
+        sounds like you — not a generic template stuffed with buzzwords.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CTA ────────────────────────────────── -->
+  <div class="cta-band">
+    <h2>Ready to build your portfolio?</h2>
+    <p>Join the job-seekers and small businesses who've used Irene's Webworks to put their best foot forward.</p>
+    <div class="btn-row">
+      <a href="overview.html" class="btn primary" style="padding:13px 26px; border-radius:13px; font-size:15px;">Start my portfolio →</a>
+      <a href="mailto:irene@irenes-ventures.com" class="btn accent-btn" style="padding:13px 26px; border-radius:13px; font-size:15px;">Talk to Irene</a>
+    </div>
+  </div>
+
+  <footer>
+    © <span id="yr"></span> Irene's Ventures &nbsp;·&nbsp; Elevating careers, one website at a time.
+    &nbsp;·&nbsp; <a href="mailto:irene@irenes-ventures.com">irene@irenes-ventures.com</a>
+    &nbsp;·&nbsp; <a href="refund_policy.html">Refund Policy</a>
+  </footer>
+
+</div>
+<script>document.getElementById('yr').textContent = new Date().getFullYear();</script>
+</body>
+</html>

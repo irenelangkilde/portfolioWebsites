@@ -1,75 +1,98 @@
 #!/usr/bin/env node
 /**
- * One-time preprocessing script — normalizes gallery sample HTML files.
+ * Normalizes templates/<major>/sample.html → templates/<major>/normalized.html
  *
- * Reads html/*Grad*.html (excluding _template, _mustache, _normalized variants),
- * calls Claude to replace all colors with 5 named CSS custom properties following
- * the ExtractVisuals.md prompt, and writes html/*_normalized.html.
- *
- * These normalized files are used by the braid pipeline when the user selects
- * "Choose by name" (option 1) on the Design page, avoiding an in-flow AI call.
+ * Two transforms applied in order:
+ *   1. Image path renaming  (deterministic)
+ *       • All .png/.jpg references in CSS url() and HTML src attributes have
+ *         their path prefix stripped and are renumbered image1.png, image2.png …
+ *       • Headshot images (detected by filename) become headshot.png/jpg.
+ *   2. Color extraction  (programmatic — no AI)
+ *       • Extracts the 5 perceptually distinct color roles via OKLCH clustering.
+ *       • Injects a <style id="extracted-theme"> block with CSS custom properties
+ *         and a <script id="color-palette"> block with palette metadata into <head>.
  *
  * Usage:
- *   ANTHROPIC_API_KEY=sk-... node scripts/preprocessSamples.mjs [--dry-run] [substr]
- *
- *   substr  — optional substring to filter filenames (default: "Grad")
- *             e.g. "biology" processes only biologyGrad*.html
- *
- * Requirements: Node 18+ (native fetch), ANTHROPIC_API_KEY env var.
+ *   node scripts/preprocessSamples.mjs [major1 major2 ...]
+ *   node scripts/preprocessSamples.mjs --dry-run
  */
 
-import { readFileSync, writeFileSync, readdirSync } from "fs";
-import { join, dirname, basename } from "path";
+import { readFileSync, writeFileSync, readdirSync, statSync, existsSync } from "fs";
+import { join, dirname, resolve } from "path";
 import { fileURLToPath } from "url";
+
+import {
+  extractRegex, dedup, autoFit, assignRoles, invertRoles, buildCss, buildJson,
+} from "../src/extractHtmlColors/extractColors.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT      = join(__dirname, "..");
-const HTML_DIR  = join(ROOT, "html");
-const PROMPT_PATH = join(ROOT, "src/netlify/functions/ExtractVisuals.md");
-const MODEL     = "claude-sonnet-4-6";
-const MAX_TOKENS = 40000;
-const RATE_LIMIT_MS = 4000; // pause between API calls
-const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
-
-const API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!API_KEY) {
-  console.error("Error: ANTHROPIC_API_KEY is not set.");
-  process.exit(1);
-}
+const TEMPLATES = join(ROOT, "templates");
+const MIN_SEP   = 1.5;
 
 const dryRun    = process.argv.includes("--dry-run");
-const args      = process.argv.slice(2).filter(a => !a.startsWith("--"));
-// Accept either a plain substring or a /regex/ argument.
-// Default pattern matches *Grad.html and *Grad_[A-Z].html exactly.
-const DEFAULT_PATTERN = /Grad\.html$|Grad_[A-Za-z]\.html$/;
-let fileFilter;
-if (args.length > 0) {
-  const arg = args[0];
-  const rMatch = arg.match(/^\/(.+)\/([gimsuy]*)$/);
-  fileFilter = rMatch ? new RegExp(rMatch[1], rMatch[2]) : f => f.includes(arg);
-} else {
-  fileFilter = f => DEFAULT_PATTERN.test(f);
+const requested = process.argv.slice(2).filter(a => !a.startsWith("--"));
+
+const majors = requested.length > 0
+  ? requested
+  : readdirSync(TEMPLATES)
+      .filter(f => statSync(join(TEMPLATES, f)).isDirectory())
+      .filter(f => existsSync(join(TEMPLATES, f, "sample.html")))
+      .sort();
+
+// ─── Image path renaming ──────────────────────────────────────────────────────
+
+function renameImagePaths(html) {
+  const seen = new Set();
+  const ordered = [];
+
+  for (const pattern of [
+    /url\(\s*["']?([^"')>\s]+\.(?:png|jpe?g))["']?\s*\)/gi,
+    /\bsrc=["']([^"']+\.(?:png|jpe?g))["']/gi,
+  ]) {
+    let m;
+    while ((m = pattern.exec(html)) !== null) {
+      const path = m[1];
+      if (!seen.has(path)) { seen.add(path); ordered.push(path); }
+    }
+  }
+
+  const renameMap = new Map();
+  let n = 1;
+  for (const ref of ordered) {
+    const filename = ref.split("/").pop().split("?")[0];
+    const ext = (filename.match(/\.(jpe?g|png)$/i) || [".png"])[0]
+      .toLowerCase().replace("jpeg", "jpg");
+    const isHeadshot =
+      /head[-_]?shot|profile[-_]?(?:photo|pic)?|portrait|avatar/i.test(filename);
+    renameMap.set(ref, isHeadshot ? `headshot${ext}` : `image${n++}${ext}`);
+  }
+
+  let out = html;
+  for (const [orig, renamed] of [...renameMap.entries()].sort((a, b) => b[0].length - a[0].length)) {
+    out = out.split(orig).join(renamed);
+  }
+
+  return { html: out, renameMap };
 }
 
-const promptTemplate = readFileSync(PROMPT_PATH, "utf-8");
+// ─── Masthead metadata ────────────────────────────────────────────────────────
 
-function stripCssComments(value = "") {
-  return String(value || "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
+const MASTHEAD_PLACEHOLDER_URL = "braid-masthead.png";
+
+function stripCssComments(v = "") {
+  return String(v || "").replace(/\/\*[\s\S]*?\*\//g, "").trim();
 }
 
 function analyzeSampleMasthead(sampleHtml = "") {
-  let sampleHasRasterHeroImage = false;
-  let sampleRasterCssUrl = "";
-  let sampleRasterCssSelector = "";
-  let sampleRasterBackgroundDecl = "";
-  let sampleHeaderContainsHero = false;
-
   const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
-  const heroMatch = sampleHtml.match(/<(?:section|header|div)[^>]*(?:id|class)=["'][^"']*hero[^"']*["'][^>]*>([\s\S]{0,5000})/i);
+  const heroMatch   = sampleHtml.match(
+    /<(?:section|header|div)[^>]*(?:id|class)=["'][^"']*hero[^"']*["'][^>]*>([\s\S]{0,5000})/i
+  );
   const searchRegions = [headerMatch?.[1], heroMatch?.[1], sampleHtml.slice(0, 6000)]
-    .filter(Boolean)
-    .join("\n");
+    .filter(Boolean).join("\n");
   const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
+
   const rasterImgMatch = searchRegions.match(
     /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
   );
@@ -78,14 +101,14 @@ function analyzeSampleMasthead(sampleHtml = "") {
     /(header|\bhero\b)/i.test(selector) &&
     /url\(\s*["']?[^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?["']?\s*\)/i.test(body)
   );
-  sampleRasterCssSelector = stripCssComments(rasterBgBlock?.[1] || "");
-  sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
+  const sampleRasterCssSelector    = stripCssComments(rasterBgBlock?.[1] || "");
+  const sampleRasterBackgroundDecl = rasterBgBlock?.[2]?.match(/background\s*:\s*[\s\S]*?;/i)?.[0]?.trim() || "";
   const rasterBgMatch = rasterBgBlock
     ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
     : null;
-  sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
-  sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
-  sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+  const sampleRasterCssUrl       = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+  const sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
+  const sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
 
   return {
     sampleHasRasterHeroImage,
@@ -110,81 +133,86 @@ function embedMastheadMetaComment(html = "", mastheadMeta = null) {
   return comment + html;
 }
 
-const files = readdirSync(HTML_DIR)
-  .filter(f => f.endsWith(".html"))
-  .filter(f => typeof fileFilter === "function" ? fileFilter(f) : fileFilter.test(f))
-  .filter(f => !/_template\.html$/.test(f))
-  .filter(f => !/_mustache\.html$/.test(f))
-  .filter(f => !/_normalized\.html$/.test(f))
-  .sort();
+// ─── Color extraction + injection ────────────────────────────────────────────
 
-const filterDesc = args.length > 0 ? args[0] : DEFAULT_PATTERN.toString();
-console.log(`Preprocessing ${files.length} file(s) matching ${filterDesc}${dryRun ? " [dry-run]" : ""}.\n`);
+function injectColorTheme(html, minSep = MIN_SEP) {
+  const counts     = extractRegex(html);
+  const candidates = dedup(counts);
+  const fit        = autoFit(candidates, minSep);
+  const { clusters, confidence } = fit;
+  const roles      = assignRoles(clusters);
+  const inverted   = invertRoles(roles);
+  const meta       = { k: fit.k, confidence, threshold: minSep };
 
-for (const file of files) {
-  const srcPath = join(HTML_DIR, file);
-  const outPath = join(HTML_DIR, file.replace(/\.html$/, "_normalized.html"));
-  const outName = basename(outPath);
+  const injection = [
+    `<style id="extracted-theme">`,
+    buildCss(roles, inverted),
+    `</style>`,
+    `<script type="application/json" id="color-palette">`,
+    buildJson(clusters, roles, inverted, meta),
+    `</script>`,
+  ].join("\n");
 
-  if (dryRun) {
-    console.log(`[dry-run] ${file} → ${outName}`);
+  if (html.includes("</head>")) {
+    return { html: html.replace("</head>", `${injection}\n</head>`), confidence, k: fit.k };
+  }
+  if (/<body/i.test(html)) {
+    return { html: html.replace(/<body[^>]*>/i, m => `${injection}\n${m}`), confidence, k: fit.k };
+  }
+  return { html: injection + "\n" + html, confidence, k: fit.k };
+}
+
+// ─── Main loop ────────────────────────────────────────────────────────────────
+
+console.log(`Normalizing ${majors.length} template(s): ${majors.join(", ")}${dryRun ? " [dry-run]" : ""}\n`);
+
+for (const major of majors) {
+  const srcPath = join(TEMPLATES, major, "sample.html");
+  const outPath = join(TEMPLATES, major, "normalized.html");
+
+  if (!existsSync(srcPath)) {
+    console.warn(`⚠ Skipping ${major}: no sample.html`);
     continue;
   }
 
-  const html   = readFileSync(srcPath, "utf-8");
-  const mastheadMeta = analyzeSampleMasthead(html);
-  const capped = html.length > 80000 ? html.slice(0, 80000) + "\n<!-- truncated -->" : html;
-  const prompt = promptTemplate.replace("{{EXAMPLE_HTML}}", capped);
-
-  process.stdout.write(`Processing: ${file} … `);
-
-  try {
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key":         API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type":      "application/json"
-      },
-      body: JSON.stringify({
-        model:      MODEL,
-        max_tokens: MAX_TOKENS,
-        system: "You are an HTML engineer. Rewrite the HTML to replace all color values with exactly 5 named CSS custom properties in :root, following the instructions in the prompt. Output only raw HTML starting with <!DOCTYPE html>. No markdown. No explanation.",
-        messages: [{ role: "user", content: prompt }]
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.text().catch(() => res.status);
-      console.error(`API error ${res.status}: ${String(err).slice(0, 200)}`);
-      continue;
-    }
-
-    const data = await res.json();
-    const normalized = embedMastheadMetaComment((data.content || [])
-      .filter(b => b.type === "text")
-      .map(b => b.text)
-      .join("")
-      .replace(/^```[a-zA-Z]*\n?/m, "")
-      .replace(/\n?```\s*$/m, "")
-      .trim(), mastheadMeta);
-
-    if (!normalized.startsWith("<!DOCTYPE") && !normalized.startsWith("<html")) {
-      console.error("⚠ Output doesn't look like HTML — skipping.");
-      continue;
-    }
-
-    writeFileSync(outPath, normalized, "utf-8");
-    const kb = (normalized.length / 1024).toFixed(1);
-    const inputTok  = data.usage?.input_tokens  ?? "?";
-    const outputTok = data.usage?.output_tokens ?? "?";
-    console.log(`✓ ${outName} (${kb} KB, ${inputTok}→${outputTok} tok)`);
-  } catch (e) {
-    console.error(`Error: ${e.message}`);
+  if (dryRun) {
+    console.log(`[dry-run] ${major}/sample.html → normalized.html`);
+    continue;
   }
 
-  // Respect rate limits between requests
-  await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+  process.stdout.write(`Processing: ${major} … `);
+
+  const html = readFileSync(srcPath, "utf-8");
+
+  // Step 1: rename image paths
+  const { html: imgRenamed, renameMap } = renameImagePaths(html);
+
+  // Update masthead metadata to reflect renamed paths
+  const mastheadMeta = analyzeSampleMasthead(html);
+  const oldCssUrl = mastheadMeta.sampleRasterCssUrl;
+  if (oldCssUrl && renameMap.has(oldCssUrl)) {
+    const newName = renameMap.get(oldCssUrl);
+    mastheadMeta.sampleRasterCssUrl = newName;
+    if (mastheadMeta.sampleRasterBackgroundDecl) {
+      mastheadMeta.sampleRasterBackgroundDecl =
+        mastheadMeta.sampleRasterBackgroundDecl.split(oldCssUrl).join(newName);
+    }
+  }
+
+  // Step 2: inject color theme
+  const { html: colorized, confidence, k } = injectColorTheme(imgRenamed);
+  const warn = confidence < MIN_SEP ? " ⚠ low-confidence" : "";
+
+  // Step 3: embed masthead metadata
+  const normalized = embedMastheadMetaComment(colorized, mastheadMeta);
+
+  writeFileSync(outPath, normalized, "utf-8");
+
+  const kb = (normalized.length / 1024).toFixed(1);
+  const renames = renameMap.size > 0
+    ? `  [${[...renameMap.values()].join(", ")}]`
+    : "";
+  console.log(`✓ ${major}/normalized.html (${kb} KB, k=${k} conf=${confidence.toFixed(2)}${warn})${renames}`);
 }
 
 console.log("\nDone.");

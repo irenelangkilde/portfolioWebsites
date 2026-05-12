@@ -40,7 +40,9 @@
     let mastheadImageResult = null;
     let mastheadImageError = null;
     let autoMastheadImageTriggered = false;
-    let mastheadImageTicker = null;   // interval handle for the generating countdown
+    let mastheadImageTicker = null;       // interval handle for the generating countdown
+    let mastheadImageStartTimestamp = null; // when masthead image generation started
+    let mastheadWaitTicker = null;        // interval handle for braidStatus while waiting for image
 
     // Slot-fill (fast mustache path)
     let slotFillInProgress = false;
@@ -492,7 +494,7 @@
       if (debug) populateBridgeDebug(bridgeResult);
       if (debug) populateTemplateExtractPanel(extractedTemplateCache ?? {});
       if (debug) greyRendererButtons(!generationResult);
-      if (debug) wireMastheadImageDebug(mastheadImageResult?.image_data_uri || null);
+      if (debug) wireMastheadImageDebug(mastheadImageResult?.image_url || null);
       if (debug) wirePayloadDebug();
     }
 
@@ -667,6 +669,14 @@
       return { ok: res.ok, status: res.status, text, data };
     }
 
+    async function responseErrorMessage(res, fallback = "Server error") {
+      const parsed = await readJsonResponseSafely(res);
+      return parsed.data?.error ||
+        parsed.data?.message ||
+        parsed.text?.slice(0, 400) ||
+        `${fallback} ${res.status}`;
+    }
+
     function escapeRegExp(value) {
       return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }
@@ -687,6 +697,7 @@
       let sampleRasterCssUrl = "";
       let sampleRasterCssSelector = "";
       let sampleRasterBackgroundDecl = "";
+      let sampleRasterImgSrc = "";
       let sampleHeaderContainsHero = false;
 
       const headerMatch = sampleHtml.match(/<header\b[^>]*>([\s\S]{0,8000})<\/header>/i);
@@ -695,9 +706,19 @@
         .filter(Boolean)
         .join("\n");
       const styleBlock = (sampleHtml.match(/<style[^>]*>([\s\S]*?)<\/style>/i) || [])[1] || "";
-      const rasterImgMatch = searchRegions.match(
-        /<img\b[^>]*src=["'](?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?["'][^>]*>/i
-      );
+      const isLikelyProfileOrBrandImage = (imgTag = "", src = "") => {
+        const haystack = `${imgTag} ${src}`.toLowerCase();
+        return /\b(headshot|profile|avatar|portrait|logo|brand|selfie|photo)\b|stockphoto|youngman|youngwoman|person/.test(haystack);
+      };
+      const isLikelyMastheadImageTag = (imgTag = "", src = "") => {
+        if (isLikelyProfileOrBrandImage(imgTag, src)) return false;
+        const haystack = `${imgTag} ${src}`.toLowerCase();
+        return /\b(masthead|banner|cover|splash|hero[-_\s]?(image|visual|media|art|bg|background)|featured[-_\s]?image)\b/.test(haystack);
+      };
+      const rasterImgMatch = [...searchRegions.matchAll(
+        /<img\b[^>]*src=["']((?!data:)[^"']+\.(?:png|jpe?g)(?:\?[^"']*)?)["'][^>]*>/ig
+      )].find(match => isLikelyMastheadImageTag(match[0], match[1]));
+      sampleRasterImgSrc = rasterImgMatch?.[1] || "";
       const cssBlocks = [...styleBlock.matchAll(/([^{}]+)\{([\s\S]*?)\}/g)];
       const rasterBgBlock = cssBlocks.find(([, selector, body]) =>
         /(header|\bhero\b)/i.test(selector) &&
@@ -709,14 +730,39 @@
         ? (rasterBgBlock[2].match(/url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)["']?\s*\)/i) || [])[1] || true
         : null;
       sampleRasterCssUrl = typeof rasterBgMatch === "string" ? rasterBgMatch : "";
+
+      // Fallback: CSS custom property indirection (e.g. :root { --hero-bg-image: url("img.png"); }
+      // referenced as var(--hero-bg-image) inside a .hero / header / .masthead selector).
+      if (!sampleRasterCssUrl) {
+        const cssVarUrlRe = /(--[\w-]+)\s*:\s*url\(\s*["']?([^"')]+\.(?:png|jpe?g)(?:\?[^"')]*)?)\s*["']?\s*\)/i;
+        for (const [, blockSelector, blockBody] of cssBlocks) {
+          const varMatch = cssVarUrlRe.exec(blockBody);
+          if (!varMatch) continue;
+          const varName = varMatch[1];
+          const varUrl  = varMatch[2];
+          const varUsedInHero = cssBlocks.some(([, sel, bod]) =>
+            /(header|\bhero\b|\bmasthead\b)/i.test(sel) && bod.includes(`var(${varName})`)
+          );
+          if (varUsedInHero) {
+            sampleRasterCssUrl = varUrl;
+            sampleRasterCssSelector = stripCssComments(blockSelector).trim();
+            const declMatch = blockBody.match(new RegExp(escapeRegExp(varName) + "\\s*:[^;]+;"));
+            sampleRasterBackgroundDecl = declMatch ? declMatch[0].trim() : "";
+            sampleHasRasterHeroImage = true;
+            break;
+          }
+        }
+      }
+
       sampleHeaderContainsHero = /class=["'][^"']*\bhero\b[^"']*["']/i.test(headerMatch?.[1] || "");
-      sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch);
+      sampleHasRasterHeroImage = !!(rasterImgMatch || rasterBgMatch || sampleHasRasterHeroImage);
 
       return {
         sampleHasRasterHeroImage,
         sampleRasterCssUrl,
         sampleRasterCssSelector,
         sampleRasterBackgroundDecl,
+        sampleRasterImgSrc,
         sampleHeaderContainsHero,
         mastheadPlaceholderUrl: MASTHEAD_PLACEHOLDER_URL,
         domainContext: ""
@@ -827,12 +873,12 @@ header > div:has(h1)::before,header > div:has(h1)::after{background:none !import
       return overrideCss + html;
     }
 
-    function injectForcedMastheadSelectorCss(html, dataUri, mastheadMeta) {
+    function injectForcedMastheadSelectorCss(html, imageUrl, mastheadMeta) {
       if (!mastheadMeta?.sampleRasterCssSelector || !mastheadMeta?.sampleRasterBackgroundDecl || !mastheadMeta?.sampleRasterCssUrl) {
         return html;
       }
       const forcedBackgroundDecl = mastheadMeta.sampleRasterBackgroundDecl
-        .replace(mastheadMeta.sampleRasterCssUrl, dataUri)
+        .replace(mastheadMeta.sampleRasterCssUrl, imageUrl)
         .replace(/;\s*$/, " !important;");
       const forcedCss = `
 <style id="braid-masthead-force">
@@ -843,6 +889,82 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (html.includes('id="braid-masthead-force"')) return html;
       if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${forcedCss}\n</head>`);
       return forcedCss + html;
+    }
+
+    function upsertHeadStyle(html, id, css) {
+      const block = `<style id="${id}">\n${String(css || "").trim()}\n</style>`;
+      const existingRe = new RegExp(`<style\\b[^>]*id=["']${escapeRegExp(id)}["'][^>]*>[\\s\\S]*?<\\/style>`, "i");
+      if (existingRe.test(html)) return html.replace(existingRe, block);
+      if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, `${block}\n</head>`);
+      return `${block}\n${html}`;
+    }
+
+    function genericMastheadSelectorsForHtml(html = "", mastheadMeta = null) {
+      const source = String(html || "");
+      const selectors = [];
+      const hasClass = (className) => new RegExp(`\\bclass=["'][^"']*\\b${escapeRegExp(className)}\\b[^"']*["']`, "i").test(source);
+
+      if (hasClass("hero")) selectors.push(".hero");
+      if (hasClass("masthead")) selectors.push(".masthead");
+      if (hasClass("banner")) selectors.push(".banner");
+      if (hasClass("cover")) selectors.push(".cover");
+      if (hasClass("splash")) selectors.push(".splash");
+
+      const headerBlock = source.match(/<header\b[^>]*>[\s\S]{0,12000}<\/header>/i)?.[0] || "";
+      const headerLooksLikeMasthead = !!headerBlock && (
+        !!mastheadMeta?.sampleHeaderContainsHero ||
+        /<h1\b/i.test(headerBlock) ||
+        /\bclass=["'][^"']*\b(?:hero|masthead|banner|cover|splash)\b/i.test(headerBlock)
+      );
+      if (headerLooksLikeMasthead) selectors.push("header");
+
+      return Array.from(new Set(selectors));
+    }
+
+    function hasGenericMastheadTarget(html = "", mastheadMeta = null) {
+      return genericMastheadSelectorsForHtml(html, mastheadMeta).length > 0;
+    }
+
+    function currentMastheadMeta() {
+      return normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
+    }
+
+    function currentTemplateNeedsMastheadImage() {
+      const mastheadMeta = currentMastheadMeta();
+      const sampleHtml = extractedTemplateCache?.templateHtml || "";
+      return !!(
+        mastheadMeta?.sampleRasterCssUrl ||
+        mastheadMeta?.sampleRasterImgSrc ||
+        mastheadMeta?.sampleHasRasterHeroImage ||
+        hasGenericMastheadTarget(sampleHtml, mastheadMeta)
+      );
+    }
+
+    function injectGenericMastheadImageCss(html, imageUrl, mastheadMeta) {
+      const selectors = genericMastheadSelectorsForHtml(html, mastheadMeta);
+      if (!selectors.length) return html;
+
+      const overlayTop    = (html.match(/--hero-overlay-top\s*:\s*([^;]+);/i)    || [])[1]?.trim() || "rgba(0,0,0,.55)";
+      const overlayBottom = (html.match(/--hero-overlay-bottom\s*:\s*([^;]+);/i) || [])[1]?.trim() || "rgba(0,0,0,.25)";
+
+      const targetSelectors = selectors.join(",\n");
+      const pseudoSelectors = selectors
+        .flatMap(selector => [`${selector}::before`, `${selector}::after`])
+        .join(",\n");
+      const css = `
+:root { --hero-bg-image: url("${imageUrl}"); }
+${targetSelectors} {
+  background: linear-gradient(to bottom, ${overlayTop}, ${overlayBottom}), url("${imageUrl}") center/cover no-repeat !important;
+}
+${pseudoSelectors} {
+  background: none !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}`;
+
+      return upsertHeadStyle(html, "braid-masthead-image-fallback", css);
     }
 
     function enforceSampleMastheadBackground(html, dataUri, mastheadMeta) {
@@ -875,50 +997,88 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       return nextHtml;
     }
 
-    function applyGeneratedMastheadImageToHtml(html, dataUri, mastheadMeta) {
-      if (!html || !dataUri) return html || "";
+    function applyGeneratedMastheadImageToHtml(html, imageUrl, mastheadMeta) {
+      if (!html || !imageUrl) { return html || ""; }
       let nextHtml = String(html);
 
       // Path 1: braid-img placeholder <img> tag
       if (nextHtml.includes('id="braid-img"')) {
-        return nextHtml.replace(/(<img[^>]*id="braid-img"[^>]*)src=""/, `$1src="${dataUri}"`);
+        console.log("[masthead] Path 1: braid-img");
+        return nextHtml.replace(/(<img[^>]*id="braid-img"[^>]*)src=""/, `$1src="${imageUrl}"`);
       }
 
       // Path 2: braid-masthead.png placeholder URL in CSS
-      if (mastheadMeta?.mastheadPlaceholderUrl && nextHtml.includes(mastheadMeta.mastheadPlaceholderUrl)) {
-        nextHtml = nextHtml.replaceAll(mastheadMeta.mastheadPlaceholderUrl, dataUri);
-        return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
+      if (mastheadMeta?.mastheadPlaceholderUrl && new RegExp(`url\\(\\s*["']?${escapeRegExp(mastheadMeta.mastheadPlaceholderUrl)}["']?\\s*\\)`, "i").test(nextHtml)) {
+        console.log("[masthead] Path 2: placeholder URL");
+        nextHtml = nextHtml.replaceAll(mastheadMeta.mastheadPlaceholderUrl, imageUrl);
+        return enforceSampleMastheadBackground(nextHtml, imageUrl, mastheadMeta);
       }
 
-      // Path 3: original sample raster URL survived into braid output
-      if (mastheadMeta?.sampleRasterCssUrl && nextHtml.includes(mastheadMeta.sampleRasterCssUrl)) {
-        nextHtml = nextHtml.replaceAll(mastheadMeta.sampleRasterCssUrl, dataUri);
-        return enforceSampleMastheadBackground(nextHtml, dataUri, mastheadMeta);
+      // Path 3: canonical Mustache masthead slot (--hero-bg-image CSS variable).
+      // With a URL the value is tiny so CSS custom properties work fine in srcdoc iframes.
+      if (/--hero-bg-image\s*:/i.test(nextHtml)) {
+        console.log("[masthead] Path 3: --hero-bg-image CSS var");
+        nextHtml = nextHtml.replaceAll(/--hero-bg-image\s*:\s*[^;]+;/gi, `--hero-bg-image: url("${imageUrl}");`);
+        // Suppress body bleed; give body a subtle 92% ghost of the hero image instead.
+        nextHtml = upsertHeadStyle(nextHtml, "braid-masthead-image",
+          `:root { --hero-bg-image: url("${imageUrl}"); --site-bg-image: none; }` +
+          ` body { background-image: linear-gradient(` +
+          `color-mix(in srgb, var(--color-canvas, var(--background, #fff)) 92%, transparent),` +
+          `color-mix(in srgb, var(--color-canvas, var(--background, #fff)) 92%, transparent)),` +
+          `url("${imageUrl}"); }`);
+        return nextHtml;
       }
 
-      // Path 4: --hero-bg-image CSS variable slot (LLM compliance)
-      nextHtml = nextHtml.replace(
-        /--hero-bg-image\s*:\s*[^;]+;/i,
-        `--hero-bg-image: url("${dataUri}");`
-      );
-      // Also inject a :root override style block so it wins even if the variable
-      // was declared with a different value or the in-place replace missed it.
-      const heroVarOverride = `<style id="braid-masthead-image">:root { --hero-bg-image: url("${dataUri}"); }</style>`;
-      if (!/id="braid-masthead-image"/i.test(nextHtml)) {
-        nextHtml = nextHtml.replace(/<\/head>/i, `${heroVarOverride}\n</head>`);
+      // Path 4: original sample raster URL survived into braid output
+      if (mastheadMeta?.sampleRasterCssUrl && new RegExp(`url\\(\\s*["']?${escapeRegExp(mastheadMeta.sampleRasterCssUrl)}["']?\\s*\\)`, "i").test(nextHtml)) {
+        console.log("[masthead] Path 4: sampleRasterCssUrl match");
+        nextHtml = nextHtml.replaceAll(mastheadMeta.sampleRasterCssUrl, imageUrl);
+        return enforceSampleMastheadBackground(nextHtml, imageUrl, mastheadMeta);
       }
 
-      // Final fallback: if the sample had a known CSS selector and background declaration,
-      // force-inject it regardless of what the LLM put in the braid output.
-      // This fires even when the LLM deviated from the placeholder instructions.
-      nextHtml = injectForcedMastheadSelectorCss(nextHtml, dataUri, mastheadMeta);
+      // Path 5: original sample raster <img> src survived into slot-fill/braid output
+      if (mastheadMeta?.sampleRasterImgSrc && nextHtml.includes(mastheadMeta.sampleRasterImgSrc)) {
+        console.log("[masthead] Path 5: sampleRasterImgSrc match");
+        return nextHtml.replaceAll(mastheadMeta.sampleRasterImgSrc, imageUrl);
+      }
+      console.log("[masthead] Path 6+: fallback, hasHeroBgVar=", /--hero-bg-image\s*:/i.test(nextHtml), "sampleRasterCssUrl=", mastheadMeta?.sampleRasterCssUrl, "htmlLength=", nextHtml.length);
 
+      // Path 6: LLM output that missed the --hero-bg-image declaration — inject it.
+      nextHtml = nextHtml.replace(/--hero-bg-image\s*:\s*[^;]+;/i, `--hero-bg-image: url("${imageUrl}");`);
+      nextHtml = upsertHeadStyle(nextHtml, "braid-masthead-image",
+        `:root { --hero-bg-image: url("${imageUrl}"); --site-bg-image: none; }` +
+        ` body { background-image: linear-gradient(` +
+        `color-mix(in srgb, var(--color-canvas, var(--background, #fff)) 92%, transparent),` +
+        `color-mix(in srgb, var(--color-canvas, var(--background, #fff)) 92%, transparent)),` +
+        `url("${imageUrl}"); }`);
+      nextHtml = injectForcedMastheadSelectorCss(nextHtml, imageUrl, mastheadMeta);
+      nextHtml = injectGenericMastheadImageCss(nextHtml, imageUrl, mastheadMeta);
       return nextHtml;
     }
 
     function applyBraidColorOverridesToHtml(html) {
       const theme = themeWithAliases(getPage3Colors().theme);
       if (!html || !theme) return html || "";
+
+      // Parse --color-* variable names and their slot numbers from the first <style> block.
+      // Templates annotate each root color with a comment like /* 1. Canvas */ through /* 5. Panel */,
+      // letting us map slot indices to semantic theme roles so swatch changes propagate.
+      const slotToSemantic = { 1: "--background", 2: "--foreground", 3: "--primary", 4: "--secondary", 5: "--accent" };
+      const colorVarAliases = [];
+      const firstStyleMatch = html.match(/<style[\s\S]*?<\/style>/i);
+      if (firstStyleMatch) {
+        const colorVarRe = /(--color-[\w-]+)\s*:[^;]+;\s*\/\*\s*(\d+)\./g;
+        let m;
+        while ((m = colorVarRe.exec(firstStyleMatch[0])) !== null) {
+          const cssVarName = m[1];
+          const slotNum = parseInt(m[2], 10);
+          const semanticVar = slotToSemantic[slotNum];
+          if (semanticVar) {
+            colorVarAliases.push([cssVarName, `var(${semanticVar})`]);
+          }
+        }
+      }
+
       const overridePairs = [
         // Canonical semantic names
         ["--background", theme.background],
@@ -955,7 +1115,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         ["--bp-secondary", theme.secondary],
         ["--bp-tertiary", theme.accent],
         ["--bp-accent2", theme.foreground],
-        ["--bp-accent1", theme.background]
+        ["--bp-accent1", theme.background],
+        // Template-specific --color-* aliases inferred from numbered slot comments
+        ...colorVarAliases
       ];
       const overrides = overridePairs
         .filter(([, v]) => !!v)
@@ -972,10 +1134,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     function composeBraidPreviewHtml(result = generationResult) {
       if (!result) return "";
       let html = String(result.base_site_html || result.site_html || "");
-      if (mastheadImageResult?.image_data_uri) {
+      if (mastheadImageResult?.image_url) {
         html = applyGeneratedMastheadImageToHtml(
           html,
-          mastheadImageResult.image_data_uri,
+          mastheadImageResult.image_url,
           result.masthead_meta || mastheadImageResult.masthead_meta || null
         );
       }
@@ -991,7 +1153,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
     }
 
-    function editorLoadingHtml() {
+    function editorLoadingHtml(message = "Preparing editor…") {
+      const safeMessage = String(message || "Preparing editor…").replace(/[&<>"']/g, ch => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[ch]));
       return `<!doctype html>
 <html lang="en">
 <head>
@@ -1019,9 +1188,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
   </style>
 </head>
 <body>
-  <div class="card">Preparing editor…</div>
+  <div class="card">${safeMessage}</div>
 </body>
 </html>`;
+    }
+
+    function showEditorPendingMasthead(message = "Portfolio generated; waiting for masthead image…") {
+      pushPreviewHtmlUpdate(editorLoadingHtml(message));
     }
 
     function ensureEditorWindow() {
@@ -1586,6 +1759,56 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 600);
     }
+
+    // Package the portfolio as a ZIP: index.html + hero.png (relative reference).
+    // Falls back to a single self-contained HTML if JSZip is unavailable or image fetch fails.
+    async function downloadPortfolioAsZip(html, zipName = "portfolio") {
+      const urlPattern = /\/\.netlify\/functions\/getPreviewImage\?key=[^"') \n]+/g;
+      const imageUrls = [...new Set(html.match(urlPattern) || [])];
+
+      if (!imageUrls.length || typeof JSZip === "undefined") {
+        // No image or no JSZip — fall back to single HTML file with data URI
+        if (imageUrls.length) {
+          try {
+            const res = await fetch(imageUrls[0]);
+            if (res.ok) {
+              const blob = await res.blob();
+              const dataUri = await new Promise(r => { const fr = new FileReader(); fr.onloadend = () => r(fr.result); fr.readAsDataURL(blob); });
+              html = html.replaceAll(imageUrls[0], dataUri);
+            }
+          } catch {}
+        }
+        downloadText(`${zipName}.html`, html, "text/html");
+        return;
+      }
+
+      // Fetch the first image (there's only one masthead per portfolio)
+      let imgBytes = null;
+      try {
+        const res = await fetch(imageUrls[0]);
+        if (res.ok) imgBytes = await res.arrayBuffer();
+      } catch {}
+
+      // Rewrite all image URL occurrences to the relative filename
+      const heroFilename = "hero.png";
+      let indexHtml = html;
+      for (const url of imageUrls) {
+        indexHtml = indexHtml.replaceAll(url, `./${heroFilename}`);
+      }
+
+      const zip = new JSZip();
+      zip.file("index.html", indexHtml);
+      if (imgBytes) zip.file(heroFilename, imgBytes);
+
+      const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(zipBlob);
+      a.download = `${zipName}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 600);
+    }
     function copyToClipboard(text, btn){
       const label = btn?.textContent;
       const done = () => {
@@ -1692,7 +1915,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       if (btn) { btn.textContent = "…"; btn.disabled = true; }
       try {
-        const res = await fetch("/html/templates.json");
+        const res = await fetch("/templates/templates.json");
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (Array.isArray(data.templates) && data.templates.length > 0) {
@@ -1739,16 +1962,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     });
 
     // Convert a user-entered label → local file path
-    // Handles both "Biology" → html/biologyGrad.html
-    //          and "Biology A" / "biology_A" → html/biologyGrad_A.html
+    // "Biology"                  → /templates/biology/sample.html
+    // "Biology B"                → /templates/biology-b/sample.html
+    // "Electrical Engineering B" → /templates/electrical-engineering-b/sample.html
     function templateLabelToPath(val) {
-      const variantMatch = val.match(/^(.*?)[\s_]+([A-Za-z])$/);
-      if (variantMatch) {
-        const base = variantMatch[1].trim().toLowerCase().replace(/\s+/g, "-");
-        const variant = variantMatch[2].toUpperCase();
-        return `/html/${base}Grad_${variant}.html`;
-      }
-      return `/html/${val.trim().toLowerCase().replace(/\s+/g, "-")}Grad.html`;
+      const slug = val.trim().toLowerCase().replace(/\s+/g, "-");
+      return `/templates/${slug}/sample.html`;
     }
 
     // ----------------------------
@@ -1873,7 +2092,8 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (myRunId !== _normalizeRunId) return null; // superseded by newer call
         try {
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
-          const data = pollRes.ok ? JSON.parse(await pollRes.text()) : null;
+          const parsed = await readJsonResponseSafely(pollRes);
+          const data = pollRes.ok ? parsed.data : null;
           if (data?.status === "done") {
             normalizedTemplateResult = { normalizedHtml: data.normalizedHtml, colorSlots: data.colorSlots || {}, mastheadMeta: data.mastheadMeta || null };
             return normalizedTemplateResult;
@@ -1919,16 +2139,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         const srcPath = templateLabelToPath(val);
 
         // Each mode has its own pre-compiled path:
-        //   analysis → *Grad_template.html
-        //   mustache → *Grad_mustache.html
-        const modeSuffix  = extractMode === "mustache" ? "_mustache" : "_template";
-        const compiledKey = srcPath.replace(/\.html$/, `${modeSuffix}.html`);
+        //   analysis → template.html
+        //   mustache → mustache.html
+        const modeFile    = extractMode === "mustache" ? "mustache" : "template";
+        const compiledKey = srcPath.replace(/\/sample\.html$/, `/${modeFile}.html`);
         if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
 
         // Braid path: prefer _normalized.html (pre-processed offline) over raw HTML.
         // Only taken when extractMode is explicitly set to analysis/braid (debug override).
         if (extractMode !== "mustache") {
-          const normalizedKey = srcPath.replace(/\.html$/, "_normalized.html");
+          const normalizedKey = srcPath.replace(/\/sample\.html$/, "/normalized.html");
           const cacheKey = normalizedKey; // use normalized path as dedup key
           if (cacheKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
           let html = null;
@@ -1986,7 +2206,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         // If mustache file is missing, fall back to the _template.html variant.
         const candidateKeys = [compiledKey];
         if (extractMode === "mustache") {
-          candidateKeys.push(srcPath.replace(/\.html$/, "_template.html"));
+          candidateKeys.push(srcPath.replace(/\/sample\.html$/, "/template.html"));
         }
         for (const candidateKey of candidateKeys) {
           try {
@@ -2580,7 +2800,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       if (!url) return true;
       try {
         const parsed = new URL(url, window.location.href);
-        return parsed.origin === window.location.origin && parsed.pathname.startsWith("/html/");
+        return parsed.origin === window.location.origin && parsed.pathname.startsWith("/templates/");
       } catch { return false; }
     }
 
@@ -3283,6 +3503,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       mastheadImageInProgress = false;
       mastheadImageResult = null;
       mastheadImageError = null;
+      mastheadImageStartTimestamp = null;
+      clearInterval(mastheadWaitTicker);
+      mastheadWaitTicker = null;
       _mastheadImageRunId += 1;
       generationResult = null;
       generationError  = null;
@@ -3362,8 +3585,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           })
         });
         if (!res.ok && res.status !== 202) {
-          const t = await res.text();
-          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+          throw new Error(await responseErrorMessage(res, "Braid request failed"));
         }
 
         const maxWaitMs = 420000;
@@ -3420,6 +3642,9 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       mastheadImageInProgress = false;
       mastheadImageResult = null;
       mastheadImageError = null;
+      mastheadImageStartTimestamp = null;
+      clearInterval(mastheadWaitTicker);
+      mastheadWaitTicker = null;
       _mastheadImageRunId += 1;
       generationResult = null;
       generationError = null;
@@ -3496,8 +3721,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           })
         });
         if (!res.ok && res.status !== 202) {
-          const t = await res.text();
-          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+          throw new Error(await responseErrorMessage(res, "Slot-fill request failed"));
         }
 
         const maxWaitMs = 120000;
@@ -3511,19 +3735,29 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           if (data.status === "done") {
             clearInterval(slotFillCountdown);
             generationResult     = { ...data, base_site_html: data.site_html || "" };
-            generationResult.site_html = mastheadImageResult?.image_data_uri
-              ? composeBraidPreviewHtml(generationResult)
-              : generationResult.base_site_html;
+            const needsMastheadImage = isMustacheMode() && currentTemplateNeedsMastheadImage();
+            const hasMastheadImage = !!mastheadImageResult?.image_url;
+            const holdPreviewForMasthead = needsMastheadImage && !hasMastheadImage;
+            // Always compose with color overrides; masthead image injected if ready
+            generationResult.site_html = composeBraidPreviewHtml(generationResult);
             slotFillInProgress   = false;
             generationInProgress = false;
             window.umami?.track("portfolio-generated");
             onCreditUsed();
-            setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             if (isDebugMode()) mergeTokenReport(data?.token_report);
+            // Push the portfolio immediately so the editor shows the real page (with
+            // placeholder masthead if the AI image isn't ready yet), not a dark loading screen.
             pushPreviewHtmlUpdate(generationResult.site_html || "");
-            setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
-            greyRendererButtons(false);
+            if (!holdPreviewForMasthead) {
+              setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
+              greyRendererButtons(false);
+            } else {
+              const elapsed = mastheadImageStartTimestamp ? Math.floor((Date.now() - mastheadImageStartTimestamp) / 1000) : 0;
+              const remainingSec = Math.max(5, 720 - elapsed);
+              clearInterval(mastheadWaitTicker);
+              mastheadWaitTicker = startCountdown("braidStatus", "Portfolio generated; waiting for masthead image…", remainingSec, "rgba(141,224,255,.75)");
+            }
             return;
           }
           if (!pollRes.ok || data.status === "error") {
@@ -3551,8 +3785,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
     async function startMastheadImageGeneration() {
       const sampleHtml = extractedTemplateCache?.templateHtml || "";
       const mastheadMeta = normalizedTemplateResult?.mastheadMeta || extractedTemplateCache?.mastheadMeta || null;
-      if (!sampleHtml) return;
-      if (!requireCredits()) return;
+      if (!sampleHtml) {
+        mastheadImageError = "No template HTML was available for masthead image generation.";
+        return;
+      }
+      if (!requireCredits()) {
+        mastheadImageError = "No credits remaining for masthead image generation.";
+        return;
+      }
 
       const myRunId = ++_mastheadImageRunId;
       mastheadImageInProgress = true;
@@ -3563,6 +3803,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const page1 = getPage1();
 
       clearInterval(mastheadImageTicker);
+      mastheadImageStartTimestamp = Date.now();
       const mastheadImageTimeoutSec = 720;
       mastheadImageTicker = startCountdown("colorsChosenStatus", "Generating masthead image…", mastheadImageTimeoutSec);
 
@@ -3583,8 +3824,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           })
         });
         if (!res.ok && res.status !== 202) {
-          const t = await res.text();
-          throw new Error(JSON.parse(t)?.error || `Server error ${res.status}`);
+          throw new Error(await responseErrorMessage(res, "Image generation request failed"));
         }
 
         const maxWaitMs = mastheadImageTimeoutSec * 1000;
@@ -3601,12 +3841,16 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
           if (data.status === "done") {
             clearInterval(mastheadImageTicker);
+            clearInterval(mastheadWaitTicker);
+            mastheadWaitTicker = null;
             mastheadImageInProgress = false;
             mastheadImageResult = data;
             onCreditUsed(!data.skipped);
-            if (generationResult?.base_site_html && data.image_data_uri) {
+            if (generationResult?.base_site_html && data.image_url) {
               generationResult.site_html = composeBraidPreviewHtml(generationResult);
               pushPreviewHtmlUpdate(generationResult.site_html || "");
+              setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
+              greyRendererButtons(false);
             }
             setHeaderStatus(
               "colorsChosenStatus",
@@ -3615,16 +3859,19 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
             );
             if (isDebugMode()) {
               mergeTokenReport(data?.token_report);
-              wireMastheadImageDebug(data.image_data_uri || null);
+              wireMastheadImageDebug(data.image_url || null);
             }
             return;
           }
           if (!pollRes.ok || data.status === "error") {
             if (data.quota) {
               clearInterval(mastheadImageTicker);
+              clearInterval(mastheadWaitTicker);
+              mastheadWaitTicker = null;
               mastheadImageInProgress = false;
               mastheadImageError = data.error || "Credit limit reached.";
-              setHeaderStatus("colorsChosenStatus", `✓ Colors chosen • ${mastheadImageError}`, "rgba(251,171,156,.9)");
+              setHeaderStatus("colorsChosenStatus", `⚠ Masthead image failed: ${mastheadImageError}`, "rgba(251,171,156,.9)");
+              showEditorPendingMasthead(`Masthead image failed: ${mastheadImageError}`);
               showUpgradePrompt(data);
               return;
             }
@@ -3634,9 +3881,12 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         throw new Error("Image generation timed out after 12 minutes.");
       } catch (err) {
         clearInterval(mastheadImageTicker);
+        clearInterval(mastheadWaitTicker);
+        mastheadWaitTicker = null;
         mastheadImageInProgress = false;
         mastheadImageError = err?.message || String(err);
-        setHeaderStatus("colorsChosenStatus", `✓ Colors chosen • ${mastheadImageError}`, "rgba(251,171,156,.9)");
+        setHeaderStatus("colorsChosenStatus", `⚠ Masthead image failed: ${mastheadImageError}`, "rgba(251,171,156,.9)");
+        showEditorPendingMasthead(`Masthead image failed: ${mastheadImageError}`);
       }
     }
 
@@ -3725,10 +3975,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
     }
 
-    function wireMastheadImageDebug(dataUri) {
+    function wireMastheadImageDebug(imageUrl) {
       const dl = document.getElementById("dlMastheadImage");
       const vw = document.getElementById("vwMastheadImage");
-      const hasData = !!dataUri;
+      const hasData = !!imageUrl;
       [dl, vw].forEach(btn => {
         if (!btn) return;
         btn.disabled = !hasData;
@@ -3742,15 +3992,11 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       }
       if (dl) dl.onclick = () => {
         const a = document.createElement("a");
-        a.href = dataUri;
+        a.href = imageUrl;
         a.download = "masthead-image.png";
         a.click();
       };
-      if (vw) vw.onclick = () => {
-        const html = `<!doctype html><html><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${dataUri}" style="max-width:100%;max-height:100vh;display:block"></body></html>`;
-        const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
-        window.open(url, "_blank");
-      };
+      if (vw) vw.onclick = () => window.open(imageUrl, "_blank");
     }
 
     function wirePayloadDebug() {
@@ -3850,7 +4096,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         const dlFinalHtml = document.getElementById("dlFinalHtml");
         const dlSummary   = document.getElementById("dlSummaryHtml");
         greyRendererButtons(false);
-        if (dlFinalHtml) dlFinalHtml.onclick = () => downloadText("portfolio.html", siteHtml, "text/html");
+        if (dlFinalHtml) dlFinalHtml.onclick = async () => downloadPortfolioAsZip(siteHtml, "portfolio");
         const cpFinalHtml = document.getElementById("cpFinalHtml");
         if (cpFinalHtml) cpFinalHtml.onclick = e => copyToClipboard(siteHtml, e.currentTarget);
         const vwFinalHtml = document.getElementById("vwFinalHtml");
@@ -3970,10 +4216,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           })
         });
         if (!res.ok && res.status !== 202) {
-          const rawText = await res.text();
-          let errData = {};
-          try { errData = JSON.parse(rawText); } catch {}
-          throw new Error(errData?.error || `Server error ${res.status}: ${rawText.slice(0, 400)}`);
+          throw new Error(await responseErrorMessage(res, "Generation request failed"));
         }
 
         const startTime = Date.now();
@@ -4067,6 +4310,14 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
         if (!generationResult) return;
       }
 
+      if (isMustacheMode() && currentTemplateNeedsMastheadImage() && !mastheadImageResult?.image_url) {
+        const message = mastheadImageError
+          ? `⚠ Masthead image failed: ${mastheadImageError}`
+          : "Generating masthead image…";
+        setHeaderStatus("colorsChosenStatus", message, mastheadImageError ? "rgba(251,171,156,.9)" : "rgba(141,224,255,.75)");
+        return;
+      }
+
       // Set localStorage with the base HTML *before* opening the window so the
       // editor never reads an empty slot. The popup-blocker rule only fires on
       // window.open(), not on localStorage writes.
@@ -4090,7 +4341,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
       let finalHtml = data.site_html;
       if (allVisuals.length > 0) {
+        const preInjectHasMastheadStyle = /id="braid-masthead-image"/i.test(finalHtml);
         finalHtml = injectArtifacts(finalHtml, allVisuals);
+        const postInjectHasMastheadStyle = /id="braid-masthead-image"/i.test(finalHtml);
+        console.log("[doPreview] injectArtifacts: visuals=", allVisuals.length, "pre-inject masthead style=", preInjectHasMastheadStyle, "post-inject=", postInjectHasMastheadStyle, "finalHtml length=", finalHtml.length);
       }
       // Push the final HTML to the already-open editor window via postMessage
       // even when there were no artifact edits; otherwise the editor can stay
@@ -4107,7 +4361,7 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       const dlFinalHtml = document.getElementById("dlFinalHtml");
       const dlSummary   = document.getElementById("dlSummaryHtml");
       greyRendererButtons(false);
-      if (dlFinalHtml) dlFinalHtml.onclick = () => downloadText("portfolio.html", finalHtml, "text/html");
+      if (dlFinalHtml) dlFinalHtml.onclick = async () => downloadPortfolioAsZip(finalHtml, "portfolio");
       if (dlSummary)   dlSummary.onclick   = () => downloadText("MyPersonalPortfolioWebsiteSummary.html", summaryHtml, "text/html");
 
       // ── Debug panel — re-wire payload with visuals included now that generation ran ──
@@ -4644,8 +4898,10 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
       window.umami?.track("form-step-complete", { step: 4 });
       if (isMustacheMode()) {
         page4Submitted = true;
-        const mastheadMeta = extractedTemplateCache?.mastheadMeta;
-        const needsMastheadImage = !!(mastheadMeta?.sampleRasterCssUrl);
+        const needsMastheadImage = currentTemplateNeedsMastheadImage();
+        if (needsMastheadImage && !mastheadImageResult?.image_url) {
+          showEditorPendingMasthead();
+        }
         if (needsMastheadImage && !autoMastheadImageTriggered) {
           autoMastheadImageTriggered = true;
           startMastheadImageGeneration();
@@ -4661,12 +4917,21 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
           setOpenEditorReady(false);
           return;
         }
-        if (needsMastheadImage && mastheadImageResult?.image_data_uri && generationResult?.base_site_html) {
-          generationResult.site_html = applyGeneratedMastheadImageToHtml(
-            generationResult.base_site_html,
-            mastheadImageResult.image_data_uri,
-            mastheadMeta
-          );
+        if (needsMastheadImage) {
+          while (mastheadImageInProgress) {
+            await new Promise(r => setTimeout(r, 500));
+          }
+          if (!mastheadImageResult?.image_url) {
+            const message = mastheadImageError
+              ? `⚠ Masthead image failed: ${mastheadImageError}`
+              : "Generating masthead image…";
+            setHeaderStatus("colorsChosenStatus", message, mastheadImageError ? "rgba(251,171,156,.9)" : "rgba(141,224,255,.75)");
+            setOpenEditorReady(false);
+            return;
+          }
+        }
+        if (needsMastheadImage && mastheadImageResult?.image_url && generationResult?.base_site_html) {
+          generationResult.site_html = composeBraidPreviewHtml(generationResult);
           pushPreviewHtmlUpdate(generationResult.site_html);
         }
         doPreview();

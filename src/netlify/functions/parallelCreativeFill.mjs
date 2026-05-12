@@ -19,13 +19,23 @@
  */
 
 import { readFileSync } from "fs";
-import { resolve }      from "path";
+import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 
-const __dir = fileURLToPath(new URL(".", import.meta.url));
-
 function loadPrompt(filename) {
-  return readFileSync(resolve(__dir, filename), "utf-8");
+  const cwd = process.cwd();
+  let here = null;
+  try { here = dirname(fileURLToPath(import.meta.url)); } catch {}
+  const candidates = [
+    resolve(cwd, `src/netlify/functions/${filename}`),
+    resolve(cwd, `netlify/functions/${filename}`),
+    resolve(cwd, filename),
+  ];
+  if (here) candidates.unshift(resolve(here, filename));
+  for (const candidate of candidates) {
+    try { return readFileSync(candidate, "utf-8"); } catch {}
+  }
+  throw new Error(`Could not load ${filename} (cwd=${cwd}, here=${here})`);
 }
 
 function parseJson(raw) {
@@ -53,7 +63,7 @@ function resumeFactsExcerpt(resumeFacts) {
       start_date: e.start_date, end_date: e.end_date,
     })),
     projects: (resumeFacts.projects || []).map(p => ({
-      name: p.name, technologies: p.technologies, summary: p.summary,
+      name: p.name, technologies: p.technologies, summary: p.summary || p.description,
     })),
     skills: resumeFacts.skills || {},
   };

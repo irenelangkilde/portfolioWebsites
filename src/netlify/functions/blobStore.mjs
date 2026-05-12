@@ -131,3 +131,14 @@ export function getNamedBlobStore(name) {
 export function getPreviewResultsStore() {
   return getNamedBlobStore(PREVIEW_RESULTS_STORE);
 }
+
+const PREVIEW_IMAGES_STORE   = "preview-images";
+const PUBLISHED_IMAGES_STORE = "published-images";
+
+export function getPreviewImagesStore() {
+  return getNamedBlobStore(PREVIEW_IMAGES_STORE);
+}
+
+export function getPublishedImagesStore() {
+  return getNamedBlobStore(PUBLISHED_IMAGES_STORE);
+}

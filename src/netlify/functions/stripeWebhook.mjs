@@ -40,6 +40,14 @@ function supportAddonMonths(cartJson) {
   } catch { return 0; }
 }
 
+function extraCreditUnits(cartJson) {
+  try {
+    const cart = JSON.parse(cartJson || "[]");
+    const item = cart.find(i => i.tier === "extra_credits");
+    return item ? Math.max(0, parseInt(item.qty || "0", 10)) : 0;
+  } catch { return 0; }
+}
+
 // ── Gift tiers ───────────────────────────────────────────────────────────────
 const GIFT_TIERS      = new Set(["starter_care", "premium_care"]);
 const PLAN_GIFT_TIERS = new Set(["graduate", "prime"]);
@@ -300,11 +308,67 @@ const TIER_LIMITS = {
 };
 
 function getSupabaseAdmin() {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error("Supabase not configured (missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)");
+  }
   return createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY,
     { auth: { persistSession: false } }
   );
+}
+
+function envValue(...names) {
+  for (const name of names) {
+    const value = process.env[name];
+    if (value) return value;
+  }
+  return "";
+}
+
+function envList(name) {
+  return String(process.env[name] || "")
+    .split(/[,\s]+/)
+    .map(v => v.trim())
+    .filter(Boolean);
+}
+
+function uniqueWebhookSecrets() {
+  const seen = new Set();
+  const candidates = [];
+  for (const name of [
+    "STRIPE_WEBHOOK_SECRET_TEST",
+    "STRIPE_TEST_WEBHOOK_SECRET",
+    "STRIPE_WEBHOOK_SECRET_LIVE",
+    "STRIPE_LIVE_WEBHOOK_SECRET",
+    "STRIPE_WEBHOOK_SECRET"
+  ]) {
+    for (const secret of envList(name)) {
+      if (seen.has(secret)) continue;
+      seen.add(secret);
+      candidates.push({ name, secret });
+    }
+  }
+  return candidates;
+}
+
+function stripeKeyForMode(livemode) {
+  return livemode
+    ? envValue("STRIPE_SECRET_KEY_LIVE", "STRIPE_LIVE_SECRET_KEY", "STRIPE_SECRET_KEY")
+    : envValue("STRIPE_SECRET_KEY_TEST", "STRIPE_TEST_SECRET_KEY", "STRIPE_SECRET_KEY");
+}
+
+function getHeader(headers = {}, name) {
+  const target = name.toLowerCase();
+  for (const [key, value] of Object.entries(headers || {})) {
+    if (key.toLowerCase() === target) return Array.isArray(value) ? value[0] : value;
+  }
+  return "";
+}
+
+function rawWebhookBody(event) {
+  if (event.isBase64Encoded) return Buffer.from(event.body || "", "base64");
+  return event.body || "";
 }
 
 async function upgradeMembership(userId, tierKey, extraFields = {}) {
@@ -346,6 +410,20 @@ async function upgradeGraduate(userId, quantity, extraFields = {}) {
   else       console.log(`Upgraded user ${userId} to graduate (${quantity} units)`);
 }
 
+async function applyMembershipAddons(userId, extraFields = {}) {
+  const supabase = getSupabaseAdmin();
+  const { error } = await supabase
+    .from("memberships")
+    .update({
+      status: "active",
+      ...extraFields
+    })
+    .eq("user_id", userId);
+
+  if (error) console.error("Supabase add-on update error:", error.message);
+  else       console.log(`Applied membership add-ons for user ${userId}`);
+}
+
 async function cancelMembership(userId) {
   const supabase = getSupabaseAdmin();
   await supabase
@@ -360,137 +438,201 @@ export async function handler(event) {
     return { statusCode: 405, body: "Method not allowed" };
   }
 
-  const stripeKey        = process.env.STRIPE_SECRET_KEY;
-  const webhookSecret    = process.env.STRIPE_WEBHOOK_SECRET;
-  if (!stripeKey || !webhookSecret) {
-    return { statusCode: 500, body: "Stripe not configured" };
+  const webhookSecrets = uniqueWebhookSecrets();
+  const verifierKey = envValue(
+    "STRIPE_SECRET_KEY_TEST",
+    "STRIPE_TEST_SECRET_KEY",
+    "STRIPE_SECRET_KEY_LIVE",
+    "STRIPE_LIVE_SECRET_KEY",
+    "STRIPE_SECRET_KEY"
+  );
+  if (!verifierKey || !webhookSecrets.length) {
+    console.error("[stripeWebhook] Stripe not configured", {
+      hasStripeKey: !!verifierKey,
+      webhookSecretNames: webhookSecrets.map(c => c.name)
+    });
+    return { statusCode: 500, body: "Stripe webhook not configured" };
   }
 
+  const signature = getHeader(event.headers, "stripe-signature");
+  if (!signature) {
+    console.error("[stripeWebhook] Missing Stripe-Signature header");
+    return { statusCode: 400, body: "Missing Stripe-Signature header" };
+  }
+
+  const verifierStripe = new Stripe(verifierKey, { apiVersion: "2024-12-18.acacia" });
+  const rawBody = rawWebhookBody(event);
+  let stripeEvent;
+  let matchedSecretName = "";
+  const verificationErrors = [];
+  for (const candidate of webhookSecrets) {
+    try {
+      stripeEvent = verifierStripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        candidate.secret
+      );
+      matchedSecretName = candidate.name;
+      break;
+    } catch (err) {
+      verificationErrors.push(`${candidate.name}: ${err.message}`);
+    }
+  }
+
+  if (!stripeEvent) {
+    console.error("[stripeWebhook] Signature verification failed", {
+      attemptedSecrets: webhookSecrets.map(c => c.name),
+      errors: verificationErrors
+    });
+    return { statusCode: 400, body: "Webhook signature verification failed" };
+  }
+
+  const stripeKey = stripeKeyForMode(!!stripeEvent.livemode);
+  if (!stripeKey) {
+    console.error("[stripeWebhook] Missing Stripe key for verified event mode", {
+      eventId: stripeEvent.id,
+      type: stripeEvent.type,
+      livemode: !!stripeEvent.livemode
+    });
+    return { statusCode: 500, body: "Stripe key missing for webhook mode" };
+  }
   const stripe = new Stripe(stripeKey, { apiVersion: "2024-12-18.acacia" });
 
-  let stripeEvent;
-  try {
-    stripeEvent = stripe.webhooks.constructEvent(
-      event.body,
-      event.headers["stripe-signature"],
-      webhookSecret
-    );
-  } catch (err) {
-    console.error("Webhook signature verification failed:", err.message);
-    return { statusCode: 400, body: `Webhook error: ${err.message}` };
-  }
-
   const obj = stripeEvent.data.object;
+  console.log("[stripeWebhook] Received event", {
+    id: stripeEvent.id,
+    type: stripeEvent.type,
+    livemode: !!stripeEvent.livemode,
+    matchedSecretName
+  });
 
-  switch (stripeEvent.type) {
+  try {
+    switch (stripeEvent.type) {
 
-    // ── One-time purchase or first subscription payment completed ─────────
-    case "checkout.session.completed": {
-      const userId  = obj.metadata?.user_id;
-      const tierKey = obj.metadata?.tier_key;
-      const qty     = parseInt(obj.metadata?.quantity || "1", 10);
-      if (!userId || !tierKey) break;
+      // ── One-time purchase or first subscription payment completed ─────────
+      case "checkout.session.completed": {
+        const userId  = obj.metadata?.user_id;
+        const tierKey = obj.metadata?.tier_key;
+        const qty     = parseInt(obj.metadata?.quantity || "1", 10);
+        if (!userId || !tierKey) break;
 
-      const extra = {};
-      if (obj.customer)       extra.stripe_customer_id    = obj.customer;
-      if (obj.subscription)   extra.stripe_subscription_id = obj.subscription;
-      if (obj.payment_intent) extra.stripe_payment_intent  = obj.payment_intent;
+        const extra = {};
+        if (obj.customer)       extra.stripe_customer_id    = obj.customer;
+        if (obj.subscription)   extra.stripe_subscription_id = obj.subscription;
+        if (obj.payment_intent) extra.stripe_payment_intent  = obj.payment_intent;
 
-      if (obj.subscription) {
+        if (obj.subscription) {
+          try {
+            const sub = await stripe.subscriptions.retrieve(obj.subscription);
+            extra.current_period_end = new Date(sub.current_period_end * 1000).toISOString();
+          } catch {}
+        }
+
+        const hAddon = hostingAddonMonths(obj.metadata?.cart);
+        const sAddon = supportAddonMonths(obj.metadata?.cart);
+        const cAddon = extraCreditUnits(obj.metadata?.cart);
+
+        if (GIFT_TIERS.has(tierKey)) {
+          await handleGiftPurchase(obj);
+        } else if (obj.metadata?.is_gift === "true" && PLAN_GIFT_TIERS.has(tierKey)) {
+          await handlePlanGiftPurchase(obj, tierKey, qty);
+        } else {
+          // Read existing membership so hosting/support stack rather than reset
+          const supabase = getSupabaseAdmin();
+          const { data: existing } = await supabase
+            .from("memberships")
+            .select("tier, status, credits_limit, hosting_until, support_until")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (sAddon > 0) extra.support_until = stackMonths(existing?.support_until, sAddon);
+
+          if (tierKey === "free" || tierKey === "prime") {
+            if (tierKey === "prime") extra.hosting_until = stackMonths(existing?.hosting_until, 4 + hAddon);
+            if (tierKey === "prime" && cAddon > 0) extra.credits_limit = TIER_LIMITS.prime.credits_limit + cAddon;
+            await upgradeMembership(userId, tierKey, extra);
+          } else if (tierKey === "graduate") {
+            extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
+            if (cAddon > 0) extra.credits_limit = (qty * CREDITS_PER_UNIT) + cAddon;
+            await upgradeGraduate(userId, qty, extra);
+          } else if (hAddon > 0 || sAddon > 0 || cAddon > 0) {
+            if (hAddon > 0) extra.hosting_until = stackMonths(existing?.hosting_until, hAddon);
+            if (cAddon > 0 && existing?.credits_limit !== -1) {
+              extra.credits_limit = Math.max(0, existing?.credits_limit ?? 0) + cAddon;
+            }
+            await applyMembershipAddons(userId, extra);
+          }
+        }
+        break;
+      }
+
+      // ── Auto-renewing subscription renewed ────────────────────────────────
+      case "invoice.payment_succeeded": {
+        const subId = obj.subscription;
+        if (!subId) break;
         try {
-          const sub = await stripe.subscriptions.retrieve(obj.subscription);
-          extra.current_period_end = new Date(sub.current_period_end * 1000).toISOString();
-        } catch {}
-      }
+          const sub     = await stripe.subscriptions.retrieve(subId);
+          const userId  = sub.metadata?.user_id;
+          const tierKey = sub.metadata?.tier_key;
+          const qty     = parseInt(sub.metadata?.quantity || "1", 10);
+          if (!userId) break;
 
-      const hAddon = hostingAddonMonths(obj.metadata?.cart);
-      const sAddon = supportAddonMonths(obj.metadata?.cart);
-
-      if (GIFT_TIERS.has(tierKey)) {
-        await handleGiftPurchase(obj);
-      } else if (obj.metadata?.is_gift === "true" && PLAN_GIFT_TIERS.has(tierKey)) {
-        await handlePlanGiftPurchase(obj, tierKey, qty);
-      } else {
-        // Read existing membership so hosting/support stack rather than reset
-        const supabase = getSupabaseAdmin();
-        const { data: existing } = await supabase
-          .from("memberships")
-          .select("hosting_until, support_until")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (sAddon > 0) extra.support_until = stackMonths(existing?.support_until, sAddon);
-
-        if (tierKey === "free" || tierKey === "prime") {
-          if (tierKey === "prime") extra.hosting_until = stackMonths(existing?.hosting_until, 4 + hAddon);
-          await upgradeMembership(userId, tierKey, extra);
-        } else if (tierKey === "graduate") {
-          extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
-          await upgradeGraduate(userId, qty, extra);
-        }
-      }
-      break;
-    }
-
-    // ── Auto-renewing subscription renewed ────────────────────────────────
-    case "invoice.payment_succeeded": {
-      const subId = obj.subscription;
-      if (!subId) break;
-      try {
-        const sub     = await stripe.subscriptions.retrieve(subId);
-        const userId  = sub.metadata?.user_id;
-        const tierKey = sub.metadata?.tier_key;
-        const qty     = parseInt(sub.metadata?.quantity || "1", 10);
-        if (!userId) break;
-
-        const supabase = getSupabaseAdmin();
-        const { data: existing } = await supabase
-          .from("memberships")
-          .select("hosting_until")
-          .eq("user_id", userId)
-          .maybeSingle();
-
-        if (tierKey === "graduate") {
-          await supabase
+          const supabase = getSupabaseAdmin();
+          const { data: existing } = await supabase
             .from("memberships")
-            .update({
-              status:             "active",
-              credits_used:       0,
-              downloads_used:     0,
-              credits_limit:      qty * CREDITS_PER_UNIT,
-              downloads_limit:    qty * DOWNLOADS_PER_UNIT,
-              hosting_until:      stackMonths(existing?.hosting_until, qty),
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString()
-            })
-            .eq("user_id", userId);
-        } else if (tierKey === "prime") {
-          await supabase
-            .from("memberships")
-            .update({
-              status:             "active",
-              credits_used:       0,
-              downloads_used:     0,
-              hosting_until:      stackMonths(existing?.hosting_until, 4),
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString()
-            })
-            .eq("user_id", userId);
+            .select("hosting_until")
+            .eq("user_id", userId)
+            .maybeSingle();
+
+          if (tierKey === "graduate") {
+            await supabase
+              .from("memberships")
+              .update({
+                status:             "active",
+                credits_used:       0,
+                downloads_used:     0,
+                credits_limit:      qty * CREDITS_PER_UNIT,
+                downloads_limit:    qty * DOWNLOADS_PER_UNIT,
+                hosting_until:      stackMonths(existing?.hosting_until, qty),
+                current_period_end: new Date(sub.current_period_end * 1000).toISOString()
+              })
+              .eq("user_id", userId);
+          } else if (tierKey === "prime") {
+            await supabase
+              .from("memberships")
+              .update({
+                status:             "active",
+                credits_used:       0,
+                downloads_used:     0,
+                hosting_until:      stackMonths(existing?.hosting_until, 4),
+                current_period_end: new Date(sub.current_period_end * 1000).toISOString()
+              })
+              .eq("user_id", userId);
+          }
+          console.log(`Renewed subscription for user ${userId} (${tierKey})`);
+        } catch (err) {
+          console.error("Renewal error:", err.message);
         }
-        console.log(`Renewed subscription for user ${userId} (${tierKey})`);
-      } catch (err) {
-        console.error("Renewal error:", err.message);
+        break;
       }
-      break;
-    }
 
-    // ── Subscription cancelled ─────────────────────────────────────────────
-    case "customer.subscription.deleted": {
-      const userId = obj.metadata?.user_id;
-      if (userId) await cancelMembership(userId);
-      break;
-    }
+      // ── Subscription cancelled ─────────────────────────────────────────────
+      case "customer.subscription.deleted": {
+        const userId = obj.metadata?.user_id;
+        if (userId) await cancelMembership(userId);
+        break;
+      }
 
-    default:
-      break;
+      default:
+        break;
+    }
+  } catch (err) {
+    console.error("[stripeWebhook] Fulfillment error", {
+      eventId: stripeEvent.id,
+      type: stripeEvent.type,
+      message: err?.message || String(err)
+    });
+    return { statusCode: 500, body: "Webhook fulfillment error" };
   }
 
   return { statusCode: 200, body: JSON.stringify({ received: true }) };

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { explainBlobStoreError, getNamedBlobStore } from "./blobStore.mjs";
+import { explainBlobStoreError, getNamedBlobStore, getPreviewImagesStore, getPublishedImagesStore } from "./blobStore.mjs";
 
 const PUBLISHED_SITES_STORE = "published-sites";
 
@@ -72,7 +72,7 @@ export async function handler(event) {
     return json(400, { error: "Invalid JSON body." });
   }
 
-  const html = String(payload.html || "").trim();
+  let html = String(payload.html || "").trim();
   if (!html || !/<html[\s>]/i.test(html)) {
     return json(400, { error: "Missing complete HTML document." });
   }
@@ -104,6 +104,28 @@ export async function handler(event) {
   const { store, configError } = getNamedBlobStore(PUBLISHED_SITES_STORE);
   if (!store) {
     return json(500, { error: configError });
+  }
+
+  // If the HTML references a preview image URL, promote it to permanent published storage.
+  const previewKeyMatch = html.match(/\/\.netlify\/functions\/getPreviewImage\?key=([^"') ]+)/);
+  if (previewKeyMatch) {
+    const previewKey = decodeURIComponent(previewKeyMatch[1]);
+    try {
+      const { store: previewImgStore } = getPreviewImagesStore();
+      const { store: publishedImgStore } = getPublishedImagesStore();
+      if (previewImgStore && publishedImgStore) {
+        const b64 = await previewImgStore.get(previewKey);
+        if (b64) {
+          await publishedImgStore.set(slug, b64);
+          html = html.replace(
+            /\/\.netlify\/functions\/getPreviewImage\?key=[^"') ]+/g,
+            `/.netlify/functions/getPublishedImage?slug=${encodeURIComponent(slug)}`
+          );
+        }
+      }
+    } catch (imgErr) {
+      console.warn("[publishPortfolio] image promotion failed (non-fatal):", imgErr?.message || imgErr);
+    }
   }
 
   const metaKey = `meta/${slug}.json`;
