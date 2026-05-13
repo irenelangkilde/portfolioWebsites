@@ -135,6 +135,85 @@ function embedMastheadMetaComment(html = "", mastheadMeta = null) {
 
 // ─── Color extraction + injection ────────────────────────────────────────────
 
+function hexToRgb(hex) {
+  const h = hex.replace("#", "").toLowerCase();
+  if (h.length === 3)
+    return { r: parseInt(h[0]+h[0],16), g: parseInt(h[1]+h[1],16), b: parseInt(h[2]+h[2],16) };
+  return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+}
+
+function buildRgbVars(roles) {
+  const lines = [":root {"];
+  for (const [varName, entry] of Object.entries(roles)) {
+    const { r, g, b } = hexToRgb(entry.hex);
+    lines.push(`  ${varName}-rgb: ${r}, ${g}, ${b};`);
+  }
+  lines.push("}");
+  return lines.join("\n");
+}
+
+// Collect every hex that belongs to each role's cluster so we can rewrite them all.
+function buildHexToVarMap(roles, clusters) {
+  const map = new Map(); // lowercase hex → CSS var name
+  for (const [varName, roleEntry] of Object.entries(roles)) {
+    const cluster = clusters.find(c => c.hex === roleEntry.hex);
+    if (!cluster) { map.set(roleEntry.hex.toLowerCase(), varName); continue; }
+    const addHex = h => map.set(h.toLowerCase(), varName);
+    addHex(cluster.hex);
+    cluster.merged.forEach(addHex);
+    for (const member of cluster.members) {
+      addHex(member.hex);
+      member.merged.forEach(addHex);
+    }
+  }
+  return map;
+}
+
+function rewriteCssVars(html, roles, clusters) {
+  const hexToVar = buildHexToVarMap(roles, clusters);
+
+  // Build rgba() lookup: "r,g,b" → var name
+  const rgbToVar = new Map();
+  for (const [hex, varName] of hexToVar) {
+    const { r, g, b } = hexToRgb(hex.length === 4 ? hex : hex); // already lowercase 6-digit
+    rgbToVar.set(`${r},${g},${b}`, varName);
+  }
+
+  function rewriteCss(css) {
+    // 6-digit hex
+    let out = css.replace(/#([0-9a-fA-F]{6})\b/g, (m) => {
+      const v = hexToVar.get(m.toLowerCase()); return v ? `var(${v})` : m;
+    });
+    // 3-digit hex
+    out = out.replace(/#([0-9a-fA-F]{3})\b/g, (m, d) => {
+      const exp = "#" + d.split("").map(c => c+c).join("");
+      const v = hexToVar.get(exp.toLowerCase()); return v ? `var(${v})` : m;
+    });
+    // rgba() / rgb()
+    out = out.replace(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/g,
+      (m, r, g, b, a) => {
+        const v = rgbToVar.get(`${+r},${+g},${+b}`);
+        if (!v) return m;
+        return a !== undefined ? `rgba(var(${v}-rgb),${a})` : `rgb(var(${v}-rgb))`;
+      });
+    return out;
+  }
+
+  // Rewrite <style> blocks (skip extracted-theme — it uses oklch() values, not hex)
+  let result = html.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (match, attrs, css) => {
+    if (/id\s*=\s*["']extracted-theme["']/i.test(attrs)) return match;
+    return `<style${attrs}>${rewriteCss(css)}</style>`;
+  });
+
+  // Rewrite inline style attributes
+  result = result.replace(/(\bstyle\s*=\s*")([^"]*?)(")/gi, (m, open, css, close) =>
+    `${open}${rewriteCss(css)}${close}`);
+  result = result.replace(/(\bstyle\s*=\s*')([^']*?)(')/gi, (m, open, css, close) =>
+    `${open}${rewriteCss(css)}${close}`);
+
+  return result;
+}
+
 function injectColorTheme(html, minSep = MIN_SEP) {
   const counts     = extractRegex(html);
   const candidates = dedup(counts);
@@ -147,19 +226,24 @@ function injectColorTheme(html, minSep = MIN_SEP) {
   const injection = [
     `<style id="extracted-theme">`,
     buildCss(roles, inverted),
+    `/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */`,
+    buildRgbVars(roles),
     `</style>`,
     `<script type="application/json" id="color-palette">`,
     buildJson(clusters, roles, inverted, meta),
     `</script>`,
   ].join("\n");
 
+  let injected;
   if (html.includes("</head>")) {
-    return { html: html.replace("</head>", `${injection}\n</head>`), confidence, k: fit.k };
+    injected = html.replace("</head>", `${injection}\n</head>`);
+  } else if (/<body/i.test(html)) {
+    injected = html.replace(/<body[^>]*>/i, m => `${injection}\n${m}`);
+  } else {
+    injected = injection + "\n" + html;
   }
-  if (/<body/i.test(html)) {
-    return { html: html.replace(/<body[^>]*>/i, m => `${injection}\n${m}`), confidence, k: fit.k };
-  }
-  return { html: injection + "\n" + html, confidence, k: fit.k };
+
+  return { html: injected, confidence, k: fit.k, roles, clusters };
 }
 
 // ─── Main loop ────────────────────────────────────────────────────────────────
@@ -200,11 +284,14 @@ for (const major of majors) {
   }
 
   // Step 2: inject color theme
-  const { html: colorized, confidence, k } = injectColorTheme(imgRenamed);
+  const { html: colorized, confidence, k, roles, clusters } = injectColorTheme(imgRenamed);
   const warn = confidence < MIN_SEP ? " ⚠ low-confidence" : "";
 
-  // Step 3: embed masthead metadata
-  const normalized = embedMastheadMetaComment(colorized, mastheadMeta);
+  // Step 3: rewrite CSS hex/rgba() values to CSS variable references
+  const varified = rewriteCssVars(colorized, roles, clusters);
+
+  // Step 4: embed masthead metadata
+  const normalized = embedMastheadMetaComment(varified, mastheadMeta);
 
   writeFileSync(outPath, normalized, "utf-8");
 

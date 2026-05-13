@@ -6,6 +6,8 @@ import { explainBlobStoreError, getPreviewImagesStore, getPreviewResultsStore } 
 import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 import { parallelCreativeFill } from "./parallelCreativeFill.mjs";
+import { generateCandidateContent } from "./generateCandidateContent.mjs";
+import { renderPortfolio } from "./renderPortfolio.mjs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
 // Extracts all resume content into a structured JSON object.
@@ -1349,6 +1351,85 @@ async function unifyResumeAndJobAnalyses(provider, creds, store, jobId, {
   }), { ttl: 3600 });
 }
 
+// ─── Annotated render pipeline ───────────────────────────────────────────────
+// New pipeline: generateCandidateContent (3 prompts) → renderPortfolio (cheerio).
+// Expects an annotated HTML template (data-* attributes) from the offline pipeline.
+
+async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, userId) {
+  const {
+    annotatedHtml  = "",
+    resumeFacts    = null,
+    resolved       = null,
+    jobContext     = "",
+    colorSpec      = {},
+    headshotName   = "",
+  } = body;
+
+  if (!annotatedHtml) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: "annotatedHtml is required for render-annotated mode." }), { ttl: 3600 });
+    return;
+  }
+  if (!resumeFacts || !resolved) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: "resumeFacts and resolved are required for render-annotated mode." }), { ttl: 3600 });
+    return;
+  }
+
+  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Generating portfolio copy…" }), { ttl: 3600 });
+
+  const callAIFn = (opts) => callAI(provider, creds, opts);
+
+  let candidateData, tokenReports;
+  try {
+    ({ candidateData, tokenReports } = await generateCandidateContent(callAIFn, {
+      resumeFacts,
+      resolved,
+      jobContext,
+    }));
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: "Content generation failed: " + (err?.message || String(err)) }), { ttl: 3600 });
+    return;
+  }
+
+  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Assembling portfolio…" }), { ttl: 3600 });
+
+  const normalizedColor = normalizeColorSpec({
+    background: colorSpec.background,
+    foreground: colorSpec.foreground,
+    primary:    colorSpec.primary,
+    secondary:  colorSpec.secondary,
+    accent:     colorSpec.accent,
+    use_sample_colors: colorSpec.use_sample_colors,
+  });
+
+  if (headshotName) {
+    candidateData.headshot = headshotName;
+  }
+
+  let siteHtml;
+  try {
+    siteHtml = renderPortfolio(annotatedHtml, candidateData, normalizedColor);
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: "Render failed: " + (err?.message || String(err)) }), { ttl: 3600 });
+    return;
+  }
+
+  const mastheadMeta = analyzeSampleMasthead(annotatedHtml, "");
+
+  await store.set(jobId, JSON.stringify({
+    status:        "done",
+    site_html:     siteHtml,
+    masthead_meta: mastheadMeta,
+    model:         "render-annotated",
+    token_report:  tokenReports,
+  }), { ttl: 3600 });
+
+  try {
+    await logUsageEvent(userId, { event_type: "generation", provider, model: "render-annotated", success: !!siteHtml });
+  } catch (e) {
+    console.error("Non-fatal render-annotated usage logging error:", e?.message);
+  }
+}
+
 // ─── Slot-fill pipeline ───────────────────────────────────────────────────────
 // Faster alternative to the braid: uses the pre-tokenized _mustache.html template,
 // fills deterministic slots via flattenToMustacheData(), and fires small parallel
@@ -2250,6 +2331,12 @@ async function handleBuildWebsiteBackground(event) {
     // slot-fill: fast mustache-based pipeline with parallel creative LLM calls
     if (mode === "slot-fill") {
       await slotFillPortfolioWebsite(provider, creds, store, jobId, body, userId);
+      return { statusCode: 202 };
+    }
+
+    // render-annotated: generateCandidateContent + renderPortfolio (new cheerio pipeline)
+    if (mode === "render-annotated") {
+      await renderAnnotatedPortfolio(provider, creds, store, jobId, body, userId);
       return { statusCode: 202 };
     }
 

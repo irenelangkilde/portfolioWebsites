@@ -712,12 +712,13 @@
       z-index: 300; box-shadow: 0 8px 24px rgba(0,0,0,.45);
     }
     .cr-info:hover::after { opacity: 1; }
+    body.tier-free .cr-badge { display: none; }
   </style>
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
-<body>
+<body class="tier-free">
   <div class="wrap">
     <header>
       <div class="headerIntro">
@@ -1743,6 +1744,8 @@
       hostingText,
       supportText
     });
+
+    document.body.classList.toggle("tier-free", effectiveTier === "free");
 
     // Let form.js react to auth state changes (gates buttons, passes userId)
     if (typeof window.onAuthStateUpdated === "function") window.onAuthStateUpdated();

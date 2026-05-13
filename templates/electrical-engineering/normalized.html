@@ -11,39 +11,39 @@
   <title><!-- Your Name --> Electrical Engineering Portfolio</title>
   <style>
     :root{
-      --bg:#0f172a;         /* slate-900 */
-      --panel:#0b1220;      /* deeper slate */
-      --muted:#94a3b8;      /* slate-400 */
-      --text:#e5e7eb;       /* gray-200 */
-      --accent:#2563eb;     /* blue-600 */
-      --accent-2:#22c55e;   /* green-500 */
-      --chip:#1f2937;       /* gray-800 */
-      --ring: 0 0 0 3px rgba(37,99,235,.35);
+      --bg:var(--color-bg);         /* slate-900 */
+      --panel:var(--color-bg);      /* deeper slate */
+      --muted:var(--color-text);      /* slate-400 */
+      --text:var(--color-text);       /* gray-200 */
+      --accent:var(--color-text);     /* blue-600 */
+      --accent-2:var(--color-text);   /* green-500 */
+      --chip:var(--color-bg);       /* gray-800 */
+      --ring: 0 0 0 3px rgba(var(--color-text-rgb),.35);
       --radius:18px;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;background:linear-gradient(180deg,var(--bg),#0b1329 55%, #0a0f1f);color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
+    body{margin:0;background:linear-gradient(180deg,var(--bg),var(--color-bg) 55%, var(--color-bg));color:var(--text);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,"Apple Color Emoji","Segoe UI Emoji";}
     a{color:var(--accent);text-decoration:none}
     a:hover{text-decoration:underline}
     .container{max-width:1100px;margin:0 auto;padding:28px} 
-    header{position:sticky;top:0;backdrop-filter:blur(8px);background:rgba(10,15,31,.6);border-bottom:1px solid rgba(148,163,184,.15);z-index:10}
+    header{position:sticky;top:0;backdrop-filter:blur(8px);background:rgba(var(--color-bg-rgb),.6);border-bottom:1px solid rgba(var(--color-text-rgb),.15);z-index:10}
     nav{display:flex;align-items:center;justify-content:space-between;gap:18px}
     .brand{display:flex;gap:12px;align-items:center}
-    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%, #3b82f6, #1d4ed8);box-shadow:0 6px 18px rgba(37,99,235,.45)}
+    .brand .logo{width:36px;height:36px;border-radius:10px;background:radial-gradient(circle at 30% 30%, var(--color-text), var(--color-text));box-shadow:0 6px 18px rgba(var(--color-text-rgb),.45)}
     .brand h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.4px}
-    .links a{margin-left:18px;font-weight:600;color:#cbd5e1}
-    .links a:hover{color:#fff}
-    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:#fff;border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:0 8px 20px rgba(37,99,235,.35);cursor:pointer}
+    .links a{margin-left:18px;font-weight:600;color:var(--color-text)}
+    .links a:hover{color:var(--color-text)}
+    .btn{display:inline-flex;align-items:center;gap:10px;background:var(--accent);color:var(--color-text);border:0;padding:12px 16px;border-radius:12px;font-weight:700;box-shadow:0 8px 20px rgba(var(--color-text-rgb),.35);cursor:pointer}
     .btn:hover{filter:brightness(1.05)}
-    .btn.secondary{background:transparent;border:1px solid rgba(148,163,184,.35);color:#e2e8f0}
+    .btn.secondary{background:transparent;border:1px solid rgba(var(--color-text-rgb),.35);color:var(--color-text)}
     .section{padding:64px 0}
     .hero{display:grid;grid-template-columns:1.15fr .85fr;gap:28px;align-items:center}
-    .badge{display:inline-flex;align-items:center;gap:10px;background:rgba(34,197,94,.12);color:#bbf7d0;border:1px solid rgba(34,197,94,.35);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
+    .badge{display:inline-flex;align-items:center;gap:10px;background:rgba(var(--color-text-rgb),.12);color:var(--color-text);border:1px solid rgba(var(--color-text-rgb),.35);padding:8px 12px;border-radius:9999px;font-weight:700;letter-spacing:.3px}
     h2{font-size:34px;margin:12px 0 6px}
-    p.lead{color:#cbd5e1;font-size:18px;line-height:1.65}
-    .hero-card{background:linear-gradient(180deg, rgba(15,23,42,.9), rgba(2,6,23,.9));border:1px solid rgba(148,163,184,.15);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    p.lead{color:var(--color-text);font-size:18px;line-height:1.65}
+    .hero-card{background:linear-gradient(180deg, rgba(var(--color-bg-rgb),.9), rgba(var(--color-bg-rgb),.9));border:1px solid rgba(var(--color-text-rgb),.15);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
     .hero-photo {
         display: block;
         margin: 24px auto 12px;      /* space above/below the image */
@@ -54,22 +54,22 @@
         box-shadow: 0 6px 20px rgba(0,0,0,0.12);
       } 
       .ee-class {
-        color: #1ea472;
+        color: var(--color-text);
         margin-top: 0;
       }   
     .grid{display:grid;gap:18px}
     .grid.cols-3{grid-template-columns:repeat(3,1fr)}
-    .card{background:linear-gradient(180deg, #0a1222, #070c17);border:1px solid rgba(148,163,184,.18);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
+    .card{background:linear-gradient(180deg, var(--color-bg), var(--color-bg));border:1px solid rgba(var(--color-text-rgb),.18);border-radius:16px;padding:14px;box-shadow:var(--shadow)}
     .card h3{margin-top:2px;margin-bottom:6px}
-    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid rgba(148,163,184,.2);color:#cbd5e1;padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
-    .mono{font-family:"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;color:#a5b4fc}
+    .chip{display:inline-flex;align-items:center;gap:8px;background:var(--chip);border:1px solid rgba(var(--color-text-rgb),.2);color:var(--color-text);padding:6px 10px;border-radius:9999px;font-size:12px;margin:4px 6px 0 0}
+    .mono{font-family:"Fira Code", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;color:var(--color-text)}
     .timeline{position:relative;margin-top:6px}
-    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:rgba(148,163,184,.25)}
+    .timeline:before{content:"";position:absolute;left:12px;top:0;bottom:0;width:2px;background:rgba(var(--color-text-rgb),.25)}
     .t-item{position:relative;margin-left:36px;padding:12px 0}
-    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:#38bdf8;border:2px solid #0b1220;border-radius:50%;box-shadow:0 0 0 3px rgba(56,189,248,.28)}
+    .t-item:before{content:"";position:absolute;left:-26px;top:14px;width:10px;height:10px;background:var(--color-text);border:2px solid var(--color-bg);border-radius:50%;box-shadow:0 0 0 3px rgba(var(--color-text-rgb),.28)}
     .resume{display:flex;gap:12px;flex-wrap:wrap}
-    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%, #0b1329 0%, #0a0f1f 60%);border-radius:12px;border:1px dashed rgba(148,163,184,.3);display:flex;align-items:center;justify-content:center;color:#93c5fd;font-weight:700}
-    footer{border-top:1px solid rgba(148,163,184,.17);padding:38px 0;color:#94a3b8}
+    .project-media{aspect-ratio:16/9;background:radial-gradient(120% 120% at 0% 0%, var(--color-bg) 0%, var(--color-bg) 60%);border-radius:12px;border:1px dashed rgba(var(--color-text-rgb),.3);display:flex;align-items:center;justify-content:center;color:var(--color-text);font-weight:700}
+    footer{border-top:1px solid rgba(var(--color-text-rgb),.17);padding:38px 0;color:var(--color-text)}
     @media (max-width: 960px){ .hero{grid-template-columns:1fr} .grid.cols-3{grid-template-columns:1fr} }
   </style>
 <style id="extracted-theme">
@@ -111,6 +111,14 @@
   --color-accent:   oklch(58.0% 0.200 45.0);
   --color-muted:    color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
   --color-border:   color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 2, 6, 23;
+  --color-text-rgb: 148, 163, 184;
+  --color-primary-rgb: 40, 133, 239;
+  --color-secondary-rgb: 111, 192, 130;
+  --color-accent-rgb: 255, 146, 68;
 }
 </style>
 <script type="application/json" id="color-palette">
@@ -460,13 +468,13 @@
         <div class="card">
           <form style="display:grid;gap:12px;grid-template-columns:1fr 1fr" onsubmit="event.preventDefault(); alert('Thanks! I\'ll reply shortly.');">
             <label style="grid-column:span 1">Name
-              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb" />
+              <input required type="text" placeholder="Jane Recruiter" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(var(--color-text-rgb),.35);background:var(--color-bg);color:var(--color-text)" />
             </label>
             <label style="grid-column:span 1">Email
-              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb" />
+              <input required type="email" placeholder="jane@company.com" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(var(--color-text-rgb),.35);background:var(--color-bg);color:var(--color-text)" />
             </label>
             <label style="grid-column:1 / -1">Message
-              <textarea required rows="4" placeholder="Hi — we\'d love to chat about our Embedded New‑Grad role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(148,163,184,.35);background:#0a1324;color:#e5e7eb"></textarea>
+              <textarea required rows="4" placeholder="Hi — we\'d love to chat about our Embedded New‑Grad role…" style="width:100%;margin-top:6px;padding:12px 14px;border-radius:10px;border:1px solid rgba(var(--color-text-rgb),.35);background:var(--color-bg);color:var(--color-text)"></textarea>
             </label>
             <div style="display:flex;gap:10px;align-items:center">
               <button class="btn" type="submit">Send</button>
@@ -482,7 +490,7 @@
     <div class="container">
       <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
         <span>© <span id="year"></span> <!-- Your Name --> Your Name. All rights reserved.</span>
-        <span style="color:#a3e635">Ready for interviews · Available for relocation</span>
+        <span style="color:var(--color-text)">Ready for interviews · Available for relocation</span>
       </div>
     </div>
   </footer>
