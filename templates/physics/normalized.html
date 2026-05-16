@@ -14,43 +14,22 @@
         }
 
         :root {
-            /* Five main theme colors */
-            --dominant:   #8b5cf6;   /* 1. Dominant    — primary violet, masthead accent & CTA */
-            --secondary:  #1e1b4b;   /* 2. Secondary   — deep indigo, hero background & footer */
-            --tertiary:   #3b82f6;   /* 3. Tertiary    — blue, publications & secondary accents */
-            --quaternary: #06b6d4;   /* 4. Quaternary  — cyan, computational research card accent */
-            --quinary:    #f0f9ff;   /* 5. Quinary     — light sky tint, section backgrounds */
-
-            /* Theme-independent hard-coded neutrals */
-            --white:   #ffffff;
-            --black:   #000000;
-
-            /* Derived tokens */
-            --gradient:        linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --cosmic:          linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, var(--secondary) 100%);
-            --card-shadow:     color-mix(in srgb, var(--dominant) 10%, transparent);
-            --card-shadow-hover: color-mix(in srgb, var(--dominant) 20%, transparent);
-            --nav-shadow:      color-mix(in srgb, var(--dominant) 10%, transparent);
-            --hero-glow:       color-mix(in srgb, var(--dominant) 50%, transparent);
-            --social-hover-shadow: color-mix(in srgb, var(--dominant) 30%, transparent);
-            --wave-border:     color-mix(in srgb, var(--dominant) 20%, transparent);
-            --wave-bg:         color-mix(in srgb, var(--dominant) 5%, transparent);
-            --wave-bg2:        color-mix(in srgb, var(--tertiary) 5%, transparent);
-            --resume-shadow:   color-mix(in srgb, var(--dominant) 8%, transparent);
-            --pub-shadow:      color-mix(in srgb, var(--dominant) 6%, transparent);
-            --contact-shadow:  color-mix(in srgb, var(--dominant) 8%, transparent);
-            --muted-text:      #6b7280;
-            --skill-border:    #f0f0f0;
-            --skill-level-color: #9ca3af;
-            --research-tag-bg: #f3f4f6;
-            --research-card-shadow: rgba(0,0,0,0.1);
+            --primary: var(--color-primary);
+            --secondary: #3b82f6;
+            --accent: var(--color-secondary);
+            --dark: var(--color-tertiary);
+            --light: var(--color-text);
+            --purple: #a855f7;
+            --blue: #2563eb;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --cosmic: linear-gradient(135deg, #1e3a8a 0%, #312e81 50%, var(--color-tertiary) 100%);
         }
 
         body {
             font-family: 'IBM Plex Sans', sans-serif;
             line-height: 1.6;
-            color: var(--secondary);
-            background: var(--white);
+            color: var(--dark);
+            background: var(--color-text);
         }
 
         h1, h2, h3, h4 {
@@ -65,8 +44,8 @@
 
         /* Navigation */
         nav {
-            background: var(--white);
-            box-shadow: 0 2px 15px var(--nav-shadow);
+            background: white;
+            box-shadow: 0 2px 15px rgba(var(--color-primary-rgb),0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -83,7 +62,7 @@
             font-family: 'Space Grotesk', sans-serif;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--dominant);
+            color: var(--primary);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -102,19 +81,19 @@
 
         nav a {
             text-decoration: none;
-            color: var(--secondary);
+            color: var(--dark);
             font-weight: 600;
             transition: color 0.3s;
         }
 
         nav a:hover {
-            color: var(--dominant);
+            color: var(--primary);
         }
 
         /* Hero Section */
         .hero {
             background: var(--cosmic);
-            color: var(--white);
+            color: white;
             padding: 100px 0;
             text-align: center;
             position: relative;
@@ -129,12 +108,12 @@
             right: 0;
             bottom: 0;
             background-image: 
-                radial-gradient(2px 2px at 20% 30%, var(--white), transparent),
-                radial-gradient(2px 2px at 60% 70%, var(--white), transparent),
-                radial-gradient(1px 1px at 50% 50%, var(--white), transparent),
-                radial-gradient(1px 1px at 80% 10%, var(--white), transparent),
-                radial-gradient(2px 2px at 90% 60%, var(--white), transparent),
-                radial-gradient(1px 1px at 33% 80%, var(--white), transparent);
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent);
             background-size: 200% 200%;
             animation: stars 60s linear infinite;
             opacity: 0.6;
@@ -158,12 +137,12 @@
             width: 190px;
             height: 190px;
             border-radius: 50%;
-            border: 5px solid rgba(255,255,255,0.3);
+            border: 5px solid rgba(var(--color-text-rgb),0.3);
             object-fit: cover;
             margin: 0 auto 25px;
             display: block;
-            box-shadow: 0 0 40px var(--hero-glow);
-            background: var(--gradient);
+            box-shadow: 0 0 40px rgba(var(--color-primary-rgb),0.5);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
 
         .hero h1 {
@@ -204,24 +183,24 @@
         }
 
         .btn-primary {
-            background: var(--white);
-            color: var(--dominant);
+            background: white;
+            color: var(--primary);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(255,255,255,0.3);
+            box-shadow: 0 10px 30px rgba(var(--color-text-rgb),0.3);
         }
 
         .btn-secondary {
             background: transparent;
-            color: var(--white);
-            border: 2px solid var(--white);
+            color: white;
+            border: 2px solid white;
         }
 
         .btn-secondary:hover {
-            background: var(--white);
-            color: var(--dominant);
+            background: white;
+            color: var(--primary);
         }
 
         /* Section Styles */
@@ -233,20 +212,20 @@
             text-align: center;
             font-size: 2.8rem;
             margin-bottom: 15px;
-            color: var(--dominant);
+            color: var(--primary);
             font-weight: 700;
         }
 
         .section-subtitle {
             text-align: center;
-            color: var(--muted-text);
+            color: var(--color-quinary);
             font-size: 1.15rem;
             margin-bottom: 55px;
         }
 
         /* About Section */
         .about {
-            background: var(--quinary);
+            background: var(--light);
         }
 
         .about-content {
@@ -270,21 +249,21 @@
         }
 
         .skill-category {
-            background: var(--white);
+            background: white;
             padding: 32px;
             border-radius: 18px;
-            box-shadow: 0 5px 25px var(--card-shadow);
+            box-shadow: 0 5px 25px rgba(var(--color-primary-rgb),0.1);
             transition: all 0.3s;
-            border-top: 4px solid var(--dominant);
+            border-top: 4px solid var(--primary);
         }
 
         .skill-category:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 40px var(--card-shadow-hover);
+            box-shadow: 0 15px 40px rgba(var(--color-primary-rgb),0.2);
         }
 
         .skill-category h3 {
-            color: var(--dominant);
+            color: var(--primary);
             margin-bottom: 22px;
             font-size: 1.35rem;
             display: flex;
@@ -302,7 +281,7 @@
 
         .skill-list li {
             padding: 11px 0;
-            border-bottom: 1px solid var(--skill-border);
+            border-bottom: 1px solid color-mix(in oklab, var(--color-text), black 3%);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -314,13 +293,13 @@
 
         .skill-level {
             font-size: 0.85rem;
-            color: var(--skill-level-color);
+            color: var(--color-bg);
             font-weight: 600;
         }
 
         /* Research Section */
         .research {
-            background: var(--white);
+            background: white;
         }
 
         .research-grid {
@@ -330,18 +309,18 @@
         }
 
         .research-card {
-            background: var(--white);
+            background: white;
             border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 8px 30px var(--research-card-shadow);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             transition: all 0.3s;
             border: 2px solid transparent;
         }
 
         .research-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 20px 50px var(--card-shadow-hover);
-            border-color: var(--dominant);
+            box-shadow: 0 20px 50px rgba(var(--color-primary-rgb),0.2);
+            border-color: var(--primary);
         }
 
         .research-image {
@@ -351,7 +330,7 @@
             align-items: center;
             justify-content: center;
             font-size: 4.5rem;
-            color: var(--white);
+            color: white;
             position: relative;
         }
 
@@ -364,15 +343,15 @@
         }
 
         .research-image.particle {
-            background: linear-gradient(135deg, var(--tertiary) 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
         }
 
         .research-image.computational {
-            background: linear-gradient(135deg, var(--quaternary) 0%, #0891b2 100%);
+            background: linear-gradient(135deg, var(--color-secondary) 0%, #0891b2 100%);
         }
 
         .research-image.optics {
-            background: linear-gradient(135deg, var(--dominant) 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, var(--color-primary) 0%, #7c3aed 100%);
         }
 
         .research-image.condensed {
@@ -384,15 +363,15 @@
         }
 
         .research-content h3 {
-            color: var(--secondary);
+            color: var(--dark);
             margin-bottom: 12px;
             font-size: 1.45rem;
         }
 
         .research-field {
             display: inline-block;
-            background: var(--quinary);
-            color: var(--dominant);
+            background: var(--light);
+            color: var(--primary);
             padding: 6px 16px;
             border-radius: 20px;
             font-size: 0.85rem;
@@ -401,7 +380,7 @@
         }
 
         .research-content p {
-            color: var(--muted-text);
+            color: var(--color-quinary);
             margin-bottom: 15px;
             line-height: 1.7;
         }
@@ -414,8 +393,8 @@
         }
 
         .research-tag {
-            background: var(--research-tag-bg);
-            color: var(--secondary);
+            background: color-mix(in oklab, var(--color-text), black 3%);
+            color: var(--dark);
             padding: 5px 13px;
             border-radius: 20px;
             font-size: 0.82rem;
@@ -424,7 +403,7 @@
 
         /* Resume Section */
         .resume {
-            background: var(--quinary);
+            background: var(--light);
         }
 
         .resume-content {
@@ -437,30 +416,30 @@
         }
 
         .resume-section h3 {
-            color: var(--dominant);
+            color: var(--primary);
             font-size: 1.9rem;
             margin-bottom: 28px;
             padding-bottom: 12px;
-            border-bottom: 3px solid var(--dominant);
+            border-bottom: 3px solid var(--primary);
         }
 
         .resume-item {
-            background: var(--white);
+            background: white;
             padding: 28px;
             border-radius: 15px;
             margin-bottom: 22px;
-            box-shadow: 0 5px 20px var(--resume-shadow);
-            border-left: 5px solid var(--dominant);
+            box-shadow: 0 5px 20px rgba(var(--color-primary-rgb),0.08);
+            border-left: 5px solid var(--primary);
         }
 
         .resume-item h4 {
-            color: var(--secondary);
+            color: var(--dark);
             font-size: 1.35rem;
             margin-bottom: 10px;
         }
 
         .resume-item .meta {
-            color: var(--muted-text);
+            color: var(--color-quinary);
             font-size: 0.95rem;
             margin-bottom: 14px;
             display: flex;
@@ -470,7 +449,7 @@
 
         .resume-item ul {
             margin-left: 20px;
-            color: var(--secondary);
+            color: var(--dark);
         }
 
         .resume-item ul li {
@@ -484,29 +463,29 @@
         }
 
         .publications {
-            background: var(--white);
+            background: white;
             padding: 25px;
             border-radius: 12px;
             margin-bottom: 18px;
-            box-shadow: 0 3px 15px var(--pub-shadow);
-            border-left: 4px solid var(--tertiary);
+            box-shadow: 0 3px 15px rgba(var(--color-primary-rgb),0.06);
+            border-left: 4px solid var(--secondary);
         }
 
         .publications h5 {
-            color: var(--tertiary);
+            color: var(--secondary);
             margin-bottom: 10px;
             font-size: 1.05rem;
         }
 
         .publications p {
-            color: var(--muted-text);
+            color: var(--color-quinary);
             font-size: 0.92rem;
             line-height: 1.5;
         }
 
         /* Contact Section */
         .contact {
-            background: var(--white);
+            background: white;
         }
 
         .contact-content {
@@ -523,33 +502,33 @@
         }
 
         .contact-item {
-            background: var(--quinary);
+            background: var(--light);
             padding: 32px;
             border-radius: 18px;
-            box-shadow: 0 5px 20px var(--contact-shadow);
+            box-shadow: 0 5px 20px rgba(var(--color-primary-rgb),0.08);
             transition: all 0.3s;
         }
 
         .contact-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 12px 35px var(--card-shadow-hover);
+            box-shadow: 0 12px 35px rgba(var(--color-primary-rgb),0.15);
         }
 
         .contact-item h3 {
-            color: var(--dominant);
+            color: var(--primary);
             margin-bottom: 15px;
             font-size: 1.25rem;
         }
 
         .contact-item a {
-            color: var(--secondary);
+            color: var(--dark);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
         }
 
         .contact-item a:hover {
-            color: var(--dominant);
+            color: var(--primary);
         }
 
         .social-links {
@@ -564,7 +543,7 @@
             height: 52px;
             border-radius: 50%;
             background: var(--gradient);
-            color: var(--white);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -575,13 +554,13 @@
 
         .social-links a:hover {
             transform: translateY(-4px) scale(1.05);
-            box-shadow: 0 10px 30px var(--social-hover-shadow);
+            box-shadow: 0 10px 30px rgba(var(--color-primary-rgb),0.3);
         }
 
         /* Footer */
         footer {
-            background: var(--secondary);
-            color: var(--white);
+            background: var(--dark);
+            color: white;
             text-align: center;
             padding: 35px 0;
         }
@@ -597,15 +576,15 @@
             max-width: 900px;
             margin: 50px auto 0;
             padding: 30px;
-            background: linear-gradient(135deg, var(--wave-bg) 0%, var(--wave-bg2) 100%);
+            background: linear-gradient(135deg, rgba(var(--color-primary-rgb),0.05) 0%, rgba(59, 130, 246, 0.05) 100%);
             border-radius: 20px;
-            border: 2px solid var(--wave-border);
-            box-shadow: 0 10px 40px var(--card-shadow-hover);
+            border: 2px solid rgba(var(--color-primary-rgb),0.2);
+            box-shadow: 0 10px 40px rgba(var(--color-primary-rgb),0.15);
         }
 
         .wave-canvas-container h3 {
             text-align: center;
-            color: var(--dominant);
+            color: var(--primary);
             margin-bottom: 15px;
             font-size: 1.4rem;
             display: flex;
@@ -618,7 +597,7 @@
             text-align: center;
             font-family: 'Times New Roman', serif;
             font-style: italic;
-            color: var(--muted-text);
+            color: var(--color-quinary);
             margin-bottom: 20px;
             font-size: 1.1rem;
         }
@@ -627,7 +606,7 @@
             width: 100%;
             height: 300px;
             border-radius: 12px;
-            background: var(--white);
+            background: white;
             box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
         }
 
@@ -644,7 +623,7 @@
             align-items: center;
             gap: 8px;
             font-size: 0.9rem;
-            color: var(--secondary);
+            color: var(--dark);
         }
 
         .wave-control label {
@@ -653,7 +632,7 @@
 
         .wave-control input[type="range"] {
             width: 120px;
-            accent-color: var(--dominant);
+            accent-color: var(--primary);
         }
 
         /* Responsive */
@@ -688,6 +667,279 @@
             }
         }
     </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(71.4% 0.019 261.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(60.6% 0.219 292.7);
+  --color-secondary:   oklch(71.5% 0.126 215.2);
+  --color-tertiary:    oklch(25.7% 0.086 281.3);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(55.1% 0.023 264.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(71.4% 0.019 261.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(60.6% 0.219 292.7);
+  --color-secondary:   oklch(71.5% 0.126 215.2);
+  --color-tertiary:    oklch(25.7% 0.086 281.3);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(55.1% 0.023 264.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(71.4% 0.019 261.3);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(42.6% 0.219 292.7);
+  --color-secondary:   oklch(53.5% 0.126 215.2);
+  --color-tertiary:    oklch(28.0% 0.086 281.3);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(37.1% 0.023 264.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 156, 163, 175;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 139, 92, 246;
+  --color-secondary-rgb: 6, 182, 212;
+  --color-tertiary-rgb: 30, 27, 75;
+  --color-quaternary-rgb: 34, 85, 85;
+  --color-quinary-rgb: 107, 114, 128;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#8b5cf6",
+      "oklch": {
+        "l": 0.6056,
+        "c": 0.2189,
+        "h": 292.7
+      },
+      "count": 19,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#1e1b4b",
+      "oklch": {
+        "l": 0.2573,
+        "c": 0.0861,
+        "h": 281.3
+      },
+      "count": 4,
+      "role": "--color-tertiary",
+      "merged": []
+    },
+    {
+      "hex": "#06b6d4",
+      "oklch": {
+        "l": 0.7148,
+        "c": 0.1257,
+        "h": 215.2
+      },
+      "count": 5,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "count": 2,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#6b7280",
+      "oklch": {
+        "l": 0.551,
+        "c": 0.0234,
+        "h": 264.4
+      },
+      "count": 24,
+      "role": "--color-quinary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#9ca3af",
+      "oklch": {
+        "l": 0.7137,
+        "c": 0.0192,
+        "h": 261.3
+      },
+      "css": "oklch(71.4% 0.019 261.3)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#8b5cf6",
+      "oklch": {
+        "l": 0.6056,
+        "c": 0.2189,
+        "h": 292.7
+      },
+      "css": "oklch(60.6% 0.219 292.7)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#06b6d4",
+      "oklch": {
+        "l": 0.7148,
+        "c": 0.1257,
+        "h": 215.2
+      },
+      "css": "oklch(71.5% 0.126 215.2)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#1e1b4b",
+      "oklch": {
+        "l": 0.2573,
+        "c": 0.0861,
+        "h": 281.3
+      },
+      "css": "oklch(25.7% 0.086 281.3)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#6b7280",
+      "oklch": {
+        "l": 0.551,
+        "c": 0.0234,
+        "h": 264.4
+      },
+      "css": "oklch(55.1% 0.023 264.4)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#9ca3af",
+      "oklch": {
+        "l": 0.7137,
+        "c": 0.0192,
+        "h": 261.3
+      },
+      "css": "oklch(71.4% 0.019 261.3)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#5a18b8",
+      "oklch": {
+        "l": 0.4256,
+        "c": 0.2189,
+        "h": 292.7
+      },
+      "css": "oklch(42.6% 0.219 292.7)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#007e9a",
+      "oklch": {
+        "l": 0.5348,
+        "c": 0.1257,
+        "h": 215.2
+      },
+      "css": "oklch(53.5% 0.126 215.2)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#232151",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0861,
+        "h": 281.3
+      },
+      "css": "oklch(28.0% 0.086 281.3)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#3a404d",
+      "oklch": {
+        "l": 0.371,
+        "c": 0.0234,
+        "h": 264.4
+      },
+      "css": "oklch(37.1% 0.023 264.4)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
     <!-- Navigation -->
@@ -1074,7 +1326,7 @@
                     <a href="mailto:aria.patel@email.edu" title="Email">✉️</a>
                 </div>
 
-                <p style="margin-top: 30px; color: var(--muted-text);">Research Interests: Quantum Computing • Computational Physics • Condensed Matter • Data Science</p>
+                <p style="margin-top: 30px; color: var(--color-quinary);">Research Interests: Quantum Computing • Computational Physics • Condensed Matter • Data Science</p>
             </div>
         </div>
     </section>

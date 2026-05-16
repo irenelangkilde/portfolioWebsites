@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <!-- IW_MASTHEAD_META: {"sampleHasRasterHeroImage":false,"sampleRasterCssUrl":"","sampleRasterCssSelector":"","sampleRasterBackgroundDecl":"","sampleHeaderContainsHero":true,"mastheadPlaceholderUrl":"braid-masthead.png","domainContext":""} -->
 <html lang="en">
 <head>
@@ -8,36 +8,21 @@
   <meta name="description" content="Resume & portfolio website for an Early Childhood Education major." />
 
   <style>
-    :root {
-      /* Five main theme colors */
-      --dominant:   #4E70F1;   /* 1. Dominant    — soft confident blue, masthead/CTA primary */
-      --secondary:  #F28B86;   /* 2. Secondary   — warm coral, accent/highlight color        */
-      --tertiary:   #8FD4C1;   /* 3. Tertiary    — gentle mint, supporting accent            */
-      --quaternary: #1f2328;   /* 4. Quaternary  — deep ink, primary text/foreground         */
-      --quinary:    #f7f9fb;   /* 5. Quinary     — soft paper, page background               */
+    :root{
+      --ink:var(--color-bg);
+      --muted:#5b6672;
+      --paper:var(--color-text);
+      --card: rgba(var(--color-text-rgb),0.88);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.12);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
+      --radius: 22px;
 
-      /* Theme-independent hard-coded neutrals */
-      --white:   #ffffff;
-      --black:   #000000;
+      --accent:var(--color-primary);      /* soft confident blue */
+      --accent2:#F28B86;     /* warm coral */
+      --accent3:var(--color-tertiary);     /* gentle mint */
 
-      /* Derived tokens */
-      --ink:         var(--quaternary);
-      --muted:       #5b6672;
-      --paper:       var(--quinary);
-      --card:        color-mix(in srgb, var(--white) 88%, transparent);
-      --stroke:      color-mix(in srgb, var(--black) 10%, transparent);
-      --shadow:      0 18px 55px color-mix(in srgb, var(--black) 12%, transparent);
-      --shadowSoft:  0 10px 28px color-mix(in srgb, var(--black) 10%, transparent);
-      --radius:      22px;
-      --accent:      var(--dominant);
-      --accent2:     var(--secondary);
-      --accent3:     var(--tertiary);
-      --max:         1120px;
-      --tag-bg:      color-mix(in srgb, var(--dominant) 12%, transparent);
-      --tag-border:  color-mix(in srgb, var(--dominant) 18%, transparent);
-      --tag-text:    #2640a6;
-      --footer-text: #6f7b73;
-      --philosophy-text: #2a3138;
+      --max: 1120px;
     }
 
     *{ box-sizing:border-box; }
@@ -47,9 +32,9 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--ink);
       background:
-        radial-gradient(1000px 520px at 12% 8%, color-mix(in srgb, var(--dominant) 14%, transparent) 0%, transparent 60%),
-        radial-gradient(900px 520px at 85% 0%, color-mix(in srgb, var(--secondary) 14%, transparent) 0%, transparent 58%),
-        radial-gradient(900px 520px at 55% 25%, color-mix(in srgb, var(--tertiary) 12%, transparent) 0%, transparent 58%),
+        radial-gradient(1000px 520px at 12% 8%, rgba(var(--color-primary-rgb),.14) 0%, transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, rgba(242,139,134,.14) 0%, transparent 58%),
+        radial-gradient(900px 520px at 55% 25%, rgba(var(--color-tertiary-rgb),.12) 0%, transparent 58%),
         var(--paper);
       overflow-x:hidden;
     }
@@ -59,11 +44,11 @@
 
     /* Header */
     header{
-      color:var(--white);
+      color:var(--color-text);
       background:
-        radial-gradient(900px 420px at 20% 30%, color-mix(in srgb, var(--secondary) 22%, transparent), transparent 60%),
-        radial-gradient(900px 420px at 80% 20%, color-mix(in srgb, var(--tertiary) 22%, transparent), transparent 60%),
-        linear-gradient(120deg, color-mix(in srgb, var(--dominant) 92%, transparent), color-mix(in srgb, var(--dominant) 70%, transparent));
+        radial-gradient(900px 420px at 20% 30%, rgba(242,139,134,.22), transparent 60%),
+        radial-gradient(900px 420px at 80% 20%, rgba(var(--color-tertiary-rgb),.22), transparent 60%),
+        linear-gradient(120deg, rgba(var(--color-primary-rgb),.92), rgba(var(--color-primary-rgb),.70));
       position:relative;
       overflow:hidden;
     }
@@ -71,10 +56,10 @@
       content:"";
       position:absolute; inset:-40px -80px -80px -80px;
       background:
-        radial-gradient(circle at 15% 30%, color-mix(in srgb, var(--white) 18%, transparent) 0 22%, transparent 23%),
-        radial-gradient(circle at 45% 20%, color-mix(in srgb, var(--white) 12%, transparent) 0 16%, transparent 17%),
-        radial-gradient(circle at 75% 40%, color-mix(in srgb, var(--white) 12%, transparent) 0 20%, transparent 21%),
-        radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--white) 10%, transparent) 0 14%, transparent 15%);
+        radial-gradient(circle at 15% 30%, rgba(var(--color-text-rgb),.18) 0 22%, transparent 23%),
+        radial-gradient(circle at 45% 20%, rgba(var(--color-text-rgb),.12) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 40%, rgba(var(--color-text-rgb),.12) 0 20%, transparent 21%),
+        radial-gradient(circle at 85% 15%, rgba(var(--color-text-rgb),.10) 0 14%, transparent 15%);
       filter: blur(1px);
       opacity:.85;
       pointer-events:none;
@@ -100,9 +85,9 @@
     }
     .mark{
       width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--white) 30%, transparent), color-mix(in srgb, var(--white) 12%, transparent));
-      border:1px solid color-mix(in srgb, var(--white) 24%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--black) 22%, transparent);
+      background: linear-gradient(135deg, rgba(var(--color-text-rgb),.30), rgba(var(--color-text-rgb),.12));
+      border:1px solid rgba(var(--color-text-rgb),.24);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
     }
     .brandText{ display:flex; flex-direction:column; line-height:1.1; }
     .brandText strong{ font-size:16px; letter-spacing:.02em; }
@@ -118,12 +103,12 @@
       font-size:13.5px;
       padding:10px 12px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--white) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
+      background: rgba(var(--color-text-rgb),.14);
+      border:1px solid rgba(var(--color-text-rgb),.18);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    nav a:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent); }
+    nav a:hover{ transform: translateY(-1px); background: rgba(var(--color-text-rgb),.20); }
 
     /* Hero */
     .hero{
@@ -158,10 +143,10 @@
     }
 
     .heroCard{
-      background: color-mix(in srgb, var(--white) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
+      background: rgba(var(--color-text-rgb),.14);
+      border:1px solid rgba(var(--color-text-rgb),.18);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--black) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -170,8 +155,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--white) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
+      background: rgba(var(--color-text-rgb),.14);
+      border:1px solid rgba(var(--color-text-rgb),.18);
       font-size:12.5px;
       font-weight:850;
       letter-spacing:.02em;
@@ -190,18 +175,18 @@
       justify-content:center;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid color-mix(in srgb, var(--white) 22%, transparent);
-      background: color-mix(in srgb, var(--white) 14%, transparent);
-      color:var(--white);
+      border:1px solid rgba(var(--color-text-rgb),.22);
+      background: rgba(var(--color-text-rgb),.14);
+      color:var(--color-text);
       text-decoration:none;
       font-weight:850;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent); }
+    .btn:hover{ transform: translateY(-1px); background: rgba(var(--color-text-rgb),.20); }
     .btn.primary{
-      background: color-mix(in srgb, var(--secondary) 22%, transparent);
-      border-color: color-mix(in srgb, var(--secondary) 28%, transparent);
+      background: rgba(242,139,134,.22);
+      border-color: rgba(242,139,134,.28);
     }
 
     /* Sections */
@@ -240,9 +225,9 @@
       font-weight:850;
       padding:7px 10px;
       border-radius:999px;
-      background: var(--tag-bg);
-      border:1px solid var(--tag-border);
-      color:var(--tag-text);
+      background: rgba(var(--color-primary-rgb),.12);
+      border:1px solid rgba(var(--color-primary-rgb),.18);
+      color:#2640a6;
     }
 
     .timeline{ display:grid; gap:14px; }
@@ -250,8 +235,8 @@
       padding:18px;
       border-radius:18px;
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--white) 74%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--black) 6%, transparent);
+      background: rgba(var(--color-text-rgb),.74);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
       backdrop-filter: blur(8px);
     }
     .itemTop{
@@ -280,13 +265,13 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:#ddd;
+      background:color-mix(in oklab, var(--color-text), black 10%);
     }
     .contactCard{
       padding:22px;
       border-radius: var(--radius);
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--white) 82%, transparent);
+      background: rgba(var(--color-text-rgb),.82);
       box-shadow: var(--shadowSoft);
       backdrop-filter: blur(8px);
     }
@@ -297,13 +282,286 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--footer-text);
+      color:color-mix(in oklab, var(--color-bg), white 32%);
       font-size:13.5px;
       text-align:center;
     }
 
     html{ scroll-behavior:smooth; }
   </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(25.4% 0.011 254.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(59.1% 0.197 268.6);
+  --color-secondary:   oklch(59.6% 0.177 145.9);
+  --color-tertiary:    oklch(81.9% 0.075 175.2);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(18.7% 0.034 282.6);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(25.4% 0.011 254.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(59.1% 0.197 268.6);
+  --color-secondary:   oklch(59.6% 0.177 145.9);
+  --color-tertiary:    oklch(81.9% 0.075 175.2);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(18.7% 0.034 282.6);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(25.4% 0.011 254.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(41.1% 0.197 268.6);
+  --color-secondary:   oklch(41.6% 0.177 145.9);
+  --color-tertiary:    oklch(58.0% 0.075 175.2);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(28.0% 0.034 282.6);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 31, 35, 40;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 78, 112, 241;
+  --color-secondary-rgb: 17, 153, 51;
+  --color-tertiary-rgb: 143, 212, 193;
+  --color-quaternary-rgb: 34, 85, 85;
+  --color-quinary-rgb: 17, 17, 34;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#4e70f1",
+      "oklch": {
+        "l": 0.5914,
+        "c": 0.1972,
+        "h": 268.6
+      },
+      "count": 8,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#111122",
+      "oklch": {
+        "l": 0.1874,
+        "c": 0.0343,
+        "h": 282.6
+      },
+      "count": 4,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#8fd4c1",
+      "oklch": {
+        "l": 0.8186,
+        "c": 0.0748,
+        "h": 175.2
+      },
+      "count": 4,
+      "role": "--color-tertiary",
+      "merged": []
+    },
+    {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "count": 28,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#119933",
+      "oklch": {
+        "l": 0.596,
+        "c": 0.1774,
+        "h": 145.9
+      },
+      "count": 2,
+      "role": "--color-secondary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#1f2328",
+      "oklch": {
+        "l": 0.2542,
+        "c": 0.0111,
+        "h": 254
+      },
+      "css": "oklch(25.4% 0.011 254.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#4e70f1",
+      "oklch": {
+        "l": 0.5914,
+        "c": 0.1972,
+        "h": 268.6
+      },
+      "css": "oklch(59.1% 0.197 268.6)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#119933",
+      "oklch": {
+        "l": 0.596,
+        "c": 0.1774,
+        "h": 145.9
+      },
+      "css": "oklch(59.6% 0.177 145.9)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#8fd4c1",
+      "oklch": {
+        "l": 0.8186,
+        "c": 0.0748,
+        "h": 175.2
+      },
+      "css": "oklch(81.9% 0.075 175.2)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#111122",
+      "oklch": {
+        "l": 0.1874,
+        "c": 0.0343,
+        "h": 282.6
+      },
+      "css": "oklch(18.7% 0.034 282.6)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#1f2328",
+      "oklch": {
+        "l": 0.2542,
+        "c": 0.0111,
+        "h": 254
+      },
+      "css": "oklch(25.4% 0.011 254.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#2335b3",
+      "oklch": {
+        "l": 0.4114,
+        "c": 0.1972,
+        "h": 268.6
+      },
+      "css": "oklch(41.1% 0.197 268.6)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#006200",
+      "oklch": {
+        "l": 0.416,
+        "c": 0.1774,
+        "h": 145.9
+      },
+      "css": "oklch(41.6% 0.177 145.9)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#458978",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.0748,
+        "h": 175.2
+      },
+      "css": "oklch(58.0% 0.075 175.2)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#262739",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0343,
+        "h": 282.6
+      },
+      "css": "oklch(28.0% 0.034 282.6)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 
 <body>
@@ -331,8 +589,8 @@
       <div>
         <h1>Early Childhood Education Portfolio</h1>
         <p>
-          I'm an Early Childhood Education major passionate about playful, evidence-based learning and supportive
-          classroom communities. I'm seeking student-teaching placements and entry-level roles in preschool, early
+          I’m an Early Childhood Education major passionate about playful, evidence-based learning and supportive
+          classroom communities. I’m seeking student-teaching placements and entry-level roles in preschool, early
           elementary, and child development settings.
         </p>
       </div>
@@ -362,7 +620,7 @@
       <h2>About</h2>
       <p class="subhead">
         I believe young children learn best through safe relationships, hands-on exploration, and consistent routines.
-        I'm especially interested in literacy-rich environments, social-emotional learning, and inclusive classroom design.
+        I’m especially interested in literacy-rich environments, social-emotional learning, and inclusive classroom design.
       </p>
 
       <div class="grid2">
@@ -382,7 +640,7 @@
         </div>
 
         <div class="card">
-          <h3>What I'm Seeking</h3>
+          <h3>What I’m Seeking</h3>
           <p class="meta">Student teaching • Preschool assistant • Early elementary aide • Child development roles</p>
           <ul class="bullets">
             <li>Supportive teams that value play-based learning</li>
@@ -453,7 +711,7 @@
 
       <div class="grid2">
         <div class="card">
-          <h3>Lesson Plan: Early Literacy &amp; Storytime</h3>
+          <h3>Lesson Plan: Early Literacy & Storytime</h3>
           <div class="meta">Objective • Materials • Step-by-step plan • Differentiation</div>
           <ul class="bullets">
             <li>Built vocabulary and comprehension using a read-aloud + picture walk</li>
@@ -468,7 +726,7 @@
         </div>
 
         <div class="card">
-          <h3>Classroom Routine: Calm Corner &amp; SEL Tools</h3>
+          <h3>Classroom Routine: Calm Corner & SEL Tools</h3>
           <div class="meta">Visual supports • Emotion labeling • Co-regulation</div>
           <ul class="bullets">
             <li>Created simple visuals for feelings, breathing, and asking for help</li>
@@ -493,11 +751,11 @@
 
       <div class="card">
         <h3>My Approach</h3>
-        <p style="margin:0; color:var(--philosophy-text); line-height:1.7;">
+        <p style="margin:0; color:#2a3138; line-height:1.7;">
           I believe early learning thrives when children feel safe, seen, and supported. I create predictable routines
           and a warm classroom culture so children can explore with confidence. I use play-based instruction to build
           language, early math thinking, and social-emotional skills, and I watch closely—adjusting activities based on
-          each child's needs and interests. I partner with families through respectful communication, and I collaborate
+          each child’s needs and interests. I partner with families through respectful communication, and I collaborate
           with colleagues to continually improve outcomes for every child.
         </p>
       </div>
@@ -514,7 +772,7 @@
 
         <div class="contactCard">
           <h3>Jordan Taylor</h3>
-          <div class="meta">Early Childhood Education • Graduation: May 2026 • Open to student teaching &amp; entry-level roles</div>
+          <div class="meta">Early Childhood Education • Graduation: May 2026 • Open to student teaching & entry-level roles</div>
 
           <div class="contactRow">
             <div><strong>Email:</strong> <a href="mailto:jordan.taylor@email.com">jordan.taylor@email.com</a></div>

@@ -125,14 +125,14 @@ function fillItem($, $item, entry) {
 
 // ── Color override injection ──────────────────────────────────────────────────
 
-// Map of colorSpec key → CSS variable name(s) in extracted-theme
+// Map of colorSpec key → CSS variable name in extracted-theme (5 ordinal vars only)
 const COLOR_VAR_MAP = {
   primary:    "--color-primary",
   secondary:  "--color-secondary",
-  accent:     "--color-accent",
-  background: "--color-bg",
-  foreground: "--color-text",
-  text:       "--color-text",  // alternate alias
+  accent:     "--color-tertiary",
+  tertiary:   "--color-tertiary",
+  quaternary: "--color-quaternary",
+  quinary:    "--color-quinary",
 };
 
 function buildColorOverrideBlock(colorSpec) {

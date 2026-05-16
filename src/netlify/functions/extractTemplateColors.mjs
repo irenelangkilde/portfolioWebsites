@@ -45,13 +45,14 @@ function parseColorString(str) {
   return null;
 }
 
-// Named CSS custom properties we recognise as theme roles
+// Named CSS custom properties we recognise as theme roles.
+// --color-* names from the current normalized template format take priority.
 const VAR_PATTERNS = {
-  primary:   [/--primary\b/, /--color-primary\b/, /--brand\b/, /--main-color\b/, /--theme-primary\b/],
-  secondary: [/--secondary\b/, /--color-secondary\b/, /--theme-secondary\b/],
-  tertiary:    [/--accent\b/, /--highlight\b/, /--cta-color\b/, /--theme-accent\b/],
-  accent1:      [/--dark\b/, /--bg-dark\b/, /--background-dark\b/, /--color-dark\b/, /--surface-dark\b/],
-  accent2:     [/--light\b/, /--bg-light\b/, /--background-light\b/, /--bg\b/, /--surface\b/, /--bg-color\b/],
+  primary:   [/--color-primary\b/,    /--primary\b/,   /--brand\b/, /--main-color\b/, /--theme-primary\b/],
+  secondary: [/--color-secondary\b/,  /--secondary\b/, /--theme-secondary\b/],
+  tertiary:  [/--color-tertiary\b/,   /--accent\b/,    /--highlight\b/, /--cta-color\b/, /--theme-accent\b/],
+  accent1:   [/--color-quaternary\b/, /--dark\b/,      /--bg-dark\b/, /--background-dark\b/, /--color-dark\b/, /--surface-dark\b/],
+  accent2:   [/--color-quinary\b/,    /--light\b/,     /--bg-light\b/, /--background-light\b/, /--bg\b/, /--surface\b/, /--bg-color\b/],
 };
 
 function tryExtractVars(css) {
@@ -159,9 +160,20 @@ export async function handler(event) {
   }
 
   const colors = extractColors(html);
+
+  // Check for nonRecolorizable flag in the embedded color-palette JSON block
+  let nonRecolorizable = false;
+  const paletteMatch = html.match(/<script[^>]*id="color-palette"[^>]*>([\s\S]*?)<\/script>/i);
+  if (paletteMatch) {
+    try {
+      const palette = JSON.parse(paletteMatch[1]);
+      nonRecolorizable = palette?.meta?.nonRecolorizable === true;
+    } catch {}
+  }
+
   return {
     statusCode: 200,
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(colors)
+    body: JSON.stringify({ ...colors, nonRecolorizable })
   };
 }

@@ -14,45 +14,20 @@
         }
 
         :root {
-            /* Five main theme colors */
-            --dominant:   #fbbf24;   /* 1. Dominant    — golden yellow; hero gradient start, logo, skill borders, CTA accents */
-            --secondary:  #3b82f6;   /* 2. Secondary   — vivid blue; hero gradient end, headings, badges, buttons */
-            --tertiary:   #06b6d4;   /* 3. Tertiary    — cyan accent; cultural project card, highlight accent */
-            --quaternary: #1e293b;   /* 4. Quaternary  — deep navy; body text, footer background, dark surfaces */
-            --quinary:    #fef3c7;   /* 5. Quinary     — warm cream; about/resume/contact section backgrounds */
-
-            /* Theme-independent hard-coded neutrals */
-            --white:   #ffffff;
-            --black:   #000000;
-
-            /* Derived tokens */
-            --gradient:             linear-gradient(135deg, var(--dominant) 0%, var(--secondary) 100%);
-            --hero-overlay:         linear-gradient(135deg, rgba(251,191,36,0.9) 0%, rgba(59,130,246,0.9) 100%);
-            --translation-gradient: linear-gradient(135deg, var(--dominant) 0%, #f97316 100%);
-            --teaching-gradient:    linear-gradient(135deg, var(--secondary) 0%, #2563eb 100%);
-            --cultural-gradient:    linear-gradient(135deg, var(--tertiary) 0%, #0891b2 100%);
-            --literature-gradient:  linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-            --media-gradient:       linear-gradient(135deg, #ec4899 0%, #db2777 100%);
-            --community-gradient:   linear-gradient(135deg, #10b981 0%, #059669 100%);
-            --muted-text:           #64748b;
-            --skill-level-color:    #94a3b8;
-            --skill-divider:        #f0f0f0;
-            --card-shadow-sm:       rgba(0,0,0,0.06);
-            --card-shadow-md:       rgba(0,0,0,0.08);
-            --card-shadow-lg:       rgba(0,0,0,0.1);
-            --card-shadow-xl:       rgba(0,0,0,0.12);
-            --card-shadow-2xl:      rgba(0,0,0,0.15);
-            --nav-shadow:           rgba(0,0,0,0.1);
-            --hero-text-shadow:     rgba(0,0,0,0.2);
-            --social-glow:          rgba(251,191,36,0.3);
-            --btn-primary-hover-glow: rgba(255,255,255,0.4);
+            --primary: var(--color-tertiary);
+            --secondary: var(--color-secondary);
+            --accent: #06b6d4;
+            --dark: var(--color-quinary);
+            --light: var(--color-quaternary);
+            --orange: #f97316;
+            --gradient: linear-gradient(135deg, var(--color-tertiary) 0%, var(--color-secondary) 100%);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
-            color: var(--quaternary);
-            background: var(--white);
+            color: var(--dark);
+            background: var(--color-text);
         }
 
         h1, h2, h3, h4 {
@@ -67,8 +42,8 @@
 
         /* Navigation */
         nav {
-            background: var(--white);
-            box-shadow: 0 2px 15px var(--nav-shadow);
+            background: white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -99,13 +74,13 @@
 
         nav a {
             text-decoration: none;
-            color: var(--quaternary);
+            color: var(--dark);
             font-weight: 600;
             transition: color 0.3s;
         }
 
         nav a:hover {
-            color: var(--dominant);
+            color: var(--primary);
         }
 
         /* Hero Section */
@@ -116,7 +91,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--white);
+            color: white;
         }
 
         .hero-background {
@@ -145,7 +120,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: var(--hero-overlay);
+            background: linear-gradient(135deg, rgba(var(--color-tertiary-rgb),0.9) 0%, rgba(var(--color-secondary-rgb),0.9) 100%);
             z-index: 3;
         }
 
@@ -160,7 +135,7 @@
             font-size: 3.5rem;
             margin-bottom: 20px;
             font-weight: 700;
-            text-shadow: 2px 2px 4px var(--hero-text-shadow);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .hero .subtitle {
@@ -193,23 +168,23 @@
         }
 
         .btn-primary {
-            background: var(--white);
+            background: white;
             color: var(--secondary);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px var(--btn-primary-hover-glow);
+            box-shadow: 0 8px 25px rgba(var(--color-text-rgb),0.4);
         }
 
         .btn-secondary {
             background: transparent;
-            color: var(--white);
-            border: 2px solid var(--white);
+            color: white;
+            border: 2px solid white;
         }
 
         .btn-secondary:hover {
-            background: var(--white);
+            background: white;
             color: var(--secondary);
         }
 
@@ -231,7 +206,7 @@
 
         .section-subtitle {
             text-align: center;
-            color: var(--muted-text);
+            color: #64748b;
             font-size: 1.15rem;
             margin-bottom: 55px;
             max-width: 700px;
@@ -241,7 +216,7 @@
 
         /* About Section */
         .about {
-            background: var(--quinary);
+            background: var(--light);
         }
 
         .about-content {
@@ -265,10 +240,10 @@
         }
 
         .language-badge {
-            background: var(--white);
+            background: white;
             padding: 15px 30px;
             border-radius: 50px;
-            box-shadow: 0 3px 15px var(--nav-shadow);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             font-weight: 600;
             color: var(--secondary);
         }
@@ -282,17 +257,17 @@
         }
 
         .skill-category {
-            background: var(--white);
+            background: white;
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 8px 30px var(--card-shadow-md);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
             transition: all 0.3s;
-            border-top: 5px solid var(--dominant);
+            border-top: 5px solid var(--primary);
         }
 
         .skill-category:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 45px var(--card-shadow-xl);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.12);
         }
 
         .skill-category h3 {
@@ -307,7 +282,7 @@
 
         .skill-list li {
             padding: 12px 0;
-            border-bottom: 1px solid var(--skill-divider);
+            border-bottom: 1px solid var(--color-bg);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -319,13 +294,13 @@
 
         .skill-level {
             font-size: 0.85rem;
-            color: var(--skill-level-color);
+            color: #94a3b8;
             font-weight: 600;
         }
 
         /* Projects Section */
         .projects {
-            background: var(--white);
+            background: white;
         }
 
         .projects-grid {
@@ -335,16 +310,16 @@
         }
 
         .project-card {
-            background: var(--white);
+            background: white;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 8px 30px var(--card-shadow-lg);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             transition: all 0.4s;
         }
 
         .project-card:hover {
             transform: translateY(-12px);
-            box-shadow: 0 20px 50px var(--card-shadow-2xl);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
         }
 
         .project-image {
@@ -354,31 +329,31 @@
             align-items: center;
             justify-content: center;
             font-size: 4.5rem;
-            color: var(--white);
+            color: white;
         }
 
         .project-image.translation {
-            background: var(--translation-gradient);
+            background: linear-gradient(135deg, var(--color-tertiary) 0%, #f97316 100%);
         }
 
         .project-image.teaching {
-            background: var(--teaching-gradient);
+            background: linear-gradient(135deg, var(--color-secondary) 0%, #2563eb 100%);
         }
 
         .project-image.cultural {
-            background: var(--cultural-gradient);
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
         }
 
         .project-image.literature {
-            background: var(--literature-gradient);
+            background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
         }
 
         .project-image.media {
-            background: var(--media-gradient);
+            background: linear-gradient(135deg, var(--color-primary) 0%, #db2777 100%);
         }
 
         .project-image.community {
-            background: var(--community-gradient);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
         }
 
         .project-content {
@@ -386,14 +361,14 @@
         }
 
         .project-content h3 {
-            color: var(--quaternary);
+            color: var(--dark);
             margin-bottom: 12px;
             font-size: 1.5rem;
         }
 
         .project-type {
             display: inline-block;
-            background: var(--quinary);
+            background: var(--light);
             color: var(--secondary);
             padding: 6px 16px;
             border-radius: 20px;
@@ -403,13 +378,13 @@
         }
 
         .project-content p {
-            color: var(--muted-text);
+            color: #64748b;
             line-height: 1.7;
         }
 
         /* Resume Section */
         .resume {
-            background: var(--quinary);
+            background: var(--light);
         }
 
         .resume-content {
@@ -426,26 +401,26 @@
             font-size: 2rem;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 3px solid var(--dominant);
+            border-bottom: 3px solid var(--primary);
         }
 
         .resume-item {
-            background: var(--white);
+            background: white;
             padding: 30px;
             border-radius: 15px;
             margin-bottom: 25px;
-            box-shadow: 0 5px 20px var(--card-shadow-sm);
-            border-left: 5px solid var(--dominant);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+            border-left: 5px solid var(--primary);
         }
 
         .resume-item h4 {
-            color: var(--quaternary);
+            color: var(--dark);
             font-size: 1.4rem;
             margin-bottom: 10px;
         }
 
         .resume-item .meta {
-            color: var(--muted-text);
+            color: #64748b;
             font-size: 0.95rem;
             margin-bottom: 15px;
             display: flex;
@@ -455,7 +430,7 @@
 
         .resume-item ul {
             margin-left: 20px;
-            color: var(--quaternary);
+            color: var(--dark);
         }
 
         .resume-item ul li {
@@ -470,7 +445,7 @@
 
         /* Contact Section */
         .contact {
-            background: var(--white);
+            background: white;
         }
 
         .contact-content {
@@ -487,16 +462,16 @@
         }
 
         .contact-item {
-            background: var(--quinary);
+            background: var(--light);
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 5px 20px var(--card-shadow-sm);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
             transition: all 0.3s;
         }
 
         .contact-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px var(--card-shadow-lg);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .contact-item h3 {
@@ -506,7 +481,7 @@
         }
 
         .contact-item a {
-            color: var(--quaternary);
+            color: var(--dark);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
@@ -528,7 +503,7 @@
             height: 55px;
             border-radius: 50%;
             background: var(--gradient);
-            color: var(--white);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -539,13 +514,13 @@
 
         .social-links a:hover {
             transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 10px 25px var(--social-glow);
+            box-shadow: 0 10px 25px rgba(var(--color-tertiary-rgb),0.3);
         }
 
         /* Footer */
         footer {
-            background: var(--quaternary);
-            color: var(--white);
+            background: var(--dark);
+            color: white;
             text-align: center;
             padding: 40px 0;
         }
@@ -582,6 +557,279 @@
             }
         }
     </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(95.5% 0.000 0.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(65.6% 0.212 354.3);
+  --color-secondary:   oklch(62.3% 0.188 259.8);
+  --color-tertiary:    oklch(83.7% 0.164 84.4);
+  --color-quaternary:  oklch(96.2% 0.058 95.6);
+  --color-quinary:     oklch(27.9% 0.037 260.0);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(95.5% 0.000 0.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(65.6% 0.212 354.3);
+  --color-secondary:   oklch(62.3% 0.188 259.8);
+  --color-tertiary:    oklch(83.7% 0.164 84.4);
+  --color-quaternary:  oklch(96.2% 0.058 95.6);
+  --color-quinary:     oklch(27.9% 0.037 260.0);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(95.5% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(47.6% 0.212 354.3);
+  --color-secondary:   oklch(44.3% 0.188 259.8);
+  --color-tertiary:    oklch(58.0% 0.164 84.4);
+  --color-quaternary:  oklch(58.0% 0.058 95.6);
+  --color-quinary:     oklch(28.0% 0.037 260.0);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 240, 240, 240;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 236, 72, 153;
+  --color-secondary-rgb: 59, 130, 246;
+  --color-tertiary-rgb: 251, 191, 36;
+  --color-quaternary-rgb: 254, 243, 199;
+  --color-quinary-rgb: 30, 41, 59;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#3b82f6",
+      "oklch": {
+        "l": 0.6231,
+        "c": 0.188,
+        "h": 259.8
+      },
+      "count": 8,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#1e293b",
+      "oklch": {
+        "l": 0.2795,
+        "c": 0.0368,
+        "h": 260
+      },
+      "count": 2,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#fef3c7",
+      "oklch": {
+        "l": 0.9619,
+        "c": 0.058,
+        "h": 95.6
+      },
+      "count": 2,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#ec4899",
+      "oklch": {
+        "l": 0.6559,
+        "c": 0.2118,
+        "h": 354.3
+      },
+      "count": 3,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#fbbf24",
+      "oklch": {
+        "l": 0.8369,
+        "c": 0.1644,
+        "h": 84.4
+      },
+      "count": 9,
+      "role": "--color-tertiary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#f0f0f0",
+      "oklch": {
+        "l": 0.9551,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(95.5% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#ec4899",
+      "oklch": {
+        "l": 0.6559,
+        "c": 0.2118,
+        "h": 354.3
+      },
+      "css": "oklch(65.6% 0.212 354.3)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#3b82f6",
+      "oklch": {
+        "l": 0.6231,
+        "c": 0.188,
+        "h": 259.8
+      },
+      "css": "oklch(62.3% 0.188 259.8)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#fbbf24",
+      "oklch": {
+        "l": 0.8369,
+        "c": 0.1644,
+        "h": 84.4
+      },
+      "css": "oklch(83.7% 0.164 84.4)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#fef3c7",
+      "oklch": {
+        "l": 0.9619,
+        "c": 0.058,
+        "h": 95.6
+      },
+      "css": "oklch(96.2% 0.058 95.6)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#1e293b",
+      "oklch": {
+        "l": 0.2795,
+        "c": 0.0368,
+        "h": 260
+      },
+      "css": "oklch(27.9% 0.037 260.0)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#f0f0f0",
+      "oklch": {
+        "l": 0.9551,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(95.5% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#ac0064",
+      "oklch": {
+        "l": 0.4759,
+        "c": 0.2118,
+        "h": 354.3
+      },
+      "css": "oklch(47.6% 0.212 354.3)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#0049b8",
+      "oklch": {
+        "l": 0.4431,
+        "c": 0.188,
+        "h": 259.8
+      },
+      "css": "oklch(44.3% 0.188 259.8)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#a76e00",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.1644,
+        "h": 84.4
+      },
+      "css": "oklch(58.0% 0.164 84.4)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#857a52",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.058,
+        "h": 95.6
+      },
+      "css": "oklch(58.0% 0.058 95.6)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#1e293b",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0368,
+        "h": 260
+      },
+      "css": "oklch(28.0% 0.037 260.0)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
     <!-- Navigation -->
@@ -618,7 +866,7 @@
         <div class="hero-overlay"></div>
         <div class="hero-content">
             <h1>Sofia Martinez</h1>
-            <p class="subtitle">Spanish Language &amp; Literature</p>
+            <p class="subtitle">Spanish Language & Literature</p>
             <p class="graduation">🎓 BA in Spanish | Minor in Education | Graduating Spring 2026</p>
             <div class="cta-buttons">
                 <a href="#projects" class="btn btn-primary">View Portfolio</a>
@@ -676,7 +924,7 @@
                 </div>
 
                 <div class="skill-category">
-                    <h3>👨‍🏫 Teaching &amp; Education</h3>
+                    <h3>👨‍🏫 Teaching & Education</h3>
                     <ul class="skill-list">
                         <li><span>Lesson Planning</span><span class="skill-level">Advanced</span></li>
                         <li><span>Curriculum Development</span><span class="skill-level">Proficient</span></li>
@@ -748,7 +996,7 @@
                     <div class="project-image media">📱</div>
                     <div class="project-content">
                         <span class="project-type">Digital Media</span>
-                        <h3>Spanish Learning Blog &amp; Podcast</h3>
+                        <h3>Spanish Learning Blog & Podcast</h3>
                         <p>Created bilingual blog and podcast series featuring interviews with native speakers, cultural insights, and language learning tips. Published 30+ episodes with 5,000+ monthly listeners.</p>
                     </div>
                 </div>
@@ -757,7 +1005,7 @@
                     <div class="project-image community">🤝</div>
                     <div class="project-content">
                         <span class="project-type">Community Service</span>
-                        <h3>ESL &amp; Spanish Classes for Immigrants</h3>
+                        <h3>ESL & Spanish Classes for Immigrants</h3>
                         <p>Volunteered with community center to teach English to Spanish-speaking immigrants and Spanish to English speakers, facilitating cultural exchange and mutual understanding between communities.</p>
                     </div>
                 </div>
@@ -774,7 +1022,7 @@
                 <div class="resume-section">
                     <h3>Education</h3>
                     <div class="resume-item">
-                        <h4>Bachelor of Arts in Spanish Language &amp; Literature</h4>
+                        <h4>Bachelor of Arts in Spanish Language & Literature</h4>
                         <div class="meta">
                             <span>📍 State University</span>
                             <span>📅 Expected Graduation: May 2026</span>
@@ -853,7 +1101,7 @@
                 </div>
 
                 <div class="resume-section">
-                    <h3>Leadership &amp; Activities</h3>
+                    <h3>Leadership & Activities</h3>
                     <div class="resume-item">
                         <h4>Sigma Delta Pi - Vice President</h4>
                         <div class="meta">
@@ -882,7 +1130,7 @@
                 </div>
 
                 <div class="resume-section">
-                    <h3>Certifications &amp; Awards</h3>
+                    <h3>Certifications & Awards</h3>
                     <div class="resume-item">
                         <ul>
                             <li>ACTFL OPI Certification - Advanced High (2025)</li>
@@ -895,7 +1143,7 @@
                 </div>
 
                 <div class="download-resume">
-                    <a href="#" class="btn btn-primary" style="background: var(--white); color: var(--secondary);">📄 Download Full Resume</a>
+                    <a href="#" class="btn btn-primary">📄 Download Full Resume</a>
                 </div>
             </div>
         </div>
@@ -930,7 +1178,7 @@
                     <a href="mailto:sofia.martinez@email.com" title="Email">✉️</a>
                 </div>
 
-                <p style="margin-top: 40px; color: var(--muted-text); font-size: 0.95rem;">Interested in Education • Translation Services • International Business • Cultural Exchange Programs</p>
+                <p style="margin-top: 40px; color: #64748b; font-size: 0.95rem;">Interested in Education • Translation Services • International Business • Cultural Exchange Programs</p>
             </div>
         </div>
     </section>

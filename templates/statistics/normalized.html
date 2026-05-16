@@ -7,38 +7,6 @@
     <title>Lucy Ross - Statistics Major Portfolio</title>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Cinzel:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-          /* Five main theme colors */
-          --dominant:   #f39c12;   /* 1. Dominant    — hero gradient anchor, golden amber */
-          --secondary:  #3498db;   /* 2. Secondary   — blue accent, CTA tags, card borders */
-          --tertiary:   #9b59b6;   /* 3. Tertiary    — purple gradient/hero accent          */
-          --quaternary: #e74c3c;   /* 4. Quaternary  — red accent, badge text, hero stop    */
-          --quinary:    #2c3e50;   /* 5. Quinary     — dark navy, headings, body text       */
-
-          /* Theme-independent hard-coded neutrals */
-          --white:   #ffffff;
-          --black:   #000000;
-          --success: #27ae60;
-          --teal:    #1abc9c;
-
-          /* Derived tokens */
-          --hero-bg-surface:        color-mix(in srgb, var(--quinary) 100%, transparent);
-          --badge-bg:               #f4e8d8;
-          --badge-text:             #c0392b;
-          --about-bg:               #f9f9f9;
-          --skills-bg:              #ecf0f1;
-          --card-surface:           color-mix(in srgb, var(--white) 100%, transparent);
-          --card-alt-surface:       color-mix(in srgb, var(--quinary) 3%, var(--white));
-          --body-text:              #555555;
-          --muted-text:             #7f8c8d;
-          --exp-card-border:        var(--secondary);
-          --tag-bg:                 var(--secondary);
-          --skill-border:           var(--secondary);
-          --skill-bullet:           var(--secondary);
-          --heading-color:          var(--quinary);
-          --contact-btn-text:       var(--quinary);
-        }
-
         * {
             margin: 0;
             padding: 0;
@@ -55,13 +23,13 @@
             min-height: 100vh;
             position: relative;
             background: 
-                radial-gradient(circle at 20% 30%, rgba(52, 152, 219, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 20% 30%, rgba(var(--color-secondary-rgb),0.6) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(155, 89, 182, 0.5) 0%, transparent 45%),
                 radial-gradient(circle at 40% 70%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
                 radial-gradient(circle at 70% 60%, rgba(230, 126, 34, 0.7) 0%, transparent 55%),
                 radial-gradient(circle at 10% 80%, rgba(231, 76, 60, 0.6) 0%, transparent 45%),
                 radial-gradient(circle at 90% 85%, rgba(192, 57, 43, 0.5) 0%, transparent 50%),
-                linear-gradient(135deg, var(--dominant) 0%, var(--quaternary) 25%, var(--tertiary) 50%, var(--secondary) 75%, var(--success) 100%);
+                linear-gradient(135deg, #f39c12 0%, #e74c3c 25%, #9b59b6 50%, var(--color-secondary) 75%, #27ae60 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -89,7 +57,7 @@
             position: absolute;
             top: 40px;
             right: 40px;
-            background: var(--badge-bg);
+            background: var(--color-quinary);
             padding: 12px 24px;
             border-radius: 50px;
             transform: rotate(5deg);
@@ -97,7 +65,7 @@
         }
 
         .major-badge span {
-            color: var(--badge-text);
+            color: #c0392b;
             font-size: 13px;
             font-weight: 700;
             letter-spacing: 1px;
@@ -107,7 +75,7 @@
         /* Main typography */
         .main-text {
             text-align: center;
-            color: var(--white);
+            color: var(--color-text);
             z-index: 1;
             padding: 0 20px;
         }
@@ -134,7 +102,7 @@
         /* Subtitle */
         .subtitle {
             margin-top: 40px;
-            color: var(--white);
+            color: var(--color-text);
             font-size: clamp(22px, 2.5vw, 32px);
             font-weight: 300;
             font-family: 'Cormorant Garamond', serif;
@@ -157,24 +125,24 @@
             height: 14px;
             border-radius: 50%;
             background: transparent;
-            border: 2px solid rgba(255, 255, 255, 0.6);
+            border: 2px solid rgba(var(--color-text-rgb),0.6);
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .dot.active {
-            background: var(--white);
+            background: var(--color-text);
             transform: scale(1.2);
         }
 
         .dot:hover {
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(var(--color-text-rgb),0.5);
         }
 
         /* About section */
         .about-section {
             padding: 100px 40px;
-            background: var(--about-bg);
+            background: var(--color-text);
         }
 
         .section-content {
@@ -185,7 +153,7 @@
         .about-section h2 {
             font-size: clamp(40px, 6vw, 70px);
             margin-bottom: 30px;
-            color: var(--heading-color);
+            color: #2c3e50;
             text-align: center;
         }
 
@@ -200,12 +168,12 @@
             font-size: clamp(16px, 2vw, 18px);
             line-height: 1.8;
             margin-bottom: 20px;
-            color: var(--body-text);
+            color: var(--color-bg);
             font-family: 'Cormorant Garamond', serif;
         }
 
         .stats-box {
-            background: var(--white);
+            background: white;
             padding: 40px;
             border-radius: 20px;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
@@ -217,13 +185,13 @@
 
         .stat-item h3 {
             font-size: 18px;
-            color: var(--heading-color);
+            color: #2c3e50;
             margin-bottom: 5px;
             font-weight: 600;
         }
 
         .stat-item p {
-            color: var(--muted-text);
+            color: color-mix(in oklab, var(--color-bg), white 18%);
             font-size: 15px;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -231,7 +199,7 @@
         /* Education & Experience */
         .experience-section {
             padding: 100px 40px;
-            background: var(--white);
+            background: var(--color-text);
         }
 
         .exp-grid {
@@ -242,20 +210,20 @@
         }
 
         .exp-card {
-            background: var(--about-bg);
+            background: var(--color-text);
             padding: 35px;
             border-radius: 15px;
-            border-left: 5px solid var(--exp-card-border);
+            border-left: 5px solid var(--color-secondary);
         }
 
         .exp-card h3 {
             font-size: 22px;
-            color: var(--heading-color);
+            color: #2c3e50;
             margin-bottom: 8px;
         }
 
         .exp-card .meta {
-            color: var(--muted-text);
+            color: color-mix(in oklab, var(--color-bg), white 18%);
             font-size: 14px;
             margin-bottom: 15px;
             text-transform: uppercase;
@@ -263,7 +231,7 @@
         }
 
         .exp-card p {
-            color: var(--body-text);
+            color: var(--color-bg);
             line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -271,7 +239,7 @@
         /* Skills section */
         .skills-section {
             padding: 100px 40px;
-            background: var(--skills-bg);
+            background: var(--color-quinary);
         }
 
         .skills-grid {
@@ -282,7 +250,7 @@
         }
 
         .skill-category {
-            background: var(--white);
+            background: white;
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
@@ -290,9 +258,9 @@
 
         .skill-category h3 {
             font-size: 20px;
-            color: var(--heading-color);
+            color: #2c3e50;
             margin-bottom: 20px;
-            border-bottom: 2px solid var(--skill-border);
+            border-bottom: 2px solid var(--color-secondary);
             padding-bottom: 10px;
         }
 
@@ -302,14 +270,14 @@
 
         .skill-list li {
             padding: 8px 0;
-            color: var(--body-text);
+            color: var(--color-bg);
             font-family: 'Cormorant Garamond', serif;
             font-size: 16px;
         }
 
         .skill-list li:before {
             content: "▪";
-            color: var(--skill-bullet);
+            color: var(--color-secondary);
             font-weight: bold;
             display: inline-block;
             width: 1em;
@@ -319,7 +287,7 @@
         /* Projects section */
         .projects-section {
             padding: 100px 40px;
-            background: var(--white);
+            background: white;
         }
 
         .projects-grid {
@@ -330,7 +298,7 @@
         }
 
         .project-card {
-            background: var(--card-alt-surface);
+            background: var(--color-text);
             padding: 35px;
             border-radius: 15px;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -343,14 +311,14 @@
 
         .project-card h3 {
             font-size: 24px;
-            color: var(--heading-color);
+            color: #2c3e50;
             margin-bottom: 10px;
         }
 
         .project-card .tag {
             display: inline-block;
-            background: var(--tag-bg);
-            color: var(--white);
+            background: var(--color-secondary);
+            color: white;
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 12px;
@@ -358,7 +326,7 @@
         }
 
         .project-card p {
-            color: var(--body-text);
+            color: var(--color-bg);
             line-height: 1.7;
             font-family: 'Cormorant Garamond', serif;
         }
@@ -367,12 +335,12 @@
         .contact-section {
             padding: 100px 40px;
             background: 
-                radial-gradient(circle at 30% 40%, rgba(46, 204, 113, 0.6) 0%, transparent 50%),
+                radial-gradient(circle at 30% 40%, rgba(var(--color-primary-rgb),0.6) 0%, transparent 50%),
                 radial-gradient(circle at 70% 30%, rgba(155, 89, 182, 0.5) 0%, transparent 50%),
                 radial-gradient(circle at 50% 80%, rgba(241, 196, 15, 0.6) 0%, transparent 50%),
-                linear-gradient(135deg, var(--teal) 0%, var(--secondary) 25%, var(--tertiary) 50%, var(--quaternary) 100%);
+                linear-gradient(135deg, #1abc9c 0%, var(--color-secondary) 25%, #9b59b6 50%, #e74c3c 100%);
             text-align: center;
-            color: var(--white);
+            color: white;
         }
 
         .contact-section h2 {
@@ -394,8 +362,8 @@
         }
 
         .contact-btn {
-            background: var(--white);
-            color: var(--contact-btn-text);
+            background: white;
+            color: #2c3e50;
             padding: 15px 35px;
             border-radius: 50px;
             text-decoration: none;
@@ -427,6 +395,281 @@
             }
         }
     </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(45.0% 0.000 0.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(74.6% 0.181 152.3);
+  --color-secondary:   oklch(65.3% 0.135 242.7);
+  --color-tertiary:    oklch(20.1% 0.065 278.8);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(93.6% 0.025 75.3);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(45.0% 0.000 0.0);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(74.6% 0.181 152.3);
+  --color-secondary:   oklch(65.3% 0.135 242.7);
+  --color-tertiary:    oklch(20.1% 0.065 278.8);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(93.6% 0.025 75.3);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(45.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(56.6% 0.181 152.3);
+  --color-secondary:   oklch(47.3% 0.135 242.7);
+  --color-tertiary:    oklch(28.0% 0.065 278.8);
+  --color-quaternary:  oklch(41.5% 0.054 195.3);
+  --color-quinary:     oklch(58.0% 0.025 75.3);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 85, 85, 85;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 46, 204, 113;
+  --color-secondary-rgb: 52, 152, 219;
+  --color-tertiary-rgb: 17, 17, 51;
+  --color-quaternary-rgb: 34, 85, 85;
+  --color-quinary-rgb: 244, 232, 216;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#3498db",
+      "oklch": {
+        "l": 0.6531,
+        "c": 0.1347,
+        "h": 242.7
+      },
+      "count": 19,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#111133",
+      "oklch": {
+        "l": 0.2015,
+        "c": 0.0654,
+        "h": 278.8
+      },
+      "count": 1,
+      "role": "--color-tertiary",
+      "merged": []
+    },
+    {
+      "hex": "#f4e8d8",
+      "oklch": {
+        "l": 0.9362,
+        "c": 0.025,
+        "h": 75.3
+      },
+      "count": 8,
+      "role": "--color-quinary",
+      "merged": [
+        "#ecf0f1"
+      ]
+    },
+    {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "count": 2,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#2ecc71",
+      "oklch": {
+        "l": 0.7459,
+        "c": 0.1812,
+        "h": 152.3
+      },
+      "count": 1,
+      "role": "--color-primary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#555555",
+      "oklch": {
+        "l": 0.4495,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(45.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#2ecc71",
+      "oklch": {
+        "l": 0.7459,
+        "c": 0.1812,
+        "h": 152.3
+      },
+      "css": "oklch(74.6% 0.181 152.3)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#3498db",
+      "oklch": {
+        "l": 0.6531,
+        "c": 0.1347,
+        "h": 242.7
+      },
+      "css": "oklch(65.3% 0.135 242.7)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#111133",
+      "oklch": {
+        "l": 0.2015,
+        "c": 0.0654,
+        "h": 278.8
+      },
+      "css": "oklch(20.1% 0.065 278.8)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#f4e8d8",
+      "oklch": {
+        "l": 0.9362,
+        "c": 0.025,
+        "h": 75.3
+      },
+      "css": "oklch(93.6% 0.025 75.3)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#555555",
+      "oklch": {
+        "l": 0.4495,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(45.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#00923a",
+      "oklch": {
+        "l": 0.5659,
+        "c": 0.1812,
+        "h": 152.3
+      },
+      "css": "oklch(56.6% 0.181 152.3)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#0061a0",
+      "oklch": {
+        "l": 0.4731,
+        "c": 0.1347,
+        "h": 242.7
+      },
+      "css": "oklch(47.3% 0.135 242.7)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#222448",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0654,
+        "h": 278.8
+      },
+      "css": "oklch(28.0% 0.065 278.8)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#225555",
+      "oklch": {
+        "l": 0.4153,
+        "c": 0.0542,
+        "h": 195.3
+      },
+      "css": "oklch(41.5% 0.054 195.3)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#83796a",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.025,
+        "h": 75.3
+      },
+      "css": "oklch(58.0% 0.025 75.3)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
     <!-- Hero Section -->
@@ -501,7 +744,7 @@
     <!-- Experience Section -->
     <section class="experience-section">
         <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--heading-color); margin-bottom: 20px;">Education & Experience</h2>
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50; margin-bottom: 20px;">Education & Experience</h2>
             
             <div class="exp-grid">
                 <div class="exp-card">
@@ -550,7 +793,7 @@
     <!-- Skills Section -->
     <section class="skills-section">
         <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--heading-color);">Technical Skills</h2>
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50;">Technical Skills</h2>
             
             <div class="skills-grid">
                 <div class="skill-category">
@@ -603,7 +846,7 @@
     <!-- Projects Section -->
     <section class="projects-section">
         <div class="section-content">
-            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: var(--heading-color);">Featured Projects</h2>
+            <h2 style="text-align: center; font-size: clamp(40px, 6vw, 70px); color: #2c3e50;">Featured Projects</h2>
             
             <div class="projects-grid">
                 <div class="project-card">

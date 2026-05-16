@@ -347,27 +347,27 @@
 
   <script>
     const files = [
-      "accountingGrad.html",
-      "anthropologyGrad.html",
-      "artGrad.html",
-      "biologyGrad.html",
-      "biologyGrad_B.html",
-      "chemistryGrad.html",
-      "civil-engineeringGrad.html",
-      "data-scienceGrad.html",
-      "data-scienceGrad_B.html",
-      "early-childhood-educationGrad.html",
-      "electrical-engineeringGrad.html",
-      "electrical-engineeringGrad_B.html",
-      "financeGrad.html",
-      "historyGrad.html",
-      "linguisticsGrad.html",
-      "managementGrad.html",
-      "physicsGrad.html",
-      "psychologyGrad.html",
-      "spanishGrad.html",
-      "spanishGrad_B.html",
-      "statisticsGrad.html"
+      { href: "../templates/accounting/sample.html",                  major: "Accounting",                variant: "Base" },
+      { href: "../templates/anthropology/sample.html",                major: "Anthropology",              variant: "Base" },
+      { href: "../templates/art/sample.html",                         major: "Art",                       variant: "Base" },
+      { href: "../templates/biology/sample.html",                     major: "Biology",                   variant: "Base" },
+      { href: "../templates/biology-b/sample.html",                   major: "Biology",                   variant: "B"    },
+      { href: "../templates/chemistry/sample.html",                   major: "Chemistry",                 variant: "Base" },
+      { href: "../templates/civil-engineering/sample.html",           major: "Civil Engineering",         variant: "Base" },
+      { href: "../templates/data-science/sample.html",                major: "Data Science",              variant: "Base" },
+      { href: "../templates/data-science-b/sample.html",              major: "Data Science",              variant: "B"    },
+      { href: "../templates/early-childhood-education/sample.html",   major: "Early Childhood Education", variant: "Base" },
+      { href: "../templates/electrical-engineering/sample.html",      major: "Electrical Engineering",    variant: "Base" },
+      { href: "../templates/electrical-engineering-b/sample.html",    major: "Electrical Engineering",    variant: "B"    },
+      { href: "../templates/finance/sample.html",                     major: "Finance",                   variant: "Base" },
+      { href: "../templates/history/sample.html",                     major: "History",                   variant: "Base" },
+      { href: "../templates/linguistics/sample.html",                 major: "Linguistics",               variant: "Base" },
+      { href: "../templates/management/sample.html",                  major: "Management",                variant: "Base" },
+      { href: "../templates/physics/sample.html",                     major: "Physics",                   variant: "Base" },
+      { href: "../templates/psychology/sample.html",                  major: "Psychology",                variant: "Base" },
+      { href: "../templates/spanish/sample.html",                     major: "Spanish",                   variant: "Base" },
+      { href: "../templates/spanish-b/sample.html",                   major: "Spanish",                   variant: "B"    },
+      { href: "../templates/statistics/sample.html",                  major: "Statistics",                variant: "Base" },
     ];
 
     const gallery = document.getElementById("gallery");
@@ -375,25 +375,8 @@
     const resultCount = document.getElementById("resultCount");
     const emptyState = document.getElementById("emptyState");
 
-    function toTitleCase(text) {
-      return text.replace(/\b\w/g, (letter) => letter.toUpperCase());
-    }
-
-    function parseFileName(fileName) {
-      const withoutExtension = fileName.replace(/\.html$/i, "");
-      const baseMatch = withoutExtension.match(/^(.*)Grad(?:_(.*))?$/);
-      const rawMajor = baseMatch ? baseMatch[1] : withoutExtension;
-      const rawVariant = baseMatch && baseMatch[2] ? baseMatch[2] : "";
-      const major = toTitleCase(rawMajor.replace(/-/g, " ").trim());
-      const variant = rawVariant ? toTitleCase(rawVariant.replace(/-/g, " ").trim()) : "Base";
-
-      return {
-        fileName,
-        href: fileName,
-        major,
-        variant,
-        searchText: [major, variant, fileName].join(" ").toLowerCase()
-      };
+    function enrichEntry(entry) {
+      return { ...entry, searchText: [entry.major, entry.variant, entry.href].join(" ").toLowerCase() };
     }
 
     function createCard(entry) {
@@ -427,7 +410,7 @@
     }
 
     function renderGallery() {
-      const entries = files.map(parseFileName);
+      const entries = files.map(enrichEntry);
       const fragment = document.createDocumentFragment();
 
       entries.forEach((entry) => {

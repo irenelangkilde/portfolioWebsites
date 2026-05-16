@@ -9,8 +9,8 @@
 
   <style>
     :root{
-      --ink:var(--color-bg);
-      --muted:var(--color-primary);
+      --ink:color-mix(in oklab, var(--color-bg), white 5%);
+      --muted:color-mix(in oklab, var(--color-bg), white 27%);
       --paper:var(--color-text);
       --card:#ffffffcc;
       --glass:#ffffffa8;
@@ -20,10 +20,10 @@
       --radius:22px;
 
       /* warm anthropology palette */
-      --accent:var(--color-primary);       /* terracotta */
-      --accent2:var(--color-text);      /* warm beige */
-      --accent3:var(--color-text);      /* light sand */
-      --btn:var(--color-bg);
+      --accent:#b8744f;       /* terracotta */
+      --accent2:var(--color-tertiary);      /* warm beige */
+      --accent3:var(--color-quaternary);      /* light sand */
+      --btn:color-mix(in oklab, var(--color-bg), white 5%);
       --btnText:var(--color-text);
 
       --max:1120px;
@@ -74,7 +74,7 @@
     }
     .brandMark{
       width:34px;height:34px;border-radius:12px;
-      background: linear-gradient(135deg, rgba(var(--color-text-rgb),.9), rgba(var(--color-primary-rgb),.7));
+      background: linear-gradient(135deg, rgba(var(--color-quaternary-rgb),.9), rgba(184,116,79,.7));
       border:1px solid rgba(var(--color-text-rgb),.25);
       box-shadow: 0 12px 26px rgba(0,0,0,.25);
     }
@@ -169,8 +169,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: rgba(var(--color-text-rgb),.18);
-      border:1px solid rgba(var(--color-text-rgb),.22);
+      background: rgba(var(--color-quaternary-rgb),.18);
+      border:1px solid rgba(var(--color-quaternary-rgb),.22);
       font-size:12.5px;
       font-weight:700;
       letter-spacing:.02em;
@@ -203,8 +203,8 @@
     }
     .btn:hover{transform: translateY(-1px); background: rgba(var(--color-text-rgb),.20);}
     .btn.primary{
-      background: rgba(var(--color-text-rgb),.22);
-      border-color: rgba(var(--color-text-rgb),.30);
+      background: rgba(var(--color-quaternary-rgb),.22);
+      border-color: rgba(var(--color-quaternary-rgb),.30);
     }
 
     /* ===== Main content sections ===== */
@@ -250,7 +250,7 @@
       font-size:13.5px;
       margin-bottom:10px;
     }
-    .card p{margin:10px 0 0; color:var(--color-bg)}
+    .card p{margin:10px 0 0; color:color-mix(in oklab, var(--color-bg), white 10%)}
     .card,
     .contactCard,
     .item,
@@ -261,7 +261,7 @@
     .bullets{
       margin:12px 0 0;
       padding-left:18px;
-      color:var(--color-bg);
+      color:color-mix(in oklab, var(--color-bg), white 10%);
     }
     .bullets li{margin:6px 0}
 
@@ -271,9 +271,9 @@
       font-weight:700;
       padding:7px 10px;
       border-radius:999px;
-      background: rgba(var(--color-primary-rgb),.12);
-      border:1px solid rgba(var(--color-primary-rgb),.18);
-      color:var(--color-bg);
+      background: rgba(184,116,79,.12);
+      border:1px solid rgba(184,116,79,.18);
+      color:#5c3622;
     }
 
     /* Timeline */
@@ -338,7 +338,7 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background: var(--color-text);
+      background: color-mix(in oklab, var(--color-text), black 10%);
     }
     .contactCard{
       padding:22px;
@@ -363,7 +363,7 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--color-primary);
+      color:var(--color-quinary);
       font-size:13.5px;
       text-align:center;
     }
@@ -376,109 +376,122 @@
 
 /* ── Default / Hero scheme ──────────────────────────────────────────── */
 :root {
-  --color-bg:       oklch(17.0% 0.013 55.3);
-  --color-text:     oklch(100.0% 0.000 0.0);
-  --color-surface:  color-mix(in oklab, var(--color-bg), white 8%);
-  --color-card:     color-mix(in oklab, var(--color-bg), white 12%);
-  --color-primary:  oklch(62.3% 0.100 48.8);
-  --color-secondary:oklch(74.0% 0.120 150.0);
-  --color-accent:   oklch(82.0% 0.200 45.0);
-  --color-muted:    color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
-  --color-border:   color-mix(in oklab, var(--color-bg), white 16%);
+  --color-bg:          oklch(17.0% 0.013 55.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(23.3% 0.132 290.1);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(82.8% 0.049 49.4);
+  --color-quaternary:  oklch(93.9% 0.042 71.9);
+  --color-quinary:     oklch(54.5% 0.022 54.9);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
 }
 
 .section-hero {
-  --color-bg:       oklch(17.0% 0.013 55.3);
-  --color-text:     oklch(100.0% 0.000 0.0);
-  --color-surface:  color-mix(in oklab, var(--color-bg), white 8%);
-  --color-card:     color-mix(in oklab, var(--color-bg), white 12%);
-  --color-primary:  oklch(62.3% 0.100 48.8);
-  --color-secondary:oklch(74.0% 0.120 150.0);
-  --color-accent:   oklch(82.0% 0.200 45.0);
-  --color-muted:    color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
-  --color-border:   color-mix(in oklab, var(--color-bg), white 16%);
+  --color-bg:          oklch(17.0% 0.013 55.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(23.3% 0.132 290.1);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(82.8% 0.049 49.4);
+  --color-quaternary:  oklch(93.9% 0.042 71.9);
+  --color-quinary:     oklch(54.5% 0.022 54.9);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
 }
 
 /* ── Inverted contrast section ──────────────────────────────────────── */
 .section-inverted {
-  --color-bg:       oklch(100.0% 0.000 0.0);
-  --color-text:     oklch(17.0% 0.013 55.3);
-  --color-surface:  color-mix(in oklab, var(--color-bg), black 6%);
-  --color-card:     color-mix(in oklab, var(--color-bg), black 10%);
-  --color-primary:  oklch(44.3% 0.100 48.8);
-  --color-secondary:oklch(56.0% 0.120 150.0);
-  --color-accent:   oklch(58.0% 0.200 45.0);
-  --color-muted:    color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
-  --color-border:   color-mix(in oklab, var(--color-bg), black 14%);
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(17.0% 0.013 55.3);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(28.0% 0.132 290.1);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(58.0% 0.049 49.4);
+  --color-quaternary:  oklch(58.0% 0.042 71.9);
+  --color-quinary:     oklch(36.5% 0.022 54.9);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
 }
 /* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
 :root {
   --color-bg-rgb: 20, 14, 10;
   --color-text-rgb: 255, 255, 255;
-  --color-primary-rgb: 184, 116, 79;
-  --color-secondary-rgb: 111, 192, 130;
-  --color-accent-rgb: 255, 146, 68;
+  --color-primary-rgb: 34, 0, 85;
+  --color-secondary-rgb: 34, 68, 119;
+  --color-tertiary-rgb: 226, 190, 171;
+  --color-quaternary-rgb: 253, 231, 205;
+  --color-quinary-rgb: 123, 109, 100;
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 3,
-    "confidence": 1.648,
+    "k": 5,
+    "confidence": null,
     "threshold": 1.5,
-    "well_separated": true
+    "well_separated": true,
+    "nonRecolorizable": false
   },
   "palette": [
     {
-      "hex": "#ffffff",
+      "hex": "#220055",
       "oklch": {
-        "l": 1,
-        "c": 0,
-        "h": 0
+        "l": 0.2329,
+        "c": 0.1317,
+        "h": 290.1
       },
-      "count": 54,
-      "role": "--color-text",
-      "merged": [
-        "#fbf7f3",
-        "#fde7cd",
-        "#dddddd",
-        "#e2beab"
-      ]
-    },
-    {
-      "hex": "#140e0a",
-      "oklch": {
-        "l": 0.1701,
-        "c": 0.0131,
-        "h": 55.3
-      },
-      "count": 32,
-      "role": "--color-bg",
-      "merged": [
-        "#2c241f",
-        "#223311",
-        "#220055",
-        "#5c3622",
-        "#1f1a16",
-        "#224477",
-        "#224433",
-        "#111166"
-      ]
-    },
-    {
-      "hex": "#b8744f",
-      "oklch": {
-        "l": 0.6235,
-        "c": 0.1002,
-        "h": 48.8
-      },
-      "count": 30,
+      "count": 4,
       "role": "--color-primary",
-      "merged": [
-        "#225555",
-        "#7b6d64",
-        "#5c514a"
-      ]
+      "merged": []
+    },
+    {
+      "hex": "#fde7cd",
+      "oklch": {
+        "l": 0.939,
+        "c": 0.0419,
+        "h": 71.9
+      },
+      "count": 10,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#7b6d64",
+      "oklch": {
+        "l": 0.5451,
+        "c": 0.0224,
+        "h": 54.9
+      },
+      "count": 4,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#224477",
+      "oklch": {
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
+      },
+      "count": 2,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#e2beab",
+      "oklch": {
+        "l": 0.8277,
+        "c": 0.049,
+        "h": 49.4
+      },
+      "count": 2,
+      "role": "--color-tertiary",
+      "merged": []
     }
   ],
   "scheme": {
@@ -490,7 +503,8 @@
         "h": 55.3
       },
       "css": "oklch(17.0% 0.013 55.3)",
-      "synthetic": false
+      "synthetic": false,
+      "fixed": true
     },
     "--color-text": {
       "hex": "#ffffff",
@@ -500,37 +514,58 @@
         "h": 0
       },
       "css": "oklch(100.0% 0.000 0.0)",
-      "synthetic": false
+      "synthetic": false,
+      "fixed": true
     },
     "--color-primary": {
-      "hex": "#b8744f",
+      "hex": "#220055",
       "oklch": {
-        "l": 0.6235,
-        "c": 0.1002,
-        "h": 48.8
+        "l": 0.2329,
+        "c": 0.1317,
+        "h": 290.1
       },
-      "css": "oklch(62.3% 0.100 48.8)",
+      "css": "oklch(23.3% 0.132 290.1)",
       "synthetic": false
     },
     "--color-secondary": {
-      "hex": "#6fc082",
+      "hex": "#224477",
       "oklch": {
-        "l": 0.74,
-        "c": 0.12,
-        "h": 150
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
       },
-      "css": "oklch(74.0% 0.120 150.0)",
-      "synthetic": true
+      "css": "oklch(38.9% 0.096 258.4)",
+      "synthetic": false
     },
-    "--color-accent": {
-      "hex": "#ff9244",
+    "--color-tertiary": {
+      "hex": "#e2beab",
       "oklch": {
-        "l": 0.82,
-        "c": 0.2,
-        "h": 45
+        "l": 0.8277,
+        "c": 0.049,
+        "h": 49.4
       },
-      "css": "oklch(82.0% 0.200 45.0)",
-      "synthetic": true
+      "css": "oklch(82.8% 0.049 49.4)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#fde7cd",
+      "oklch": {
+        "l": 0.939,
+        "c": 0.0419,
+        "h": 71.9
+      },
+      "css": "oklch(93.9% 0.042 71.9)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#7b6d64",
+      "oklch": {
+        "l": 0.5451,
+        "c": 0.0224,
+        "h": 54.9
+      },
+      "css": "oklch(54.5% 0.022 54.9)",
+      "synthetic": false
     }
   },
   "invertedScheme": {
@@ -542,7 +577,8 @@
         "h": 0
       },
       "css": "oklch(100.0% 0.000 0.0)",
-      "synthetic": false
+      "synthetic": false,
+      "fixed": true
     },
     "--color-text": {
       "hex": "#140e0a",
@@ -552,36 +588,57 @@
         "h": 55.3
       },
       "css": "oklch(17.0% 0.013 55.3)",
-      "synthetic": false
+      "synthetic": false,
+      "fixed": true
     },
     "--color-primary": {
-      "hex": "#7f401a",
+      "hex": "#2c1163",
       "oklch": {
-        "l": 0.4435,
-        "c": 0.1002,
-        "h": 48.8
+        "l": 0.28,
+        "c": 0.1317,
+        "h": 290.1
       },
-      "css": "oklch(44.3% 0.100 48.8)",
+      "css": "oklch(28.0% 0.132 290.1)",
       "synthetic": true
     },
     "--color-secondary": {
-      "hex": "#36884d",
+      "hex": "#224477",
       "oklch": {
-        "l": 0.56,
-        "c": 0.12,
-        "h": 150
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
       },
-      "css": "oklch(56.0% 0.120 150.0)",
+      "css": "oklch(38.9% 0.096 258.4)",
       "synthetic": true
     },
-    "--color-accent": {
-      "hex": "#d34100",
+    "--color-tertiary": {
+      "hex": "#937261",
       "oklch": {
         "l": 0.58,
-        "c": 0.2,
-        "h": 45
+        "c": 0.049,
+        "h": 49.4
       },
-      "css": "oklch(58.0% 0.200 45.0)",
+      "css": "oklch(58.0% 0.049 49.4)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#8a775f",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.0419,
+        "h": 71.9
+      },
+      "css": "oklch(58.0% 0.042 71.9)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#483c33",
+      "oklch": {
+        "l": 0.3651,
+        "c": 0.0224,
+        "h": 54.9
+      },
+      "css": "oklch(36.5% 0.022 54.9)",
       "synthetic": true
     }
   }

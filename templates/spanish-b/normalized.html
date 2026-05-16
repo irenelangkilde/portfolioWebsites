@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- IW_MASTHEAD_META: {"sampleHasRasterHeroImage":true,"sampleRasterCssUrl":"","sampleRasterCssSelector":"","sampleRasterBackgroundDecl":"","sampleHeaderContainsHero":false,"mastheadPlaceholderUrl":"braid-masthead.png","domainContext":""} -->
+<!-- IW_MASTHEAD_META: {"sampleHasRasterHeroImage":false,"sampleRasterCssUrl":"","sampleRasterCssSelector":"","sampleRasterBackgroundDecl":"","sampleHeaderContainsHero":false,"mastheadPlaceholderUrl":"braid-masthead.png","domainContext":""} -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -8,49 +8,17 @@
   <meta name="description" content="Job-ready portfolio for a Spanish major: language skills, cultural experience, projects, resume, and contact." />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      /* Five main theme colors */
-      --dominant:   #fde047;   /* 1. Dominant    — hero yellow, primary gradient start */
-      --secondary:  #2563eb;   /* 2. Secondary   — vibrant blue, gradient mid-tone     */
-      --tertiary:   #22c55e;   /* 3. Tertiary    — green CTA / accent buttons          */
-      --quaternary: #0f172a;   /* 4. Quaternary  — deep navy panel / dark surface      */
-      --quinary:    #e5e7eb;   /* 5. Quinary     — light muted text / chip labels      */
-
-      /* Theme-independent hard-coded neutrals */
-      --white:   #ffffff;
-      --black:   #000000;
-      --deep-bg: #0b1120;
-      --input-bg: #020617;
-      --chip-bg:  #1f2937;
-
-      /* Derived tokens */
-      --panel:          color-mix(in srgb, var(--quaternary) 96%, transparent);
-      --muted:          var(--quinary);
-      --text:           #f9fafb;
-      --accent:         var(--tertiary);
-      --accent-2:       #fbbf24;
-      --chip:           var(--chip-bg);
-      --radius:         18px;
-      --shadow:         0 14px 35px color-mix(in srgb, var(--quaternary) 60%, transparent);
-      --nav-bg-light:   color-mix(in srgb, var(--white) 18%, transparent);
-      --nav-bg-dark:    color-mix(in srgb, var(--quaternary) 90%, transparent);
-      --border-subtle:  color-mix(in srgb, var(--white) 18%, transparent);
-      --border-muted:   color-mix(in srgb, #94a3b8 40%, transparent);
-      --border-muted2:  color-mix(in srgb, #94a3b8 65%, transparent);
-      --hero-badge-bg:  color-mix(in srgb, var(--white) 12%, transparent);
-      --hero-badge-bd:  color-mix(in srgb, var(--white) 40%, transparent);
-      --hero-tag-bg:    color-mix(in srgb, var(--tertiary) 16%, transparent);
-      --hero-tag-text:  #bbf7d0;
-      --hero-badge-text:#fef9c3;
-      --link-color:     #bfdbfe;
-      --nav-link:       var(--quinary);
-      --btn-primary-bg: var(--tertiary);
-      --btn-primary-fg: #052e16;
-      --footer-bg:      color-mix(in srgb, var(--quaternary) 90%, transparent);
-      --footer-border:  color-mix(in srgb, var(--quaternary) 50%, transparent);
-      --gradient-body:  linear-gradient(135deg, var(--dominant) 0%, var(--secondary) 55%, var(--deep-bg) 100%);
-      --gradient-nav:   linear-gradient(135deg, var(--nav-bg-light), var(--nav-bg-dark));
-      --gradient-logo:  conic-gradient(from 210deg, var(--dominant), #f97316, var(--secondary), var(--dominant));
+    :root{
+      --bg1:#fde047;          /* yellow-300 */
+      --bg2:var(--color-primary);          /* blue-600 (vibrant) */
+      --panel:rgba(15,23,42,.96);
+      --muted:var(--color-bg);
+      --text:var(--color-text);
+      --accent:var(--color-secondary);
+      --accent-2:#fbbf24;
+      --chip:#1f2937;
+      --radius:18px;
+      --shadow:0 14px 35px rgba(15,23,42,.6);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -58,16 +26,16 @@
       margin:0;
       font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
       color:var(--text);
-      background:var(--gradient-body);
+      background:linear-gradient(135deg,var(--bg1) 0%, var(--bg2) 55%, #0b1120 100%);
     }
-    a{color:var(--link-color);text-decoration:none}
+    a{color:#bfdbfe;text-decoration:none}
     a:hover{text-decoration:underline}
     .container{max-width:1100px;margin:0 auto;padding:24px 22px 64px}
     header{
       position:sticky;top:0;z-index:10;
-      background:var(--gradient-nav);
+      background:linear-gradient(135deg,rgba(var(--color-text-rgb),.18),rgba(15,23,42,.9));
       backdrop-filter:blur(10px);
-      border-bottom:1px solid var(--border-subtle);
+      border-bottom:1px solid rgba(var(--color-text-rgb),.18);
     }
     nav{
       display:flex;align-items:center;justify-content:space-between;
@@ -77,21 +45,21 @@
     .brand{display:flex;align-items:center;gap:10px}
     .badge-logo{
       width:34px;height:34px;border-radius:999px;
-      background:var(--gradient-logo);
-      box-shadow:0 6px 18px color-mix(in srgb, var(--quaternary) 50%, transparent);
+      background:conic-gradient(from 210deg,var(--bg1),#f97316,var(--bg2),var(--bg1));
+      box-shadow:0 6px 18px rgba(15,23,42,.5);
     }
     .brand h1{margin:0;font-size:19px;font-weight:700}
     .nav-links{display:flex;flex-wrap:wrap;gap:14px;font-weight:600}
-    .nav-links a{color:var(--nav-link)}
-    .nav-links a:hover{color:var(--white)}
+    .nav-links a{color:var(--color-bg)}
+    .nav-links a:hover{color:var(--color-text)}
     .btn{
       display:inline-flex;align-items:center;justify-content:center;
       padding:11px 16px;border-radius:999px;
       font-weight:700;border:none;cursor:pointer;
-      box-shadow:0 10px 24px color-mix(in srgb, var(--quaternary) 65%, transparent);
+      box-shadow:0 10px 24px rgba(15,23,42,.65);
     }
-    .btn-primary{background:var(--btn-primary-bg);color:var(--btn-primary-fg)}
-    .btn-secondary{background:transparent;color:var(--text);border:1px solid color-mix(in srgb, var(--text) 40%, transparent)}
+    .btn-primary{background:var(--color-secondary);color:#052e16}
+    .btn-secondary{background:transparent;color:var(--color-text);border:1px solid rgba(var(--color-text-rgb),.4)}
     .section{padding-top:60px}
     /* HERO */
     .hero{
@@ -101,39 +69,39 @@
     .hero-left{max-width:640px}
     .hero-photo{
       width:150px;height:150px;border-radius:20px;
-      object-fit:cover;border:3px solid color-mix(in srgb, var(--white) 80%, transparent);
+      object-fit:cover;border:3px solid rgba(var(--color-text-rgb),.8);
       box-shadow:var(--shadow);margin-bottom:18px;
     }
     .hero-badge{
       display:inline-flex;align-items:center;gap:10px;
       padding:7px 12px;border-radius:999px;
-      background:var(--hero-badge-bg);
-      border:1px solid var(--hero-badge-bd);
-      font-size:13px;font-weight:700;color:var(--hero-badge-text);
+      background:rgba(var(--color-text-rgb),.12);
+      border:1px solid rgba(var(--color-text-rgb),.4);
+      font-size:13px;font-weight:700;color:var(--color-quaternary);
       text-transform:uppercase;letter-spacing:.12em;
     }
     .hero-badge span.tag{
       padding:4px 8px;border-radius:999px;
-      background:var(--hero-tag-bg);color:var(--hero-tag-text);
+      background:rgba(var(--color-secondary-rgb),.16);color:#bbf7d0;
     }
     h2.hero-title{font-size:32px;margin:14px 0 6px}
     .hero-sub{color:var(--muted);font-size:18px;line-height:1.7}
     .hero-actions{margin-top:18px;display:flex;flex-wrap:wrap;gap:12px}
-    .hero-note{margin-top:10px;font-size:14px;color:var(--quinary)}
+    .hero-note{margin-top:10px;font-size:14px;color:var(--color-bg)}
     .hero-card{
       background:var(--panel);
       border-radius:var(--radius);
       padding:22px;
       box-shadow:var(--shadow);
-      border:1px solid var(--border-subtle);
+      border:1px solid rgba(var(--color-text-rgb),.18);
     }
     .hero-card h3{margin:0 0 8px;font-size:16px}
     .chip{
       display:inline-flex;align-items:center;
       padding:6px 11px;border-radius:999px;
-      background:var(--chip);color:var(--quinary);
+      background:var(--chip);color:var(--color-bg);
       font-size:12px;margin:4px 4px 0 0;
-      border:1px solid var(--border-muted);
+      border:1px solid rgba(148,163,184,.45);
     }
 
     /* GENERAL CARDS / GRID */
@@ -142,13 +110,13 @@
       background:var(--panel);
       border-radius:var(--radius);
       padding:18px;
-      border:1px solid var(--border-muted);
+      border:1px solid rgba(148,163,184,.4);
       box-shadow:var(--shadow);
     }
     .grid{display:grid;gap:18px}
     .grid-3{grid-template-columns:repeat(3,1fr)}
     .card h3{margin-top:2px;margin-bottom:6px}
-    .card p{margin-top:6px;color:var(--quinary);font-size:15px;line-height:1.6}
+    .card p{margin-top:6px;color:var(--color-bg);font-size:15px;line-height:1.6}
     ul{padding-left:1.1rem;margin:6px 0}
     li{margin-bottom:4px}
 
@@ -160,19 +128,19 @@
     input,textarea{
       width:100%;margin-top:5px;
       padding:11px 12px;border-radius:12px;
-      border:1px solid var(--border-muted2);
-      background:var(--input-bg);color:var(--text);
+      border:1px solid rgba(148,163,184,.65);
+      background:var(--color-quinary);color:var(--text);
       font:inherit;
     }
     textarea{resize:vertical;min-height:110px}
 
     footer{
-      border-top:1px solid var(--footer-border);
+      border-top:1px solid rgba(15,23,42,.5);
       padding:30px 0;
       text-align:center;
-      color:var(--text);
+      color:var(--color-text);
       font-size:14px;
-      background:var(--footer-bg);
+      background:rgba(15,23,42,.9);
     }
 
     /* RESPONSIVE */
@@ -186,6 +154,281 @@
       .form-grid{grid-template-columns:1fr}
     }
   </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(92.8% 0.006 264.5);
+  --color-text:        oklch(98.5% 0.002 247.8);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(54.6% 0.215 262.9);
+  --color-secondary:   oklch(72.3% 0.192 149.6);
+  --color-tertiary:    oklch(39.8% 0.121 137.1);
+  --color-quaternary:  oklch(97.3% 0.069 103.2);
+  --color-quinary:     oklch(12.9% 0.041 264.7);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(92.8% 0.006 264.5);
+  --color-text:        oklch(98.5% 0.002 247.8);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(54.6% 0.215 262.9);
+  --color-secondary:   oklch(72.3% 0.192 149.6);
+  --color-tertiary:    oklch(39.8% 0.121 137.1);
+  --color-quaternary:  oklch(97.3% 0.069 103.2);
+  --color-quinary:     oklch(12.9% 0.041 264.7);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(98.5% 0.002 247.8);
+  --color-text:        oklch(92.8% 0.006 264.5);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(36.6% 0.215 262.9);
+  --color-secondary:   oklch(54.3% 0.192 149.6);
+  --color-tertiary:    oklch(39.8% 0.121 137.1);
+  --color-quaternary:  oklch(58.0% 0.069 103.2);
+  --color-quinary:     oklch(28.0% 0.041 264.7);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 229, 231, 235;
+  --color-text-rgb: 249, 250, 251;
+  --color-primary-rgb: 37, 99, 235;
+  --color-secondary-rgb: 34, 197, 94;
+  --color-tertiary-rgb: 34, 85, 0;
+  --color-quaternary-rgb: 254, 249, 195;
+  --color-quinary-rgb: 2, 6, 23;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#22c55e",
+      "oklch": {
+        "l": 0.7227,
+        "c": 0.192,
+        "h": 149.6
+      },
+      "count": 8,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#020617",
+      "oklch": {
+        "l": 0.1288,
+        "c": 0.0406,
+        "h": 264.7
+      },
+      "count": 4,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#225500",
+      "oklch": {
+        "l": 0.3984,
+        "c": 0.1211,
+        "h": 137.1
+      },
+      "count": 4,
+      "role": "--color-tertiary",
+      "merged": [
+        "#225522"
+      ]
+    },
+    {
+      "hex": "#fef9c3",
+      "oklch": {
+        "l": 0.9729,
+        "c": 0.0693,
+        "h": 103.2
+      },
+      "count": 4,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#2563eb",
+      "oklch": {
+        "l": 0.5461,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "count": 2,
+      "role": "--color-primary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#e5e7eb",
+      "oklch": {
+        "l": 0.9276,
+        "c": 0.0058,
+        "h": 264.5
+      },
+      "css": "oklch(92.8% 0.006 264.5)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#f9fafb",
+      "oklch": {
+        "l": 0.9846,
+        "c": 0.0017,
+        "h": 247.8
+      },
+      "css": "oklch(98.5% 0.002 247.8)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#2563eb",
+      "oklch": {
+        "l": 0.5461,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "css": "oklch(54.6% 0.215 262.9)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#22c55e",
+      "oklch": {
+        "l": 0.7227,
+        "c": 0.192,
+        "h": 149.6
+      },
+      "css": "oklch(72.3% 0.192 149.6)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#225500",
+      "oklch": {
+        "l": 0.3984,
+        "c": 0.1211,
+        "h": 137.1
+      },
+      "css": "oklch(39.8% 0.121 137.1)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#fef9c3",
+      "oklch": {
+        "l": 0.9729,
+        "c": 0.0693,
+        "h": 103.2
+      },
+      "css": "oklch(97.3% 0.069 103.2)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#020617",
+      "oklch": {
+        "l": 0.1288,
+        "c": 0.0406,
+        "h": 264.7
+      },
+      "css": "oklch(12.9% 0.041 264.7)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#f9fafb",
+      "oklch": {
+        "l": 0.9846,
+        "c": 0.0017,
+        "h": 247.8
+      },
+      "css": "oklch(98.5% 0.002 247.8)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#e5e7eb",
+      "oklch": {
+        "l": 0.9276,
+        "c": 0.0058,
+        "h": 264.5
+      },
+      "css": "oklch(92.8% 0.006 264.5)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#0024ad",
+      "oklch": {
+        "l": 0.3661,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "css": "oklch(36.6% 0.215 262.9)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#008b24",
+      "oklch": {
+        "l": 0.5427,
+        "c": 0.192,
+        "h": 149.6
+      },
+      "css": "oklch(54.3% 0.192 149.6)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#225500",
+      "oklch": {
+        "l": 0.3984,
+        "c": 0.1211,
+        "h": 137.1
+      },
+      "css": "oklch(39.8% 0.121 137.1)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#817c4b",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.0693,
+        "h": 103.2
+      },
+      "css": "oklch(58.0% 0.069 103.2)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#1f283d",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0406,
+        "h": 264.7
+      },
+      "css": "oklch(28.0% 0.041 264.7)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
 <header>
@@ -209,7 +452,7 @@
     <div class="container hero">
       <div class="hero-left">
         <!-- STOCK HERO IMAGE -->
-        <img src="assets/images/hero-spanish.jpg" alt="Student studying Spanish with books and laptop" class="hero-photo">
+        <img src="headshot.png" alt="Student studying Spanish with books and laptop" class="hero-photo">
 
         <div class="hero-badge">
           <span>Spanish Major</span>
@@ -218,15 +461,15 @@
 
         <h2 class="hero-title">Bridging cultures through language, stories, and translation.</h2>
         <p class="hero-sub">
-          I'm <strong><!-- Your Name --></strong>, a Spanish major with a focus on
+          I’m <strong><!-- Your Name --></strong>, a Spanish major with a focus on
           <em>literature</em>, <em>translation</em>, and <em>cross-cultural communication</em>.
-          I love helping people connect—whether that's through bilingual content, tutoring,
+          I love helping people connect—whether that’s through bilingual content, tutoring,
           or supporting teams that work across borders.
         </p>
 
         <div class="hero-actions">
           <a href="#contact" class="btn btn-primary">Invite Me to Interview</a>
-          <a href="#projects" class="btn btn-secondary">View Writing &amp; Projects</a>
+          <a href="#projects" class="btn btn-secondary">View Writing & Projects</a>
         </div>
         <p class="hero-note">
           Interests: localization · education · international programs · community outreach
@@ -237,9 +480,9 @@
         <h3>Language Snapshot</h3>
         <div class="chip">Near-native fluency (C1–C2)</div>
         <div class="chip">Academic writing · essays</div>
-        <div class="chip">Conversational &amp; professional Spanish</div>
+        <div class="chip">Conversational & professional Spanish</div>
         <div class="chip">Translation EN ↔ ES</div>
-        <div class="chip">Latin American &amp; Iberian culture</div>
+        <div class="chip">Latin American & Iberian culture</div>
 
         <h3 style="margin-top:16px;font-size:15px">Quick Highlights</h3>
         <ul style="margin-top:6px;font-size:14px">
@@ -254,7 +497,7 @@
   <!-- PROJECTS -->
   <section id="projects" class="section">
     <div class="container">
-      <h2 class="section-title">Selected Projects &amp; Work</h2>
+      <h2 class="section-title">Selected Projects & Work</h2>
       <div class="grid grid-3">
         <article class="card">
           <h3>Bilingual Blog Series</h3>
@@ -278,7 +521,7 @@
         </article>
 
         <article class="card">
-          <h3>Spanish Tutoring &amp; Conversation Group</h3>
+          <h3>Spanish Tutoring & Conversation Group</h3>
           <p>
             Led weekly conversation groups for beginning students, preparing prompts and games that
             encouraged speaking confidence and cultural curiosity.
@@ -302,7 +545,7 @@
             <ul>
               <li>Near-native Spanish fluency (listening, speaking, reading, writing).</li>
               <li>Academic and professional register.</li>
-              <li>Dialect awareness: Spain &amp; Latin America.</li>
+              <li>Dialect awareness: Spain & Latin America.</li>
             </ul>
           </div>
           <div>
@@ -314,11 +557,11 @@
             </ul>
           </div>
           <div>
-            <h3>Translation &amp; Culture</h3>
+            <h3>Translation & Culture</h3>
             <ul>
               <li>EN ↔ ES translation and adaptation.</li>
-              <li>Localization mindset for audience &amp; context.</li>
-              <li>Strong interest in Hispanic literature &amp; film.</li>
+              <li>Localization mindset for audience & context.</li>
+              <li>Strong interest in Hispanic literature & film.</li>
             </ul>
           </div>
         </div>
@@ -332,14 +575,14 @@
       <h2 class="section-title">Experience</h2>
       <div class="card">
         <h3>Spanish Tutor — Language Lab</h3>
-        <p style="font-size:14px;color:var(--quinary)">2023–2024 · University Campus</p>
+        <p style="font-size:14px;color:var(--color-bg)">2023–2024 · University Campus</p>
         <ul>
           <li>Met with students 1:1 and in small groups to review grammar, conversation, and pronunciation.</li>
-          <li>Created simple practice materials tailored to each student's learning level.</li>
+          <li>Created simple practice materials tailored to each student’s learning level.</li>
         </ul>
 
         <h3 style="margin-top:16px">Study Abroad Participant — (Program Name)</h3>
-        <p style="font-size:14px;color:var(--quinary)">Semester (Year) · City, Country</p>
+        <p style="font-size:14px;color:var(--color-bg)">Semester (Year) · City, Country</p>
         <ul>
           <li>Completed coursework fully in Spanish in literature, culture, and history.</li>
           <li>Developed comfort using Spanish in daily life—housing, transportation, and community activities.</li>

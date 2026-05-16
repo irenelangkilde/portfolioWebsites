@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<!-- IW_MASTHEAD_META: {"sampleHasRasterHeroImage":true,"sampleRasterCssUrl":"../assets/images/biologyHero_B.png","sampleRasterCssSelector":"header","sampleRasterBackgroundDecl":"background:\n        linear-gradient(0deg, rgba(10,20,14,.65), rgba(10,20,14,.42)),\n        url(\"../assets/images/biologyHero_B.png\") center/cover no-repeat;","sampleHeaderContainsHero":true,"mastheadPlaceholderUrl":"braid-masthead.png","domainContext":""} -->
+<!doctype html>
+<!-- IW_MASTHEAD_META: {"sampleHasRasterHeroImage":true,"sampleRasterCssUrl":"image1.png","sampleRasterCssSelector":"header","sampleRasterBackgroundDecl":"background:\n        linear-gradient(0deg, rgba(10,20,14,.65), rgba(10,20,14,.42)),\n        url(\"image1.png\") center/cover no-repeat;","sampleHeaderContainsHero":true,"mastheadPlaceholderUrl":"braid-masthead.png","domainContext":""} -->
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -8,45 +8,21 @@
   <meta name="description" content="Resume and portfolio website for a college student majoring in Biology." />
 
   <style>
-    :root {
-      /* Five main theme colors */
-      --dominant:   #132018;   /* 1. Dominant    — deep forest ink, primary text & masthead base */
-      --secondary:  #2e7d5b;   /* 2. Secondary   — forest green accent, headings & CTAs */
-      --tertiary:   #88c26e;   /* 3. Tertiary    — leaf green, pills, gradient & marks */
-      --quaternary: #f2d27c;   /* 4. Quaternary  — warm sunlight, hero accent & brand mark */
-      --quinary:    #f7fbf7;   /* 5. Quinary     — soft paper background */
+    :root{
+      --ink:#132018;
+      --muted:var(--color-quinary);
 
-      /* Theme-independent hard-coded neutrals */
-      --white:   #ffffff;
-      --black:   #000000;
-
-      /* Derived tokens */
-      --ink:        var(--dominant);
-      --muted:      color-mix(in srgb, var(--dominant) 38%, var(--secondary));
-      --paper:      var(--quinary);
-      --card:       color-mix(in srgb, var(--white) 82%, transparent);
-      --stroke:     color-mix(in srgb, var(--black) 10%, transparent);
-      --shadow:     0 18px 55px color-mix(in srgb, var(--black) 14%, transparent);
-      --shadowSoft: 0 10px 28px color-mix(in srgb, var(--black) 10%, transparent);
+      --paper:var(--color-text);
+      --card: rgba(var(--color-text-rgb),0.82);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.14);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
       --radius: 22px;
 
-      --accent:  var(--secondary);
-      --accent2: var(--tertiary);
-      --accent3: var(--quaternary);
-      --btnText: var(--white);
-
-      --footer-text: color-mix(in srgb, var(--dominant) 55%, var(--tertiary));
-      --tag-bg:      color-mix(in srgb, var(--secondary) 12%, transparent);
-      --tag-border:  color-mix(in srgb, var(--secondary) 18%, transparent);
-      --tag-text:    color-mix(in srgb, var(--dominant) 85%, var(--secondary));
-      --pill-bg:     color-mix(in srgb, var(--tertiary) 18%, transparent);
-      --pill-border: color-mix(in srgb, var(--tertiary) 22%, transparent);
-      --item-bg:     color-mix(in srgb, var(--white) 72%, transparent);
-      --contact-bg:  color-mix(in srgb, var(--white) 78%, transparent);
-      --mark-start:  color-mix(in srgb, var(--tertiary) 92%, transparent);
-      --mark-end:    color-mix(in srgb, var(--quaternary) 80%, transparent);
-      --radial-tertiary: color-mix(in srgb, var(--tertiary) 18%, transparent);
-      --radial-quaternary: color-mix(in srgb, var(--quaternary) 18%, transparent);
+      --accent:#2e7d5b;     /* forest green */
+      --accent2:var(--color-secondary);    /* leaf */
+      --accent3:var(--color-tertiary);    /* warm sunlight */
+      --btnText:var(--color-text);
 
       --max: 1120px;
     }
@@ -58,8 +34,8 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--ink);
       background:
-        radial-gradient(1100px 520px at 12% 8%, var(--radial-tertiary) 0%, transparent 60%),
-        radial-gradient(900px 520px at 80% 0%, var(--radial-quaternary) 0%, transparent 58%),
+        radial-gradient(1100px 520px at 12% 8%, rgba(var(--color-secondary-rgb),.18) 0%, transparent 60%),
+        radial-gradient(900px 520px at 80% 0%, rgba(var(--color-tertiary-rgb),.18) 0%, transparent 58%),
         var(--paper);
       overflow-x:hidden;
     }
@@ -69,10 +45,10 @@
 
     /* ===== HEADER with biology image ===== */
     header{
-      color:var(--white);
+      color:var(--color-text);
       background:
-        linear-gradient(0deg, color-mix(in oklch, var(--dominant) 65%, transparent), color-mix(in oklch, var(--secondary) 42%, transparent)),
-        url("../assets/images/biologyHero_B.png") center/cover no-repeat;
+        linear-gradient(0deg, rgba(var(--color-quaternary-rgb),.65), rgba(var(--color-quaternary-rgb),.42)),
+        url("image1.png") center/cover no-repeat;
     }
 
     .topbar{
@@ -93,9 +69,9 @@
     }
     .mark{
       width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, var(--mark-start), var(--mark-end));
-      border:1px solid color-mix(in srgb, var(--white) 20%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--black) 22%, transparent);
+      background: linear-gradient(135deg, rgba(var(--color-secondary-rgb),.92), rgba(var(--color-tertiary-rgb),.80));
+      border:1px solid rgba(var(--color-text-rgb),.20);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
     }
     .brandText{display:flex; flex-direction:column; line-height:1.1}
     .brandText strong{font-size:16px; letter-spacing:.02em}
@@ -110,12 +86,12 @@
       font-size:13.5px;
       padding:10px 12px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--white) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
+      background: rgba(var(--color-text-rgb),.12);
+      border:1px solid rgba(var(--color-text-rgb),.18);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    .navLinks a:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--white) 18%, transparent);}
+    .navLinks a:hover{transform: translateY(-1px); background: rgba(var(--color-text-rgb),.18);}
 
     .hero{
       max-width:var(--max);
@@ -147,10 +123,10 @@
     }
 
     .heroCard{
-      background: color-mix(in srgb, var(--white) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--white) 18%, transparent);
+      background: rgba(var(--color-text-rgb),.12);
+      border:1px solid rgba(var(--color-text-rgb),.18);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--black) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -159,8 +135,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: var(--pill-bg);
-      border:1px solid var(--pill-border);
+      background: rgba(var(--color-secondary-rgb),.18);
+      border:1px solid rgba(var(--color-secondary-rgb),.22);
       font-size:12.5px;
       font-weight:800;
       letter-spacing:.02em;
@@ -182,18 +158,18 @@
       justify-content:center;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid color-mix(in srgb, var(--white) 22%, transparent);
-      background: color-mix(in srgb, var(--white) 14%, transparent);
-      color:var(--white);
+      border:1px solid rgba(var(--color-text-rgb),.22);
+      background: rgba(var(--color-text-rgb),.14);
+      color:var(--color-text);
       text-decoration:none;
       font-weight:850;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--white) 20%, transparent);}
+    .btn:hover{transform: translateY(-1px); background: rgba(var(--color-text-rgb),.20);}
     .btn.primary{
-      background: color-mix(in srgb, var(--quaternary) 18%, transparent);
-      border-color: color-mix(in srgb, var(--quaternary) 26%, transparent);
+      background: rgba(var(--color-tertiary-rgb),.18);
+      border-color: rgba(var(--color-tertiary-rgb),.26);
     }
 
     /* ===== Main content ===== */
@@ -234,9 +210,9 @@
       font-weight:800;
       padding:7px 10px;
       border-radius:999px;
-      background: var(--tag-bg);
-      border:1px solid var(--tag-border);
-      color:var(--tag-text);
+      background: rgba(46,125,91,.12);
+      border:1px solid rgba(46,125,91,.18);
+      color:#1f4b37;
     }
 
     .timeline{display:grid; gap:14px}
@@ -244,8 +220,8 @@
       padding:18px;
       border-radius:18px;
       border:1px solid var(--stroke);
-      background: var(--item-bg);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--black) 6%, transparent);
+      background: rgba(var(--color-text-rgb),.72);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
       backdrop-filter: blur(8px);
     }
     .itemTop{
@@ -276,13 +252,13 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:color-mix(in srgb, var(--dominant) 15%, var(--white));
+      background:color-mix(in oklab, var(--color-text), black 10%);
     }
     .contactCard{
       padding:22px;
       border-radius: var(--radius);
       border:1px solid var(--stroke);
-      background: var(--contact-bg);
+      background: rgba(var(--color-text-rgb),.78);
       box-shadow: var(--shadowSoft);
       backdrop-filter: blur(8px);
     }
@@ -293,13 +269,288 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--footer-text);
+      color:var(--color-bg);
       font-size:13.5px;
       text-align:center;
     }
 
     html{scroll-behavior:smooth}
   </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(57.0% 0.019 156.6);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(59.8% 0.164 149.1);
+  --color-secondary:   oklch(75.4% 0.129 136.6);
+  --color-tertiary:    oklch(87.3% 0.112 89.6);
+  --color-quaternary:  oklch(17.2% 0.037 109.8);
+  --color-quinary:     oklch(46.2% 0.025 156.1);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(57.0% 0.019 156.6);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(59.8% 0.164 149.1);
+  --color-secondary:   oklch(75.4% 0.129 136.6);
+  --color-tertiary:    oklch(87.3% 0.112 89.6);
+  --color-quaternary:  oklch(17.2% 0.037 109.8);
+  --color-quinary:     oklch(46.2% 0.025 156.1);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(57.0% 0.019 156.6);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(41.8% 0.164 149.1);
+  --color-secondary:   oklch(57.4% 0.129 136.6);
+  --color-tertiary:    oklch(58.0% 0.112 89.6);
+  --color-quaternary:  oklch(28.0% 0.037 109.8);
+  --color-quinary:     oklch(46.2% 0.025 156.1);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 111, 123, 115;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 17, 153, 68;
+  --color-secondary-rgb: 136, 194, 110;
+  --color-tertiary-rgb: 242, 210, 124;
+  --color-quaternary-rgb: 17, 17, 0;
+  --color-quinary-rgb: 78, 93, 83;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#88c26e",
+      "oklch": {
+        "l": 0.7541,
+        "c": 0.1291,
+        "h": 136.6
+      },
+      "count": 7,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#111100",
+      "oklch": {
+        "l": 0.172,
+        "c": 0.0375,
+        "h": 109.8
+      },
+      "count": 5,
+      "role": "--color-quaternary",
+      "merged": [
+        "#0a140e"
+      ]
+    },
+    {
+      "hex": "#4e5d53",
+      "oklch": {
+        "l": 0.4623,
+        "c": 0.0245,
+        "h": 156.1
+      },
+      "count": 2,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#119944",
+      "oklch": {
+        "l": 0.5981,
+        "c": 0.1636,
+        "h": 149.1
+      },
+      "count": 3,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#f2d27c",
+      "oklch": {
+        "l": 0.8728,
+        "c": 0.1115,
+        "h": 89.6
+      },
+      "count": 8,
+      "role": "--color-tertiary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#6f7b73",
+      "oklch": {
+        "l": 0.5704,
+        "c": 0.0187,
+        "h": 156.6
+      },
+      "css": "oklch(57.0% 0.019 156.6)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#119944",
+      "oklch": {
+        "l": 0.5981,
+        "c": 0.1636,
+        "h": 149.1
+      },
+      "css": "oklch(59.8% 0.164 149.1)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#88c26e",
+      "oklch": {
+        "l": 0.7541,
+        "c": 0.1291,
+        "h": 136.6
+      },
+      "css": "oklch(75.4% 0.129 136.6)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#f2d27c",
+      "oklch": {
+        "l": 0.8728,
+        "c": 0.1115,
+        "h": 89.6
+      },
+      "css": "oklch(87.3% 0.112 89.6)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#111100",
+      "oklch": {
+        "l": 0.172,
+        "c": 0.0375,
+        "h": 109.8
+      },
+      "css": "oklch(17.2% 0.037 109.8)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#4e5d53",
+      "oklch": {
+        "l": 0.4623,
+        "c": 0.0245,
+        "h": 156.1
+      },
+      "css": "oklch(46.2% 0.025 156.1)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#6f7b73",
+      "oklch": {
+        "l": 0.5704,
+        "c": 0.0187,
+        "h": 156.6
+      },
+      "css": "oklch(57.0% 0.019 156.6)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#006206",
+      "oklch": {
+        "l": 0.4181,
+        "c": 0.1636,
+        "h": 149.1
+      },
+      "css": "oklch(41.8% 0.164 149.1)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#528937",
+      "oklch": {
+        "l": 0.5741,
+        "c": 0.1291,
+        "h": 136.6
+      },
+      "css": "oklch(57.4% 0.129 136.6)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#947617",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.1115,
+        "h": 89.6
+      },
+      "css": "oklch(58.0% 0.112 89.6)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#2a2a14",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0375,
+        "h": 109.8
+      },
+      "css": "oklch(28.0% 0.037 109.8)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#4e5d53",
+      "oklch": {
+        "l": 0.4623,
+        "c": 0.0245,
+        "h": 156.1
+      },
+      "css": "oklch(46.2% 0.025 156.1)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 
 <body>
@@ -327,8 +578,8 @@
       <div>
         <h1>Biology Resume & Portfolio</h1>
         <p>
-          I'm a Biology major focused on field observation, lab fundamentals, and evidence-based writing.
-          I'm seeking internships and entry-level roles in research, conservation, healthcare-adjacent labs,
+          I’m a Biology major focused on field observation, lab fundamentals, and evidence-based writing.
+          I’m seeking internships and entry-level roles in research, conservation, healthcare-adjacent labs,
           environmental science, and science communication.
         </p>
       </div>
@@ -357,7 +608,7 @@
     <section id="about" class="section">
       <h2>About</h2>
       <p class="subhead">
-        I'm a senior Biology major interested in the intersection of life science and real-world impact.
+        I’m a senior Biology major interested in the intersection of life science and real-world impact.
         I enjoy structured lab work, careful observation in the field, and communicating results clearly.
       </p>
 
@@ -377,7 +628,7 @@
         </div>
 
         <div class="card">
-          <h3>Roles I'm Targeting</h3>
+          <h3>Roles I’m Targeting</h3>
           <p>
             Internship or entry-level roles where careful work, documentation, and learning fast matters.
           </p>

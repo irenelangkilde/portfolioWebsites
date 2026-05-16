@@ -57,15 +57,15 @@ for (const filename of files) {
   }
 
   try {
-    const html       = readFileSync(srcPath, "utf-8");
-    const counts     = extractRegex(html);
-    const candidates = dedup(counts);
-    const fit        = autoFit(candidates, minSep);
-    const { clusters, confidence } = fit;
-    const k          = fit.k;
-    const roles      = assignRoles(clusters);
-    const inverted   = invertRoles(roles);
-    const meta       = { k, confidence, threshold: minSep };
+    const html           = readFileSync(srcPath, "utf-8");
+    const { counts }          = extractRegex(html);
+    const allCandidates       = dedup(counts);
+    const fit                 = autoFit(allCandidates, minSep);
+    const { clusters, achromatic, confidence } = fit;
+    const k                   = fit.k;
+    const roles               = assignRoles(clusters, achromatic);
+    const inverted       = invertRoles(roles);
+    const meta           = { k, confidence, threshold: minSep };
 
     const injection = [
       `<style id="extracted-theme">`,

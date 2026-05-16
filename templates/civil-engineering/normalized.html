@@ -14,39 +14,21 @@
         }
 
         :root {
-            /* Five main theme colors */
-            --dominant:   #d97706;   /* 1. Dominant    — primary amber brand/hero color */
-            --secondary:  #ea580c;   /* 2. Secondary   — deep orange gradient partner & accent */
-            --tertiary:   #2563eb;   /* 3. Tertiary    — blue CTA/structural highlight */
-            --quaternary: #059669;   /* 4. Quaternary  — green secondary accent/cert border */
-            --quinary:    #1f2937;   /* 5. Quinary     — dark charcoal text/footer/nav */
-
-            /* Theme-independent hard-coded neutrals */
-            --white:   #ffffff;
-            --black:   #000000;
-
-            /* Derived tokens */
-            --gray:            #6b7280;
-            --light:           #f3f4f6;
-            --gradient:        linear-gradient(135deg, var(--dominant) 0%, var(--secondary) 100%);
-            --card-shadow-sm:  rgba(0,0,0,0.08);
-            --card-shadow-md:  rgba(0,0,0,0.1);
-            --card-shadow-lg:  rgba(0,0,0,0.15);
-            --hover-glow:      color-mix(in srgb, var(--dominant) 30%, transparent);
-            --structural-grad: linear-gradient(135deg, var(--tertiary) 0%, #1e40af 100%);
-            --transport-grad:  linear-gradient(135deg, var(--quaternary) 0%, #047857 100%);
-            --water-grad:      linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
-            --geo-grad:        linear-gradient(135deg, #92400e 0%, #78350f 100%);
-            --env-grad:        linear-gradient(135deg, #16a34a 0%, #15803d 100%);
-            --profile-grad:    linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
-            --skill-border:    #eee;
+            --primary: #d97706;
+            --secondary: #059669;
+            --accent: var(--color-primary);
+            --dark: var(--color-quinary);
+            --light: var(--color-bg);
+            --gray: #6b7280;
+            --orange: #ea580c;
+            --gradient: linear-gradient(135deg, #d97706 0%, #ea580c 100%);
         }
 
         body {
             font-family: 'Open Sans', sans-serif;
             line-height: 1.6;
-            color: var(--quinary);
-            background: var(--white);
+            color: var(--dark);
+            background: var(--color-text);
         }
 
         h1, h2, h3, h4 {
@@ -61,7 +43,7 @@
 
         /* Navigation */
         nav {
-            background: var(--white);
+            background: white;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
@@ -79,7 +61,7 @@
             font-family: 'Roboto Slab', serif;
             font-size: 1.5rem;
             font-weight: 700;
-            color: var(--dominant);
+            color: var(--primary);
             display: flex;
             align-items: center;
             gap: 10px;
@@ -98,19 +80,19 @@
 
         nav a {
             text-decoration: none;
-            color: var(--quinary);
+            color: var(--dark);
             font-weight: 600;
             transition: color 0.3s;
         }
 
         nav a:hover {
-            color: var(--dominant);
+            color: var(--primary);
         }
 
         /* Hero Section */
         .hero {
             background: var(--gradient);
-            color: var(--white);
+            color: white;
             padding: 90px 0;
             text-align: center;
             position: relative;
@@ -125,8 +107,8 @@
             right: 0;
             bottom: 0;
             background-image: 
-                linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+                linear-gradient(90deg, rgba(var(--color-text-rgb),0.05) 1px, transparent 1px),
+                linear-gradient(rgba(var(--color-text-rgb),0.05) 1px, transparent 1px);
             background-size: 50px 50px;
             opacity: 0.3;
         }
@@ -140,12 +122,12 @@
             width: 180px;
             height: 180px;
             border-radius: 50%;
-            border: 5px solid var(--white);
+            border: 5px solid white;
             object-fit: cover;
             margin: 0 auto 25px;
             display: block;
             box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            background: var(--profile-grad);
+            background: linear-gradient(135deg, var(--color-tertiary) 0%, #dc2626 100%);
         }
 
         .hero h1 {
@@ -184,24 +166,24 @@
         }
 
         .btn-primary {
-            background: var(--white);
-            color: var(--dominant);
+            background: white;
+            color: var(--primary);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(255,255,255,0.3);
+            box-shadow: 0 5px 20px rgba(var(--color-text-rgb),0.3);
         }
 
         .btn-secondary {
             background: transparent;
-            color: var(--white);
-            border: 2px solid var(--white);
+            color: white;
+            border: 2px solid white;
         }
 
         .btn-secondary:hover {
-            background: var(--white);
-            color: var(--dominant);
+            background: white;
+            color: var(--primary);
         }
 
         /* Section Styles */
@@ -213,7 +195,7 @@
             text-align: center;
             font-size: 2.5rem;
             margin-bottom: 15px;
-            color: var(--dominant);
+            color: var(--primary);
             position: relative;
             font-weight: 700;
         }
@@ -263,12 +245,12 @@
         }
 
         .skill-category {
-            background: var(--white);
+            background: white;
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px var(--card-shadow-sm);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
             transition: all 0.3s;
-            border-top: 4px solid var(--dominant);
+            border-top: 4px solid var(--primary);
         }
 
         .skill-category:hover {
@@ -277,7 +259,7 @@
         }
 
         .skill-category h3 {
-            color: var(--dominant);
+            color: var(--primary);
             margin-bottom: 20px;
             font-size: 1.3rem;
             display: flex;
@@ -295,7 +277,7 @@
 
         .skill-list li {
             padding: 10px 0;
-            border-bottom: 1px solid var(--skill-border);
+            border-bottom: 1px solid var(--color-bg);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -313,7 +295,7 @@
 
         /* Projects Section */
         .projects {
-            background: var(--white);
+            background: white;
         }
 
         .projects-grid {
@@ -323,18 +305,18 @@
         }
 
         .project-card {
-            background: var(--white);
+            background: white;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 5px 20px var(--card-shadow-md);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
             transition: all 0.3s;
             border: 2px solid transparent;
         }
 
         .project-card:hover {
             transform: translateY(-10px);
-            box-shadow: 0 15px 40px var(--card-shadow-lg);
-            border-color: var(--dominant);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            border-color: var(--primary);
         }
 
         .project-image {
@@ -344,29 +326,29 @@
             align-items: center;
             justify-content: center;
             font-size: 4rem;
-            color: var(--white);
+            color: white;
             background: var(--gradient);
             position: relative;
         }
 
         .project-image.structural {
-            background: var(--structural-grad);
+            background: linear-gradient(135deg, var(--color-primary) 0%, #1e40af 100%);
         }
 
         .project-image.transportation {
-            background: var(--transport-grad);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
         }
 
         .project-image.water {
-            background: var(--water-grad);
+            background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
         }
 
         .project-image.geotechnical {
-            background: var(--geo-grad);
+            background: linear-gradient(135deg, #92400e 0%, var(--color-quaternary) 100%);
         }
 
         .project-image.environmental {
-            background: var(--env-grad);
+            background: linear-gradient(135deg, var(--color-secondary) 0%, #15803d 100%);
         }
 
         .project-content {
@@ -374,7 +356,7 @@
         }
 
         .project-content h3 {
-            color: var(--quinary);
+            color: var(--dark);
             margin-bottom: 10px;
             font-size: 1.4rem;
         }
@@ -382,7 +364,7 @@
         .project-type {
             display: inline-block;
             background: var(--light);
-            color: var(--dominant);
+            color: var(--primary);
             padding: 5px 15px;
             border-radius: 20px;
             font-size: 0.85rem;
@@ -405,7 +387,7 @@
 
         .tech-tag {
             background: var(--light);
-            color: var(--quinary);
+            color: var(--dark);
             padding: 5px 12px;
             border-radius: 20px;
             font-size: 0.85rem;
@@ -427,24 +409,24 @@
         }
 
         .resume-section h3 {
-            color: var(--dominant);
+            color: var(--primary);
             font-size: 1.8rem;
             margin-bottom: 25px;
             padding-bottom: 10px;
-            border-bottom: 3px solid var(--dominant);
+            border-bottom: 3px solid var(--primary);
         }
 
         .resume-item {
-            background: var(--white);
+            background: white;
             padding: 25px;
             border-radius: 12px;
             margin-bottom: 20px;
             box-shadow: 0 3px 15px rgba(0,0,0,0.06);
-            border-left: 4px solid var(--dominant);
+            border-left: 4px solid var(--primary);
         }
 
         .resume-item h4 {
-            color: var(--quinary);
+            color: var(--dark);
             font-size: 1.3rem;
             margin-bottom: 8px;
         }
@@ -460,7 +442,7 @@
 
         .resume-item ul {
             margin-left: 20px;
-            color: var(--quinary);
+            color: var(--dark);
         }
 
         .resume-item ul li {
@@ -481,22 +463,22 @@
         }
 
         .cert-item {
-            background: var(--white);
+            background: white;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 3px 15px rgba(0,0,0,0.06);
-            border-left: 4px solid var(--quaternary);
+            border-left: 4px solid var(--secondary);
         }
 
         .cert-item h5 {
-            color: var(--quaternary);
+            color: var(--secondary);
             margin-bottom: 8px;
             font-size: 1.1rem;
         }
 
         /* Contact Section */
         .contact {
-            background: var(--white);
+            background: white;
         }
 
         .contact-content {
@@ -516,7 +498,7 @@
             background: var(--light);
             padding: 30px;
             border-radius: 15px;
-            box-shadow: 0 5px 20px var(--card-shadow-sm);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
             transition: all 0.3s;
         }
 
@@ -526,20 +508,20 @@
         }
 
         .contact-item h3 {
-            color: var(--dominant);
+            color: var(--primary);
             margin-bottom: 15px;
             font-size: 1.2rem;
         }
 
         .contact-item a {
-            color: var(--quinary);
+            color: var(--dark);
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s;
         }
 
         .contact-item a:hover {
-            color: var(--dominant);
+            color: var(--primary);
         }
 
         .social-links {
@@ -554,7 +536,7 @@
             height: 50px;
             border-radius: 50%;
             background: var(--gradient);
-            color: var(--white);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -565,13 +547,13 @@
 
         .social-links a:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px var(--hover-glow);
+            box-shadow: 0 8px 20px rgba(217, 119, 6, 0.3);
         }
 
         /* Footer */
         footer {
-            background: var(--quinary);
-            color: var(--white);
+            background: var(--dark);
+            color: white;
             text-align: center;
             padding: 30px 0;
         }
@@ -603,6 +585,279 @@
             }
         }
     </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(96.7% 0.003 264.5);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(54.6% 0.215 262.9);
+  --color-secondary:   oklch(62.7% 0.170 149.2);
+  --color-tertiary:    oklch(76.9% 0.165 70.1);
+  --color-quaternary:  oklch(41.4% 0.105 45.9);
+  --color-quinary:     oklch(27.8% 0.030 256.8);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(96.7% 0.003 264.5);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(54.6% 0.215 262.9);
+  --color-secondary:   oklch(62.7% 0.170 149.2);
+  --color-tertiary:    oklch(76.9% 0.165 70.1);
+  --color-quaternary:  oklch(41.4% 0.105 45.9);
+  --color-quinary:     oklch(27.8% 0.030 256.8);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(96.7% 0.003 264.5);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(36.6% 0.215 262.9);
+  --color-secondary:   oklch(44.7% 0.170 149.2);
+  --color-tertiary:    oklch(58.0% 0.165 70.1);
+  --color-quaternary:  oklch(41.4% 0.105 45.9);
+  --color-quinary:     oklch(28.0% 0.030 256.8);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 243, 244, 246;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 37, 99, 235;
+  --color-secondary-rgb: 22, 163, 74;
+  --color-tertiary-rgb: 245, 158, 11;
+  --color-quaternary-rgb: 120, 53, 15;
+  --color-quinary-rgb: 31, 41, 55;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#2563eb",
+      "oklch": {
+        "l": 0.5461,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "count": 5,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#1f2937",
+      "oklch": {
+        "l": 0.2781,
+        "c": 0.0296,
+        "h": 256.8
+      },
+      "count": 2,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#f59e0b",
+      "oklch": {
+        "l": 0.7686,
+        "c": 0.1647,
+        "h": 70.1
+      },
+      "count": 3,
+      "role": "--color-tertiary",
+      "merged": []
+    },
+    {
+      "hex": "#16a34a",
+      "oklch": {
+        "l": 0.6271,
+        "c": 0.1699,
+        "h": 149.2
+      },
+      "count": 3,
+      "role": "--color-secondary",
+      "merged": []
+    },
+    {
+      "hex": "#78350f",
+      "oklch": {
+        "l": 0.4137,
+        "c": 0.1054,
+        "h": 45.9
+      },
+      "count": 3,
+      "role": "--color-quaternary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#f3f4f6",
+      "oklch": {
+        "l": 0.967,
+        "c": 0.0029,
+        "h": 264.5
+      },
+      "css": "oklch(96.7% 0.003 264.5)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#2563eb",
+      "oklch": {
+        "l": 0.5461,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "css": "oklch(54.6% 0.215 262.9)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#16a34a",
+      "oklch": {
+        "l": 0.6271,
+        "c": 0.1699,
+        "h": 149.2
+      },
+      "css": "oklch(62.7% 0.170 149.2)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#f59e0b",
+      "oklch": {
+        "l": 0.7686,
+        "c": 0.1647,
+        "h": 70.1
+      },
+      "css": "oklch(76.9% 0.165 70.1)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#78350f",
+      "oklch": {
+        "l": 0.4137,
+        "c": 0.1054,
+        "h": 45.9
+      },
+      "css": "oklch(41.4% 0.105 45.9)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#1f2937",
+      "oklch": {
+        "l": 0.2781,
+        "c": 0.0296,
+        "h": 256.8
+      },
+      "css": "oklch(27.8% 0.030 256.8)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#f3f4f6",
+      "oklch": {
+        "l": 0.967,
+        "c": 0.0029,
+        "h": 264.5
+      },
+      "css": "oklch(96.7% 0.003 264.5)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#0024ad",
+      "oklch": {
+        "l": 0.3661,
+        "c": 0.2152,
+        "h": 262.9
+      },
+      "css": "oklch(36.6% 0.215 262.9)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#006b0e",
+      "oklch": {
+        "l": 0.4471,
+        "c": 0.1699,
+        "h": 149.2
+      },
+      "css": "oklch(44.7% 0.170 149.2)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#b66300",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.1647,
+        "h": 70.1
+      },
+      "css": "oklch(58.0% 0.165 70.1)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#78350f",
+      "oklch": {
+        "l": 0.4137,
+        "c": 0.1054,
+        "h": 45.9
+      },
+      "css": "oklch(41.4% 0.105 45.9)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#1f2937",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0296,
+        "h": 256.8
+      },
+      "css": "oklch(28.0% 0.030 256.8)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
     <!-- Navigation -->
@@ -925,7 +1180,7 @@
                 </div>
 
                 <div class="download-resume">
-                    <a href="#" class="btn btn-primary" style="background: var(--dominant); color: var(--white);">📄 Download Full Resume (PDF)</a>
+                    <a href="#" class="btn btn-primary">📄 Download Full Resume (PDF)</a>
                 </div>
             </div>
         </div>

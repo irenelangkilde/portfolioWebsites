@@ -46,6 +46,7 @@
 
     // Slot-fill (fast mustache path)
     let slotFillInProgress = false;
+    let userHasCustomizedColors = false;  // true only when user manually edits a color input
 
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
@@ -931,12 +932,13 @@ ${mastheadMeta.sampleRasterCssSelector}::after{background:none !important;backgr
 
     function currentTemplateNeedsMastheadImage() {
       const mastheadMeta = currentMastheadMeta();
-      const sampleHtml = extractedTemplateCache?.templateHtml || "";
+      // Only true when the sample template actually has a raster background image in the hero/header.
+      // hasGenericMastheadTarget is intentionally excluded — it detects *where* to inject, not *whether*.
+      const hasCssTarget = !!(mastheadMeta?.sampleRasterCssUrl || mastheadMeta?.sampleRasterCssSelector);
       return !!(
         mastheadMeta?.sampleRasterCssUrl ||
         mastheadMeta?.sampleRasterImgSrc ||
-        mastheadMeta?.sampleHasRasterHeroImage ||
-        hasGenericMastheadTarget(sampleHtml, mastheadMeta)
+        (mastheadMeta?.sampleHasRasterHeroImage && hasCssTarget)
       );
     }
 
@@ -1086,6 +1088,12 @@ ${pseudoSelectors} {
         ["--primary", theme.primary],
         ["--secondary", theme.secondary],
         ["--accent", theme.accent],
+        // Normalized template --color-* vars (current format)
+        ["--color-bg",         theme.background],
+        ["--color-text",       theme.foreground],
+        ["--color-primary",    theme.primary],
+        ["--color-secondary",  theme.secondary],
+        ["--color-tertiary",   theme.accent],
         // Backward-compatible aliases for older generated HTML
         ["--dominant", theme.primary],
         ["--tertiary", theme.accent],
@@ -2139,16 +2147,17 @@ ${pseudoSelectors} {
         const srcPath = templateLabelToPath(val);
 
         // Each mode has its own pre-compiled path:
-        //   analysis → template.html
-        //   mustache → mustache.html
-        const modeFile    = extractMode === "mustache" ? "mustache" : "template";
+        //   annotated → annotated.html  (preferred: Cheerio slot-fill)
+        //   mustache  → mustache.html   (legacy: Mustache slot-fill)
+        //   analysis  → template.html   (braid/analysis path)
+        const modeFile    = (extractMode === "mustache" || extractMode === "annotated") ? "annotated" : "template";
         const compiledKey = srcPath.replace(/\/sample\.html$/, `/${modeFile}.html`);
-        if (extractMode === "mustache") requestBody.targetOutputPath = compiledKey;
+        if (extractMode === "mustache" || extractMode === "annotated") requestBody.targetOutputPath = compiledKey;
 
-        // Braid path: prefer _normalized.html (pre-processed offline) over raw HTML.
+        // Braid path: prefer annotated.html (pre-processed offline) over raw HTML.
         // Only taken when extractMode is explicitly set to analysis/braid (debug override).
         if (extractMode !== "mustache") {
-          const normalizedKey = srcPath.replace(/\/sample\.html$/, "/normalized.html");
+          const normalizedKey = srcPath.replace(/\/sample\.html$/, "/annotated.html");
           const cacheKey = normalizedKey; // use normalized path as dedup key
           if (cacheKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
           let html = null;
@@ -2204,8 +2213,11 @@ ${pseudoSelectors} {
 
         // Try pre-compiled version (fast path, no API call).
         // If mustache file is missing, fall back to the _template.html variant.
+        // Fallback chain: annotated.html → mustache.html → template.html
         const candidateKeys = [compiledKey];
-        if (extractMode === "mustache") {
+        if (extractMode === "mustache" || extractMode === "annotated") {
+          candidateKeys.push(srcPath.replace(/\/sample\.html$/, "/mustache.html"));
+        } else {
           candidateKeys.push(srcPath.replace(/\/sample\.html$/, "/template.html"));
         }
         for (const candidateKey of candidateKeys) {
@@ -2217,8 +2229,11 @@ ${pseudoSelectors} {
             let embeddedJson = null;
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
             lastExtractedTemplate = candidateKey;
-            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: candidateKey === compiledKey ? extractMode : "analysis", templateInputKind: "template" };
-            const label = candidateKey === compiledKey ? "✓ Template loaded (pre-compiled)" : "✓ Template loaded (analysis fallback — mustache not yet generated)";
+            const isAnnotated = candidateKey.endsWith("/annotated.html");
+            const isMustacheFallback = candidateKey.endsWith("/mustache.html") && !isAnnotated;
+            const resolvedMode = isAnnotated ? "annotated" : isMustacheFallback ? "mustache" : "analysis";
+            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode, templateInputKind: "template" };
+            const label = isAnnotated ? "✓ Template loaded" : isMustacheFallback ? "✓ Template loaded (annotated.html not yet generated)" : "✓ Template loaded (analysis fallback)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
             renderSuggestedPalettes();
@@ -2384,6 +2399,26 @@ ${pseudoSelectors} {
     // Parse numbered --color-* role comments from a template's :root block.
     // Existing normalized templates may still annotate semantic roles with numbers 1–5.
     // Returns [{index, label, hex}] sorted by index.
+    function parseEmbeddedColorPalette(html) {
+      if (!html) return null;
+      const m = html.match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
+      if (!m) return null;
+      try {
+        const json = JSON.parse(m[1]);
+        const scheme = json?.scheme;
+        if (!scheme) return null;
+        const hex = role => scheme[role]?.hex || null;
+        const result = {
+          primary:    hex("--color-primary"),
+          secondary:  hex("--color-secondary"),
+          accent:     hex("--color-tertiary"),
+          quaternary: hex("--color-quaternary"),
+          quinary:    hex("--color-quinary"),
+        };
+        return Object.values(result).some(Boolean) ? result : null;
+      } catch { return null; }
+    }
+
     function parseColorRoles(html) {
       if (!html) return [];
       const rootMatch = html.match(/:root\s*\{([\s\S]*?)\}/);
@@ -2460,47 +2495,48 @@ ${pseudoSelectors} {
       return hexMetrics(hex).chroma < 22;
     }
 
-    const THEME_ROLE_KEYS = ["background", "foreground", "primary", "secondary", "accent"];
+    const THEME_ROLE_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
     const THEME_INPUT_IDS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
     const ROLE_TO_INPUT_ID = {
-      background: "primary",
-      foreground: "secondary",
-      primary: "tertiary",
-      secondary: "accent2",
-      accent: "accent1"
+      primary:    "primary",
+      secondary:  "secondary",
+      accent:     "tertiary",
+      quaternary: "accent2",
+      quinary:    "accent1",
     };
     const INPUT_ID_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_INPUT_ID).map(([role, id]) => [id, role]));
     const THEME_ROLE_LABELS = {
-      background: "Background",
-      foreground: "Foreground",
-      primary: "Primary",
-      secondary: "Secondary",
-      accent: "Accent"
+      primary:    "Primary",
+      secondary:  "Secondary",
+      accent:     "Accent",
+      quaternary: "Quaternary",
+      quinary:    "Quinary",
     };
 
     function normalizeThemeColors(value = {}) {
-      const theme = {
-        background: normalizeHex(value.background || value.accent1 || value.slot5 || null),
-        foreground: normalizeHex(value.foreground || value.accent2 || value.slot4 || null),
-        primary: normalizeHex(value.primary || value.slot1 || null),
-        secondary: normalizeHex(value.secondary || value.slot2 || null),
-        accent: normalizeHex(value.accent || value.tertiary || value.slot3 || null)
+      return {
+        primary:    normalizeHex(value.primary    || value.slot1 || null),
+        secondary:  normalizeHex(value.secondary  || value.slot2 || null),
+        accent:     normalizeHex(value.accent     || value.tertiary || value.slot3 || null),
+        quaternary: normalizeHex(value.quaternary || value.foreground || value.accent2 || value.slot4 || null),
+        quinary:    normalizeHex(value.quinary    || value.background || value.accent1 || value.slot5 || null),
       };
-      return theme;
     }
 
     function themeWithAliases(value = {}) {
       const theme = normalizeThemeColors(value);
       return {
         ...theme,
-        tertiary: theme.accent,
-        accent1: theme.background,
-        accent2: theme.foreground,
-        slot1: theme.primary,
-        slot2: theme.secondary,
-        slot3: theme.accent,
-        slot4: theme.foreground,
-        slot5: theme.background
+        tertiary:   theme.accent,
+        background: theme.quinary,
+        foreground: theme.quaternary,
+        accent1:    theme.quinary,
+        accent2:    theme.quaternary,
+        slot1:      theme.primary,
+        slot2:      theme.secondary,
+        slot3:      theme.accent,
+        slot4:      theme.quaternary,
+        slot5:      theme.quinary,
       };
     }
 
@@ -2645,6 +2681,11 @@ ${pseudoSelectors} {
 
     function buildTemplatePalette(cache) {
       if (!cache) return null;
+
+      // Authoritative path: annotated.html embeds the extracted palette as structured JSON.
+      const embeddedPalette = parseEmbeddedColorPalette(cache.templateHtml);
+      if (embeddedPalette) return { label: "Template palette", colors: embeddedPalette };
+
       const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
       const rootVars = parseRootHexVars(cache.templateHtml);
       const embedded = cache.embeddedJson?.default_color_scheme || {};
@@ -2794,6 +2835,7 @@ ${pseudoSelectors} {
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
       Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
       updateColorRoleLabels();
+      userHasCustomizedColors = false;
     }
 
     function isOwnLibraryUrl(url) {
@@ -2953,9 +2995,14 @@ ${pseudoSelectors} {
       if (!templateUrl || templateUrl === lastExtractedUrl) return;
       lastExtractedUrl = templateUrl;
 
-      const bar    = document.getElementById("sampleColorsBar");
-      const status = document.getElementById("sampleColorsStatus");
-      if (bar)    bar.style.display = "flex";
+      const bar          = document.getElementById("sampleColorsBar");
+      const status       = document.getElementById("sampleColorsStatus");
+      const useSampleLbl = document.getElementById("useSampleColorsLabel");
+      const resetBtn     = document.getElementById("resetToSampleColors");
+      const fixedNote    = document.getElementById("fixedColorsNote");
+      const palettes     = document.getElementById("suggestedPalettes");
+
+      if (bar) bar.style.display = "flex";
       if (status) status.textContent = "Extracting colors from template…";
 
       try {
@@ -2965,9 +3012,28 @@ ${pseudoSelectors} {
           if (status) status.textContent = "Could not extract colors from template.";
           return;
         }
-        sampleColors = data;
-        applyColors(sampleColors);
-        if (status) status.textContent = "Colors pre-filled from template.";
+
+        if (data.nonRecolorizable) {
+          // Template uses fixed colors — hide customization UI
+          if (status)       status.textContent = "";
+          if (useSampleLbl) useSampleLbl.style.display = "none";
+          if (resetBtn)     resetBtn.style.display     = "none";
+          if (fixedNote)    fixedNote.style.display     = "block";
+          if (palettes)     palettes.style.display      = "none";
+          const overlay = document.getElementById("sampleColorsOverlay");
+          const cb      = document.getElementById("useSampleColors");
+          if (cb)      cb.checked = true;
+          if (overlay) overlay.style.display = "block";
+        } else {
+          // Normal template — restore customization UI in case we previously hid it
+          if (useSampleLbl) useSampleLbl.style.display = "";
+          if (resetBtn)     resetBtn.style.display     = "";
+          if (fixedNote)    fixedNote.style.display     = "none";
+          if (palettes)     palettes.style.display      = "";
+          sampleColors = data;
+          applyColors(sampleColors);
+          if (status) status.textContent = "Colors pre-filled from template.";
+        }
       } catch {
         if (status) status.textContent = "Color extraction failed.";
       }
@@ -3124,12 +3190,12 @@ ${pseudoSelectors} {
     }
 
     function getPage3Colors(){
-      const background = document.getElementById("primary").value.trim();
-      const foreground = document.getElementById("secondary").value.trim();
-      const primary = document.getElementById("tertiary").value.trim();
-      const secondary = document.getElementById("accent2").value.trim();
-      const accent = document.getElementById("accent1").value.trim();
-      const theme = themeWithAliases({ background, foreground, primary, secondary, accent });
+      const primary    = document.getElementById("primary").value.trim();
+      const secondary  = document.getElementById("secondary").value.trim();
+      const accent     = document.getElementById("tertiary").value.trim();
+      const quaternary = document.getElementById("accent2").value.trim();
+      const quinary    = document.getElementById("accent1").value.trim();
+      const theme = themeWithAliases({ primary, secondary, accent, quaternary, quinary });
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -3485,7 +3551,7 @@ ${pseudoSelectors} {
       // If the pipeline was already triggered and job just re-completed, restart it
       if (!braidInProgress && !slotFillInProgress && !bridgeInProgress && !generationInProgress) {
         if (page3Submitted && isBraidMode()) doBraidWebsite();
-        else if (page3Submitted && isMustacheMode()) doSlotFillWebsite();
+        else if (page3Submitted && isSlotFillMode()) doSlotFillWebsite();
         else if (page4Submitted) page4OpenEditorAction();
       }
     }
@@ -3699,8 +3765,9 @@ ${pseudoSelectors} {
 
       const resumeFacts      = lastAnalysisData?.resume_facts ?? lastAnalysisData ?? null;
       const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
-      const userColors       = getPage3Colors().theme;
-      const colorSpec        = (userColors?.primary ? userColors : null) ?? null;
+      const page3            = getPage3Colors();
+      const userColors       = page3.theme;
+      const colorSpec        = userHasCustomizedColors ? (userColors?.primary ? userColors : null) : null;
 
       try {
         const res = await fetch(buildWebsiteFunctionPath(), {
@@ -3735,7 +3802,7 @@ ${pseudoSelectors} {
           if (data.status === "done") {
             clearInterval(slotFillCountdown);
             generationResult     = { ...data, base_site_html: data.site_html || "" };
-            const needsMastheadImage = isMustacheMode() && currentTemplateNeedsMastheadImage();
+            const needsMastheadImage = isSlotFillMode() && currentTemplateNeedsMastheadImage();
             const hasMastheadImage = !!mastheadImageResult?.image_url;
             const holdPreviewForMasthead = needsMastheadImage && !hasMastheadImage;
             // Always compose with color overrides; masthead image injected if ready
@@ -3749,6 +3816,7 @@ ${pseudoSelectors} {
             // Push the portfolio immediately so the editor shows the real page (with
             // placeholder masthead if the AI image isn't ready yet), not a dark loading screen.
             pushPreviewHtmlUpdate(generationResult.site_html || "");
+            if (page4Submitted) { doPreview(); setOpenEditorReady(true); }
             if (!holdPreviewForMasthead) {
               setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
               greyRendererButtons(false);
@@ -3849,6 +3917,7 @@ ${pseudoSelectors} {
             if (generationResult?.base_site_html && data.image_url) {
               generationResult.site_html = composeBraidPreviewHtml(generationResult);
               pushPreviewHtmlUpdate(generationResult.site_html || "");
+              if (page4Submitted) doPreview();
               setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
               greyRendererButtons(false);
             }
@@ -4310,7 +4379,7 @@ ${pseudoSelectors} {
         if (!generationResult) return;
       }
 
-      if (isMustacheMode() && currentTemplateNeedsMastheadImage() && !mastheadImageResult?.image_url) {
+      if (isSlotFillMode() && currentTemplateNeedsMastheadImage() && !mastheadImageResult?.image_url) {
         const message = mastheadImageError
           ? `⚠ Masthead image failed: ${mastheadImageError}`
           : "Generating masthead image…";
@@ -4852,7 +4921,7 @@ ${pseudoSelectors} {
       if (isBraidMode()) {
         page3Submitted = true;
         doBraidWebsite();
-      } else if (isMustacheMode()) {
+      } else if (isSlotFillMode()) {
         page3Submitted = true;
         doSlotFillWebsite();
       }
@@ -4865,21 +4934,22 @@ ${pseudoSelectors} {
     function selectedTemplateSource() {
       return document.querySelector('input[name="templateSource"]:checked')?.value || "";
     }
-    function wantsMustacheMode() {
+    function wantsSlotFillMode() {
       const source = selectedTemplateSource();
       if (source !== "keyword") return false;
       const mode = document.getElementById("extractTemplateMode")?.value || "mustache";
       return mode === "mustache";
     }
-    function isMustacheMode() {
-      return extractedTemplateCache?.templateMode === "mustache" || (!extractedTemplateCache && wantsMustacheMode());
+    function isSlotFillMode() {
+      const mode = extractedTemplateCache?.templateMode;
+      return mode === "annotated" || mode === "mustache" || (!extractedTemplateCache && wantsSlotFillMode());
     }
     function isDirectDesignMode() {
       return selectedTemplateSource() === "none";
     }
     function isBraidMode() {
       const source = selectedTemplateSource();
-      return (source === "keyword" || source === "file") && !isMustacheMode() && !isDirectDesignMode();
+      return (source === "keyword" || source === "file") && !isSlotFillMode() && !isDirectDesignMode();
     }
     function applyBraidColorOverrides(result) {
       if (!result?.site_html) return;
@@ -4896,7 +4966,7 @@ ${pseudoSelectors} {
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
       ensureEditorWindow();
       window.umami?.track("form-step-complete", { step: 4 });
-      if (isMustacheMode()) {
+      if (isSlotFillMode()) {
         page4Submitted = true;
         const needsMastheadImage = currentTemplateNeedsMastheadImage();
         if (needsMastheadImage && !mastheadImageResult?.image_url) {
@@ -4908,28 +4978,15 @@ ${pseudoSelectors} {
         } else {
           autoMastheadImageTriggered = true;
         }
-        // Slot-fill kicked off on page 3 Next — wait for it to finish.
-        if (slotFillInProgress) {
-          setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
-          while (slotFillInProgress) await new Promise(r => setTimeout(r, 500));
-        }
-        if (!generationResult) {
-          setOpenEditorReady(false);
+        // Slot-fill runs in the background from page 3 Next. If it's still in
+        // progress (or hasn't produced a result yet), open the editor now so the
+        // user can wait there. doSlotFillWebsite will push the HTML and re-enable
+        // navigation when done.
+        if (slotFillInProgress || !generationResult) {
+          setOpenEditorReady(true);
           return;
         }
-        if (needsMastheadImage) {
-          while (mastheadImageInProgress) {
-            await new Promise(r => setTimeout(r, 500));
-          }
-          if (!mastheadImageResult?.image_url) {
-            const message = mastheadImageError
-              ? `⚠ Masthead image failed: ${mastheadImageError}`
-              : "Generating masthead image…";
-            setHeaderStatus("colorsChosenStatus", message, mastheadImageError ? "rgba(251,171,156,.9)" : "rgba(141,224,255,.75)");
-            setOpenEditorReady(false);
-            return;
-          }
-        }
+        // Generation already complete — apply masthead if available, then open.
         if (needsMastheadImage && mastheadImageResult?.image_url && generationResult?.base_site_html) {
           generationResult.site_html = composeBraidPreviewHtml(generationResult);
           pushPreviewHtmlUpdate(generationResult.site_html);
@@ -4942,9 +4999,11 @@ ${pseudoSelectors} {
       if (isDirectDesignMode()) {
         page4Submitted = true;
         setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
-        if (!autoMastheadImageTriggered) {
+        if (!autoMastheadImageTriggered && currentTemplateNeedsMastheadImage()) {
           autoMastheadImageTriggered = true;
           startMastheadImageGeneration();
+        } else {
+          autoMastheadImageTriggered = true;
         }
         await doGenerateWebsite();
         setHeaderStatus("braidStatus", "");
@@ -4958,10 +5017,10 @@ ${pseudoSelectors} {
       page4Submitted = true;
       if (generationResult) applyBraidColorOverrides(generationResult);
 
-      // Start masthead image generation on the first click only.
+      // Start masthead image generation on the first click only, and only when needed.
       if (!autoMastheadImageTriggered) {
         autoMastheadImageTriggered = true;
-        startMastheadImageGeneration();
+        if (currentTemplateNeedsMastheadImage()) startMastheadImageGeneration();
       }
 
       // Wait for braid HTML (may still be in progress if user clicked quickly).
@@ -4991,7 +5050,7 @@ ${pseudoSelectors} {
       generationResult = null;
       greyRendererButtons(true);
       setApplyBtnState(false);
-      if (isMustacheMode()) doSlotFillWebsite();
+      if (isSlotFillMode()) doSlotFillWebsite();
       else doGenerateWebsite();
     });
     // Track which color input last had focus
@@ -4999,6 +5058,7 @@ ${pseudoSelectors} {
     let focusedColorId = "primary";
     colorInputIds.forEach(id => {
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
+      document.getElementById(id)?.addEventListener("change", () => { userHasCustomizedColors = true; });
     });
 
     // Resize color-themes iframe to its exact content height (posted by ResizeObserver inside)

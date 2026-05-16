@@ -291,25 +291,27 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
-const COLOR_ROLE_KEYS = ["background", "foreground", "primary", "secondary", "accent"];
+const COLOR_ROLE_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
 
 function normalizeColorSpec(colorSpec = {}) {
   const normalized = { use_sample_colors: !!colorSpec?.use_sample_colors };
-  normalized.background = colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot1 ?? null;
-  normalized.foreground = colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot2 ?? null;
-  normalized.primary = colorSpec?.primary ?? colorSpec?.slot3 ?? null;
-  normalized.secondary = colorSpec?.secondary ?? colorSpec?.slot4 ?? null;
-  normalized.accent = colorSpec?.accent ?? colorSpec?.tertiary ?? colorSpec?.slot5 ?? null;
+  normalized.primary    = colorSpec?.primary    ?? colorSpec?.slot1 ?? null;
+  normalized.secondary  = colorSpec?.secondary  ?? colorSpec?.slot2 ?? null;
+  normalized.accent     = colorSpec?.accent     ?? colorSpec?.tertiary ?? colorSpec?.slot3 ?? null;
+  normalized.quaternary = colorSpec?.quaternary ?? colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot4 ?? null;
+  normalized.quinary    = colorSpec?.quinary    ?? colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot5 ?? null;
 
-  // Backward-compatible aliases for older prompts/templates/editor code.
-  normalized.tertiary = normalized.accent;
-  normalized.accent1 = normalized.background;
-  normalized.accent2 = normalized.foreground;
-  normalized.slot1 = normalized.background;
-  normalized.slot2 = normalized.foreground;
-  normalized.slot3 = normalized.primary;
-  normalized.slot4 = normalized.secondary;
-  normalized.slot5 = normalized.accent;
+  // Aliases for backward compatibility with older prompts and editor code.
+  normalized.tertiary   = normalized.accent;
+  normalized.background = normalized.quinary;
+  normalized.foreground = normalized.quaternary;
+  normalized.accent1    = normalized.quinary;
+  normalized.accent2    = normalized.quaternary;
+  normalized.slot1      = normalized.primary;
+  normalized.slot2      = normalized.secondary;
+  normalized.slot3      = normalized.accent;
+  normalized.slot4      = normalized.quaternary;
+  normalized.slot5      = normalized.quinary;
   if (colorSpec?.note) normalized.note = colorSpec.note;
   return normalized;
 }
@@ -318,11 +320,11 @@ function serializeColorSpecForAI(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
   return {
     use_sample_colors: !!normalized.use_sample_colors,
-    background: normalized.background,
-    foreground: normalized.foreground,
-    primary: normalized.primary,
-    secondary: normalized.secondary,
-    accent: normalized.accent
+    primary:    normalized.primary,
+    secondary:  normalized.secondary,
+    accent:     normalized.accent,
+    quaternary: normalized.quaternary,
+    quinary:    normalized.quinary,
   };
 }
 
@@ -866,7 +868,7 @@ function renderMustache(template, data) {
 /**
  * Normalizes either the new split schema (resume_facts with identity/factual_profile)
  * or the old flat schema (personal, education, etc. at top level) to the flat format
- * that flattenToMustacheData expects.
+ * that flattenCandidateData expects.
  */
 function toFlatResumeSchema(f) {
   if (!f) return {};
@@ -941,7 +943,7 @@ function trimAboutToLength(text, targetWords) {
   return result || text;
 }
 
-function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null, creativePack = null, augmentedProjects = null) {
+function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null, creativePack = null, augmentedProjects = null) {
   const personal = resumeJson?.personal || {};
   // resolved strategy (job_resolved or resume_resolved) has strategy.positioning.{headline,subheadline,value_proposition}
   const _coreStory = strategy?.editorial_direction?.core_story || "";
@@ -1143,8 +1145,8 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             trimAboutToLength(resumeJson?.summary || _coreStory || creativePack?.about_full || "", aboutWordCount),
-    about_full:        creativePack?.about_full || resumeJson?.summary || _coreStory || "",
+    about:             trimAboutToLength(resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "", aboutWordCount),
+    about_full:        trimAboutToLength(creativePack?.about_full || resumeJson?.summary || _coreStory || "", aboutWordCount),
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",
@@ -1199,6 +1201,7 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       bullets:     e.bullets    || [],
       technologies:e.technologies || []
     })),
+    has_experience: (resumeJson?.experience || []).length > 0,
 
     projects: assignProjectIcons(augmentedProjects || resumeJson?.projects || [], resumeJson).map((p) => ({
       name:        p.name        || "",
@@ -1221,6 +1224,15 @@ function flattenToMustacheData(strategy, resumeJson, colorSpec, resumeStrategy =
       honors:           e.honors           || "",
       activities:       e.activities       || []
     })),
+
+    education_stats: (() => {
+      const stats = [];
+      if (edu0.graduation_date) stats.push({ stat_number: edu0.graduation_date, stat_label: edu0.degree || "Degree" });
+      if (edu0.major)           stats.push({ stat_number: edu0.major,           stat_label: edu0.institution || "University" });
+      if (edu0.gpa)             stats.push({ stat_number: edu0.gpa,             stat_label: "GPA" });
+      if (edu0.honors)          stats.push({ stat_number: "🏅",                 stat_label: edu0.honors });
+      return stats.slice(0, 4);
+    })(),
 
     skill_groups,
     hero_cards,
@@ -1431,16 +1443,16 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
 }
 
 // ─── Slot-fill pipeline ───────────────────────────────────────────────────────
-// Faster alternative to the braid: uses the pre-tokenized _mustache.html template,
-// fills deterministic slots via flattenToMustacheData(), and fires small parallel
-// LLM calls only for the creative slots (section arc, about, project augmentation).
+// Uses the annotated.html template (data-* attributes), fills candidate data via
+// flattenCandidateData(), fires parallel LLM calls for creative slots (section arc,
+// about, project augmentation), then renders with renderPortfolio (Cheerio).
 
 async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, userId) {
   const {
     page1            = {},
     resumeFacts      = null,
     resolvedStrategy = null,
-    sampleHtml       = "",          // expected to be a *_mustache.html template
+    sampleHtml       = "",          // annotated.html (data-* attributes)
     mastheadMeta: providedMastheadMeta = null,
     colorSpec        = {},
     headshotName     = "",
@@ -1506,7 +1518,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     use_sample_colors: colorSpec.use_sample_colors,
   });
 
-  const mustacheData = flattenToMustacheData(
+  const candidateData = flattenCandidateData(
     resolvedStrategy,
     flatResumeFacts,
     theme,
@@ -1517,18 +1529,14 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     augmentedProjects,
   );
 
+  if (headshotName) candidateData.headshot = headshotName;
+
   let siteHtml;
   try {
-    siteHtml = renderMustache(sampleHtml, mustacheData);
+    siteHtml = renderPortfolio(sampleHtml, candidateData, theme);
   } catch (err) {
-    await store.set(jobId, JSON.stringify({ status: "error", error: `Mustache render failed: ${err.message}` }), { ttl: 3600 });
+    await store.set(jobId, JSON.stringify({ status: "error", error: `Render failed: ${err.message}` }), { ttl: 3600 });
     return;
-  }
-
-  siteHtml = injectCssColors(siteHtml, theme, sampleHtml);
-
-  if (headshotName) {
-    siteHtml = siteHtml.replace(/src="[^"]*headshot[^"]*"/i, `src="${headshotName}"`);
   }
 
   siteHtml = embedMastheadMetaComment(siteHtml, mastheadMeta);
@@ -1780,10 +1788,24 @@ async function generateImageJob(store, jobId, body, userId) {
       console.error("Non-fatal image usage logging error:", usageErr?.message || usageErr);
     }
   } catch (imgErr) {
-    await store.set(jobId, JSON.stringify({
-      status: "error",
-      error: `${stageLabel} generation failed: ${imgErr?.message || String(imgErr)}`
-    }), { ttl: 3600 });
+    const msg = imgErr?.message || String(imgErr);
+    const isAuthError = /401|403|authentication failed|not allowed/i.test(msg)
+      || imgErr?.status === 401 || imgErr?.status === 403;
+
+    if (isAuthError) {
+      console.warn(`[buildWebsite-background] ${stageLabel} skipped: image service unavailable (${msg.slice(0, 120)})`);
+      await store.set(jobId, JSON.stringify({
+        status: "done",
+        skipped: true,
+        image_kind: imageKind,
+        skip_reason: "image_service_unavailable",
+      }), { ttl: 3600 });
+    } else {
+      await store.set(jobId, JSON.stringify({
+        status: "error",
+        error: `${stageLabel} generation failed: ${msg}`
+      }), { ttl: 3600 });
+    }
   }
 }
 
@@ -2042,7 +2064,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
         display_label: DEFAULT_LABELS[type] || ""
       }));
     }
-    const mustacheData = flattenToMustacheData(
+    const mustacheData = flattenCandidateData(
       coreContent.strategy,
       toFlatResumeSchema(resumeFacts),
       colorSpec,

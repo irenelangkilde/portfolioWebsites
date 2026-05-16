@@ -17,6 +17,13 @@ SCALAR FIELDS
   data-attr-href="key"    Renderer sets href=data[key] on the element.
   data-attr-src="key"     Renderer sets src=data[key] on the element.
 
+WORD COUNT  (always add alongside data-field and data-html-field)
+  data-word-count="N"     Word count of the original sample text at this element.
+                          Count the visible text words only (no HTML tags).
+                          Also add on each data-item element (total words in that
+                          representative item's visible text). Omit on
+                          data-attr-href, data-attr-src, data-if, and containers.
+
 CONDITIONAL ELEMENTS  (element is removed when data[key] is falsy/empty)
   data-if="key"
 

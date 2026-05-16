@@ -8,42 +8,15 @@
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Five main theme colors */
-            --dominant:   #9D2235;   /* 1. Dominant    — ruby red CTA, buttons, accents, stats bg */
-            --secondary:  #2A1A1F;   /* 2. Secondary   — charcoal text, contact section bg         */
-            --tertiary:   #F5D6DC;   /* 3. Tertiary    — soft pink cards, expertise tiles, shapes  */
-            --quaternary: #F5EDE4;   /* 4. Quaternary  — warm beige page background, experience bg */
-            --quinary:    #8B7A74;   /* 5. Quinary     — muted body text, descriptions             */
-
-            /* Theme-independent hard-coded neutrals */
-            --white:   #ffffff;
-            --black:   #000000;
-
-            /* Derived tokens */
-            --ruby-deep:        color-mix(in srgb, var(--dominant) 78%, var(--black));
-            --soft-pink:        var(--tertiary);
-            --pink-light:       color-mix(in srgb, var(--tertiary) 40%, var(--white));
-            --beige:            var(--quaternary);
-            --beige-dark:       color-mix(in srgb, var(--quaternary) 80%, var(--quinary));
-            --warm-white:       color-mix(in srgb, var(--quaternary) 30%, var(--white));
-            --charcoal:         var(--secondary);
-            --text-muted:       var(--quinary);
-            --footer-bg:        color-mix(in srgb, var(--secondary) 85%, var(--black));
-            --nav-bg:           color-mix(in srgb, var(--warm-white) 95%, transparent);
-            --nav-border:       color-mix(in srgb, var(--dominant) 10%, transparent);
-            --ruby-shadow-sm:   color-mix(in srgb, var(--dominant) 25%, transparent);
-            --ruby-shadow-md:   color-mix(in srgb, var(--dominant) 30%, transparent);
-            --ruby-shadow-lg:   color-mix(in srgb, var(--dominant) 40%, transparent);
-            --ruby-shadow-xl:   color-mix(in srgb, var(--dominant) 15%, transparent);
-            --expertise-hover:  color-mix(in srgb, var(--dominant) 15%, transparent);
-            --skill-hover:      color-mix(in srgb, var(--dominant) 15%, transparent);
-            --card-icon-tint:   color-mix(in srgb, var(--pink-light) 100%, transparent);
-            --shape3-color:     color-mix(in srgb, var(--dominant) 30%, transparent);
-            --contact-form-bg:  color-mix(in srgb, var(--white) 5%, transparent);
-            --input-bg:         color-mix(in srgb, var(--white) 10%, transparent);
-            --input-border:     color-mix(in srgb, var(--white) 10%, transparent);
-            --input-bg-focus:   color-mix(in srgb, var(--white) 15%, transparent);
-            --social-bg:        color-mix(in srgb, var(--white) 10%, transparent);
+            --ruby-red: var(--color-primary);
+            --ruby-deep: #7A1B2B;
+            --soft-pink: var(--color-tertiary);
+            --pink-light: color-mix(in oklab, var(--color-text), black 3%);
+            --beige: color-mix(in oklab, var(--color-text), black 3%);
+            --beige-dark: var(--color-tertiary);
+            --warm-white: var(--color-text);
+            --charcoal: var(--color-quaternary);
+            --text-muted: var(--color-quinary);
         }
 
         * {
@@ -66,10 +39,10 @@
             top: 0;
             left: 0;
             right: 0;
-            background: rgba(255, 251, 247, 0.95);
+            background: rgba(var(--color-text-rgb),0.95);
             backdrop-filter: blur(10px);
             z-index: 1000;
-            border-bottom: 1px solid var(--nav-border);
+            border-bottom: 1px solid rgba(var(--color-primary-rgb),0.1);
         }
 
         .nav-container {
@@ -85,7 +58,7 @@
             font-family: 'Cormorant Garamond', serif;
             font-size: 28px;
             font-weight: 700;
-            color: var(--dominant);
+            color: var(--ruby-red);
             letter-spacing: -0.5px;
         }
 
@@ -106,12 +79,12 @@
         }
 
         .nav-links a:hover {
-            color: var(--dominant);
+            color: var(--ruby-red);
         }
 
         .nav-cta {
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             padding: 12px 28px;
             border-radius: 30px;
             border: none;
@@ -124,10 +97,10 @@
         .nav-cta:hover {
             background: var(--ruby-deep);
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px var(--ruby-shadow-sm);
+            box-shadow: 0 8px 20px rgba(var(--color-primary-rgb),0.25);
         }
 
-        /* Hero Section */
+        /* Hero Section - Extra Pizzaz! */
         .hero {
             margin-top: 80px;
             min-height: 85vh;
@@ -138,6 +111,7 @@
             background: linear-gradient(135deg, var(--pink-light) 0%, var(--beige) 50%, var(--soft-pink) 100%);
         }
 
+        /* Animated geometric shapes in background */
         .hero-shapes {
             position: absolute;
             top: 0;
@@ -158,7 +132,7 @@
         .shape-1 {
             width: 400px;
             height: 400px;
-            background: radial-gradient(circle at 30% 30%, var(--dominant), transparent);
+            background: radial-gradient(circle at 30% 30%, var(--ruby-red), transparent);
             top: -200px;
             right: 10%;
             animation-delay: 0s;
@@ -176,7 +150,7 @@
         .shape-3 {
             width: 200px;
             height: 200px;
-            background: radial-gradient(circle at 50% 50%, var(--shape3-color), transparent);
+            background: radial-gradient(circle at 50% 50%, rgba(var(--color-primary-rgb),0.3), transparent);
             top: 40%;
             left: 15%;
             animation-delay: 10s;
@@ -226,8 +200,8 @@
 
         .hero-label {
             display: inline-block;
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             padding: 8px 20px;
             border-radius: 20px;
             font-size: 13px;
@@ -268,8 +242,8 @@
         }
 
         .btn-primary {
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             padding: 16px 36px;
             border-radius: 30px;
             border: none;
@@ -282,15 +256,15 @@
         .btn-primary:hover {
             background: var(--ruby-deep);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px var(--ruby-shadow-md);
+            box-shadow: 0 12px 30px rgba(var(--color-primary-rgb),0.3);
         }
 
         .btn-secondary {
             background: transparent;
-            color: var(--dominant);
+            color: var(--ruby-red);
             padding: 16px 36px;
             border-radius: 30px;
-            border: 2px solid var(--dominant);
+            border: 2px solid var(--ruby-red);
             font-weight: 600;
             font-size: 16px;
             cursor: pointer;
@@ -298,12 +272,12 @@
         }
 
         .btn-secondary:hover {
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             transform: translateY(-3px);
         }
 
-        /* Hero Visual */
+        /* Hero Visual - 3D Card Stack Effect */
         .hero-visual {
             position: relative;
             height: 500px;
@@ -332,7 +306,7 @@
             position: absolute;
             width: 320px;
             height: 420px;
-            background: var(--white);
+            background: white;
             border-radius: 24px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
@@ -350,8 +324,8 @@
             top: 0;
             left: 50%;
             transform: translateX(-50%) rotate(-8deg);
-            background: linear-gradient(135deg, var(--dominant), var(--ruby-deep));
-            color: var(--white);
+            background: linear-gradient(135deg, var(--ruby-red), var(--ruby-deep));
+            color: white;
             z-index: 3;
             animation: cardFloat1 1s ease-out 1s both;
         }
@@ -360,7 +334,7 @@
             top: 40px;
             left: 50%;
             transform: translateX(-50%) rotate(4deg);
-            background: var(--white);
+            background: white;
             border: 2px solid var(--soft-pink);
             z-index: 2;
             animation: cardFloat2 1s ease-out 1.2s both;
@@ -411,7 +385,7 @@
         .card-icon {
             width: 60px;
             height: 60px;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(var(--color-text-rgb),0.2);
             border-radius: 16px;
             display: flex;
             align-items: center;
@@ -432,7 +406,7 @@
         }
 
         .card-2 .card-title, .card-3 .card-title {
-            color: var(--dominant);
+            color: var(--ruby-red);
         }
 
         .card-desc {
@@ -447,8 +421,8 @@
 
         /* Stats Section */
         .stats {
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             padding: 60px 40px;
         }
 
@@ -495,7 +469,7 @@
         }
 
         .section-label {
-            color: var(--dominant);
+            color: var(--ruby-red);
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
@@ -534,7 +508,7 @@
 
         .expertise-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px var(--expertise-hover);
+            box-shadow: 0 10px 30px rgba(var(--color-primary-rgb),0.15);
         }
 
         .expertise-icon {
@@ -545,7 +519,7 @@
         .expertise-title {
             font-weight: 700;
             font-size: 18px;
-            color: var(--dominant);
+            color: var(--ruby-red);
             margin-bottom: 8px;
         }
 
@@ -583,7 +557,7 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: linear-gradient(to bottom, var(--dominant), var(--soft-pink));
+            background: linear-gradient(to bottom, var(--ruby-red), var(--soft-pink));
         }
 
         .timeline-item {
@@ -598,14 +572,14 @@
             top: 0;
             width: 20px;
             height: 20px;
-            background: var(--dominant);
+            background: var(--ruby-red);
             border-radius: 50%;
             border: 4px solid var(--beige);
             box-shadow: 0 0 0 4px var(--soft-pink);
         }
 
         .timeline-date {
-            color: var(--dominant);
+            color: var(--ruby-red);
             font-size: 14px;
             font-weight: 700;
             text-transform: uppercase;
@@ -652,7 +626,7 @@
         }
 
         .skill-card {
-            background: var(--white);
+            background: white;
             padding: 32px 24px;
             border-radius: 20px;
             text-align: center;
@@ -661,9 +635,9 @@
         }
 
         .skill-card:hover {
-            border-color: var(--dominant);
+            border-color: var(--ruby-red);
             transform: translateY(-5px);
-            box-shadow: 0 15px 40px var(--skill-hover);
+            box-shadow: 0 15px 40px rgba(var(--color-primary-rgb),0.15);
         }
 
         .skill-name {
@@ -682,7 +656,7 @@
 
         .skill-progress {
             height: 100%;
-            background: linear-gradient(90deg, var(--dominant), var(--ruby-deep));
+            background: linear-gradient(90deg, var(--ruby-red), var(--ruby-deep));
             border-radius: 10px;
             transition: width 1s ease;
         }
@@ -691,7 +665,7 @@
         .contact {
             padding: 120px 40px;
             background: var(--charcoal);
-            color: var(--white);
+            color: white;
         }
 
         .contact-container {
@@ -703,7 +677,7 @@
         }
 
         .contact h2 {
-            color: var(--white);
+            color: white;
         }
 
         .contact-info {
@@ -721,7 +695,7 @@
         .contact-icon {
             width: 50px;
             height: 50px;
-            background: var(--dominant);
+            background: var(--ruby-red);
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -743,7 +717,7 @@
         }
 
         .contact-form {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(var(--color-text-rgb),0.05);
             padding: 40px;
             border-radius: 24px;
             backdrop-filter: blur(10px);
@@ -766,10 +740,10 @@
         .form-group textarea {
             width: 100%;
             padding: 16px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid rgba(255, 255, 255, 0.1);
+            background: rgba(var(--color-text-rgb),0.1);
+            border: 2px solid rgba(var(--color-text-rgb),0.1);
             border-radius: 12px;
-            color: var(--white);
+            color: white;
             font-family: inherit;
             font-size: 16px;
             transition: all 0.3s ease;
@@ -778,8 +752,8 @@
         .form-group input:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: var(--dominant);
-            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--ruby-red);
+            background: rgba(var(--color-text-rgb),0.15);
         }
 
         .form-group textarea {
@@ -789,13 +763,13 @@
 
         .form-group input::placeholder,
         .form-group textarea::placeholder {
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(var(--color-text-rgb),0.5);
         }
 
         .submit-btn {
             width: 100%;
-            background: var(--dominant);
-            color: var(--white);
+            background: var(--ruby-red);
+            color: white;
             padding: 18px;
             border: none;
             border-radius: 12px;
@@ -810,13 +784,13 @@
         .submit-btn:hover {
             background: var(--ruby-deep);
             transform: translateY(-2px);
-            box-shadow: 0 10px 30px var(--ruby-shadow-lg);
+            box-shadow: 0 10px 30px rgba(var(--color-primary-rgb),0.4);
         }
 
         /* Footer */
         footer {
-            background: var(--footer-bg);
-            color: var(--white);
+            background: var(--color-bg);
+            color: white;
             padding: 40px;
             text-align: center;
         }
@@ -836,19 +810,19 @@
         .social-link {
             width: 45px;
             height: 45px;
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(var(--color-text-rgb),0.1);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--white);
+            color: white;
             text-decoration: none;
             font-size: 20px;
             transition: all 0.3s ease;
         }
 
         .social-link:hover {
-            background: var(--dominant);
+            background: var(--ruby-red);
             transform: translateY(-3px);
         }
 
@@ -915,6 +889,281 @@
             }
         }
     </style>
+<style id="extracted-theme">
+/* Generated by extractColors.mjs — do not edit; re-run to regenerate. */
+
+/* ── Default / Hero scheme ──────────────────────────────────────────── */
+:root {
+  --color-bg:          oklch(18.5% 0.019 1.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(46.1% 0.158 18.0);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(90.4% 0.035 4.7);
+  --color-quaternary:  oklch(24.0% 0.027 358.9);
+  --color-quinary:     oklch(59.3% 0.023 40.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+.section-hero {
+  --color-bg:          oklch(18.5% 0.019 1.3);
+  --color-text:        oklch(100.0% 0.000 0.0);
+  --color-surface:     color-mix(in oklab, var(--color-bg), white 8%);
+  --color-card:        color-mix(in oklab, var(--color-bg), white 12%);
+  --color-primary:     oklch(46.1% 0.158 18.0);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(90.4% 0.035 4.7);
+  --color-quaternary:  oklch(24.0% 0.027 358.9);
+  --color-quinary:     oklch(59.3% 0.023 40.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), white 16%);
+}
+
+/* ── Inverted contrast section ──────────────────────────────────────── */
+.section-inverted {
+  --color-bg:          oklch(100.0% 0.000 0.0);
+  --color-text:        oklch(18.5% 0.019 1.3);
+  --color-surface:     color-mix(in oklab, var(--color-bg), black 6%);
+  --color-card:        color-mix(in oklab, var(--color-bg), black 10%);
+  --color-primary:     oklch(46.1% 0.158 18.0);
+  --color-secondary:   oklch(38.9% 0.096 258.4);
+  --color-tertiary:    oklch(58.0% 0.035 4.7);
+  --color-quaternary:  oklch(28.0% 0.027 358.9);
+  --color-quinary:     oklch(41.3% 0.023 40.4);
+  --color-muted:       color-mix(in oklab, var(--color-text), var(--color-bg) 40%);
+  --color-border:      color-mix(in oklab, var(--color-bg), black 14%);
+}
+/* RGB channel variables — enables rgba(var(--color-primary-rgb), alpha) */
+:root {
+  --color-bg-rgb: 26, 15, 18;
+  --color-text-rgb: 255, 255, 255;
+  --color-primary-rgb: 157, 34, 53;
+  --color-secondary-rgb: 34, 68, 119;
+  --color-tertiary-rgb: 245, 214, 220;
+  --color-quaternary-rgb: 42, 26, 31;
+  --color-quinary-rgb: 139, 122, 116;
+}
+</style>
+<script type="application/json" id="color-palette">
+{
+  "meta": {
+    "k": 5,
+    "confidence": null,
+    "threshold": 1.5,
+    "well_separated": true,
+    "nonRecolorizable": false
+  },
+  "palette": [
+    {
+      "hex": "#9d2235",
+      "oklch": {
+        "l": 0.4606,
+        "c": 0.1578,
+        "h": 18
+      },
+      "count": 9,
+      "role": "--color-primary",
+      "merged": []
+    },
+    {
+      "hex": "#f5d6dc",
+      "oklch": {
+        "l": 0.9035,
+        "c": 0.0353,
+        "h": 4.7
+      },
+      "count": 4,
+      "role": "--color-tertiary",
+      "merged": [
+        "#e8ddd0"
+      ]
+    },
+    {
+      "hex": "#2a1a1f",
+      "oklch": {
+        "l": 0.2404,
+        "c": 0.0268,
+        "h": 358.9
+      },
+      "count": 2,
+      "role": "--color-quaternary",
+      "merged": []
+    },
+    {
+      "hex": "#8b7a74",
+      "oklch": {
+        "l": 0.5933,
+        "c": 0.023,
+        "h": 40.4
+      },
+      "count": 2,
+      "role": "--color-quinary",
+      "merged": []
+    },
+    {
+      "hex": "#224477",
+      "oklch": {
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
+      },
+      "count": 1,
+      "role": "--color-secondary",
+      "merged": []
+    }
+  ],
+  "scheme": {
+    "--color-bg": {
+      "hex": "#1a0f12",
+      "oklch": {
+        "l": 0.1847,
+        "c": 0.0194,
+        "h": 1.3
+      },
+      "css": "oklch(18.5% 0.019 1.3)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#9d2235",
+      "oklch": {
+        "l": 0.4606,
+        "c": 0.1578,
+        "h": 18
+      },
+      "css": "oklch(46.1% 0.158 18.0)",
+      "synthetic": false
+    },
+    "--color-secondary": {
+      "hex": "#224477",
+      "oklch": {
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
+      },
+      "css": "oklch(38.9% 0.096 258.4)",
+      "synthetic": false
+    },
+    "--color-tertiary": {
+      "hex": "#f5d6dc",
+      "oklch": {
+        "l": 0.9035,
+        "c": 0.0353,
+        "h": 4.7
+      },
+      "css": "oklch(90.4% 0.035 4.7)",
+      "synthetic": false
+    },
+    "--color-quaternary": {
+      "hex": "#2a1a1f",
+      "oklch": {
+        "l": 0.2404,
+        "c": 0.0268,
+        "h": 358.9
+      },
+      "css": "oklch(24.0% 0.027 358.9)",
+      "synthetic": false
+    },
+    "--color-quinary": {
+      "hex": "#8b7a74",
+      "oklch": {
+        "l": 0.5933,
+        "c": 0.023,
+        "h": 40.4
+      },
+      "css": "oklch(59.3% 0.023 40.4)",
+      "synthetic": false
+    }
+  },
+  "invertedScheme": {
+    "--color-bg": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 1,
+        "c": 0,
+        "h": 0
+      },
+      "css": "oklch(100.0% 0.000 0.0)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-text": {
+      "hex": "#1a0f12",
+      "oklch": {
+        "l": 0.1847,
+        "c": 0.0194,
+        "h": 1.3
+      },
+      "css": "oklch(18.5% 0.019 1.3)",
+      "synthetic": false,
+      "fixed": true
+    },
+    "--color-primary": {
+      "hex": "#9d2235",
+      "oklch": {
+        "l": 0.4606,
+        "c": 0.1578,
+        "h": 18
+      },
+      "css": "oklch(46.1% 0.158 18.0)",
+      "synthetic": true
+    },
+    "--color-secondary": {
+      "hex": "#224477",
+      "oklch": {
+        "l": 0.3889,
+        "c": 0.0956,
+        "h": 258.4
+      },
+      "css": "oklch(38.9% 0.096 258.4)",
+      "synthetic": true
+    },
+    "--color-tertiary": {
+      "hex": "#8d7277",
+      "oklch": {
+        "l": 0.58,
+        "c": 0.0353,
+        "h": 4.7
+      },
+      "css": "oklch(58.0% 0.035 4.7)",
+      "synthetic": true
+    },
+    "--color-quaternary": {
+      "hex": "#342329",
+      "oklch": {
+        "l": 0.28,
+        "c": 0.0268,
+        "h": 358.9
+      },
+      "css": "oklch(28.0% 0.027 358.9)",
+      "synthetic": true
+    },
+    "--color-quinary": {
+      "hex": "#574742",
+      "oklch": {
+        "l": 0.4133,
+        "c": 0.023,
+        "h": 40.4
+      },
+      "css": "oklch(41.3% 0.023 40.4)",
+      "synthetic": true
+    }
+  }
+}
+</script>
 </head>
 <body>
     <!-- Navigation -->

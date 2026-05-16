@@ -101,8 +101,8 @@ VALUE_PROPOSITION  (hero sub-pitch — 1–2 punchy sentences, first person)
   - It must name something concrete and differentiating, not a generic claim.
   - Should answer: what do you bring that most candidates at your level don't?
 
-ABOUT  (short hero lead paragraph — 3–5 sentences)
-  - Start with what makes the candidate interesting or distinctive, not their major.
+ABOUT  (short hero lead paragraph — 2–4 sentences)
+  - Lead with what makes the candidate interesting or distinctive — not their major or degree.
   - Explain how they think about problems, what drives their work, what they care about.
   - Mention 1–2 concrete anchors from resolved.content_strategy.must_feature.
   - Do NOT begin with "I am" or state the major in sentence 1.
