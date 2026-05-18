@@ -9,22 +9,22 @@
 
   <style>
     :root{
-      --ink:var(--c-2);
-      --muted:var(--c-2);
-      --paper:var(--c-2);
+      --ink:oklch(from var(--color-secondary) calc(l + 0.0521) calc(c - 0.0021) calc(h + 5.5));
+      --muted:oklch(from var(--color-primary) calc(l + 0.0283) calc(c - 0.0357) calc(h - 140.7));
+      --paper:oklch(from var(--color-quaternary) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7));
       --card:#ffffffcc;
       --glass:#ffffffa8;
       --stroke:#00000014;
-      --shadow:0 18px 55px color-mix(in srgb, var(--c-2) 12%, transparent);
-      --shadowSoft:0 10px 28px color-mix(in srgb, var(--c-2) 10%, transparent);
+      --shadow:0 18px 55px rgba(0,0,0,.12);
+      --shadowSoft:0 10px 28px rgba(0,0,0,.10);
       --radius:22px;
 
       /* warm anthropology palette */
-      --accent:var(--c-3);       /* terracotta */
-      --accent2:var(--c-5);      /* warm beige */
-      --accent3:var(--c-2);      /* light sand */
-      --btn:var(--c-2);
-      --btnText:var(--c-1);
+      --accent:var(--color-tertiary);       /* terracotta */
+      --accent2:var(--color-quinary);      /* warm beige */
+      --accent3:oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9));      /* light sand */
+      --btn:oklch(from var(--color-secondary) calc(l + 0.0521) calc(c - 0.0021) calc(h + 5.5));
+      --btnText:var(--color-quaternary);
 
       --max:1120px;
     }
@@ -37,8 +37,8 @@
         color:var(--ink);
         background:
             linear-gradient(
-            color-mix(in srgb, var(--c-2) 72%, transparent),
-            color-mix(in srgb, var(--c-2) 72%, transparent)
+            color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7)) 72%, transparent),
+            color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7)) 72%, transparent)
             ),
             url("image1.png") center / 180% no-repeat fixed;
         overflow-x:hidden;
@@ -51,9 +51,9 @@
     .masthead{
       margin:0 auto;
       background:
-        linear-gradient(0deg, color-mix(in srgb, oklch(from var(--c-4) calc(l - 0.0157) calc(c + 0.0096) calc(h + 72.7)) 62%, transparent), color-mix(in srgb, oklch(from var(--c-4) calc(l - 0.0157) calc(c + 0.0096) calc(h + 72.7)) 45%, transparent)),
+        linear-gradient(0deg, color-mix(in srgb, var(--color-secondary) 62%, transparent), color-mix(in srgb, var(--color-secondary) 45%, transparent)),
         url("image1.png") center/cover no-repeat;
-      color:var(--c-1);
+      color:var(--color-quaternary);
     }
 
     /* Top navigation inside masthead */
@@ -74,9 +74,9 @@
     }
     .brandMark{
       width:34px;height:34px;border-radius:12px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-2) 90%, transparent), color-mix(in srgb, var(--c-3) 70%, transparent));
-      border:1px solid color-mix(in srgb, var(--c-1) 25%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--c-2) 25%, transparent);
+      background: linear-gradient(135deg, color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9)) 90%, transparent), color-mix(in srgb, var(--color-tertiary) 70%, transparent));
+      border:1px solid color-mix(in srgb, var(--color-quaternary) 25%, transparent);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
     }
     .brandText{display:flex; flex-direction:column; line-height:1.1}
     .brandText strong{font-size:16px; letter-spacing:.02em}
@@ -93,12 +93,12 @@
       letter-spacing:.02em;
       padding:10px 12px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-1) 10%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 10%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-quaternary) 18%, transparent);
       backdrop-filter: blur(8px);
       transition: transform .15s ease, background .15s ease;
     }
-    .navLinks a:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 16%, transparent);}
+    .navLinks a:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--color-quaternary) 16%, transparent);}
 
     /* Hero block */
     .hero{
@@ -131,10 +131,10 @@
     }
 
     .heroCard{
-      background: color-mix(in srgb, var(--c-1) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 12%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-quaternary) 18%, transparent);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--c-2) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -169,8 +169,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-2) 18%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-2) 22%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9)) 18%, transparent);
+      border:1px solid color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9)) 22%, transparent);
       font-size:12.5px;
       font-weight:700;
       letter-spacing:.02em;
@@ -193,18 +193,18 @@
       gap:10px;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid color-mix(in srgb, var(--c-1) 22%, transparent);
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      color:var(--c-1);
+      border:1px solid color-mix(in srgb, var(--color-quaternary) 22%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 14%, transparent);
+      color:var(--color-quaternary);
       text-decoration:none;
       font-weight:800;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 20%, transparent);}
+    .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--color-quaternary) 20%, transparent);}
     .btn.primary{
-      background: color-mix(in srgb, var(--c-2) 22%, transparent);
-      border-color: color-mix(in srgb, var(--c-2) 30%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9)) 22%, transparent);
+      border-color: color-mix(in srgb, oklch(from var(--color-quaternary) calc(l - 0.0610) calc(c + 0.0419) calc(h + 71.9)) 30%, transparent);
     }
 
     /* ===== Main content sections ===== */
@@ -250,18 +250,18 @@
       font-size:13.5px;
       margin-bottom:10px;
     }
-    .card p{margin:10px 0 0; color:var(--c-2)}
+    .card p{margin:10px 0 0; color:oklch(from var(--color-secondary) calc(l + 0.0976) calc(c + 0.0021) calc(h - 1.4))}
     .card,
     .contactCard,
     .item,
     .writing {
          backdrop-filter: blur(6px);
-        background-color: color-mix(in srgb, var(--c-1) 78%, transparent);
+        background-color: color-mix(in srgb, var(--color-quaternary) 78%, transparent);
     }
     .bullets{
       margin:12px 0 0;
       padding-left:18px;
-      color:var(--c-2);
+      color:oklch(from var(--color-secondary) calc(l + 0.0976) calc(c + 0.0021) calc(h - 1.4));
     }
     .bullets li{margin:6px 0}
 
@@ -271,9 +271,9 @@
       font-weight:700;
       padding:7px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-3) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-3) 18%, transparent);
-      color:var(--c-2);
+      background: color-mix(in srgb, var(--color-tertiary) 12%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-tertiary) 18%, transparent);
+      color:oklch(from var(--color-primary) calc(l - 0.0406) calc(c + 0.0089) calc(h - 147.4));
     }
 
     /* Timeline */
@@ -285,8 +285,8 @@
       padding:18px;
       border-radius:18px;
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 70%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--c-2) 6%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 70%, transparent);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
     }
     .itemTop{
       display:flex;
@@ -312,7 +312,7 @@
       padding:14px 16px;
       border-radius:16px;
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 72%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 72%, transparent);
     }
     .writing a{
       text-decoration:none;
@@ -338,13 +338,13 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background: var(--c-2);
+      background: oklch(from var(--color-quinary) calc(l + 0.0698) calc(c - 0.0490) calc(h - 49.4));
     }
     .contactCard{
       padding:22px;
       border-radius: var(--radius);
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 78%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 78%, transparent);
       box-shadow: var(--shadowSoft);
     }
     .contactCard h3{margin:0 0 8px}
@@ -363,7 +363,7 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--c-2);
+      color:oklch(from var(--color-tertiary) calc(l - 0.0783) calc(c - 0.0778) calc(h + 6.1));
       font-size:13.5px;
       text-align:center;
     }
@@ -372,78 +372,146 @@
     html{scroll-behavior:smooth}
   </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(23.6% 0.013 61.9);
-  --c-2:           oklch(0.0% 0.000 0.0);
-  --c-3:           oklch(40.2% 0.046 49.2);
-  --c-4:           oklch(100.0% 0.000 0.0);
-  --c-5:           oklch(87.0% 0.019 51.9);
+  --color-primary:       oklch(59.7% 0.074 49.4);
+  --color-secondary:     oklch(98.5% 0.010 71.7);
+  --color-tertiary:      oklch(40.2% 0.045 49.0);
+  --color-quaternary:    oklch(23.6% 0.013 56.0);
+  --color-quinary:       oklch(87.0% 0.020 49.4);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
     "k": 5,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
-      "hex": "#231d18",
+    "--color-primary": {
+      "hex": "#a47257",
       "oklch": {
-        "l": 0.236,
-        "c": 0.0132,
-        "h": 61.9
+        "l": 0.5973,
+        "c": 0.0742,
+        "h": 49.4
       },
-      "count": 30,
-      "members": []
-    },
-    "--c-2": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 25,
-      "members": []
-    },
-    "--c-3": {
-      "hex": "#5d4132",
-      "oklch": {
-        "l": 0.4025,
-        "c": 0.0461,
-        "h": 49.2
-      },
-      "count": 6,
-      "members": []
-    },
-    "--c-4": {
-      "hex": "#ffffff",
-      "oklch": {
-        "l": 1,
-        "c": 0,
-        "h": 0
-      },
-      "count": 4,
+      "count": 9,
+      "memberCount": 2,
+      "aggregateScore": 0.6686,
       "members": [
         {
-          "hex": "#fef9f3",
-          "count": 2,
-          "dist": 0.0254
+          "hex": "#b8744f",
+          "count": 6,
+          "score": 0.6013
+        },
+        {
+          "hex": "#7b6d64",
+          "count": 3,
+          "score": 0.0673
         }
       ]
     },
-    "--c-5": {
+    "--color-secondary": {
+      "hex": "#fef9f3",
+      "oklch": {
+        "l": 0.9848,
+        "c": 0.0097,
+        "h": 71.7
+      },
+      "count": 46,
+      "memberCount": 3,
+      "aggregateScore": 0.4464,
+      "members": [
+        {
+          "hex": "#ffffff",
+          "count": 32,
+          "score": 0
+        },
+        {
+          "hex": "#fde7cd",
+          "count": 10,
+          "score": 0.4191
+        },
+        {
+          "hex": "#fbf7f3",
+          "count": 4,
+          "score": 0.0273
+        }
+      ]
+    },
+    "--color-tertiary": {
+      "hex": "#5d4132",
+      "oklch": {
+        "l": 0.4022,
+        "c": 0.0452,
+        "h": 49
+      },
+      "count": 5,
+      "memberCount": 2,
+      "aggregateScore": 0.2262,
+      "members": [
+        {
+          "hex": "#5c3622",
+          "count": 3,
+          "score": 0.1892
+        },
+        {
+          "hex": "#5c514a",
+          "count": 2,
+          "score": 0.037
+        }
+      ]
+    },
+    "--color-quaternary": {
+      "hex": "#231d18",
+      "oklch": {
+        "l": 0.2363,
+        "c": 0.0134,
+        "h": 56
+      },
+      "count": 12,
+      "memberCount": 3,
+      "aggregateScore": 0.1611,
+      "members": [
+        {
+          "hex": "#2c241f",
+          "count": 6,
+          "score": 0.0911
+        },
+        {
+          "hex": "#1f1a16",
+          "count": 4,
+          "score": 0.0439
+        },
+        {
+          "hex": "#140e0a",
+          "count": 2,
+          "score": 0.0261
+        }
+      ]
+    },
+    "--color-quinary": {
       "hex": "#dfd1c9",
       "oklch": {
-        "l": 0.8698,
-        "c": 0.0191,
-        "h": 51.9
+        "l": 0.8696,
+        "c": 0.0196,
+        "h": 49.4
       },
-      "count": 2,
-      "members": []
+      "count": 5,
+      "memberCount": 2,
+      "aggregateScore": 0.098,
+      "members": [
+        {
+          "hex": "#dddddd",
+          "count": 3,
+          "score": 0
+        },
+        {
+          "hex": "#e2beab",
+          "count": 2,
+          "score": 0.098
+        }
+      ]
     }
   }
 }

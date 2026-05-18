@@ -5,6 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Edit Portfolio — Irene's Webworks</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script>
+    // Initialize once immediately after the CDN loads so both the main IIFE
+    // and the auth modal script can rely on window._supabaseClient.
+    window._supabaseClient = window.supabase?.createClient
+      ? window.supabase.createClient(
+          "https://ssnjjojacxalnwpbzprx.supabase.co",
+          "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY"
+        )
+      : null;
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,6 +58,70 @@
     }
     #saveMenu button:hover { background: rgba(255,255,255,.1); }
     #saveMenu .save-sep { height: 1px; background: rgba(255,255,255,.1); margin: 2px 0; }
+    #openWrap { position: relative; flex-shrink: 0; }
+    #openMenu {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0;
+      background: #1e2d54; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 8px; overflow: hidden; min-width: 190px; z-index: 99999;
+      box-shadow: 0 8px 24px rgba(0,0,0,.5);
+    }
+    #openMenu.open { display: block; }
+    #openMenu button {
+      display: block; width: 100%; text-align: left;
+      padding: 10px 14px; background: none; border: none;
+      color: #eaf0ff; font-size: 13px; font-weight: 600; cursor: pointer;
+    }
+    #openMenu button:hover { background: rgba(255,255,255,.1); }
+    #openMenu .open-hint {
+      padding: 4px 14px 8px; font-size: 11px; color: rgba(234,240,255,.45); line-height: 1.35;
+    }
+    #urlModal {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #urlModal.open { display: flex; }
+    #urlModalBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 24px; width: 480px; max-width: 95vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6);
+    }
+    #urlModalBox h3 { margin: 0 0 6px; font-size: 15px; color: #eaf0ff; }
+    #urlModalBox p  { margin: 0 0 14px; font-size: 12px; color: rgba(234,240,255,.5); line-height: 1.5; }
+    #urlModalInput {
+      width: 100%; box-sizing: border-box; padding: 9px 12px;
+      background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.18);
+      border-radius: 7px; color: #eaf0ff; font-size: 13px; outline: none;
+    }
+    #urlModalInput:focus { border-color: rgba(102,126,234,.7); }
+    #urlModalActions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+    #urlModalError { margin-top: 8px; font-size: 12px; color: rgba(255,140,140,.8); min-height: 16px; }
+    #tplPickerModal {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #tplPickerModal.open { display: flex; }
+    #tplPickerBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 24px; width: 340px; max-width: 95vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6); display: flex; flex-direction: column; gap: 10px;
+    }
+    #tplPickerBox h3 { margin: 0; font-size: 15px; color: #eaf0ff; }
+    #tplPickerList {
+      display: flex; flex-direction: column; gap: 2px;
+      overflow-y: auto; max-height: 340px;
+    }
+    #tplPickerList button {
+      text-align: left; padding: 9px 12px; background: rgba(255,255,255,.04);
+      border: none; border-radius: 7px; color: #eaf0ff; font-size: 13px;
+      font-weight: 600; cursor: pointer;
+    }
+    #tplPickerList button:hover { background: rgba(102,126,234,.35); }
+    #tplPickerList .tpl-loading { padding: 8px 4px; color: rgba(234,240,255,.45); font-size: 13px; }
+    #tplPickerClose {
+      align-self: flex-end; background: none; border: none; color: rgba(234,240,255,.5);
+      font-size: 18px; cursor: pointer; line-height: 1; padding: 0;
+    }
+    #tplPickerClose:hover { color: #eaf0ff; }
     .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
     #editorAccount {
       display: flex;
@@ -194,6 +268,7 @@
     #editorLayout {
       display: flex;
       height: calc(100vh - 84px);
+      position: relative;
     }
     body.code-mode #editorLayout { height: calc(100vh - 48px); }
 
@@ -236,52 +311,269 @@
 
     /* ── Color panel ──────────────────────────────────────────────── */
     #colorPanel {
-      width: 150px; flex-shrink: 0; background: #16213e;
+      width: 264px; flex-shrink: 0; background: #16213e;
       border-left: 1px solid rgba(255,255,255,.1);
-      display: flex; flex-direction: column; overflow-y: auto;
+      display: flex; flex-direction: column; overflow: hidden;
       transition: width .2s, opacity .2s;
     }
     #colorPanel.hidden { width: 0; opacity: 0; overflow: hidden; pointer-events: none; }
     body.code-mode   #colorPanel { display: none; }
     body.split-mode  #colorPanel { display: none; }
-    #colorPanel h2 {
-      font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase;
-      color: rgba(255,255,255,.45); padding: 14px 14px 8px;
+    #colorWorkbenchHeader {
+      flex: 0 0 auto; display: flex; flex-direction: column; align-items: flex-start; gap: 7px;
+      padding: 12px 12px 10px; border-bottom: 1px solid rgba(255,255,255,.08);
     }
-    .color-row { display: flex; align-items: center; gap: 8px; padding: 5px 14px; }
-    .color-row label {
-      font-size: 12px;
-      color: rgba(234,240,255,.7);
-      flex: 1 1 auto;
-      min-width: 0;
+    .color-workbench-title {
+      min-width: 0; color: rgba(234,240,255,.92); font-size: 13px; font-weight: 800;
+      letter-spacing: .01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .color-row input[type="color"] {
-      width: 44px; height: 23px; border: none; border-radius: 4px;
-      cursor: pointer; padding: 0; background: transparent; flex: 0 0 44px;
-      box-shadow: 0 0 0 2px rgba(255,255,255,.9), 0 0 0 3px rgba(0,0,0,.2);
-      overflow: hidden;
+    #cwStatus {
+      display: none; font-size: 11px; line-height: 1.35; padding: 3px 6px;
+      border-radius: 4px; max-width: 100%;
     }
-    .color-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
-    .color-row input[type="color"]::-webkit-color-swatch {
-      border: none;
-      border-radius: 4px;
+    #cwStatus.ok  { display: block; color: rgba(160,230,160,.9); background: rgba(0,180,80,.12); }
+    #cwStatus.err { display: block; color: rgba(255,160,160,.9); background: rgba(200,60,60,.15); }
+    .color-workbench-note {
+      margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
-    .color-row input[type="color"]::-moz-color-swatch {
-      border: none;
-      border-radius: 4px;
+    .color-workbench-footer-note {
+      margin: 0 0 7px; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
-    .drag-handle {
-      color: rgba(234,240,255,.25); font-size: 13px; cursor: grab;
-      user-select: none; line-height: 1; flex-shrink: 0;
-      margin-right: 2px;
+    .color-workbench-footer-actions {
+      display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 7px; align-items: center;
     }
-    .drag-handle:active { cursor: grabbing; }
-    .color-row.drag-over,
-    .color-row.cp-source { outline: 2px solid rgba(102,126,234,.8); border-radius: 4px; }
-    .color-row.cp-dragging { opacity: .35; }
+    .color-workbench-footer-actions button {
+      min-height: 30px; border: none; border-radius: 6px; cursor: pointer;
+      background: rgba(255,255,255,.1); color: rgba(234,240,255,.86);
+      font-size: 12px; font-weight: 750;
+    }
+    .color-workbench-footer-actions button:hover { background: rgba(255,255,255,.18); color: #fff; }
+    @keyframes paletteReadyPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(134,239,172,.18); }
+      50% { box-shadow: 0 0 0 3px rgba(134,239,172,.55); background: rgba(22,163,74,.46); }
+    }
+    #btnOpenPalettePanel.palette-ready { animation: paletteReadyPulse 1.05s ease-in-out infinite; color: #a3f0c0; }
+    #btnOpenPalettePanel.palette-generating { opacity: .75; cursor: wait; font-size: 10px; }
+    .color-workbench-footer-actions button:disabled {
+      opacity: .55; cursor: wait;
+    }
+    #btnResetColors { font-size: 14px; }
+    .esp-submit-note {
+      color: rgba(234,240,255,.45); font-size: 10.5px; line-height: 1.4; margin: 0;
+      font-style: italic;
+    }
+
+    .color-inspector-toggle {
+      flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
+      color: rgba(234,240,255,.7); font-size: 11px; font-weight: 700; cursor: pointer;
+      user-select: none; border: 0; background: transparent; padding: 2px; border-radius: 999px;
+    }
+    .color-inspector-toggle:focus-visible {
+      outline: 2px solid rgba(141,186,255,.75); outline-offset: 2px;
+    }
+    .color-inspector-slider {
+      position: relative; width: 30px; height: 16px; flex: 0 0 30px; border-radius: 999px;
+      background: rgba(234,240,255,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+      transition: background .16s ease, box-shadow .16s ease;
+    }
+    .color-inspector-slider::after {
+      content: ""; position: absolute; left: 2px; top: 2px; width: 12px; height: 12px;
+      border-radius: 50%; background: rgba(234,240,255,.92);
+      box-shadow: 0 1px 3px rgba(0,0,0,.45); transition: transform .16s ease;
+    }
+    .color-inspector-toggle[aria-checked="true"] .color-inspector-slider {
+      background: #5c7cfa; box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+    }
+    .color-inspector-toggle[aria-checked="true"] .color-inspector-slider::after {
+      transform: translateX(14px);
+    }
+    #editorSwatchHead {
+      display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px;
+      padding: 2px 10px 6px; border-bottom: 1px solid rgba(255,255,255,.08);
+      font-size: 9px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(234,240,255,.42);
+    }
+    #editorSwatchRows {
+      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 10px 6px;
+    }
+    .ewb-row {
+      display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px;
+      align-items: center; padding: 5px 2px; border-bottom: 1px solid rgba(255,255,255,.045);
+      position: relative;
+    }
+    .ewb-row.active { background: rgba(102,126,234,.12); border-radius: 7px; }
+    .ewb-cell { min-width: 0; display: flex; align-items: center; gap: 6px; }
+    .ewb-swatch {
+      width: 36px; height: 28px; border: 1px solid rgba(255,255,255,.24);
+      border-radius: 6px; display: inline-flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.85);
+      font-size: 12px; font-weight: 900; cursor: pointer; user-select: none;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.28), 0 1px 5px rgba(0,0,0,.28);
+    }
+    .ewb-swatch:hover { outline: 2px solid rgba(141,186,255,.65); outline-offset: 1px; }
+    .ewb-swatch.ewb-inspector-blink {
+      animation: ewb-inspector-pulse .85s ease-in-out infinite;
+    }
+    @keyframes ewb-inspector-pulse {
+      0%, 100% {
+        outline: 2px solid rgba(141,186,255,.28);
+        outline-offset: 1px;
+        transform: translateZ(0) scale(1);
+      }
+      50% {
+        outline: 3px solid rgba(255,255,255,.95);
+        outline-offset: 2px;
+        transform: translateZ(0) scale(1.08);
+      }
+    }
+    .ewb-swatch.blank {
+      color: rgba(234,240,255,.38); text-shadow: none;
+      background:
+        linear-gradient(135deg, transparent 47%, rgba(255,255,255,.38) 48%, rgba(255,255,255,.38) 52%, transparent 53%),
+        repeating-conic-gradient(rgba(255,255,255,.10) 0% 25%, rgba(0,0,0,.18) 0% 50%) 50% / 12px 12px;
+    }
+    .ewb-hex { font-family: monospace; font-size: 10.5px; color: rgba(234,240,255,.46); }
+    .ewb-dependents { flex-wrap: wrap; align-content: flex-start; min-height: 30px; }
+    .ewb-dependent {
+      width: 28px; height: 22px; font-size: 10px; border-radius: 5px; flex: 0 0 auto;
+    }
+    .ewb-dep-input {
+      width: 20px; height: 26px; border: 1px solid rgba(141,186,255,.5);
+      border-radius: 5px; background: rgba(0,0,0,.32); color: #eaf0ff;
+      text-align: center; font-size: 10px; font-weight: 900; text-transform: uppercase;
+      outline: none;
+    }
     #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
     #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
+    #colorHoverTooltip {
+      position: fixed; z-index: 20002; display: none; pointer-events: none;
+      max-width: 180px; padding: 5px 8px; border-radius: 6px;
+      background: rgba(10,18,34,.94); color: rgba(234,240,255,.95);
+      border: 1px solid rgba(141,186,255,.28); box-shadow: 0 6px 18px rgba(0,0,0,.38);
+      font-size: 11px; font-weight: 800; letter-spacing: .02em;
+    }
+    /* ── Palette slide panel ─────────────────────────────────── */
+    #paletteSlidePanel {
+      display: none; position: absolute; top: 0; left: 0; right: 264px; bottom: 0;
+      z-index: 50; background: #0d1528; flex-direction: column; overflow: hidden;
+    }
+    #paletteSlidePanel.open { display: flex; }
+    #psp-top {
+      flex: 0 0 50%; display: flex; flex-direction: row; min-height: 0;
+      border-bottom: 1px solid rgba(255,255,255,.12); overflow: hidden;
+    }
+    #psp-question-col {
+      flex: 0 0 50%; display: flex; flex-direction: column; gap: 9px;
+      padding: 12px; border-right: 1px solid rgba(255,255,255,.12); overflow-y: auto;
+    }
+    #psp-results-col {
+      flex: 1; display: flex; flex-direction: column; gap: 9px;
+      padding: 12px; overflow-y: auto;
+    }
+    .psp-request-heading {
+      margin: 0; color: rgba(234,240,255,.9); font-size: 26px; line-height: 1.1; font-weight: 850;
+    }
+    .psp-request-options {
+      display: flex; flex-direction: column;
+      gap: 10px; min-height: 118px; width: 100%;
+    }
+    .psp-request-option {
+      width: 100%; min-width: 0; display: flex; flex-direction: column; gap: 8px;
+      border: 1px solid rgba(255,255,255,.11); border-radius: 8px;
+      background: rgba(255,255,255,.035); padding: 9px;
+    }
+    .psp-request-option.active {
+      border-color: rgba(141,186,255,.48); background: rgba(102,126,234,.12);
+    }
+    .psp-request-label {
+      display: flex; align-items: center; gap: 7px;
+      color: rgba(234,240,255,.76); font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .psp-request-label input { accent-color: #8dbaff; }
+    .psp-request-help {
+      margin: -2px 0 0; color: rgba(234,240,255,.48); font-size: 11px; line-height: 1.35;
+    }
+    .psp-request-control { min-width: 0; }
+    #psp-swatches-col {
+      flex: 1 1 auto; display: flex; align-items: center;
+      gap: 8px; padding: 8px; overflow-x: auto; overflow-y: hidden;
+      background: rgba(0,0,0,.16); border-radius: 7px; min-height: 54px;
+    }
+    #pspSlotList { display: flex; flex-direction: row; align-items: center; gap: 8px; }
+    .psp-slot-wrap { position: relative; }
+    .psp-slot {
+      display: block; width: 46px; height: 34px; border-radius: 7px; cursor: pointer;
+      border: 2px solid rgba(255,255,255,.28); background: rgba(255,255,255,.1);
+      box-sizing: border-box; flex: 0 0 auto;
+    }
+    .psp-slot:hover { border-color: rgba(141,186,255,.65); }
+    .psp-slot.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(141,186,255,.7); }
+    .psp-slot-input { position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none; }
+    #pspAddSlot {
+      width: 34px; height: 34px; flex: 0 0 34px; border-radius: 6px;
+      border: 1px dashed rgba(255,255,255,.35); background: transparent;
+      color: rgba(234,240,255,.6); font-size: 18px; cursor: pointer; line-height: 1;
+    }
+    #pspAddSlot:hover { background: rgba(255,255,255,.08); color: #fff; }
+    #psp-suggested-col {
+      display: flex; flex-direction: column; gap: 8px; min-width: 0; width: 100%;
+    }
+    #psp-bottom {
+      flex: 0 0 auto; min-height: 0; overflow: hidden;
+      border-radius: 8px 8px 0 0; background: #f5f5f5;
+    }
+    #pspThemesFrame {
+      width: 100%; height: 100%; border: none; display: block;
+      border-radius: 8px 8px 0 0; background: #f5f5f5;
+    }
+    #pspCloseBtn {
+      position: absolute; top: 50%; right: 0; transform: translateY(-50%);
+      width: 20px; height: 52px; display: flex; align-items: center; justify-content: center;
+      background: rgba(103,126,234,.4); border: 1px solid rgba(103,126,234,.45);
+      border-right: none; border-radius: 6px 0 0 6px;
+      color: rgba(234,240,255,.9); font-size: 20px; cursor: pointer; z-index: 51;
+    }
+    #pspCloseBtn:hover { background: rgba(103,126,234,.7); color: #fff; }
 
+    .esp-help { color: rgba(234,240,255,.58); font-size: 12px; line-height: 1.45; }
+    #editorSuggestedPaletteInput {
+      width: 100%; min-height: 74px; flex: 1 1 auto; resize: vertical; border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.14); background: rgba(0,0,0,.22);
+      color: #eaf0ff; padding: 9px 10px; font: 12px/1.45 inherit; outline: none;
+    }
+    #editorSuggestedPaletteInput:focus { border-color: rgba(141,186,255,.58); box-shadow: 0 0 0 2px rgba(141,186,255,.12); }
+    .esp-actions { display: flex; justify-content: flex-end; gap: 8px; }
+    .esp-actions button, .esp-palette button {
+      border: 0; border-radius: 7px; padding: 7px 11px; cursor: pointer;
+      font-size: 12px; font-weight: 800;
+    }
+    #editorSuggestedPaletteSubmit { background: #667eea; color: #fff; }
+    #editorSuggestedPaletteSubmit:hover { background: #5568d4; }
+
+    #editorSuggestedPaletteStatus {
+      min-height: 16px; color: rgba(234,240,255,.55); font-size: 12px; line-height: 1.35;
+    }
+    #editorSuggestedPaletteRows { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; flex: 1; }
+    .esp-palette {
+      border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.045);
+      padding: 10px; display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+    }
+    .esp-palette:hover, .esp-palette:focus-visible {
+      border-color: rgba(141,186,255,.45); background: rgba(102,126,234,.12); outline: none;
+    }
+    .esp-palette-title {
+      color: rgba(234,240,255,.9); font-size: 12px; font-weight: 850; line-height: 1.25;
+    }
+    .esp-palette-note { color: rgba(234,240,255,.54); font-size: 11px; line-height: 1.35; }
+    .esp-swatch-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+    .esp-swatch {
+      width: 28px; height: 22px; border-radius: 4px; border: 1px solid rgba(255,255,255,.7);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.26);
+    }
+    .esp-palette button { align-self: flex-start; background: rgba(88,166,255,.22); color: #bfe0ff; }
+    .esp-palette button:hover { background: rgba(88,166,255,.34); color: #fff; }
+    .esp-palette-inversion { border-color: rgba(255,200,100,.28); background: rgba(255,180,50,.06); }
+    .esp-palette-inversion:hover, .esp-palette-inversion:focus-visible { border-color: rgba(255,200,100,.55); background: rgba(255,180,50,.12); }
     /* ── Unified portfolio panel ─────────────────────────────── */
     #portfolioPanelOverlay {
       display: none; position: fixed; inset: 0; z-index: 200001;
@@ -507,10 +799,21 @@
     #imgReplaceApply:hover  { background: #5568d4; }
     #imgReplaceApply[disabled] { opacity: .45; cursor: not-allowed; }
 
+    /* ── Auth gate screen (behind modal, covers editor) ── */
+    #authGateScreen {
+      display:none; position:fixed; inset:0; z-index:200010;
+      background:#1a1a2e; flex-direction:column;
+      align-items:center; justify-content:center; gap:18px;
+      color:#eaf0ff; font-size:16px; text-align:center;
+    }
+    #authGateScreen.active { display:flex; }
+    #authGateScreen p { color:rgba(234,240,255,.6); font-size:14px; margin:0; }
+    #authGateScreen .tbtn { font-size:14px; padding:10px 28px; }
+
     /* ── Sign-in modal ── */
     .authModalOverlay{
       position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
-      z-index:1100; display:none; align-items:center; justify-content:center;
+      z-index:200020; display:none; align-items:center; justify-content:center;
     }
     .authModalOverlay.open{ display:flex; }
     .authModalBox{
@@ -564,6 +867,18 @@
     <div id="sbWrap">
       <span id="sbTicker"></span>
     </div>
+    <div id="openWrap">
+      <button class="tbtn tbtn-ghost" id="btnOpenMenu">Open ▾</button>
+      <div id="openMenu" role="menu">
+        <button id="btnOpenHtml">📄 Open HTML file</button>
+        <button id="btnOpenDir">📁 Open folder</button>
+        <button id="btnOpenTpl">📋 Browse templates</button>
+        <button id="btnOpenUrl">🔗 Open from URL…</button>
+        <p class="open-hint">Folder mode rewrites image/CSS paths so assets load from the chosen directory.</p>
+      </div>
+    </div>
+    <input type="file" id="openFileInput" accept=".html,text/html" style="display:none">
+    <input type="file" id="openDirInput"  webkitdirectory style="display:none">
     <button class="tbtn tbtn-ghost" id="btnBack" data-umami-event="editor-close">← Close Editor</button>
     <div id="viewToggle">
       <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
@@ -665,20 +980,73 @@
     <div id="codePane">
       <div id="cmContainer"></div>
     </div>
-    <div id="colorPanel" class="hidden">
-      <h2>Colors</h2>
-      <div class="color-row" data-slot="background"><span class="drag-handle">⠿</span><input type="color" id="cp-background"><label>Background</label></div>
-      <div class="color-row" data-slot="foreground"><span class="drag-handle">⠿</span><input type="color" id="cp-foreground"><label>Foreground</label></div>
-      <div class="color-row" data-slot="primary"><span class="drag-handle">⠿</span><input type="color" id="cp-primary"><label>Primary</label></div>
-      <div class="color-row" data-slot="secondary"><span class="drag-handle">⠿</span><input type="color" id="cp-secondary"><label>Secondary</label></div>
-      <div class="color-row" data-slot="accent"><span class="drag-handle">⠿</span><input type="color" id="cp-accent"><label>Accent</label></div>
-      <hr>
-      <div style="padding: 4px 14px 10px;">
-        <button id="btnResetColors" title="Reset the five editor colors back to the page/template defaults. This does not clear the chosen template." style="width:100%; padding:5px 0; border:none; border-radius:5px; background:rgba(255,255,255,.1); color:rgba(234,240,255,.8); font-size:11px; font-weight:600; cursor:pointer;">Reset</button>
+    <div id="colorPanel" class="hidden" aria-label="Colors">
+      <div id="colorWorkbenchHeader">
+        <div class="color-workbench-title">Color workbench</div>
+        <div id="cwStatus" role="status" aria-live="polite"></div>
+        <button type="button" class="color-inspector-toggle" id="colorHoverInspectorToggle" role="switch" aria-checked="false" title="Show the swatch ID for colors under the cursor in the visual editor.">
+          <span class="color-inspector-slider" aria-hidden="true"></span>
+          <span>Swatch Reporter</span>
+        </button>
+        <p class="color-workbench-note">Hovering over preview identifies swatch.</p>
       </div>
-      <p class="hint">Changes apply live. Download to save.</p>
+      <div id="editorSwatchHead" aria-hidden="true"><span>Rep</span><span>Dep</span></div>
+      <div id="editorSwatchRows" aria-live="polite"></div>
+      <div style="padding: 4px 14px 10px;">
+        <ul class="color-workbench-footer-note" style="padding-left:16px;margin:0 0 8px;">
+          <li><b>Single-click:</b> flash red.</li>
+          <li><b>Double-click:</b> substitute color.</li>
+          <li><b>Shift-click:</b> Swap Rep/Dep status.</li>
+        </ul>
+        <div class="color-workbench-footer-actions">
+          <button id="btnOpenPalettePanel" type="button" title="Browse palettes">&#8249; Palettes</button>
+          <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺</button>
+        </div>
+      </div>
     </div>
+  <div id="paletteSlidePanel">
+    <div id="psp-top">
+      <div id="psp-question-col">
+        <p class="psp-request-heading">List your preferred website colors:</p>
+        <div class="psp-request-options">
+          <div class="psp-request-option active" data-palette-request-option="swatches">
+          <label class="psp-request-label" for="pspRequestModeSwatches">
+            <input id="pspRequestModeSwatches" type="radio" name="pspRequestMode" value="swatches" checked>
+            <span>Use swatches</span>
+          </label>
+          <p class="psp-request-help">Click to select a swatch. Double-click to choose a color. Shift-click to delete a swatch.</p>
+          <div id="psp-swatches-col" class="psp-request-control">
+            <div id="pspSlotList"></div>
+            <button id="pspAddSlot" type="button" title="Add swatch slot">+</button>
+            </div>
+          </div>
+          <div class="psp-request-option" data-palette-request-option="text">
+            <label class="psp-request-label" for="pspRequestModeText">
+              <input id="pspRequestModeText" type="radio" name="pspRequestMode" value="text">
+              <span>Use text</span>
+            </label>
+            <div id="psp-suggested-col" class="psp-request-control">
+              <textarea id="editorSuggestedPaletteInput" placeholder="e.g. deep navy, warm copper, #f7f2e8" spellcheck="true"></textarea>
+            </div>
+          </div>
+        </div>
+        <p class="esp-submit-note">Panel closes while generating&#8202;—&#8202;watch the &#8249; Palettes button.</p>
+        <div class="esp-actions">
+          <button id="editorSuggestedPaletteSubmit" type="button">Get Suggestions</button>
+        </div>
+      </div>
+      <div id="psp-results-col">
+        <div id="editorSuggestedPaletteStatus" aria-live="polite"></div>
+        <div id="editorSuggestedPaletteRows"></div>
+      </div>
+    </div>
+    <div id="psp-bottom">
+      <iframe id="pspThemesFrame" src="/src/color-themes.html" title="Color themes gallery"></iframe>
+    </div>
+    <button id="pspCloseBtn" type="button" title="Return to editor">&#8250;</button>
   </div>
+  </div>
+  <div id="colorHoverTooltip" role="status" aria-live="polite"></div>
 
   <!-- Unified publish / manage panel -->
   <div id="portfolioPanelOverlay">
@@ -789,19 +1157,48 @@
 
   <div id="no-preview">
     <p>No portfolio found. Please generate one on Page 5 first.</p>
-    <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;">
+      <button class="tbtn tbtn-ghost" onclick="openAuthModal()">Sign In</button>
+      <button class="tbtn tbtn-primary" onclick="window.close()">← Close</button>
+    </div>
+    <div id="noPreviewAccount" style="font-size:12px;color:rgba(234,240,255,.45);margin-top:4px;"></div>
   </div>
 
   <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
 
+  <!-- Template picker modal -->
+  <div id="tplPickerModal" role="dialog" aria-modal="true" aria-labelledby="tplPickerTitle">
+    <div id="tplPickerBox">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <h3 id="tplPickerTitle">Browse templates</h3>
+        <button id="tplPickerClose" aria-label="Close">✕</button>
+      </div>
+      <div id="tplPickerList"><span class="tpl-loading">Loading…</span></div>
+    </div>
+  </div>
+
+  <!-- URL open modal -->
+  <div id="urlModal" role="dialog" aria-modal="true" aria-labelledby="urlModalTitle">
+    <div id="urlModalBox">
+      <h3 id="urlModalTitle">Open from URL or server path</h3>
+      <p>Enter a full URL (e.g. <code>https://example.com/page.html</code>) or a server-relative path (e.g. <code>/templates/biology/sample.html</code>).<br>
+      For full URLs the page is fetched and a <code>&lt;base href&gt;</code> is injected so relative assets resolve correctly.</p>
+      <input id="urlModalInput" type="text" placeholder="https://… or /path/to/file.html" autocomplete="off" spellcheck="false">
+      <div id="urlModalError"></div>
+      <div id="urlModalActions">
+        <button class="tbtn tbtn-ghost" id="urlModalCancel">Cancel</button>
+        <button class="tbtn tbtn-primary" id="urlModalLoad">Load</button>
+      </div>
+    </div>
+  </div>
+
+
   <script>
   (async function () {
-    const SUPABASE_URL      = "https://ssnjjojacxalnwpbzprx.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_0vuLGHGt-cvTr6UZKY4Jdw_r5768KtY";
-    const supabaseClient = window.supabase?.createClient
-      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      : null;
-    const EDITOR_BASE_TAG_ID = "iw-editor-base";
+	    const supabaseClient = window._supabaseClient;
+	    const EDITOR_BASE_TAG_ID = "iw-editor-base";
+	    const EDITOR_COLOR_STYLE_ID = "iw-editor-color-theme";
+	    const EDITOR_COLOR_STATE_ID = "iw-editor-color-state";
 
     function setNoPreviewMessage(message) {
       const host = document.getElementById("no-preview");
@@ -984,6 +1381,13 @@
       secondary: "secondary",
       accent: "primary"
     };
+    const ORDINAL_ROLE_ALIAS_MAP = {
+      background: "quinary",
+      foreground: "quaternary",
+      primary: "primary",
+      secondary: "secondary",
+      accent: "accent"
+    };
     const SLOT_CSS_VAR_FAMILIES = {
       background: ["--background", "--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"],
       foreground: ["--foreground", "--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
@@ -1073,9 +1477,56 @@
       return "#" + m.slice(0,3).map(n => (+n).toString(16).padStart(2,"0")).join("");
     }
 
+    function normalizeComplementMap(map) {
+      if (!map || typeof map !== "object") return {};
+      const out = {};
+      for (const name of CSS_VAR_NAMES) {
+        const value = map[name] || map[ORDINAL_ROLE_ALIAS_MAP[name]] || map[SLOT_ALIAS_MAP[name]] || map[LEGACY_ROLE_ALIAS_MAP[name]];
+        if (value) out[name] = toHexColor(String(value));
+      }
+      return out;
+    }
+
+    function parseEmbeddedPaletteComplements(html) {
+      const match = String(html || "").match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
+      if (!match) return {};
+      try {
+        const scheme = JSON.parse(match[1])?.scheme || {};
+        const complement = varName => {
+          const item = scheme[varName]?.complement;
+          return item?.memberCount > 0 && item?.hex ? item.hex : "";
+        };
+        return normalizeComplementMap({
+          primary:    complement("--color-primary"),
+          secondary:  complement("--color-secondary"),
+          accent:     complement("--color-tertiary"),
+          foreground: complement("--color-quaternary"),
+          background: complement("--color-quinary"),
+        });
+      } catch {
+        return {};
+      }
+    }
+
+    function updateSplitColorInput(input, slotName, complementColor) {
+      if (!input) return;
+      const hasComplement = !!complementColor;
+      input.classList.toggle("split-color", hasComplement);
+      if (!hasComplement) {
+        input.style.removeProperty("--split-main-color");
+        input.style.removeProperty("--split-complement-color");
+        input.removeAttribute("title");
+        return;
+      }
+      input.style.setProperty("--split-main-color", toHexColor(input.value || currentColors[slotName] || "#000000"));
+      input.style.setProperty("--split-complement-color", complementColor);
+      input.title = `${slotName}: ${input.value} / complement ${complementColor}`;
+    }
+
     // ── State ──────────────────────────────────────────────────────────────────
     const currentColors = {};
     let currentHtml = fullHtml;
+    let baseHtml    = null;   // pre-Apply snapshot; Apply always rewrites from this
     let viewMode = "visual";
     let cmView = null; // set after CodeMirror loads
     let suppressCodeSync = false;
@@ -2219,17 +2670,19 @@
     frame.addEventListener("load", attachIframeInputListener);
     frame.addEventListener("load", attachIframeImageClickHandler);
     frame.addEventListener("load", attachIframeSelectionTracker);
+    frame.addEventListener("load", attachColorHoverInspector);
 
     function loadIframe(html) {
       frame.srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
     }
 
-    frame.addEventListener("load", () => {
-      try {
-        if (frame.contentDocument) frame.contentDocument.designMode = "on";
-        applyColorOverrides();
-      } catch {}
-    });
+	    frame.addEventListener("load", () => {
+	      try {
+	        if (frame.contentDocument) frame.contentDocument.designMode = "on";
+	        applyColorOverrides();
+	        applyColorWorkbenchToFrame();
+	      } catch {}
+	    });
 
     function applyColorOverrides() {
       try {
@@ -2251,6 +2704,10 @@
     // ── Color panel ────────────────────────────────────────────────────────────
     const byRole = extractCssVarsByRoleComment(cssText);
     const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
+    const paletteComplements = {
+      ...parseEmbeddedPaletteComplements(fullHtml),
+      ...normalizeComplementMap(page4Colors?.__complements || page4Colors?.complements),
+    };
     for (const name of CSS_VAR_NAMES) {
       const preferred = page4Colors?.[name] || page4Colors?.[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors?.[SLOT_ALIAS_MAP[name]];
       const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
@@ -2260,7 +2717,12 @@
         const input = row.querySelector("input[type=color]");
         if (input) {
           input.value = hex;
-          input.addEventListener("input", () => { currentColors[name] = input.value; applyColorOverrides(); });
+          updateSplitColorInput(input, name, paletteComplements[name]);
+          input.addEventListener("input", () => {
+            currentColors[name] = input.value;
+            updateSplitColorInput(input, name, paletteComplements[name]);
+            applyColorOverrides();
+          });
         }
       }
     }
@@ -2278,75 +2740,2311 @@
         if (!hex) continue;
         currentColors[name] = hex;
         const input = document.getElementById(`cp-${name}`);
-        if (input) input.value = hex;
+        if (input) {
+          input.value = hex;
+          updateSplitColorInput(input, name, paletteComplements[name]);
+        }
       }
       applyColorOverrides();
     };
 
-    // ── Color row swap interaction ─────────────────────────────────────────────
-    // The semantic role rows stay fixed in place. Dragging from a handle swaps only
-    // the swatch values between two roles, which avoids brittle native HTML
-    // drag-and-drop behavior in the editor.
-    (function () {
-      const panel = document.getElementById("colorPanel");
-      let dragSrc = null;
-      let activePointerId = null;
+    // ── Full palette modal ─────────────────────────────────────────────────────
 
-      function clearSwapUi() {
-        panel.querySelectorAll(".color-row").forEach(r => r.classList.remove("drag-over", "cp-dragging", "cp-source"));
+    // Minimal hex → Oklab (l, a, b) — matches the server-side culori conversion.
+    function hexToOklab(hex) {
+      const h = hex.replace(/^#/, "");
+      if (h.length !== 6) return null;
+      const r = parseInt(h.slice(0,2),16)/255;
+      const g = parseInt(h.slice(2,4),16)/255;
+      const b = parseInt(h.slice(4,6),16)/255;
+      const lin = v => v <= 0.04045 ? v/12.92 : ((v+0.055)/1.055)**2.4;
+      const [R,G,B] = [lin(r),lin(g),lin(b)];
+      const l_ = Math.cbrt(0.4122214708*R + 0.5363325363*G + 0.0514459929*B);
+      const m_ = Math.cbrt(0.2119034982*R + 0.6806995451*G + 0.1073969566*B);
+      const s_ = Math.cbrt(0.0883024619*R + 0.2817188376*G + 0.6299787005*B);
+      return {
+        l:  0.2104542553*l_ + 0.7936177850*m_ - 0.0040720468*s_,
+        a:  1.9779984951*l_ - 2.4285922050*m_ + 0.4505937099*s_,
+        b:  0.0259040371*l_ + 0.7827717662*m_ - 0.8086757660*s_,
+      };
+    }
+    function oklabDist(x, y) {
+      return Math.sqrt((x.l-y.l)**2 + (x.a-y.a)**2 + (x.b-y.b)**2);
+    }
+
+    // OKLCH — extends hexToOklab with chroma and hue.
+    function hexToOklch(hex) {
+      const lab = hexToOklab(hex);
+      if (!lab) return null;
+      const c = Math.sqrt(lab.a**2 + lab.b**2);
+      const h = Math.atan2(lab.b, lab.a) * 180 / Math.PI;
+      return { l: lab.l, c, h: h < 0 ? h + 360 : h };
+    }
+
+    function hexToRgb(hex) {
+      const h = hex.replace(/^#/, "");
+      if (h.length !== 6) return null;
+      return { r: parseInt(h.slice(0,2),16), g: parseInt(h.slice(2,4),16), b: parseInt(h.slice(4,6),16) };
+    }
+
+    function fmtOklch(ok) {
+      return `oklch(${ok.l.toFixed(4)} ${ok.c.toFixed(4)} ${ok.h.toFixed(2)})`;
+    }
+
+    // CSS Relative Color Syntax expression encoding a member relative to its cluster rep.
+    function relColorExpr(varName, memberOk, repOk) {
+      const dL = memberOk.l - repOk.l;
+      const dC = memberOk.c - repOk.c;
+      let   dH = memberOk.h - repOk.h;
+      if (dH >  180) dH -= 360;
+      if (dH < -180) dH += 360;
+      if (Math.abs(dL) < 0.0005 && Math.abs(dC) < 0.0005 && Math.abs(dH) < 0.05)
+        return `var(${varName})`;
+      const fmt = (d, dp) => d >= 0 ? `+ ${d.toFixed(dp)}` : `- ${Math.abs(d).toFixed(dp)}`;
+      const lPart = Math.abs(dL) < 0.0005 ? "l" : `calc(l ${fmt(dL, 4)})`;
+      const cPart = Math.abs(dC) < 0.0005 ? "c" : `calc(c ${fmt(dC, 4)})`;
+      const hPart = Math.abs(dH) < 0.05   ? "h" : `calc(h ${fmt(dH, 1)})`;
+      return `oklch(from var(${varName}) ${lPart} ${cPart} ${hPart})`;
+    }
+
+    // Rewrite hex and rgba() in all <style> blocks and inline style= attrs.
+    function rewriteCssVarsHtml(html, hexExprMap, rgbMap) {
+      function rewriteCss(css) {
+        let out = css.replace(/#([0-9a-fA-F]{6})\b/g, m => hexExprMap.get(m.toLowerCase()) ?? m);
+        out = out.replace(/#([0-9a-fA-F]{3})\b/g, (m, d) => {
+          const exp = "#" + d.split("").map(c => c+c).join("");
+          return hexExprMap.get(exp.toLowerCase()) ?? m;
+        });
+        out = out.replace(
+          /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/g,
+          (m, r, g, b, a) => {
+            const info = rgbMap.get(`${+r},${+g},${+b}`);
+            if (!info) return m;
+            const base = relColorExpr(info.varName, info.memberOk, info.repOk);
+            if (a === undefined) return base;
+            const alpha = String(a).endsWith("%") ? parseFloat(a)/100 : parseFloat(a);
+            return `color-mix(in srgb, ${base} ${(alpha*100).toFixed(1).replace(/\.0$/,"")}%, transparent)`;
+          }
+        );
+        return out;
       }
-
-      function swapRowColors(rowA, rowB) {
-        const slotA = rowA?.dataset.slot;
-        const slotB = rowB?.dataset.slot;
-        if (!slotA || !slotB || slotA === slotB) return;
-        const hexA = currentColors[slotA];
-        const hexB = currentColors[slotB];
-        currentColors[slotA] = hexB;
-        currentColors[slotB] = hexA;
-        const inputA = rowA.querySelector("input[type=color]");
-        const inputB = rowB.querySelector("input[type=color]");
-        if (inputA) inputA.value = hexB;
-        if (inputB) inputB.value = hexA;
-        applyColorOverrides();
-      }
-
-      panel.addEventListener("pointerdown", e => {
-        const handle = e.target.closest(".drag-handle");
-        if (!handle) return;
-        const row = handle.closest(".color-row");
-        if (!row) return;
-        e.preventDefault();
-        dragSrc = row;
-        activePointerId = e.pointerId;
-        clearSwapUi();
-        row.classList.add("cp-source", "cp-dragging");
-        try { handle.setPointerCapture(e.pointerId); } catch {}
+      let result = html.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (match, attrs, css) => {
+        if (/id\s*=\s*["']extracted-theme["']/i.test(attrs)) return match;
+        return `<style${attrs}>${rewriteCss(css)}</style>`;
       });
-
-      panel.addEventListener("pointermove", e => {
-        if (!dragSrc || activePointerId !== e.pointerId) return;
-        const hit = document.elementFromPoint(e.clientX, e.clientY);
-        const row = hit?.closest?.(".color-row");
-        clearSwapUi();
-        dragSrc.classList.add("cp-source", "cp-dragging");
-        if (row && row !== dragSrc) row.classList.add("drag-over");
-      });
-
-      function finishPointerSwap(e) {
-        if (!dragSrc || activePointerId !== e.pointerId) return;
-        const hit = document.elementFromPoint(e.clientX, e.clientY);
-        const target = hit?.closest?.(".color-row");
-        if (target && target !== dragSrc) {
-          swapRowColors(dragSrc, target);
+      result = result.replace(/(\bstyle\s*=\s*")([^"]*?)(")/gi,  (m, o, css, c) => `${o}${rewriteCss(css)}${c}`);
+      result = result.replace(/(\bstyle\s*=\s*')([^']*?)(')/gi,  (m, o, css, c) => `${o}${rewriteCss(css)}${c}`);
+      result = result.replace(
+        /\b(fill|stroke|stop-color|flood-color)\s*=\s*"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})"/gi,
+        (m, prop, hex) => {
+          const norm = hex.length === 4
+            ? "#" + hex[1]+hex[1] + hex[2]+hex[2] + hex[3]+hex[3] : hex;
+          const expr = hexExprMap.get(norm.toLowerCase());
+          return expr ? `style="${prop}: ${expr}"` : m;
         }
-        clearSwapUi();
-        dragSrc = null;
-        activePointerId = null;
+      );
+      return result;
+    }
+
+    // Substitute var(--color-X) back to hex — used to un-rewrite a previously
+    // Apply'd file so Apply is idempotent even after save-and-reopen.
+    function unRewriteVarsToHex(html, scheme) {
+      const varToHex = new Map(Object.entries(scheme).map(([k, v]) => [k, v.hex]).filter(([,h]) => h));
+      function sub(css) {
+        return css.replace(/var\(\s*(--color-[\w-]+)\s*\)/g, (m, v) => varToHex.get(v) ?? m);
+      }
+      let result = html.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (match, attrs, css) => {
+        if (/id\s*=\s*["']extracted-theme["']/i.test(attrs)) return match;
+        return `<style${attrs}>${sub(css)}</style>`;
+      });
+      result = result.replace(/(\bstyle\s*=\s*")([^"]*?)(")/gi, (m, o, css, c) => `${o}${sub(css)}${c}`);
+      result = result.replace(/(\bstyle\s*=\s*')([^']*?)(')/gi, (m, o, css, c) => `${o}${sub(css)}${c}`);
+      return result;
+    }
+
+	    // Extract color counts directly from an HTML string's CSS (no server needed).
+	    function extractColorsClientSide(html) {
+	      const stripped = html
+	        .replace(/<script\b[\s\S]*?<\/script>/gi, "")
+	        .replace(new RegExp(`<style[^>]*id=["']${EDITOR_COLOR_STYLE_ID}["'][^>]*>[\\s\\S]*?<\\/style>`, "gi"), "")
+	        .replace(/<style[^>]*id=["']extracted-theme["'][^>]*>[\s\S]*?<\/style>/gi, "");
+
+	      const cssParts = [];
+	      for (const m of stripped.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) cssParts.push(m[1]);
+	      for (const m of stripped.matchAll(/\bstyle\s*=\s*"([^"]*)"/gi))         cssParts.push(m[1]);
+	      for (const m of stripped.matchAll(/\bstyle\s*=\s*'([^']*)'/gi))         cssParts.push(m[1]);
+	      const css = cssParts.join("\n").replace(/\/\*[\s\S]*?\*\//g, "");
+
+      const counts = new Map();
+      function add(h6) {
+        const key = "#" + h6.toLowerCase();
+        counts.set(key, (counts.get(key) || 0) + 1);
+      }
+      for (const m of css.matchAll(/#([0-9a-fA-F]{6})\b/g)) add(m[1]);
+      for (const m of css.matchAll(/#([0-9a-fA-F]{3})\b/g)) {
+        const [a,b,c] = m[1].toLowerCase();
+        add(a+a+b+b+c+c);
+      }
+	      for (const m of css.matchAll(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/g)) {
+	        add([m[1],m[2],m[3]].map(v => (+v).toString(16).padStart(2,"0")).join(""));
+	      }
+	      for (const m of stripped.matchAll(/\b(?:fill|stroke|stop-color|flood-color|color|bgcolor|background)\s*=\s*["'](#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})["']/gi)) {
+	        const h = m[1].slice(1);
+	        add(h.length === 3 ? h.split("").map(c => c + c).join("") : h);
+	      }
+	      return counts;
+	    }
+
+	    function ordinalForIndex(index) {
+	      const alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	      if (index < alpha.length) return alpha[index];
+	      const second = index - alpha.length;
+	      return alpha[Math.floor(second / alpha.length)] + alpha[second % alpha.length];
+	    }
+
+	    function sanitizeWorkbenchToken(value) {
+	      return String(value || "")
+	        .trim().toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^-+|-+$/g, "");
+	    }
+
+	    function colorWorkbenchVarName(item) {
+	      const token = sanitizeWorkbenchToken(item?.varToken || item?.ordinal || item?.id || "x");
+	      return `--iw-color-${token || "x"}`;
+	    }
+
+	    function uniqueWorkbenchVarToken(seed = "swatch") {
+	      const used = new Set();
+	      for (const row of colorWorkbenchRows) {
+	        const rowToken = sanitizeWorkbenchToken(row.varToken || row.ordinal || row.id);
+	        if (rowToken) used.add(rowToken);
+	        for (const dep of row.deps || []) {
+	          const depToken = sanitizeWorkbenchToken(dep.varToken || dep.ordinal || dep.id);
+	          if (depToken) used.add(depToken);
+	        }
+	      }
+	      const base = sanitizeWorkbenchToken(seed) || "swatch";
+	      let token = base;
+	      let index = 2;
+	      while (used.has(token)) token = `${base}-${index++}`;
+	      return token;
+	    }
+
+	    function normalizeColorWorkbenchRows(rows) {
+	      const normalizeOne = (item, index) => {
+	        const hex = toHexColor(item?.hex || "#000000");
+	        const ok = hexToOklch(hex);
+	        const chroma = Number.isFinite(+item?.chroma) ? +item.chroma : (ok?.c ?? 0);
+	        const count = Number.isFinite(+item?.count) ? +item.count : 0;
+	        const score = Number.isFinite(+item?.score) ? +item.score : count * chroma;
+	        const ordinal = String(item?.ordinal || ordinalForIndex(index)).toUpperCase();
+	        return {
+	          id: String(item?.id || `swatch-${index + 1}`),
+	          ordinal,
+	          hex,
+	          count,
+	          chroma,
+	          score,
+	          varToken: sanitizeWorkbenchToken(item?.varToken || item?.cssToken || ""),
+	          sourceVarName: item?.sourceVarName || item?.varName || "",
+	          substitute: item?.substitute ? toHexColor(item.substitute) : "",
+	          preserveHex: !!item?.preserveHex,
+	          deps: Array.isArray(item?.deps) ? item.deps.map((dep, depIndex) => {
+	            const depHex = toHexColor(dep?.hex || "#000000");
+	            const depOk = hexToOklch(depHex);
+	            const depChroma = Number.isFinite(+dep?.chroma) ? +dep.chroma : (depOk?.c ?? 0);
+	            const depCount = Number.isFinite(+dep?.count) ? +dep.count : 0;
+	            const depScore = Number.isFinite(+dep?.score) ? +dep.score : depCount * depChroma;
+	            return {
+	              id: String(dep?.id || `${item?.id || `swatch-${index + 1}`}-dep-${depIndex + 1}`),
+	              ordinal: String(dep?.ordinal || ordinalForIndex(index + depIndex + 1)).toUpperCase(),
+	              hex: depHex,
+	              count: depCount,
+	              chroma: depChroma,
+	              score: depScore,
+	              varToken: sanitizeWorkbenchToken(dep?.varToken || dep?.cssToken || ""),
+	              sourceVarName: dep?.sourceVarName || dep?.varName || "",
+	              substitute: dep?.substitute ? toHexColor(dep.substitute) : "",
+	              preserveHex: !!dep?.preserveHex,
+	              deps: [],
+	            };
+	          }) : [],
+	        };
+	      };
+
+	      const normalized = (rows || []).map(normalizeOne);
+	      const usedOrdinals = new Set();
+	      let next = 0;
+	      function assignOrdinal(item) {
+	        if (!item.ordinal || usedOrdinals.has(item.ordinal)) {
+	          while (usedOrdinals.has(ordinalForIndex(next))) next++;
+	          item.ordinal = ordinalForIndex(next);
+	        }
+	        usedOrdinals.add(item.ordinal);
+	      }
+	      normalized.forEach(assignOrdinal);
+	      normalized.forEach(row => row.deps.forEach(assignOrdinal));
+	      const usedTokens = new Set();
+	      function assignVarToken(item) {
+	        let token = sanitizeWorkbenchToken(item.varToken || item.ordinal || item.id);
+	        if (!token || usedTokens.has(token)) {
+	          const base = sanitizeWorkbenchToken(item.ordinal || item.id || "swatch") || "swatch";
+	          let index = 2;
+	          token = base;
+	          while (usedTokens.has(token)) token = `${base}-${index++}`;
+	        }
+	        item.varToken = token;
+	        usedTokens.add(token);
+	      }
+	      normalized.forEach(assignVarToken);
+	      normalized.forEach(row => row.deps.forEach(assignVarToken));
+	      return normalized.sort((a, b) => (b.score || 0) - (a.score || 0));
+	    }
+
+	    function buildFullPaletteSwatches(html, dedupDist = 0.1) {
+	      // Fastest path: restore the editor's saved full-swatch state.
+	      const editorStateMatch = String(html).match(new RegExp(`<script[^>]*id=["']${EDITOR_COLOR_STATE_ID}["'][^>]*>([\\s\\S]*?)<\\/script>`, "i"));
+	      if (editorStateMatch) {
+	        try {
+	          const saved = JSON.parse(editorStateMatch[1]);
+	          if (Array.isArray(saved?.rows) && saved.rows.length) {
+	            return normalizeColorWorkbenchRows(saved.rows);
+	          }
+	        } catch {}
+	      }
+
+	      // Legacy path: restore saved user cluster state.
+	      const savedMatch = String(html).match(/<script[^>]*id=["']fp-user-clusters["'][^>]*>([\s\S]*?)<\/script>/i);
+	      if (savedMatch) {
+	        try {
+	          const saved = JSON.parse(savedMatch[1]);
+	          if (Array.isArray(saved) && saved.length) {
+	            // Normalise deps — may be hex strings (old format) or {hex,count,score} objects.
+	            return normalizeColorWorkbenchRows(saved.map(r => ({
+	              ...r,
+	              deps: (r.deps || []).map(d =>
+	                typeof d === "string" ? { hex: d, count: 0, score: 0 } : d
+	              ),
+	            })));
+	          }
+	        } catch {}
+	      }
+
+	      // Fast path: read pre-computed members from embedded color-palette JSON.
+	      let rawRows = null;
+	      let raw = null;
+	      const match = String(html).match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
+	      if (match) {
+	        let scheme;
+	        try { scheme = JSON.parse(match[1])?.scheme; } catch {}
+	        if (scheme) {
+	          rawRows = [];
+	          raw = [];
+	          let schemeIndex = 0;
+	          for (const [varName, entry] of Object.entries(scheme)) {
+	            const repHex = entry?.hex ? toHexColor(entry.hex) : "";
+	            if (repHex) {
+	              const repOk = hexToOklch(repHex);
+	              const repChroma = repOk?.c ?? 0;
+	              const repScore = Number(entry.aggregateScore ?? entry.score ?? ((entry.count || 0) * repChroma)) || 0;
+	              const seen = new Set([repHex.toLowerCase()]);
+	              const deps = [];
+	              for (const m of (entry.members || [])) {
+	                const depHex = m?.hex ? toHexColor(m.hex) : "";
+	                if (!depHex || seen.has(depHex.toLowerCase())) continue;
+	                seen.add(depHex.toLowerCase());
+	                const depOk = hexToOklch(depHex);
+	                const depChroma = depOk?.c ?? 0;
+	                deps.push({
+	                  hex: depHex,
+	                  count: Number(m.count || 0),
+	                  chroma: depChroma,
+	                  score: Number(m.score ?? ((m.count || 0) * depChroma)) || 0,
+	                });
+	              }
+	              rawRows.push({
+	                id: `scheme-${schemeIndex + 1}`,
+	                ordinal: ordinalForIndex(schemeIndex),
+	                hex: repHex,
+	                count: Number(entry.count || 0),
+	                chroma: repChroma,
+	                score: repScore,
+	                sourceVarName: varName,
+	                substitute: "",
+	                deps,
+	              });
+	              schemeIndex++;
+	            }
+	            for (const m of (entry.members || [])) {
+	              const lab = hexToOklab(m.hex);
+	              if (lab) raw.push({ hex: m.hex.toLowerCase(), count: m.count, lab });
+	            }
+	            if (!entry.members?.length) {
+              const lab = hexToOklab(entry.hex);
+              if (lab) raw.push({ hex: entry.hex.toLowerCase(), count: entry.count, lab });
+	            }
+	          }
+	        }
+	      }
+	      if (rawRows?.length) return normalizeColorWorkbenchRows(rawRows);
+
+	      // Slow path: extract directly from CSS in the HTML.
+	      if (!raw) {
+	        raw = [];
+	        for (const [hex, count] of extractColorsClientSide(html)) {
+          const lab = hexToOklab(hex);
+          if (lab) raw.push({ hex, count, lab });
+        }
       }
 
-      panel.addEventListener("pointerup", finishPointerSwap);
-      panel.addEventListener("pointercancel", finishPointerSwap);
+	      if (!raw.length) return null;
+
+	      // Greedy dedup: merge colors within dedupDist in Oklab space.
+	      // When merging, keep the hex with the higher individual count as rep.
+	      const deduped = [];
+	      for (const item of raw) {
+	        const hit = deduped.find(d => oklabDist(d.lab, item.lab) < dedupDist);
+	        if (hit) {
+	          hit.members.push(item);
+	          if (item.count > hit.count) { hit.hex = item.hex; hit.lab = item.lab; }
+	          hit.count += item.count;
+	        } else {
+	          deduped.push({ ...item, members: [item] });
+	        }
+	      }
+
+	      // Chroma = sqrt(a²+b²) in Oklab ≡ C in OKLCH.
+	      return normalizeColorWorkbenchRows(deduped
+	        .map(d => {
+	          const chroma = Math.sqrt(d.lab.a**2 + d.lab.b**2);
+	          const score  = d.count * chroma;
+	          const seen = new Set([d.hex.toLowerCase()]);
+	          const deps = (d.members || [])
+	            .filter(member => {
+	              const key = member.hex.toLowerCase();
+	              if (seen.has(key)) return false;
+	              seen.add(key);
+	              return true;
+	            })
+	            .map(member => {
+	              const depChroma = Math.sqrt(member.lab.a**2 + member.lab.b**2);
+	              return {
+	                hex: member.hex,
+	                count: member.count,
+	                chroma: depChroma,
+	                score: member.count * depChroma,
+	              };
+	            });
+	          return { hex: d.hex, count: d.count, chroma, score, deps };
+	        })
+	        .sort((a, b) => b.score - a.score));
+	    }
+
+	    let colorWorkbenchRows = [];
+	    let activeWorkbenchItemId = "";
+	    let activeSubstituteRowId = "";
+	    const pendingPriorColorById = new Map();
+	    let dependencyInputRowId = "";
+	    const colorWorkbenchHost = document.getElementById("editorSwatchRows");
+	    const colorHoverInspectorToggle = document.getElementById("colorHoverInspectorToggle");
+	    const colorHoverTooltip = document.getElementById("colorHoverTooltip");
+	    const suggestedPaletteInput = document.getElementById("editorSuggestedPaletteInput");
+	    const suggestedPaletteStatus = document.getElementById("editorSuggestedPaletteStatus");
+	    const suggestedPaletteRows = document.getElementById("editorSuggestedPaletteRows");
+	    const suggestedPaletteSubmit = document.getElementById("editorSuggestedPaletteSubmit");
+	    const btnOpenPalettePanel = document.getElementById("btnOpenPalettePanel");
+	    const paletteSlidePanel = document.getElementById("paletteSlidePanel");
+	    const pspCloseBtn = document.getElementById("pspCloseBtn");
+	    const pspThemesFrame = document.getElementById("pspThemesFrame");
+	    const pspBottom = document.getElementById("psp-bottom");
+	    const pspSlotList = document.getElementById("pspSlotList");
+	    const pspAddSlot = document.getElementById("pspAddSlot");
+	    const paletteRequestModeRadios = [...document.querySelectorAll('input[name="pspRequestMode"]')];
+	    let paletteSlotColors = [""];
+	    let activePaletteSlotIndex = null;
+	    let _paletteCountdownTimer = null;
+	    let _paletteCountdownStart = 0;
+	    let colorHoverInspectorEnabled = false;
+	    let colorHoverMatchCache = null;
+	    let colorHoverLastItemId = "";
+	    let colorHoverPendingPoint = null;
+	    let colorHoverRaf = 0;
+	    let suggestedPaletteState = { status: "idle", palettes: [], error: "", requestedColors: "" };
+	    const COLOR_HOVER_CURSOR_STYLE_ID = "iw-color-hover-reporter-cursor";
+	    const colorWorkbenchNativeInput = document.createElement("input");
+	    colorWorkbenchNativeInput.type = "color";
+	    colorWorkbenchNativeInput.tabIndex = -1;
+	    colorWorkbenchNativeInput.setAttribute("aria-hidden", "true");
+	    colorWorkbenchNativeInput.style.cssText = [
+	      "position:fixed",
+	      "left:0",
+	      "top:0",
+	      "width:32px",
+	      "height:32px",
+	      "opacity:0",
+	      "pointer-events:none",
+	      "z-index:20001",
+	    ].join(";");
+	    document.body.appendChild(colorWorkbenchNativeInput);
+
+	    function escapeHtml(value) {
+	      return String(value ?? "")
+	        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+	        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+	    }
+
+	    function cssEscape(value) {
+	      if (window.CSS?.escape) return window.CSS.escape(String(value));
+	      return String(value).replace(/["\\]/g, "\\$&");
+	    }
+
+	    function getAllWorkbenchItems() {
+	      const out = [];
+	      for (const row of colorWorkbenchRows) {
+	        out.push({ ...row, parentId: "" });
+	        for (const dep of row.deps || []) out.push({ ...dep, parentId: row.id });
+	      }
+	      return out;
+	    }
+
+	    function findWorkbenchItem(id) {
+	      for (const row of colorWorkbenchRows) {
+	        if (row.id === id) return { item: row, row, parent: null };
+	        const dep = (row.deps || []).find(d => d.id === id);
+	        if (dep) return { item: dep, row: dep, parent: row };
+	      }
+	      return null;
+	    }
+
+	    function hueDelta(fromHue, toHue) {
+	      let delta = (toHue || 0) - (fromHue || 0);
+	      if (delta > 180) delta -= 360;
+	      if (delta < -180) delta += 360;
+	      return delta;
+	    }
+
+	    function resolveDependentWorkbenchColor(parent, dep) {
+	      if (dep?.substitute) return toHexColor(dep.substitute);
+	      if (dep?.preserveHex) return toHexColor(dep.hex);
+	      const parentOriginal = hexToOklch(parent?.hex || "");
+	      const depOriginal = hexToOklch(dep?.hex || "");
+	      const parentCurrent = hexToOklch(parent?.substitute || parent?.hex || "");
+	      if (!parentOriginal || !depOriginal || !parentCurrent) return toHexColor(dep?.hex || "#000000");
+	      const l = Math.max(0, Math.min(1, parentCurrent.l + (depOriginal.l - parentOriginal.l)));
+	      const c = Math.max(0, parentCurrent.c + (depOriginal.c - parentOriginal.c));
+	      const h = (parentCurrent.h + hueDelta(parentOriginal.h, depOriginal.h) + 360) % 360;
+	      return oklchToHex(l, c, h);
+	    }
+
+	    function currentWorkbenchColor(item) {
+	      const hit = item?.id ? findWorkbenchItem(item.id) : null;
+	      if (hit?.parent) return resolveDependentWorkbenchColor(hit.parent, hit.item);
+	      return toHexColor(item?.substitute || item?.hex || "#000000");
+	    }
+
+	    function nextWorkbenchOrdinal() {
+	      const used = new Set();
+	      for (const row of colorWorkbenchRows) {
+	        if (row.ordinal) used.add(String(row.ordinal).toUpperCase());
+	        for (const dep of row.deps || []) {
+	          if (dep.ordinal) used.add(String(dep.ordinal).toUpperCase());
+	        }
+	      }
+	      for (let i = 0; i < 1000; i++) {
+	        const ord = ordinalForIndex(i);
+	        if (!used.has(ord)) return ord;
+	      }
+	      return String(used.size + 1);
+	    }
+
+	    function findIndependentByOrdinal(ordinal) {
+	      const target = String(ordinal || "").trim().toUpperCase();
+	      if (!target) return null;
+	      return colorWorkbenchRows.find(row => row.ordinal === target) || null;
+	    }
+
+	    function sortWorkbenchRows() {
+	      colorWorkbenchRows.sort((a, b) => (b.score || 0) - (a.score || 0));
+	    }
+
+	    function rgbToHsl({ r, g, b }) {
+	      r /= 255; g /= 255; b /= 255;
+	      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+	      let h = 0, s = 0;
+	      const l = (max + min) / 2;
+	      const d = max - min;
+	      if (d) {
+	        s = l > .5 ? d / (2 - max - min) : d / (max + min);
+	        if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+	        else if (max === g) h = (b - r) / d + 2;
+	        else h = (r - g) / d + 4;
+	        h /= 6;
+	      }
+	      return { h, s, l };
+	    }
+
+	    function hslToRgb({ h, s, l }) {
+	      if (!s) {
+	        const v = Math.round(l * 255);
+	        return { r: v, g: v, b: v };
+	      }
+	      const hue2rgb = (p, q, t) => {
+	        if (t < 0) t += 1;
+	        if (t > 1) t -= 1;
+	        if (t < 1/6) return p + (q - p) * 6 * t;
+	        if (t < 1/2) return q;
+	        if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+	        return p;
+	      };
+	      const q = l < .5 ? l * (1 + s) : l + s - l * s;
+	      const p = 2 * l - q;
+	      return {
+	        r: Math.round(hue2rgb(p, q, h + 1/3) * 255),
+	        g: Math.round(hue2rgb(p, q, h) * 255),
+	        b: Math.round(hue2rgb(p, q, h - 1/3) * 255),
+	      };
+	    }
+
+	    function rgbToHex({ r, g, b }) {
+	      return "#" + [r, g, b].map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0")).join("");
+	    }
+
+	    function cssRgbToHex(value) {
+	      const s = String(value || "").trim();
+	      const channel = v => String(v).endsWith("%") ? parseFloat(v) * 2.55 : parseFloat(v);
+	      let m = s.match(/rgba?\(\s*([\d.]+%?)\s*,\s*([\d.]+%?)\s*,\s*([\d.]+%?)(?:\s*,\s*([\d.]+%?))?/i);
+	      if (!m) m = s.match(/rgba?\(\s*([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+%?)(?:\s*\/\s*([\d.]+%?))?\s*\)/i);
+	      if (m) {
+	        if (m[4] !== undefined) {
+	          const alpha = String(m[4]).endsWith("%") ? parseFloat(m[4]) / 100 : parseFloat(m[4]);
+	          if (alpha <= 0.02) return "";
+	        }
+	        return rgbToHex({ r: channel(m[1]), g: channel(m[2]), b: channel(m[3]) });
+	      }
+	      const srgb = s.match(/color\(\s*srgb\s+([\d.]+%?)\s+([\d.]+%?)\s+([\d.]+%?)(?:\s*\/\s*([\d.]+%?))?\s*\)/i);
+	      if (!srgb) return "";
+	      if (srgb[4] !== undefined) {
+	        const alpha = String(srgb[4]).endsWith("%") ? parseFloat(srgb[4]) / 100 : parseFloat(srgb[4]);
+	        if (alpha <= 0.02) return "";
+	      }
+	      const srgbChannel = v => String(v).endsWith("%") ? parseFloat(v) * 2.55 : parseFloat(v) * 255;
+	      return rgbToHex({ r: srgbChannel(srgb[1]), g: srgbChannel(srgb[2]), b: srgbChannel(srgb[3]) });
+	    }
+
+	    // Converts oklch(L C H) → hex via oklab → linear sRGB → sRGB.
+	    function oklchToHex(l, c, h) {
+	      const hRad = h * Math.PI / 180;
+	      const a = c * Math.cos(hRad), bv = c * Math.sin(hRad);
+	      const l_ = Math.cbrt(l + 0.3963377774*a + 0.2158037573*bv);
+	      const m_ = Math.cbrt(l - 0.1055613458*a - 0.0638541728*bv);
+	      const s_ = Math.cbrt(l - 0.0894841775*a - 1.2914855480*bv);
+	      const Ll = l_**3, Mm = m_**3, Ss = s_**3;
+	      const r =  4.0767416621*Ll - 3.3077115913*Mm + 0.2309699292*Ss;
+	      const g = -1.2684380046*Ll + 2.6097574011*Mm - 0.3413193965*Ss;
+	      const b = -0.0041960863*Ll - 0.7034186147*Mm + 1.7076147010*Ss;
+	      const toS = v => v <= 0.0031308 ? 12.92*v : 1.055*v**(1/2.4) - 0.055;
+	      return rgbToHex({
+	        r: Math.round(Math.max(0,Math.min(1,toS(r)))*255),
+	        g: Math.round(Math.max(0,Math.min(1,toS(g)))*255),
+	        b: Math.round(Math.max(0,Math.min(1,toS(b)))*255),
+	      });
+	    }
+
+	    // Handles rgb/rgba() and oklch() — getComputedStyle returns either on modern browsers.
+	    function cssColorToHex(value) {
+	      const s = String(value || "").trim();
+	      const rgb = cssRgbToHex(s);
+	      if (rgb) return rgb;
+	      const ok = s.match(/oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+|none)(?:\s*\/\s*([\d.]+%?))?\s*\)/i);
+	      if (!ok) return "";
+	      let l = parseFloat(ok[1]);
+	      if (String(ok[1]).endsWith("%")) l /= 100;
+	      const c = parseFloat(ok[2]);
+	      const h = (ok[3] === "none" || isNaN(parseFloat(ok[3]))) ? 0 : parseFloat(ok[3]);
+	      if (ok[4] !== undefined) {
+	        const alpha = String(ok[4]).endsWith("%") ? parseFloat(ok[4])/100 : parseFloat(ok[4]);
+	        if (alpha <= 0.02) return "";
+	      }
+	      return oklchToHex(l, c, h);
+	    }
+
+	    function complementHex(hex) {
+	      const rgb = hexToRgb(toHexColor(hex));
+	      if (!rgb) return "#ffffff";
+	      const hsl = rgbToHsl(rgb);
+	      hsl.h = (hsl.h + 0.5) % 1;
+	      hsl.s = Math.max(.35, hsl.s);
+	      hsl.l = hsl.l < .5 ? Math.min(.82, hsl.l + .22) : Math.max(.18, hsl.l - .22);
+	      return rgbToHex(hslToRgb(hsl));
+	    }
+
+	    function serializeColorWorkbenchState() {
+	      return {
+	        version: 1,
+	        rows: colorWorkbenchRows.map(row => ({
+	          id: row.id,
+	          ordinal: row.ordinal,
+	          hex: row.hex,
+	          count: row.count,
+	          chroma: row.chroma,
+	          score: row.score,
+	          varToken: row.varToken || "",
+	          sourceVarName: row.sourceVarName || "",
+	          substitute: row.substitute || "",
+	          preserveHex: !!row.preserveHex,
+	          deps: (row.deps || []).map(dep => ({
+	            id: dep.id,
+	            ordinal: dep.ordinal,
+	            hex: dep.hex,
+	            count: dep.count,
+	            chroma: dep.chroma,
+	            score: dep.score,
+	            varToken: dep.varToken || "",
+	            sourceVarName: dep.sourceVarName || "",
+	            substitute: dep.substitute || "",
+	            preserveHex: !!dep.preserveHex,
+	          })),
+	        })),
+	      };
+	    }
+
+	    function buildColorWorkbenchStyle() {
+	      const lines = [":root {"];
+	      for (const row of colorWorkbenchRows) {
+	        const rowVar = colorWorkbenchVarName(row);
+	        const rowValue = row.substitute || row.hex;
+	        lines.push(`  ${rowVar}: ${rowValue};`);
+	        lines.push(`  --iw-original-${row.ordinal.toLowerCase()}: ${row.hex};`);
+	        if (row.sourceVarName) lines.push(`  ${row.sourceVarName}: var(${rowVar});`);
+	        const parentOk = hexToOklch(row.hex);
+	        for (const dep of row.deps || []) {
+	          const depVar = colorWorkbenchVarName(dep);
+	          const depOk = hexToOklch(dep.hex);
+	          const depValue = dep.substitute
+	            ? dep.substitute
+	            : dep.preserveHex
+	              ? dep.hex
+	            : parentOk && depOk ? relColorExpr(rowVar, depOk, parentOk) : `var(${rowVar})`;
+	          lines.push(`  ${depVar}: ${depValue};`);
+	          lines.push(`  --iw-original-${dep.ordinal.toLowerCase()}: ${dep.hex};`);
+	          if (dep.sourceVarName) lines.push(`  ${dep.sourceVarName}: var(${depVar});`);
+	        }
+	      }
+	      lines.push("}");
+	      return lines.join("\n");
+	    }
+
+	    function colorWorkbenchInjection() {
+	      const json = JSON.stringify(serializeColorWorkbenchState(), null, 2).replace(/<\/script/gi, "<\\/script");
+	      return [
+	        `<style id="${EDITOR_COLOR_STYLE_ID}">`,
+	        buildColorWorkbenchStyle(),
+	        `</style>`,
+	        `<script type="application/json" id="${EDITOR_COLOR_STATE_ID}">`,
+	        json,
+	        `<\/script>`,
+	      ].join("\n");
+	    }
+
+	    function stripColorWorkbenchBlocks(html) {
+	      return String(html || "")
+	        .replace(new RegExp(`\\s*<style[^>]*id=["']${EDITOR_COLOR_STYLE_ID}["'][^>]*>[\\s\\S]*?<\\/style>\\s*`, "gi"), "\n")
+	        .replace(new RegExp(`\\s*<script[^>]*id=["']${EDITOR_COLOR_STATE_ID}["'][^>]*>[\\s\\S]*?<\\/script>\\s*`, "gi"), "\n");
+	    }
+
+	    function insertColorWorkbenchBlocks(html) {
+	      const clean = stripColorWorkbenchBlocks(html);
+	      const injection = colorWorkbenchInjection();
+	      if (/<\/head>/i.test(clean)) return clean.replace(/<\/head>/i, `${injection}\n</head>`);
+	      if (/<body\b/i.test(clean)) return clean.replace(/<body\b/i, `${injection}\n<body`);
+	      return `${injection}\n${clean}`;
+	    }
+
+	    function persistColorWorkbench() {
+	      if (!colorWorkbenchRows.length) return;
+	      const sourceHtml = viewMode === "visual" ? getVisualContent() : getCodeContent();
+	      currentHtml = insertColorWorkbenchBlocks(stripEditorBaseTag(sourceHtml || currentHtml));
+	      setCodeContent(currentHtml);
+	      try { cachePreviewHtml(currentHtml); } catch {}
+	    }
+
+	    function applyColorWorkbenchToFrame() {
+	      if (!colorWorkbenchRows.length) return;
+	      colorHoverMatchCache = null;
+	      try {
+	        const doc = frame.contentDocument;
+	        if (!doc) return;
+	        let style = doc.getElementById(EDITOR_COLOR_STYLE_ID);
+	        if (!style) {
+	          style = doc.createElement("style");
+	          style.id = EDITOR_COLOR_STYLE_ID;
+	          (doc.head || doc.documentElement).appendChild(style);
+	        }
+	        style.textContent = buildColorWorkbenchStyle();
+	        const root = doc.documentElement;
+	        for (const row of colorWorkbenchRows) {
+	          const rowVar = colorWorkbenchVarName(row);
+	          root.style.setProperty(rowVar, row.substitute || row.hex);
+	          if (row.sourceVarName) root.style.setProperty(row.sourceVarName, `var(${rowVar})`);
+	          const parentOk = hexToOklch(row.hex);
+	          for (const dep of row.deps || []) {
+	            const depVar = colorWorkbenchVarName(dep);
+	            const depOk = hexToOklch(dep.hex);
+	            const depValue = dep.substitute
+	              ? dep.substitute
+	              : dep.preserveHex
+	                ? dep.hex
+	              : parentOk && depOk ? relColorExpr(rowVar, depOk, parentOk) : `var(${rowVar})`;
+	            root.style.setProperty(depVar, depValue);
+	            if (dep.sourceVarName) root.style.setProperty(dep.sourceVarName, `var(${depVar})`);
+	          }
+	        }
+	      } catch {}
+	    }
+
+	    function renderSwatchButton(item, className, action, color, isBlank = false) {
+	      const bg = isBlank ? "" : ` style="background:${escapeHtml(color)}"`;
+	      const title = color && toHexColor(color).toLowerCase() !== toHexColor(item.hex).toLowerCase()
+	        ? `${toHexColor(color)} (original ${toHexColor(item.hex)})`
+	        : toHexColor(item.hex);
+	      return `<button type="button" class="ewb-swatch ${className}${isBlank ? " blank" : ""}" data-action="${action}" data-id="${escapeHtml(item.id)}"${bg} title="${escapeHtml(title)}">${escapeHtml(item.ordinal)}</button>`;
+	    }
+
+	    function renderColorWorkbenchPanel(rows = null) {
+	      if (rows) colorWorkbenchRows = normalizeColorWorkbenchRows(rows);
+	      colorHoverMatchCache = null;
+	      if (!colorWorkbenchHost) return;
+	      if (!colorWorkbenchRows.length) {
+	        colorWorkbenchHost.innerHTML = `<div class="hint">No page color references found.</div>`;
+	        return;
+	      }
+	      colorWorkbenchHost.innerHTML = colorWorkbenchRows.map(row => {
+	        const depHtml = (row.deps || []).map(dep =>
+	          renderSwatchButton(dep, "ewb-dependent", "activate-dependent", currentWorkbenchColor(dep))
+	        ).join("");
+	        const input = dependencyInputRowId === row.id
+	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="2" autocomplete="off" placeholder="?" aria-label="Parent Rep letter" />`
+	          : "";
+	        return `
+	          <div class="ewb-row${(activeWorkbenchItemId === row.id || (row.deps || []).some(dep => dep.id === activeWorkbenchItemId)) ? " active" : ""}" data-row-id="${escapeHtml(row.id)}">
+	            <div class="ewb-cell">${renderSwatchButton(row, "ewb-original", "activate-row", currentWorkbenchColor(row))}${input}</div>
+	            <div class="ewb-cell ewb-dependents">${depHtml || `<span class="ewb-hex">-</span>`}</div>
+	          </div>
+	        `;
+	      }).join("");
+	      setColorInspectorBlink(colorHoverLastItemId, true);
+	      const depInput = colorWorkbenchHost.querySelector(".ewb-dep-input");
+	      if (depInput) depInput.focus();
+	    }
+
+	    function updateSubstituteDom(row) {
+	      const button = colorWorkbenchHost?.querySelector(`.ewb-swatch[data-id="${cssEscape(row.id)}"]`);
+	      if (button) button.style.background = currentWorkbenchColor(row);
+	    }
+
+	    function movePriorColorToDependents(hit, priorHex, nextHex) {
+	      const parentRow = hit?.parent || hit?.row;
+	      if (!parentRow || !priorHex) return;
+	      const prior = toHexColor(priorHex);
+	      const next = nextHex ? toHexColor(nextHex) : "";
+	      if (next && prior.toLowerCase() === next.toLowerCase()) return;
+	      const activeItem = hit.item;
+	      const oldOrdinal = String(activeItem?.ordinal || nextWorkbenchOrdinal()).toUpperCase();
+	      const replacementOrdinal = nextWorkbenchOrdinal();
+	      const existingPrior = [parentRow, ...(parentRow.deps || [])].find(item =>
+	        item !== activeItem && toHexColor(item.hex).toLowerCase() === prior.toLowerCase()
+	      );
+	      activeItem.ordinal = replacementOrdinal;
+	      if (existingPrior) {
+	        existingPrior.ordinal = oldOrdinal;
+	        return { parentRow, dep: existingPrior };
+	      }
+	      const ok = hexToOklch(prior);
+	      const chroma = ok?.c ?? 0;
+	      const dep = {
+	        id: `swatch-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+	        ordinal: oldOrdinal,
+	        hex: prior,
+	        count: activeItem?.count || 0,
+	        chroma,
+	        score: (activeItem?.count || 0) * chroma,
+	        varToken: uniqueWorkbenchVarToken(`prior-${oldOrdinal}`),
+	        sourceVarName: "",
+	        substitute: "",
+	        preserveHex: true,
+	        deps: [],
+	      };
+	      parentRow.deps = [...(parentRow.deps || []), dep];
+	      return { parentRow, dep };
+	    }
+
+	    function setRowSubstitute(rowId, color, { rerender = true, movePrior = false } = {}) {
+	      const hit = findWorkbenchItem(rowId);
+	      if (!hit) return;
+	      const nextColor = color ? toHexColor(color) : "";
+	      let movedPrior = null;
+	      if (movePrior && nextColor && pendingPriorColorById.has(rowId)) {
+	        const prior = pendingPriorColorById.get(rowId);
+	        movedPrior = movePriorColorToDependents(hit, prior, nextColor);
+	        pendingPriorColorById.delete(rowId);
+	      }
+	      hit.item.substitute = nextColor;
+	      if (rerender || movedPrior) renderColorWorkbenchPanel();
+	      else {
+	        updateSubstituteDom(hit.item);
+	      }
+	      applyColorWorkbenchToFrame();
+	      persistColorWorkbench();
+	    }
+
+	    function getPaletteRequestMode() {
+	      return paletteRequestModeRadios.find(radio => radio.checked)?.value || "swatches";
+	    }
+
+	    function setPaletteRequestMode(mode) {
+	      const normalized = mode === "text" ? "text" : "swatches";
+	      paletteRequestModeRadios.forEach(radio => { radio.checked = radio.value === normalized; });
+	      document.querySelectorAll("[data-palette-request-option]").forEach(option => {
+	        option.classList.toggle("active", option.dataset.paletteRequestOption === normalized);
+	      });
+	    }
+
+	    function updatePaletteRequestMode() {
+	      setPaletteRequestMode(getPaletteRequestMode());
+	    }
+
+	    function selectedPaletteSlotHexes() {
+	      return paletteSlotColors.map(color => color ? toHexColor(color) : "").filter(Boolean);
+	    }
+
+	    function deletePaletteSlot(index) {
+	      if (index < 0 || index >= paletteSlotColors.length) return;
+	      if (paletteSlotColors.length <= 1) {
+	        paletteSlotColors = [""];
+	        activePaletteSlotIndex = null;
+	      } else {
+	        paletteSlotColors.splice(index, 1);
+	        if (activePaletteSlotIndex === index) activePaletteSlotIndex = null;
+	        else if (activePaletteSlotIndex > index) activePaletteSlotIndex -= 1;
+	      }
+	      renderPaletteSlots();
+	      updateThemesSwatchCount();
+	    }
+
+	    function updatePaletteSlotActiveClasses() {
+	      pspSlotList?.querySelectorAll(".psp-slot").forEach((button, index) => {
+	        button.classList.toggle("active", index === activePaletteSlotIndex);
+	      });
+	    }
+
+	    function renderPaletteSlots() {
+	      if (!pspSlotList) return;
+	      pspSlotList.innerHTML = "";
+	      paletteSlotColors.forEach((color, i) => {
+	        const wrap = document.createElement("div");
+	        wrap.className = "psp-slot-wrap";
+	        const btn = document.createElement("button");
+	        btn.type = "button";
+	        btn.className = "psp-slot" + (i === activePaletteSlotIndex ? " active" : "");
+	        btn.style.background = color || "rgba(255,255,255,.1)";
+	        btn.title = color ? color + " (double-click to edit; shift-click to delete)" : "Click to activate; shift-click to delete";
+	        const input = document.createElement("input");
+	        input.type = "color";
+	        input.className = "psp-slot-input";
+	        input.value = color || "#ffffff";
+	        const syncSlotColor = () => {
+	          setPaletteRequestMode("swatches");
+	          paletteSlotColors[i] = input.value;
+	          btn.style.background = input.value;
+	          btn.title = input.value + " (double-click to edit; shift-click to delete)";
+	        };
+	        input.addEventListener("input", syncSlotColor);
+	        input.addEventListener("change", syncSlotColor);
+	        btn.addEventListener("click", (ev) => {
+	          setPaletteRequestMode("swatches");
+	          if (ev.shiftKey) {
+	            deletePaletteSlot(i);
+	            return;
+	          }
+	          if (ev.detail > 1) return;
+	          activePaletteSlotIndex = i === activePaletteSlotIndex ? null : i;
+	          updatePaletteSlotActiveClasses();
+	        });
+	        btn.addEventListener("dblclick", (e) => {
+	          e.preventDefault();
+	          e.stopPropagation();
+	          setPaletteRequestMode("swatches");
+	          activePaletteSlotIndex = i;
+	          updatePaletteSlotActiveClasses();
+	          input.value = paletteSlotColors[i] || "#ffffff";
+	          try {
+	            if (typeof input.showPicker === "function") input.showPicker();
+	            else input.click();
+	          } catch {
+	            input.click();
+	          }
+	        });
+	        wrap.append(btn, input);
+	        pspSlotList.appendChild(wrap);
+	      });
+	    }
+
+	    function updateThemesSwatchCount() {
+	      try {
+	        pspThemesFrame?.contentWindow?.postMessage({ type: "setSwatchCount", n: paletteSlotColors.length }, "*");
+	      } catch {}
+	    }
+
+	    function updateColorThemesFrameHeight(height) {
+	      if (!pspBottom || !height) return;
+	      const panelHeight = paletteSlidePanel?.clientHeight || window.innerHeight;
+	      const maxHeight = Math.max(140, Math.floor(panelHeight * 0.46));
+	      const nextHeight = Math.max(120, Math.min(maxHeight, Math.ceil(Number(height) || 0)));
+	      pspBottom.style.height = `${nextHeight}px`;
+	    }
+
+	    function syncColorThemesFrameHeight() {
+	      try {
+	        updateColorThemesFrameHeight(pspThemesFrame?.contentDocument?.body?.scrollHeight);
+	      } catch {}
+	    }
+
+	    function openPalettePanel() {
+	      resetPaletteBtn();
+	      paletteSlidePanel?.classList.add("open");
+	      renderPaletteSlots();
+	      renderSuggestedPaletteResults();
+	      updatePaletteRequestMode();
+	      setTimeout(() => {
+	        updateThemesSwatchCount();
+	        syncColorThemesFrameHeight();
+	        if (getPaletteRequestMode() === "text") suggestedPaletteInput?.focus();
+	      }, 80);
+	    }
+
+	    function closePalettePanel() {
+	      paletteSlidePanel?.classList.remove("open");
+	    }
+
+	    const PALETTE_COUNTDOWN_FROM = 30;
+	    function startPaletteCountdown() {
+	      stopPaletteCountdown();
+	      _paletteCountdownStart = Date.now();
+	      btnOpenPalettePanel?.classList.add("palette-generating");
+	      btnOpenPalettePanel?.classList.remove("palette-ready");
+	      function tick() {
+	        const elapsed = Math.floor((Date.now() - _paletteCountdownStart) / 1000);
+	        const remaining = Math.max(0, PALETTE_COUNTDOWN_FROM - elapsed);
+	        if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = remaining > 0 ? `Generating… ${remaining}s` : "Generating…";
+	      }
+	      tick();
+	      _paletteCountdownTimer = setInterval(tick, 1000);
+	    }
+
+	    function stopPaletteCountdown() {
+	      if (_paletteCountdownTimer) { clearInterval(_paletteCountdownTimer); _paletteCountdownTimer = null; }
+	      btnOpenPalettePanel?.classList.remove("palette-generating");
+	    }
+
+	    function setPaletteBtnReady() {
+	      stopPaletteCountdown();
+	      if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = "Ready";
+	      btnOpenPalettePanel?.classList.add("palette-ready");
+	    }
+
+	    function resetPaletteBtn() {
+	      stopPaletteCountdown();
+	      if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = "\u2039 Palettes";
+	      btnOpenPalettePanel?.classList.remove("palette-ready");
+	    }
+
+	    function preferredColorTokenCount(value) {
+	      return String(value || "")
+	        .replace(/\band\b/gi, ",")
+	        .split(/[,;\n]+/)
+	        .map(part => part.trim())
+	        .filter(Boolean).length;
+	    }
+
+	    function getEditorTemplateHtml() {
+	      try {
+	        return frame.contentDocument?.documentElement?.outerHTML || "";
+	      } catch {
+	        return "";
+	      }
+	    }
+
+	    function getEditorSuggestedPaletteSwatches() {
+	      return colorWorkbenchRows.map(row => ({
+	        id: row.id,
+	        ordinal: row.ordinal,
+	        original: toHexColor(row.hex),
+	        current: currentWorkbenchColor(row),
+	        dependents: (row.deps || []).map(dep => ({
+	          ordinal: dep.ordinal,
+	          original: toHexColor(dep.hex),
+	          current: currentWorkbenchColor(dep),
+	        })),
+	      }));
+	    }
+
+	    function renderSuggestedPaletteResults() {
+	      if (!suggestedPaletteRows) return;
+	      const palettes = suggestedPaletteState.palettes || [];
+	      suggestedPaletteRows.innerHTML = "";
+	      if (suggestedPaletteState.error) {
+	        suggestedPaletteStatus.textContent = suggestedPaletteState.error;
+	        suggestedPaletteStatus.style.color = "rgba(255,166,166,.9)";
+	        return;
+	      }
+	      suggestedPaletteStatus.style.color = "rgba(234,240,255,.55)";
+	      suggestedPaletteStatus.textContent = palettes.length
+	        ? "Click a palette to apply it, submit a new request, or dismiss these suggestions."
+	        : "No AI suggestions loaded yet.";
+	      palettes.forEach((palette, index) => {
+	        const paletteEl = document.createElement("div");
+	        paletteEl.className = "esp-palette" + (palette._isInversion ? " esp-palette-inversion" : "");
+	        paletteEl.dataset.paletteIndex = String(index);
+	        paletteEl.tabIndex = 0;
+	        paletteEl.setAttribute("role", "button");
+	        paletteEl.setAttribute("aria-label", `Apply ${palette.name || `palette ${index + 1}`}`);
+
+	        const title = document.createElement("div");
+	        title.className = "esp-palette-title";
+	        title.textContent = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
+
+	        const strip = document.createElement("div");
+	        strip.className = "esp-swatch-strip";
+	        (palette.colors || []).forEach(color => {
+	          const swatch = document.createElement("span");
+	          swatch.className = "esp-swatch";
+	          swatch.style.background = toHexColor(color.hex);
+	          swatch.title = `${color.ordinal || ""} ${toHexColor(color.hex)}`.trim();
+	          strip.appendChild(swatch);
+	        });
+
+	        const note = document.createElement("div");
+	        note.className = "esp-palette-note";
+	        note.textContent = palette.rationale || "";
+
+	        const apply = document.createElement("button");
+	        apply.type = "button";
+	        apply.dataset.paletteIndex = String(index);
+	        apply.textContent = "Apply Palette";
+
+	        paletteEl.append(title, strip);
+	        if (note.textContent) paletteEl.appendChild(note);
+	        paletteEl.appendChild(apply);
+	        suggestedPaletteRows.appendChild(paletteEl);
+	      });
+	    }
+
+
+
+	    async function requestSuggestedEditorPalettes() {
+	      if (suggestedPaletteState.status === "loading") return;
+	      const requestMode = getPaletteRequestMode();
+	      const swatchColors = selectedPaletteSlotHexes();
+	      const textColors = String(suggestedPaletteInput?.value || "").trim();
+	      const requestedColors = requestMode === "text" ? textColors : swatchColors.join(", ");
+	      const colorTokenCount = requestMode === "text" ? preferredColorTokenCount(requestedColors) : swatchColors.length;
+	      if (!requestedColors) {
+	        suggestedPaletteState.error = requestMode === "text"
+	          ? "Please describe at least one preferred website color."
+	          : "Please choose at least one swatch color.";
+	        renderSuggestedPaletteResults();
+	        return;
+	      }
+	      if (colorTokenCount > 8) {
+	        suggestedPaletteState.error = "Please narrow the request to eight preferred colors or fewer.";
+	        renderSuggestedPaletteResults();
+	        return;
+	      }
+	      const swatches = getEditorSuggestedPaletteSwatches();
+	      if (swatches.length < 2) {
+	        suggestedPaletteState.error = "No usable color workbench swatches were found.";
+	        renderSuggestedPaletteResults();
+	        return;
+	      }
+
+	      suggestedPaletteState = { status: "loading", palettes: [], error: "", requestedColors };
+	      startPaletteCountdown();
+	      if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = true; suggestedPaletteSubmit.textContent = "Generating…"; }
+	      if (suggestedPaletteStatus) suggestedPaletteStatus.textContent = "";
+	      closePalettePanel();
+
+	      try {
+	        const res = await fetch("/.netlify/functions/suggestEditorPalettes", {
+	          method: "POST",
+	          headers: { "content-type": "application/json" },
+	          body: JSON.stringify({
+	            preferredColors: requestedColors,
+	            swatches,
+	            html: getEditorTemplateHtml(),
+	            provider: "claude",
+	          }),
+	        });
+	        const data = await res.json().catch(() => ({}));
+	        if (!res.ok || data.error) throw new Error(data.error || `Palette request failed (${res.status})`);
+	        suggestedPaletteState = {
+	          status: "ready",
+	          palettes: Array.isArray(data.palettes) ? data.palettes : [],
+	          error: "",
+	          requestedColors,
+	        };
+	        if (!suggestedPaletteState.palettes.length) throw new Error("No palettes returned.");
+	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
+	        renderSuggestedPaletteResults();
+	        setPaletteBtnReady();
+	      } catch (err) {
+	        suggestedPaletteState = {
+	          status: "error",
+	          palettes: [],
+	          error: err?.message || String(err),
+	          requestedColors,
+	        };
+	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
+	        resetPaletteBtn();
+	        renderSuggestedPaletteResults();
+	        setEditStatus("Suggested palette generation failed.", "err");
+	      }
+	    }
+
+	    function applySuggestedEditorPalette(index) {
+	      const palette = suggestedPaletteState.palettes?.[index];
+	      if (!palette) return;
+	      const byId = new Map();
+	      const byOrdinal = new Map();
+	      (palette.colors || []).forEach((color, i) => {
+	        const hex = toHexColor(color.hex);
+	        if (color.id) byId.set(String(color.id), hex);
+	        if (color.ordinal) byOrdinal.set(String(color.ordinal).toUpperCase(), hex);
+	        byId.set(`__index_${i}`, hex);
+	      });
+	      // Fill palette slots with suggested colors
+	      const suggestedColors = (palette.colors || []).map(c => toHexColor(c.hex)).filter(Boolean);
+	      paletteSlotColors = suggestedColors.slice(0, Math.max(paletteSlotColors.length, suggestedColors.length));
+	      while (paletteSlotColors.length < 1) paletteSlotColors.push("");
+	      renderPaletteSlots();
+	      // Apply to workbench
+	      colorWorkbenchRows.forEach((row, i) => {
+	        const hex = byId.get(row.id) || byOrdinal.get(String(row.ordinal || "").toUpperCase()) || byId.get(`__index_${i}`);
+	        if (hex) row.substitute = toHexColor(hex);
+	        for (const dep of row.deps || []) dep.substitute = "";
+	      });
+	      activeSubstituteRowId = "";
+	      dependencyInputRowId = "";
+	      renderColorWorkbenchPanel();
+	      applyColorWorkbenchToFrame();
+	      persistColorWorkbench();
+	      suggestedPaletteState.status = "idle";
+	      closePalettePanel();
+	      setEditStatus(`${palette.name || "Suggested palette"} applied.`, "ok");
+	    }
+
+	    btnOpenPalettePanel?.addEventListener("click", openPalettePanel);
+	    pspCloseBtn?.addEventListener("click", closePalettePanel);
+	    pspAddSlot?.addEventListener("click", () => {
+	      setPaletteRequestMode("swatches");
+	      if (paletteSlotColors.length < 8) {
+	        paletteSlotColors.push("");
+	        activePaletteSlotIndex = paletteSlotColors.length - 1;
+	        renderPaletteSlots();
+	        updateThemesSwatchCount();
+	      }
+	    });
+	    paletteRequestModeRadios.forEach(radio => {
+	      radio.addEventListener("change", updatePaletteRequestMode);
+	    });
+	    document.querySelectorAll("[data-palette-request-option]").forEach(option => {
+	      option.addEventListener("click", ev => {
+	        const target = ev.target instanceof Element ? ev.target : ev.target?.parentElement;
+	        if (target?.closest("button,input,textarea")) return;
+	        setPaletteRequestMode(option.dataset.paletteRequestOption);
+	        if (option.dataset.paletteRequestOption === "text") suggestedPaletteInput?.focus();
+	      });
+	    });
+	    suggestedPaletteSubmit?.addEventListener("click", requestSuggestedEditorPalettes);
+	    suggestedPaletteInput?.addEventListener("focus", () => setPaletteRequestMode("text"));
+	    suggestedPaletteInput?.addEventListener("input", () => setPaletteRequestMode("text"));
+	    suggestedPaletteInput?.addEventListener("keydown", ev => {
+	      if ((ev.metaKey || ev.ctrlKey) && ev.key === "Enter") requestSuggestedEditorPalettes();
+	    });
+	    window.addEventListener("message", (e) => {
+	      if (!e.data) return;
+	      if (e.data.type === "colorThemesHeight") {
+	        updateColorThemesFrameHeight(e.data.height);
+	        return;
+	      }
+	      if (e.data.type === "colorPick" && e.data.color && activePaletteSlotIndex !== null) {
+	        setPaletteRequestMode("swatches");
+	        paletteSlotColors[activePaletteSlotIndex] = e.data.color;
+	        renderPaletteSlots();
+	        return;
+	      }
+	      if (e.data.type === "colorThemeSelected") {
+	        setPaletteRequestMode("swatches");
+	        const roleOrder = ["primary", "secondary", "tertiary", "quaternary", "quinary"];
+	        const themeColors = roleOrder.map(role => e.data.theme?.[role]).filter(Boolean);
+	        const n = Math.max(paletteSlotColors.length, themeColors.length);
+	        paletteSlotColors = themeColors.slice(0, n);
+	        while (paletteSlotColors.length < 1) paletteSlotColors.push("");
+	        activePaletteSlotIndex = null;
+	        renderPaletteSlots();
+	        updateThemesSwatchCount();
+	      }
+	    });
+	    suggestedPaletteRows?.addEventListener("click", ev => {
+	      const target = ev.target.closest("[data-palette-index]");
+	      if (!target) return;
+	      applySuggestedEditorPalette(Number(target.dataset.paletteIndex));
+	    });
+	    suggestedPaletteRows?.addEventListener("keydown", ev => {
+	      if (ev.key !== "Enter" && ev.key !== " ") return;
+	      const target = ev.target.closest("[data-palette-index]");
+	      if (!target) return;
+	      ev.preventDefault();
+	      applySuggestedEditorPalette(Number(target.dataset.paletteIndex));
+	    });
+
+	    function makeRowDependent(sourceId, targetOrdinal) {
+	      const sourceIndex = colorWorkbenchRows.findIndex(row => row.id === sourceId);
+	      const target = findIndependentByOrdinal(targetOrdinal);
+	      if (sourceIndex < 0 || !target || target.id === sourceId) {
+	        setCwStatus("Choose a different swatch letter for the dependency.", "err");
+	        return;
+	      }
+	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
+	      const moved = { ...source, substitute: "", deps: [] };
+	      target.deps = [...(target.deps || []), moved, ...(source.deps || [])];
+	      activeSubstituteRowId = "";
+	      dependencyInputRowId = "";
+	      renderColorWorkbenchPanel();
+	      applyColorWorkbenchToFrame();
+	      persistColorWorkbench();
+	    }
+
+	    function absorbRepAsDep(destinationId, sourceOrdinal) {
+	      const destRow = colorWorkbenchRows.find(row => row.id === destinationId);
+	      const sourceIndex = colorWorkbenchRows.findIndex(row =>
+	        String(row.ordinal || "").toUpperCase() === String(sourceOrdinal || "").trim().toUpperCase()
+	      );
+	      if (!destRow || sourceIndex < 0 || colorWorkbenchRows[sourceIndex].id === destinationId) {
+	        setCwStatus("Rep not found or same as target.", "err");
+	        return;
+	      }
+	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
+	      const moved = { ...source, substitute: "", deps: [] };
+	      destRow.deps = [...(destRow.deps || []), moved, ...(source.deps || [])];
+	      dependencyInputRowId = "";
+	      renderColorWorkbenchPanel();
+	      applyColorWorkbenchToFrame();
+	      persistColorWorkbench();
+	    }
+
+	    function promoteDependent(depId) {
+	      for (const row of colorWorkbenchRows) {
+	        const depIndex = (row.deps || []).findIndex(dep => dep.id === depId);
+	        if (depIndex < 0) continue;
+	        const [dep] = row.deps.splice(depIndex, 1);
+	        colorWorkbenchRows.push({ ...dep, deps: [] });
+	        sortWorkbenchRows();
+	        activeWorkbenchItemId = dep.id;
+	        renderColorWorkbenchPanel();
+	        applyColorWorkbenchToFrame();
+	        persistColorWorkbench();
+	        return;
+	      }
+	    }
+
+	    function resolveWorkbenchColorInFrame(item) {
+	      try {
+	        const doc = frame.contentDocument;
+	        if (!doc) return item.hex;
+	        const probe = doc.createElement("span");
+	        probe.style.cssText = `position:absolute;left:-9999px;top:-9999px;color:var(${colorWorkbenchVarName(item)});`;
+	        doc.body.appendChild(probe);
+	        const hex = cssColorToHex(doc.defaultView.getComputedStyle(probe).color);
+	        probe.remove();
+	        return hex || item.substitute || item.hex;
+	      } catch {
+	        return item.substitute || item.hex;
+	      }
+	    }
+
+	    function colorWorkbenchItemRefs() {
+	      const out = [];
+	      for (const row of colorWorkbenchRows) {
+	        out.push(row);
+	        for (const dep of row.deps || []) out.push(dep);
+	      }
+	      return out;
+	    }
+
+	    function buildColorHoverMatchCache() {
+	      if (colorHoverMatchCache) return colorHoverMatchCache;
+	      colorHoverMatchCache = colorWorkbenchItemRefs().map(item => {
+	        const renderedHex = toHexColor(resolveWorkbenchColorInFrame(item)).toLowerCase();
+	        const originalHex = toHexColor(item.hex).toLowerCase();
+	        return {
+	          item,
+	          renderedHex,
+	          originalHex,
+	          renderedLab: hexToOklab(renderedHex),
+	          originalLab: hexToOklab(originalHex),
+	        };
+	      });
+	      return colorHoverMatchCache;
+	    }
+
+	    function matchWorkbenchColor(hex) {
+	      if (!hex) return null;
+	      const targetHex = toHexColor(hex).toLowerCase();
+	      const targetLab = hexToOklab(targetHex);
+	      let best = null;
+	      for (const entry of buildColorHoverMatchCache()) {
+	        if (targetHex === entry.renderedHex || targetHex === entry.originalHex) return entry;
+	        if (!targetLab) continue;
+	        const distances = [
+	          entry.renderedLab ? oklabDist(targetLab, entry.renderedLab) : Infinity,
+	          entry.originalLab ? oklabDist(targetLab, entry.originalLab) : Infinity,
+	        ];
+	        const distance = Math.min(...distances);
+	        if (distance < 0.025 && (!best || distance < best.distance)) best = { ...entry, distance };
+	      }
+	      return best;
+	    }
+
+	    function setColorInspectorBlink(itemId, force = false) {
+	      if (!force && colorHoverLastItemId === itemId) return;
+	      if (colorHoverLastItemId) {
+	        colorWorkbenchHost
+	          ?.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(colorHoverLastItemId)}"]`)
+	          .forEach(el => el.classList.remove("ewb-inspector-blink"));
+	      }
+	      colorHoverLastItemId = itemId || "";
+	      if (colorHoverLastItemId) {
+	        colorWorkbenchHost
+	          ?.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(colorHoverLastItemId)}"]`)
+	          .forEach(el => el.classList.add("ewb-inspector-blink"));
+	      }
+	    }
+
+	    function hideColorHoverInspector() {
+	      if (colorHoverTooltip) colorHoverTooltip.style.display = "none";
+	      setColorInspectorBlink("");
+	    }
+
+	    function colorHoverElementsAt(doc, x, y) {
+	      const stack = doc.elementsFromPoint?.(x, y) || [doc.elementFromPoint?.(x, y)].filter(Boolean);
+	      const out = [];
+	      const seen = new Set();
+	      for (const el of stack) {
+	        let node = el;
+	        while (node && node.nodeType === 1 && node !== doc.documentElement) {
+	          if (!seen.has(node)) {
+	            seen.add(node);
+	            out.push(node);
+	          }
+	          if (node === doc.body) break;
+	          node = node.parentElement;
+	        }
+	      }
+	      return out;
+	    }
+
+	    function colorHoverTextElementAt(doc, x, y) {
+	      try {
+	        let node = null;
+	        let offset = 0;
+	        if (doc.caretRangeFromPoint) {
+	          const range = doc.caretRangeFromPoint(x, y);
+	          node = range?.startContainer || null;
+	          offset = range?.startOffset || 0;
+	        } else if (doc.caretPositionFromPoint) {
+	          const pos = doc.caretPositionFromPoint(x, y);
+	          node = pos?.offsetNode || null;
+	          offset = pos?.offset || 0;
+	        }
+	        if (!node || node.nodeType !== Node.TEXT_NODE || !node.nodeValue?.trim()) return null;
+	        const text = node.nodeValue;
+	        let start = Math.max(0, Math.min(text.length - 1, offset));
+	        if (/\s/.test(text[start] || "") && start > 0) start--;
+	        const range = doc.createRange();
+	        range.setStart(node, start);
+	        range.setEnd(node, Math.min(text.length, start + 1));
+	        const rects = Array.from(range.getClientRects());
+	        range.detach?.();
+	        const onGlyph = rects.some(rect =>
+	          x >= rect.left - 2 && x <= rect.right + 2 &&
+	          y >= rect.top - 2 && y <= rect.bottom + 2
+	        );
+	        return onGlyph ? node.parentElement : null;
+	      } catch {
+	        return null;
+	      }
+	    }
+
+	    function splitCssTopLevelCommas(value) {
+	      const parts = [];
+	      let depth = 0;
+	      let start = 0;
+	      const s = String(value || "");
+	      for (let i = 0; i < s.length; i++) {
+	        const ch = s[i];
+	        if (ch === "(") depth++;
+	        else if (ch === ")") depth = Math.max(0, depth - 1);
+	        else if (ch === "," && depth === 0) {
+	          parts.push(s.slice(start, i).trim());
+	          start = i + 1;
+	        }
+	      }
+	      const last = s.slice(start).trim();
+	      if (last) parts.push(last);
+	      return parts;
+	    }
+
+	    function balancedCssFunctionAt(value, start) {
+	      const s = String(value || "");
+	      const open = s.indexOf("(", start);
+	      if (open < 0) return "";
+	      let depth = 0;
+	      for (let i = open; i < s.length; i++) {
+	        if (s[i] === "(") depth++;
+	        else if (s[i] === ")") {
+	          depth--;
+	          if (depth === 0) return s.slice(start, i + 1);
+	        }
+	      }
+	      return "";
+	    }
+
+	    function firstCssColorToken(value) {
+	      const s = String(value || "").trim();
+	      const hex = s.match(/#[0-9a-fA-F]{3,8}\b/);
+	      const candidates = [
+	        ...["rgb", "rgba", "oklch", "color"].map(name => {
+	          const index = s.toLowerCase().indexOf(`${name}(`);
+	          return index >= 0 ? { index, token: balancedCssFunctionAt(s, index) } : null;
+	        }).filter(Boolean),
+	        hex ? { index: hex.index, token: hex[0] } : null,
+	      ].filter(item => item?.token);
+	      candidates.sort((a, b) => a.index - b.index);
+	      return candidates[0]?.token || "";
+	    }
+
+	    function parseGradientColorStops(layer) {
+	      const fn = String(layer || "").match(/^\s*(?:repeating-)?(?:linear|radial)-gradient\(([\s\S]*)\)\s*$/i);
+	      if (!fn) return [];
+	      const args = splitCssTopLevelCommas(fn[1]);
+	      if (!args.length) return [];
+	      let direction = "";
+	      if (!firstCssColorToken(args[0])) direction = args.shift() || "";
+	      const stops = args.map((arg, index) => {
+	        const token = firstCssColorToken(arg);
+	        const hex = cssColorToHex(token);
+	        if (!hex) return null;
+	        const afterColor = token ? arg.slice(arg.indexOf(token) + token.length) : arg;
+	        const pctMatch = afterColor.match(/(-?[\d.]+)%/);
+	        return {
+	          hex,
+	          index,
+	          position: pctMatch ? Math.max(0, Math.min(1, parseFloat(pctMatch[1]) / 100)) : null,
+	        };
+	      }).filter(Boolean);
+	      if (!stops.length) return [];
+	      if (stops.length === 1) {
+	        stops[0].position = 0;
+	        return stops;
+	      }
+	      const explicit = stops.filter(stop => stop.position !== null);
+	      if (explicit.length < stops.length) {
+	        for (let i = 0; i < stops.length; i++) {
+	          if (stops[i].position === null) stops[i].position = i / (stops.length - 1);
+	        }
+	      }
+	      stops.direction = direction;
+	      return stops;
+	    }
+
+	    function gradientPointPosition(layer, rect, point) {
+	      const s = String(layer || "").toLowerCase();
+	      const x = Math.max(0, Math.min(1, (point.x - rect.left) / Math.max(1, rect.width)));
+	      const y = Math.max(0, Math.min(1, (point.y - rect.top) / Math.max(1, rect.height)));
+	      if (s.startsWith("radial-gradient") || s.startsWith("repeating-radial-gradient")) {
+	        const at = s.match(/\bat\s+(-?[\d.]+)%\s+(-?[\d.]+)%/);
+	        const cx = at ? parseFloat(at[1]) / 100 : 0.5;
+	        const cy = at ? parseFloat(at[2]) / 100 : 0.5;
+	        return Math.max(0, Math.min(1, Math.hypot(x - cx, y - cy) / Math.SQRT2));
+	      }
+	      if (/\bto\s+left\b/.test(s) || /\b270deg\b/.test(s)) return 1 - x;
+	      if (/\bto\s+right\b/.test(s) || /\b90deg\b/.test(s)) return x;
+	      if (/\bto\s+top\b/.test(s) || /\b0deg\b/.test(s) || /\b360deg\b/.test(s)) return 1 - y;
+	      return y;
+	    }
+
+	    function matchBackgroundImageColor(backgroundImage, rect, point) {
+	      const image = String(backgroundImage || "");
+	      if (!image || image === "none") return null;
+	      const layers = splitCssTopLevelCommas(image).filter(layer => /gradient\(/i.test(layer));
+	      for (const layer of layers) {
+	        const stops = parseGradientColorStops(layer);
+	        if (!stops.length) continue;
+	        const t = gradientPointPosition(layer, rect, point);
+	        const ordered = [...stops].sort((a, b) => Math.abs(a.position - t) - Math.abs(b.position - t));
+	        for (const stop of ordered) {
+	          const match = matchWorkbenchColor(stop.hex);
+	          if (match) return match;
+	        }
+	      }
+	      return null;
+	    }
+
+	    function findColorHoverMatchAt(point) {
+	      try {
+	        const doc = frame.contentDocument;
+	        const win = frame.contentWindow;
+	        if (!doc || !win || !colorWorkbenchRows.length) return null;
+	        const textEl = colorHoverTextElementAt(doc, point.x, point.y);
+	        if (textEl) {
+	          const cs = win.getComputedStyle(textEl);
+	          for (const prop of ["color", "textDecorationColor", "fill", "stroke"]) {
+	            const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	            if (match) return match;
+	          }
+	        }
+	        const backgroundProps = ["backgroundColor"];
+	        const borderProps = [
+	          ["borderTopColor", "borderTopWidth", "borderTopStyle"],
+	          ["borderRightColor", "borderRightWidth", "borderRightStyle"],
+	          ["borderBottomColor", "borderBottomWidth", "borderBottomStyle"],
+	          ["borderLeftColor", "borderLeftWidth", "borderLeftStyle"],
+	          ["outlineColor", "outlineWidth", "outlineStyle"],
+	        ];
+	        const fallbackTextProps = ["color", "textDecorationColor"];
+	        const elements = colorHoverElementsAt(doc, point.x, point.y);
+	        for (const el of elements) {
+	          const rect = el.getBoundingClientRect();
+	          if (rect.width <= 0 || rect.height <= 0) continue;
+	          const cs = win.getComputedStyle(el);
+	          for (const prop of backgroundProps) {
+	            const hex = cssColorToHex(cs[prop]);
+	            const match = matchWorkbenchColor(hex);
+	            if (match) return match;
+	          }
+	          const gradientMatch = matchBackgroundImageColor(cs.backgroundImage, rect, point);
+	          if (gradientMatch) return gradientMatch;
+	          for (const [colorProp, widthProp, styleProp] of borderProps) {
+	            if (parseFloat(cs[widthProp]) <= 0 || cs[styleProp] === "none") continue;
+	            const match = matchWorkbenchColor(cssColorToHex(cs[colorProp]));
+	            if (match) return match;
+	          }
+	          if (win.SVGElement && el instanceof win.SVGElement) {
+	            for (const prop of ["fill", "stroke"]) {
+	              const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	              if (match) return match;
+	            }
+	          }
+	        }
+	        for (const el of elements) {
+	          const rect = el.getBoundingClientRect();
+	          if (rect.width <= 0 || rect.height <= 0) continue;
+	          const cs = win.getComputedStyle(el);
+	          for (const prop of fallbackTextProps) {
+	            const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	            if (match) return match;
+	          }
+	        }
+	      } catch {}
+	      return null;
+	    }
+
+	    function showColorHoverTooltip(match, point) {
+	      if (!colorHoverTooltip || !match) return;
+	      const frameRect = frame.getBoundingClientRect();
+	      const label = String(match.item.ordinal || "").trim() || "?";
+	      colorHoverTooltip.textContent = `Swatch ${label}`;
+	      colorHoverTooltip.style.display = "block";
+	      const width = colorHoverTooltip.offsetWidth || 90;
+	      const height = colorHoverTooltip.offsetHeight || 26;
+	      let left = Math.round(frameRect.left + point.x + 12);
+	      let top = Math.round(frameRect.top + point.y + 12);
+	      if (left + width + 8 > window.innerWidth) left = Math.max(8, Math.round(frameRect.left + point.x - width - 12));
+	      if (top + height + 8 > window.innerHeight) top = Math.max(8, Math.round(frameRect.top + point.y - height - 12));
+	      colorHoverTooltip.style.left = `${left}px`;
+	      colorHoverTooltip.style.top = `${top}px`;
+	    }
+
+	    function inspectColorHoverPoint(point) {
+	      if (!colorHoverInspectorEnabled || viewMode !== "visual") {
+	        hideColorHoverInspector();
+	        return;
+	      }
+	      const match = findColorHoverMatchAt(point);
+	      if (!match) {
+	        hideColorHoverInspector();
+	        return;
+	      }
+	      setColorInspectorBlink(match.item.id);
+	      showColorHoverTooltip(match, point);
+	    }
+
+	    function onColorHoverInspectorMove(ev) {
+	      if (!colorHoverInspectorEnabled || viewMode !== "visual") return;
+	      colorHoverPendingPoint = { x: ev.clientX, y: ev.clientY };
+	      if (colorHoverRaf) return;
+	      colorHoverRaf = requestAnimationFrame(() => {
+	        colorHoverRaf = 0;
+	        if (colorHoverPendingPoint) inspectColorHoverPoint(colorHoverPendingPoint);
+	      });
+	    }
+
+	    function attachColorHoverInspector() {
+	      try {
+	        const doc = frame.contentDocument;
+	        if (!doc) return;
+	        doc.addEventListener("mousemove", onColorHoverInspectorMove, true);
+	        doc.addEventListener("mouseleave", hideColorHoverInspector, true);
+	        updateColorHoverCursor();
+	      } catch {}
+	    }
+
+	    function updateColorHoverCursor() {
+	      try {
+	        const doc = frame.contentDocument;
+	        if (!doc) return;
+	        let style = doc.getElementById(COLOR_HOVER_CURSOR_STYLE_ID);
+	        const active = colorHoverInspectorEnabled && viewMode === "visual";
+	        if (!active) {
+	          style?.remove();
+	          return;
+	        }
+	        if (!style) {
+	          style = doc.createElement("style");
+	          style.id = COLOR_HOVER_CURSOR_STYLE_ID;
+	          (doc.head || doc.documentElement).appendChild(style);
+	        }
+	        style.textContent = "html, body, body * { cursor: pointer !important; }";
+	      } catch {}
+	    }
+
+	    colorHoverInspectorToggle?.addEventListener("click", () => {
+	      colorHoverInspectorEnabled = !colorHoverInspectorEnabled;
+	      colorHoverInspectorToggle.setAttribute("aria-checked", colorHoverInspectorEnabled ? "true" : "false");
+	      colorHoverMatchCache = null;
+	      updateColorHoverCursor();
+	      if (!colorHoverInspectorEnabled) hideColorHoverInspector();
+	    });
+
+	    function blinkElementColor(el, prop, targetHex) {
+	      const cssProp = prop.replace(/[A-Z]/g, m => "-" + m.toLowerCase());
+	      const oldValue = el.style.getPropertyValue(cssProp);
+	      const oldPriority = el.style.getPropertyPriority(cssProp);
+	      const oldTransition = el.style.transition;
+	      const complement = complementHex(targetHex);
+	      let ticks = 0;
+	      el.style.transition = oldTransition ? `${oldTransition}, ${cssProp} .45s ease` : `${cssProp} .45s ease`;
+	      const timer = setInterval(() => {
+	        ticks++;
+	        if (ticks % 2) el.style.setProperty(cssProp, complement, "important");
+	        else if (oldValue) el.style.setProperty(cssProp, oldValue, oldPriority);
+	        else el.style.removeProperty(cssProp);
+	        if (ticks >= 8) {
+	          clearInterval(timer);
+	          if (oldValue) el.style.setProperty(cssProp, oldValue, oldPriority);
+	          else el.style.removeProperty(cssProp);
+	          el.style.transition = oldTransition;
+	        }
+	      }, 650);
+	    }
+
+	    function activateWorkbenchItem(itemId) {
+	      const hit = findWorkbenchItem(itemId);
+	      if (!hit) return;
+	      activeWorkbenchItemId = itemId;
+	      renderColorWorkbenchPanel();
+	      try {
+	        const doc = frame.contentDocument;
+	        const win = frame.contentWindow;
+	        if (doc && win) {
+	          const renderedHex = resolveWorkbenchColorInFrame(hit.item).toLowerCase();
+	          const originalHex = hit.item.hex.toLowerCase();
+	          const props = [
+	            "color", "backgroundColor", "borderTopColor", "borderRightColor",
+	            "borderBottomColor", "borderLeftColor", "outlineColor",
+	            "textDecorationColor", "fill", "stroke",
+	          ];
+	          const elements = [doc.body, ...doc.body.querySelectorAll("*")].filter(Boolean);
+	          let scrolled = false;
+	          outer: for (const el of elements) {
+	            const rect = el.getBoundingClientRect();
+	            if (rect.width <= 0 || rect.height <= 0) continue;
+	            const cs = win.getComputedStyle(el);
+	            for (const prop of props) {
+	              const hex = cssColorToHex(cs[prop]);
+	              if (!hex) continue;
+	              const normalized = hex.toLowerCase();
+	              const exact = normalized === renderedHex || normalized === originalHex;
+	              const fuzzy = !exact && (() => {
+	                const tgt = hexToOklab(renderedHex) || hexToOklab(originalHex);
+	                const cur = hexToOklab(normalized);
+	                return tgt && cur && oklabDist(tgt, cur) < 0.02;
+	              })();
+	              if (!exact && !fuzzy) continue;
+	              el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+	              scrolled = true;
+	              break outer;
+	            }
+	          }
+	          if (!scrolled) {
+	            // Fallback: find any visible element referencing the CSS variable directly.
+	            const varName = colorWorkbenchVarName(hit.item);
+	            const sourceVar = hit.item.sourceVarName || "";
+	            for (const el of elements) {
+	              const rect = el.getBoundingClientRect();
+	              if (rect.width <= 0 || rect.height <= 0) continue;
+	              const inlineStyle = el.getAttribute("style") || "";
+	              if (inlineStyle.includes(varName) || (sourceVar && inlineStyle.includes(sourceVar))) {
+	                el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+	                scrolled = true;
+	                break;
+	              }
+	            }
+	          }
+	          if (!scrolled) setCwStatus(`No visible instance found for ${hit.item.ordinal}.`, "err");
+	        }
+	      } catch {}
+	      startBlink(itemId);
+	    }
+
+	    // Delay single-click actions so double-click can cancel them.
+	    let _ewbClickTimer = null;
+
+	    // Blink state
+	    let _ewbBlinkTimer = null;
+	    let _ewbBlinkItemId = null;
+	    let _ewbBlinkVarName = null;
+
+	    function stopBlink() {
+	      if (!_ewbBlinkTimer) return;
+	      clearInterval(_ewbBlinkTimer);
+	      _ewbBlinkTimer = null;
+	      // Restore swatch
+	      if (_ewbBlinkItemId) {
+	        const hit = findWorkbenchItem(_ewbBlinkItemId);
+	        const color = hit ? currentWorkbenchColor(hit.item) : "";
+	        colorWorkbenchHost?.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(_ewbBlinkItemId)}"]`)
+	          .forEach(b => { b.style.background = color || ""; });
+	      }
+	      // Restore CSS variable in iframe
+	      if (_ewbBlinkVarName) {
+	        try { frame.contentDocument?.documentElement?.style.removeProperty(_ewbBlinkVarName); } catch {}
+	      }
+	      _ewbBlinkItemId = null;
+	      _ewbBlinkVarName = null;
+	    }
+
+	    function startBlink(itemId) {
+	      stopBlink();
+	      const hit = findWorkbenchItem(itemId);
+	      if (!hit) return;
+	      _ewbBlinkItemId = itemId;
+	      _ewbBlinkVarName = colorWorkbenchVarName(hit.item);
+	      let tick = 0;
+	      _ewbBlinkTimer = setInterval(() => {
+	        tick++;
+	        const isRed = tick % 2 === 1;
+	        const btns = colorWorkbenchHost
+	          ? colorWorkbenchHost.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(itemId)}"]`)
+	          : [];
+	        if (isRed) {
+	          btns.forEach(b => { b.style.background = "#ee1111"; });
+	          try { frame.contentDocument?.documentElement?.style.setProperty(_ewbBlinkVarName, "#ee1111"); } catch {}
+	        } else {
+	          const h = findWorkbenchItem(itemId);
+	          const color = h ? currentWorkbenchColor(h.item) : "";
+	          btns.forEach(b => { b.style.background = color || ""; });
+	          try { frame.contentDocument?.documentElement?.style.removeProperty(_ewbBlinkVarName); } catch {}
+	        }
+	        if (tick >= 6) stopBlink();
+	      }, 500);
+	    }
+
+	    function positionNativeColorInput(anchorEl) {
+	      const r = anchorEl?.getBoundingClientRect?.();
+	      if (!r) return;
+	      let left = Math.round(r.right + 4);
+	      let top = Math.round(r.top);
+	      if (left + 32 > window.innerWidth) left = Math.max(0, Math.round(r.left - 36));
+	      if (top + 32 > window.innerHeight) top = Math.max(0, window.innerHeight - 36);
+	      colorWorkbenchNativeInput.style.left = `${left}px`;
+	      colorWorkbenchNativeInput.style.top = `${top}px`;
+	    }
+
+	    function openNativeSubstitutePicker(id, anchorEl) {
+	      const hit = findWorkbenchItem(id);
+	      if (!hit) return;
+	      clearTimeout(_ewbClickTimer);
+	      activeWorkbenchItemId = id;
+	      activeSubstituteRowId = id;
+	      pendingPriorColorById.set(id, toHexColor(hit.item.hex));
+	      dependencyInputRowId = "";
+	      renderColorWorkbenchPanel();
+	      const freshAnchor = colorWorkbenchHost?.querySelector(`.ewb-swatch[data-id="${cssEscape(id)}"]`) || anchorEl;
+	      positionNativeColorInput(freshAnchor);
+	      colorWorkbenchNativeInput.dataset.id = id;
+	      colorWorkbenchNativeInput.value = currentWorkbenchColor(hit.item);
+	      colorWorkbenchNativeInput.focus({ preventScroll: true });
+	      colorWorkbenchNativeInput.click();
+	    }
+
+	    function applyNativeSubstituteColor(final = false) {
+	      const id = colorWorkbenchNativeInput.dataset.id || activeSubstituteRowId;
+	      if (!id) return;
+	      setRowSubstitute(id, colorWorkbenchNativeInput.value, { rerender: false, movePrior: true });
+	      if (final) {
+	        pendingPriorColorById.delete(id);
+	        if (activeSubstituteRowId === id) activeSubstituteRowId = "";
+	        delete colorWorkbenchNativeInput.dataset.id;
+	      }
+	    }
+
+	    colorWorkbenchNativeInput.addEventListener("click", ev => ev.stopPropagation());
+	    colorWorkbenchNativeInput.addEventListener("input", () => applyNativeSubstituteColor(false));
+	    colorWorkbenchNativeInput.addEventListener("change", () => applyNativeSubstituteColor(true));
+
+	    colorWorkbenchHost?.addEventListener("click", ev => {
+	      const target = ev.target.closest("[data-action]");
+	      if (!target) return;
+	      const action = target.dataset.action;
+	      const id = target.dataset.id;
+
+	      // Shift+click rep → show input to absorb another Rep as a dependent.
+	      // Shift+click dependent → promote back to rep column.
+	      if ((action === "activate-row" || action === "activate-dependent") && ev.shiftKey) {
+	        ev.stopPropagation();
+	        ev.preventDefault();
+	        clearTimeout(_ewbClickTimer);
+	        if (action === "activate-row") {
+	          dependencyInputRowId = dependencyInputRowId === id ? "" : id;
+	          activeSubstituteRowId = "";
+	          renderColorWorkbenchPanel();
+	        } else {
+	          promoteDependent(id);
+	        }
+	        return;
+	      }
+
+	      // Plain click → scroll + blink, delayed so dblclick can cancel it.
+	      if (action === "activate-row" || action === "activate-dependent") {
+	        clearTimeout(_ewbClickTimer);
+	        _ewbClickTimer = setTimeout(() => activateWorkbenchItem(id), 220);
+	        return;
+	      }
+
+	    });
+
+	    // Double-click on a swatch → open color picker.
+	    colorWorkbenchHost?.addEventListener("dblclick", ev => {
+	      clearTimeout(_ewbClickTimer);
+	      const target = ev.target.closest("[data-action]");
+	      if (!target) return;
+	      const action = target.dataset.action;
+	      const id = target.dataset.id;
+	      if (action !== "activate-row" && action !== "activate-dependent") return;
+	      ev.stopPropagation();
+	      ev.preventDefault();
+	      openNativeSubstitutePicker(id, target);
+	    });
+
+	    // A later click means the native color picker was dismissed or focus moved on.
+	    document.addEventListener("click", (e) => {
+	      if (!activeSubstituteRowId) return;
+	      pendingPriorColorById.delete(activeSubstituteRowId);
+	      activeSubstituteRowId = "";
+	      delete colorWorkbenchNativeInput.dataset.id;
+	      renderColorWorkbenchPanel();
+	    });
+
+	    // Cancel blink when user clicks anywhere outside a swatch
+	    document.addEventListener("click", (e) => {
+	      if (_ewbBlinkTimer && !e.target.closest(".ewb-swatch")) stopBlink();
+	    });
+
+	    colorWorkbenchHost?.addEventListener("keydown", ev => {
+	      const target = ev.target;
+	      if (target?.dataset?.action !== "dependency-input") return;
+	      if (ev.key === "Enter") {
+	        ev.preventDefault();
+	        const value = target.value;
+	        target.value = "";
+	        makeRowDependent(target.dataset.id, value);
+	      } else if (ev.key === "Escape") {
+	        target.value = "";
+	        dependencyInputRowId = "";
+	        renderColorWorkbenchPanel();
+	      }
+	    });
+
+	    colorWorkbenchHost?.addEventListener("focusout", ev => {
+	      const target = ev.target;
+	      if (target?.dataset?.action === "dependency-input" && target.value.trim()) {
+	        makeRowDependent(target.dataset.id, target.value);
+	      }
+	    });
+
+	    document.getElementById("btnResetColors").onclick = () => {
+	      for (const row of colorWorkbenchRows) {
+	        row.substitute = "";
+	        for (const dep of row.deps || []) dep.substitute = "";
+	      }
+	      pendingPriorColorById.clear();
+	      activeSubstituteRowId = "";
+	      delete colorWorkbenchNativeInput.dataset.id;
+	      dependencyInputRowId = "";
+	      renderColorWorkbenchPanel();
+	      applyColorWorkbenchToFrame();
+	      persistColorWorkbench();
+	      setEditStatus("Original colors restored.", "ok");
+	    };
+
+	    function rewriteCssWithWorkbenchVars(css, rows) {
+	      const hexMap = new Map();
+	      const rgbMap = new Map();
+	      const items = rows.flatMap(row => [row, ...(row.deps || [])]);
+	      for (const item of items) {
+	        const hex = toHexColor(item.hex).toLowerCase();
+	        const varName = colorWorkbenchVarName(item);
+	        hexMap.set(hex, `var(${varName})`);
+	        const rgb = hexToRgb(hex);
+	        if (rgb) rgbMap.set(`${rgb.r},${rgb.g},${rgb.b}`, `var(${varName})`);
+	      }
+	      const rewritePlain = part => {
+	        let out = part.replace(/#([0-9a-fA-F]{6})\b/g, m => hexMap.get(m.toLowerCase()) ?? m);
+	        out = out.replace(/#([0-9a-fA-F]{3})\b/g, (m, d) => {
+	          const exp = "#" + d.split("").map(c => c + c).join("");
+	          return hexMap.get(exp.toLowerCase()) ?? m;
+	        });
+	        out = out.replace(
+	          /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*([\d.]+%?)\s*)?\)/g,
+	          (m, r, g, b, a) => {
+	            const expr = rgbMap.get(`${+r},${+g},${+b}`);
+	            if (!expr) return m;
+	            if (a === undefined) return expr;
+	            const alpha = String(a).endsWith("%") ? parseFloat(a) : parseFloat(a) * 100;
+	            return `color-mix(in srgb, ${expr} ${alpha.toFixed(1).replace(/\.0$/, "")}%, transparent)`;
+	          }
+	        );
+	        return out;
+	      };
+	      return String(css || "").split(/(\/\*[\s\S]*?\*\/)/g)
+	        .map(part => part.startsWith("/*") ? part : rewritePlain(part))
+	        .join("");
+	    }
+
+	    function rewriteHtmlWithWorkbenchVars(html, rows) {
+	      let result = stripColorWorkbenchBlocks(html);
+	      result = result.replace(/<style([^>]*)>([\s\S]*?)<\/style>/gi, (match, attrs, css) => {
+	        if (/id\s*=\s*["'](?:extracted-theme|iw-editor-color-theme)["']/i.test(attrs)) return match;
+	        return `<style${attrs}>${rewriteCssWithWorkbenchVars(css, rows)}</style>`;
+	      });
+	      result = result.replace(/(\bstyle\s*=\s*")([^"]*?)(")/gi, (m, o, css, c) => `${o}${rewriteCssWithWorkbenchVars(css, rows)}${c}`);
+	      result = result.replace(/(\bstyle\s*=\s*')([^']*?)(')/gi, (m, o, css, c) => `${o}${rewriteCssWithWorkbenchVars(css, rows)}${c}`);
+	      result = result.replace(
+	        /\b(fill|stroke|stop-color|flood-color)\s*=\s*"(#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3})"/gi,
+	        (m, prop, hex) => {
+	          const norm = hex.length === 4
+	            ? "#" + hex[1]+hex[1] + hex[2]+hex[2] + hex[3]+hex[3]
+	            : hex;
+	          const row = rows.flatMap(r => [r, ...(r.deps || [])]).find(r => r.hex.toLowerCase() === norm.toLowerCase());
+	          return row ? `style="${prop}: var(${colorWorkbenchVarName(row)})"` : m;
+	        }
+	      );
+	      return result;
+	    }
+
+	    function ensureEditorColorPreprocessed(html) {
+	      const hasEditorState = new RegExp(`id=["']${EDITOR_COLOR_STATE_ID}["']`, "i").test(String(html || ""));
+	      const rows = buildFullPaletteSwatches(html) || [];
+	      if (!rows.length) return { html, rows: [], changed: false };
+	      colorWorkbenchRows = normalizeColorWorkbenchRows(rows);
+	      let nextHtml = html;
+	      if (!hasEditorState) {
+	        const hasExistingPalette = /<script[^>]*id=["']color-palette["']/i.test(String(html || ""));
+	        nextHtml = hasExistingPalette
+	          ? insertColorWorkbenchBlocks(html)
+	          : insertColorWorkbenchBlocks(rewriteHtmlWithWorkbenchVars(html, colorWorkbenchRows));
+	      }
+	      return { html: nextHtml, rows: colorWorkbenchRows, changed: nextHtml !== html };
+	    }
+
+	    function initializeColorWorkbenchFromHtml(html) {
+	      const prepared = ensureEditorColorPreprocessed(html);
+	      currentHtml = prepared.html;
+	      renderColorWorkbenchPanel(prepared.rows);
+	      loadIframe(currentHtml);
+	      setCodeContent(currentHtml);
+	      document.getElementById("colorPanel").classList.remove("hidden");
+	    }
+
+	    // Initialize the right-side color workbench after the first document load.
+	    initializeColorWorkbenchFromHtml(currentHtml || fullHtml);
+
+	    // ── Open menu (HTML file / folder / URL) ─────────────────────────────────
+    (function () {
+      const btnMenu = document.getElementById("btnOpenMenu");
+      const menu    = document.getElementById("openMenu");
+      btnMenu.addEventListener("click", e => {
+        e.stopPropagation();
+        menu.classList.toggle("open");
+      });
+      document.addEventListener("click", () => menu.classList.remove("open"));
+
+      // ── Open single HTML file ──────────────────────────────────────────────
+      document.getElementById("btnOpenHtml").addEventListener("click", () => {
+        menu.classList.remove("open");
+        document.getElementById("openFileInput").click();
+      });
+
+      document.getElementById("openFileInput").onchange = async (ev) => {
+        const file = ev.target.files?.[0];
+        ev.target.value = "";
+        if (!file) return;
+        const sbTicker = document.getElementById("sbTicker");
+        sbTicker.textContent = "Processing…";
+        const raw = await file.text();
+        const prepared = ensureEditorColorPreprocessed(raw);
+        currentHtml = prepared.html;
+        baseHtml    = null;
+        currentDocumentBaseHref = "";
+        loadIframe(currentHtml);
+        setCodeContent(currentHtml);
+        renderColorWorkbenchPanel(prepared.rows);
+        applyColorWorkbenchToFrame();
+        sbTicker.textContent = prepared.changed
+          ? `Opened and preprocessed: ${file.name}`
+          : `Opened: ${file.name}`;
+      };
+
+      // ── Open folder (rewrites relative asset URLs to blob: URLs) ──────────
+      document.getElementById("btnOpenDir").addEventListener("click", () => {
+        menu.classList.remove("open");
+        document.getElementById("openDirInput").click();
+      });
+
+      document.getElementById("openDirInput").onchange = async (ev) => {
+        const files = Array.from(ev.target.files || []);
+        ev.target.value = "";
+        if (!files.length) return;
+
+        const sbTicker = document.getElementById("sbTicker");
+        sbTicker.textContent = "Loading folder…";
+
+        // Build a map from relative path (sans root dir) → File
+        const fileMap = new Map();
+        for (const f of files) {
+          const rel = f.webkitRelativePath.split("/").slice(1).join("/");
+          if (rel) fileMap.set(rel, f);
+        }
+
+        // Find the HTML entry point: prefer index.html, then sample.html, then first .html
+        const htmlFiles = [...fileMap.entries()].filter(([p]) => /\.html?$/i.test(p) && !p.includes("/"));
+        const [htmlRel, htmlFileObj] = htmlFiles.find(([p]) => p === "index.html")
+          || htmlFiles.find(([p]) => p === "sample.html")
+          || htmlFiles[0]
+          || [];
+        if (!htmlFileObj) { sbTicker.textContent = "No HTML file found in folder."; return; }
+
+        // Create blob URLs for all non-HTML assets
+        const blobMap = new Map();
+        for (const [rel, f] of fileMap) {
+          if (!/\.html?$/i.test(rel)) blobMap.set(rel, URL.createObjectURL(f));
+        }
+
+        const rawHtml = await htmlFileObj.text();
+        const rewritten = rewriteRelativeUrlsWithBlobMap(rawHtml, blobMap);
+
+        try {
+          importHtmlIntoEditor(rewritten, htmlRel || htmlFileObj.name);
+        } catch (err) {
+          sbTicker.textContent = `Error: ${err.message}`;
+        }
+      };
+
+      // ── Rewrite relative asset paths to blob: URLs ────────────────────────
+      function resolveAssetPath(rawPath, blobMap) {
+        const p = rawPath.replace(/^\.\//, "");
+        return blobMap.get(p) || blobMap.get(decodeURIComponent(p)) || null;
+      }
+
+      function rewriteRelativeUrlsWithBlobMap(html, blobMap) {
+        if (!blobMap.size) return html;
+        // url("...") in <style> blocks and inline style= attributes
+        let out = html.replace(
+          /\burl\(\s*(["']?)([^"')]+)\1\s*\)/gi,
+          (m, q, path) => {
+            if (/^(https?:|data:|blob:|#|\/\/)/i.test(path)) return m;
+            const blob = resolveAssetPath(path, blobMap);
+            return blob ? `url(${q}${blob}${q})` : m;
+          }
+        );
+        // src="..." on img/script/video/audio/source/iframe
+        out = out.replace(
+          /(<(?:img|script|video|audio|source|iframe|track)\b[^>]*?)\bsrc=(["'])([^"']*)\2/gi,
+          (m, pre, q, val) => {
+            if (/^(https?:|data:|blob:|#|\/\/)/i.test(val)) return m;
+            const blob = resolveAssetPath(val, blobMap);
+            return blob ? `${pre}src=${q}${blob}${q}` : m;
+          }
+        );
+        // href="..." on <link> elements only (not <a>)
+        out = out.replace(
+          /(<link\b[^>]*?)\bhref=(["'])([^"']*)\2/gi,
+          (m, pre, q, val) => {
+            if (/^(https?:|data:|blob:|#|\/\/)/i.test(val)) return m;
+            const blob = resolveAssetPath(val, blobMap);
+            return blob ? `${pre}href=${q}${blob}${q}` : m;
+          }
+        );
+        return out;
+      }
+
+      // ── Browse templates ─────────────────────────────────────────────────
+      (function () {
+        const tplModal = document.getElementById("tplPickerModal");
+        const tplList  = document.getElementById("tplPickerList");
+        let tplLoaded  = false;
+
+        function labelToDir(label) {
+          return label.toLowerCase().replace(/\s+/g, "-");
+        }
+
+        async function populateTplList() {
+          if (tplLoaded) return;
+          tplLoaded = true;
+          try {
+            const res  = await fetch("/.netlify/functions/listTemplates");
+            const data = await res.json();
+            const names = (data.templates || []);
+            if (!names.length) {
+              tplList.innerHTML = '<span class="tpl-loading">No templates found.</span>';
+              return;
+            }
+            tplList.innerHTML = names.map(label =>
+              `<button data-dir="${escapeHtml(labelToDir(label))}">${escapeHtml(label)}</button>`
+            ).join("");
+            tplList.querySelectorAll("button[data-dir]").forEach(b => {
+              b.addEventListener("click", async () => {
+                const dir   = b.dataset.dir;
+                const label = b.textContent;
+                const path  = `/templates/${dir}/sample.html`;
+                b.textContent = "Loading…";
+                b.disabled = true;
+                try {
+                  const res = await fetch(path, { cache: "no-store" });
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  const html = await res.text();
+                  tplModal.classList.remove("open");
+                  importHtmlIntoEditor(html, label, `/templates/${dir}/`);
+                } catch (err) {
+                  b.textContent = `Error: ${err.message}`;
+                  b.disabled = false;
+                }
+              });
+            });
+          } catch {
+            tplList.innerHTML = '<span class="tpl-loading">Could not load template list.</span>';
+          }
+        }
+
+        document.getElementById("btnOpenTpl").addEventListener("click", () => {
+          menu.classList.remove("open");
+          tplModal.classList.add("open");
+          populateTplList();
+        });
+        document.getElementById("tplPickerClose").addEventListener("click", () =>
+          tplModal.classList.remove("open")
+        );
+        tplModal.addEventListener("click", e => {
+          if (e.target === tplModal) tplModal.classList.remove("open");
+        });
+      })();
+
+      // ── Open from URL / server path ───────────────────────────────────────
+      document.getElementById("btnOpenUrl").addEventListener("click", () => {
+        menu.classList.remove("open");
+        const modal = document.getElementById("urlModal");
+        const input = document.getElementById("urlModalInput");
+        document.getElementById("urlModalError").textContent = "";
+        input.value = "";
+        modal.classList.add("open");
+        setTimeout(() => input.focus(), 50);
+      });
+
+      document.getElementById("urlModalCancel").addEventListener("click", () =>
+        document.getElementById("urlModal").classList.remove("open")
+      );
+
+      document.getElementById("urlModal").addEventListener("click", e => {
+        if (e.target === document.getElementById("urlModal"))
+          document.getElementById("urlModal").classList.remove("open");
+      });
+
+      document.getElementById("urlModalInput").addEventListener("keydown", e => {
+        if (e.key === "Enter") document.getElementById("urlModalLoad").click();
+        if (e.key === "Escape") document.getElementById("urlModal").classList.remove("open");
+      });
+
+      document.getElementById("urlModalLoad").addEventListener("click", async () => {
+        const raw   = document.getElementById("urlModalInput").value.trim();
+        const errEl = document.getElementById("urlModalError");
+        const loadBtn = document.getElementById("urlModalLoad");
+        errEl.textContent = "";
+        if (!raw) { errEl.textContent = "Please enter a URL or path."; return; }
+
+        loadBtn.textContent = "Loading…";
+        loadBtn.disabled = true;
+
+        // Server-relative path — fetch directly, derive baseHref from directory
+        if (raw.startsWith("/")) {
+          try {
+            const res = await fetch(raw, { cache: "no-store" });
+            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+            const html = await res.text();
+            const baseHref = raw.replace(/[^/]*$/, "");
+            document.getElementById("urlModal").classList.remove("open");
+            importHtmlIntoEditor(html, raw.replace(/.*\//, "") || raw, baseHref);
+          } catch (err) {
+            errEl.textContent = `Could not load: ${err.message}`;
+          } finally {
+            loadBtn.textContent = "Load";
+            loadBtn.disabled = false;
+          }
+          return;
+        }
+
+        // Full URL
+        let url;
+        try { url = new URL(raw); } catch {
+          errEl.textContent = "Enter a server-relative path (starting with /) or a full https:// URL.";
+          loadBtn.textContent = "Load";
+          loadBtn.disabled = false;
+          return;
+        }
+
+        try {
+          const res = await fetch(raw, { mode: "cors" });
+          if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+          const html = await res.text();
+          const baseHref = url.href.replace(/[^/]*$/, "");
+          document.getElementById("urlModal").classList.remove("open");
+          importHtmlIntoEditor(html, url.hostname + url.pathname.replace(/.*\//, "/"), baseHref);
+        } catch (err) {
+          errEl.textContent = `Could not load: ${err.message}. The server may not allow cross-origin requests.`;
+        } finally {
+          loadBtn.textContent = "Load";
+          loadBtn.disabled = false;
+        }
+      });
     })();
 
     // ── Resizable divider ──────────────────────────────────────────────────────
@@ -2432,19 +5130,22 @@
       loadIframe(html);
     }
 
-    function importHtmlIntoEditor(html, sourceLabel = "Imported HTML") {
-      const nextHtml = String(html || "").trim();
-      if (!nextHtml) throw new Error("The selected file was empty.");
-      currentDocumentBaseHref = "";
-      currentHtml = nextHtml;
-      setCodeContent(nextHtml);
-      loadIframe(nextHtml);
-      try {
-        cachePreviewHtml(nextHtml);
-        localStorage.setItem("portfolio_preview_html", nextHtml);
-      } catch {}
-      setEditStatus(`${sourceLabel} loaded.`, "ok");
-    }
+	    function importHtmlIntoEditor(html, sourceLabel = "Imported HTML", baseHref = "") {
+	      const prepared = ensureEditorColorPreprocessed(String(html || "").trim());
+	      const nextHtml = String(prepared.html || "").trim();
+	      if (!nextHtml) throw new Error("The selected file was empty.");
+	      currentDocumentBaseHref = baseHref;
+	      currentHtml = nextHtml;
+	      setCodeContent(nextHtml);
+	      loadIframe(nextHtml);
+	      renderColorWorkbenchPanel(prepared.rows);
+	      applyColorWorkbenchToFrame();
+	      try {
+	        cachePreviewHtml(nextHtml);
+	        localStorage.setItem("portfolio_preview_html", nextHtml);
+	      } catch {}
+	      setEditStatus(`${sourceLabel} loaded.`, "ok");
+	    }
 
     function scheduleSplitPreviewSync() {
       if (splitSyncTimer) clearTimeout(splitSyncTimer);
@@ -2471,6 +5172,8 @@
       document.getElementById("btnSplit").className  = "tbtn" + (mode === "split"  ? " tbtn-active" : "");
       document.getElementById("btnCode").className   = "tbtn" + (mode === "code"   ? " tbtn-active" : "");
       document.getElementById("colorPanel").classList.toggle("hidden", mode !== "visual");
+      if (mode !== "visual") hideColorHoverInspector();
+      updateColorHoverCursor();
       // Create CodeMirror only now that the pane is visible (lazy init avoids zero-height measurement)
       if (mode !== "visual") ensureCmView();
     }
@@ -2905,13 +5608,25 @@
         html = getCodeContent();
       } else {
         html = getVisualContent();
-      }
-      html = stripEditorBaseTag(html);
-      const overrides = Object.entries(currentColors)
-        .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
-        .join(" ");
-      if (overrides) html = html.replace("</head>", `<style>:root{${overrides}}</style>\n</head>`);
-      return html;
+	      }
+	      html = stripEditorBaseTag(html);
+	      if (!colorWorkbenchRows.length) {
+	        const overrides = Object.entries(currentColors)
+	          .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
+	          .join(" ");
+	        if (overrides) html = html.replace("</head>", `<style>:root{${overrides}}</style>\n</head>`);
+	      }
+	      return html;
+	    }
+
+    let _cwStatusTimer = null;
+    function setCwStatus(message, kind = "") {
+      const el = document.getElementById("cwStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.className = message ? kind : "";
+      clearTimeout(_cwStatusTimer);
+      if (message) _cwStatusTimer = setTimeout(() => { el.textContent = ""; el.className = ""; }, 4000);
     }
 
     function setEditStatus(message, kind = "") {
@@ -3485,6 +6200,8 @@
       "Sometimes you can also double-click a placeholder to replace it.",
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
+      "Color Workbench: click a swatch to scroll to its first use (the swatch blinks red). Double-click to substitute a color.",
+      "Color Workbench: shift-click a Rep swatch to absorb another Rep as its dependent — type the other Rep's letter and press Enter.",
     ];
 
     const ticker  = document.getElementById("sbTicker");
@@ -3619,6 +6336,13 @@
     </div>
   </div>
 
+  <!-- Auth gate screen -->
+  <div id="authGateScreen">
+    <strong>Please sign in to continue</strong>
+    <p>This editor requires an account.</p>
+    <button class="tbtn tbtn-primary" onclick="document.getElementById('authModalOverlay').classList.add('open');document.getElementById('authModalEmail').focus()">Sign In / Create Account</button>
+  </div>
+
   <!-- Sign-in modal -->
   <div class="authModalOverlay" id="authModalOverlay" onclick="if(event.target===this)closeAuthModal()">
     <div class="authModalBox">
@@ -3626,10 +6350,11 @@
       <p id="authModalSubtitle">Sign in to download or publish your portfolio.</p>
       <form id="authModalForm" style="display:contents;">
         <input id="authModalEmail" type="email" placeholder="Email" autocomplete="email" />
+        <button class="authModalForgot" id="authModalForgotUsername" type="button" style="margin-top:-6px;font-size:11px;align-self:flex-start;">Forgot username?</button>
         <input id="authModalPassword" type="password" placeholder="Password" autocomplete="current-password" />
         <input id="authModalPasswordConfirm" type="password" placeholder="Confirm new password" autocomplete="new-password" style="display:none;" />
         <div class="authModalActions">
-          <button class="btn" type="button" onclick="closeAuthModal()">Cancel</button>
+          <button class="btn" id="authModalCancel" type="button" onclick="closeAuthModal()">Cancel</button>
           <button class="btn primary" type="submit" id="authModalSubmit">Sign In</button>
         </div>
       </form>
@@ -3642,6 +6367,67 @@
   </div>
 
   <script>
+    const supabaseClient = window._supabaseClient ?? null;
+
+    // ── Auth gate (required sign-in on every editor entry) ────────────────────
+    let _authRequired = false;
+    let _authMode = "signin";
+
+    // Called by onAuthStateChange; also drives no-preview status text.
+    function _onSessionChange(session, event) {
+      if (event === "PASSWORD_RECOVERY") {
+        openAuthModal("reset");
+        return;
+      }
+      // Release gate when user signs in
+      if (session && _authRequired) {
+        _authRequired = false;
+        _doCloseAuthModal();
+      }
+      // Update no-preview sign-in status
+      const el  = document.getElementById("noPreviewAccount");
+      const btn = document.querySelector("#no-preview .tbtn-ghost");
+      if (el && btn) {
+        if (session?.user) {
+          el.textContent  = "Signed in as " + session.user.email;
+          btn.textContent = "Sign Out";
+          btn.onclick     = () => supabaseClient.auth.signOut().then(() => location.reload());
+        } else {
+          el.textContent  = "";
+          btn.textContent = "Sign In";
+          btn.onclick     = () => openAuthModal();
+        }
+      }
+    }
+
+    if (supabaseClient) {
+      supabaseClient.auth.getSession().then(({ data: { session } }) => _onSessionChange(session));
+      supabaseClient.auth.onAuthStateChange((ev, session) => _onSessionChange(session, ev));
+    }
+
+    function requireAuthGate() {
+      _authRequired = true;
+      // Gate screen: always visible regardless of modal z-index or JS errors below
+      document.getElementById("authGateScreen").classList.add("active");
+      // Modal on top of the gate screen
+      _setAuthMode("signin");
+      document.getElementById("authModalTitle").textContent    = "Sign in to use the editor";
+      document.getElementById("authModalSubtitle").textContent = supabaseClient
+        ? "Create a free account or sign in to continue."
+        : "Auth service unavailable — please reload the page.";
+      document.getElementById("authModalCancel").style.display = "none";
+      document.getElementById("authModalOverlay").classList.add("open");
+      document.getElementById("authModalEmail").focus();
+      // Already signed in? Dismiss both immediately.
+      if (supabaseClient) {
+        supabaseClient.auth.getSession().then(function (r) {
+          if (r.data.session) { _authRequired = false; _doCloseAuthModal(); }
+        });
+      }
+    }
+    requireAuthGate();
+
+    // ── Upgrade modal ─────────────────────────────────────────────────────────
     function openUpgradeModal(message) {
       if (message) document.getElementById("upgradeModalMsg").textContent = message;
       document.getElementById("upgradeModalOverlay").classList.add("open");
@@ -3650,40 +6436,59 @@
       document.getElementById("upgradeModalOverlay").classList.remove("open");
     }
 
-    let _authMode = "signin";
+    // ── Auth modal ────────────────────────────────────────────────────────────
 
     function openAuthModal(mode) {
       if (mode) _setAuthMode(mode);
+      document.getElementById("authModalCancel").style.display = "";
       document.getElementById("authModalOverlay").classList.add("open");
       const focusEl = _authMode === "reset"
         ? document.getElementById("authModalPassword")
         : document.getElementById("authModalEmail");
       focusEl.focus();
     }
-    function closeAuthModal() {
+
+    function _doCloseAuthModal() {
+      document.getElementById("authGateScreen").classList.remove("active");
       document.getElementById("authModalOverlay").classList.remove("open");
       document.getElementById("authModalMsg").textContent = "";
       document.getElementById("authModalMsg").className = "authModalMsg";
+      document.getElementById("authModalCancel").style.display = "";
+    }
+
+    function closeAuthModal() {
+      if (_authRequired) return; // gate is active — must sign in first
+      _doCloseAuthModal();
     }
 
     function _setAuthMode(mode) {
       _authMode = mode;
-      const isSignup = mode === "signup";
-      const isReset  = mode === "reset";
-      document.getElementById("authModalTitle").textContent    = isReset  ? "Set new password"
-                                                               : isSignup ? "Create an account"
-                                                               :            "Sign in to continue";
-      document.getElementById("authModalSubtitle").textContent = isReset  ? "Enter and confirm your new password."
-                                                               : isSignup ? "Verify your email to save and publish your portfolio."
-                                                               :            "Sign in to download or publish your portfolio.";
-      document.getElementById("authModalSubmit").textContent   = isReset  ? "Save Password"
-                                                               : isSignup ? "Create Account"
-                                                               :            "Sign In";
+      const isSignup      = mode === "signup";
+      const isReset       = mode === "reset";
+      const isChangeEmail = mode === "change-email";
+      document.getElementById("authModalTitle").textContent    =
+        isReset       ? "Set new password"
+        : isSignup    ? "Create an account"
+        : isChangeEmail ? "Change Username"
+        :                 "Sign in to continue";
+      document.getElementById("authModalSubtitle").textContent =
+        isReset       ? "Enter and confirm your new password."
+        : isSignup    ? "Verify your email to save and publish your portfolio."
+        : isChangeEmail ? "Enter your new email address. A confirmation link will be sent."
+        :                 "Sign in to download or publish your portfolio.";
+      document.getElementById("authModalSubmit").textContent   =
+        isReset       ? "Save Password"
+        : isSignup    ? "Create Account"
+        : isChangeEmail ? "Send Confirmation"
+        :                 "Sign In";
       document.getElementById("authModalEmail").style.display          = isReset ? "none" : "";
+      document.getElementById("authModalEmail").placeholder            = isChangeEmail ? "New email address" : "Email";
+      document.getElementById("authModalPassword").style.display       = isChangeEmail ? "none" : "";
       document.getElementById("authModalPasswordConfirm").style.display = isReset ? "" : "none";
       document.getElementById("authModalPassword").placeholder          = isReset ? "New password" : "Password";
       document.getElementById("authModalPassword").autocomplete         = (isSignup || isReset) ? "new-password" : "current-password";
-      document.getElementById("authModalFooterRow").style.display       = isReset ? "none" : "";
+      document.getElementById("authModalFooterRow").style.display       = (isReset || isChangeEmail) ? "none" : "";
+      document.getElementById("authModalForgotUsername").style.display  = (isReset || isChangeEmail || isSignup) ? "none" : "";
       document.getElementById("authModalMsg").textContent = "";
       document.getElementById("authModalMsg").className = "authModalMsg";
     }
@@ -3704,18 +6509,43 @@
       const btn      = document.getElementById("authModalSubmit");
       msgEl.className = "authModalMsg";
       msgEl.textContent = "";
-      if (!email || !password) {
-        msgEl.className = "authModalMsg err";
-        msgEl.textContent = "Email and password required.";
-        return;
-      }
       if (!supabaseClient) {
         msgEl.className = "authModalMsg err";
         msgEl.textContent = "Auth not available — please reload the page.";
         return;
       }
+      if (_authMode === "change-email") {
+        if (!email) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = "Enter a new email address.";
+          return;
+        }
+        btn.disabled = true; btn.textContent = "Sending…";
+        try {
+          const { error } = await supabaseClient.auth.updateUser({ email });
+          if (error) {
+            msgEl.className = "authModalMsg err";
+            msgEl.textContent = error.message;
+          } else {
+            msgEl.className = "authModalMsg ok";
+            msgEl.textContent = "Confirmation email sent — check your inbox.";
+            setTimeout(() => _setAuthMode("signin"), 2500);
+          }
+        } catch (err) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = err.message || "Update failed — check your connection.";
+        } finally {
+          btn.disabled = false; btn.textContent = "Send Confirmation";
+        }
+        return;
+      }
       if (_authMode === "reset") {
         const confirm = document.getElementById("authModalPasswordConfirm").value;
+        if (!password) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = "Enter a new password.";
+          return;
+        }
         if (password !== confirm) {
           msgEl.className = "authModalMsg err";
           msgEl.textContent = "Passwords don't match.";
@@ -3726,8 +6556,7 @@
           msgEl.textContent = "Password must be at least 8 characters.";
           return;
         }
-        btn.disabled = true;
-        btn.textContent = "Saving…";
+        btn.disabled = true; btn.textContent = "Saving…";
         try {
           const { error } = await supabaseClient.auth.updateUser({ password });
           if (error) {
@@ -3736,18 +6565,21 @@
           } else {
             msgEl.className = "authModalMsg ok";
             msgEl.textContent = "Password updated!";
-            setTimeout(closeAuthModal, 1200);
+            _authRequired = false;
+            setTimeout(_doCloseAuthModal, 1200);
           }
         } catch (err) {
           msgEl.className = "authModalMsg err";
           msgEl.textContent = err.message || "Update failed — check your connection.";
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Save Password";
+          btn.disabled = false; btn.textContent = "Save Password";
         }
+      } else if (!email || !password) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = "Email and password required.";
+        return;
       } else if (_authMode === "signup") {
-        btn.disabled = true;
-        btn.textContent = "Creating account…";
+        btn.disabled = true; btn.textContent = "Creating account…";
         try {
           const { error } = await supabaseClient.auth.signUp({
             email, password,
@@ -3764,12 +6596,10 @@
           msgEl.className = "authModalMsg err";
           msgEl.textContent = err.message || "Sign-up failed — check your connection.";
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Create Account";
+          btn.disabled = false; btn.textContent = "Create Account";
         }
       } else {
-        btn.disabled = true;
-        btn.textContent = "Signing in…";
+        btn.disabled = true; btn.textContent = "Signing in…";
         try {
           const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
           if (error) {
@@ -3778,40 +6608,78 @@
           } else {
             msgEl.className = "authModalMsg ok";
             msgEl.textContent = "Signed in!";
-            setTimeout(closeAuthModal, 800);
           }
         } catch (err) {
           msgEl.className = "authModalMsg err";
           msgEl.textContent = err.message || "Sign-in failed — check your connection.";
         } finally {
-          btn.disabled = false;
-          btn.textContent = "Sign In";
+          btn.disabled = false; btn.textContent = "Sign In";
         }
       }
     });
 
-    document.getElementById("authModalForgot").addEventListener("click", async () => {
-      const email = document.getElementById("authModalEmail").value.trim();
-      const msgEl = document.getElementById("authModalMsg");
+    document.getElementById("authModalForgot").addEventListener("click", async function () {
+      const emailEl  = document.getElementById("authModalEmail");
+      const msgEl    = document.getElementById("authModalMsg");
+      const email    = emailEl.value.trim();
       msgEl.className = "authModalMsg";
-      if (!email) {
+      msgEl.textContent = "";
+      if (!supabaseClient) {
         msgEl.className = "authModalMsg err";
-        msgEl.textContent = "Enter your email above first.";
+        msgEl.textContent = "Auth not available — please reload the page.";
         return;
       }
-      msgEl.textContent = "Sending reset email…";
-      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/src/editor.html`
-      });
-      if (error) {
+      if (!email) {
         msgEl.className = "authModalMsg err";
-        msgEl.textContent = error.message;
-      } else {
-        msgEl.className = "authModalMsg ok";
-        msgEl.textContent = "Reset email sent — check your inbox.";
+        msgEl.textContent = "Enter your email address above first.";
+        emailEl.focus();
+        emailEl.style.borderColor = "rgba(251,171,156,.8)";
+        setTimeout(() => { emailEl.style.borderColor = ""; }, 2000);
+        return;
+      }
+      this.disabled = true;
+      this.textContent = "Sending…";
+      try {
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + "/src/editor.html"
+        });
+        if (error) {
+          msgEl.className = "authModalMsg err";
+          msgEl.textContent = error.message;
+          console.error("[Auth] resetPasswordForEmail:", error);
+        } else {
+          msgEl.className = "authModalMsg ok";
+          msgEl.textContent = "Reset email sent — check your inbox.";
+        }
+      } catch (err) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = err.message || "Failed to send — check your connection.";
+        console.error("[Auth] resetPasswordForEmail threw:", err);
+      } finally {
+        this.disabled = false;
+        this.textContent = "Forgot password?";
       }
     });
+
+    document.getElementById("authModalForgotUsername").addEventListener("click", async () => {
+      const msgEl = document.getElementById("authModalMsg");
+      msgEl.className = "authModalMsg";
+      if (!supabaseClient) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = "Auth not available — please reload the page.";
+        return;
+      }
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session) {
+        msgEl.className = "authModalMsg err";
+        msgEl.textContent = "Sign in first, then use this to change your username.";
+        return;
+      }
+      _setAuthMode("change-email");
+      document.getElementById("authModalCancel").style.display = "";
+    });
   </script>
+
 
 </body>
 </html>

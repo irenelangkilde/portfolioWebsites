@@ -10,19 +10,19 @@
   <style>
     :root{
       --ink:oklch(from var(--color-quinary) calc(l + 0.0565) calc(c - 0.0135) calc(h + 47.1));
-      --muted:var(--c-4);
+      --muted:var(--color-primary);
 
-      --paper:var(--c-1);
-      --card: color-mix(in srgb, var(--c-1) 82%, transparent);
-      --stroke: color-mix(in srgb, var(--c-1) 10%, transparent);
-      --shadow: 0 18px 55px color-mix(in srgb, var(--c-1) 14%, transparent);
-      --shadowSoft: 0 10px 28px color-mix(in srgb, var(--c-1) 10%, transparent);
+      --paper:oklch(from var(--color-primary) calc(l + 0.0179) calc(c - 0.0158) calc(h + 55.2));
+      --card: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 82%, transparent);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.14);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
       --radius: 22px;
 
-      --accent:var(--c-1);     /* forest green */
-      --accent2:var(--c-3);    /* leaf */
-      --accent3:var(--c-2);    /* warm sunlight */
-      --btnText:var(--c-1);
+      --accent:oklch(from var(--color-secondary) calc(l - 0.0666) calc(c - 0.0690) calc(h + 12.7));     /* forest green */
+      --accent2:var(--color-tertiary);    /* leaf */
+      --accent3:var(--color-quaternary);    /* warm sunlight */
+      --btnText:oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3));
 
       --max: 1120px;
     }
@@ -34,8 +34,8 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--ink);
       background:
-        radial-gradient(1100px 520px at 12% 8%, color-mix(in srgb, var(--c-3) 18%, transparent) 0%, transparent 60%),
-        radial-gradient(900px 520px at 80% 0%, color-mix(in srgb, var(--c-2) 18%, transparent) 0%, transparent 58%),
+        radial-gradient(1100px 520px at 12% 8%, color-mix(in srgb, var(--color-tertiary) 18%, transparent) 0%, transparent 60%),
+        radial-gradient(900px 520px at 80% 0%, color-mix(in srgb, var(--color-quaternary) 18%, transparent) 0%, transparent 58%),
         var(--paper);
       overflow-x:hidden;
     }
@@ -45,7 +45,7 @@
 
     /* ===== HEADER with biology image ===== */
     header{
-      color:var(--c-1);
+      color:oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3));
       background:
         linear-gradient(0deg, color-mix(in srgb, oklch(from var(--color-quinary) calc(l + 0.0071) calc(c - 0.0181) calc(h + 47.7)) 65%, transparent), color-mix(in srgb, oklch(from var(--color-quinary) calc(l + 0.0071) calc(c - 0.0181) calc(h + 47.7)) 42%, transparent)),
         url("image1.png") center/cover no-repeat;
@@ -69,9 +69,9 @@
     }
     .mark{
       width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-3) 92%, transparent), color-mix(in srgb, var(--c-2) 80%, transparent));
-      border:1px solid color-mix(in srgb, var(--c-1) 20%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--c-1) 22%, transparent);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--color-tertiary) 92%, transparent), color-mix(in srgb, var(--color-quaternary) 80%, transparent));
+      border:1px solid color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 20%, transparent);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
     }
     .brandText{display:flex; flex-direction:column; line-height:1.1}
     .brandText strong{font-size:16px; letter-spacing:.02em}
@@ -86,12 +86,12 @@
       font-size:13.5px;
       padding:10px 12px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-1) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 12%, transparent);
+      border:1px solid color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 18%, transparent);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    .navLinks a:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 18%, transparent);}
+    .navLinks a:hover{transform: translateY(-1px); background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 18%, transparent);}
 
     .hero{
       max-width:var(--max);
@@ -123,10 +123,10 @@
     }
 
     .heroCard{
-      background: color-mix(in srgb, var(--c-1) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 12%, transparent);
+      border:1px solid color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 18%, transparent);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--c-1) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -135,8 +135,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-3) 18%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-3) 22%, transparent);
+      background: color-mix(in srgb, var(--color-tertiary) 18%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-tertiary) 22%, transparent);
       font-size:12.5px;
       font-weight:800;
       letter-spacing:.02em;
@@ -158,18 +158,18 @@
       justify-content:center;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid color-mix(in srgb, var(--c-1) 22%, transparent);
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      color:var(--c-1);
+      border:1px solid color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 22%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 14%, transparent);
+      color:oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3));
       text-decoration:none;
       font-weight:850;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 20%, transparent);}
+    .btn:hover{transform: translateY(-1px); background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 20%, transparent);}
     .btn.primary{
-      background: color-mix(in srgb, var(--c-2) 18%, transparent);
-      border-color: color-mix(in srgb, var(--c-2) 26%, transparent);
+      background: color-mix(in srgb, var(--color-quaternary) 18%, transparent);
+      border-color: color-mix(in srgb, var(--color-quaternary) 26%, transparent);
     }
 
     /* ===== Main content ===== */
@@ -210,9 +210,9 @@
       font-weight:800;
       padding:7px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-1) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
-      color:var(--c-1);
+      background: color-mix(in srgb, oklch(from var(--color-secondary) calc(l - 0.0666) calc(c - 0.0690) calc(h + 12.7)) 12%, transparent);
+      border:1px solid color-mix(in srgb, oklch(from var(--color-secondary) calc(l - 0.0666) calc(c - 0.0690) calc(h + 12.7)) 18%, transparent);
+      color:oklch(from var(--color-primary) calc(l - 0.0871) calc(c + 0.0358) calc(h + 5.6));
     }
 
     .timeline{display:grid; gap:14px}
@@ -220,8 +220,8 @@
       padding:18px;
       border-radius:18px;
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 72%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--c-1) 6%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 72%, transparent);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
       backdrop-filter: blur(8px);
     }
     .itemTop{
@@ -252,13 +252,13 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:var(--c-1);
+      background:oklch(from var(--color-quaternary) calc(l + 0.0248) calc(c - 0.1115) calc(h - 89.6));
     }
     .contactCard{
       padding:22px;
       border-radius: var(--radius);
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 78%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-primary) calc(l + 0.0339) calc(c - 0.0225) calc(h - 90.3)) 78%, transparent);
       box-shadow: var(--shadowSoft);
       backdrop-filter: blur(8px);
     }
@@ -269,7 +269,7 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--c-1);
+      color:oklch(from var(--color-secondary) calc(l - 0.0276) calc(c - 0.1449) calc(h + 7.5));
       font-size:13.5px;
       text-align:center;
     }
@@ -277,61 +277,127 @@
     html{scroll-behavior:smooth}
   </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(0.0% 0.000 0.0);
-  --c-2:           oklch(20.4% 0.022 158.1);
-  --c-3:           oklch(49.4% 0.058 161.5);
-  --c-4:           oklch(96.7% 0.023 90.7);
+  --color-primary:       oklch(96.6% 0.022 90.3);
+  --color-secondary:     oklch(75.4% 0.129 136.6);
+  --color-tertiary:      oklch(49.4% 0.058 161.1);
+  --color-quaternary:    oklch(20.4% 0.022 157.1);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
     "k": 4,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
-      "hex": "#000000",
+    "--color-primary": {
+      "hex": "#faf4e3",
       "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
+        "l": 0.9661,
+        "c": 0.0225,
+        "h": 90.3
       },
-      "count": 21,
-      "members": []
+      "count": 40,
+      "memberCount": 4,
+      "aggregateScore": 0.9055,
+      "members": [
+        {
+          "hex": "#ffffff",
+          "count": 27,
+          "score": 0
+        },
+        {
+          "hex": "#f2d27c",
+          "count": 8,
+          "score": 0.892
+        },
+        {
+          "hex": "#dddddd",
+          "count": 3,
+          "score": 0
+        },
+        {
+          "hex": "#f7fbf7",
+          "count": 2,
+          "score": 0.0135
+        }
+      ]
     },
-    "--c-2": {
-      "hex": "#0e1a13",
+    "--color-secondary": {
+      "hex": "#88c26e",
       "oklch": {
-        "l": 0.2037,
-        "c": 0.0222,
-        "h": 158.1
+        "l": 0.7541,
+        "c": 0.1291,
+        "h": 136.6
       },
-      "count": 8,
-      "members": []
+      "count": 7,
+      "memberCount": 1,
+      "aggregateScore": 0.904,
+      "members": [
+        {
+          "hex": "#88c26e",
+          "count": 7,
+          "score": 0.904
+        }
+      ]
     },
-    "--c-3": {
+    "--color-tertiary": {
       "hex": "#426c57",
       "oklch": {
         "l": 0.4938,
         "c": 0.0583,
-        "h": 161.5
+        "h": 161.1
       },
-      "count": 7,
-      "members": []
+      "count": 13,
+      "memberCount": 4,
+      "aggregateScore": 0.7589,
+      "members": [
+        {
+          "hex": "#2e7d5b",
+          "count": 5,
+          "score": 0.4728
+        },
+        {
+          "hex": "#1f4b37",
+          "count": 3,
+          "score": 0.1809
+        },
+        {
+          "hex": "#6f7b73",
+          "count": 3,
+          "score": 0.0562
+        },
+        {
+          "hex": "#4e5d53",
+          "count": 2,
+          "score": 0.0491
+        }
+      ]
     },
-    "--c-4": {
-      "hex": "#faf4e3",
+    "--color-quaternary": {
+      "hex": "#0e1a13",
       "oklch": {
-        "l": 0.9673,
-        "c": 0.0233,
-        "h": 90.7
+        "l": 0.2037,
+        "c": 0.0217,
+        "h": 157.1
       },
-      "count": 2,
-      "members": []
+      "count": 4,
+      "memberCount": 2,
+      "aggregateScore": 0.0866,
+      "members": [
+        {
+          "hex": "#132018",
+          "count": 2,
+          "score": 0.0479
+        },
+        {
+          "hex": "#0a140e",
+          "count": 2,
+          "score": 0.0387
+        }
+      ]
     }
   }
 }

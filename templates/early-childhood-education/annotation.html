@@ -9,18 +9,18 @@
 
   <style>
     :root{
-      --ink:var(--c-2);
-      --muted:var(--c-2);
-      --paper:var(--c-2);
-      --card: color-mix(in srgb, var(--c-1) 88%, transparent);
-      --stroke: color-mix(in srgb, var(--c-2) 10%, transparent);
-      --shadow: 0 18px 55px color-mix(in srgb, var(--c-2) 12%, transparent);
-      --shadowSoft: 0 10px 28px color-mix(in srgb, var(--c-2) 10%, transparent);
+      --ink:oklch(from var(--color-quaternary) calc(l + 0.0668) calc(c - 0.0231) calc(h - 28.5));
+      --muted:oklch(from var(--color-primary) calc(l + 0.0900) calc(c - 0.0307) calc(h + 55.3));
+      --paper:oklch(from var(--color-quinary) calc(l - 0.0188) calc(c + 0.0034) calc(h - 112.1));
+      --card: color-mix(in srgb, var(--color-quinary) 88%, transparent);
+      --stroke: rgba(0,0,0,0.10);
+      --shadow: 0 18px 55px rgba(0,0,0,0.12);
+      --shadowSoft: 0 10px 28px rgba(0,0,0,0.10);
       --radius: 22px;
 
-      --accent:var(--c-4);      /* soft confident blue */
-      --accent2:var(--c-3);     /* warm coral */
-      --accent3:var(--c-2);     /* gentle mint */
+      --accent:var(--color-secondary);      /* soft confident blue */
+      --accent2:var(--color-tertiary);     /* warm coral */
+      --accent3:oklch(from var(--color-tertiary) calc(l + 0.0728) calc(c - 0.0515) calc(h + 151.7));     /* gentle mint */
 
       --max: 1120px;
     }
@@ -32,9 +32,9 @@
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
       color:var(--ink);
       background:
-        radial-gradient(1000px 520px at 12% 8%, color-mix(in srgb, var(--c-4) 14%, transparent) 0%, transparent 60%),
-        radial-gradient(900px 520px at 85% 0%, color-mix(in srgb, var(--c-3) 14%, transparent) 0%, transparent 58%),
-        radial-gradient(900px 520px at 55% 25%, color-mix(in srgb, var(--c-2) 12%, transparent) 0%, transparent 58%),
+        radial-gradient(1000px 520px at 12% 8%, color-mix(in srgb, var(--color-secondary) 14%, transparent) 0%, transparent 60%),
+        radial-gradient(900px 520px at 85% 0%, color-mix(in srgb, var(--color-tertiary) 14%, transparent) 0%, transparent 58%),
+        radial-gradient(900px 520px at 55% 25%, color-mix(in srgb, oklch(from var(--color-tertiary) calc(l + 0.0728) calc(c - 0.0515) calc(h + 151.7)) 12%, transparent) 0%, transparent 58%),
         var(--paper);
       overflow-x:hidden;
     }
@@ -44,11 +44,11 @@
 
     /* Header */
     header{
-      color:var(--c-1);
+      color:var(--color-quinary);
       background:
-        radial-gradient(900px 420px at 20% 30%, color-mix(in srgb, var(--c-3) 22%, transparent), transparent 60%),
-        radial-gradient(900px 420px at 80% 20%, color-mix(in srgb, var(--c-2) 22%, transparent), transparent 60%),
-        linear-gradient(120deg, color-mix(in srgb, var(--c-4) 92%, transparent), color-mix(in srgb, var(--c-4) 70%, transparent));
+        radial-gradient(900px 420px at 20% 30%, color-mix(in srgb, var(--color-tertiary) 22%, transparent), transparent 60%),
+        radial-gradient(900px 420px at 80% 20%, color-mix(in srgb, oklch(from var(--color-tertiary) calc(l + 0.0728) calc(c - 0.0515) calc(h + 151.7)) 22%, transparent), transparent 60%),
+        linear-gradient(120deg, color-mix(in srgb, var(--color-secondary) 92%, transparent), color-mix(in srgb, var(--color-secondary) 70%, transparent));
       position:relative;
       overflow:hidden;
     }
@@ -56,10 +56,10 @@
       content:"";
       position:absolute; inset:-40px -80px -80px -80px;
       background:
-        radial-gradient(circle at 15% 30%, color-mix(in srgb, var(--c-1) 18%, transparent) 0 22%, transparent 23%),
-        radial-gradient(circle at 45% 20%, color-mix(in srgb, var(--c-1) 12%, transparent) 0 16%, transparent 17%),
-        radial-gradient(circle at 75% 40%, color-mix(in srgb, var(--c-1) 12%, transparent) 0 20%, transparent 21%),
-        radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--c-1) 10%, transparent) 0 14%, transparent 15%);
+        radial-gradient(circle at 15% 30%, color-mix(in srgb, var(--color-quinary) 18%, transparent) 0 22%, transparent 23%),
+        radial-gradient(circle at 45% 20%, color-mix(in srgb, var(--color-quinary) 12%, transparent) 0 16%, transparent 17%),
+        radial-gradient(circle at 75% 40%, color-mix(in srgb, var(--color-quinary) 12%, transparent) 0 20%, transparent 21%),
+        radial-gradient(circle at 85% 15%, color-mix(in srgb, var(--color-quinary) 10%, transparent) 0 14%, transparent 15%);
       filter: blur(1px);
       opacity:.85;
       pointer-events:none;
@@ -85,9 +85,9 @@
     }
     .mark{
       width:36px;height:36px;border-radius:14px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-1) 30%, transparent), color-mix(in srgb, var(--c-1) 12%, transparent));
-      border:1px solid color-mix(in srgb, var(--c-1) 24%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--c-2) 22%, transparent);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--color-quinary) 30%, transparent), color-mix(in srgb, var(--color-quinary) 12%, transparent));
+      border:1px solid color-mix(in srgb, var(--color-quinary) 24%, transparent);
+      box-shadow: 0 12px 26px rgba(0,0,0,.22);
     }
     .brandText{ display:flex; flex-direction:column; line-height:1.1; }
     .brandText strong{ font-size:16px; letter-spacing:.02em; }
@@ -103,12 +103,12 @@
       font-size:13.5px;
       padding:10px 12px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 14%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-quinary) 18%, transparent);
       backdrop-filter: blur(10px);
       transition: transform .15s ease, background .15s ease;
     }
-    nav a:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 20%, transparent); }
+    nav a:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--color-quinary) 20%, transparent); }
 
     /* Hero */
     .hero{
@@ -143,10 +143,10 @@
     }
 
     .heroCard{
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 14%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-quinary) 18%, transparent);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--c-2) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -155,8 +155,8 @@
       display:inline-flex;
       padding:8px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 14%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-quinary) 18%, transparent);
       font-size:12.5px;
       font-weight:850;
       letter-spacing:.02em;
@@ -175,18 +175,18 @@
       justify-content:center;
       padding:12px 14px;
       border-radius:14px;
-      border:1px solid color-mix(in srgb, var(--c-1) 22%, transparent);
-      background: color-mix(in srgb, var(--c-1) 14%, transparent);
-      color:var(--c-1);
+      border:1px solid color-mix(in srgb, var(--color-quinary) 22%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 14%, transparent);
+      color:var(--color-quinary);
       text-decoration:none;
       font-weight:850;
       font-size:13.5px;
       transition: transform .15s ease, background .15s ease;
     }
-    .btn:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--c-1) 20%, transparent); }
+    .btn:hover{ transform: translateY(-1px); background: color-mix(in srgb, var(--color-quinary) 20%, transparent); }
     .btn.primary{
-      background: color-mix(in srgb, var(--c-3) 22%, transparent);
-      border-color: color-mix(in srgb, var(--c-3) 28%, transparent);
+      background: color-mix(in srgb, var(--color-tertiary) 22%, transparent);
+      border-color: color-mix(in srgb, var(--color-tertiary) 28%, transparent);
     }
 
     /* Sections */
@@ -225,9 +225,9 @@
       font-weight:850;
       padding:7px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-4) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-4) 18%, transparent);
-      color:var(--c-2);
+      background: color-mix(in srgb, var(--color-secondary) 12%, transparent);
+      border:1px solid color-mix(in srgb, var(--color-secondary) 18%, transparent);
+      color:oklch(from var(--color-primary) calc(l + 0.0041) calc(c + 0.1126) calc(h + 72.2));
     }
 
     .timeline{ display:grid; gap:14px; }
@@ -235,8 +235,8 @@
       padding:18px;
       border-radius:18px;
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 74%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--c-2) 6%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 74%, transparent);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
       backdrop-filter: blur(8px);
     }
     .itemTop{
@@ -265,13 +265,13 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background:var(--c-2);
+      background:oklch(from var(--color-quinary) calc(l - 0.1025) c h);
     }
     .contactCard{
       padding:22px;
       border-radius: var(--radius);
       border:1px solid var(--stroke);
-      background: color-mix(in srgb, var(--c-1) 82%, transparent);
+      background: color-mix(in srgb, var(--color-quinary) 82%, transparent);
       box-shadow: var(--shadowSoft);
       backdrop-filter: blur(8px);
     }
@@ -282,7 +282,7 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--c-2);
+      color:oklch(from var(--color-secondary) calc(l - 0.0210) calc(c - 0.1785) calc(h - 112.0));
       font-size:13.5px;
       text-align:center;
     }
@@ -290,53 +290,66 @@
     html{ scroll-behavior:smooth; }
   </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(100.0% 0.000 0.0);
-  --c-2:           oklch(0.0% 0.000 0.0);
-  --c-3:           oklch(85.2% 0.043 175.8);
-  --c-4:           oklch(74.6% 0.126 23.5);
+  --color-primary:       oklch(54.4% 0.131 266.5);
+  --color-secondary:     oklch(74.6% 0.126 23.5);
+  --color-tertiary:      oklch(85.2% 0.043 175.2);
+  --color-quaternary:    oklch(28.7% 0.014 250.2);
+  --color-quinary:       oklch(99.9% 0.000 247.9);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 4,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "k": 5,
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
-      "hex": "#ffffff",
+    "--color-primary": {
+      "hex": "#4c6bbc",
       "oklch": {
-        "l": 1,
-        "c": 0,
-        "h": 0
+        "l": 0.5444,
+        "c": 0.1314,
+        "h": 266.5
       },
-      "count": 34,
-      "members": []
+      "count": 16,
+      "memberCount": 4,
+      "aggregateScore": 2.1813,
+      "members": [
+        {
+          "hex": "#4e70f1",
+          "count": 8,
+          "score": 1.5778
+        },
+        {
+          "hex": "#2640a6",
+          "count": 3,
+          "score": 0.5004
+        },
+        {
+          "hex": "#6f7b73",
+          "count": 3,
+          "score": 0.0562
+        },
+        {
+          "hex": "#5b6672",
+          "count": 2,
+          "score": 0.0469
+        }
+      ],
+      "complement": {
+        "hex": "#6f7b73",
+        "oklch": {
+          "l": 0.5704,
+          "c": 0.0187,
+          "h": 156.6
+        },
+        "count": 3,
+        "memberCount": 1
+      }
     },
-    "--c-2": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 20,
-      "members": []
-    },
-    "--c-3": {
-      "hex": "#b2d8cd",
-      "oklch": {
-        "l": 0.8517,
-        "c": 0.0428,
-        "h": 175.8
-      },
-      "count": 8,
-      "members": []
-    },
-    "--c-4": {
+    "--color-secondary": {
       "hex": "#f28b86",
       "oklch": {
         "l": 0.7457,
@@ -344,7 +357,84 @@
         "h": 23.5
       },
       "count": 8,
-      "members": []
+      "memberCount": 1,
+      "aggregateScore": 1.0097,
+      "members": [
+        {
+          "hex": "#f28b86",
+          "count": 8,
+          "score": 1.0097
+        }
+      ]
+    },
+    "--color-tertiary": {
+      "hex": "#b2d8cd",
+      "oklch": {
+        "l": 0.8524,
+        "c": 0.0427,
+        "h": 175.2
+      },
+      "count": 7,
+      "memberCount": 2,
+      "aggregateScore": 0.299,
+      "members": [
+        {
+          "hex": "#dddddd",
+          "count": 3,
+          "score": 0
+        },
+        {
+          "hex": "#8fd4c1",
+          "count": 4,
+          "score": 0.299
+        }
+      ]
+    },
+    "--color-quaternary": {
+      "hex": "#262b32",
+      "oklch": {
+        "l": 0.2873,
+        "c": 0.014,
+        "h": 250.2
+      },
+      "count": 5,
+      "memberCount": 2,
+      "aggregateScore": 0.07,
+      "members": [
+        {
+          "hex": "#1f2328",
+          "count": 2,
+          "score": 0.0222
+        },
+        {
+          "hex": "#2a3138",
+          "count": 3,
+          "score": 0.0478
+        }
+      ]
+    },
+    "--color-quinary": {
+      "hex": "#ffffff",
+      "oklch": {
+        "l": 0.999,
+        "c": 0.0002,
+        "h": 247.9
+      },
+      "count": 36,
+      "memberCount": 2,
+      "aggregateScore": 0.0068,
+      "members": [
+        {
+          "hex": "#ffffff",
+          "count": 34,
+          "score": 0
+        },
+        {
+          "hex": "#f7f9fb",
+          "count": 2,
+          "score": 0.0068
+        }
+      ]
     }
   }
 }
@@ -540,7 +630,7 @@
 
       <div class="card">
         <h3>My Approach</h3>
-        <p style="margin:0; color:var(--c-2); line-height:1.7;" data-html-field="value_proposition" data-word-count="76">
+        <p style="margin:0; color:oklch(from var(--color-primary) calc(l - 0.1059) calc(c - 0.0383) calc(h + 53.1)); line-height:1.7;" data-html-field="value_proposition" data-word-count="76">
           I believe early learning thrives when children feel safe, seen, and supported. I create predictable routines
           and a warm classroom culture so children can explore with confidence. I use play-based instruction to build
           language, early math thinking, and social-emotional skills, and I watch closely—adjusting activities based on

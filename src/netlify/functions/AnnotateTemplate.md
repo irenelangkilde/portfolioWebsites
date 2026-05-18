@@ -29,10 +29,12 @@ CONDITIONAL ELEMENTS  (element is removed when data[key] is falsy/empty)
 
 REPEATING SECTIONS  (entire container removed when array is empty)
   data-section="key"      On the container element for an array.
-  data-item="key"         On the single representative child to clone per entry.
-                          Keep exactly ONE [data-item] per [data-section].
-                          If the source HTML has multiple hardcoded entries,
-                          keep the first and remove the rest.
+  data-item="key"         On each structurally repeated child in that array.
+                          Fully annotate the first repeated child as the
+                          representative clone source. Preserve later repeated
+                          siblings exactly and add the same data-item value; the
+                          renderer removes those extra sample siblings at render
+                          time.
 
 SUB-ARRAY LISTS  (string arrays inside a repeating item — special case)
   data-list="key"         On the <ul>/<ol> or chip container.
@@ -42,7 +44,9 @@ SUB-ARRAY LISTS  (string arrays inside a repeating item — special case)
 
 HERO CARD GRID  (special case — at-a-glance sidebar with typed cards)
   data-section="hero_cards"   On the grid/sidebar container.
-  data-item="hero_card"       On a single representative card (keep one, remove rest).
+  data-item="hero_card"       On each repeated hero card. Fully annotate the first
+                              card as the representative clone source; preserve the
+                              rest for source-file visual fidelity.
   data-field="card_label"     On the card's title/heading.
   data-hero-body              On the element whose body the renderer fills by card type.
 
@@ -109,8 +113,9 @@ Recognise candidate-specific content by these signals:
    (Education, Certifications, Publications, Leadership).
 
 4. REPEATING CARDS / ROWS: any group of 2+ structurally identical card,
-   row, or list-item elements is a repeating section. Keep the first,
-   remove the rest, annotate with data-section / data-item.
+   row, or list-item elements is a repeating section. Annotate the container
+   with data-section and each repeated sibling with data-item. Fully annotate
+   the first sibling as the representative; preserve all sibling content.
 
 5. SKILL TAGS / CHIPS: any cluster of badge-style inline elements
    containing skill or tool names → data-list inside the nearest
@@ -159,9 +164,11 @@ OUTPUT RULES
 3. Preserve all visible sample content (text, images, colours). The rendered
    page must look identical to the input.
 4. Add data-* attributes alongside existing attributes; never replace them.
-5. Where multiple hardcoded items exist inside a [data-section], keep only
-   the FIRST [data-item] and remove the rest. Add style="margin-bottom:14px"
-   to the kept item if it is a card or panel.
+5. Where multiple hardcoded items exist inside a [data-section], preserve all
+   visible items. Add data-item to every repeated sibling, fully annotate the
+   first as the representative, and add style="margin-bottom:14px" to the first
+   item if it is a card or panel. The renderer will use the first item as the
+   clone template and discard the extra sample siblings during render.
 6. Strip no existing attributes. Only add.
 7. The output HTML must be valid and self-contained.
 

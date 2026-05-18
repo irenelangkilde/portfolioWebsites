@@ -62,6 +62,10 @@ export function oklchDist(a, b) {
   return Math.sqrt(dL * dL + (aA - bA) ** 2 + (aB - bB) ** 2);
 }
 
+function oklchComplement(ok) {
+  return { l: ok.l, c: ok.c ?? 0, h: ((ok.h ?? 0) + 180) % 360 };
+}
+
 // ── Regex extraction (default path) ──────────────────────────────────────────
 
 const COLOR_PROPS = new Set([
@@ -79,6 +83,10 @@ const SKIP = new Set([
 export function extractRegex(html) {
   const counts = new Map();
 
+  const stripCssComments = css => String(css || "").replace(/\/\*[\s\S]*?\*\//g, "");
+  const stripHtmlComments = markup => String(markup || "").replace(/<!--[\s\S]*?-->/g, "");
+  const scanHtml = stripCssComments(stripHtmlComments(html));
+
   function record(str) {
     if (!str) return;
     const s = str.trim().toLowerCase();
@@ -93,9 +101,9 @@ export function extractRegex(html) {
   }
 
   function sweepCss(css) {
+    css = stripCssComments(css);
     for (const [, prop, val] of css.matchAll(/([\w-]+)\s*:\s*([^;{}]+)/g)) {
       if (!COLOR_PROPS.has(prop.trim().toLowerCase())) continue;
-      for (const tok of val.split(/[\s,]+/)) record(tok.replace(/[;)]+$/, ""));
       record(val.trim());
     }
     for (const [m] of css.matchAll(/#[0-9a-fA-F]{3,8}\b/g))   record(m);
@@ -103,12 +111,15 @@ export function extractRegex(html) {
     for (const [m] of css.matchAll(/hsla?\([^)]+\)/gi))         record(m);
     for (const [m] of css.matchAll(/oklch\([^)]+\)/gi))         record(m);
     for (const [m] of css.matchAll(/oklab\([^)]+\)/gi))         record(m);
+    for (const [m] of css.matchAll(/lch\([^)]+\)/gi))           record(m);
+    for (const [m] of css.matchAll(/lab\([^)]+\)/gi))           record(m);
+    for (const [m] of css.matchAll(/color\([^)]+\)/gi))         record(m);
   }
 
-  for (const [, css] of html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) sweepCss(css);
-  for (const [, attr] of html.matchAll(/\bstyle="([^"]*)"/gi))  sweepCss(attr);
-  for (const [, attr] of html.matchAll(/\bstyle='([^']*)'/gi))  sweepCss(attr);
-  for (const [m] of html.matchAll(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)) record(m);
+  for (const [, css] of scanHtml.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)) sweepCss(css);
+  for (const [, attr] of scanHtml.matchAll(/\bstyle="([^"]*)"/gi))  sweepCss(attr);
+  for (const [, attr] of scanHtml.matchAll(/\bstyle='([^']*)'/gi))  sweepCss(attr);
+  for (const [m] of scanHtml.matchAll(/#([0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)) record(m);
 
   return { counts };
 }
@@ -209,77 +220,231 @@ async function extractBrowser(htmlPath) {
   return { counts, sections: result };
 }
 
-// ── Rep selection ─────────────────────────────────────────────────────────────
+// ── Centroid: frequency-weighted OKLab mean → OKLCH ──────────────────────────
+
+function computeCentroid(members) {
+  let wL = 0, wA = 0, wB = 0, totalW = 0;
+  for (const m of members) {
+    const w = m.count;
+    const a = (m.ok.c ?? 0) * Math.cos(((m.ok.h ?? 0) * Math.PI) / 180);
+    const b = (m.ok.c ?? 0) * Math.sin(((m.ok.h ?? 0) * Math.PI) / 180);
+    wL += w * m.ok.l; wA += w * a; wB += w * b; totalW += w;
+  }
+  if (!totalW) return members[0]?.ok ?? { l: 0.5, c: 0, h: 0 };
+  const l = wL / totalW;
+  const a = wA / totalW;
+  const b = wB / totalW;
+  const c = Math.sqrt(a * a + b * b);
+  const h = (Math.atan2(b, a) * 180 / Math.PI + 360) % 360;
+  return { l, c, h };
+}
+
+// ── Calinski-Harabasz index ───────────────────────────────────────────────────
 //
-// selectReps(candidates, threshold)
-//   candidates: [{ hex, count, ok: {l,c,h} }]
-//   threshold:  OKLCH distance below which a new rep is too close to existing ones
+// CH(k) = [ SSB / (k−1) ] / [ SSW / (n−k) ]
+//   SSB = Σ_clusters  count_cl × dist(centroid_cl, global_centroid)²   (freq-weighted)
+//   SSW = Σ_clusters  Σ_members  count_m × dist(member.ok, centroid_cl)²
+//   n   = number of distinct color candidates (NOT frequency sum — this keeps the
+//          degrees-of-freedom penalty proportional to cluster count)
+//   k   = number of clusters
 //
-// Seed: candidate with highest count × C (most visually prominent color).
-// Each subsequent pick: the remaining candidate with the greatest minimum
-// "effective distance" from all current reps, where effective distance from rep r
-// is min(dist(c, r), dist(c, complement(r))). Using the complement means each rep
-// also covers the opposite hue zone, preventing near-complement pairs from both
-// being selected as reps. Stops when best remaining effective distance < threshold.
+// Using n = distinct count makes n-k sensitive: at k=n every cluster is a singleton,
+// n-k=0, and CH collapses to 0 — blocking the full-singleton degenerate solution.
+// Returns 0 for k<2 or n<=k (undefined / degenerate).
 
-export function selectReps(candidates, threshold = 0.20) {
-  if (candidates.length === 0) return [];
-
-  const compOk = ok => ({ l: ok.l, c: ok.c ?? 0, h: ((ok.h ?? 0) + 180) % 360 });
-
-  // Seed: highest count × C
-  const sorted = [...candidates].sort(
-    (a, b) => (b.count * (b.ok.c ?? 0)) - (a.count * (a.ok.c ?? 0))
-  );
-  const reps    = [sorted[0]];
-  const repSet  = new Set([sorted[0]]);
-
-  while (true) {
-    let bestCand = null, bestDist = -Infinity;
-    for (const c of candidates) {
-      if (repSet.has(c)) continue;
-      let minEff = Infinity;
-      for (const r of reps) {
-        const dRep  = oklchDist(c.ok, r.ok);
-        const dComp = oklchDist(c.ok, compOk(r.ok));
-        minEff = Math.min(minEff, dRep, dComp);
-      }
-      if (minEff > bestDist) { bestDist = minEff; bestCand = c; }
+function computeCH(clusters, n) {
+  const k = clusters.length;
+  if (k < 2 || n <= k) return 0;
+  const allMembers = clusters.flatMap(cl => cl.members);
+  const globalCentroid = computeCentroid(allMembers);
+  let SSB = 0;
+  for (const cl of clusters) {
+    const clCount = cl.members.reduce((s, m) => s + m.count, 0);
+    const d = oklchDist(cl.centroid, globalCentroid);
+    SSB += clCount * d * d;
+  }
+  let SSW = 0;
+  for (const cl of clusters) {
+    for (const m of cl.members) {
+      const d = oklchDist(m.ok, cl.centroid);
+      SSW += m.count * d * d;
     }
-    if (!bestCand || bestDist < threshold) break;
-    reps.push(bestCand);
-    repSet.add(bestCand);
+  }
+  if (SSW === 0) return Infinity;
+  return (SSB / (k - 1)) / (SSW / (n - k));
+}
+
+// ── Cluster builder ───────────────────────────────────────────────────────────
+//
+// Phase 1 — farthest-point selection seeded on virtual {black, white} anchors.
+//   Each iteration: find the candidate with the largest minEff distance from
+//   the current effective-rep set (anchors + cluster centroids), seed a new
+//   cluster at that point, reassign all candidates to their nearest cluster,
+//   recompute each cluster's frequency-weighted centroid.
+//   Stop at k ≥ maxK or absolute minEff < threshold.
+//
+// Phase 2a — k-means refinement.
+//   Phase 1 centroids drift as new reps are added, leaving some colors assigned
+//   to a sub-optimal cluster. Run reassign→recompute until convergence.
+//
+// Phase 2b — CH-guided merge.
+//   Greedily merge cluster pairs whose union increases Calinski-Harabasz.
+//   This corrects any over-clustering from Phase 1 without collapsing clusters
+//   that are genuinely distinct.
+//
+// Caller: pass result directly to rankClusters → buildJson.
+
+export function buildClusters(
+  candidates,
+  { threshold = 0.20, maxK = 7 } = {}
+) {
+  if (!candidates.length) return [];
+
+  const BLACK = { l: 0, c: 0, h: 0 };
+  const WHITE = { l: 1, c: 0, h: 0 };
+
+  // ── Phase 1 ─────────────────────────────────────────────────────────────────
+  let clusters = [];
+
+  while (clusters.length < maxK) {
+    const effectiveReps = [BLACK, WHITE, ...clusters.map(cl => cl.centroid)];
+
+    let bestCand = null, bestMEff = -Infinity;
+    for (const c of candidates) {
+      const mEff = Math.min(...effectiveReps.map(r => oklchDist(c.ok, r)));
+      if (mEff > bestMEff) { bestMEff = mEff; bestCand = c; }
+    }
+
+    if (!bestCand || bestMEff < threshold) break;
+
+    clusters.push({ centroid: { ...bestCand.ok }, members: [] });
+
+    // Reassign all candidates to nearest cluster centroid
+    const buckets = clusters.map(() => []);
+    for (const c of candidates) {
+      let nearestIdx = 0, nearestD = Infinity;
+      for (let i = 0; i < clusters.length; i++) {
+        const d = oklchDist(c.ok, clusters[i].centroid);
+        if (d < nearestD) { nearestD = d; nearestIdx = i; }
+      }
+      buckets[nearestIdx].push(c);
+    }
+
+    for (let i = 0; i < clusters.length; i++) {
+      clusters[i].members = buckets[i];
+      if (buckets[i].length) clusters[i].centroid = computeCentroid(buckets[i]);
+    }
+    clusters = clusters.filter(cl => cl.members.length > 0);
+  }
+
+  // ── Phase 2a — k-means refinement ────────────────────────────────────────────
+  //
+  // Phase 1 centroids drift as each new rep is added and colours are globally
+  // reassigned, so some colours end up in the wrong cluster. Iterate
+  // reassign→recompute until stable (at most 20 passes).
+  for (let pass = 0; pass < 20; pass++) {
+    const buckets = clusters.map(() => []);
+    for (const c of candidates) {
+      let ni = 0, nd = Infinity;
+      for (let i = 0; i < clusters.length; i++) {
+        const d = oklchDist(c.ok, clusters[i].centroid);
+        if (d < nd) { nd = d; ni = i; }
+      }
+      buckets[ni].push(c);
+    }
+    let changed = false;
+    for (let i = 0; i < clusters.length; i++) {
+      const oldSet = new Set(clusters[i].members.map(m => m.hex));
+      if (buckets[i].length !== oldSet.size || buckets[i].some(m => !oldSet.has(m.hex)))
+        changed = true;
+      clusters[i].members = buckets[i];
+      if (buckets[i].length) clusters[i].centroid = computeCentroid(buckets[i]);
+    }
+    clusters = clusters.filter(cl => cl.members.length > 0);
+    if (!changed) break;
+  }
+
+  // ── Phase 2b — CH-guided merge ────────────────────────────────────────────────
+  //
+  // After k-means the cluster boundaries are optimal for the current k.
+  // Now try merging pairs: if merging raises CH (clusters are not genuinely
+  // distinct), apply it. n = distinct color count so (n-k) is sensitive to k,
+  // preventing degenerate collapse when n is small.
+  const n = candidates.length;
+  let chCurrent = computeCH(clusters, n);
+
+  while (clusters.length > 1) {
+    let bestCH = chCurrent, bestMerge = null;
+
+    for (let i = 0; i < clusters.length; i++) {
+      for (let j = i + 1; j < clusters.length; j++) {
+        const mergedMembers  = [...clusters[i].members, ...clusters[j].members];
+        const mergedCentroid = computeCentroid(mergedMembers);
+        const hypothetical   = [
+          ...clusters.slice(0, i),
+          { centroid: mergedCentroid, members: mergedMembers },
+          ...clusters.slice(i + 1, j),
+          ...clusters.slice(j + 1),
+        ];
+        const chNew = computeCH(hypothetical, n);
+        if (chNew > bestCH) { bestCH = chNew; bestMerge = { i, j, hypothetical }; }
+      }
+    }
+
+    if (!bestMerge) break;
+    clusters = bestMerge.hypothetical;
+    chCurrent = bestCH;
+  }
+
+  return clusters.map(cl => ({
+    centroid: cl.centroid,
+    hex:      oklchToHex(cl.centroid),
+    ok:       cl.centroid,
+    count:    cl.members.reduce((s, m) => s + m.count, 0),
+    members:  cl.members,
+  }));
+}
+
+// ── Two-phase dedup ───────────────────────────────────────────────────────────
+//
+// dedupColors(candidates, { dupThreshold, variantThreshold })
+//
+// A lighter alternative to buildClusters for the editor's normalizeHtml path.
+// Rather than running k-means / CH-merge, it does a single greedy pass:
+//
+//   - Process candidates sorted by count (descending).
+//   - For each candidate, find its nearest existing rep:
+//       dist < dupThreshold  → "exact duplicate": same CSS var expression
+//       dist < variantThreshold → "variant": oklch(from var(…) …) expression
+//       dist ≥ variantThreshold → new rep: gets its own CSS variable
+//
+// Returns an array of rep objects { hex, ok, count, members[] } where
+// members hold both exact-duplicate and variant entries annotated with dist.
+// White and black are treated as ordinary colors (no virtual anchors).
+
+export function dedupColors(
+  candidates,
+  { dupThreshold = 0.02, variantThreshold = 0.10 } = {}
+) {
+  const sorted = [...candidates].sort((a, b) => b.count - a.count);
+  const reps = [];
+
+  for (const c of sorted) {
+    let nearestIdx = -1, nearestDist = Infinity;
+    for (let i = 0; i < reps.length; i++) {
+      const d = oklchDist(c.ok, reps[i].ok);
+      if (d < nearestDist) { nearestDist = d; nearestIdx = i; }
+    }
+
+    if (nearestIdx < 0 || nearestDist >= variantThreshold) {
+      reps.push({ hex: c.hex, ok: c.ok, count: c.count, members: [] });
+    } else {
+      reps[nearestIdx].count += c.count;
+      reps[nearestIdx].members.push({ hex: c.hex, ok: c.ok, count: c.count, dist: nearestDist });
+    }
   }
 
   return reps;
-}
-
-// ── Member assignment ─────────────────────────────────────────────────────────
-//
-// assignMembers(candidates, reps)
-//   Assigns every candidate to the nearest rep cluster by OKLCH distance.
-//   Each cluster: { hex, count, ok, members: [{hex, count, ok}] }
-
-export function assignMembers(candidates, reps) {
-  if (reps.length === 0) return [];
-  const clusters = reps.map(r => ({
-    hex:     r.hex,
-    count:   r.count,
-    ok:      r.ok,
-    members: [r],
-  }));
-
-  for (const c of candidates) {
-    if (reps.includes(c)) continue;
-    let bestIdx = 0, bestDist = Infinity;
-    for (let i = 0; i < clusters.length; i++) {
-      const d = oklchDist(c.ok, clusters[i].ok);
-      if (d < bestDist) { bestDist = d; bestIdx = i; }
-    }
-    clusters[bestIdx].members.push(c);
-  }
-
-  return clusters;
 }
 
 // ── Cluster ranking ───────────────────────────────────────────────────────────
@@ -298,6 +463,44 @@ export function rankClusters(clusters) {
     .sort((a, b) => b.aggregateScore - a.aggregateScore);
 }
 
+export function annotateComplementMembers(topClusters, candidates, { threshold = 0.20 } = {}) {
+  if (!Array.isArray(topClusters) || !topClusters.length || !Array.isArray(candidates)) {
+    return topClusters || [];
+  }
+
+  const clusters = topClusters.map(cluster => ({ ...cluster, complementMembers: [] }));
+  const complementSeen = clusters.map(() => new Set());
+
+  for (const candidate of candidates) {
+    if (!candidate?.ok || !candidate?.hex) continue;
+
+    let best = { distance: Infinity, index: -1, side: "rep" };
+    clusters.forEach((cluster, index) => {
+      const repDistance = oklchDist(candidate.ok, cluster.ok);
+      if (repDistance < best.distance) {
+        best = { distance: repDistance, index, side: "rep" };
+      }
+
+      const complementDistance = oklchDist(candidate.ok, oklchComplement(cluster.ok));
+      if (complementDistance < best.distance) {
+        best = { distance: complementDistance, index, side: "complement" };
+      }
+    });
+
+    if (best.index < 0 || best.side !== "complement" || best.distance >= threshold) continue;
+
+    const cluster = clusters[best.index];
+    if (candidate.hex.toLowerCase() === cluster.hex.toLowerCase()) continue;
+
+    const seenKey = candidate.hex.toLowerCase();
+    if (complementSeen[best.index].has(seenKey)) continue;
+    complementSeen[best.index].add(seenKey);
+    cluster.complementMembers.push(candidate);
+  }
+
+  return clusters;
+}
+
 // ── JSON builder ──────────────────────────────────────────────────────────────
 
 const ORDINAL_VARS = [
@@ -312,67 +515,83 @@ export function buildJson(top5, meta) {
   const scheme = {};
   for (let i = 0; i < top5.length; i++) {
     const cl = top5[i];
-    scheme[ORDINAL_VARS[i]] = {
+    const entry = {
       hex:            cl.hex,
       oklch:          { l: +cl.ok.l.toFixed(4), c: +(cl.ok.c ?? 0).toFixed(4), h: +(cl.ok.h ?? 0).toFixed(1) },
       count:          cl.count,
       memberCount:    cl.members.length,
       aggregateScore: +(cl.aggregateScore ?? 0).toFixed(4),
+      members:        cl.members.map(m => ({
+        hex:   m.hex,
+        count: m.count,
+        score: +((m.count * (m.ok.c ?? 0)).toFixed(4)),
+      })),
     };
+
+    if (Array.isArray(cl.complementMembers) && cl.complementMembers.length) {
+      const complementOk = computeCentroid(cl.complementMembers);
+      entry.complement = {
+        hex:         oklchToHex(complementOk),
+        oklch:       { l: +complementOk.l.toFixed(4), c: +(complementOk.c ?? 0).toFixed(4), h: +(complementOk.h ?? 0).toFixed(1) },
+        count:       cl.complementMembers.reduce((sum, member) => sum + member.count, 0),
+        memberCount: cl.complementMembers.length,
+      };
+    }
+
+    scheme[ORDINAL_VARS[i]] = entry;
   }
   return JSON.stringify({ meta, scheme }, null, 2);
 }
 
 // ── CLI (only runs when invoked directly) ─────────────────────────────────────
 
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  const args        = process.argv.slice(2);
-  const useBrowser  = args.includes("--browser");
-  const tArg        = args.find(a => a.startsWith("--threshold="));
-  const threshold   = tArg ? parseFloat(tArg.split("=")[1]) : 0.20;
-  const posArgs     = args.filter(a => !a.startsWith("--"));
-  const [inputPath, outputArg] = posArgs;
+/* @__PURE__ */ (() => { if (typeof import.meta.url === "string" && process.argv[1] === fileURLToPath(import.meta.url)) (async () => {
+    const args        = process.argv.slice(2);
+    const useBrowser  = args.includes("--browser");
+    const tArg        = args.find(a => a.startsWith("--threshold="));
+    const threshold   = tArg ? parseFloat(tArg.split("=")[1]) : 0.20;
+    const posArgs     = args.filter(a => !a.startsWith("--"));
+    const [inputPath, outputArg] = posArgs;
 
-  if (!inputPath) {
-    console.error("Usage: node extractColors.mjs <input.html> [outputDir] [--browser] [--threshold=<float>]");
-    process.exit(1);
-  }
-
-  const outDir = resolve(outputArg ?? dirname(resolve(inputPath)));
-  mkdirSync(outDir, { recursive: true });
-
-  let counts;
-  if (useBrowser) {
-    console.log("🌐 Launching Chromium for computed styles…");
-    try {
-      ({ counts } = await extractBrowser(inputPath));
-      console.log(`✓ Browser extracted ${counts.size} raw color tokens`);
-    } catch (err) {
-      console.warn(`⚠  Browser failed (${err.message}) — falling back to regex`);
-      ({ counts } = extractRegex(readFileSync(resolve(inputPath), "utf-8")));
+    if (!inputPath) {
+      console.error("Usage: node extractColors.mjs <input.html> [outputDir] [--browser] [--threshold=<float>]");
+      process.exit(1);
     }
-  } else {
-    ({ counts } = extractRegex(readFileSync(resolve(inputPath), "utf-8")));
-    console.log(`✓ Regex extracted ${counts.size} unique colors`);
-  }
 
-  const candidates = [...counts.entries()]
-    .map(([hex, count]) => ({ hex, count, ok: toOk(hex) }))
-    .filter(e => e.ok);
+    const outDir = resolve(outputArg ?? dirname(resolve(inputPath)));
+    mkdirSync(outDir, { recursive: true });
 
-  const reps     = selectReps(candidates, threshold);
-  const clusters = assignMembers(candidates, reps);
-  const ranked   = rankClusters(clusters);
-  const top5     = ranked.slice(0, 5);
-  const meta     = { k: top5.length, threshold };
+    let counts;
+    if (useBrowser) {
+      console.log("🌐 Launching Chromium for computed styles…");
+      try {
+        ({ counts } = await extractBrowser(inputPath));
+        console.log(`✓ Browser extracted ${counts.size} raw color tokens`);
+      } catch (err) {
+        console.warn(`⚠  Browser failed (${err.message}) — falling back to regex`);
+        ({ counts } = extractRegex(readFileSync(resolve(inputPath), "utf-8")));
+      }
+    } else {
+      ({ counts } = extractRegex(readFileSync(resolve(inputPath), "utf-8")));
+      console.log(`✓ Regex extracted ${counts.size} unique colors`);
+    }
 
-  const jsonPath = resolve(outDir, "palette.json");
-  writeFileSync(jsonPath, buildJson(top5, meta), "utf-8");
+    const candidates = [...counts.entries()]
+      .map(([hex, count]) => ({ hex, count, ok: toOk(hex) }))
+      .filter(e => e.ok);
 
-  console.log(`\nTop ${top5.length} clusters (threshold=${threshold}):`);
-  for (let i = 0; i < top5.length; i++) {
-    const cl = top5[i];
-    console.log(`  ${ORDINAL_VARS[i].padEnd(22)}  ${fmtOklch(cl.ok)}  members=${cl.members.length}  score=${cl.aggregateScore.toFixed(3)}`);
-  }
-  console.log(`\n✓ ${jsonPath}`);
-}
+    const clusters = buildClusters(candidates, { threshold });
+    const ranked   = rankClusters(clusters);
+    const top5     = annotateComplementMembers(ranked.slice(0, 5), candidates, { threshold });
+    const meta     = { k: top5.length, threshold };
+
+    const jsonPath = resolve(outDir, "palette.json");
+    writeFileSync(jsonPath, buildJson(top5, meta), "utf-8");
+
+    console.log(`\nTop ${top5.length} clusters (threshold=${threshold}):`);
+    for (let i = 0; i < top5.length; i++) {
+      const cl = top5[i];
+      console.log(`  ${ORDINAL_VARS[i].padEnd(22)}  ${fmtOklch(cl.ok)}  members=${cl.members.length}  score=${cl.aggregateScore.toFixed(3)}`);
+    }
+    console.log(`\n✓ ${jsonPath}`);
+  })(); })();

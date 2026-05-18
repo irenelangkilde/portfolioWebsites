@@ -14,20 +14,20 @@
         }
 
         :root {
-            --primary: var(--c-3);
-            --secondary: var(--c-4);
-            --accent: var(--c-1);
-            --dark: var(--c-6);
-            --light: var(--c-1);
-            --orange: var(--c-1);
-            --gradient: linear-gradient(135deg, var(--c-3) 0%, var(--c-4) 100%);
+            --primary: var(--color-quaternary);
+            --secondary: var(--color-primary);
+            --accent: oklch(from var(--color-tertiary) calc(l + 0.0042) calc(c + 0.0906) calc(h - 41.6));
+            --dark: #1e293b;
+            --light: oklch(from var(--color-quinary) calc(l - 0.0306) calc(c + 0.0528) h);
+            --orange: oklch(from var(--color-secondary) calc(l + 0.0490) calc(c - 0.0251) calc(h + 53.3));
+            --gradient: linear-gradient(135deg, var(--color-quaternary) 0%, var(--color-primary) 100%);
         }
 
         body {
             font-family: 'Poppins', sans-serif;
             line-height: 1.6;
             color: var(--dark);
-            background: var(--c-1);
+            background: oklch(from var(--color-quinary) calc(l + 0.0075) calc(c - 0.0053) calc(h - 95.6));
         }
 
         h1, h2, h3, h4 {
@@ -43,7 +43,7 @@
         /* Navigation */
         nav {
             background: white;
-            box-shadow: 0 2px 15px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 1000;
@@ -120,7 +120,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, color-mix(in srgb, var(--c-3) 90%, transparent) 0%, color-mix(in srgb, var(--c-4) 90%, transparent) 100%);
+            background: linear-gradient(135deg, color-mix(in srgb, var(--color-quaternary) 90%, transparent) 0%, color-mix(in srgb, var(--color-primary) 90%, transparent) 100%);
             z-index: 3;
         }
 
@@ -135,7 +135,7 @@
             font-size: 3.5rem;
             margin-bottom: 20px;
             font-weight: 700;
-            text-shadow: 2px 2px 4px color-mix(in srgb, var(--c-1) 20%, transparent);
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
         .hero .subtitle {
@@ -174,7 +174,7 @@
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 25px color-mix(in srgb, var(--c-1) 40%, transparent);
+            box-shadow: 0 8px 25px color-mix(in srgb, oklch(from var(--color-quinary) calc(l + 0.0075) calc(c - 0.0053) calc(h - 95.6)) 40%, transparent);
         }
 
         .btn-secondary {
@@ -206,7 +206,7 @@
 
         .section-subtitle {
             text-align: center;
-            color: var(--c-1);
+            color: oklch(from var(--color-primary) calc(l - 0.0687) calc(c - 0.1473) calc(h - 2.4));
             font-size: 1.15rem;
             margin-bottom: 55px;
             max-width: 700px;
@@ -243,7 +243,7 @@
             background: white;
             padding: 15px 30px;
             border-radius: 50px;
-            box-shadow: 0 3px 15px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
             font-weight: 600;
             color: var(--secondary);
         }
@@ -260,14 +260,14 @@
             background: white;
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 8px 30px color-mix(in srgb, var(--c-1) 8%, transparent);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
             transition: all 0.3s;
             border-top: 5px solid var(--primary);
         }
 
         .skill-category:hover {
             transform: translateY(-8px);
-            box-shadow: 0 15px 45px color-mix(in srgb, var(--c-1) 12%, transparent);
+            box-shadow: 0 15px 45px rgba(0,0,0,0.12);
         }
 
         .skill-category h3 {
@@ -282,7 +282,7 @@
 
         .skill-list li {
             padding: 12px 0;
-            border-bottom: 1px solid var(--c-1);
+            border-bottom: 1px solid oklch(from var(--color-quinary) calc(l - 0.0373) calc(c - 0.0053) calc(h - 95.6));
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -294,7 +294,7 @@
 
         .skill-level {
             font-size: 0.85rem;
-            color: var(--c-5);
+            color: var(--color-tertiary);
             font-weight: 600;
         }
 
@@ -313,13 +313,13 @@
             background: white;
             border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 8px 30px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             transition: all 0.4s;
         }
 
         .project-card:hover {
             transform: translateY(-12px);
-            box-shadow: 0 20px 50px color-mix(in srgb, var(--c-1) 15%, transparent);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
         }
 
         .project-image {
@@ -333,27 +333,27 @@
         }
 
         .project-image.translation {
-            background: linear-gradient(135deg, var(--c-3) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, var(--color-quaternary) 0%, oklch(from var(--color-secondary) calc(l + 0.0490) calc(c - 0.0251) calc(h + 53.3)) 100%);
         }
 
         .project-image.teaching {
-            background: linear-gradient(135deg, var(--c-4) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, var(--color-primary) 0%, oklch(from var(--color-primary) calc(l - 0.0769) calc(c + 0.0272) calc(h + 3.1)) 100%);
         }
 
         .project-image.cultural {
-            background: linear-gradient(135deg, var(--c-1) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, oklch(from var(--color-tertiary) calc(l + 0.0042) calc(c + 0.0906) calc(h - 41.6)) 0%, oklch(from var(--color-primary) calc(l - 0.0142) calc(c - 0.0771) calc(h - 38.1)) 100%);
         }
 
         .project-image.literature {
-            background: linear-gradient(135deg, var(--c-1) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, oklch(from var(--color-primary) calc(l - 0.0175) calc(c + 0.0309) calc(h + 32.9)) 0%, oklch(from var(--color-primary) calc(l - 0.0817) calc(c + 0.0586) calc(h + 33.2)) 100%);
         }
 
         .project-image.media {
-            background: linear-gradient(135deg, var(--c-7) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, var(--color-secondary) 0%, oklch(from var(--color-secondary) calc(l - 0.0643) calc(c + 0.0062) calc(h + 6.3)) 100%);
         }
 
         .project-image.community {
-            background: linear-gradient(135deg, var(--c-1) 0%, var(--c-1) 100%);
+            background: linear-gradient(135deg, oklch(from var(--color-tertiary) calc(l - 0.0148) calc(c + 0.1140) calc(h - 94.3)) 0%, oklch(from var(--color-tertiary) calc(l - 0.1147) calc(c + 0.0923) calc(h - 93.6)) 100%);
         }
 
         .project-content {
@@ -378,7 +378,7 @@
         }
 
         .project-content p {
-            color: var(--c-1);
+            color: oklch(from var(--color-primary) calc(l - 0.0687) calc(c - 0.1473) calc(h - 2.4));
             line-height: 1.7;
         }
 
@@ -409,7 +409,7 @@
             padding: 30px;
             border-radius: 15px;
             margin-bottom: 25px;
-            box-shadow: 0 5px 20px color-mix(in srgb, var(--c-1) 6%, transparent);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
             border-left: 5px solid var(--primary);
         }
 
@@ -420,7 +420,7 @@
         }
 
         .resume-item .meta {
-            color: var(--c-1);
+            color: oklch(from var(--color-primary) calc(l - 0.0687) calc(c - 0.1473) calc(h - 2.4));
             font-size: 0.95rem;
             margin-bottom: 15px;
             display: flex;
@@ -465,13 +465,13 @@
             background: var(--light);
             padding: 35px;
             border-radius: 20px;
-            box-shadow: 0 5px 20px color-mix(in srgb, var(--c-1) 6%, transparent);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.06);
             transition: all 0.3s;
         }
 
         .contact-item:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 30px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
         .contact-item h3 {
@@ -514,7 +514,7 @@
 
         .social-links a:hover {
             transform: translateY(-5px) scale(1.1);
-            box-shadow: 0 10px 25px color-mix(in srgb, var(--c-3) 30%, transparent);
+            box-shadow: 0 10px 25px color-mix(in srgb, var(--color-quaternary) 30%, transparent);
         }
 
         /* Footer */
@@ -558,94 +558,181 @@
         }
     </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(0.0% 0.000 0.0);
-  --c-2:           oklch(100.0% 0.000 0.0);
-  --c-3:           oklch(69.0% 0.090 193.4);
-  --c-4:           oklch(57.8% 0.119 266.5);
-  --c-5:           oklch(83.7% 0.164 84.4);
-  --c-6:           oklch(27.9% 0.037 260.0);
-  --c-7:           oklch(66.5% 0.181 20.7);
+  --color-primary:       oklch(57.8% 0.119 266.5);
+  --color-secondary:     oklch(66.4% 0.182 20.7);
+  --color-tertiary:      oklch(83.7% 0.164 84.4);
+  --color-quaternary:    oklch(68.9% 0.090 193.4);
+  --color-quinary:       oklch(99.2% 0.005 95.6);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 7,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "k": 5,
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 41,
-      "members": []
-    },
-    "--c-2": {
-      "hex": "#ffffff",
-      "oklch": {
-        "l": 1,
-        "c": 0,
-        "h": 0
-      },
-      "count": 14,
-      "members": []
-    },
-    "--c-3": {
-      "hex": "#4dadab",
-      "oklch": {
-        "l": 0.69,
-        "c": 0.09,
-        "h": 193.4
-      },
-      "count": 8,
-      "members": []
-    },
-    "--c-4": {
+    "--color-primary": {
       "hex": "#5976c0",
       "oklch": {
-        "l": 0.5775,
-        "c": 0.1192,
+        "l": 0.5785,
+        "c": 0.1189,
         "h": 266.5
       },
-      "count": 7,
-      "members": []
+      "count": 27,
+      "memberCount": 6,
+      "aggregateScore": 3.388,
+      "members": [
+        {
+          "hex": "#64748b",
+          "count": 12,
+          "score": 0.4886
+        },
+        {
+          "hex": "#3b82f6",
+          "count": 7,
+          "score": 1.3161
+        },
+        {
+          "hex": "#2563eb",
+          "count": 2,
+          "score": 0.4304
+        },
+        {
+          "hex": "#0891b2",
+          "count": 2,
+          "score": 0.2219
+        },
+        {
+          "hex": "#8b5cf6",
+          "count": 2,
+          "score": 0.4378
+        },
+        {
+          "hex": "#7c3aed",
+          "count": 2,
+          "score": 0.4932
+        }
+      ]
     },
-    "--c-5": {
+    "--color-secondary": {
+      "hex": "#ee5b62",
+      "oklch": {
+        "l": 0.6643,
+        "c": 0.1819,
+        "h": 20.7
+      },
+      "count": 8,
+      "memberCount": 3,
+      "aggregateScore": 1.6064,
+      "members": [
+        {
+          "hex": "#f97316",
+          "count": 4,
+          "score": 0.7469
+        },
+        {
+          "hex": "#ec4899",
+          "count": 2,
+          "score": 0.4235
+        },
+        {
+          "hex": "#db2777",
+          "count": 2,
+          "score": 0.436
+        }
+      ],
+      "complement": {
+        "hex": "#059669",
+        "oklch": {
+          "l": 0.596,
+          "c": 0.1274,
+          "h": 163.2
+        },
+        "count": 2,
+        "memberCount": 1
+      }
+    },
+    "--color-tertiary": {
       "hex": "#fbbf24",
       "oklch": {
         "l": 0.8369,
         "c": 0.1644,
         "h": 84.4
       },
-      "count": 3,
-      "members": []
+      "count": 8,
+      "memberCount": 1,
+      "aggregateScore": 1.3154,
+      "members": [
+        {
+          "hex": "#fbbf24",
+          "count": 8,
+          "score": 1.3154
+        }
+      ]
     },
-    "--c-6": {
-      "hex": "#1e293b",
+    "--color-quaternary": {
+      "hex": "#4dadab",
       "oklch": {
-        "l": 0.2795,
-        "c": 0.0368,
-        "h": 260
+        "l": 0.6886,
+        "c": 0.09,
+        "h": 193.4
       },
-      "count": 2,
-      "members": []
+      "count": 11,
+      "memberCount": 4,
+      "aggregateScore": 1.1613,
+      "members": [
+        {
+          "hex": "#94a3b8",
+          "count": 3,
+          "score": 0.1053
+        },
+        {
+          "hex": "#06b6d4",
+          "count": 4,
+          "score": 0.5029
+        },
+        {
+          "hex": "#10b981",
+          "count": 2,
+          "score": 0.2981
+        },
+        {
+          "hex": "#059669",
+          "count": 2,
+          "score": 0.2548
+        }
+      ]
     },
-    "--c-7": {
-      "hex": "#ee5b62",
+    "--color-quinary": {
+      "hex": "#fefdf9",
       "oklch": {
-        "l": 0.6647,
-        "c": 0.1814,
-        "h": 20.7
+        "l": 0.9925,
+        "c": 0.0053,
+        "h": 95.6
       },
-      "count": 2,
-      "members": []
+      "count": 22,
+      "memberCount": 3,
+      "aggregateScore": 0.1161,
+      "members": [
+        {
+          "hex": "#ffffff",
+          "count": 18,
+          "score": 0
+        },
+        {
+          "hex": "#fef3c7",
+          "count": 2,
+          "score": 0.1161
+        },
+        {
+          "hex": "#f0f0f0",
+          "count": 2,
+          "score": 0
+        }
+      ]
     }
   }
 }
@@ -1006,7 +1093,7 @@
                     <a href="mailto:sofia.martinez@email.com" data-attr-href="email" title="Email">✉️</a>
                 </div>
 
-                <p data-field="open_to" data-if="has_open_to" data-word-count="13" style="margin-top: 40px; color: var(--c-1); font-size: 0.95rem;">Interested in Education • Translation Services • International Business • Cultural Exchange Programs</p>
+                <p data-field="open_to" data-if="has_open_to" data-word-count="13" style="margin-top: 40px; color: oklch(from var(--color-primary) calc(l - 0.0687) calc(c - 0.1473) calc(h - 2.4)); font-size: 0.95rem;">Interested in Education • Translation Services • International Business • Cultural Exchange Programs</p>
             </div>
         </div>
     </section>

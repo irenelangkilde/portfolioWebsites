@@ -49,6 +49,30 @@ function parseJson(raw) {
   return null;
 }
 
+function normalizeLabelArray(values) {
+  if (typeof values === "string") {
+    values = values.split(/[•|]/).map(s => s.trim()).filter(Boolean);
+  }
+  if (!Array.isArray(values)) return [];
+  return values
+    .map(value => {
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        const label = String(value.label ?? value.card_label ?? value.name ?? value.title ?? "").trim();
+        return label ? { ...value, label } : value;
+      }
+      const label = String(value || "").trim();
+      return label ? { label } : null;
+    })
+    .filter(Boolean);
+}
+
+function firstNonEmpty(...values) {
+  return values.find(value => {
+    if (Array.isArray(value)) return value.length > 0;
+    return value !== undefined && value !== null && String(value).trim() !== "";
+  });
+}
+
 const SYSTEM = "Return only a valid JSON object. No markdown. No explanation. No code fences.";
 
 /**
@@ -118,15 +142,48 @@ export async function generateCandidateContent(callAIFn, {
     console.warn("[generateCandidateContent] fillExperienceSkills failed:", expSkillsResult.reason?.message);
 
   // ── Step 3: Merge ─────────────────────────────────────────────────────────
+  const sg = expSkillsData?.skill_groups ?? [];
+  const projects = projectsData?.projects ?? [];
+  const experience = expSkillsData?.experience ?? [];
+  const education = expSkillsData?.education ?? [];
+  const certifications = expSkillsData?.certifications ?? [];
+  const publications = expSkillsData?.publications ?? [];
+  const leadership = expSkillsData?.leadership ?? [];
+  const statusBadges = normalizeLabelArray(firstNonEmpty(heroData.status_badges, heroData.status_badges_inline));
+  const openToRoles = normalizeLabelArray(firstNonEmpty(heroData.open_to_roles, heroData.open_to_items));
+  const workDomains = normalizeLabelArray(heroData.work_domains);
   const candidateData = {
     ...heroData,
-    projects:       projectsData?.projects       ?? [],
-    experience:     expSkillsData?.experience    ?? [],
-    education:      expSkillsData?.education     ?? [],
-    skill_groups:   expSkillsData?.skill_groups  ?? [],
-    certifications: expSkillsData?.certifications ?? [],
-    publications:   expSkillsData?.publications  ?? [],
-    leadership:     expSkillsData?.leadership    ?? [],
+    projects,
+    experience,
+    education,
+    skill_groups:   sg,
+    certifications,
+    publications,
+    leadership,
+    status_badges:  statusBadges,
+    open_to_roles:  openToRoles,
+    open_to_items:  openToRoles,
+    work_domains:   workDomains,
+    has_status_badges: statusBadges.length > 0,
+    has_open_to_roles: openToRoles.length > 0,
+    has_open_to_items: openToRoles.length > 0,
+    has_work_domains:  workDomains.length > 0,
+    has_certifications: certifications.length > 0,
+    has_publications:   publications.length > 0,
+    has_leadership:     leadership.length > 0,
+    has_projects_intro: Boolean(heroData.projects_intro && String(heroData.projects_intro).trim()),
+    has_experience_intro: Boolean(heroData.experience_intro && String(heroData.experience_intro).trim()),
+    has_open_to: Boolean(heroData.open_to && String(heroData.open_to).trim()),
+    // Flat hero card aliases for templates with fixed (non-section) hero card layouts.
+    // hero_skills / hero_toolchain map to the first two skill groups (e.g. EE template).
+    // hero_highlights derives the lead bullet from each top experience entry.
+    hero_skills:    (sg[0]?.skills ?? []).slice(0, 4),
+    hero_toolchain: (sg[1]?.skills ?? []).slice(0, 4),
+    hero_highlights: experience
+      .map(e => (e.bullets ?? [])[0])
+      .filter(Boolean)
+      .slice(0, 3),
   };
 
   // ── Token accounting ──────────────────────────────────────────────────────

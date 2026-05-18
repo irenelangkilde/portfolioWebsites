@@ -11,14 +11,14 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg: var(--c-3);
+      --bg: oklch(from var(--color-quaternary) calc(l + 0.0294) calc(c + 0.0167) calc(h - 8.8));
       --panel: color-mix(in srgb, var(--color-quinary) 6%, transparent);
       --stroke: color-mix(in srgb, var(--color-quinary) 10%, transparent);
       --text: color-mix(in srgb, var(--color-quinary) 92%, transparent);
       --muted: color-mix(in srgb, var(--color-quinary) 70%, transparent);
-      --brand: var(--c-1);      /* blue */
-      --accent: var(--c-2);     /* coral */
-      --shadow: 0 18px 60px color-mix(in srgb, var(--c-3) 45%, transparent);
+      --brand: var(--color-secondary);      /* blue */
+      --accent: var(--color-tertiary);     /* coral */
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
       --radius-xl: 26px;
       --radius-lg: 20px;
       --radius-md: 14px;
@@ -32,9 +32,9 @@
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(1000px 650px at 10% 10%, color-mix(in srgb, var(--c-1) 30%, transparent), transparent 55%),
-        radial-gradient(900px 650px at 90% 20%, color-mix(in srgb, var(--c-2) 22%, transparent), transparent 55%),
-        linear-gradient(180deg, var(--bg), var(--c-4));
+        radial-gradient(1000px 650px at 10% 10%, color-mix(in srgb, var(--color-secondary) 30%, transparent), transparent 55%),
+        radial-gradient(900px 650px at 90% 20%, color-mix(in srgb, var(--color-tertiary) 22%, transparent), transparent 55%),
+        linear-gradient(180deg, var(--bg), var(--color-quaternary));
       line-height: 1.6;
       -webkit-font-smoothing: antialiased;
     }
@@ -47,7 +47,7 @@
       top:0;
       z-index:50;
       backdrop-filter: blur(10px);
-      background: color-mix(in srgb, var(--c-3) 62%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-quaternary) calc(l + 0.0294) calc(c + 0.0167) calc(h - 8.8)) 62%, transparent);
       border-bottom: 1px solid var(--stroke);
     }
     .nav{
@@ -72,9 +72,9 @@
       border-radius: 14px;
       background:
         radial-gradient(circle at 30% 25%, color-mix(in srgb, var(--color-quinary) 60%, transparent), transparent 55%),
-        linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--c-2) 95%, transparent));
+        linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--color-tertiary) 95%, transparent));
       border: 1px solid color-mix(in srgb, var(--color-quinary) 16%, transparent);
-      box-shadow: 0 16px 40px color-mix(in srgb, var(--c-1) 18%, transparent);
+      box-shadow: 0 16px 40px color-mix(in srgb, var(--color-secondary) 18%, transparent);
     }
     nav ul{
       list-style:none; margin:0; padding:0;
@@ -102,8 +102,8 @@
     .btn:hover{transform: translateY(-1px); opacity:.98}
     .btn.primary{
       border: none;
-      background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--c-1) 65%, transparent));
-      box-shadow: 0 18px 50px color-mix(in srgb, var(--c-1) 20%, transparent);
+      background: linear-gradient(135deg, var(--brand), color-mix(in srgb, var(--color-secondary) 65%, transparent));
+      box-shadow: 0 18px 50px color-mix(in srgb, var(--color-secondary) 20%, transparent);
     }
 
     /* Layout helpers */
@@ -145,7 +145,7 @@
     .dot{
       width: 10px; height: 10px; border-radius: 999px;
       background: linear-gradient(135deg, var(--brand), var(--accent));
-      box-shadow: 0 14px 32px color-mix(in srgb, var(--c-2) 18%, transparent);
+      box-shadow: 0 14px 32px color-mix(in srgb, var(--color-tertiary) 18%, transparent);
     }
     h1{
       margin: 14px 0 10px;
@@ -187,8 +187,8 @@
       content:"";
       position:absolute; inset:-40%;
       background:
-        radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--c-1) 25%, transparent), transparent 45%),
-        radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--c-2) 18%, transparent), transparent 48%),
+        radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--color-secondary) 25%, transparent), transparent 45%),
+        radial-gradient(circle at 70% 60%, color-mix(in srgb, var(--color-tertiary) 18%, transparent), transparent 48%),
         radial-gradient(circle at 50% 20%, color-mix(in srgb, var(--color-quinary) 10%, transparent), transparent 40%);
       filter: blur(1px);
       opacity: .9;
@@ -208,7 +208,7 @@
       padding: 12px 12px;
       border-radius: 16px;
       border: 1px solid color-mix(in srgb, var(--color-quinary) 14%, transparent);
-      background: color-mix(in srgb, var(--c-3) 55%, transparent);
+      background: color-mix(in srgb, oklch(from var(--color-quaternary) calc(l + 0.0294) calc(c + 0.0167) calc(h - 8.8)) 55%, transparent);
       backdrop-filter: blur(10px);
       color: color-mix(in srgb, var(--color-quinary) 86%, transparent);
       font-size: 13px;
@@ -227,7 +227,7 @@
       border: 1px solid color-mix(in srgb, var(--color-quinary) 12%, transparent);
       background: color-mix(in srgb, var(--color-quinary) 5%, transparent);
       padding: 18px;
-      box-shadow: 0 12px 38px color-mix(in srgb, var(--c-3) 25%, transparent);
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
     }
     .card h3{
       margin: 0 0 8px;
@@ -281,8 +281,8 @@
       border-radius: var(--radius-xl);
       border: 1px solid color-mix(in srgb, var(--color-quinary) 12%, transparent);
       background:
-        radial-gradient(900px 600px at 20% 20%, color-mix(in srgb, var(--c-1) 22%, transparent), transparent 55%),
-        radial-gradient(700px 500px at 80% 40%, color-mix(in srgb, var(--c-2) 18%, transparent), transparent 55%),
+        radial-gradient(900px 600px at 20% 20%, color-mix(in srgb, var(--color-secondary) 22%, transparent), transparent 55%),
+        radial-gradient(700px 500px at 80% 40%, color-mix(in srgb, var(--color-tertiary) 18%, transparent), transparent 55%),
         color-mix(in srgb, var(--color-quinary) 5%, transparent);
       padding: 18px;
       box-shadow: var(--shadow);
@@ -295,7 +295,7 @@
       border: 1px solid color-mix(in srgb, var(--color-quinary) 12%, transparent);
       background: color-mix(in srgb, var(--color-quinary) 5%, transparent);
       padding: 18px;
-      box-shadow: 0 12px 38px color-mix(in srgb, var(--c-3) 25%, transparent);
+      box-shadow: 0 12px 38px rgba(0,0,0,.25);
       display:grid;
       gap: 12px;
     }
@@ -320,7 +320,7 @@
     }
     textarea{min-height: 110px; resize: vertical}
     input:focus, textarea:focus{
-      border-color: color-mix(in srgb, var(--c-1) 55%, transparent);
+      border-color: color-mix(in srgb, var(--color-secondary) 55%, transparent);
       background: color-mix(in srgb, var(--color-quinary) 8%, transparent);
     }
 
@@ -353,61 +353,97 @@
     }
   </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(74.6% 0.126 23.5);
-  --c-2:           oklch(17.2% 0.028 270.2);
-  --c-3:           oklch(0.0% 0.000 0.0);
-  --c-4:           oklch(100.0% 0.000 0.0);
+  --color-primary:       oklch(59.1% 0.197 268.6);
+  --color-secondary:     oklch(74.6% 0.126 23.5);
+  --color-tertiary:      oklch(17.0% 0.030 270.8);
+  --color-quaternary:    oklch(100.0% 0.000 0.0);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
     "k": 4,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
+    "--color-primary": {
+      "hex": "#4e70f1",
+      "oklch": {
+        "l": 0.5914,
+        "c": 0.1972,
+        "h": 268.6
+      },
+      "count": 10,
+      "memberCount": 1,
+      "aggregateScore": 1.9723,
+      "members": [
+        {
+          "hex": "#4e70f1",
+          "count": 10,
+          "score": 1.9723
+        }
+      ]
+    },
+    "--color-secondary": {
       "hex": "#f28b86",
       "oklch": {
         "l": 0.7457,
         "c": 0.1262,
         "h": 23.5
       },
-      "count": 10,
-      "members": []
+      "count": 7,
+      "memberCount": 1,
+      "aggregateScore": 0.8835,
+      "members": [
+        {
+          "hex": "#f28b86",
+          "count": 7,
+          "score": 0.8835
+        }
+      ]
     },
-    "--c-2": {
+    "--color-tertiary": {
       "hex": "#0b0f1c",
       "oklch": {
-        "l": 0.1716,
-        "c": 0.028,
-        "h": 270.2
+        "l": 0.17,
+        "c": 0.0299,
+        "h": 270.8
       },
-      "count": 7,
-      "members": []
+      "count": 8,
+      "memberCount": 2,
+      "aggregateScore": 0.2394,
+      "members": [
+        {
+          "hex": "#0b1020",
+          "count": 6,
+          "score": 0.2047
+        },
+        {
+          "hex": "#090a12",
+          "count": 2,
+          "score": 0.0347
+        }
+      ]
     },
-    "--c-3": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 2,
-      "members": []
-    },
-    "--c-4": {
+    "--color-quaternary": {
       "hex": "#ffffff",
       "oklch": {
         "l": 1,
         "c": 0,
         "h": 0
       },
-      "count": 2,
-      "members": []
+      "count": 52,
+      "memberCount": 1,
+      "aggregateScore": 0,
+      "members": [
+        {
+          "hex": "#ffffff",
+          "count": 52,
+          "score": 0
+        }
+      ]
     }
   }
 }

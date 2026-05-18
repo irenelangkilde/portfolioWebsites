@@ -1954,6 +1954,7 @@ ${pseudoSelectors} {
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
       const sampleColorsBar = document.getElementById("sampleColorsBar");
       const sampleColorsStatus = document.getElementById("sampleColorsStatus");
       const useSampleColors = document.getElementById("useSampleColors");
@@ -1987,6 +1988,7 @@ ${pseudoSelectors} {
     let paletteSuggestionsLocked = false; // true once visible suggestions should stop being replaced by later analysis
     let displayedSuggestedPalettes = []; // current visible palette rows, preserved when late arrivals appear
     let selectedSuggestedPaletteKey = ""; // selected suggested palette, preserved across rerenders
+    let selectedPaletteComplements = null; // role → complement color for split swatches
     let uploadedImagePalette = null;     // semantic palette inferred directly from an uploaded screenshot/template image
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
@@ -2408,6 +2410,7 @@ ${pseudoSelectors} {
         const scheme = json?.scheme;
         if (!scheme) return null;
         const hex = role => scheme[role]?.hex || null;
+        const complementHex = role => scheme[role]?.complement?.memberCount > 0 ? (scheme[role]?.complement?.hex || null) : null;
         const result = {
           primary:    hex("--color-primary"),
           secondary:  hex("--color-secondary"),
@@ -2415,6 +2418,14 @@ ${pseudoSelectors} {
           quaternary: hex("--color-quaternary"),
           quinary:    hex("--color-quinary"),
         };
+        const complements = {
+          primary:    complementHex("--color-primary"),
+          secondary:  complementHex("--color-secondary"),
+          accent:     complementHex("--color-tertiary"),
+          quaternary: complementHex("--color-quaternary"),
+          quinary:    complementHex("--color-quinary"),
+        };
+        if (Object.values(complements).some(Boolean)) result.__complements = complements;
         return Object.values(result).some(Boolean) ? result : null;
       } catch { return null; }
     }
@@ -2453,6 +2464,51 @@ ${pseudoSelectors} {
       if (!/^#[0-9a-f]{3,8}$/.test(h)) return h;
       if (h.length === 4) return "#" + h.slice(1).split("").map(ch => ch + ch).join("");
       return h.slice(0, 7);
+    }
+
+    function getPaletteComplements(colors) {
+      const raw = colors?.__complements || colors?.complements || null;
+      if (!raw || typeof raw !== "object") return null;
+      const complements = {};
+      THEME_ROLE_KEYS.forEach(slot => {
+        complements[slot] = normalizeHex(raw[slot]) || "";
+      });
+      return Object.values(complements).some(Boolean) ? complements : null;
+    }
+
+    function getPaletteComplementColor(colors, slot) {
+      return getPaletteComplements(colors)?.[slot] || "";
+    }
+
+    function ensureSplitColorInputStyles() {
+      if (document.getElementById("iw-split-color-input-style")) return;
+      const style = document.createElement("style");
+      style.id = "iw-split-color-input-style";
+      style.textContent = `
+input[type="color"].split-color::-webkit-color-swatch {
+  background: linear-gradient(90deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+}
+input[type="color"].split-color::-moz-color-swatch {
+  background: linear-gradient(90deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+}`;
+      document.head?.appendChild(style);
+    }
+
+    function updatePageColorInputSplitSwatches() {
+      ensureSplitColorInputStyles();
+      Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const complementColor = selectedPaletteComplements?.[role] || "";
+        input.classList.toggle("split-color", !!complementColor);
+        if (!complementColor) {
+          input.style.removeProperty("--split-main-color");
+          input.style.removeProperty("--split-complement-color");
+          return;
+        }
+        input.style.setProperty("--split-main-color", input.value || "#000000");
+        input.style.setProperty("--split-complement-color", complementColor);
+      });
     }
 
     function rgbToHex(r, g, b) {
@@ -2831,10 +2887,12 @@ ${pseudoSelectors} {
 
     function applyColors(colors) {
       if (!colors) return;
+      selectedPaletteComplements = getPaletteComplements(colors);
       const theme = themeWithAliases(colors);
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
       Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
       updateColorRoleLabels();
+      updatePageColorInputSplitSwatches();
       userHasCustomizedColors = false;
     }
 
@@ -3196,6 +3254,7 @@ ${pseudoSelectors} {
       const quaternary = document.getElementById("accent2").value.trim();
       const quinary    = document.getElementById("accent1").value.trim();
       const theme = themeWithAliases({ primary, secondary, accent, quaternary, quinary });
+      if (selectedPaletteComplements) theme.__complements = { ...selectedPaletteComplements };
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
         use_sample_colors: document.getElementById("useSampleColors")?.checked || false,
@@ -4467,6 +4526,7 @@ ${pseudoSelectors} {
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
       setResumeAnalysisStatus("");
     });
 
@@ -4490,6 +4550,7 @@ ${pseudoSelectors} {
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
       jobAdResult          = null;
       page2Submitted       = false;
       page3Submitted       = false;
@@ -4546,6 +4607,7 @@ ${pseudoSelectors} {
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
       bridgeResult           = null;
       generationResult       = null;
       autoMastheadImageTriggered = false;
@@ -4567,6 +4629,8 @@ ${pseudoSelectors} {
 
     function invalidateFromPage4() {
       if (activePageId() !== "page4") return;
+      selectedPaletteComplements = null;
+      updatePageColorInputSplitSwatches();
 
       if (isBraidMode()) {
         // Live-apply new colors to already-generated result without re-triggering generation
@@ -4744,6 +4808,11 @@ ${pseudoSelectors} {
 
     // Page 3 (Colors)
     const PALETTE_SLOTS = THEME_ROLE_KEYS;
+    const MISSING_PALETTE_SWATCH_BACKGROUND = "linear-gradient(135deg, transparent 0%, transparent 46%, #ff2f2f 46%, #ff2f2f 54%, transparent 54%, transparent 100%), #000000";
+
+    function isMissingPaletteColor(value) {
+      return value == null || String(value).trim() === "";
+    }
 
     function renderSuggestedPalettes(analysisData) {
       const msg = document.getElementById("suggestedPalettesMsg");
@@ -4845,19 +4914,48 @@ ${pseudoSelectors} {
         if (!pending) {
           PALETTE_SLOTS.forEach(slot => {
             const s = document.createElement("span");
-            const color = empty ? "rgba(255,255,255,.07)" : (palette.colors[slot] || "#888");
-            s.style.cssText = `width:44px; height:23px; border-radius:4px; background:${color}; border:2px solid rgba(255,255,255,.85); display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.25);${empty ? "" : " cursor:pointer;"}`;
+            const rawColor = empty ? "" : palette.colors?.[slot];
+            const missingColor = !empty && isMissingPaletteColor(rawColor);
+            const complementColor = missingColor ? "" : getPaletteComplementColor(palette.colors, slot);
+            const color = empty ? "rgba(255,255,255,.07)" : rawColor;
+            const background = missingColor
+              ? MISSING_PALETTE_SWATCH_BACKGROUND
+              : complementColor
+                ? `linear-gradient(90deg, ${color} 0%, ${color} 50%, ${complementColor} 50%, ${complementColor} 100%)`
+                : color;
+            const roleLabel = THEME_ROLE_LABELS[slot] || slot;
+            s.title = missingColor
+              ? `${roleLabel}: no extracted color`
+              : complementColor
+                ? `${roleLabel}: ${color || ""} / complement ${complementColor}`
+                : `${roleLabel}: ${color || ""}`;
+            s.setAttribute("aria-label", missingColor
+              ? `${roleLabel} color missing`
+              : complementColor
+                ? `${roleLabel} ${color || ""} with complement ${complementColor}`
+                : `${roleLabel} ${color || ""}`);
+            s.style.cssText = `width:44px; height:23px; border-radius:4px; background:${background}; border:2px solid rgba(255,255,255,.85); display:inline-block; box-shadow:0 0 0 1px rgba(0,0,0,.25);${empty ? "" : missingColor ? " cursor:not-allowed;" : " cursor:pointer;"}`;
             if (!empty) {
-              // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
-              const applySwatchColor = e => {
+              const stopSwatchClick = e => {
                 e.stopPropagation();
                 e.preventDefault();
-                const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
-                const input = document.getElementById(targetId);
-                if (input) input.value = palette.colors[slot] || "#000000";
               };
-              s.addEventListener("click", applySwatchColor);
-              s.addEventListener("dblclick", applySwatchColor);
+              if (missingColor) {
+                s.addEventListener("click", stopSwatchClick);
+                s.addEventListener("dblclick", stopSwatchClick);
+              } else {
+                // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
+                const applySwatchColor = e => {
+                  stopSwatchClick(e);
+                  selectedPaletteComplements = null;
+                  const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
+                  const input = document.getElementById(targetId);
+                  if (input) input.value = rawColor;
+                  updatePageColorInputSplitSwatches();
+                };
+                s.addEventListener("click", applySwatchColor);
+                s.addEventListener("dblclick", applySwatchColor);
+              }
             }
             swatches.appendChild(s);
           });
@@ -5058,7 +5156,15 @@ ${pseudoSelectors} {
     let focusedColorId = "primary";
     colorInputIds.forEach(id => {
       document.getElementById(id)?.addEventListener("focus", () => { focusedColorId = id; });
-      document.getElementById(id)?.addEventListener("change", () => { userHasCustomizedColors = true; });
+      document.getElementById(id)?.addEventListener("input", () => {
+        selectedPaletteComplements = null;
+        updatePageColorInputSplitSwatches();
+      });
+      document.getElementById(id)?.addEventListener("change", () => {
+        userHasCustomizedColors = true;
+        selectedPaletteComplements = null;
+        updatePageColorInputSplitSwatches();
+      });
     });
 
     // Resize color-themes iframe to its exact content height (posted by ResizeObserver inside)
@@ -5080,8 +5186,10 @@ ${pseudoSelectors} {
       userHasSelectedPalette = true;
       paletteSuggestionsLocked = true;
       selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
+      updatePageColorInputSplitSwatches();
     });
 
     document.getElementById("submit_top")?.addEventListener("click", doPreview);
@@ -5111,6 +5219,7 @@ ${pseudoSelectors} {
         userHasSelectedPalette = true;
         paletteSuggestionsLocked = true;
         selectedSuggestedPaletteKey = "";
+        selectedPaletteComplements = null;
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
         const theme = themeWithAliases(t.base_colors || t);
@@ -5121,4 +5230,5 @@ ${pseudoSelectors} {
         set("tertiary",  theme.primary);
         set("accent2",   theme.secondary);
         set("accent1",   theme.accent);
+        updatePageColorInputSplitSwatches();
       });

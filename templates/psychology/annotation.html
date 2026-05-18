@@ -16,7 +16,7 @@
         body {
             font-family: 'Open Sans', sans-serif;
             line-height: 1.6;
-            color: var(--c-1);
+            color: oklch(from var(--color-tertiary) calc(l + 0.0516) calc(c - 0.1191) calc(h + 77.4));
             background: oklch(from var(--color-quaternary) calc(l - 0.0184) calc(c + 0.0017) calc(h - 112.2));
         }
 
@@ -28,7 +28,7 @@
 
         /* Header */
         header {
-            background: var(--c-1); /*var(--c-3); /*var(--c-1); /*var(--c-1); /*linear-gradient(135deg, var(--c-2) 0%, var(--c-1) 100%); */
+            background: oklch(from var(--color-primary) calc(l - 0.0795) calc(c - 0.0204) calc(h + 17.5)); /*var(--color-tertiary); /*oklch(from var(--color-secondary) calc(l - 0.0164) calc(c + 0.1387) calc(h - 71.0)); /*oklch(from var(--color-primary) calc(l - 0.0795) calc(c - 0.0204) calc(h + 17.5)); /*linear-gradient(135deg, var(--color-primary) 0%, oklch(from var(--color-secondary) calc(l - 0.0091) calc(c + 0.1384) calc(h - 55.3)) 100%); */
             color: white;
             padding: 80px 0 60px; 
             text-align: center;
@@ -40,11 +40,11 @@
     padding-bottom: 40px;*/
 
     /* Same gradient as original example */
-    background-color: var(--c-1);
+    background-color: oklch(from var(--color-primary) calc(l - 0.0795) calc(c - 0.0204) calc(h + 17.5));
     background-image: radial-gradient(
         circle,
-        var(--c-3) 0%,
-        var(--c-1) 100%
+        var(--color-tertiary) 0%,
+        oklch(from var(--color-primary) calc(l - 0.0795) calc(c - 0.0204) calc(h + 17.5)) 100%
     );
 
     background-position: center center;
@@ -82,7 +82,7 @@
             align-items: center;
             justify-content: center;
             font-size: 3rem;
-            color: var(--c-2);
+            color: var(--color-primary);
             margin-left: auto;
             margin-right: auto;
         }
@@ -120,7 +120,7 @@
         /* Navigation */
         nav {
             background: white;
-            box-shadow: 0 2px 10px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -139,14 +139,14 @@
         }
 
         nav a {
-            color: var(--c-2);
+            color: var(--color-primary);
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s;
         }
 
         nav a:hover {
-            color: var(--c-1);
+            color: oklch(from var(--color-secondary) calc(l - 0.0091) calc(c + 0.1384) calc(h - 55.3));
         }
 
         /* Sections */
@@ -155,20 +155,20 @@
             margin: 40px auto;
             padding: 50px;
             border-radius: 10px;
-            box-shadow: 0 5px 20px color-mix(in srgb, var(--c-1) 10%, transparent);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
         }
 
         h2 {
             font-family: 'Playfair Display', serif;
-            color: var(--c-2);
+            color: var(--color-primary);
             font-size: 2rem;
             margin-bottom: 30px;
             padding-bottom: 15px;
-            border-bottom: 3px solid var(--c-2);
+            border-bottom: 3px solid var(--color-primary);
         }
 
         h3 {
-            color: var(--c-1);
+            color: oklch(from var(--color-secondary) calc(l - 0.0091) calc(c + 0.1384) calc(h - 55.3));
             margin-top: 25px;
             margin-bottom: 10px;
             font-size: 1.3rem;
@@ -183,11 +183,11 @@
         .experience-item {
             margin-bottom: 30px;
             padding-left: 20px;
-            border-left: 3px solid var(--c-2);
+            border-left: 3px solid var(--color-primary);
         }
 
         .date {
-            color: var(--c-4);
+            color: var(--color-secondary);
             font-style: italic;
             font-size: 0.95rem;
         }
@@ -228,7 +228,7 @@
             content: "✓";
             position: absolute;
             left: 0;
-            color: var(--c-2);
+            color: var(--color-primary);
             font-weight: bold;
         }
 
@@ -242,7 +242,7 @@
 
         /* Footer */
         footer {
-            background: var(--c-1);
+            background: oklch(from var(--color-tertiary) calc(l + 0.0656) calc(c - 0.0860) calc(h - 21.7));
             color: white;
             text-align: center;
             padding: 30px 20px;
@@ -251,7 +251,7 @@
 
         .cta-button {
             display: inline-block;
-            background: var(--c-2);
+            background: var(--color-primary);
             color: white;
             padding: 15px 40px;
             border-radius: 50px;
@@ -263,7 +263,7 @@
 
         .cta-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 20px color-mix(in srgb, var(--c-2) 40%, transparent);
+            box-shadow: 0 5px 20px color-mix(in srgb, var(--color-primary) 40%, transparent);
         }
 
         /* Responsive */
@@ -296,67 +296,103 @@
         }
     </style>
 <style id="extracted-theme">
-/* Generated by preprocessSamples */
+/* Generated by extractColors.mjs */
 :root {
-  --c-1:           oklch(0.0% 0.000 0.0);
-  --c-2:           oklch(58.0% 0.136 280.8);
-  --c-3:           oklch(100.0% 0.000 0.0);
-  --c-4:           oklch(32.0% 0.031 271.8);
+  --color-primary:       oklch(57.9% 0.136 280.7);
+  --color-secondary:     oklch(32.0% 0.031 272.8);
+  --color-tertiary:      oklch(99.2% 0.001 247.8);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 4,
-    "dupThreshold": 0.02,
-    "variantThreshold": 0.1
+    "k": 3,
+    "threshold": 0.2
   },
   "scheme": {
-    "--c-1": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 20,
-      "members": []
-    },
-    "--c-2": {
+    "--color-primary": {
       "hex": "#6d6ec8",
       "oklch": {
-        "l": 0.5795,
-        "c": 0.1359,
-        "h": 280.8
+        "l": 0.5786,
+        "c": 0.1361,
+        "h": 280.7
       },
-      "count": 17,
-      "members": []
-    },
-    "--c-3": {
-      "hex": "#ffffff",
-      "oklch": {
-        "l": 1,
-        "c": 0,
-        "h": 0
-      },
-      "count": 9,
+      "count": 31,
+      "memberCount": 4,
+      "aggregateScore": 4.3328,
       "members": [
         {
-          "hex": "#fcfcfd",
-          "count": 2,
-          "dist": 0.013
+          "hex": "#705fbe",
+          "count": 5,
+          "score": 0.7171
+        },
+        {
+          "hex": "#667eea",
+          "count": 17,
+          "score": 2.7851
+        },
+        {
+          "hex": "#764ba2",
+          "count": 6,
+          "score": 0.8306
+        },
+        {
+          "hex": "#666666",
+          "count": 3,
+          "score": 0
         }
       ]
     },
-    "--c-4": {
+    "--color-secondary": {
       "hex": "#2d3243",
       "oklch": {
-        "l": 0.3198,
-        "c": 0.0312,
-        "h": 271.8
+        "l": 0.3197,
+        "c": 0.0306,
+        "h": 272.8
       },
-      "count": 3,
-      "members": []
+      "count": 7,
+      "memberCount": 3,
+      "aggregateScore": 0.2183,
+      "members": [
+        {
+          "hex": "#333333",
+          "count": 3,
+          "score": 0
+        },
+        {
+          "hex": "#2d3748",
+          "count": 3,
+          "score": 0.0992
+        },
+        {
+          "hex": "#22165d",
+          "count": 1,
+          "score": 0.1191
+        }
+      ]
+    },
+    "--color-tertiary": {
+      "hex": "#fcfcfd",
+      "oklch": {
+        "l": 0.9915,
+        "c": 0.0008,
+        "h": 247.8
+      },
+      "count": 13,
+      "memberCount": 2,
+      "aggregateScore": 0.0102,
+      "members": [
+        {
+          "hex": "#f8f9fa",
+          "count": 6,
+          "score": 0.0102
+        },
+        {
+          "hex": "#ffffff",
+          "count": 7,
+          "score": 0
+        }
+      ]
     }
   }
 }
