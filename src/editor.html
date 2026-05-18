@@ -459,15 +459,15 @@
     }
     #paletteSlidePanel.open { display: flex; }
     #psp-top {
-      flex: 0 0 50%; display: flex; flex-direction: row; min-height: 0;
+      flex: 1 1 auto; display: flex; flex-direction: row; min-height: 0;
       border-bottom: 1px solid rgba(255,255,255,.12); overflow: hidden;
     }
     #psp-question-col {
-      flex: 0 0 50%; display: flex; flex-direction: column; gap: 9px;
+      flex: 0 0 50%; min-height: 0; display: flex; flex-direction: column; gap: 9px;
       padding: 12px; border-right: 1px solid rgba(255,255,255,.12); overflow-y: auto;
     }
     #psp-results-col {
-      flex: 1; display: flex; flex-direction: column; gap: 9px;
+      flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px;
       padding: 12px; overflow-y: auto;
     }
     .psp-request-heading {
@@ -519,7 +519,7 @@
       display: flex; flex-direction: column; gap: 8px; min-width: 0; width: 100%;
     }
     #psp-bottom {
-      flex: 0 0 auto; min-height: 0; overflow: hidden;
+      flex: 0 0 auto; min-height: 0; overflow: hidden; margin-top: auto;
       border-radius: 8px 8px 0 0; background: #f5f5f5;
     }
     #pspThemesFrame {
@@ -543,12 +543,15 @@
     }
     #editorSuggestedPaletteInput:focus { border-color: rgba(141,186,255,.58); box-shadow: 0 0 0 2px rgba(141,186,255,.12); }
     .esp-actions { display: flex; justify-content: flex-end; gap: 8px; }
-    .esp-actions button, .esp-palette button {
+    .esp-actions button, #editorSuggestedPaletteApply {
       border: 0; border-radius: 7px; padding: 7px 11px; cursor: pointer;
       font-size: 12px; font-weight: 800;
     }
     #editorSuggestedPaletteSubmit { background: #667eea; color: #fff; }
     #editorSuggestedPaletteSubmit:hover { background: #5568d4; }
+    #editorSuggestedPaletteApply { background: rgba(88,166,255,.24); color: #bfe0ff; }
+    #editorSuggestedPaletteApply:hover:not(:disabled) { background: rgba(88,166,255,.38); color: #fff; }
+    #editorSuggestedPaletteApply:disabled { opacity: .48; cursor: not-allowed; }
 
     #editorSuggestedPaletteStatus {
       min-height: 16px; color: rgba(234,240,255,.55); font-size: 12px; line-height: 1.35;
@@ -556,22 +559,22 @@
     #editorSuggestedPaletteRows { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; flex: 1; }
     .esp-palette {
       border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.045);
-      padding: 10px; display: flex; flex-direction: column; gap: 8px; cursor: pointer;
+      padding: 10px; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; cursor: pointer;
     }
     .esp-palette:hover, .esp-palette:focus-visible {
       border-color: rgba(141,186,255,.45); background: rgba(102,126,234,.12); outline: none;
     }
-    .esp-palette-title {
-      color: rgba(234,240,255,.9); font-size: 12px; font-weight: 850; line-height: 1.25;
-    }
+    .esp-palette input { margin-top: 2px; accent-color: #8dbaff; }
+    .esp-palette:has(input:checked) { border-color: rgba(141,186,255,.65); background: rgba(102,126,234,.16); }
+    .esp-palette-body { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
     .esp-palette-note { color: rgba(234,240,255,.54); font-size: 11px; line-height: 1.35; }
+    .esp-palette-note strong { color: rgba(234,240,255,.92); font-weight: 850; }
     .esp-swatch-strip { display: flex; flex-wrap: wrap; gap: 4px; }
     .esp-swatch {
       width: 28px; height: 22px; border-radius: 4px; border: 1px solid rgba(255,255,255,.7);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.26);
     }
-    .esp-palette button { align-self: flex-start; background: rgba(88,166,255,.22); color: #bfe0ff; }
-    .esp-palette button:hover { background: rgba(88,166,255,.34); color: #fff; }
+    .esp-apply-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
     .esp-palette-inversion { border-color: rgba(255,200,100,.28); background: rgba(255,180,50,.06); }
     .esp-palette-inversion:hover, .esp-palette-inversion:focus-visible { border-color: rgba(255,200,100,.55); background: rgba(255,180,50,.12); }
     /* ── Unified portfolio panel ─────────────────────────────── */
@@ -1038,6 +1041,9 @@
       <div id="psp-results-col">
         <div id="editorSuggestedPaletteStatus" aria-live="polite"></div>
         <div id="editorSuggestedPaletteRows"></div>
+        <div class="esp-apply-actions">
+          <button id="editorSuggestedPaletteApply" type="button" disabled>Apply Palette</button>
+        </div>
       </div>
     </div>
     <div id="psp-bottom">
@@ -3151,6 +3157,7 @@
 	    const suggestedPaletteStatus = document.getElementById("editorSuggestedPaletteStatus");
 	    const suggestedPaletteRows = document.getElementById("editorSuggestedPaletteRows");
 	    const suggestedPaletteSubmit = document.getElementById("editorSuggestedPaletteSubmit");
+	    const suggestedPaletteApply = document.getElementById("editorSuggestedPaletteApply");
 	    const btnOpenPalettePanel = document.getElementById("btnOpenPalettePanel");
 	    const paletteSlidePanel = document.getElementById("paletteSlidePanel");
 	    const pspCloseBtn = document.getElementById("pspCloseBtn");
@@ -3169,6 +3176,7 @@
 	    let colorHoverPendingPoint = null;
 	    let colorHoverRaf = 0;
 	    let suggestedPaletteState = { status: "idle", palettes: [], error: "", requestedColors: "" };
+	    let selectedSuggestedPaletteIndex = -1;
 	    const COLOR_HOVER_CURSOR_STYLE_ID = "iw-color-hover-reporter-cursor";
 	    const colorWorkbenchNativeInput = document.createElement("input");
 	    colorWorkbenchNativeInput.type = "color";
@@ -3777,10 +3785,17 @@
 	      return colorWorkbenchRows.map(row => ({
 	        id: row.id,
 	        ordinal: row.ordinal,
+	        variable: colorWorkbenchVarName(row),
+	        sourceVariable: row.sourceVarName || "",
+	        count: row.count || 0,
+	        chroma: row.chroma || 0,
 	        original: toHexColor(row.hex),
 	        current: currentWorkbenchColor(row),
 	        dependents: (row.deps || []).map(dep => ({
 	          ordinal: dep.ordinal,
+	          variable: colorWorkbenchVarName(dep),
+	          sourceVariable: dep.sourceVarName || "",
+	          count: dep.count || 0,
 	          original: toHexColor(dep.hex),
 	          current: currentWorkbenchColor(dep),
 	        })),
@@ -3794,23 +3809,28 @@
 	      if (suggestedPaletteState.error) {
 	        suggestedPaletteStatus.textContent = suggestedPaletteState.error;
 	        suggestedPaletteStatus.style.color = "rgba(255,166,166,.9)";
+	        selectedSuggestedPaletteIndex = -1;
+	        updateSuggestedPaletteApplyButton();
 	        return;
 	      }
 	      suggestedPaletteStatus.style.color = "rgba(234,240,255,.55)";
 	      suggestedPaletteStatus.textContent = palettes.length
-	        ? "Click a palette to apply it, submit a new request, or dismiss these suggestions."
+	        ? "Choose a palette, then click Apply Palette."
 	        : "No AI suggestions loaded yet.";
+	      if (!palettes.length) selectedSuggestedPaletteIndex = -1;
+	      else if (selectedSuggestedPaletteIndex < 0 || selectedSuggestedPaletteIndex >= palettes.length) selectedSuggestedPaletteIndex = 0;
 	      palettes.forEach((palette, index) => {
-	        const paletteEl = document.createElement("div");
+	        const paletteEl = document.createElement("label");
 	        paletteEl.className = "esp-palette" + (palette._isInversion ? " esp-palette-inversion" : "");
 	        paletteEl.dataset.paletteIndex = String(index);
-	        paletteEl.tabIndex = 0;
-	        paletteEl.setAttribute("role", "button");
-	        paletteEl.setAttribute("aria-label", `Apply ${palette.name || `palette ${index + 1}`}`);
+	        paletteEl.setAttribute("for", `editorSuggestedPaletteChoice${index}`);
 
-	        const title = document.createElement("div");
-	        title.className = "esp-palette-title";
-	        title.textContent = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
+	        const choice = document.createElement("input");
+	        choice.type = "radio";
+	        choice.name = "editorSuggestedPaletteChoice";
+	        choice.id = `editorSuggestedPaletteChoice${index}`;
+	        choice.value = String(index);
+	        choice.checked = index === selectedSuggestedPaletteIndex;
 
 	        const strip = document.createElement("div");
 	        strip.className = "esp-swatch-strip";
@@ -3824,18 +3844,24 @@
 
 	        const note = document.createElement("div");
 	        note.className = "esp-palette-note";
-	        note.textContent = palette.rationale || "";
+	        const title = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
+	        const rationale = String(palette.rationale || "").trim();
+	        note.innerHTML = `<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
 
-	        const apply = document.createElement("button");
-	        apply.type = "button";
-	        apply.dataset.paletteIndex = String(index);
-	        apply.textContent = "Apply Palette";
+	        const body = document.createElement("div");
+	        body.className = "esp-palette-body";
+	        body.append(note, strip);
 
-	        paletteEl.append(title, strip);
-	        if (note.textContent) paletteEl.appendChild(note);
-	        paletteEl.appendChild(apply);
+	        paletteEl.append(choice, body);
 	        suggestedPaletteRows.appendChild(paletteEl);
 	      });
+	      updateSuggestedPaletteApplyButton();
+	    }
+
+	    function updateSuggestedPaletteApplyButton() {
+	      if (!suggestedPaletteApply) return;
+	      const palettes = suggestedPaletteState.palettes || [];
+	      suggestedPaletteApply.disabled = !palettes.length || selectedSuggestedPaletteIndex < 0 || selectedSuggestedPaletteIndex >= palettes.length;
 	    }
 
 
@@ -3866,7 +3892,9 @@
 	        return;
 	      }
 
+	      selectedSuggestedPaletteIndex = -1;
 	      suggestedPaletteState = { status: "loading", palettes: [], error: "", requestedColors };
+	      updateSuggestedPaletteApplyButton();
 	      startPaletteCountdown();
 	      if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = true; suggestedPaletteSubmit.textContent = "Generating…"; }
 	      if (suggestedPaletteStatus) suggestedPaletteStatus.textContent = "";
@@ -3892,24 +3920,28 @@
 	          requestedColors,
 	        };
 	        if (!suggestedPaletteState.palettes.length) throw new Error("No palettes returned.");
+	        selectedSuggestedPaletteIndex = 0;
 	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
 	        renderSuggestedPaletteResults();
 	        setPaletteBtnReady();
+	        setEditStatus(data.fallback ? "Suggested palettes ready using local fallback." : "Suggested palettes ready.", "ok");
 	      } catch (err) {
+	        const message = err?.message || String(err);
 	        suggestedPaletteState = {
 	          status: "error",
 	          palettes: [],
-	          error: err?.message || String(err),
+	          error: message,
 	          requestedColors,
 	        };
+	        selectedSuggestedPaletteIndex = -1;
 	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
 	        resetPaletteBtn();
 	        renderSuggestedPaletteResults();
-	        setEditStatus("Suggested palette generation failed.", "err");
+	        setEditStatus(`Suggested palette generation failed: ${message}`, "err");
 	      }
 	    }
 
-	    function applySuggestedEditorPalette(index) {
+	    function applySuggestedEditorPalette(index = selectedSuggestedPaletteIndex) {
 	      const palette = suggestedPaletteState.palettes?.[index];
 	      if (!palette) return;
 	      const byId = new Map();
@@ -3993,17 +4025,15 @@
 	        updateThemesSwatchCount();
 	      }
 	    });
-	    suggestedPaletteRows?.addEventListener("click", ev => {
-	      const target = ev.target.closest("[data-palette-index]");
-	      if (!target) return;
-	      applySuggestedEditorPalette(Number(target.dataset.paletteIndex));
+	    suggestedPaletteApply?.addEventListener("click", () => {
+	      applySuggestedEditorPalette();
 	    });
-	    suggestedPaletteRows?.addEventListener("keydown", ev => {
-	      if (ev.key !== "Enter" && ev.key !== " ") return;
-	      const target = ev.target.closest("[data-palette-index]");
-	      if (!target) return;
-	      ev.preventDefault();
-	      applySuggestedEditorPalette(Number(target.dataset.paletteIndex));
+	    suggestedPaletteRows?.addEventListener("change", ev => {
+	      const target = ev.target instanceof Element ? ev.target : ev.target?.parentElement;
+	      const choice = target?.closest('input[name="editorSuggestedPaletteChoice"]');
+	      if (!choice) return;
+	      selectedSuggestedPaletteIndex = Number(choice.value);
+	      updateSuggestedPaletteApplyButton();
 	    });
 
 	    function makeRowDependent(sourceId, targetOrdinal) {
