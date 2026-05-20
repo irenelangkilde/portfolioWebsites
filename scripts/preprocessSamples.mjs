@@ -265,9 +265,31 @@ function buildPaletteJson(reps, meta) {
 }
 
 function rewriteCssVars(html, hexExprMap, rgbMap) {
+  function hexWithAlphaToExpr(rgbHex, alphaByte) {
+    const r = parseInt(rgbHex.slice(0, 2), 16);
+    const g = parseInt(rgbHex.slice(2, 4), 16);
+    const b = parseInt(rgbHex.slice(4, 6), 16);
+    const alpha = parseInt(alphaByte, 16) / 255;
+    const info = rgbMap.get(`${r},${g},${b}`);
+    if (!info) return null;
+    const { varName, memberOk, repOk } = info;
+    return relColorAlphaExpr(varName, memberOk, repOk, alpha);
+  }
+
   function rewriteCss(css) {
+    // 8-digit hex (#RRGGBBAA) → relative color expression w/ alpha. Must run before 6-digit.
+    let out = css.replace(/#([0-9a-fA-F]{8})\b/g, (m, hex) => {
+      const expr = hexWithAlphaToExpr(hex.slice(0, 6), hex.slice(6, 8));
+      return expr ?? m;
+    });
+    // 4-digit hex (#RGBA) → expand each digit, then handle as 8-digit. Must run before 3-digit.
+    out = out.replace(/#([0-9a-fA-F]{4})\b/g, (m, hex) => {
+      const expanded = hex.split("").map(c => c + c).join("");
+      const expr = hexWithAlphaToExpr(expanded.slice(0, 6), expanded.slice(6, 8));
+      return expr ?? m;
+    });
     // 6-digit hex → CSS expression
-    let out = css.replace(/#([0-9a-fA-F]{6})\b/g, m => hexExprMap.get(m.toLowerCase()) ?? m);
+    out = out.replace(/#([0-9a-fA-F]{6})\b/g, m => hexExprMap.get(m.toLowerCase()) ?? m);
     // 3-digit hex → expand then look up
     out = out.replace(/#([0-9a-fA-F]{3})\b/g, (m, d) => {
       const exp = "#" + d.split("").map(c => c + c).join("");

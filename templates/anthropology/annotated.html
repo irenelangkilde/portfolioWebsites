@@ -9,21 +9,21 @@
 
   <style>
     :root{
-      --ink:var(--c-2);
-      --muted:var(--c-2);
-      --paper:var(--c-2);
-      --card:#ffffffcc;
-      --glass:#ffffffa8;
+      --ink:oklch(from var(--c-3) calc(l - 0.0455) calc(c - 0.0042) calc(h + 7.0));
+      --muted:var(--c-7);
+      --paper:oklch(from var(--c-1) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7));
+      --card:color-mix(in srgb, var(--c-1) 80%, transparent);
+      --glass:color-mix(in srgb, var(--c-1) 65.9%, transparent);
       --stroke:#00000014;
-      --shadow:0 18px 55px color-mix(in srgb, var(--c-2) 12%, transparent);
-      --shadowSoft:0 10px 28px color-mix(in srgb, var(--c-2) 10%, transparent);
+      --shadow:0 18px 55px rgba(0,0,0,.12);
+      --shadowSoft:0 10px 28px rgba(0,0,0,.10);
       --radius:22px;
 
       /* warm anthropology palette */
-      --accent:var(--c-3);       /* terracotta */
-      --accent2:var(--c-5);      /* warm beige */
+      --accent:var(--c-4);       /* terracotta */
+      --accent2:var(--c-8);      /* warm beige */
       --accent3:var(--c-2);      /* light sand */
-      --btn:var(--c-2);
+      --btn:oklch(from var(--c-3) calc(l - 0.0455) calc(c - 0.0042) calc(h + 7.0));
       --btnText:var(--c-1);
 
       --max:1120px;
@@ -37,8 +37,8 @@
         color:var(--ink);
         background:
             linear-gradient(
-            color-mix(in srgb, var(--c-2) 72%, transparent),
-            color-mix(in srgb, var(--c-2) 72%, transparent)
+            color-mix(in srgb, oklch(from var(--c-1) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7)) 72%, transparent),
+            color-mix(in srgb, oklch(from var(--c-1) calc(l - 0.0219) calc(c + 0.0068) calc(h + 67.7)) 72%, transparent)
             ),
             url("image1.png") center / 180% no-repeat fixed;
         overflow-x:hidden;
@@ -51,7 +51,7 @@
     .masthead{
       margin:0 auto;
       background:
-        linear-gradient(0deg, color-mix(in srgb, oklch(from var(--c-4) calc(l - 0.0157) calc(c + 0.0096) calc(h + 72.7)) 62%, transparent), color-mix(in srgb, oklch(from var(--c-4) calc(l - 0.0157) calc(c + 0.0096) calc(h + 72.7)) 45%, transparent)),
+        linear-gradient(0deg, color-mix(in srgb, var(--c-9) 62%, transparent), color-mix(in srgb, var(--c-9) 45%, transparent)),
         url("image1.png") center/cover no-repeat;
       color:var(--c-1);
     }
@@ -74,9 +74,9 @@
     }
     .brandMark{
       width:34px;height:34px;border-radius:12px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-2) 90%, transparent), color-mix(in srgb, var(--c-3) 70%, transparent));
+      background: linear-gradient(135deg, color-mix(in srgb, var(--c-2) 90%, transparent), color-mix(in srgb, var(--c-4) 70%, transparent));
       border:1px solid color-mix(in srgb, var(--c-1) 25%, transparent);
-      box-shadow: 0 12px 26px color-mix(in srgb, var(--c-2) 25%, transparent);
+      box-shadow: 0 12px 26px rgba(0,0,0,.25);
     }
     .brandText{display:flex; flex-direction:column; line-height:1.1}
     .brandText strong{font-size:16px; letter-spacing:.02em}
@@ -134,7 +134,7 @@
       background: color-mix(in srgb, var(--c-1) 12%, transparent);
       border:1px solid color-mix(in srgb, var(--c-1) 18%, transparent);
       border-radius: var(--radius);
-      box-shadow: 0 18px 44px color-mix(in srgb, var(--c-2) 18%, transparent);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
       backdrop-filter: blur(10px);
       padding:18px;
     }
@@ -250,7 +250,7 @@
       font-size:13.5px;
       margin-bottom:10px;
     }
-    .card p{margin:10px 0 0; color:var(--c-2)}
+    .card p{margin:10px 0 0; color:var(--c-3)}
     .card,
     .contactCard,
     .item,
@@ -261,7 +261,7 @@
     .bullets{
       margin:12px 0 0;
       padding-left:18px;
-      color:var(--c-2);
+      color:var(--c-3);
     }
     .bullets li{margin:6px 0}
 
@@ -271,9 +271,9 @@
       font-weight:700;
       padding:7px 10px;
       border-radius:999px;
-      background: color-mix(in srgb, var(--c-3) 12%, transparent);
-      border:1px solid color-mix(in srgb, var(--c-3) 18%, transparent);
-      color:var(--c-2);
+      background: color-mix(in srgb, var(--c-4) 12%, transparent);
+      border:1px solid color-mix(in srgb, var(--c-4) 18%, transparent);
+      color:var(--c-5);
     }
 
     /* Timeline */
@@ -286,7 +286,7 @@
       border-radius:18px;
       border:1px solid var(--stroke);
       background: color-mix(in srgb, var(--c-1) 70%, transparent);
-      box-shadow: 0 10px 22px color-mix(in srgb, var(--c-2) 6%, transparent);
+      box-shadow: 0 10px 22px rgba(0,0,0,.06);
     }
     .itemTop{
       display:flex;
@@ -338,7 +338,7 @@
       object-fit: cover;
       border:1px solid var(--stroke);
       box-shadow: var(--shadow);
-      background: var(--c-2);
+      background: oklch(from var(--c-2) calc(l - 0.0415) calc(c - 0.0419) calc(h - 71.9));
     }
     .contactCard{
       padding:22px;
@@ -363,7 +363,7 @@
     footer{
       margin-top:70px;
       padding:28px 0 0;
-      color:var(--c-2);
+      color:var(--c-6);
       font-size:13.5px;
       text-align:center;
     }
@@ -374,73 +374,129 @@
 <style id="extracted-theme">
 /* Generated by preprocessSamples */
 :root {
-  --c-1:           oklch(23.6% 0.013 61.9);
-  --c-2:           oklch(0.0% 0.000 0.0);
-  --c-3:           oklch(40.2% 0.046 49.2);
-  --c-4:           oklch(100.0% 0.000 0.0);
-  --c-5:           oklch(87.0% 0.019 51.9);
+  --c-1:           oklch(100.0% 0.000 0.0);
+  --c-2:           oklch(93.9% 0.042 71.9);
+  --c-3:           oklch(26.8% 0.015 53.9);
+  --c-4:           oklch(62.3% 0.100 48.8);
+  --c-5:           oklch(37.5% 0.063 47.9);
+  --c-6:           oklch(54.5% 0.022 54.9);
+  --c-7:           oklch(44.4% 0.018 54.6);
+  --c-8:           oklch(82.8% 0.049 49.4);
+  --c-9:           oklch(17.0% 0.013 55.3);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 5,
+    "k": 9,
     "dupThreshold": 0.02,
     "variantThreshold": 0.1
   },
   "scheme": {
     "--c-1": {
-      "hex": "#231d18",
-      "oklch": {
-        "l": 0.236,
-        "c": 0.0132,
-        "h": 61.9
-      },
-      "count": 30,
-      "members": []
-    },
-    "--c-2": {
-      "hex": "#000000",
-      "oklch": {
-        "l": 0,
-        "c": 0,
-        "h": 0
-      },
-      "count": 25,
-      "members": []
-    },
-    "--c-3": {
-      "hex": "#5d4132",
-      "oklch": {
-        "l": 0.4025,
-        "c": 0.0461,
-        "h": 49.2
-      },
-      "count": 6,
-      "members": []
-    },
-    "--c-4": {
       "hex": "#ffffff",
       "oklch": {
         "l": 1,
         "c": 0,
         "h": 0
       },
-      "count": 4,
+      "count": 36,
       "members": [
         {
-          "hex": "#fef9f3",
-          "count": 2,
-          "dist": 0.0254
+          "hex": "#fbf7f3",
+          "count": 4,
+          "dist": 0.0335
         }
       ]
     },
-    "--c-5": {
-      "hex": "#dfd1c9",
+    "--c-2": {
+      "hex": "#fde7cd",
       "oklch": {
-        "l": 0.8698,
-        "c": 0.0191,
-        "h": 51.9
+        "l": 0.939,
+        "c": 0.0419,
+        "h": 71.9
+      },
+      "count": 13,
+      "members": [
+        {
+          "hex": "#dddddd",
+          "count": 3,
+          "dist": 0.075
+        }
+      ]
+    },
+    "--c-3": {
+      "hex": "#2c241f",
+      "oklch": {
+        "l": 0.2677,
+        "c": 0.0152,
+        "h": 53.9
+      },
+      "count": 10,
+      "members": [
+        {
+          "hex": "#1f1a16",
+          "count": 4,
+          "dist": 0.0684
+        }
+      ]
+    },
+    "--c-4": {
+      "hex": "#b8744f",
+      "oklch": {
+        "l": 0.6235,
+        "c": 0.1002,
+        "h": 48.8
+      },
+      "count": 6,
+      "members": []
+    },
+    "--c-5": {
+      "hex": "#5c3622",
+      "oklch": {
+        "l": 0.3746,
+        "c": 0.0631,
+        "h": 47.9
+      },
+      "count": 3,
+      "members": []
+    },
+    "--c-6": {
+      "hex": "#7b6d64",
+      "oklch": {
+        "l": 0.5451,
+        "c": 0.0224,
+        "h": 54.9
+      },
+      "count": 3,
+      "members": []
+    },
+    "--c-7": {
+      "hex": "#5c514a",
+      "oklch": {
+        "l": 0.4436,
+        "c": 0.0185,
+        "h": 54.6
+      },
+      "count": 2,
+      "members": []
+    },
+    "--c-8": {
+      "hex": "#e2beab",
+      "oklch": {
+        "l": 0.8277,
+        "c": 0.049,
+        "h": 49.4
+      },
+      "count": 2,
+      "members": []
+    },
+    "--c-9": {
+      "hex": "#140e0a",
+      "oklch": {
+        "l": 0.1701,
+        "c": 0.0131,
+        "h": 55.3
       },
       "count": 2,
       "members": []
@@ -458,7 +514,7 @@
         <div class="brandMark" aria-hidden="true"></div>
         <div class="brandText">
           <strong data-field="name" data-word-count="2">Student Name</strong>
-          <span data-field="subheadline" data-word-count="6">Anthropology Major • Graduation: May 2026</span>
+          <span><span data-field="major" data-word-count="1">Anthropology</span> Major • Graduation: <span data-field="graduation_date" data-word-count="2">May 2026</span></span>
         </div>
       </div>
 
@@ -475,7 +531,7 @@
     <div class="hero">
       <div>
         <h1 data-field="headline" data-word-count="4">Anthropology Portfolio & Resume</h1>
-        <p data-field="about" data-word-count="46">
+        <p data-field="about" data-word-count="47">
           I study how people create meaning—through culture, material remains, language, and lived experience.
           I'm seeking internships and entry-level opportunities in research, museums, cultural resource work,
           UX research, public policy, NGOs, and education.
@@ -509,7 +565,7 @@
     <!-- ABOUT -->
     <section id="about" class="section">
       <h2 data-field="about_section_title" data-word-count="1">About</h2>
-      <p class="subhead" data-field="value_proposition" data-word-count="37">
+      <p class="subhead" data-field="value_proposition" data-word-count="42">
         I'm an Anthropology major with interests in cultural analysis, archaeology, and human-centered research.
         I enjoy turning complex human contexts into clear insights that support real decisions—whether in academic,
         public-facing, or applied settings.
@@ -521,12 +577,12 @@
           <ul class="bullets" data-list="bullets">
             <li data-item="bullet" data-word-count="11">Cultural anthropology: community practices, identity, and lived experience</li>
             <li data-item="bullet" data-word-count="8">Archaeology: material remains, documentation, and interpretation</li>
-            <li data-item="bullet" data-word-count="8">Applied research: making findings useful and understandable</li>
+            <li data-item="bullet" data-word-count="7">Applied research: making findings useful and understandable</li>
           </ul>
-          <div class="tagRow" data-list="skills" data-section="skill_groups">
-            <span class="tag" data-item="tag" data-word-count="1">Ethnography</span>
-            <span class="tag" data-item="tag" data-word-count="2">Material Culture</span>
-            <span class="tag" data-item="tag" data-word-count="2">Qualitative Analysis</span>
+          <div class="tagRow" data-list="technologies">
+            <span class="tag" data-item="tech" data-word-count="1">Ethnography</span>
+            <span class="tag" data-item="tech" data-word-count="2">Material Culture</span>
+            <span class="tag" data-item="tech" data-word-count="2">Qualitative Analysis</span>
           </div>
         </div>
 
@@ -551,15 +607,15 @@
       <p class="subhead">Replace placeholders with your real school details.</p>
 
       <div class="timeline" data-section="education">
-        <div class="item" data-item="education" data-word-count="35" style="margin-bottom:14px">
+        <div class="item" data-item="education" style="margin-bottom:14px" data-word-count="38">
           <div class="itemTop">
             <strong data-field="degree" data-word-count="5">B.A. / B.S. in Anthropology</strong>
             <span data-field="graduation_date" data-word-count="3">Expected May 2026</span>
           </div>
-          <div class="meta" data-field="institution" data-word-count="12">Brigham Young University (example) • GPA: 3.X (optional) • Provo, UT</div>
+          <div class="meta" data-field="institution" data-word-count="10">Brigham Young University (example) • GPA: 3.X (optional) • Provo, UT</div>
           <ul class="bullets" data-list="bullets">
-            <li data-item="bullet" data-word-count="18">Coursework: Archaeological Method & Theory, Cultural Anthropology, Linguistic Anthropology, Statistics/Methods (edit)</li>
-            <li data-item="bullet" data-word-count="12">Capstone: Research design, ethics, and formal presentation of findings</li>
+            <li data-item="bullet" data-word-count="17">Coursework: Archaeological Method & Theory, Cultural Anthropology, Linguistic Anthropology, Statistics/Methods (edit)</li>
+            <li data-item="bullet" data-word-count="11">Capstone: Research design, ethics, and formal presentation of findings</li>
           </ul>
         </div>
       </div>
@@ -568,26 +624,26 @@
     <!-- SKILLS -->
     <section id="skills" class="section">
       <h2 data-field="skills_section_title" data-word-count="1">Skills</h2>
-      <p class="subhead" data-word-count="13">A quick snapshot of skills employers look for in anthropology-adjacent roles.</p>
+      <p class="subhead" data-word-count="14">A quick snapshot of skills employers look for in anthropology-adjacent roles.</p>
 
       <div class="grid2" data-section="skill_groups">
-        <div class="card" data-item="skill_groups" data-word-count="34" style="margin-bottom:14px">
+        <div class="card" data-item="skill_groups" style="margin-bottom:14px" data-word-count="30">
           <h3 data-field="group_name" data-word-count="2">Research Methods</h3>
           <ul class="bullets" data-list="skills">
-            <li data-item="tag" data-word-count="12">Interviewing and focus groups (protocols, consent, note-taking)</li>
+            <li data-item="tag" data-word-count="11">Interviewing and focus groups (protocols, consent, note-taking)</li>
             <li data-item="tag" data-word-count="6">Participant observation and field notes</li>
             <li data-item="tag" data-word-count="9">Thematic coding and synthesis (basic qualitative workflows)</li>
             <li data-item="tag" data-word-count="6">Artifact documentation and descriptive cataloging</li>
           </ul>
         </div>
 
-        <div class="card" data-item="skill_groups" data-word-count="32">
+        <div class="card" data-item="skill_groups" data-word-count="30">
           <h3 data-field="group_name" data-word-count="3">Communication & Tools</h3>
           <ul class="bullets" data-list="skills">
             <li data-item="tag" data-word-count="7">Clear writing: briefs, reports, presentations</li>
             <li data-item="tag" data-word-count="7">Slides, documents, and structured summaries</li>
             <li data-item="tag" data-word-count="6">Spreadsheets and basic data organization</li>
-            <li data-item="tag" data-word-count="12">Optional: NVivo/Atlas.ti, GIS, or archival tools (edit)</li>
+            <li data-item="tag" data-word-count="10">Optional: NVivo/Atlas.ti, GIS, or archival tools (edit)</li>
           </ul>
         </div>
       </div>
@@ -596,15 +652,15 @@
     <!-- EXPERIENCE -->
     <section id="experience" class="section">
       <h2 data-field="experience_section_title" data-word-count="1">Experience</h2>
-      <p class="subhead" data-if="has_experience_intro" data-word-count="17">Include campus roles, internships, volunteer work, research labs, museum work, etc.</p>
+      <p class="subhead" data-if="has_experience_intro" data-word-count="15">Include campus roles, internships, volunteer work, research labs, museum work, etc.</p>
 
       <div class="timeline" data-section="experience">
-        <div class="item" data-item="experience" data-word-count="46" style="margin-bottom:14px">
+        <div class="item" data-item="experience" style="margin-bottom:14px" data-word-count="43">
           <div class="itemTop">
             <strong data-field="title" data-word-count="6">Research Assistant, Anthropology Lab (Example)</strong>
             <span><span data-field="start_date" data-word-count="2">Sep 2024</span> – <span data-field="end_date" data-word-count="1">Present</span></span>
           </div>
-          <div class="meta" data-field="location" data-word-count="6">University Department / Lab Name • City, State</div>
+          <div class="meta" data-field="location" data-word-count="7">University Department / Lab Name • City, State</div>
           <ul class="bullets" data-list="bullets">
             <li data-item="bullet" data-word-count="14">Supported literature reviews and summarized findings for faculty and graduate researchers.</li>
             <li data-item="bullet" data-word-count="14">Maintained organized research notes, citations, and documentation for project continuity.</li>
@@ -612,14 +668,14 @@
           </ul>
         </div>
 
-        <div class="item" data-item="experience" data-word-count="28">
+        <div class="item" data-item="experience" data-word-count="30">
           <div class="itemTop">
-            <strong data-field="title" data-word-count="5">Museum / Archive Volunteer (Example)</strong>
+            <strong data-field="title" data-word-count="6">Museum / Archive Volunteer (Example)</strong>
             <span><span data-field="start_date" data-word-count="2">Jan 2024</span> – <span data-field="end_date" data-word-count="2">Aug 2024</span></span>
           </div>
           <div class="meta" data-field="location" data-word-count="4">Museum Name • City, State</div>
           <ul class="bullets" data-list="bullets">
-            <li data-item="bullet" data-word-count="12">Helped catalog objects with consistent metadata and careful handling procedures.</li>
+            <li data-item="bullet" data-word-count="13">Helped catalog objects with consistent metadata and careful handling procedures.</li>
             <li data-item="bullet" data-word-count="11">Supported visitor education through short explanations and exhibit guidance.</li>
           </ul>
         </div>
@@ -629,18 +685,18 @@
     <!-- PROJECTS -->
     <section id="projects" class="section">
       <h2 data-field="projects_section_title" data-word-count="1">Projects</h2>
-      <p class="subhead" data-if="has_projects_intro" data-word-count="17">These are written in a hiring-manager-friendly way. Replace titles with real projects.</p>
+      <p class="subhead" data-if="has_projects_intro" data-word-count="16">These are written in a hiring-manager-friendly way. Replace titles with real projects.</p>
 
       <div class="grid2" data-section="projects">
-        <div class="card" data-item="projects" data-word-count="57" style="margin-bottom:14px">
+        <div class="card" data-item="projects" style="margin-bottom:14px" data-word-count="56">
           <h3 data-field="name" data-word-count="3">Ethnography Mini-Study</h3>
-          <div class="meta" data-field="role" data-word-count="7">Qualitative research • Interviewing • Thematic coding</div>
-          <p data-field="description" data-word-count="26">
+          <div class="meta" data-field="role" data-word-count="6">Qualitative research • Interviewing • Thematic coding</div>
+          <p data-field="description" data-word-count="29">
             Designed a small ethnographic inquiry around a community practice, conducted interviews, and produced a
             structured write-up linking evidence to interpretation.
           </p>
           <ul class="bullets" data-list="bullets">
-            <li data-item="bullet" data-word-count="11">Created research questions and an interview guide; documented consent.</li>
+            <li data-item="bullet" data-word-count="12">Created research questions and an interview guide; documented consent.</li>
             <li data-item="bullet" data-word-count="14">Summarized themes and supported them with direct observations and participant input.</li>
           </ul>
           <div class="tagRow" data-list="technologies">
@@ -653,12 +709,12 @@
         <div class="card" data-item="projects" data-word-count="51">
           <h3 data-field="name" data-word-count="3">Material Culture Analysis</h3>
           <div class="meta" data-field="role" data-word-count="6">Interpretation • Documentation • Context building</div>
-          <p data-field="description" data-word-count="24">
+          <p data-field="description" data-word-count="25">
             Analyzed objects as cultural texts—identifying function, symbolism, and social meaning through comparison
             to historical and cultural sources.
           </p>
           <ul class="bullets" data-list="bullets">
-            <li data-item="bullet" data-word-count="10">Built a short catalog with consistent attributes and interpretive notes.</li>
+            <li data-item="bullet" data-word-count="12">Built a short catalog with consistent attributes and interpretive notes.</li>
             <li data-item="bullet" data-word-count="13">Presented findings in a concise brief designed for non-specialist readers.</li>
           </ul>
           <div class="tagRow" data-list="technologies">
@@ -678,10 +734,10 @@
       </p>
 
       <div class="writingList" data-section="publications">
-        <div class="writing" data-item="publications" data-word-count="14" style="margin-bottom:14px">
+        <div class="writing" data-item="publications" style="margin-bottom:14px" data-word-count="13">
           <div>
             <strong data-field="title" data-word-count="7">Research Brief: Culture & Meaning (Example)</strong><br/>
-            <small data-field="venue" data-word-count="7">2–3 pages • clear executive summary + evidence</small>
+            <small data-field="venue" data-word-count="8">2–3 pages • clear executive summary + evidence</small>
           </div>
           <a href="#" data-attr-href="link" aria-label="Open writing sample">Open</a>
         </div>
@@ -694,10 +750,10 @@
           <a href="#" data-attr-href="link" aria-label="Open writing sample">Open</a>
         </div>
 
-        <div class="writing" data-item="publications" data-word-count="8">
+        <div class="writing" data-item="publications" data-word-count="9">
           <div>
-            <strong data-field="title" data-word-count="3">Ethnographic Reflection (Example)</strong><br/>
-            <small data-field="venue" data-word-count="6">Field notes → themes → conclusion</small>
+            <strong data-field="title" data-word-count="4">Ethnographic Reflection (Example)</strong><br/>
+            <small data-field="venue" data-word-count="7">Field notes → themes → conclusion</small>
           </div>
           <a href="#" data-attr-href="link" aria-label="Open writing sample">Open</a>
         </div>
@@ -710,18 +766,18 @@
       <p class="subhead">Optional but useful for scholarships, honors programs, and internships.</p>
 
       <div class="grid2" data-section="leadership">
-        <div class="card" data-item="leadership" data-word-count="16" style="margin-bottom:14px">
+        <div class="card" data-item="leadership" style="margin-bottom:14px" data-word-count="16">
           <h3 data-field="role" data-word-count="1">Leadership</h3>
           <ul class="bullets" data-list="bullets">
-            <li data-item="bullet" data-word-count="11">Student club role (example): event planning, outreach, coordinating speakers</li>
-            <li data-item="bullet" data-word-count="10">Peer mentor / tutor (example): supporting writing and study habits</li>
+            <li data-item="bullet" data-word-count="10">Student club role (example): event planning, outreach, coordinating speakers</li>
+            <li data-item="bullet" data-word-count="9">Peer mentor / tutor (example): supporting writing and study habits</li>
           </ul>
         </div>
-        <div class="card" data-item="leadership" data-word-count="9">
+        <div class="card" data-item="leadership" data-word-count="10">
           <h3 data-field="role" data-word-count="1">Awards</h3>
           <ul class="bullets" data-list="bullets">
             <li data-item="bullet" data-word-count="6">Department recognition / scholarship (example)</li>
-            <li data-item="bullet" data-word-count="3">Dean's list (optional)</li>
+            <li data-item="bullet" data-word-count="4">Dean's list (optional)</li>
           </ul>
         </div>
       </div>
@@ -730,26 +786,26 @@
     <!-- CONTACT (headshot + contact info in last section) -->
     <section id="contact" class="section">
       <h2 data-field="contact_section_title" data-word-count="1">Contact</h2>
-      <p class="subhead" data-word-count="20">
+      <p class="subhead" data-word-count="19">
         This section is designed for quick recruiter scanning: a friendly photo and direct contact links.
       </p>
 
       <div class="contactWrap">
         <!-- Replace headshot.jpg with the student's real photo -->
-        <img class="headshot" src="headshot.jpg" alt="Headshot of Student Name" data-attr-src="headshot" />
+        <img class="headshot" src="headshot.jpg" data-attr-src="headshot" alt="Headshot of Student Name" />
 
         <div class="contactCard">
           <h3 data-field="name" data-word-count="2">Student Name</h3>
-          <div class="meta" data-field="subheadline" data-word-count="10">Anthropology Major • Graduation: May 2026 • Open to internships & entry-level roles</div>
+          <div class="meta"><span data-field="major" data-word-count="1">Anthropology</span> Major • Graduation: <span data-field="graduation_date" data-word-count="2">May 2026</span> • <span data-field="open_to" data-if="has_open_to" data-word-count="6">Open to internships &amp; entry-level roles</span></div>
 
           <div class="contactRow">
             <div><strong>Email:</strong> <a href="mailto:student.email@example.com" data-attr-href="email" data-field="email" data-word-count="1">student.email@example.com</a></div>
-            <div data-if="has_linkedin"><strong>LinkedIn:</strong> <a href="#" target="_blank" rel="noreferrer" data-attr-href="linkedin" data-field="linkedin" data-word-count="1">linkedin.com/in/studentname</a></div>
-            <div data-if="has_website"><strong>Portfolio PDF:</strong> <a href="#" target="_blank" rel="noreferrer" data-attr-href="website">Download</a></div>
+            <div data-if="has_linkedin"><strong>LinkedIn:</strong> <a href="#" data-attr-href="linkedin" target="_blank" rel="noreferrer" data-field="linkedin" data-word-count="1">linkedin.com/in/studentname</a></div>
+            <div><strong>Portfolio PDF:</strong> <a href="#" data-attr-href="website" target="_blank" rel="noreferrer">Download</a></div>
             <div><strong>Location:</strong> <span data-field="location" data-word-count="7">Provo, UT (open to relocation / remote)</span></div>
           </div>
 
-          <div class="tagRow" style="margin-top:16px" data-list="work_domains" data-section="work_domains" data-if="has_work_domains">
+          <div class="tagRow" style="margin-top:16px" data-list="work_domains">
             <span class="tag" data-item="tag" data-word-count="1">Research</span>
             <span class="tag" data-item="tag" data-word-count="2">Museums/Archives</span>
             <span class="tag" data-item="tag" data-word-count="2">Field Methods</span>
@@ -761,7 +817,7 @@
     </section>
 
     <footer>
-      © <span id="y"></span> <span data-field="name" data-word-count="2">Student Name</span> • <span data-if="cta_tagline" data-html-field="cta_tagline" data-word-count="9">Built for clarity, credibility, and quick scanning.</span>
+      © <span id="y"></span> <span data-field="name" data-word-count="2">Student Name</span> • <span data-html-field="cta_tagline" data-if="cta_tagline" data-word-count="9">Built for clarity, credibility, and quick scanning.</span>
     </footer>
   </main>
 
