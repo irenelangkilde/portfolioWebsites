@@ -11,19 +11,19 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg: var(--c-1);
+      --bg: oklch(from var(--c-1) calc(l - 0.0147) calc(c + 0.0029) calc(h + 84.6));
       --paper: var(--c-1);
-      --ink: var(--c-1);
-      --muted: var(--c-1);
-      --soft: var(--c-1);
-      --soft2:var(--c-1);
-      --border: color-mix(in srgb, var(--c-1) 10%, transparent);
-      --shadow: 0 18px 55px color-mix(in srgb, var(--c-4) 10%, transparent);
+      --ink: oklch(from var(--c-5) calc(l + 0.0447) calc(c - 0.0093) calc(h + 9.4));
+      --muted: var(--c-6);
+      --soft: oklch(from var(--c-1) calc(l - 0.0656) calc(c + 0.0099) calc(h + 87.5));
+      --soft2:oklch(from var(--c-1) calc(l - 0.0417) calc(c + 0.0070) calc(h + 88.6));
+      --border: color-mix(in srgb, oklch(from var(--c-5) calc(l + 0.0447) calc(c - 0.0093) calc(h + 9.4)) 10%, transparent);
+      --shadow: 0 18px 55px color-mix(in srgb, var(--c-5) 10%, transparent);
 
       /* pulled to harmonize with the hero art */
       --violet: var(--c-2);
-      --pink: var(--c-3);
-      --blue: var(--c-1);
+      --pink: var(--c-4);
+      --blue: oklch(from var(--c-2) calc(l + 0.0161) calc(c - 0.0427) calc(h - 13.1));
       --radius-xl: 26px;
       --radius-lg: 20px;
       --radius-md: 14px;
@@ -37,8 +37,8 @@
       margin:0;
       background:
         radial-gradient(1000px 600px at 12% 0%, color-mix(in srgb, var(--c-2) 10%, transparent), transparent 55%),
-        radial-gradient(900px 560px at 88% 12%, color-mix(in srgb, var(--c-3) 10%, transparent), transparent 55%),
-        linear-gradient(180deg, var(--bg), var(--c-1));
+        radial-gradient(900px 560px at 88% 12%, color-mix(in srgb, var(--c-4) 10%, transparent), transparent 55%),
+        linear-gradient(180deg, var(--bg), oklch(from var(--c-1) calc(l - 0.0269) calc(c + 0.0041) calc(h + 91.4)));
       color: var(--ink);
       font-family: "IBM Plex Sans", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       line-height: 1.65;
@@ -52,7 +52,7 @@
       position: sticky;
       top:0;
       z-index: 50;
-      background: color-mix(in srgb, var(--c-1) 78%, transparent);
+      background: color-mix(in srgb, oklch(from var(--c-1) calc(l - 0.0147) calc(c + 0.0029) calc(h + 84.6)) 78%, transparent);
       backdrop-filter: blur(10px);
       border-bottom: 1px solid var(--border);
     }
@@ -115,7 +115,7 @@
       gap:10px;
       white-space:nowrap;
     }
-    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px color-mix(in srgb, var(--c-4) 10%, transparent)}
+    .btn:hover{transform: translateY(-1px); box-shadow: 0 12px 28px color-mix(in srgb, var(--c-5) 10%, transparent)}
     .btn.primary{
       border: none;
       color: var(--c-1);
@@ -149,7 +149,7 @@
     .poster .cap{
       padding: 14px 16px 16px;
       border-top: 1px solid var(--border);
-      background: linear-gradient(180deg, var(--paper), color-mix(in srgb, var(--c-1) 90%, transparent));
+      background: linear-gradient(180deg, var(--paper), color-mix(in srgb, oklch(from var(--c-1) calc(l - 0.0147) calc(c + 0.0029) calc(h + 84.6)) 90%, transparent));
     }
     .cap strong{display:block; font-size: 14px}
     .cap span{display:block; color: var(--muted); font-size: 13px; margin-top: 2px}
@@ -159,7 +159,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 22px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-4) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-5) 6%, transparent);
     }
     .kicker{
       display:inline-flex;
@@ -168,7 +168,7 @@
       padding: 8px 12px;
       border-radius: 999px;
       background: color-mix(in srgb, var(--c-2) 8%, transparent);
-      color: var(--c-1);
+      color: var(--c-3);
       font-size: 12px;
       letter-spacing: .14em;
       text-transform: uppercase;
@@ -198,7 +198,7 @@
       margin: 14px 0 0;
       padding: 0;
       list-style:none;
-      color: var(--c-1);
+      color: var(--c-3);
       font-size: 14px;
     }
     .bullets li{
@@ -213,7 +213,7 @@
     .tick{
       width: 20px; height: 20px;
       border-radius: 999px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-2) 18%, transparent), color-mix(in srgb, var(--c-3) 18%, transparent));
+      background: linear-gradient(135deg, color-mix(in srgb, var(--c-2) 18%, transparent), color-mix(in srgb, var(--c-4) 18%, transparent));
       display:flex; align-items:center; justify-content:center;
       border: 1px solid color-mix(in srgb, var(--c-2) 14%, transparent);
       flex: 0 0 auto;
@@ -249,7 +249,7 @@
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-4) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-5) 6%, transparent);
       position: relative;
       overflow:hidden;
     }
@@ -259,7 +259,7 @@
       inset:-40%;
       background:
         radial-gradient(circle at 30% 30%, color-mix(in srgb, var(--c-2) 10%, transparent), transparent 45%),
-        radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--c-3) 10%, transparent), transparent 45%);
+        radial-gradient(circle at 70% 70%, color-mix(in srgb, var(--c-4) 10%, transparent), transparent 45%);
       opacity:.9;
       pointer-events:none;
       transform: rotate(8deg);
@@ -276,7 +276,7 @@
       gap: 8px;
       flex-wrap: wrap;
       margin-top: 10px;
-      color: var(--c-1);
+      color: var(--c-3);
       font-size: 12px;
     }
     .tag{
@@ -294,7 +294,7 @@
       background: color-mix(in srgb, var(--c-1) 75%, transparent);
       border: 1px solid var(--border);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-4) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-5) 6%, transparent);
     }
     .post .date{font-size: 12px; color: var(--muted); letter-spacing:.12em; text-transform:uppercase}
     .post h3{margin: 8px 0 8px; font-size: 16px}
@@ -313,7 +313,7 @@
       background: color-mix(in srgb, var(--c-1) 85%, transparent);
       border: 1px solid var(--border);
       font-size: 13px;
-      color: var(--c-1);
+      color: var(--c-3);
     }
 
     /* Contact */
@@ -325,7 +325,7 @@
     }
     .contact-card{
       border-radius: var(--radius-xl);
-      background: linear-gradient(135deg, color-mix(in srgb, var(--c-1) 10%, transparent), color-mix(in srgb, var(--c-3) 8%, transparent)), color-mix(in srgb, var(--c-1) 75%, transparent);
+      background: linear-gradient(135deg, color-mix(in srgb, oklch(from var(--c-2) calc(l + 0.0161) calc(c - 0.0427) calc(h - 13.1)) 10%, transparent), color-mix(in srgb, var(--c-4) 8%, transparent)), color-mix(in srgb, var(--c-1) 75%, transparent);
       border: 1px solid var(--border);
       padding: 18px;
       box-shadow: var(--shadow);
@@ -339,7 +339,7 @@
       background: color-mix(in srgb, var(--c-1) 75%, transparent);
       border: 1px solid var(--border);
       padding: 18px;
-      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-4) 6%, transparent);
+      box-shadow: 0 12px 34px color-mix(in srgb, var(--c-5) 6%, transparent);
       display:grid;
       gap: 12px;
     }
@@ -399,58 +399,113 @@
 <style id="extracted-theme">
 /* Generated by preprocessSamples */
 :root {
-  --c-1:           oklch(0.0% 0.000 0.0);
-  --c-2:           oklch(57.8% 0.233 279.8);
-  --c-3:           oklch(23.9% 0.021 297.3);
-  --c-4:           oklch(47.9% 0.018 302.2);
+  --c-1:           oklch(100.0% 0.000 0.0);
+  --c-2:           oklch(57.5% 0.240 281.6);
+  --c-3:           oklch(29.4% 0.022 300.3);
+  --c-4:           oklch(75.4% 0.175 350.9);
+  --c-5:           oklch(15.0% 0.021 283.5);
+  --c-6:           oklch(47.9% 0.018 302.2);
 }
 </style>
 <script type="application/json" id="color-palette">
 {
   "meta": {
-    "k": 4,
+    "k": 6,
     "dupThreshold": 0.02,
     "variantThreshold": 0.1
   },
   "scheme": {
     "--c-1": {
-      "hex": "#000000",
+      "hex": "#ffffff",
       "oklch": {
-        "l": 0,
+        "l": 1,
         "c": 0,
         "h": 0
       },
-      "count": 34,
-      "members": []
+      "count": 35,
+      "members": [
+        {
+          "hex": "#fbfaf8",
+          "count": 5,
+          "dist": 0.0222
+        },
+        {
+          "hex": "#ece9e2",
+          "count": 2,
+          "dist": 0.0989
+        },
+        {
+          "hex": "#f3f1ec",
+          "count": 2,
+          "dist": 0.0629
+        },
+        {
+          "hex": "#f7f6f3",
+          "count": 2,
+          "dist": 0.0406
+        }
+      ]
     },
     "--c-2": {
-      "hex": "#675afd",
+      "hex": "#6b55ff",
       "oklch": {
-        "l": 0.5781,
-        "c": 0.2326,
-        "h": 279.8
+        "l": 0.5753,
+        "c": 0.2399,
+        "h": 281.6
       },
-      "count": 17,
-      "members": []
+      "count": 20,
+      "members": [
+        {
+          "hex": "#4e70f1",
+          "count": 3,
+          "dist": 0.0697
+        }
+      ]
     },
     "--c-3": {
-      "hex": "#201d28",
+      "hex": "#2e2a36",
       "oklch": {
-        "l": 0.2391,
-        "c": 0.0212,
-        "h": 297.3
+        "l": 0.2943,
+        "c": 0.0222,
+        "h": 300.3
+      },
+      "count": 12,
+      "members": []
+    },
+    "--c-4": {
+      "hex": "#ff7bbd",
+      "oklch": {
+        "l": 0.7541,
+        "c": 0.1751,
+        "h": 350.9
       },
       "count": 6,
       "members": []
     },
-    "--c-4": {
+    "--c-5": {
+      "hex": "#0a0a14",
+      "oklch": {
+        "l": 0.1505,
+        "c": 0.0214,
+        "h": 283.5
+      },
+      "count": 9,
+      "members": [
+        {
+          "hex": "#15141a",
+          "count": 3,
+          "dist": 0.0678
+        }
+      ]
+    },
+    "--c-6": {
       "hex": "#5f5b66",
       "oklch": {
         "l": 0.4788,
         "c": 0.0181,
         "h": 302.2
       },
-      "count": 6,
+      "count": 2,
       "members": []
     }
   }
@@ -463,7 +518,7 @@
     <header>
       <div class="topbar">
         <div class="id">
-          <div class="monogram" aria-hidden="true" data-field="first_name" data-word-count="2">RN</div>
+          <div class="monogram" aria-hidden="true" data-field="first_name" data-word-count="1">RN</div>
           <div>
             <strong data-field="name" data-word-count="2">Riley Nguyen</strong>
             <span data-field="headline" data-word-count="4">Data Science • Graduating 2026</span>
@@ -492,25 +547,25 @@
         <div class="container">
           <div class="hero-grid">
             <aside class="poster" aria-label="Hero image poster">
-              <img src="image1.png" alt="Data Science portfolio hero graphic" data-attr-src="headshot" />
+              <img data-attr-src="headshot" src="image1.png" alt="Data Science portfolio hero graphic" />
               <div class="cap">
-                <strong data-field="subheadline" data-word-count="4">Projects • Analysis • Insights</strong>
-                <span data-field="value_proposition" data-word-count="10">Portfolio poster (use as a homepage hero or cover image)</span>
+                <strong>Projects • Analysis • Insights</strong>
+                <span>Portfolio poster (use as a homepage hero or cover image)</span>
               </div>
             </aside>
 
             <div class="hero-copy">
-              <span class="kicker"><span class="dot" aria-hidden="true"></span> <span data-field="desired_role" data-word-count="3">Data Science Portfolio</span></span>
-              <h1 data-field="headline" data-word-count="10">Data you can explain. Models you can defend.</h1>
-              <p class="lead" data-field="about" data-word-count="35">
+              <span class="kicker"><span class="dot" aria-hidden="true"></span> Data Science Portfolio</span>
+              <h1 data-field="subheadline" data-word-count="8">Data you can explain. Models you can defend.</h1>
+              <p class="lead" data-field="about" data-word-count="36">
                 I'm a soon-to-graduate data science student focused on practical analytics and machine learning—
                 with an emphasis on reproducibility, clear evaluation, and stakeholder-ready storytelling.
               </p>
 
               <div class="cta">
                 <a class="btn primary" href="#projects">See Projects</a>
-                <a class="btn" href="#" onclick="alert('Replace this with a link to your resume PDF.'); return false;" data-attr-href="website">Resume (PDF)</a>
-                <a class="btn" href="#" onclick="alert('Replace this with your GitHub URL.'); return false;" data-attr-href="github" data-if="has_github">GitHub</a>
+                <a class="btn" href="#" onclick="alert('Replace this with a link to your resume PDF.'); return false;">Resume (PDF)</a>
+                <a class="btn" data-if="has_github" href="#" onclick="alert('Replace this with your GitHub URL.'); return false;" data-attr-href="github">GitHub</a>
               </div>
 
               <ul class="bullets" aria-label="Highlights">
@@ -528,38 +583,38 @@
       <section class="section" id="projects">
         <div class="container">
           <h2 data-field="projects_section_title" data-word-count="1">Projects</h2>
-          <p class="hint" data-field="projects_intro" data-if="has_projects_intro" data-word-count="17">Replace each card with real outcomes, links, and artifacts (notebooks, dashboards, demos).</p>
+          <p class="hint" data-if="has_projects_intro" data-field="projects_intro" data-word-count="18">Replace each card with real outcomes, links, and artifacts (notebooks, dashboards, demos).</p>
 
           <div class="grid" data-section="projects">
             <article class="card" data-item="projects" style="margin-bottom:14px">
               <h3 data-field="name" data-word-count="5">Churn Prediction + Action Drivers</h3>
-              <p data-field="description" data-word-count="18">Built a classification pipeline and translated top features into retention experiments and messaging.</p>
+              <p data-field="description" data-word-count="17">Built a classification pipeline and translated top features into retention experiments and messaging.</p>
               <div class="meta" data-list="technologies">
-                <span class="tag" data-item="tech" data-word-count="1">Python</span><span class="tag" data-item="tech" data-word-count="1">scikit-learn</span><span class="tag" data-item="tech" data-word-count="1">SHAP</span>
+                <span class="tag" data-item="tech">Python</span><span class="tag" data-item="tech">scikit-learn</span><span class="tag" data-item="tech">SHAP</span>
               </div>
             </article>
 
             <article class="card" data-item="projects">
-              <h3 data-field="name" data-word-count="5">Forecasting: Demand &amp; Capacity Planning</h3>
+              <h3 data-field="name" data-word-count="5">Forecasting: Demand & Capacity Planning</h3>
               <p data-field="description" data-word-count="15">Backtested time-series forecasts and communicated uncertainty with confidence intervals.</p>
               <div class="meta" data-list="technologies">
-                <span class="tag" data-item="tech" data-word-count="2">Time Series</span><span class="tag" data-item="tech" data-word-count="1">Backtesting</span><span class="tag" data-item="tech" data-word-count="2">Error Analysis</span>
+                <span class="tag" data-item="tech">Time Series</span><span class="tag" data-item="tech">Backtesting</span><span class="tag" data-item="tech">Error Analysis</span>
               </div>
             </article>
 
             <article class="card" data-item="projects">
-              <h3 data-field="name" data-word-count="5">NLP: Review Insights Dashboard</h3>
+              <h3 data-field="name" data-word-count="4">NLP: Review Insights Dashboard</h3>
               <p data-field="description" data-word-count="18">Extracted themes and sentiment to highlight product issues and wins; packaged results in a dashboard.</p>
               <div class="meta" data-list="technologies">
-                <span class="tag" data-item="tech" data-word-count="1">NLP</span><span class="tag" data-item="tech" data-word-count="1">Embeddings</span><span class="tag" data-item="tech" data-word-count="2">Topic Modeling</span>
+                <span class="tag" data-item="tech">NLP</span><span class="tag" data-item="tech">Embeddings</span><span class="tag" data-item="tech">Topic Modeling</span>
               </div>
             </article>
 
             <article class="card" data-item="projects">
-              <h3 data-field="name" data-word-count="4">Experiment Design Playbook</h3>
+              <h3 data-field="name" data-word-count="3">Experiment Design Playbook</h3>
               <p data-field="description" data-word-count="17">Created a lightweight framework for hypotheses, guardrails, power considerations, and interpretation.</p>
               <div class="meta" data-list="technologies">
-                <span class="tag" data-item="tech" data-word-count="1">Statistics</span><span class="tag" data-item="tech" data-word-count="2">A/B Testing</span><span class="tag" data-item="tech" data-word-count="2">Causal Thinking</span>
+                <span class="tag" data-item="tech">Statistics</span><span class="tag" data-item="tech">A/B Testing</span><span class="tag" data-item="tech">Causal Thinking</span>
               </div>
             </article>
           </div>
@@ -570,22 +625,22 @@
       <section class="section" id="writing">
         <div class="container">
           <h2 data-field="about_section_title" data-word-count="1">Writing</h2>
-          <p class="hint" data-word-count="16">Short posts that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
+          <p class="hint">Short posts that show how you think: methodology, evaluation, and communicating tradeoffs.</p>
 
           <div class="grid" data-section="publications">
             <article class="post" data-item="publications" style="margin-bottom:14px">
               <div class="date" data-field="venue" data-word-count="2">Case Note</div>
-              <h3 data-field="title" data-word-count="9">How I evaluate models beyond "accuracy"</h3>
-              <p data-field="description" data-word-count="16">Picking metrics that reflect business cost, calibration, and the user experience of mistakes.</p>
+              <h3 data-field="title" data-word-count="8">How I evaluate models beyond "accuracy"</h3>
+              <p data-field="description" data-word-count="17">Picking metrics that reflect business cost, calibration, and the user experience of mistakes.</p>
             </article>
             <article class="post" data-item="publications">
               <div class="date" data-field="venue" data-word-count="1">Explainer</div>
-              <h3 data-field="title" data-word-count="8">What makes a dashboard actually useful</h3>
-              <p data-field="description" data-word-count="15">Definitions, ownership, refresh cadence, and the "so what" layer that drives action.</p>
+              <h3 data-field="title" data-word-count="7">What makes a dashboard actually useful</h3>
+              <p data-field="description" data-word-count="16">Definitions, ownership, refresh cadence, and the "so what" layer that drives action.</p>
             </article>
             <article class="post" data-item="publications">
               <div class="date" data-field="venue" data-word-count="1">Toolkit</div>
-              <h3 data-field="title" data-word-count="6">My reproducible project checklist</h3>
+              <h3 data-field="title" data-word-count="5">My reproducible project checklist</h3>
               <p data-field="description" data-word-count="15">Data validation, versioning, clear assumptions, and artifact structure for clean handoffs.</p>
             </article>
           </div>
@@ -596,21 +651,21 @@
       <section class="section" id="skills">
         <div class="container">
           <h2 data-field="skills_section_title" data-word-count="1">Skills</h2>
-          <p class="hint" data-word-count="12">Keep this aligned with the roles you want. Be specific and credible.</p>
+          <p class="hint">Keep this aligned with the roles you want. Be specific and credible.</p>
 
           <div class="grid" data-section="skill_groups">
             <div class="card span-12" data-item="skill_groups" style="margin-bottom:14px">
               <h3 data-field="group_name" data-word-count="1">Core</h3>
               <div class="skills" aria-label="Skill chips" data-list="skills">
-                <span class="skill" data-item="tag" data-word-count="3">Python (Pandas, NumPy)</span>
-                <span class="skill" data-item="tag" data-word-count="4">SQL (CTEs, window functions)</span>
-                <span class="skill" data-item="tag" data-word-count="4">Machine Learning (classification, regression)</span>
-                <span class="skill" data-item="tag" data-word-count="3">NLP (embeddings, sentiment)</span>
-                <span class="skill" data-item="tag" data-word-count="3">Time Series (forecasting)</span>
-                <span class="skill" data-item="tag" data-word-count="3">Statistics &amp; experimentation</span>
-                <span class="skill" data-item="tag" data-word-count="3">Visualization (Tableau/Power BI)</span>
-                <span class="skill" data-item="tag" data-word-count="4">Storytelling &amp; stakeholder communication</span>
-                <span class="skill" data-item="tag" data-word-count="4">Git &amp; reproducible notebooks</span>
+                <span class="skill" data-item="tag">Python (Pandas, NumPy)</span>
+                <span class="skill" data-item="tag">SQL (CTEs, window functions)</span>
+                <span class="skill" data-item="tag">Machine Learning (classification, regression)</span>
+                <span class="skill" data-item="tag">NLP (embeddings, sentiment)</span>
+                <span class="skill" data-item="tag">Time Series (forecasting)</span>
+                <span class="skill" data-item="tag">Statistics & experimentation</span>
+                <span class="skill" data-item="tag">Visualization (Tableau/Power BI)</span>
+                <span class="skill" data-item="tag">Storytelling & stakeholder communication</span>
+                <span class="skill" data-item="tag">Git & reproducible notebooks</span>
               </div>
             </div>
           </div>
@@ -621,7 +676,7 @@
       <section class="section" id="contact">
         <div class="container">
           <h2 data-field="contact_section_title" data-word-count="1">Contact</h2>
-          <p class="hint" data-word-count="18">Add your real email, LinkedIn, and location. This form is a demo until connected to a service.</p>
+          <p class="hint">Add your real email, LinkedIn, and location. This form is a demo until connected to a service.</p>
 
           <div class="contact">
             <div class="contact-card">
@@ -631,8 +686,8 @@
                 If you're hiring or want to talk about a project, I'd like to connect.
               </p>
               <p style="margin:0;">
-                <strong>Email:</strong> <a href="mailto:riley.nguyen@email.com" data-attr-href="email" data-field="email" data-word-count="1">riley.nguyen@email.com</a><br/>
-                <strong>LinkedIn:</strong> <a href="#" data-attr-href="linkedin" data-if="has_linkedin" data-field="linkedin" data-word-count="1">linkedin.com/in/riley-nguyen</a><br/>
+                <strong>Email:</strong> <a data-attr-href="email" href="mailto:riley.nguyen@email.com" data-field="email" data-word-count="1">riley.nguyen@email.com</a><br/>
+                <strong>LinkedIn:</strong> <a data-if="has_linkedin" data-attr-href="linkedin" href="#" data-field="linkedin" data-word-count="1">linkedin.com/in/riley-nguyen</a><br/>
                 <strong>Location:</strong> <span data-field="location" data-word-count="6">Your City, State • Open to relocation</span>
               </p>
             </div>

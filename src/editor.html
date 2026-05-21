@@ -75,26 +75,25 @@
     #openMenu .open-hint {
       padding: 4px 14px 8px; font-size: 11px; color: rgba(234,240,255,.45); line-height: 1.35;
     }
-    #urlModal {
+    #annotateAskModal {
       display: none; position: fixed; inset: 0; z-index: 200000;
       background: rgba(0,0,0,.6); align-items: center; justify-content: center;
     }
-    #urlModal.open { display: flex; }
-    #urlModalBox {
+    #annotateAskModal.open { display: flex; }
+    #annotateAskBox {
       background: #0f1929; border: 1px solid rgba(255,255,255,.18);
-      border-radius: 12px; padding: 22px 24px; width: 480px; max-width: 95vw;
-      box-shadow: 0 16px 48px rgba(0,0,0,.6);
+      border-radius: 12px; padding: 22px 24px; width: 460px; max-width: 95vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6); color: #eaf0ff;
     }
-    #urlModalBox h3 { margin: 0 0 6px; font-size: 15px; color: #eaf0ff; }
-    #urlModalBox p  { margin: 0 0 14px; font-size: 12px; color: rgba(234,240,255,.5); line-height: 1.5; }
-    #urlModalInput {
-      width: 100%; box-sizing: border-box; padding: 9px 12px;
-      background: rgba(0,0,0,.35); border: 1px solid rgba(255,255,255,.18);
-      border-radius: 7px; color: #eaf0ff; font-size: 13px; outline: none;
+    #annotateAskBox h3 { margin: 0 0 10px; font-size: 16px; color: #eaf0ff; }
+    #annotateAskBox p { margin: 0 0 10px; font-size: 13px; color: rgba(234,240,255,.85); line-height: 1.55; }
+    #annotateAskBox p.muted { color: rgba(234,240,255,.5); font-size: 12px; }
+    #annotateAskBox code {
+      background: rgba(0,0,0,.35); padding: 1px 5px; border-radius: 4px;
+      font-size: 11.5px; color: #cfe8ff;
     }
-    #urlModalInput:focus { border-color: rgba(102,126,234,.7); }
-    #urlModalActions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
-    #urlModalError { margin-top: 8px; font-size: 12px; color: rgba(255,140,140,.8); min-height: 16px; }
+    #annotateAskActions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; }
+
     #tplPickerModal {
       display: none; position: fixed; inset: 0; z-index: 200000;
       background: rgba(0,0,0,.6); align-items: center; justify-content: center;
@@ -122,6 +121,37 @@
       font-size: 18px; cursor: pointer; line-height: 1; padding: 0;
     }
     #tplPickerClose:hover { color: #eaf0ff; }
+    #folderMainModal {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.6); align-items: center; justify-content: center;
+    }
+    #folderMainModal.open { display: flex; }
+    #folderMainBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 24px; width: 520px; max-width: 95vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6); color: #eaf0ff;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #folderMainBox h3 { margin: 0; font-size: 15px; color: #eaf0ff; }
+    #folderMainList {
+      display: flex; flex-direction: column; gap: 4px;
+      overflow-y: auto; max-height: min(420px, 58vh);
+    }
+    #folderMainList button {
+      width: 100%; text-align: left; padding: 10px 12px;
+      background: rgba(255,255,255,.04); border: none; border-radius: 7px;
+      color: #eaf0ff; font-size: 13px; font-weight: 600; cursor: pointer;
+      overflow-wrap: anywhere;
+    }
+    #folderMainList button:hover, #folderMainList button:focus {
+      background: rgba(102,126,234,.35); outline: none;
+    }
+    #folderMainClose {
+      background: none; border: none; color: rgba(234,240,255,.5);
+      font-size: 18px; cursor: pointer; line-height: 1; padding: 0;
+    }
+    #folderMainClose:hover { color: #eaf0ff; }
+    #folderMainActions { display: flex; justify-content: flex-end; }
     .tbtn-active  { background: rgba(102,126,234,.5); color: #fff; outline: 1px solid rgba(102,126,234,.8); }
     #editorAccount {
       display: flex;
@@ -273,9 +303,120 @@
     body.code-mode #editorLayout { height: calc(100vh - 48px); }
 
     /* Visual pane */
-    #visualPane { flex: 1; min-width: 0; overflow: hidden; }
+    #visualPane { flex: 1; min-width: 0; overflow: hidden; position: relative; }
     body.code-mode #visualPane { display: none; }
     #visualFrame { width: 100%; height: 100%; border: none; display: block; }
+
+    /* ── Trivia overlay shown while the portfolio is generating ─────────────── */
+    #triviaOverlay {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      pointer-events: none;
+      z-index: 5;
+      transition: opacity .25s ease;
+    }
+    #triviaOverlay.hidden { opacity: 0; pointer-events: none; }
+    #triviaCard, .overlay-card {
+      pointer-events: auto;
+      max-width: 460px; width: calc(100% - 48px);
+      padding: 22px 26px 18px;
+      background: rgba(13,21,40,.96);
+      border: 1px solid rgba(141,186,255,.32);
+      border-radius: 14px;
+      box-shadow: 0 16px 48px rgba(0,0,0,.45);
+      color: #eaf0ff;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .overlay-card-header {
+      font-size: 10.5px; font-weight: 900; letter-spacing: .15em;
+      text-transform: uppercase; color: rgba(141,186,255,.85);
+      margin-bottom: 8px;
+    }
+    .overlay-card-title {
+      font-size: 17px; font-weight: 800; line-height: 1.3;
+      color: rgba(234,240,255,.96); margin: 0 0 10px;
+    }
+    .overlay-card-body {
+      font-size: 13.5px; line-height: 1.5;
+      color: rgba(234,240,255,.78); margin: 0 0 16px;
+    }
+    .overlay-card-actions {
+      display: flex; gap: 10px; justify-content: center; align-items: center;
+      flex-wrap: wrap;
+    }
+    .overlay-btn-primary, .overlay-btn-ghost {
+      border: 0; border-radius: 999px;
+      padding: 8px 16px; font-size: 12.5px; font-weight: 800;
+      cursor: pointer; transition: background .15s, color .15s;
+    }
+    .overlay-btn-primary {
+      background: rgba(141,186,255,.85); color: #0d1528;
+    }
+    .overlay-btn-primary:hover { background: #fff; color: #0d1528; }
+    .overlay-btn-ghost {
+      background: transparent; color: rgba(234,240,255,.65);
+      border: 1px solid rgba(255,255,255,.18);
+    }
+    .overlay-btn-ghost:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+    #firstTimeVideoSlot {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; height: 220px;
+      margin: 0 0 16px;
+      background: rgba(0,0,0,.36);
+      border: 1px dashed rgba(141,186,255,.4);
+      border-radius: 10px;
+      color: rgba(234,240,255,.55);
+      font-size: 12.5px; font-style: italic;
+    }
+    #triviaHeader {
+      font-size: 10.5px; font-weight: 900; letter-spacing: .15em;
+      text-transform: uppercase; color: rgba(141,186,255,.85);
+      margin-bottom: 10px;
+    }
+    #triviaText {
+      font-size: 14.5px; line-height: 1.5;
+      color: rgba(234,240,255,.92);
+      margin: 0 0 12px;
+    }
+    #triviaAnswer {
+      font-size: 13px; line-height: 1.45;
+      color: rgba(160,230,160,.92);
+      background: rgba(76,175,80,.10);
+      border: 1px solid rgba(76,175,80,.32);
+      border-radius: 8px;
+      padding: 8px 10px;
+      margin: 0 0 12px;
+      display: none;
+    }
+    #triviaAnswer.revealed { display: block; }
+    #triviaReveal {
+      display: inline-block;
+      background: rgba(141,186,255,.18);
+      border: 1px solid rgba(141,186,255,.45);
+      color: rgba(141,186,255,.95);
+      border-radius: 999px;
+      padding: 5px 14px;
+      font-size: 11.5px; font-weight: 800;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      margin-bottom: 8px;
+    }
+    #triviaReveal:hover { background: rgba(141,186,255,.32); color: #fff; }
+    #triviaReveal.hidden { display: none; }
+    #triviaFooter {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-top: 4px;
+      font-size: 10.5px; color: rgba(234,240,255,.45);
+    }
+    #triviaNext, #triviaDismiss {
+      background: none; border: 0; padding: 2px 8px;
+      color: rgba(234,240,255,.65); font-size: 11px; cursor: pointer;
+      border-radius: 6px;
+    }
+    #triviaNext:hover, #triviaDismiss:hover { background: rgba(255,255,255,.08); color: #fff; }
+    #triviaFooterActions { display: inline-flex; gap: 4px; }
 
     /* Resizable divider */
     #divider {
@@ -876,7 +1017,6 @@
         <button id="btnOpenHtml">📄 Open HTML file</button>
         <button id="btnOpenDir">📁 Open folder</button>
         <button id="btnOpenTpl">📋 Browse templates</button>
-        <button id="btnOpenUrl">🔗 Open from URL…</button>
         <p class="open-hint">Folder mode rewrites image/CSS paths so assets load from the chosen directory.</p>
       </div>
     </div>
@@ -978,6 +1118,44 @@
   <div id="editorLayout">
     <div id="visualPane">
       <iframe id="visualFrame"></iframe>
+      <div id="triviaOverlay" aria-live="polite">
+        <div id="signinNudgeCard" class="overlay-card" hidden>
+          <div class="overlay-card-header">While you wait</div>
+          <p class="overlay-card-title">Sign in to save your work</p>
+          <p class="overlay-card-body">
+            Building and editing your first portfolio is <strong>free</strong>. Sign in so your draft and any color choices are saved across visits — you can always come back and refine it.
+          </p>
+          <div class="overlay-card-actions">
+            <button id="signinNudgeBtn" type="button" class="overlay-btn-primary">Sign in</button>
+            <button id="signinSkipBtn" type="button" class="overlay-btn-ghost">Skip for now</button>
+          </div>
+        </div>
+
+        <div id="firstTimeVideoCard" class="overlay-card" hidden>
+          <div class="overlay-card-header">Welcome to the editor</div>
+          <p class="overlay-card-title">Quick tour</p>
+          <div id="firstTimeVideoSlot" aria-label="Welcome video placeholder">
+            <span>Video coming soon</span>
+          </div>
+          <div class="overlay-card-actions">
+            <button id="firstTimeContinueBtn" type="button" class="overlay-btn-primary">Continue</button>
+          </div>
+        </div>
+
+        <div id="triviaCard" hidden>
+          <div id="triviaHeader">Did you know?</div>
+          <p id="triviaText"></p>
+          <button id="triviaReveal" type="button">Tap to reveal</button>
+          <div id="triviaAnswer"></div>
+          <div id="triviaFooter">
+            <span id="triviaCounter"></span>
+            <span id="triviaFooterActions">
+              <button id="triviaDismiss" type="button" title="Hide trivia">Dismiss</button>
+              <button id="triviaNext" type="button" title="Next fact">Next →</button>
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="divider"></div>
     <div id="codePane">
@@ -1172,6 +1350,24 @@
 
   <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
 
+  <!-- Annotate with AI? modal — shown when opened HTML lacks data-* attributes -->
+  <div id="annotateAskModal" role="dialog" aria-modal="true" aria-labelledby="annotateAskTitle">
+    <div id="annotateAskBox">
+      <h3 id="annotateAskTitle">Annotate with AI?</h3>
+      <p>
+        This page hasn't been annotated yet. AI annotation adds <code>data-*</code> attributes that
+        let the editor swap in personalized content (name, projects, headline, etc.).
+      </p>
+      <p class="muted">
+        Color normalization will run regardless. Annotation takes ~30 seconds and uses API credits.
+      </p>
+      <div id="annotateAskActions">
+        <button class="tbtn tbtn-ghost" id="annotateAskNo">Skip annotation</button>
+        <button class="tbtn tbtn-primary" id="annotateAskYes">Run annotation</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Template picker modal -->
   <div id="tplPickerModal" role="dialog" aria-modal="true" aria-labelledby="tplPickerTitle">
     <div id="tplPickerBox">
@@ -1183,17 +1379,16 @@
     </div>
   </div>
 
-  <!-- URL open modal -->
-  <div id="urlModal" role="dialog" aria-modal="true" aria-labelledby="urlModalTitle">
-    <div id="urlModalBox">
-      <h3 id="urlModalTitle">Open from URL or server path</h3>
-      <p>Enter a full URL (e.g. <code>https://example.com/page.html</code>) or a server-relative path (e.g. <code>/templates/biology/sample.html</code>).<br>
-      For full URLs the page is fetched and a <code>&lt;base href&gt;</code> is injected so relative assets resolve correctly.</p>
-      <input id="urlModalInput" type="text" placeholder="https://… or /path/to/file.html" autocomplete="off" spellcheck="false">
-      <div id="urlModalError"></div>
-      <div id="urlModalActions">
-        <button class="tbtn tbtn-ghost" id="urlModalCancel">Cancel</button>
-        <button class="tbtn tbtn-primary" id="urlModalLoad">Load</button>
+  <!-- Folder entry picker modal -->
+  <div id="folderMainModal" role="dialog" aria-modal="true" aria-labelledby="folderMainTitle">
+    <div id="folderMainBox">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <h3 id="folderMainTitle">Choose main HTML file</h3>
+        <button id="folderMainClose" aria-label="Close">✕</button>
+      </div>
+      <div id="folderMainList"></div>
+      <div id="folderMainActions">
+        <button class="tbtn tbtn-ghost" id="folderMainCancel">Cancel</button>
       </div>
     </div>
   </div>
@@ -2680,6 +2875,213 @@
 
     function loadIframe(html) {
       frame.srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
+    }
+
+    // ── Trivia overlay (shown while the portfolio is generating) ─────────────
+    // Mix of "facts" (one-line) and "tap-to-reveal" pairs.
+    const TRIVIA = [
+      { fact: "Recruiters spend an average of just 7.4 seconds on a portfolio before deciding whether to read further." },
+      { question: "Which color do humans typically perceive as the most calming?", answer: "Blue — and it lowers heart rate by a few beats per minute in lab studies." },
+      { question: "How many distinct colors can the average human eye distinguish?", answer: "Roughly 10 million." },
+      { fact: "Around 8% of men and 0.5% of women have some form of color blindness — usually red-green deficiency." },
+      { question: "Why do most banks pick blue logos?", answer: "Blue is the color most associated with trust, stability, and security." },
+      { fact: "Personal portfolios with even a short intro video typically get 3× more inbound contacts than text-only sites." },
+      { question: "What was the world's most expensive blue pigment?", answer: "Ultramarine — made from ground lapis lazuli, once worth more than gold." },
+      { fact: "Studies show portfolio sites with a clear value proposition above the fold get up to 80% longer engagement." },
+      { question: "Why are warning signs typically yellow or orange?", answer: "These hues activate the brain's alertness centers fastest of any color." },
+      { fact: "A triadic color scheme uses three hues evenly spaced around the color wheel — high contrast, very vibrant." },
+      { question: "Which color is the cheapest to print?", answer: "Black — it uses single-channel ink instead of CMYK mixing." },
+      { fact: "Apple's signature white-space-heavy design owes a debt to Steve Jobs' college calligraphy class." },
+      { question: "How does Claude pick distinct colors when generating a palette?", answer: "It compares them in Oklab perceptual color space, so each one looks visually distinct — not just numerically different." },
+      { fact: "Sans-serif fonts score roughly 11% higher in 'modern' perception studies compared to serif fonts." },
+      { question: "Why does the McDonald's logo use red and yellow?", answer: "Red stimulates appetite; yellow grabs attention fastest from a distance." },
+      { fact: "Hiring managers consistently report that portfolios with 4–6 main colors feel more 'professional' than those with 7+." },
+      { question: "What does the term 'split-complementary' mean in color theory?", answer: "One base color plus the two colors adjacent to its complement — softer contrast than full complementary." },
+      { fact: "The Pantone Color of the Year is selected by a secret committee that meets twice a year in Europe." },
+      { question: "Which font is statistically the most common on professional portfolio sites?", answer: "Inter (or Inter-like geometric sans-serifs) — it overtook Helvetica around 2021." },
+      { fact: "Pink is the only color whose 'warmth' is measured psychologically — its hue temperature is actually neutral." },
+      { fact: "In Sub-Saharan Africa, over 80% of internet users access the web exclusively from a mobile device — desktop browsers are vanishingly rare." },
+      { question: "Why did Opera Mini once dominate African mobile browsing?", answer: "Its server-side compression could shrink page weight by up to 90% before delivery, dramatically reducing data costs." },
+      { fact: "Roughly 350 million people worldwide still get online primarily over 2G connections, mostly in South Asia and Sub-Saharan Africa." },
+      { question: "In India, what share of internet users prefer browsing in a regional language over English?", answer: "Around 75% — which has driven a wave of multilingual web design across South Asia." },
+      { fact: "Facebook Lite, YouTube Go, and Spotify Lite were all built specifically for emerging markets — slow networks, low-end Androids, tight data caps." },
+      { question: "How much of monthly income does 1 GB of mobile data cost in the least-affordable countries?", answer: "Over 5% — versus the UN's 'affordable internet' target of 2%, which most high-income countries are far below." },
+      { fact: "A page that loads instantly on US fiber can take 30+ seconds on a 2G connection — every kilobyte of bundle bloat matters more than designers usually realize." },
+      { question: "What's the median RAM of an entry-level smartphone in emerging markets?", answer: "Around 2 GB — roughly a quarter of the average flagship phone in the US or EU." },
+      { question: "What does WCAG stand for?", answer: "Web Content Accessibility Guidelines — the W3C's international standard for making sites usable by people with visual, auditory, motor, or cognitive disabilities." },
+      { question: "What are WCAG's four POUR principles?", answer: "Perceivable, Operable, Understandable, Robust. Every accessibility criterion in the standard fits under one of these four umbrellas." },
+      { fact: "WCAG AA requires a contrast ratio of at least 4.5:1 between text and its background." },
+      { question: "What contrast ratio does WCAG AA require for large text (18pt+) vs. normal body text?", answer: "3:1 for large text, 4.5:1 for normal body. AAA pushes both up — to 4.5:1 and 7:1 respectively." },
+      { fact: "WCAG defines three conformance levels: A (minimum), AA (what most laws and contracts mandate), and AAA (highest, rarely achievable site-wide)." },
+      { question: "Which US law most often points back to WCAG for federal websites?", answer: "Section 508 of the Rehabilitation Act. Federal agencies must hit WCAG 2.x AA conformance to comply." },
+      { question: "What's the smallest font size that still hits WCAG AA on standard monitors?", answer: "16px body text with a 4.5:1 contrast ratio is the practical floor." },
+      { fact: "WCAG 2.1 (2018) added 17 new criteria focused on mobile and cognitive disabilities. WCAG 2.2 (2023) added nine more; WCAG 3.0 is currently in draft." },
+    ];
+
+    let _triviaIdx = 0;
+    let _triviaTimer = null;
+    const TRIVIA_ROTATE_MS = 9000;
+
+    function renderTriviaCard() {
+      const item = TRIVIA[_triviaIdx];
+      const textEl = document.getElementById("triviaText");
+      const revealBtn = document.getElementById("triviaReveal");
+      const answerEl = document.getElementById("triviaAnswer");
+      const counter = document.getElementById("triviaCounter");
+      if (!textEl || !revealBtn || !answerEl) return;
+
+      if (item.question) {
+        textEl.textContent = item.question;
+        answerEl.textContent = item.answer || "";
+        answerEl.classList.remove("revealed");
+        revealBtn.classList.remove("hidden");
+      } else {
+        textEl.textContent = item.fact || "";
+        answerEl.classList.remove("revealed");
+        answerEl.textContent = "";
+        revealBtn.classList.add("hidden");
+      }
+      if (counter) counter.textContent = `${_triviaIdx + 1} / ${TRIVIA.length}`;
+    }
+
+    function rotateTrivia() {
+      _triviaIdx = (_triviaIdx + 1) % TRIVIA.length;
+      renderTriviaCard();
+    }
+
+    // ── Waiting-overlay state machine ────────────────────────────────────────
+    // Cards run in sequence:
+    //   1. sign-in nudge   (skipped if user is already signed in OR has clicked Skip this session)
+    //   2. first-time video (skipped if user has seen it before — localStorage flag)
+    //   3. trivia          (auto-rotates until real portfolio HTML arrives)
+    const INTRO_SEEN_KEY = "iw_editor_intro_seen";
+    let _signinNudgeSkipped = false;
+
+    function showOverlayCard(which) {
+      ["signinNudgeCard", "firstTimeVideoCard", "triviaCard"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.hidden = (id !== which);
+      });
+    }
+
+    function hasSeenIntroVideo() {
+      try { return !!localStorage.getItem(INTRO_SEEN_KEY); } catch { return false; }
+    }
+    function markIntroVideoSeen() {
+      try { localStorage.setItem(INTRO_SEEN_KEY, "1"); } catch {}
+    }
+
+    async function isUserSignedIn() {
+      try {
+        if (!window._supabaseClient) return true; // no auth client → skip the nudge
+        const { data: { session } } = await window._supabaseClient.auth.getSession();
+        return !!session;
+      } catch { return true; }
+    }
+
+    function advanceWaitingOverlay() {
+      // Step through the sequence and start trivia once the earlier cards are done.
+      if (!_signinNudgeSkipped) {
+        // Re-check sign-in status — user may have just signed in.
+        isUserSignedIn().then(signedIn => {
+          if (signedIn) _signinNudgeSkipped = true;
+          if (!_signinNudgeSkipped) {
+            showOverlayCard("signinNudgeCard");
+            return;
+          }
+          continueAfterSignin();
+        });
+        return;
+      }
+      continueAfterSignin();
+    }
+
+    function continueAfterSignin() {
+      if (!hasSeenIntroVideo()) {
+        showOverlayCard("firstTimeVideoCard");
+        return;
+      }
+      startTrivia();
+    }
+
+    function startTrivia() {
+      showOverlayCard("triviaCard");
+      if (!_triviaTimer) {
+        _triviaIdx = Math.floor(Math.random() * TRIVIA.length);
+        renderTriviaCard();
+        _triviaTimer = setInterval(rotateTrivia, TRIVIA_ROTATE_MS);
+      }
+    }
+
+    function showTriviaOverlay() {
+      const overlay = document.getElementById("triviaOverlay");
+      if (!overlay) return;
+      overlay.classList.remove("hidden");
+      advanceWaitingOverlay();
+    }
+
+    function hideTriviaOverlay() {
+      const overlay = document.getElementById("triviaOverlay");
+      if (!overlay) return;
+      overlay.classList.add("hidden");
+      if (_triviaTimer) { clearInterval(_triviaTimer); _triviaTimer = null; }
+    }
+
+    // Sign-in nudge buttons.
+    document.getElementById("signinNudgeBtn")?.addEventListener("click", () => {
+      try { openAuthModal && openAuthModal(); } catch {}
+      // When auth state flips to "signed in" the onAuthStateChange listener will advance.
+    });
+    document.getElementById("signinSkipBtn")?.addEventListener("click", () => {
+      _signinNudgeSkipped = true;
+      continueAfterSignin();
+    });
+
+    // First-time video continue button.
+    document.getElementById("firstTimeContinueBtn")?.addEventListener("click", () => {
+      markIntroVideoSeen();
+      startTrivia();
+    });
+
+    // Auto-advance when the user signs in via the modal opened from the nudge.
+    if (window._supabaseClient) {
+      window._supabaseClient.auth.onAuthStateChange((ev, session) => {
+        if (session && !_signinNudgeSkipped) {
+          _signinNudgeSkipped = true;
+          // Only continue if the overlay is currently visible (waiting state).
+          const overlay = document.getElementById("triviaOverlay");
+          if (overlay && !overlay.classList.contains("hidden")) continueAfterSignin();
+        }
+      });
+    }
+
+    document.getElementById("triviaReveal")?.addEventListener("click", () => {
+      const answerEl = document.getElementById("triviaAnswer");
+      const revealBtn = document.getElementById("triviaReveal");
+      if (answerEl) answerEl.classList.add("revealed");
+      if (revealBtn) revealBtn.classList.add("hidden");
+    });
+
+    document.getElementById("triviaNext")?.addEventListener("click", () => {
+      // User-initiated advance: reset auto-rotate timer so it doesn't fire 1s later.
+      if (_triviaTimer) { clearInterval(_triviaTimer); _triviaTimer = setInterval(rotateTrivia, TRIVIA_ROTATE_MS); }
+      rotateTrivia();
+    });
+
+    document.getElementById("triviaDismiss")?.addEventListener("click", () => {
+      hideTriviaOverlay();
+    });
+
+    // Show trivia overlay only while the editor is waiting for portfolio generation.
+    // The form's ensureEditorWindow() seeds the iframe with a "Preparing editor…" placeholder
+    // (editorLoadingHtml in form.js) before posting the real portfolio HTML via postMessage.
+    // Detect that placeholder and show trivia; otherwise stay hidden (e.g., user reopened
+    // the editor with an existing portfolio).
+    function isWaitingPlaceholderHtml(html) {
+      return /<title>\s*Preparing Editor/i.test(String(html || ""));
+    }
+    if (isWaitingPlaceholderHtml(fullHtml)) {
+      showTriviaOverlay();
     }
 
 	    frame.addEventListener("load", () => {
@@ -4876,44 +5278,124 @@
           if (rel) fileMap.set(rel, f);
         }
 
-        // Find the HTML entry point: prefer index.html, then sample.html, then first .html
-        const htmlFiles = [...fileMap.entries()].filter(([p]) => /\.html?$/i.test(p) && !p.includes("/"));
-        const [htmlRel, htmlFileObj] = htmlFiles.find(([p]) => p === "index.html")
-          || htmlFiles.find(([p]) => p === "sample.html")
-          || htmlFiles[0]
-          || [];
-        if (!htmlFileObj) { sbTicker.textContent = "No HTML file found in folder."; return; }
+        const htmlFiles = sortFolderHtmlEntries([...fileMap.entries()].filter(([p]) => /\.html?$/i.test(p)));
+        if (!htmlFiles.length) { sbTicker.textContent = "No HTML file found in folder."; return; }
+        const selectedHtmlEntry = await chooseFolderMainHtmlFile(htmlFiles);
+        if (!selectedHtmlEntry) { sbTicker.textContent = "Folder open canceled."; return; }
+        const [htmlRel, htmlFileObj] = selectedHtmlEntry;
+        const htmlBaseDir = getDirectoryPath(htmlRel || "");
 
-        // Create blob URLs for all non-HTML assets
-        const blobMap = new Map();
-        for (const [rel, f] of fileMap) {
-          if (!/\.html?$/i.test(rel)) blobMap.set(rel, URL.createObjectURL(f));
-        }
+        const blobMap = await buildFolderBlobMap(fileMap);
 
         const rawHtml = await htmlFileObj.text();
-        const rewritten = rewriteRelativeUrlsWithBlobMap(rawHtml, blobMap);
+        const rewritten = rewriteRelativeUrlsWithBlobMap(rawHtml, blobMap, htmlBaseDir);
 
         try {
-          importHtmlIntoEditor(rewritten, htmlRel || htmlFileObj.name);
+          await importHtmlIntoEditorWithPreprocessing(rewritten, htmlRel || htmlFileObj.name);
         } catch (err) {
           sbTicker.textContent = `Error: ${err.message}`;
         }
       };
 
       // ── Rewrite relative asset paths to blob: URLs ────────────────────────
-      function resolveAssetPath(rawPath, blobMap) {
-        const p = rawPath.replace(/^\.\//, "");
-        return blobMap.get(p) || blobMap.get(decodeURIComponent(p)) || null;
+      function normalizeFolderPath(path) {
+        const parts = [];
+        String(path || "").replace(/\\/g, "/").split("/").forEach(part => {
+          if (!part || part === ".") return;
+          if (part === "..") { if (parts.length) parts.pop(); return; }
+          parts.push(part);
+        });
+        return parts.join("/");
       }
 
-      function rewriteRelativeUrlsWithBlobMap(html, blobMap) {
+      function getDirectoryPath(path) {
+        const normalized = normalizeFolderPath(path);
+        const idx = normalized.lastIndexOf("/");
+        return idx === -1 ? "" : normalized.slice(0, idx);
+      }
+
+      function decodePathSafely(path) {
+        try { return decodeURIComponent(path); } catch { return path; }
+      }
+
+      function splitAssetReference(rawPath) {
+        const value = String(rawPath || "").trim();
+        const match = value.match(/^([^?#]*)(\?[^#]*)?(#.*)?$/);
+        return {
+          pathname: match?.[1] || "",
+          hash: match?.[3] || "",
+        };
+      }
+
+      function isExternalAssetPath(path) {
+        return /^(https?:|data:|blob:|#|\/\/|mailto:|tel:)/i.test(String(path || "").trim());
+      }
+
+      function resolveAssetPath(rawPath, blobMap, baseDir = "") {
+        const { pathname, hash } = splitAssetReference(rawPath);
+        if (!pathname || isExternalAssetPath(pathname)) return null;
+        const decodedPathname = decodePathSafely(pathname);
+        const candidates = [];
+        const pushCandidate = path => {
+          const normalized = normalizeFolderPath(path);
+          if (normalized && !candidates.includes(normalized)) candidates.push(normalized);
+        };
+        if (pathname.startsWith("/")) {
+          pushCandidate(pathname.replace(/^\/+/, ""));
+          pushCandidate(decodedPathname.replace(/^\/+/, ""));
+        } else {
+          pushCandidate(`${baseDir ? `${baseDir}/` : ""}${pathname}`);
+          pushCandidate(`${baseDir ? `${baseDir}/` : ""}${decodedPathname}`);
+          pushCandidate(pathname);
+          pushCandidate(decodedPathname);
+        }
+        for (const candidate of candidates) {
+          const blob = blobMap.get(candidate);
+          if (blob) return `${blob}${hash}`;
+        }
+        return null;
+      }
+
+      function rewriteCssUrlsWithBlobMap(cssText, blobMap, baseDir = "") {
+        if (!blobMap.size) return cssText;
+        return String(cssText || "").replace(
+          /\burl\(\s*(["']?)([^"')]+)\1\s*\)/gi,
+          (m, q, path) => {
+            if (isExternalAssetPath(path)) return m;
+            const blob = resolveAssetPath(path, blobMap, baseDir);
+            return blob ? `url(${q}${blob}${q})` : m;
+          }
+        );
+      }
+
+      async function buildFolderBlobMap(fileMap) {
+        const blobMap = new Map();
+        const cssEntries = [];
+        for (const [rel, f] of fileMap) {
+          if (/\.html?$/i.test(rel)) continue;
+          if (/\.css$/i.test(rel)) {
+            cssEntries.push([rel, f]);
+          } else {
+            blobMap.set(rel, URL.createObjectURL(f));
+          }
+        }
+        for (const [rel, f] of cssEntries) {
+          const cssText = await f.text();
+          const rewrittenCss = rewriteCssUrlsWithBlobMap(cssText, blobMap, getDirectoryPath(rel));
+          const cssBlob = new Blob([rewrittenCss], { type: f.type || "text/css" });
+          blobMap.set(rel, URL.createObjectURL(cssBlob));
+        }
+        return blobMap;
+      }
+
+      function rewriteRelativeUrlsWithBlobMap(html, blobMap, baseDir = "") {
         if (!blobMap.size) return html;
         // url("...") in <style> blocks and inline style= attributes
         let out = html.replace(
           /\burl\(\s*(["']?)([^"')]+)\1\s*\)/gi,
           (m, q, path) => {
-            if (/^(https?:|data:|blob:|#|\/\/)/i.test(path)) return m;
-            const blob = resolveAssetPath(path, blobMap);
+            if (isExternalAssetPath(path)) return m;
+            const blob = resolveAssetPath(path, blobMap, baseDir);
             return blob ? `url(${q}${blob}${q})` : m;
           }
         );
@@ -4921,8 +5403,8 @@
         out = out.replace(
           /(<(?:img|script|video|audio|source|iframe|track)\b[^>]*?)\bsrc=(["'])([^"']*)\2/gi,
           (m, pre, q, val) => {
-            if (/^(https?:|data:|blob:|#|\/\/)/i.test(val)) return m;
-            const blob = resolveAssetPath(val, blobMap);
+            if (isExternalAssetPath(val)) return m;
+            const blob = resolveAssetPath(val, blobMap, baseDir);
             return blob ? `${pre}src=${q}${blob}${q}` : m;
           }
         );
@@ -4930,12 +5412,74 @@
         out = out.replace(
           /(<link\b[^>]*?)\bhref=(["'])([^"']*)\2/gi,
           (m, pre, q, val) => {
-            if (/^(https?:|data:|blob:|#|\/\/)/i.test(val)) return m;
-            const blob = resolveAssetPath(val, blobMap);
+            if (isExternalAssetPath(val)) return m;
+            const blob = resolveAssetPath(val, blobMap, baseDir);
             return blob ? `${pre}href=${q}${blob}${q}` : m;
           }
         );
         return out;
+      }
+
+      function folderHtmlEntryRank([rel]) {
+        const lower = String(rel || "").toLowerCase();
+        const name = lower.split("/").pop();
+        const depth = lower.split("/").length - 1;
+        const priority =
+          name === "annotated.html" ? 0 :
+          name === "index.html" ? 1 :
+          name === "sample.html" ? 2 :
+          3;
+        return { priority, depth, lower };
+      }
+
+      function sortFolderHtmlEntries(entries) {
+        return [...entries].sort((a, b) => {
+          const ar = folderHtmlEntryRank(a);
+          const br = folderHtmlEntryRank(b);
+          return ar.priority - br.priority || ar.depth - br.depth || ar.lower.localeCompare(br.lower);
+        });
+      }
+
+      function chooseFolderMainHtmlFile(htmlEntries) {
+        if (!htmlEntries.length) return Promise.resolve(null);
+        if (htmlEntries.length === 1) return Promise.resolve(htmlEntries[0]);
+        return new Promise(resolve => {
+          const modal = document.getElementById("folderMainModal");
+          const list = document.getElementById("folderMainList");
+          const close = document.getElementById("folderMainClose");
+          const cancel = document.getElementById("folderMainCancel");
+          if (!modal || !list || !close || !cancel) return resolve(htmlEntries[0]);
+
+          function cleanup(choice) {
+            modal.classList.remove("open");
+            modal.removeEventListener("click", onBackdropClick);
+            close.removeEventListener("click", onCancel);
+            cancel.removeEventListener("click", onCancel);
+            document.removeEventListener("keydown", onKeyDown);
+            list.innerHTML = "";
+            resolve(choice);
+          }
+          function onCancel() { cleanup(null); }
+          function onBackdropClick(e) { if (e.target === modal) cleanup(null); }
+          function onKeyDown(e) { if (e.key === "Escape") cleanup(null); }
+
+          list.innerHTML = "";
+          htmlEntries.forEach(entry => {
+            const [rel] = entry;
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = rel;
+            button.addEventListener("click", () => cleanup(entry), { once: true });
+            list.appendChild(button);
+          });
+
+          modal.addEventListener("click", onBackdropClick);
+          close.addEventListener("click", onCancel);
+          cancel.addEventListener("click", onCancel);
+          document.addEventListener("keydown", onKeyDown);
+          modal.classList.add("open");
+          list.querySelector("button")?.focus();
+        });
       }
 
       // ── Browse templates ─────────────────────────────────────────────────
@@ -4966,15 +5510,26 @@
               b.addEventListener("click", async () => {
                 const dir   = b.dataset.dir;
                 const label = b.textContent;
-                const path  = `/templates/${dir}/sample.html`;
                 b.textContent = "Loading…";
                 b.disabled = true;
+                // Prefer the preprocessed annotated.html (color-normalized, has data-* attrs);
+                // fall back to sample.html only if annotated.html doesn't exist for this template.
+                const candidates = [
+                  `/templates/${dir}/annotated.html`,
+                  `/templates/${dir}/sample.html`,
+                ];
                 try {
-                  const res = await fetch(path, { cache: "no-store" });
-                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                  const html = await res.text();
+                  let html = null, lastErr = null;
+                  for (const path of candidates) {
+                    try {
+                      const res = await fetch(path, { cache: "no-store" });
+                      if (res.ok) { html = await res.text(); break; }
+                      lastErr = `HTTP ${res.status}`;
+                    } catch (e) { lastErr = e.message; }
+                  }
+                  if (html == null) throw new Error(lastErr || "Not found");
                   tplModal.classList.remove("open");
-                  importHtmlIntoEditor(html, label, `/templates/${dir}/`);
+                  await importHtmlIntoEditorWithPreprocessing(html, label, `/templates/${dir}/`);
                 } catch (err) {
                   b.textContent = `Error: ${err.message}`;
                   b.disabled = false;
@@ -5000,81 +5555,6 @@
       })();
 
       // ── Open from URL / server path ───────────────────────────────────────
-      document.getElementById("btnOpenUrl").addEventListener("click", () => {
-        menu.classList.remove("open");
-        const modal = document.getElementById("urlModal");
-        const input = document.getElementById("urlModalInput");
-        document.getElementById("urlModalError").textContent = "";
-        input.value = "";
-        modal.classList.add("open");
-        setTimeout(() => input.focus(), 50);
-      });
-
-      document.getElementById("urlModalCancel").addEventListener("click", () =>
-        document.getElementById("urlModal").classList.remove("open")
-      );
-
-      document.getElementById("urlModal").addEventListener("click", e => {
-        if (e.target === document.getElementById("urlModal"))
-          document.getElementById("urlModal").classList.remove("open");
-      });
-
-      document.getElementById("urlModalInput").addEventListener("keydown", e => {
-        if (e.key === "Enter") document.getElementById("urlModalLoad").click();
-        if (e.key === "Escape") document.getElementById("urlModal").classList.remove("open");
-      });
-
-      document.getElementById("urlModalLoad").addEventListener("click", async () => {
-        const raw   = document.getElementById("urlModalInput").value.trim();
-        const errEl = document.getElementById("urlModalError");
-        const loadBtn = document.getElementById("urlModalLoad");
-        errEl.textContent = "";
-        if (!raw) { errEl.textContent = "Please enter a URL or path."; return; }
-
-        loadBtn.textContent = "Loading…";
-        loadBtn.disabled = true;
-
-        // Server-relative path — fetch directly, derive baseHref from directory
-        if (raw.startsWith("/")) {
-          try {
-            const res = await fetch(raw, { cache: "no-store" });
-            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-            const html = await res.text();
-            const baseHref = raw.replace(/[^/]*$/, "");
-            document.getElementById("urlModal").classList.remove("open");
-            importHtmlIntoEditor(html, raw.replace(/.*\//, "") || raw, baseHref);
-          } catch (err) {
-            errEl.textContent = `Could not load: ${err.message}`;
-          } finally {
-            loadBtn.textContent = "Load";
-            loadBtn.disabled = false;
-          }
-          return;
-        }
-
-        // Full URL
-        let url;
-        try { url = new URL(raw); } catch {
-          errEl.textContent = "Enter a server-relative path (starting with /) or a full https:// URL.";
-          loadBtn.textContent = "Load";
-          loadBtn.disabled = false;
-          return;
-        }
-
-        try {
-          const res = await fetch(raw, { mode: "cors" });
-          if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-          const html = await res.text();
-          const baseHref = url.href.replace(/[^/]*$/, "");
-          document.getElementById("urlModal").classList.remove("open");
-          importHtmlIntoEditor(html, url.hostname + url.pathname.replace(/.*\//, "/"), baseHref);
-        } catch (err) {
-          errEl.textContent = `Could not load: ${err.message}. The server may not allow cross-origin requests.`;
-        } finally {
-          loadBtn.textContent = "Load";
-          loadBtn.disabled = false;
-        }
-      });
     })();
 
     // ── Resizable divider ──────────────────────────────────────────────────────
@@ -5176,6 +5656,111 @@
 	      } catch {}
 	      setEditStatus(`${sourceLabel} loaded.`, "ok");
 	    }
+
+    // ── Runtime preprocessing wrapper ────────────────────────────────────────
+    // For all three "Open" paths: if the HTML hasn't been preprocessed, run color
+    // normalization automatically (silent), and prompt the user before running AI
+    // annotation (slower and costs API tokens). Color normalization runs regardless
+    // of the annotation choice.
+    function htmlNeedsColorNormalization(html) {
+      return !/<script[^>]*id=["']color-palette["']/i.test(String(html || ""));
+    }
+    function htmlNeedsAiAnnotation(html) {
+      // Heuristic: presence of any data-* attribute the cheerio renderer uses.
+      return !/\bdata-(field|section|item|list|html-field|attr-href|attr-src|if|hero-body)\b/i.test(String(html || ""));
+    }
+
+    async function runColorNormalization(html) {
+      try {
+        const htmlBase64 = btoa(unescape(encodeURIComponent(html)));
+        const res = await fetch("/.netlify/functions/colorNormalize", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ htmlBase64 }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.html) throw new Error(data.error || `Color normalization failed (${res.status})`);
+        return data.html;
+      } catch (err) {
+        console.warn("Color normalization request failed:", err);
+        return html; // fall back to the original HTML
+      }
+    }
+
+    async function askUserAboutAnnotation() {
+      return await new Promise(resolve => {
+        const modal = document.getElementById("annotateAskModal");
+        const yes = document.getElementById("annotateAskYes");
+        const no  = document.getElementById("annotateAskNo");
+        if (!modal || !yes || !no) return resolve(false);
+        function cleanup(answer) {
+          modal.classList.remove("open");
+          yes.removeEventListener("click", onYes);
+          no.removeEventListener("click", onNo);
+          resolve(answer);
+        }
+        function onYes() { cleanup(true); }
+        function onNo()  { cleanup(false); }
+        yes.addEventListener("click", onYes);
+        no.addEventListener("click", onNo);
+        modal.classList.add("open");
+      });
+    }
+
+    async function runAiAnnotation(html) {
+      const jobId = crypto.randomUUID();
+      const htmlBase64 = btoa(unescape(encodeURIComponent(html)));
+      const startRes = await fetch("/.netlify/functions/annotateHtml-background", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ htmlBase64, jobId }),
+      });
+      if (!startRes.ok && startRes.status !== 202) {
+        const errBody = await startRes.text().catch(() => "");
+        throw new Error(`Failed to start annotation (${startRes.status}): ${errBody.slice(0, 200)}`);
+      }
+      const maxWaitMs = 300000;
+      const startTime = Date.now();
+      while (Date.now() - startTime < maxWaitMs) {
+        await new Promise(r => setTimeout(r, 3000));
+        const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
+        if (!pollRes.ok) continue;
+        const data = await pollRes.json().catch(() => ({}));
+        if (data?.status === "done" && data?.html) return data.html;
+        if (data?.status === "error") throw new Error(data?.error || "Annotation failed");
+      }
+      throw new Error("Annotation timed out.");
+    }
+
+    async function importHtmlIntoEditorWithPreprocessing(rawHtml, sourceLabel, baseHref = "") {
+      let html = String(rawHtml || "").trim();
+      if (!html) throw new Error("The selected file was empty.");
+
+      const needsColor      = htmlNeedsColorNormalization(html);
+      const needsAnnotation = htmlNeedsAiAnnotation(html);
+
+      if (needsColor) {
+        setEditStatus("Normalizing colors…", "ok");
+        html = await runColorNormalization(html);
+      }
+
+      if (needsAnnotation) {
+        const userOptIn = await askUserAboutAnnotation();
+        if (userOptIn) {
+          setEditStatus("Annotating with AI…", "ok");
+          showTriviaOverlay();
+          try {
+            html = await runAiAnnotation(html);
+          } catch (err) {
+            setEditStatus(`AI annotation failed: ${err.message}. Loaded without annotation.`, "err");
+          } finally {
+            hideTriviaOverlay();
+          }
+        }
+      }
+
+      importHtmlIntoEditor(html, sourceLabel, baseHref);
+    }
 
     function scheduleSplitPreviewSync() {
       if (splitSyncTimer) clearTimeout(splitSyncTimer);
@@ -6058,7 +6643,7 @@
       if (!file) return;
       try {
         const html = await file.text();
-        importHtmlIntoEditor(html, file.name || "HTML file");
+        await importHtmlIntoEditorWithPreprocessing(html, file.name || "HTML file");
       } catch (err) {
         console.error("HTML import failed:", err);
         showLinkedError(err?.message || "Failed to load HTML file.");
@@ -6158,11 +6743,24 @@
     // ── Live update from form window ───────────────────────────────────────────
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
+      // Hide trivia FIRST so an exception later in this handler can't leave the overlay stuck open.
+      // Skip the hide only for the editorLoadingHtml placeholder (which is sent repeatedly with status updates).
+      if (!isWaitingPlaceholderHtml(e.data.html)) {
+        try { hideTriviaOverlay(); } catch {}
+      }
       currentHtml = e.data.html;
       cachePreviewHtml(e.data.html);
       loadIframe(e.data.html);
       setCodeContent(e.data.html);
       window.__editorTickerClearProcess?.();
+    });
+
+    // Expose for console diagnostics — the function itself lives in the IIFE.
+    window._debugHideTriviaOverlay = hideTriviaOverlay;
+    window._debugTriviaState = () => ({
+      overlayHidden: document.getElementById("triviaOverlay")?.classList.contains("hidden"),
+      timerActive: !!_triviaTimer,
+      signinNudgeSkipped: _signinNudgeSkipped,
     });
 
     window.addEventListener("message", e => {

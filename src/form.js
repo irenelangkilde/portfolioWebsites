@@ -3871,6 +3871,16 @@ input[type="color"].split-color::-moz-color-swatch {
           if (data.status === "done") {
             clearInterval(slotFillCountdown);
             generationResult     = { ...data, base_site_html: data.site_html || "" };
+            try {
+              window._debugSlotFillData = {
+                rawSiteHtmlLength: (data.site_html || "").length,
+                rawSiteHtmlStart: (data.site_html || "").slice(0, 300),
+                model: data.model,
+                truncated: data.truncated,
+                error: data.error,
+                hasBody: /<body[\s\S]{0,5000}\w/.test(data.site_html || ""),
+              };
+            } catch {}
             const needsMastheadImage = isSlotFillMode() && currentTemplateNeedsMastheadImage();
             const hasMastheadImage = !!mastheadImageResult?.image_url;
             const holdPreviewForMasthead = needsMastheadImage && !hasMastheadImage;

@@ -46,21 +46,31 @@ function repVarName(i) { return `--c-${i + 1}`; }
 
 const TEMPLATES = join(ROOT, "templates");
 
-const dryRun       = process.argv.includes("--dry-run");
-const skipAnnotate = process.argv.includes("--skip-annotate");
-const requested    = process.argv.slice(2).filter(a => !a.startsWith("--"));
+// Is this file being run as a CLI script vs. imported as a module?
+// When imported (e.g. from a Netlify function), we skip all top-level CLI side effects
+// so just the exported helpers are available.
+const __isCli = (() => {
+  try { return process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]; }
+  catch { return false; }
+})();
+
+const dryRun       = __isCli && process.argv.includes("--dry-run");
+const skipAnnotate = __isCli && process.argv.includes("--skip-annotate");
+const requested    = __isCli ? process.argv.slice(2).filter(a => !a.startsWith("--")) : [];
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-if (!skipAnnotate && !dryRun && !ANTHROPIC_API_KEY) {
+if (__isCli && !skipAnnotate && !dryRun && !ANTHROPIC_API_KEY) {
   console.warn("⚠ ANTHROPIC_API_KEY not set — annotation step will be skipped. Pass --skip-annotate to suppress this warning.\n");
 }
 
-const majors = requested.length > 0
-  ? requested
-  : readdirSync(TEMPLATES)
-      .filter(f => statSync(join(TEMPLATES, f)).isDirectory())
-      .filter(f => existsSync(join(TEMPLATES, f, "sample.html")))
-      .sort();
+const majors = __isCli
+  ? (requested.length > 0
+      ? requested
+      : readdirSync(TEMPLATES)
+          .filter(f => statSync(join(TEMPLATES, f)).isDirectory())
+          .filter(f => existsSync(join(TEMPLATES, f, "sample.html")))
+          .sort())
+  : [];
 
 // ─── Image path renaming ──────────────────────────────────────────────────────
 
@@ -376,6 +386,27 @@ function injectColorTheme(html) {
   return { ...theme, html: insertThemeInjection(html, theme.injection) };
 }
 
+// normalizeColorsInHtml: full color-normalization pipeline as a single call.
+// Idempotent — re-applying it on already-normalized HTML produces the same result
+// (modulo cluster-membership shifts if the color budget changes).
+//
+//   1. Un-rewrite any prior CSS-var color expressions back to literal hex.
+//   2. Strip the existing <style id="extracted-theme"> and <script id="color-palette"> blocks.
+//   3. Extract a fresh palette via dedupColors.
+//   4. Insert the new theme block (<style> + <script>).
+//   5. Rewrite all hex/rgba/CSS occurrences to var(--c-N) references.
+//
+// Returns { html, k } where k is the number of palette reps produced.
+export function normalizeColorsInHtml(html) {
+  if (!html) return { html: "", k: 0 };
+  const unRewrote          = unRewriteOldVars(html);
+  const stripped           = stripColorThemeBlocks(unRewrote);
+  const { injection, k, hexExprMap, rgbMap } = computeColorTheme(stripped);
+  const withTheme          = insertThemeInjection(stripped, injection);
+  const colorized          = rewriteCssVars(withTheme, hexExprMap, rgbMap);
+  return { html: colorized, k };
+}
+
 // ─── Strip previously injected theme blocks (for idempotent re-normalization) ─
 
 function stripColorThemeBlocks(html) {
@@ -418,7 +449,7 @@ function unRewriteNewVars(html, scheme) {
     const L = evalExpr(lExpr, base.l);
     const C = Math.max(0, evalExpr(cExpr, base.c));
     const H = evalExpr(hExpr, base.h);
-    return oklchToHex(L, C, H) || null;
+    return oklchToHex({ l: L, c: C, h: H }) || null;
   }
 
   function hexToRgba(hex, alpha) {
@@ -580,6 +611,7 @@ async function annotateHtml(major, sampleHtml) {
 
 // ─── Main loop ────────────────────────────────────────────────────────────────
 
+if (__isCli) {
 const canAnnotate = !skipAnnotate && !!ANTHROPIC_API_KEY;
 console.log(`Preprocessing ${majors.length} template(s): ${majors.join(", ")}${dryRun ? " [dry-run]" : ""}${canAnnotate ? "" : " [normalize only]"}\n`);
 
@@ -660,3 +692,4 @@ for (const major of majors) {
 }
 
 console.log("\nDone.");
+} // end if (__isCli)
