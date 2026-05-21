@@ -316,6 +316,29 @@ function normalizeColorSpec(colorSpec = {}) {
   return normalized;
 }
 
+/**
+ * Formats user color preferences as a guidance paragraph for AI prompts.
+ * Returns "" when the user hasn't supplied anything — prompts should handle empty gracefully.
+ *
+ * `colorPreferences` shape: { mode: "swatches"|"text", swatches: string[], text: string }
+ *
+ * The framing intentionally calls them "key/anchor" colors rather than a complete palette,
+ * so the AI knows it may fill remaining slots with neutrals and supporting tones.
+ */
+function formatColorPreferencesGuidance(prefs) {
+  if (!prefs || typeof prefs !== "object") return "";
+  if (prefs.mode === "swatches" && Array.isArray(prefs.swatches) && prefs.swatches.length) {
+    const list = prefs.swatches.map(h => String(h)).filter(h => /^#[0-9a-fA-F]{3,8}$/.test(h)).join(", ");
+    if (!list) return "";
+    return `USER COLOR PREFERENCES: The user selected these as KEY anchor colors they want prominently featured: ${list}. Treat them as anchors, not the complete palette — you may add complementary neutrals and supporting tones to round out the design.`;
+  }
+  if (prefs.mode === "text" && typeof prefs.text === "string" && prefs.text.trim()) {
+    const text = prefs.text.trim().slice(0, 500);
+    return `USER COLOR PREFERENCES: The user described their color intent in words: "${text}". Interpret this as anchor preferences (not a fixed palette) and choose actual hex values that honor the described mood/colors. Add complementary neutrals and supporting tones as needed.`;
+  }
+  return "";
+}
+
 function serializeColorSpecForAI(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
   return {
@@ -1455,6 +1478,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     sampleHtml       = "",          // annotated.html (data-* attributes)
     mastheadMeta: providedMastheadMeta = null,
     colorSpec        = {},
+    colorPreferences = null,        // { mode: "swatches"|"text", swatches: string[], text: string }
     headshotName     = "",
     templateColorSlots = null,
   } = body;
@@ -1502,6 +1526,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
       resumeFacts: flatResumeFacts,
       templateMeta,
       jobContext,
+      colorPreferences,
     }),
   ]);
 
@@ -1571,6 +1596,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     sampleHtml       = "",
     mastheadMeta: providedMastheadMeta = null,
     colorSpec        = {},
+    colorPreferences = null,        // { mode: "swatches"|"text", swatches: string[], text: string }
     headshotName         = "",
     templateColorSlots   = null,  // pre-extracted from color-normalized sample (optional)
   } = body;
@@ -1637,6 +1663,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts,      null, 2))
       .replace("{{RESOLVED_STRATEGY_JSON}}", JSON.stringify(resolvedStrategy, null, 2))
       .replace("{{COLOR_SPEC_JSON}}",      JSON.stringify(serializeColorSpecForAI(theme), null, 2))
+      .replace("{{COLOR_PREFERENCES_GUIDANCE}}", formatColorPreferencesGuidance(colorPreferences))
       .replace("{{SAMPLE_HTML}}",          cappedSampleHtml);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });

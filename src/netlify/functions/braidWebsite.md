@@ -211,5 +211,7 @@ resolved_strategy:
 color_spec:
 {{COLOR_SPEC_JSON}}
 
+{{COLOR_PREFERENCES_GUIDANCE}}
+
 sample_website_html:
 {{SAMPLE_HTML}}

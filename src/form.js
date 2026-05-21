@@ -1687,6 +1687,7 @@ ${pseudoSelectors} {
         }
         stepPills.appendChild(pill);
       });
+      stepPills.style.display = currentStep > 0 ? "flex" : "none";
       stepLabel.textContent = currentStep > 0 ? `Step ${currentStep} of ${PAGES.length - 1}` : "";
       const pct = currentStep > 0 ? (currentStep / (PAGES.length - 1)) * 100 : 0;
       progressBar.style.width = `${pct}%`;
@@ -2411,19 +2412,26 @@ ${pseudoSelectors} {
         if (!scheme) return null;
         const hex = role => scheme[role]?.hex || null;
         const complementHex = role => scheme[role]?.complement?.memberCount > 0 ? (scheme[role]?.complement?.hex || null) : null;
+        // New format (ordinal vars from preprocessSamples): --c-1 … --c-5, ranked by
+        // frequency. Old format (semantic vars): --color-primary, --color-secondary, …
+        // Fall back to the old keys when the new ones aren't present so legacy templates still work.
+        const useNew = scheme["--c-1"] || scheme["--c-2"];
+        const keys = useNew
+          ? ["--c-1", "--c-2", "--c-3", "--c-4", "--c-5"]
+          : ["--color-primary", "--color-secondary", "--color-tertiary", "--color-quaternary", "--color-quinary"];
         const result = {
-          primary:    hex("--color-primary"),
-          secondary:  hex("--color-secondary"),
-          accent:     hex("--color-tertiary"),
-          quaternary: hex("--color-quaternary"),
-          quinary:    hex("--color-quinary"),
+          primary:    hex(keys[0]),
+          secondary:  hex(keys[1]),
+          accent:     hex(keys[2]),
+          quaternary: hex(keys[3]),
+          quinary:    hex(keys[4]),
         };
         const complements = {
-          primary:    complementHex("--color-primary"),
-          secondary:  complementHex("--color-secondary"),
-          accent:     complementHex("--color-tertiary"),
-          quaternary: complementHex("--color-quaternary"),
-          quinary:    complementHex("--color-quinary"),
+          primary:    complementHex(keys[0]),
+          secondary:  complementHex(keys[1]),
+          accent:     complementHex(keys[2]),
+          quaternary: complementHex(keys[3]),
+          quinary:    complementHex(keys[4]),
         };
         if (Object.values(complements).some(Boolean)) result.__complements = complements;
         return Object.values(result).some(Boolean) ? result : null;
@@ -2845,19 +2853,19 @@ input[type="color"].split-color::-moz-color-swatch {
       if (source === "file") {
         const uploadedPalette = buildUploadedImagePalette(extractedTemplateCache);
         if (uploadedPalette) {
-          return { ...uploadedPalette, label: "Input palette", sourceKind: "input" };
+          return { ...uploadedPalette, label: "Original template colors", sourceKind: "input" };
         }
 
         const htmlUploadPalette = buildTemplatePalette(extractedTemplateCache);
         if (htmlUploadPalette) {
           const label = extractedTemplateCache?.templateInputKind === "html-upload" && !hasNormalizedTemplatePalette(extractedTemplateCache)
-            ? "Preliminary Input Palette"
-            : "Input palette";
+            ? "Original template colors (preliminary)"
+            : "Original template colors";
           return { ...htmlUploadPalette, label, sourceKind: "input" };
         }
 
         if (extractedTemplateCache?.templateInputKind === "html-upload" && !hasNormalizedTemplatePalette(extractedTemplateCache)) {
-          return { label: "Input palette", colors: null, sourceKind: "input-pending", pending: true };
+          return { label: "Original template colors", colors: null, sourceKind: "input-pending", pending: true };
         }
 
         return null;
@@ -2882,7 +2890,7 @@ input[type="color"].split-color::-moz-color-swatch {
         }
       }
 
-      return tplPalette ? { ...tplPalette, label: "Template palette", sourceKind: "input" } : null;
+      return tplPalette ? { ...tplPalette, label: "Original template colors", sourceKind: "input" } : null;
     }
 
     function applyColors(colors) {
@@ -3621,7 +3629,7 @@ input[type="color"].split-color::-moz-color-swatch {
     // ----------------------------
     // Braid — single-pass layout clone + content substitution
     // ----------------------------
-    async function doBraidWebsite() {
+    async function doBraidWebsite(colorPreferences = null) {
       const myRunId = ++_braidRunId;
       braidInProgress  = true;
       autoMastheadImageTriggered = false;
@@ -3703,6 +3711,7 @@ input[type="color"].split-color::-moz-color-swatch {
 	            sampleHtml,
               mastheadMeta,
 	            colorSpec,
+            colorPreferences,
             templateColorSlots: shouldUseInputPalette() ? (normalizedTemplateResult?.colorSlots || null) : null,
             headshotName: headshotInput?.files?.[0]?.name || "",
             provider:     getAnalysisProvider(),
@@ -3759,7 +3768,7 @@ input[type="color"].split-color::-moz-color-swatch {
       }
     }
 
-    async function doSlotFillWebsite() {
+    async function doSlotFillWebsite(colorPreferences = null) {
       const myRunId = ++_slotFillRunId;
       slotFillInProgress = true;
       autoMastheadImageTriggered = false;
@@ -3841,6 +3850,7 @@ input[type="color"].split-color::-moz-color-swatch {
             sampleHtml,
             mastheadMeta:     extractedTemplateCache?.mastheadMeta || null,
             colorSpec,
+            colorPreferences,
             headshotName:     headshotInput?.files?.[0]?.name || "",
             provider:         getAnalysisProvider(),
             userId:           currentUserId(),
@@ -4241,7 +4251,7 @@ input[type="color"].split-color::-moz-color-swatch {
     // ----------------------------
     // Generation — called from page 4 Next (fire-and-forget); visuals injected client-side after generation
     // ----------------------------
-    async function doGenerateWebsite() {
+    async function doGenerateWebsite(colorPreferences = null) {
       const myRunId = ++_generationRunId;
       generationResult    = null;
       generationError     = null;
@@ -4339,6 +4349,7 @@ input[type="color"].split-color::-moz-color-swatch {
             templateHtml:         extractedTemplateCache?.templateHtml || null,
             strategyJson:         jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null,
             bridgeJson:           isDebugMode() ? (bridgeResult?.bridge_json || null) : null,
+            colorPreferences,
             provider:             getAnalysisProvider(),
             userId:               currentUserId()
           })
@@ -4886,31 +4897,24 @@ input[type="color"].split-color::-moz-color-swatch {
       }
 
       rows.innerHTML = "";
+      // The first non-empty/non-pending palette is the "default" — gets a subtle outline.
+      // Covers both keyword/file mode (template-derived palette is prepended at index 0)
+      // and DirectDesign mode (first AI palette is the default).
+      let defaultMarked = false;
       visible.slice(0, MAX).forEach(palette => {
         const empty = !palette;
         const pending = !!palette?.pending;
-        const row = document.createElement("label");
-        row.style.cssText = `display:flex; flex-direction:column; gap:5px; padding:7px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15); cursor:${empty ? "default" : "pointer"};`;
-
-        const cb = document.createElement("input");
-        cb.type = "radio";
-        cb.name = "suggestedPalette";
-        cb.disabled = empty;
-        cb.style.cssText = "width:14px; height:14px; accent-color:var(--primary); flex-shrink:0; margin-top:1px;";
-        if (!empty) cb.style.cursor = "pointer";
-        if (!empty && !pending && selectedSuggestedPaletteKey && getPaletteKey(palette) === selectedSuggestedPaletteKey) cb.checked = true;
-        cb.addEventListener("change", () => {
-          if (cb.checked) {
-            if (pending) return;
-            userHasSelectedPalette = true;
-            paletteSuggestionsLocked = true;
-            selectedSuggestedPaletteKey = getPaletteKey(palette);
-            applyColors(palette.colors);
-          }
-        });
+        const isDefault = !empty && !pending && !defaultMarked;
+        if (isDefault) defaultMarked = true;
+        const row = document.createElement("div");
+        let rowStyle = `display:flex; flex-direction:column; gap:6px; padding:7px 10px; border-radius:8px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);`;
+        if (isDefault) {
+          rowStyle += " outline: 1px solid rgba(141,186,255,.5); outline-offset: -1px; background: rgba(102,126,234,.08);";
+        }
+        row.style.cssText = rowStyle;
 
         const swatches = document.createElement("div");
-        swatches.style.cssText = "display:flex; gap:3px; flex-shrink:0; margin-left:10px;";
+        swatches.style.cssText = "display:flex; gap:3px; flex-wrap:wrap;";
         if (!pending) {
           PALETTE_SLOTS.forEach(slot => {
             const s = document.createElement("span");
@@ -4961,17 +4965,46 @@ input[type="color"].split-color::-moz-color-swatch {
           });
         }
 
-        const topRow = document.createElement("div");
-        topRow.style.cssText = "display:flex; align-items:center; gap:10px;";
-        topRow.append(cb);
-        if (!pending) topRow.append(swatches);
-
         const lbl = document.createElement("span");
         lbl.style.cssText = "font-size:12px; font-weight:400; line-height:1.4; white-space:normal; width:100%;";
         lbl.style.color = empty ? "rgba(255,255,255,.18)" : "rgba(234,240,255,.7)";
         lbl.textContent = empty ? "" : palette.label;
 
-        row.append(topRow, lbl);
+        // Top row: swatches grow on the left, Copy All button sits on the right.
+        const topRow = document.createElement("div");
+        topRow.style.cssText = "display:flex; align-items:center; gap:8px;";
+        if (!pending) {
+          swatches.style.flex = "1";
+          topRow.append(swatches);
+        }
+
+        if (!empty && !pending) {
+          const copyBtn = document.createElement("button");
+          copyBtn.type = "button";
+          copyBtn.textContent = "Copy All";
+          copyBtn.style.cssText = "flex:0 0 auto; padding:4px 10px; background:#333; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px; font-weight:700; transition:background .2s ease; white-space:nowrap;";
+          copyBtn.addEventListener("mouseenter", () => { if (copyBtn.dataset.state !== "copied") copyBtn.style.background = "#555"; });
+          copyBtn.addEventListener("mouseleave", () => { if (copyBtn.dataset.state !== "copied") copyBtn.style.background = "#333"; });
+          copyBtn.addEventListener("click", () => {
+            userHasSelectedPalette = true;
+            paletteSuggestionsLocked = true;
+            selectedSuggestedPaletteKey = getPaletteKey(palette);
+            applyColors(palette.colors);
+            copyBtn.dataset.state = "copied";
+            copyBtn.textContent = "Copied! ✓";
+            copyBtn.style.background = "#4CAF50";
+            setTimeout(() => {
+              copyBtn.dataset.state = "";
+              copyBtn.textContent = "Copy All";
+              copyBtn.style.background = "#333";
+            }, 2000);
+          });
+          topRow.append(copyBtn);
+        }
+
+        row.append(topRow);
+        row.append(lbl);
+
         rows.appendChild(row);
       });
 
@@ -4981,22 +5014,18 @@ input[type="color"].split-color::-moz-color-swatch {
 
       // If a palette is already selected and the list rerendered (for example when an
       // uploaded-image palette arrives late), re-apply that palette to the actual
-      // picker inputs so the radio state and left-side swatches stay in sync.
+      // picker inputs so the left-side swatches stay in sync.
       if (selectedVisiblePalette) {
         applyColors(selectedVisiblePalette.colors);
         return;
       }
 
-      // Auto-select the first available suggested palette the first time it arrives,
+      // Auto-apply the first available suggested palette the first time it arrives,
       // but only if the user hasn't already made an active palette or theme choice.
       if (!userHasSelectedPalette && visible.length > 0) {
-        const firstRadio = rows.querySelector('input[name="suggestedPalette"]');
-        if (firstRadio) {
-          firstRadio.checked = true;
-          applyColors(visible[0].colors);
-          selectedSuggestedPaletteKey = getPaletteKey(visible[0]);
-          if (inputPalette && getPaletteKey(visible[0]) === getPaletteKey(inputPalette)) templatePaletteRendered = true;
-        }
+        applyColors(visible[0].colors);
+        selectedSuggestedPaletteKey = getPaletteKey(visible[0]);
+        if (inputPalette && getPaletteKey(visible[0]) === getPaletteKey(inputPalette)) templatePaletteRendered = true;
       }
     }
 
@@ -5016,17 +5045,45 @@ input[type="color"].split-color::-moz-color-swatch {
     const _next3Handler = () => {
       if (!page3Action()) return;
       window.umami?.track("form-step-complete", { step: 3 });
-      if (isBraidMode()) {
-        page3Submitted = true;
-        doBraidWebsite();
-      } else if (isSlotFillMode()) {
-        page3Submitted = true;
-        doSlotFillWebsite();
-      }
+      // Just navigate to page 4. Braid/slot-fill kickoff happens on the page-4 Next click,
+      // so the user's color choices (page 4) get folded into the request.
       setStep(4);
     };
     document.getElementById("next3_bottom")?.addEventListener("click", _next3Handler);
     document.getElementById("next3")?.addEventListener("click", _next3Handler);
+
+    // Page 4 (Colors) — "Choose key colors" card mode toggle
+    (function setupColorChoiceMode() {
+      const modes = [...document.querySelectorAll(".colorChoiceMode")];
+      const radios = [...document.querySelectorAll('input[name="colorChoiceMode"]')];
+      if (!modes.length || !radios.length) return;
+      function applyActive() {
+        const checked = document.querySelector('input[name="colorChoiceMode"]:checked')?.value || "swatches";
+        modes.forEach(m => m.classList.toggle("active", m.dataset.colorChoiceMode === checked));
+      }
+      radios.forEach(r => r.addEventListener("change", applyActive));
+      // Clicking anywhere in a mode box selects its radio (except clicks on inputs/textarea)
+      modes.forEach(m => {
+        m.addEventListener("click", ev => {
+          const target = ev.target instanceof Element ? ev.target : null;
+          if (target?.closest("input,textarea,button")) return;
+          const radio = m.querySelector('input[type="radio"]');
+          if (radio && !radio.checked) { radio.checked = true; applyActive(); }
+        });
+      });
+      // Typing in textarea or interacting with a swatch auto-selects that mode
+      document.getElementById("colorTextDescription")?.addEventListener("focus", () => {
+        const r = document.getElementById("colorChoiceRadioText");
+        if (r && !r.checked) { r.checked = true; applyActive(); }
+      });
+      ["primary","secondary","tertiary","accent2","accent1"].forEach(id => {
+        document.getElementById(id)?.addEventListener("input", () => {
+          const r = document.getElementById("colorChoiceRadioSwatches");
+          if (r && !r.checked) { r.checked = true; applyActive(); }
+        });
+      });
+      applyActive();
+    })();
 
     // Page 4 (Colors)
     function selectedTemplateSource() {
@@ -5054,16 +5111,104 @@ input[type="color"].split-color::-moz-color-swatch {
       result.site_html = composeBraidPreviewHtml(result);
     }
 
+    // ── Page-4 color preferences: collect + validate ─────────────────────────────
+    // Returns { mode: "swatches"|"text", swatches: string[], text: string }
+    // If the user touched nothing, the swatches reflect the auto-applied default —
+    // typically "Original template colors" (or the first AI palette in DirectDesign mode).
+    // Only when ALL five inputs are still the untouched HTML default (#000000) do we
+    // treat the choice as "no preference" — that's the case when no template/palette
+    // ever loaded and the user didn't pick anything either.
+    function collectPage4ColorPreferences() {
+      const mode = document.querySelector('input[name="colorChoiceMode"]:checked')?.value || "swatches";
+      const ids = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+      const raw = ids.map(id => document.getElementById(id)?.value?.toLowerCase() || "");
+      const allUntouched = raw.every(h => h === "#000000");
+      const swatches = allUntouched
+        ? []
+        : raw.filter(hex => /^#[0-9a-f]{6}$/.test(hex));
+      const text = (document.getElementById("colorTextDescription")?.value || "").trim();
+      return { mode, swatches, text };
+    }
+
+    function showPage4ColorError(message) {
+      const el = document.getElementById("colorTextDescription");
+      if (!el) { alert(message); return; }
+      let msgEl = document.getElementById("_msg_colorChoice");
+      if (!msgEl) {
+        msgEl = document.createElement("div");
+        msgEl.id = "_msg_colorChoice";
+        msgEl.style.cssText = "font-size:12px; margin-top:6px; color:rgba(251,171,156,.95); font-weight:600;";
+        el.closest(".colorChoiceCard")?.appendChild(msgEl);
+      }
+      msgEl.textContent = message;
+      setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 6000);
+    }
+
+    // Heuristic check: enough length, has alphabetic words, includes at least
+    // one color-related term. Lets through grammatical English with a hint of color.
+    function heuristicValidateColorText(text) {
+      const trimmed = String(text || "").trim();
+      if (trimmed.length < 10)  return "Please describe your color preferences in at least 10 characters.";
+      if (trimmed.length > 500) return "Please keep your color description under 500 characters.";
+      if (!/[a-z]{3,}/i.test(trimmed)) return "Please describe your color preferences in words.";
+      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastel|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
+      if (!colorish.test(trimmed)) return "Please mention at least one color or descriptor (e.g. “deep navy”, “warm earth tones”).";
+      return null; // valid
+    }
+
+    async function aiValidateColorText(text) {
+      try {
+        const res = await fetch("/.netlify/functions/validateColorText", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) return { ok: true, error: "" }; // fail open on server error
+        return { ok: !!data.valid, error: data.reason || "" };
+      } catch {
+        return { ok: true, error: "" }; // fail open on network error
+      }
+    }
+
+    // Validates the color choice; returns null if OK, or an error string.
+    // For text mode, runs heuristic → AI sanity check.
+    async function validatePage4ColorChoice(prefs) {
+      if (prefs.mode === "text") {
+        const heur = heuristicValidateColorText(prefs.text);
+        if (heur) return heur;
+        const ai = await aiValidateColorText(prefs.text);
+        if (!ai.ok) return ai.error || "That doesn't look like a clear color description. Please rephrase.";
+      }
+      // Swatches mode: anything goes (zero or more swatches; backend treats as anchors).
+      return null;
+    }
+
     async function page4OpenEditorAction() {
       // Grey the button immediately — re-enabled when the editor opens.
       const openBtn = document.getElementById("next2_bottom");
       if (openBtn) { openBtn.disabled = true; openBtn.style.opacity = ".4"; openBtn.style.cursor = "not-allowed"; }
+
+      // Collect + validate the user's color choice before any AI calls.
+      const colorPreferences = collectPage4ColorPreferences();
+      const colorError = await validatePage4ColorChoice(colorPreferences);
+      if (colorError) {
+        showPage4ColorError(colorError);
+        if (openBtn) { openBtn.disabled = false; openBtn.style.opacity = ""; openBtn.style.cursor = ""; }
+        return;
+      }
 
       // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
       ensureEditorWindow();
       window.umami?.track("form-step-complete", { step: 4 });
+
+      // Wait for extraction to settle so we route to the resolved pipeline.
+      if (extractTemplatePending) {
+        try { await extractTemplatePending; } catch {}
+      }
+
       if (isSlotFillMode()) {
         page4Submitted = true;
         const needsMastheadImage = currentTemplateNeedsMastheadImage();
@@ -5076,20 +5221,10 @@ input[type="color"].split-color::-moz-color-swatch {
         } else {
           autoMastheadImageTriggered = true;
         }
-        // Slot-fill runs in the background from page 3 Next. If it's still in
-        // progress (or hasn't produced a result yet), open the editor now so the
-        // user can wait there. doSlotFillWebsite will push the HTML and re-enable
-        // navigation when done.
-        if (slotFillInProgress || !generationResult) {
-          setOpenEditorReady(true);
-          return;
+        // Kick off slot-fill now (with the page-4 color preferences in scope).
+        if (!slotFillInProgress && !generationResult) {
+          doSlotFillWebsite(colorPreferences);
         }
-        // Generation already complete — apply masthead if available, then open.
-        if (needsMastheadImage && mastheadImageResult?.image_url && generationResult?.base_site_html) {
-          generationResult.site_html = composeBraidPreviewHtml(generationResult);
-          pushPreviewHtmlUpdate(generationResult.site_html);
-        }
-        doPreview();
         setOpenEditorReady(true);
         return;
       }
@@ -5103,7 +5238,7 @@ input[type="color"].split-color::-moz-color-swatch {
         } else {
           autoMastheadImageTriggered = true;
         }
-        await doGenerateWebsite();
+        await doGenerateWebsite(colorPreferences);
         setHeaderStatus("braidStatus", "");
         while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
         doPreview();
@@ -5113,7 +5248,13 @@ input[type="color"].split-color::-moz-color-swatch {
 
       // Braid mode.
       page4Submitted = true;
-      if (generationResult) applyBraidColorOverrides(generationResult);
+
+      // Start braid now (with color preferences in scope).
+      if (!braidInProgress && !generationResult) {
+        doBraidWebsite(colorPreferences);
+      } else if (generationResult) {
+        applyBraidColorOverrides(generationResult);
+      }
 
       // Start masthead image generation on the first click only, and only when needed.
       if (!autoMastheadImageTriggered) {

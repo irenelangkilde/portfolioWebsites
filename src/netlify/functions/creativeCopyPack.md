@@ -93,3 +93,6 @@ resume_facts (excerpt — personal, education, experience titles, project titles
 
 job_context (empty string if no job ad provided)
 {{JOB_CONTEXT}}
+
+color_preferences (empty string if the user did not supply any; when present, treat the listed colors as key anchors rather than a fixed palette — copy referencing color choices should honor the anchors but is free to imply complementary tones)
+{{COLOR_PREFERENCES_GUIDANCE}}

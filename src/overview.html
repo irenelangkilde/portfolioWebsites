@@ -127,8 +127,10 @@
       font-size:11.5px;
       text-align:center;
       line-height:1.25;
-      min-height: 14px;
       font-variant-numeric: tabular-nums;
+    }
+    .sharedStatusPanel span:not(:empty){
+      min-height: 14px;
     }
     .accountAddonsMenu{
       position:absolute;
@@ -317,7 +319,7 @@
       margin-bottom: 10px;
     }
     .stepPills{
-      display:none;
+      display:flex;
       gap: 8px;
       flex-wrap:wrap;
       align-items:center;
@@ -367,12 +369,95 @@
     @media (min-width: 860px){ .grid2{ grid-template-columns: 1fr 1fr; } }
 
     .themeLayout{ display:flex; gap: 16px; align-items: flex-start; }
-    .themeLeft{ flex: 0 0 260px; display:flex; flex-direction:column; gap: 10px; }
+    .themeLeft{ flex: 0 0 auto; display:flex; flex-direction:column; gap: 10px; }
     .themeRight{ flex: 1; min-width: 0; }
+    .colorChoiceCard{ width: fit-content; }
     .themeLeft input[type="color"]{ border-radius: 4px; overflow: hidden; cursor: pointer; padding: 2px; }
     .themeLeft input[type="color"]::-webkit-color-swatch-wrapper{ padding: 0; border-radius: 4px; }
     .themeLeft input[type="color"]::-webkit-color-swatch{ border: none; border-radius: 3px; }
     .themeLeft input[type="color"]::-moz-color-swatch{ border: none; border-radius: 3px; }
+
+    /* Page 4 "Choose key colors" card */
+    .colorChoiceCard{
+      background: rgba(78,112,241,.06);
+      border: 1px solid rgba(78,112,241,.32);
+      border-radius: 12px;
+      padding: 14px 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,.18);
+    }
+    .colorChoiceTitle{
+      margin: 0 0 10px;
+      font-size: 14px;
+      font-weight: 850;
+      color: rgba(234,240,255,.92);
+      letter-spacing: .2px;
+    }
+    .colorChoiceMode{
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,.1);
+      background: rgba(0,0,0,.18);
+      transition: background .15s, border-color .15s;
+    }
+    .colorChoiceMode + .colorChoiceMode{ margin-top: 8px; }
+    .colorChoiceMode.active{
+      border-color: rgba(141,186,255,.55);
+      background: rgba(102,126,234,.14);
+    }
+    .colorChoiceMode > label{
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; font-weight: 800;
+      color: rgba(234,240,255,.82);
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .colorChoiceMode > label input{ accent-color: #8dbaff; }
+    .colorChoiceControl{
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .colorSwatchRow{
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .colorSwatchRow input[type="color"]{
+      width: 44px;
+      height: 23px;
+      border-radius: 4px;
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+      border: 2px solid rgba(255,255,255,.85);
+      box-shadow: 0 0 0 1px rgba(0,0,0,.25);
+      background: rgba(0,0,0,.18);
+    }
+    .colorSwatchRow input[type="color"]::-webkit-color-swatch-wrapper{ padding: 0; }
+    .colorSwatchRow input[type="color"]::-webkit-color-swatch{ border: none; border-radius: 0; }
+    .colorSwatchRow input[type="color"]::-moz-color-swatch{ border: none; border-radius: 0; }
+    #colorTextDescription{
+      width: 100%;
+      min-height: 64px;
+      resize: vertical;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(0,0,0,.22);
+      color: #eaf0ff;
+      padding: 9px 10px;
+      font: 12.5px/1.45 inherit;
+      outline: none;
+    }
+    #colorTextDescription:focus{
+      border-color: rgba(141,186,255,.58);
+      box-shadow: 0 0 0 2px rgba(141,186,255,.12);
+    }
 
     .colorPreview{ display:flex; border-radius: 8px; overflow:hidden; height: 36px; margin-top: 4px; }
     .colorPreview .swatch{ flex:1; display:flex; align-items:center; justify-content:center; font-size:8px; color:rgba(255,255,255,.7); text-shadow:0 1px 2px rgba(0,0,0,.6); transition: background-color 0.3s ease; }
@@ -966,12 +1051,34 @@
   <div id="sampleColorsOverlay" style="display:none; position:absolute; inset:0; background:rgba(0,0,0,.45); border-radius:8px; z-index:10; pointer-events:none;"></div>
 
   <div class="themeLeft">
-    <div style="display:flex; flex-direction:column; gap:5px;">
-      <label for="primary"   title="Background color" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="primary"   type="color" value="#000000" aria-label="Background color" title="Background color" /></label>
-      <label for="secondary" title="Foreground color" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="secondary" type="color" value="#000000" aria-label="Foreground color" title="Foreground color" /></label>
-      <label for="tertiary"  title="Primary color" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="tertiary"  type="color" value="#000000" aria-label="Primary color" title="Primary color" /></label>
-      <label for="accent2"   title="Secondary color" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent2"   type="color" value="#000000" aria-label="Secondary color" title="Secondary color" /></label>
-      <label for="accent1"   title="Accent color" style="display:flex; align-items:center; gap:8px; margin:0; font-weight:600; cursor:pointer;"><input id="accent1"   type="color" value="#000000" aria-label="Accent color" title="Accent color" /></label>
+    <div class="colorChoiceCard" id="colorChoiceCard">
+      <p class="colorChoiceTitle">Choose key colors:</p>
+
+      <div class="colorChoiceMode active" data-color-choice-mode="swatches" id="colorChoiceModeSwatches">
+        <label for="colorChoiceRadioSwatches">
+          <input id="colorChoiceRadioSwatches" type="radio" name="colorChoiceMode" value="swatches" checked>
+          <span>Use swatches</span>
+        </label>
+        <div class="colorChoiceControl">
+          <div class="colorSwatchRow">
+            <input id="primary"   type="color" value="#000000" aria-label="Background color" title="Background color" />
+            <input id="secondary" type="color" value="#000000" aria-label="Foreground color" title="Foreground color" />
+            <input id="tertiary"  type="color" value="#000000" aria-label="Primary color" title="Primary color" />
+            <input id="accent2"   type="color" value="#000000" aria-label="Secondary color" title="Secondary color" />
+            <input id="accent1"   type="color" value="#000000" aria-label="Accent color" title="Accent color" />
+          </div>
+        </div>
+      </div>
+
+      <div class="colorChoiceMode" data-color-choice-mode="text" id="colorChoiceModeText">
+        <label for="colorChoiceRadioText">
+          <input id="colorChoiceRadioText" type="radio" name="colorChoiceMode" value="text">
+          <span>Use text</span>
+        </label>
+        <div class="colorChoiceControl">
+          <textarea id="colorTextDescription" placeholder="e.g. deep navy with warm copper accents and a soft cream background" spellcheck="true"></textarea>
+        </div>
+      </div>
     </div>
   </div>
 

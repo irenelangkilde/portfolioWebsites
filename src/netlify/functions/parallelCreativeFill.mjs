@@ -80,20 +80,36 @@ const SYSTEM = "Return only a valid JSON object. No markdown. No explanation.";
  * @param {string}   options.jobContext     - brief job ad context, or ""
  * @returns {Promise<{ creativePack, augmentedProjects, tokenReports }>}
  */
+function formatColorPreferencesGuidance(prefs) {
+  if (!prefs || typeof prefs !== "object") return "";
+  if (prefs.mode === "swatches" && Array.isArray(prefs.swatches) && prefs.swatches.length) {
+    const list = prefs.swatches.map(h => String(h)).filter(h => /^#[0-9a-fA-F]{3,8}$/.test(h)).join(", ");
+    if (!list) return "";
+    return `USER COLOR PREFERENCES: The user selected these as KEY anchor colors: ${list}. Treat them as anchors (not the complete palette) when copy references color choices.`;
+  }
+  if (prefs.mode === "text" && typeof prefs.text === "string" && prefs.text.trim()) {
+    return `USER COLOR PREFERENCES: The user described their color intent as: "${prefs.text.trim().slice(0, 500)}". Treat this as anchor preferences (not a fixed palette) when copy references color choices.`;
+  }
+  return "";
+}
+
 export async function parallelCreativeFill(callAIFn, {
   resolvedStrategy,
   resumeFacts,
   templateMeta,
   jobContext = "",
+  colorPreferences = null,
 }) {
   const projects = resumeFacts?.projects || [];
   const topN     = Math.min(3, projects.length);
+  const colorGuidance = formatColorPreferencesGuidance(colorPreferences);
 
   const creativePrompt = loadPrompt("creativeCopyPack.md")
     .replace("{{TEMPLATE_META_JSON}}",        JSON.stringify(templateMeta,                   null, 2))
     .replace("{{RESOLVED_STRATEGY_JSON}}",    JSON.stringify(resolvedStrategy,               null, 2))
     .replace("{{RESUME_FACTS_EXCERPT_JSON}}", JSON.stringify(resumeFactsExcerpt(resumeFacts), null, 2))
-    .replace("{{JOB_CONTEXT}}",               jobContext || "");
+    .replace("{{JOB_CONTEXT}}",               jobContext || "")
+    .replace("{{COLOR_PREFERENCES_GUIDANCE}}", colorGuidance);
 
   const augmentPrompt = loadPrompt("projectAugment.md")
     .replace("{{TOP_N}}",                  String(topN))
