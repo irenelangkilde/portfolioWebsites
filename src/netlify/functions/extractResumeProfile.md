@@ -358,19 +358,26 @@ CTA OPTIONS
 Write 2-3 specific calls to action appropriate for this candidate's career stage and field. Avoid generic "Get in Touch" — make them action-specific and honest. Examples: "See my research", "View my projects", "Download my resume", "Let's talk about your team's needs". Pair with context: what page action or link they point to.
 
 6. SUBJECT-INSPIRED COLOR STRATEGY
-Conjure five colors inspired by the candidate's field and subject matter. Output them in `base_colors` using these semantic roles:
+Conjure five colors inspired by the candidate's field and subject matter. Output them in `base_colors` using these slot names:
 
-  background — the dominant page canvas or atmospheric base
-  foreground — the main readable ink/text color against the background
-  primary — the strongest action / emphasis color
-  secondary — a distinct supporting brand or hierarchy color
-  accent — a fifth orthogonal highlight color that adds new contrast
+  background — the dominant page canvas. Treat as a CHROMATIC surface, not a default white. Examples: deep cosmic navy, warm cream, dusty rose, forest green, paper-bag tan, ink slate.
+  foreground — the main readable ink color. Treat as a CHROMATIC dark/contrast tone, not a default black. Examples: deep burgundy, ink blue, espresso brown, dark teal, forest umber.
+  primary — the strongest action / emphasis color. Pops against the background.
+  secondary — a distinct supporting color used for hierarchy, chips, or panels.
+  accent — a fifth orthogonal highlight color that adds new contrast.
 
-Rules:
-- `foreground` must be readable on `background`.
-- `primary`, `secondary`, and `accent` must be genuinely distinct.
-- Do NOT default to generic black/white unless the subject matter genuinely demands it.
-- Favor field-relevant, composition-driving colors over bland neutrals.
+HARD RULES — all five colors must satisfy these or the palette is rejected:
+- Every color must have chroma > 0.02 in OKLCH. NO pure black (#000000), NO pure white (#ffffff), NO desaturated grays.
+- `background` must NOT be #ffffff, #f8f9fa, #fafafa, or any near-white at chroma < 0.02. Pick a chromatic surface tone (light or dark) that reads as "designed."
+- `foreground` must NOT be #000000, #111111, #1a1a1a, or any near-black at chroma < 0.02. Pick a chromatic dark/contrast tone.
+- `foreground` must be readable on `background` (WCAG AA contrast ≥ 4.5:1).
+- All five colors must be genuinely distinct in OKLCH space (pairwise distance ≥ 0.10).
+
+Examples of field-inspired palettes that follow these rules:
+  Astrophysics: background=#1a1f4a (deep cosmic navy), foreground=#fff3d6 (warm star-cream), primary=#ff6b5b (nebula coral), secondary=#d4a017 (stellar gold), accent=#4ec9b0 (photon teal)
+  Marine biology: background=#0a3d5c (deep ocean), foreground=#f4ecd4 (pale sand), primary=#e85d4d (coral red), secondary=#3a8c5f (kelp green), accent=#9fdfd2 (seafoam mint)
+  Civil engineering: background=#2c3640 (steel slate, NOT pure black), foreground=#f0e7d5 (concrete cream, NOT pure white), primary=#e57825 (safety orange), secondary=#3d7ba8 (steel blue), accent=#e5c63b (caution yellow)
+  Statistics: background=#fdfaf3 (warm paper, NOT pure white), foreground=#3a2f5f (deep aubergine, NOT pure black), primary=#5b8dd8 (data blue), secondary=#c84b6e (signal rose), accent=#7ec488 (chart mint)
 
 In `how_used`, describe the overall palette mood and field connection in one sentence.
 

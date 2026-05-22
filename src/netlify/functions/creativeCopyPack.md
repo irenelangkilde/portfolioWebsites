@@ -21,7 +21,7 @@ OUTPUT SCHEMA
     "projects":   "<1–2 sentence bridge introducing the projects section>",
     "experience": "<1–2 sentence bridge introducing the experience section>"
   },
-  "about_full": "<rich 150–250 word About section body — omit key if has_about is false>",
+  "about_full": "<About section body shaped to template_meta.about_full_word_count and template_meta.about_full_paragraph_count — omit key if has_about is false>",
   "cta_tagline": "<one-line personalized footer tagline (max 12 words)>"
 }
 
@@ -56,10 +56,16 @@ If the job_context is non-empty, at least one intro should weave in a keyword or
 ABOUT_FULL RULES  (only if has_about is true)
 ═══════════════════════════════════════════════════
 
-Write 2–3 paragraphs, 150–250 words total. Structure:
+Match the template shape in template_meta:
+- If about_full_word_count is present, stay close to that word count. Do not default to 150–250 words when the template is shorter.
+- If about_full_paragraph_count is present, use exactly that many paragraphs.
+- Otherwise use 2–3 paragraphs, 150–250 words total.
+
+Structure:
   Para 1 — Who they are: major, institution if known, what drew them to the field
   Para 2 — What they've done: 2–3 concrete highlights from the resume (no fabrication)
   Para 3 — Where they're going: career goals, what kind of work excites them, job-targeted if job_context is non-empty
+If the template asks for fewer than 3 paragraphs, combine those beats into the requested paragraph count.
 
 Voice: first-person, matches resolved_strategy.editorial_direction.recommended_tone.
 Do NOT begin with "I am" or repeat the hero headline verbatim.

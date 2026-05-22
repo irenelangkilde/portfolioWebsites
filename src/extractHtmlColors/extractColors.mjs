@@ -444,6 +444,12 @@ export function dedupColors(
     }
   }
 
+  // Sort reps by aggregate visual weight = count × chroma (descending).
+  // Vivid high-frequency colors land in --c-1, --c-2…; near-neutral grays/black/white
+  // (chroma ≈ 0, score ≈ 0) sort to the bottom. Sort is stable so ties preserve
+  // discovery order.
+  reps.sort((a, b) => (b.count * (b.ok.c ?? 0)) - (a.count * (a.ok.c ?? 0)));
+
   return reps;
 }
 

@@ -75,11 +75,20 @@
     #openMenu .open-hint {
       padding: 4px 14px 8px; font-size: 11px; color: rgba(234,240,255,.45); line-height: 1.35;
     }
-    #annotateAskModal {
+    #annotateAskModal, #workbenchEditsModal {
       display: none; position: fixed; inset: 0; z-index: 200000;
       background: rgba(0,0,0,.6); align-items: center; justify-content: center;
     }
-    #annotateAskModal.open { display: flex; }
+    #annotateAskModal.open, #workbenchEditsModal.open { display: flex; }
+    #workbenchEditsBox {
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 22px 24px; width: 480px; max-width: 95vw;
+      box-shadow: 0 16px 48px rgba(0,0,0,.6); color: #eaf0ff;
+    }
+    #workbenchEditsBox h3 { margin: 0 0 10px; font-size: 16px; color: #eaf0ff; }
+    #workbenchEditsBox p { margin: 0 0 10px; font-size: 13px; color: rgba(234,240,255,.85); line-height: 1.55; }
+    #workbenchEditsBox p.muted { color: rgba(234,240,255,.55); font-size: 12px; }
+    #workbenchEditsActions { display: flex; gap: 8px; margin-top: 14px; justify-content: flex-end; flex-wrap: wrap; }
     #annotateAskBox {
       background: #0f1929; border: 1px solid rgba(255,255,255,.18);
       border-radius: 12px; padding: 22px 24px; width: 460px; max-width: 95vw;
@@ -1022,7 +1031,6 @@
     </div>
     <input type="file" id="openFileInput" accept=".html,text/html" style="display:none">
     <input type="file" id="openDirInput"  webkitdirectory style="display:none">
-    <button class="tbtn tbtn-ghost" id="btnBack" data-umami-event="editor-close">← Close Editor</button>
     <div id="viewToggle">
       <button class="tbtn tbtn-active" id="btnVisual">Visual</button>
       <button class="tbtn"             id="btnSplit">Split</button>
@@ -1350,6 +1358,29 @@
 
   <input type="file" id="htmlImportInput" accept=".html,text/html" hidden />
 
+  <!-- Workbench-edits modal — shown when new portfolio HTML arrives and the user has
+       made color workbench changes (substitutes / preserved hexes / etc.). Iframe and
+       code view already updated by this point; this only decides what to do with the
+       workbench rows. -->
+  <div id="workbenchEditsModal" role="dialog" aria-modal="true" aria-labelledby="workbenchEditsTitle">
+    <div id="workbenchEditsBox">
+      <h3 id="workbenchEditsTitle">Keep your color edits?</h3>
+      <p>
+        A new portfolio just arrived in the editor. You have unsaved color changes in the
+        workbench. What should we do?
+      </p>
+      <p class="muted">
+        <strong>Keep my edits</strong>: the workbench panel keeps your substitutes. Your overrides
+        may not visibly apply if the new template uses a different color structure.<br>
+        <strong>Discard and use new colors</strong>: the workbench resets to the new template's palette.
+      </p>
+      <div id="workbenchEditsActions">
+        <button class="tbtn tbtn-ghost" id="workbenchEditsDiscard">Discard and use new colors</button>
+        <button class="tbtn tbtn-primary" id="workbenchEditsKeep">Keep my edits</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Annotate with AI? modal — shown when opened HTML lacks data-* attributes -->
   <div id="annotateAskModal" role="dialog" aria-modal="true" aria-labelledby="annotateAskTitle">
     <div id="annotateAskBox">
@@ -1559,6 +1590,28 @@
     let currentDocumentBaseHref = loadedFileBaseHref;
 
     if (!fullHtml) {
+      const recoverWhenHtmlArrives = html => {
+        if (!html) return;
+        cachePreviewHtml(html);
+        window.location.reload();
+      };
+      window.addEventListener("message", e => {
+        if (e.data?.type !== "portfolio_html" || !e.data.html) return;
+        recoverWhenHtmlArrives(e.data.html);
+      });
+      window.addEventListener("storage", ev => {
+        if (ev.key !== "portfolio_preview_html") return;
+        recoverWhenHtmlArrives(ev.newValue || "");
+      });
+      const emptyPreviewPoll = setInterval(() => {
+        const cachedHtml = getPreviewHtml();
+        if (!cachedHtml) return;
+        clearInterval(emptyPreviewPoll);
+        recoverWhenHtmlArrives(cachedHtml);
+      }, 750);
+      try {
+        window.opener?.postMessage({ type: "portfolio_editor_ready" }, location.origin);
+      } catch {}
       document.getElementById("no-preview").style.display = "flex";
       document.getElementById("editorLayout").style.display = "none";
       document.getElementById("toolbar").style.display = "none";
@@ -3013,7 +3066,14 @@
       }
     }
 
+    // Once the user clicks Dismiss, we stop showing the trivia overlay for the rest
+    // of the session — even when fresh "Preparing editor…" placeholders arrive later.
+    // Cleared only by a full page reload, not by hideTriviaOverlay (which fires on every
+    // real-portfolio postMessage and shouldn't suppress the next placeholder by itself).
+    let _triviaDismissedBySession = false;
+
     function showTriviaOverlay() {
+      if (_triviaDismissedBySession) return;
       const overlay = document.getElementById("triviaOverlay");
       if (!overlay) return;
       overlay.classList.remove("hidden");
@@ -3069,6 +3129,7 @@
     });
 
     document.getElementById("triviaDismiss")?.addEventListener("click", () => {
+      _triviaDismissedBySession = true;
       hideTriviaOverlay();
     });
 
@@ -3080,9 +3141,127 @@
     function isWaitingPlaceholderHtml(html) {
       return /<title>\s*Preparing Editor/i.test(String(html || ""));
     }
+    let previewCachePoll = null;
+    let lastIncomingPortfolioHtml = "";
+    function stopPreviewCachePoll() {
+      if (previewCachePoll) {
+        clearInterval(previewCachePoll);
+        previewCachePoll = null;
+      }
+    }
+    // True if the workbench has any user-applied substitutes or preserve flags.
+    function workbenchHasUserEdits() {
+      if (!Array.isArray(colorWorkbenchRows) || !colorWorkbenchRows.length) return false;
+      return colorWorkbenchRows.some(row => {
+        if (row.substitute || row.preserveHex) return true;
+        return Array.isArray(row.deps) && row.deps.some(d => d.substitute || d.preserveHex);
+      });
+    }
+
+    // Re-extract the palette from a new HTML doc and refresh the workbench rows.
+    // Also re-applies any workbench overrides so the iframe stays in sync visually.
+    function reinitWorkbenchFromHtml(html) {
+      try {
+        const prepared = ensureEditorColorPreprocessed(html);
+        const nextHtml = prepared.html || html;
+        renderColorWorkbenchPanel(prepared.rows);
+        applyColorWorkbenchToFrame();
+        if (nextHtml !== html) {
+          currentHtml = nextHtml;
+          cachePreviewHtml(nextHtml);
+          loadIframe(nextHtml);
+          setCodeContent(nextHtml);
+        }
+      } catch (err) {
+        console.warn("Workbench re-init failed:", err);
+      }
+    }
+
+    // Modal: "You have unsaved color edits — keep them or discard?"
+    function askUserAboutWorkbenchEdits() {
+      return new Promise(resolve => {
+        const modal = document.getElementById("workbenchEditsModal");
+        const keep    = document.getElementById("workbenchEditsKeep");
+        const discard = document.getElementById("workbenchEditsDiscard");
+        if (!modal || !keep || !discard) return resolve("discard");
+        function cleanup(choice) {
+          modal.classList.remove("open");
+          keep.removeEventListener("click", onKeep);
+          discard.removeEventListener("click", onDiscard);
+          resolve(choice);
+        }
+        const onKeep    = () => cleanup("keep");
+        const onDiscard = () => cleanup("discard");
+        keep.addEventListener("click", onKeep);
+        discard.addEventListener("click", onDiscard);
+        modal.classList.add("open");
+      });
+    }
+
+    function requestProcessStatusFromOpener() {
+      try {
+        if (!window.opener || window.opener.closed) return false;
+        window.opener.postMessage({ type: "editor_process_status_request" }, location.origin);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
+    function loadIncomingPortfolioHtml(html, { allowPlaceholder = false } = {}) {
+      const waiting = isWaitingPlaceholderHtml(html);
+      if (!html || (waiting && !allowPlaceholder)) return false;
+      if (!waiting && html === lastIncomingPortfolioHtml) {
+        requestProcessStatusFromOpener();
+        return true;
+      }
+      if (!waiting) lastIncomingPortfolioHtml = html;
+      if (waiting) {
+        showTriviaOverlay();
+      } else {
+        stopPreviewCachePoll();
+        try { hideTriviaOverlay(); } catch {}
+      }
+      currentHtml = html;
+      cachePreviewHtml(html);
+      loadIframe(html);
+      setCodeContent(html);
+      if (!waiting) {
+        if (requestProcessStatusFromOpener()) {
+          setTimeout(requestProcessStatusFromOpener, 150);
+        } else {
+          window.__editorTickerClearProcess?.();
+        }
+        // Workbench re-init policy:
+        //   - No prior edits → re-init silently to reflect the new HTML's palette.
+        //   - Prior edits exist → ask the user whether to keep their edits or discard them.
+        //     The iframe + code view already updated above, so the page content reflects the
+        //     new HTML either way; the choice only affects the workbench panel.
+        if (workbenchHasUserEdits()) {
+          askUserAboutWorkbenchEdits().then(choice => {
+            if (choice === "discard") reinitWorkbenchFromHtml(html);
+            // "keep" → leave workbench rows as-is. Substitutes may not visibly apply
+            // to the new HTML if its --c-N structure differs, but the user opted in.
+          });
+        } else {
+          reinitWorkbenchFromHtml(html);
+        }
+      }
+      return !waiting;
+    }
     if (isWaitingPlaceholderHtml(fullHtml)) {
       showTriviaOverlay();
+      previewCachePoll = setInterval(() => {
+        const cachedHtml = getPreviewHtml();
+        if (cachedHtml && cachedHtml !== currentHtml) {
+          loadIncomingPortfolioHtml(cachedHtml);
+        }
+      }, 750);
     }
+    window.addEventListener("storage", ev => {
+      if (ev.key !== "portfolio_preview_html") return;
+      loadIncomingPortfolioHtml(ev.newValue || "");
+    });
 
 	    frame.addEventListener("load", () => {
 	      try {
@@ -3308,6 +3487,40 @@
 	      if (index < alpha.length) return alpha[index];
 	      const second = index - alpha.length;
 	      return alpha[Math.floor(second / alpha.length)] + alpha[second % alpha.length];
+	    }
+
+	    // User-visible label for a swatch ordinal. Internally we still use letters
+	    // (A, B, … AA, AB, …) for var names and lookups, but the UI shows integers
+	    // (1, 2, … 26, 27, …) which read more naturally.
+	    function displayOrdinal(letterOrd) {
+	      const s = String(letterOrd || "").trim().toUpperCase();
+	      if (!s) return "";
+	      let n = 0;
+	      for (const ch of s) {
+	        if (ch < "A" || ch > "Z") return s; // not a letter ordinal — show as-is
+	        n = n * 26 + (ch.charCodeAt(0) - 64);
+	      }
+	      return String(n);
+	    }
+
+	    // Parse an integer-form ordinal (1, 2, … 27, …) back to its letter form (A, B, … AA, …).
+	    // Used when the dep-input accepts a number from the user; the rest of the workbench
+	    // still keys off letters.
+	    function parseDisplayOrdinal(numStr) {
+	      const trimmed = String(numStr || "").trim();
+	      if (!trimmed) return "";
+	      // Allow direct letter input as a fallback for power users.
+	      if (/^[A-Za-z]{1,2}$/.test(trimmed)) return trimmed.toUpperCase();
+	      const n = parseInt(trimmed, 10);
+	      if (!Number.isFinite(n) || n < 1) return "";
+	      let out = "";
+	      let remaining = n;
+	      while (remaining > 0) {
+	        const r = (remaining - 1) % 26;
+	        out = String.fromCharCode(65 + r) + out;
+	        remaining = Math.floor((remaining - 1) / 26);
+	      }
+	      return out;
 	    }
 
 	    function sanitizeWorkbenchToken(value) {
@@ -3916,7 +4129,7 @@
 	      const title = color && toHexColor(color).toLowerCase() !== toHexColor(item.hex).toLowerCase()
 	        ? `${toHexColor(color)} (original ${toHexColor(item.hex)})`
 	        : toHexColor(item.hex);
-	      return `<button type="button" class="ewb-swatch ${className}${isBlank ? " blank" : ""}" data-action="${action}" data-id="${escapeHtml(item.id)}"${bg} title="${escapeHtml(title)}">${escapeHtml(item.ordinal)}</button>`;
+	      return `<button type="button" class="ewb-swatch ${className}${isBlank ? " blank" : ""}" data-action="${action}" data-id="${escapeHtml(item.id)}"${bg} title="${escapeHtml(title)}">${escapeHtml(displayOrdinal(item.ordinal))}</button>`;
 	    }
 
 	    function renderColorWorkbenchPanel(rows = null) {
@@ -3932,7 +4145,7 @@
 	          renderSwatchButton(dep, "ewb-dependent", "activate-dependent", currentWorkbenchColor(dep))
 	        ).join("");
 	        const input = dependencyInputRowId === row.id
-	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="2" autocomplete="off" placeholder="?" aria-label="Parent Rep letter" />`
+	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="3" autocomplete="off" placeholder="?" aria-label="Parent Rep number" />`
 	          : "";
 	        return `
 	          <div class="ewb-row${(activeWorkbenchItemId === row.id || (row.deps || []).some(dep => dep.id === activeWorkbenchItemId)) ? " active" : ""}" data-row-id="${escapeHtml(row.id)}">
@@ -4442,7 +4655,7 @@
 	      const sourceIndex = colorWorkbenchRows.findIndex(row => row.id === sourceId);
 	      const target = findIndependentByOrdinal(targetOrdinal);
 	      if (sourceIndex < 0 || !target || target.id === sourceId) {
-	        setCwStatus("Choose a different swatch letter for the dependency.", "err");
+	        setCwStatus("Choose a different swatch number for the dependency.", "err");
 	        return;
 	      }
 	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
@@ -4793,7 +5006,7 @@
 	    function showColorHoverTooltip(match, point) {
 	      if (!colorHoverTooltip || !match) return;
 	      const frameRect = frame.getBoundingClientRect();
-	      const label = String(match.item.ordinal || "").trim() || "?";
+	      const label = displayOrdinal(match.item.ordinal) || "?";
 	      colorHoverTooltip.textContent = `Swatch ${label}`;
 	      colorHoverTooltip.style.display = "block";
 	      const width = colorHoverTooltip.offsetWidth || 90;
@@ -4942,7 +5155,6 @@
 	              }
 	            }
 	          }
-	          if (!scrolled) setCwStatus(`No visible instance found for ${hit.item.ordinal}.`, "err");
 	        }
 	      } catch {}
 	      startBlink(itemId);
@@ -5107,7 +5319,7 @@
 	      if (target?.dataset?.action !== "dependency-input") return;
 	      if (ev.key === "Enter") {
 	        ev.preventDefault();
-	        const value = target.value;
+	        const value = parseDisplayOrdinal(target.value);
 	        target.value = "";
 	        makeRowDependent(target.dataset.id, value);
 	      } else if (ev.key === "Escape") {
@@ -5120,7 +5332,7 @@
 	    colorWorkbenchHost?.addEventListener("focusout", ev => {
 	      const target = ev.target;
 	      if (target?.dataset?.action === "dependency-input" && target.value.trim()) {
-	        makeRowDependent(target.dataset.id, target.value);
+	        makeRowDependent(target.dataset.id, parseDisplayOrdinal(target.value));
 	      }
 	    });
 
@@ -6730,30 +6942,14 @@
       }
     };
 
-
-    // ── Back ───────────────────────────────────────────────────────────────────
-    document.getElementById("btnBack").onclick = () => {
-      if (window.opener && !window.opener.closed) {
-        window.close(); // closes editor tab; form tab comes back into view
-      } else {
-        window.location.href = "/";
-      }
-    };
-
     // ── Live update from form window ───────────────────────────────────────────
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
-      // Hide trivia FIRST so an exception later in this handler can't leave the overlay stuck open.
-      // Skip the hide only for the editorLoadingHtml placeholder (which is sent repeatedly with status updates).
-      if (!isWaitingPlaceholderHtml(e.data.html)) {
-        try { hideTriviaOverlay(); } catch {}
-      }
-      currentHtml = e.data.html;
-      cachePreviewHtml(e.data.html);
-      loadIframe(e.data.html);
-      setCodeContent(e.data.html);
-      window.__editorTickerClearProcess?.();
+      loadIncomingPortfolioHtml(e.data.html, { allowPlaceholder: true });
     });
+    try {
+      window.opener?.postMessage({ type: "portfolio_editor_ready" }, location.origin);
+    } catch {}
 
     // Expose for console diagnostics — the function itself lives in the IIFE.
     window._debugHideTriviaOverlay = hideTriviaOverlay;
@@ -6829,7 +7025,7 @@
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
       "Color Workbench: click a swatch to scroll to its first use (the swatch blinks red). Double-click to substitute a color.",
-      "Color Workbench: shift-click a Rep swatch to absorb another Rep as its dependent — type the other Rep's letter and press Enter.",
+      "Color Workbench: shift-click a Rep swatch to absorb another Rep as its dependent — type the other Rep's number and press Enter.",
     ];
 
     const ticker  = document.getElementById("sbTicker");

@@ -2,6 +2,7 @@ import OpenAI, { toFile } from "openai";
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
+import { load as loadHtml } from "cheerio";
 import { explainBlobStoreError, getPreviewImagesStore, getPreviewResultsStore } from "./blobStore.mjs";
 import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
@@ -600,71 +601,106 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
   ]
     .map(([source, key]) => [source, String(key || "").trim()])
     .filter(([, key], idx, arr) => key && arr.findIndex(([, seen]) => seen === key) === idx);
-  const imageModel = "chatgpt-image-latest";
+  const configuredModels = String(process.env.OPENAI_IMAGE_MODELS || process.env.OPENAI_IMAGE_MODEL || "")
+    .split(/[\s,]+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+  const imageModels = [...configuredModels, "gpt-image-1", "gpt-image-1-mini"]
+    .filter((model, idx, arr) => model && arr.indexOf(model) === idx);
   console.log(
     `[buildWebsite-background] ${stageLabel} API key candidates:`,
     keyCandidates.map(([source]) => source).join(", ") || "none"
   );
+  console.log(`[buildWebsite-background] ${stageLabel} model candidates: ${imageModels.join(", ")}`);
   if (!keyCandidates.length) {
     throw new Error("OPENAI_API_KEY is not set.");
   }
 
   console.log(`[buildWebsite-background] ${stageLabel} prompt: ${prompt}`);
-  console.log(
-    `[buildWebsite-background] Image request payload: ${JSON.stringify({
-      model: imageModel,
-      prompt,
-      n: 1,
-      size
-    })}`
-  );
 
   let imgResp = null;
   let lastImgErr = null;
-  const maxAttempts = 3;
+  let successfulModel = imageModels[0];
+  const imageRequestTimeoutMs = 330000;
+  const maxAttempts = 1;
   for (let keyIndex = 0; keyIndex < keyCandidates.length; keyIndex += 1) {
     const [openaiKeySource, openaiKey] = keyCandidates[keyIndex];
-    const openaiImgClient = new OpenAI({ apiKey: openaiKey });
-    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
-      try {
-        console.log(`[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts} using ${openaiKeySource}`);
-        imgResp = await openaiImgClient.images.generate({
-          model: imageModel,
-          prompt,
-          n: 1,
-          size
-        });
-        lastImgErr = null;
-        break;
-      } catch (err) {
-        lastImgErr = err;
-        const status = err?.status ?? err?.response?.status ?? null;
-        const shouldRetry = attempt < maxAttempts && (status === 429 || (status != null && status >= 500));
-        console.warn(
-          `[buildWebsite-background] ${stageLabel} generation attempt ${attempt} failed with ${openaiKeySource}: ${status || "no-status"} ${err?.message || err}`
-        );
-        if ((status === 401 || status === 403) && keyIndex < keyCandidates.length - 1) {
-          console.warn(`[buildWebsite-background] ${openaiKeySource} failed with ${status}; trying ${keyCandidates[keyIndex + 1][0]}`);
+    const openaiImgClient = new OpenAI({ apiKey: openaiKey, timeout: imageRequestTimeoutMs, maxRetries: 0 });
+    let tryNextKey = false;
+    for (let modelIndex = 0; modelIndex < imageModels.length; modelIndex += 1) {
+      const imageModel = imageModels[modelIndex];
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          console.log(
+            `[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts} ` +
+            `using ${openaiKeySource} and ${imageModel}`
+          );
+          console.log(
+            `[buildWebsite-background] Image request payload: ${JSON.stringify({
+              model: imageModel,
+              prompt,
+              n: 1,
+              size
+            })}`
+          );
+          imgResp = await openaiImgClient.images.generate({
+            model: imageModel,
+            prompt,
+            n: 1,
+            size
+          }, { timeout: imageRequestTimeoutMs });
+          successfulModel = imageModel;
+          lastImgErr = null;
           break;
+        } catch (err) {
+          lastImgErr = err;
+          const status = err?.status ?? err?.response?.status ?? null;
+          const msg = err?.message || String(err);
+          const modelUnavailable = /unable to find a suitable provider|invalid.*model|model.*not.*found|model.*not.*available|unsupported model|does not exist/i.test(msg);
+          const connectionError = /connection error|network error|fetch failed|socket hang up|econnreset|enotfound|eai_again/i.test(msg);
+          const shouldRetry = attempt < maxAttempts && (connectionError || status === 429 || (status != null && status >= 500));
+          console.warn(
+            `[buildWebsite-background] ${stageLabel} generation attempt ${attempt} failed with ` +
+            `${openaiKeySource}/${imageModel}: ${status || "no-status"} ${msg}`
+          );
+          if ((status === 401 || status === 403) && keyIndex < keyCandidates.length - 1) {
+            console.warn(`[buildWebsite-background] ${openaiKeySource} failed with ${status}; trying ${keyCandidates[keyIndex + 1][0]}`);
+            tryNextKey = true;
+            break;
+          }
+          if (status === 401) {
+            throw new Error(`OpenAI authentication failed for image generation (401). Check ${openaiKeySource}; the key is missing, expired, revoked, or from the wrong project.`);
+          }
+          if (status === 403) {
+            throw new Error(`OpenAI image generation is not allowed for this key or project (403). Check access to ${imageModel} for ${openaiKeySource}.`);
+          }
+          if (modelUnavailable && modelIndex < imageModels.length - 1) {
+            console.warn(`[buildWebsite-background] ${imageModel} unavailable; trying ${imageModels[modelIndex + 1]}`);
+            break;
+          }
+          if (!shouldRetry) break;
+          await sleep(900 * attempt);
         }
-        if (status === 401) {
-          throw new Error(`OpenAI authentication failed for image generation (401). Check ${openaiKeySource}; the key is missing, expired, revoked, or from the wrong project.`);
-        }
-        if (status === 403) {
-          throw new Error(`OpenAI image generation is not allowed for this key or project (403). Check access to ${imageModel} for ${openaiKeySource}.`);
-        }
-        if (!shouldRetry) break;
-        await sleep(900 * attempt);
       }
+      if (imgResp || tryNextKey) break;
     }
     if (imgResp) break;
   }
-  if (lastImgErr) throw lastImgErr;
+  if (lastImgErr) {
+    const msg = lastImgErr?.message || String(lastImgErr);
+    if (/unable to find a suitable provider|invalid.*model|model.*not.*found|model.*not.*available|unsupported model|does not exist/i.test(msg)) {
+      throw new Error(
+        `OpenAI image model unavailable (${imageModels.join(", ")}). ` +
+        `Set OPENAI_IMAGE_MODEL to an Image API generation model available to this project. Last error: ${msg}`
+      );
+    }
+    throw lastImgErr;
+  }
   const b64 = imgResp?.data?.[0]?.b64_json || "";
   console.log(`[buildWebsite-background] ${stageLabel} generated:`, !!b64);
   return {
     dataUri: b64 ? `data:image/png;base64,${b64}` : "",
-    model: imageModel
+    model: successfulModel
   };
 }
 
@@ -706,6 +742,159 @@ function parseTemplateMetadata(html) {
   const m = (html || "").match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
   if (!m) return {};
   try { return JSON.parse(m[1]); } catch { return {}; }
+}
+
+function normalizeTemplateText(value) {
+  return String(value || "").replace(/\s+/g, " ").trim();
+}
+
+function classifyHeroCard(label, sampleItems = [], hasListBody = false) {
+  const labelText = normalizeTemplateText(label).toLowerCase();
+  const sampleText = sampleItems.map(normalizeTemplateText).join(" ").toLowerCase();
+  const haystack = `${labelText} ${sampleText}`;
+  if (/\b(links?|connect|social)\b/.test(labelText) || /\b(linkedin|github|resume|website|email)\b/.test(haystack)) {
+    return "links";
+  }
+  if (/\b(snapshot|strength)\b/.test(labelText)) return "snapshot";
+  if (/\b(highlights?|at[-\s]?a[-\s]?glance)\b/.test(labelText) || hasListBody) return "highlights";
+  return "skill_group";
+}
+
+function dataWordCountFromEl($, el) {
+  const n = parseInt($(el).attr("data-word-count") || "", 10);
+  if (Number.isFinite(n) && n > 0) return n;
+  const text = normalizeTemplateText($(el).text());
+  return text ? text.split(/\s+/).filter(Boolean).length : 0;
+}
+
+function shallowDataItems($, rootEl) {
+  const $root = $(rootEl);
+  const root = $root[0];
+  const $all = $root.find("[data-item]");
+  const $shallow = $all.filter((_, el) => (
+    $(el).parentsUntil(root, "[data-list], [data-section], [data-item='hero_card']").length === 0
+  ));
+  return $shallow.length ? $shallow : $all;
+}
+
+function inferListShapes($, cardEl) {
+  const $card = $(cardEl);
+  const shapes = {};
+  $card.find("[data-list]").each((_, listEl) => {
+    if ($(listEl).parents("[data-item='hero_card']").first()[0] !== cardEl) return;
+    const key = $(listEl).attr("data-list");
+    if (!key) return;
+    const $items = shallowDataItems($, listEl);
+    const samples = [];
+    const wordCounts = [];
+    $items.each((_, itemEl) => {
+      const text = normalizeTemplateText($(itemEl).text());
+      if (text) samples.push(text);
+      const wc = dataWordCountFromEl($, itemEl);
+      if (wc) wordCounts.push(wc);
+    });
+    shapes[key] = {
+      count: $items.length,
+      word_counts: wordCounts,
+      sample_items: samples,
+    };
+  });
+  return shapes;
+}
+
+export function inferHeroCardMapFromAnnotatedHtml(html) {
+  if (!html || !/\bdata-section=["']hero_cards["']/.test(html)) return [];
+
+  const $ = loadHtml(html, { decodeEntities: false });
+  const $section = $("[data-section='hero_cards']").first();
+  if (!$section.length) return [];
+
+  const cards = [];
+  $section.find("[data-item='hero_card']").each((_, el) => {
+    if ($(el).parents("[data-item='hero_card']").length) return;
+    cards.push(el);
+  });
+
+  return cards.map(card => {
+    const $card = $(card);
+    const $labelEl = $card
+      .find("[data-field='card_label'],[data-field='group_name'],h1,h2,h3,h4,h5,h6,.mono,.card-title")
+      .first();
+    const originalLabel = normalizeTemplateText($labelEl.text());
+    const $body = $card.find("[data-hero-body]").first();
+    const $sampleRoot = $body.length ? $body : $card;
+    const sampleItems = [];
+
+    $sampleRoot.find("li,.chip,.pill,.tag,a").each((_, itemEl) => {
+      const value = normalizeTemplateText($(itemEl).text());
+      if (value && !sampleItems.includes(value)) sampleItems.push(value);
+    });
+
+    const type = classifyHeroCard(originalLabel, sampleItems, $sampleRoot.find("li").length > 0);
+    const fallbackLabel = type === "highlights"
+      ? "Highlights"
+      : type === "snapshot"
+        ? "Strengths Snapshot"
+        : type === "links"
+          ? "Links"
+          : "";
+
+    return {
+      original_label: originalLabel || fallbackLabel,
+      type,
+      display_label: originalLabel || fallbackLabel,
+      sample_items: sampleItems.slice(0, 4),
+      lists: inferListShapes($, card),
+    };
+  }).filter(entry => entry.original_label || entry.type);
+}
+
+export function inferAboutMetaFromTemplateHtml(html) {
+  const source = String(html || "");
+  if (!source) {
+    return {
+      has_about: false,
+      about_word_count: 0,
+      hero_about_word_count: 0,
+      about_full_word_count: 0,
+      about_full_paragraph_count: 0,
+    };
+  }
+
+  const hasAboutToken = /\bdata-(?:html-)?field=["']about_full["']/.test(source) || /\{\{\s*about_full\s*\}\}/.test(source);
+  const hasAboutContainer = /\bid=["']about["']/.test(source) || /\bclass=["'][^"']*\babout(?:-[\w-]+)?\b/i.test(source);
+  let heroAboutWordCount = 0;
+  let aboutFullWordCount = 0;
+  let aboutFullParagraphCount = 0;
+
+  try {
+    const $ = loadHtml(source, { decodeEntities: false });
+    const $heroAboutField = $("[data-field='about']").first();
+    const heroAttrCount = parseInt($heroAboutField.attr("data-word-count") || "", 10);
+    if (Number.isFinite(heroAttrCount) && heroAttrCount > 0) heroAboutWordCount = heroAttrCount;
+    else if ($heroAboutField.length) heroAboutWordCount = normalizeTemplateText($heroAboutField.text()).split(/\s+/).filter(Boolean).length;
+
+    const $aboutField = $("[data-html-field='about_full'],[data-field='about_full']").first();
+    const attrCount = parseInt($aboutField.attr("data-word-count") || "", 10);
+    if (Number.isFinite(attrCount) && attrCount > 0) aboutFullWordCount = attrCount;
+    else if ($aboutField.length) aboutFullWordCount = normalizeTemplateText($aboutField.text()).split(/\s+/).filter(Boolean).length;
+
+    if ($aboutField.length) {
+      const $container = $aboutField.parent();
+      const siblingParagraphs = $container.children("p,[data-html-field='about_full'],[data-field='about_full']")
+        .filter((_, el) => normalizeTemplateText($(el).text()).length > 0)
+        .length;
+      aboutFullParagraphCount = Math.max(1, siblingParagraphs || ($aboutField.is("p") ? 1 : $aboutField.find("p").length));
+    }
+  } catch {}
+
+  return {
+    has_about: Boolean(hasAboutToken || hasAboutContainer),
+    about_word_count: heroAboutWordCount || aboutFullWordCount,
+    hero_about_word_count: heroAboutWordCount,
+    about_full_word_count: aboutFullWordCount,
+    about_full_paragraph_count: aboutFullParagraphCount,
+  };
 }
 
 // ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
@@ -948,8 +1137,9 @@ function toFlatResumeSchema(f) {
  * colorSpec: { background, foreground, primary, secondary, accent } — user's palette choice
  */
 function trimAboutToLength(text, targetWords) {
+  text = String(text || "").trim();
   if (!targetWords || targetWords <= 0) return text;
-  const words = text.trim().split(/\s+/);
+  const words = text.split(/\s+/);
   if (words.length <= targetWords * 1.3) return text;  // within 30% — keep as-is
 
   // Split into sentences, accumulate until we reach the target word count
@@ -966,7 +1156,75 @@ function trimAboutToLength(text, targetWords) {
   return result || text;
 }
 
-function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null, creativePack = null, augmentedProjects = null) {
+function dedupeStrings(values = []) {
+  const seen = new Set();
+  const out = [];
+  for (const value of values) {
+    const text = String((value?.label ?? value?.card_label ?? value?.name ?? value?.title ?? value) || "").replace(/\s+/g, " ").trim();
+    const key = text.toLowerCase();
+    if (!text || seen.has(key)) continue;
+    seen.add(key);
+    out.push(text);
+  }
+  return out;
+}
+
+function toLabelItems(values = [], count = 0, fallbacks = []) {
+  const labels = dedupeStrings([...values, ...fallbacks]);
+  const shaped = count > 0 ? labels.slice(0, count) : labels;
+  return shaped.map(label => ({ label }));
+}
+
+function splitTextSentences(value) {
+  return String(value || "")
+    .replace(/\r/g, "")
+    .match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)
+    ?.map(s => s.trim())
+    .filter(Boolean) || [];
+}
+
+function shapeParagraphText(value, targetParagraphs = 0, targetWords = 0) {
+  const trimmed = trimAboutToLength(value, targetWords);
+  if (!targetParagraphs || targetParagraphs <= 1 || /\n\s*\n/.test(trimmed)) return trimmed;
+  const sentences = splitTextSentences(trimmed);
+  if (sentences.length < targetParagraphs * 2) return trimmed;
+  const perParagraph = Math.ceil(sentences.length / targetParagraphs);
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += perParagraph) {
+    paragraphs.push(sentences.slice(i, i + perParagraph).join(" "));
+  }
+  return paragraphs.filter(Boolean).join("\n\n");
+}
+
+function listShapeCount(heroMapEntry, key) {
+  const shape = heroMapEntry?.lists?.[key];
+  const n = Number(shape?.count);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+function sourceForHeroList(key, sources) {
+  if (/status_badges?|badges?|pills?/i.test(key)) return sources.statusBadges;
+  if (/bullets?|highlights?/i.test(key)) return sources.highlights;
+  if (/snapshot|strength/i.test(key)) return sources.strengths;
+  if (/open_to|roles?/i.test(key)) return sources.openTo;
+  if (/links?/i.test(key)) return [];
+  return sources.skills;
+}
+
+function applyHeroListShapes(heroEntry, heroMapEntry, sources) {
+  const lists = heroMapEntry?.lists || {};
+  for (const [key, shape] of Object.entries(lists)) {
+    const count = Number(shape?.count) || 0;
+    if (!count) continue;
+    heroEntry[key] = toLabelItems(sourceForHeroList(key, sources), count);
+  }
+  return heroEntry;
+}
+
+function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = null, aboutWordCount = 0, heroCardMap = null, creativePack = null, augmentedProjects = null, templateMeta = null) {
+  const heroAboutWordCount = templateMeta?.hero_about_word_count || aboutWordCount || 0;
+  const aboutFullWordCount = templateMeta?.about_full_word_count || aboutWordCount || 0;
+  const aboutFullParagraphCount = templateMeta?.about_full_paragraph_count || 0;
   const personal = resumeJson?.personal || {};
   // resolved strategy (job_resolved or resume_resolved) has strategy.positioning.{headline,subheadline,value_proposition}
   const _coreStory = strategy?.editorial_direction?.core_story || "";
@@ -1062,16 +1320,25 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
   // similarly-sized cards end up in the same row of the 2-column grid.
   const charCount = arr => arr.reduce((n, s) => n + String(s).length, 0);
 
-  // Highlights: prefer AI-generated copy seed bullets; fall back to first bullet of each job
-  const highlightBullets = copySeed.highlights?.length
-    ? copySeed.highlights.slice(0, 4)
-    : (resumeJson?.experience || []).map(e => (e.bullets || [])[0]).filter(Boolean).slice(0, 3);
+  const experienceBullets = (resumeJson?.experience || []).flatMap(e => e.bullets || []).filter(Boolean);
+  const projectBullets = (resumeJson?.projects || []).flatMap(p => p.bullets || []).filter(Boolean);
+  const skillLabels = skill_groups.flatMap(g => g.skills || []);
 
-  // Strengths snapshot: prefer AI-generated phrases; fall back to strengths_to_emphasize
-  const HERO_CARD_MAX = 4;   // max skills shown inside one card
-  const strengths = (copySeed.strengths_snapshot?.length
-    ? copySeed.strengths_snapshot
-    : (strategy?.editorial_direction?.strengths_to_emphasize || [])).slice(0, 4);
+  // Highlights: prefer AI-generated copy seed bullets, then resume/project evidence.
+  const highlightBullets = dedupeStrings([
+    ...(copySeed.highlights || []),
+    ...experienceBullets,
+    ...projectBullets,
+    pos.value_proposition,
+    _firstSentence,
+  ]);
+
+  // Strengths snapshot: prefer AI-generated phrases; fall back to strategy and skills.
+  const strengths = dedupeStrings([
+    ...(copySeed.strengths_snapshot || []),
+    ...(strategy?.editorial_direction?.strengths_to_emphasize || []),
+    ...skillLabels,
+  ]);
   const desiredRoles = (resumeJson?.desired_roles?.length ? resumeJson.desired_roles
     : strategy?.desired_roles?.length ? strategy.desired_roles
     : (resumeStrategy?.desired_roles || [])).slice(0, 3);
@@ -1089,41 +1356,80 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     resumeJson?.professional_interests ||
     []
   ).slice(0, 6).map(d => (typeof d === "string" ? { label: d } : d));
-  const status_badges = (copySeed.status_badges || [])
-    .map(label => String(label || "").trim())
-    .filter(Boolean)
-    .filter((label, idx, arr) => arr.findIndex(v => v.toLowerCase() === label.toLowerCase()) === idx)
+
+  const statusBadgeLabels = dedupeStrings([
+    ...(copySeed.status_badges || []),
+    major,
+    specialization && specialization !== major ? specialization : "",
+    edu0.degree,
+    edu0.graduation_date,
+    ...work_domains.map(item => item.label || item),
+    ...skillLabels,
+  ])
     .filter(label => !/^(seeking|open to|available|based in|located in)\b/i.test(label))
     .filter(label => {
       const lc = label.toLowerCase();
       return !normalizedOpenToText || !normalizedOpenToText.includes(lc);
-    })
-    .map(label => ({ label }));
+    });
+  const status_badges = statusBadgeLabels.map(label => ({ label }));
   const status_badges_inline = status_badges.map(item => item.label).join(" • ");
+  const heroLinkFields = {
+    email: personal.email || "",
+    phone: personal.phone || "",
+    linkedin: personal.linkedin || "",
+    github: personal.github || "",
+    website: personal.website || "",
+    has_email: !!personal.email,
+    has_phone: !!personal.phone,
+    has_linkedin: !!personal.linkedin,
+    has_github: !!personal.github,
+    has_website: !!personal.website,
+  };
 
   // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
   // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
   // in ExtractMustacheTemplate.md — keep both in sync when adding new card types.
   // Falls back to a default three-card set for old templates without hero_card_map.
   let hero_cards;
+  const heroListSources = {
+    statusBadges: statusBadgeLabels,
+    highlights: highlightBullets,
+    strengths,
+    openTo: open_to_items.map(item => item.label || item),
+    skills: skillLabels,
+  };
   if (heroCardMap && heroCardMap.length) {
     let skillGroupIdx = 0;
     hero_cards = heroCardMap.map(entry => {
       const label = entry.display_label || entry.original_label || "";
       switch (entry.type) {
-        case "highlights":
-          return { group_name: label, card_label: label, skills: [],
-            highlights: highlightBullets, is_highlights: true, _size: charCount(highlightBullets) };
-        case "snapshot":
-          return { group_name: label, card_label: label, skills: [],
-            snapshot: strengths, is_snapshot: true, _size: charCount(strengths) };
+        case "highlights": {
+          const count = listShapeCount(entry, "highlights") || listShapeCount(entry, "bullets") || 4;
+          return applyHeroListShapes({ group_name: label, card_label: label, skills: [],
+            highlights: toLabelItems(highlightBullets, count), bullets: toLabelItems(highlightBullets, count),
+            is_highlights: true, _size: charCount(highlightBullets) }, entry, heroListSources);
+        }
+        case "snapshot": {
+          const count = listShapeCount(entry, "snapshot") || listShapeCount(entry, "bullets") || 4;
+          return applyHeroListShapes({ group_name: label, card_label: label, skills: [],
+            snapshot: toLabelItems(strengths, count), bullets: toLabelItems(strengths, count),
+            is_snapshot: true, _size: charCount(strengths) }, entry, heroListSources);
+        }
         case "links":
-          return { group_name: label, card_label: label, skills: [], is_links: true, _size: 30 };
+          return applyHeroListShapes(
+            { group_name: label, card_label: label, skills: [], is_links: true, _size: 30, ...heroLinkFields },
+            entry,
+            heroListSources
+          );
         case "skill_group": {
           const g = skill_groups[skillGroupIdx++];
-          if (!g) return null;
-          const skills = g.skills.slice(0, HERO_CARD_MAX);
-          return { ...g, card_label: label || g.group_name, skills, _size: charCount(skills) };
+          if (!g) return { group_name: label, card_label: label, skills: [], _size: 0 };
+          const count = listShapeCount(entry, "skills") || listShapeCount(entry, "tags") || listShapeCount(entry, "bullets") || 4;
+          const skills = g.skills.slice(0, count);
+          return applyHeroListShapes({ ...g, card_label: label || g.group_name, skills, _size: charCount(skills) }, entry, {
+            ...heroListSources,
+            skills,
+          });
         }
         default: return null;
       }
@@ -1132,10 +1438,10 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     // Legacy fallback: highlights + snapshot (if data available) + links
     hero_cards = [
       { group_name: "Highlights", card_label: "Highlights", skills: [],
-        highlights: highlightBullets, is_highlights: true, _size: charCount(highlightBullets) },
+        highlights: toLabelItems(highlightBullets, 4), is_highlights: true, _size: charCount(highlightBullets) },
       ...(strengths.length ? [{ group_name: "Strengths Snapshot", card_label: "Strengths Snapshot", skills: [],
-        snapshot: strengths, is_snapshot: true, _size: charCount(strengths) }] : []),
-      { group_name: "Links", card_label: "Links", skills: [], is_links: true, _size: 30 }
+        snapshot: toLabelItems(strengths, 4), is_snapshot: true, _size: charCount(strengths) }] : []),
+      { group_name: "Links", card_label: "Links", skills: [], is_links: true, _size: 30, ...heroLinkFields }
     ];
   }
 
@@ -1168,8 +1474,8 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             trimAboutToLength(resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "", aboutWordCount),
-    about_full:        trimAboutToLength(creativePack?.about_full || resumeJson?.summary || _coreStory || "", aboutWordCount),
+    about:             trimAboutToLength(resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "", heroAboutWordCount),
+    about_full:        shapeParagraphText(creativePack?.about_full || resumeJson?.summary || _coreStory || "", aboutFullParagraphCount, aboutFullWordCount),
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",
@@ -1399,6 +1705,7 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
     colorSpec      = {},
     headshotName   = "",
   } = body;
+  const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
 
   if (!annotatedHtml) {
     await store.set(jobId, JSON.stringify({ status: "error", error: "annotatedHtml is required for render-annotated mode." }), { ttl: 3600 });
@@ -1428,12 +1735,12 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
   await store.set(jobId, JSON.stringify({ status: "pending", stage: "Assembling portfolio…" }), { ttl: 3600 });
 
   const normalizedColor = normalizeColorSpec({
-    background: colorSpec.background,
-    foreground: colorSpec.foreground,
-    primary:    colorSpec.primary,
-    secondary:  colorSpec.secondary,
-    accent:     colorSpec.accent,
-    use_sample_colors: colorSpec.use_sample_colors,
+    background: safeColorSpec.background,
+    foreground: safeColorSpec.foreground,
+    primary:    safeColorSpec.primary,
+    secondary:  safeColorSpec.secondary,
+    accent:     safeColorSpec.accent,
+    use_sample_colors: safeColorSpec.use_sample_colors,
   });
 
   if (headshotName) {
@@ -1482,6 +1789,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     headshotName     = "",
     templateColorSlots = null,
   } = body;
+  const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
 
   await store.set(jobId, JSON.stringify({
     status: "pending", stage: "Generating portfolio content…"
@@ -1492,13 +1800,20 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
   // Derive template metadata from the embedded JSON comment in the mustache file
   const metaMatch  = sampleHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
   const metaJson   = metaMatch ? (() => { try { return JSON.parse(metaMatch[1]); } catch { return {}; } })() : {};
-  const hasAbout   = /id=["']about["']/.test(sampleHtml);
+  const aboutMeta  = inferAboutMetaFromTemplateHtml(sampleHtml);
+  const hasAbout   = Boolean(metaJson.has_about || aboutMeta.has_about);
+  const heroCardMap = Array.isArray(metaJson.hero_card_map) && metaJson.hero_card_map.length
+    ? metaJson.hero_card_map
+    : inferHeroCardMapFromAnnotatedHtml(sampleHtml);
   const templateMeta = {
     has_about:      hasAbout,
     has_projects:   /\{\{#projects\}\}/.test(sampleHtml),
     has_experience: /\{\{#experience\}\}/.test(sampleHtml),
-    about_word_count: metaJson.about_word_count || 0,
-    hero_card_map:    metaJson.hero_card_map    || [],
+    about_word_count: metaJson.about_word_count || aboutMeta.about_word_count || 0,
+    hero_about_word_count: metaJson.hero_about_word_count || aboutMeta.hero_about_word_count || metaJson.about_word_count || 0,
+    about_full_word_count: metaJson.about_full_word_count || aboutMeta.about_full_word_count || 0,
+    about_full_paragraph_count: metaJson.about_full_paragraph_count || aboutMeta.about_full_paragraph_count || 0,
+    hero_card_map:    heroCardMap,
   };
 
   // Job context: brief summary for prompts (not the full job ad)
@@ -1535,12 +1850,12 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
   }), { ttl: 3600 });
 
   const theme = normalizeColorSpec({
-    background: colorSpec.background,
-    foreground: colorSpec.foreground,
-    primary:    colorSpec.primary,
-    secondary:  colorSpec.secondary,
-    accent:     colorSpec.accent,
-    use_sample_colors: colorSpec.use_sample_colors,
+    background: safeColorSpec.background,
+    foreground: safeColorSpec.foreground,
+    primary:    safeColorSpec.primary,
+    secondary:  safeColorSpec.secondary,
+    accent:     safeColorSpec.accent,
+    use_sample_colors: safeColorSpec.use_sample_colors,
   });
 
   const candidateData = flattenCandidateData(
@@ -1552,6 +1867,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     templateMeta.hero_card_map,
     creativePack,
     augmentedProjects,
+    templateMeta,
   );
 
   if (headshotName) candidateData.headshot = headshotName;
@@ -1600,6 +1916,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     headshotName         = "",
     templateColorSlots   = null,  // pre-extracted from color-normalized sample (optional)
   } = body;
+  const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
 
   await store.set(jobId, JSON.stringify({
     status: "pending", stage: "Braiding portfolio website…"
@@ -1623,12 +1940,12 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     : "";
 
   const theme = normalizeColorSpec({
-    background: colorSpec.background,
-    foreground: colorSpec.foreground,
-    primary: colorSpec.primary,
-    secondary: colorSpec.secondary,
-    accent: colorSpec.accent,
-    use_sample_colors: colorSpec.use_sample_colors
+    background: safeColorSpec.background,
+    foreground: safeColorSpec.foreground,
+    primary: safeColorSpec.primary,
+    secondary: safeColorSpec.secondary,
+    accent: safeColorSpec.accent,
+    use_sample_colors: safeColorSpec.use_sample_colors
   });
 
   // Cap sample HTML to avoid exceeding model context.
@@ -1649,11 +1966,6 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
   let prompt;
   try {
     prompt = loadPromptFile("braidWebsite.md")
-      .replace("{{COLOR_PRIMARY}}",        theme.primary)
-      .replace("{{COLOR_SECONDARY}}",      theme.secondary)
-      .replace("{{COLOR_TERTIARY}}",       theme.tertiary)
-      .replace("{{COLOR_ACCENT2}}",        theme.accent2)
-      .replace("{{COLOR_ACCENT1}}",        theme.accent1)
       .replace("{{HEADSHOT_HTML}}",        headshotHtml)
       .replace("{{CANDIDATE_INITIALS}}",   initials)
       .replace("{{CANDIDATE_NAME}}",       name)
@@ -1662,7 +1974,6 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
       .replace("{{HERO_IMAGE_INSTRUCTION}}", mastheadImageInstruction)
       .replace("{{RESUME_FACTS_JSON}}",    JSON.stringify(resumeFacts,      null, 2))
       .replace("{{RESOLVED_STRATEGY_JSON}}", JSON.stringify(resolvedStrategy, null, 2))
-      .replace("{{COLOR_SPEC_JSON}}",      JSON.stringify(serializeColorSpecForAI(theme), null, 2))
       .replace("{{COLOR_PREFERENCES_GUIDANCE}}", formatColorPreferencesGuidance(colorPreferences))
       .replace("{{SAMPLE_HTML}}",          cappedSampleHtml);
   } catch (err) {
@@ -1818,14 +2129,24 @@ async function generateImageJob(store, jobId, body, userId) {
     const msg = imgErr?.message || String(imgErr);
     const isAuthError = /401|403|authentication failed|not allowed/i.test(msg)
       || imgErr?.status === 401 || imgErr?.status === 403;
+    const isTimeoutError = /timeout|timed out|aborted|abort/i.test(msg)
+      || imgErr?.code === "ETIMEDOUT"
+      || imgErr?.name === "AbortError";
+    const isProviderUnavailable = /unable to find a suitable provider|image model unavailable|invalid.*model|model.*not.*found|model.*not.*available|unsupported model|does not exist/i.test(msg);
+    const isConnectionError = /connection error|network error|fetch failed|socket hang up|econnreset|enotfound|eai_again/i.test(msg)
+      || imgErr?.code === "ECONNRESET"
+      || imgErr?.code === "ENOTFOUND"
+      || imgErr?.code === "EAI_AGAIN";
 
-    if (isAuthError) {
-      console.warn(`[buildWebsite-background] ${stageLabel} skipped: image service unavailable (${msg.slice(0, 120)})`);
+    if (isAuthError || isTimeoutError || isProviderUnavailable || isConnectionError) {
+      const skipReason = isTimeoutError ? "image_generation_timeout" : "image_service_unavailable";
+      console.warn(`[buildWebsite-background] ${stageLabel} skipped: ${skipReason} (${msg.slice(0, 120)})`);
       await store.set(jobId, JSON.stringify({
         status: "done",
         skipped: true,
         image_kind: imageKind,
-        skip_reason: "image_service_unavailable",
+        skip_reason: skipReason,
+        skip_message: `${stageLabel} skipped: ${isTimeoutError ? "image generation timed out" : "image service unavailable"}.`,
       }), { ttl: 3600 });
     } else {
       await store.set(jobId, JSON.stringify({
@@ -2066,7 +2387,15 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
   if (isMustacheTemplate(rendererSampleHtml)) {
     // ── Mustache path: fill programmatically, skip AI renderer ─────────────
     const templateMeta   = parseTemplateMetadata(rendererSampleHtml);
-    const aboutWordCount = templateMeta.about_word_count || 0;
+    const aboutMeta      = inferAboutMetaFromTemplateHtml(rendererSampleHtml);
+    const aboutWordCount = templateMeta.about_word_count || aboutMeta.about_word_count || 0;
+    const fullTemplateMeta = {
+      ...templateMeta,
+      about_word_count: aboutWordCount,
+      hero_about_word_count: templateMeta.hero_about_word_count || aboutMeta.hero_about_word_count || aboutWordCount,
+      about_full_word_count: templateMeta.about_full_word_count || aboutMeta.about_full_word_count || 0,
+      about_full_paragraph_count: templateMeta.about_full_paragraph_count || aboutMeta.about_full_paragraph_count || 0,
+    };
     // HERO CARD CLASSIFICATION & FIELD MAPPING (mirrors table in ExtractMustacheTemplate.md)
     //   type          unified JSON field read by renderer              default display_label
     //   highlights  → resumeJson.experience[*].bullets[0] (max 3)  → "Highlights"
@@ -2097,7 +2426,10 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       colorSpec,
       resumeStrategy,
       aboutWordCount,
-      heroCardMap
+      heroCardMap,
+      null,
+      null,
+      fullTemplateMeta
     );
     siteHtml = cleanHtml(renderMustache(rendererSampleHtml, fixMojibakeDeep(mustacheData)));
     siteHtml = injectCssColors(siteHtml, colorSpec, rendererSampleHtml);

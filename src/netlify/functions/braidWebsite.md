@@ -26,71 +26,75 @@ Reproduce the sample website's visual structure as closely as possible:
   data, omit those sections entirely.
 
 ═══════════════════════════════════════════════════
-PART 2 — COLOR SYSTEM  (orthogonal CSS variables)
+PART 2 — COLOR SYSTEM  (use the sample's full palette)
 ═══════════════════════════════════════════════════
 
-`color_spec` is a semantic five-color palette with these roles:
-  - `background` = page canvas or atmospheric base
-  - `foreground` = main readable ink/text color
-  - `primary` = strongest action / emphasis color
-  - `secondary` = distinct supporting brand / hierarchy color
-  - `accent` = orthogonal highlight color
+The sample HTML already has a normalized palette declared in its `<style id="extracted-theme">`
+block as `--c-1`, `--c-2`, …, `--c-N`, where N is the actual number of distinct color clusters
+in the sample (typically anywhere from 4 to 18). These variables are ordered by visual weight
+(count × chroma) — `--c-1` is the most visually prominent / chromatic color, `--c-2` the next,
+and so on. Near-neutral grays/black/white sink to the high-N end. The companion
+`<script id="color-palette">` JSON describes each cluster.
 
-`color_spec` is authoritative for the actual rendered website colors.
-The sample palette is reference-only and exists solely to preserve the sample's hierarchy of
-contrast, placement, and tonal relationships. Do NOT copy the sample's literal colors into the
-final site. Do NOT invent a new palette. Do NOT average the sample colors with `color_spec`.
-Use `color_spec` for every live rendered color token.
+Do NOT collapse the palette into a fixed five-slot taxonomy (primary/secondary/tertiary/etc.).
+The template's design uses as many slots as it needs.
 
-Step 1 — Analyze the sample HTML's color usage and identify five semantic color roles.
-  Pre-normalized shortcut: if the sample's :root already contains `--color-*` variables
-  with semantic role comments, or if a pre-extracted palette comment appears at the top of
-  the sample listing semantic roles, use those values directly and skip color archaeology.
-  This step is for understanding the sample's visual hierarchy only, not for choosing final colors.
-  (a) `background` — the dominant page canvas / atmospheric wash
-  (b) `foreground` — the main readable text / ink color
-  (c) `primary` — the strongest action / headline / brand emphasis color
-  (d) `secondary` — a distinct supporting color used for hierarchy, chips, or panels
-  (e) `accent` — a fifth orthogonal highlight color
+`color_preferences` (when provided) describes the user's preferred colors as ANCHOR colors —
+colors they want prominently featured. This is NOT a complete palette and you should NOT try
+to squash the sample's full set of `--c-N` slots down to just these anchors. Treat anchors as
+"the colors the user definitely wants prominent" and let the other `--c-N` slots keep filling
+out the design.
 
-Step 2 — In :root, under the comment /* ── Sample palette (reference) ── */,
-  declare the five colors extracted from the sample as documentation:
-    --background-ref: <hex>;
-    --foreground-ref: <hex>;
-    --primary-ref:    <hex>;
-    --secondary-ref:  <hex>;
-    --accent-ref:     <hex>;
+Step 1 — Use the existing `--c-1` through `--c-N` variables from the sample's :root as-is.
+  Do not invent new palette variable names. Do not rename them. The sample already has the
+  right number of slots for its design. Preserve the sample's existing `<style id="extracted-theme">`
+  block in your output.
 
-Step 3 — Express EVERY other color in the stylesheet exclusively as color-mix()
-  combining only the five semantic palette variables. Use oklch color space for perceptual
-  uniformity. Examples:
-    card border:      color-mix(in oklch, var(--foreground) 18%, var(--background))
-    hero overlay:     color-mix(in oklch, transparent 35%, var(--background))
-    muted text:       color-mix(in oklch, var(--foreground) 55%, var(--background))
-    section alt-bg:   color-mix(in oklch, var(--background) 82%, var(--primary))
-    nav blur-bg:      color-mix(in oklch, var(--background) 70%, transparent)
+Step 2 — Express every COLOR-MIX or relative-color expression using only the existing
+  `--c-N` variables. Use oklch color space for perceptual uniformity. Examples:
+    card border:      color-mix(in oklch, var(--c-2) 18%, var(--c-1))
+    hero overlay:     color-mix(in oklch, transparent 35%, var(--c-1))
+    muted text:       color-mix(in oklch, var(--c-2) 55%, var(--c-1))
+    nav blur-bg:      color-mix(in oklch, var(--c-1) 70%, transparent)
   Exceptions: keep red (#ef4444 range) for error/danger states and green (#22c55e range)
   for success indicators as literals — do not express these as color-mix().
 
-Step 3a — The rendered five live palette variables must come directly from `color_spec`.
-  Map them as:
-    --background: color_spec.background;
-    --foreground: color_spec.foreground;
-    --primary:    color_spec.primary;
-    --secondary:  color_spec.secondary;
-    --accent:     color_spec.accent;
-  Do not substitute sample colors for these variables.
+Step 3 — If `color_preferences` provides user-supplied anchor colors, assign them to slots by
+  SEMANTIC BEST-FIT, not by positional order:
+
+  3a. For each `--c-N` in the sample, identify the visual role it plays (hero background,
+      primary CTA, card surface, body text, muted divider, etc.) by examining where the
+      variable is referenced in the sample's CSS.
+
+  3b. For each anchor, pick the `--c-N` slot whose current role + hue/temperature best matches
+      the anchor's intent, then override that slot's value with the anchor's hex.
+      Examples:
+        - Anchor "deep navy" + sample uses `--c-2` as a dark heading/accent → override `--c-2`.
+        - Anchor "warm copper" + sample uses `--c-4` as the warmest mid-chroma accent → override `--c-4`.
+        - Anchor "soft cream" + sample uses `--c-3` as the off-white card surface → override `--c-3`.
+
+  3c. Tie-breakers when multiple slots fit similarly:
+        - Prefer the more prominent (lower-N) slot for the anchor the user listed first.
+        - If the user supplied only one anchor and no slot is a clearly best match, override `--c-1`.
+
+  3d. Keep all other `--c-N` slots intact — they're needed for the design's full color
+      expression. Do NOT delete unused slots, rename them, or compress the palette to match
+      the number of anchors. The user's anchors are an INPUT to the palette, not a
+      REPLACEMENT for it.
+
+  3e. If `color_preferences` is empty, do not modify any `--c-N` value — render the template
+      with its original palette.
 
 Step 4 — Add this line inside :root so a hero background image can be injected later:
     --hero-bg-image: none;
   Apply it in the hero: background-image: var(--hero-bg-image), <gradient...>;
 
 Usage constraints:
-  - `background` and `foreground` should establish the main readability system.
-  - `primary`, `secondary`, and `accent` should carry most of the chromatic personality.
-  - Large-area backgrounds and major panels should derive from `background`, sometimes mixed with `primary` or `secondary`.
-  - Do not let `accent` become a page-wide wash or the default surface color.
-  - Preserve the sample's hierarchy of prominence even after recoloring.
+  - Preserve the sample's hierarchy of prominence (which `--c-N` is used where) even after
+    re-coloring. If the sample used `--c-1` as the dominant action color and `--c-3` as a
+    card surface, keep that pattern.
+  - Lower-N slots (`--c-1`, `--c-2`, `--c-3`) carry the most chromatic personality. Higher-N
+    slots are typically neutrals; use them for backgrounds, borders, and muted text.
   - Within any one repeated section pattern, keep card styling systematic.
     Sibling cards in the same section should share the same surface/background treatment,
     border treatment, title color role, and chip/tag styling unless there is a real semantic reason not to.
@@ -208,10 +212,11 @@ resume_facts:
 resolved_strategy:
 {{RESOLVED_STRATEGY_JSON}}
 
-color_spec:
-{{COLOR_SPEC_JSON}}
-
 {{COLOR_PREFERENCES_GUIDANCE}}
 
 sample_website_html:
+(The sample's existing `<style id="extracted-theme">` declares the full --c-1..--c-N palette.
+Use those variables as-is; weave in user color preferences from above by overriding individual
+--c-N values in :root — do NOT collapse the palette to a fixed number of slots.)
+
 {{SAMPLE_HTML}}

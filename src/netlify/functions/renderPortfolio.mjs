@@ -53,6 +53,17 @@ const SCALAR_FALLBACK_FIELDS = new Set([
   "role",
 ]);
 
+const RESUME_DRIVEN_SECTIONS = new Set([
+  "education",
+  "experience",
+  "projects",
+  "certifications",
+  "publications",
+  "leadership",
+  "volunteer",
+  "extracurricular",
+]);
+
 function resolveFieldValue(entry, key) {
   if (!isRecord(entry)) {
     return SCALAR_FALLBACK_FIELDS.has(key) ? entry : undefined;
@@ -101,6 +112,122 @@ function entryFromValue(value, preferredKey = "label") {
     title: text,
     description: text,
   };
+}
+
+function wordCount(value) {
+  return String(value || "").trim().split(/\s+/).filter(Boolean).length;
+}
+
+function dataWordCount($el) {
+  const target = parseInt($el.attr("data-word-count") || "", 10);
+  return Number.isFinite(target) && target > 0 ? target : 0;
+}
+
+function splitSentences(value) {
+  return String(value || "")
+    .match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)
+    ?.map(sentence => sentence.trim())
+    .filter(Boolean) || [];
+}
+
+function constrainTextToWordCount(value, targetWords) {
+  const text = String(value ?? "").trim();
+  if (!text || !targetWords || targetWords < 8) return value;
+  if (wordCount(text) <= targetWords * 1.35) return value;
+
+  const normalized = text.replace(/\s+/g, " ");
+  const sentences = splitSentences(normalized);
+  let result = "";
+  let count = 0;
+
+  for (const sentence of sentences.length ? sentences : [normalized]) {
+    const sentenceWords = sentence.trim().split(/\s+/).filter(Boolean);
+    if (!sentenceWords.length) continue;
+    if (!result && sentenceWords.length > targetWords * 1.35) {
+      return sentenceWords.slice(0, targetWords).join(" ") + "...";
+    }
+    if (result && count + sentenceWords.length > targetWords * 1.25) break;
+    result += (result ? " " : "") + sentence.trim();
+    count += sentenceWords.length;
+    if (count >= targetWords * 0.85) break;
+  }
+
+  if (result) return result;
+  return normalized.split(/\s+/).slice(0, targetWords).join(" ") + "...";
+}
+
+function constrainFieldText($el, value, preferredKey) {
+  const text = valueToText(value, preferredKey);
+  return constrainTextToWordCount(text, dataWordCount($el));
+}
+
+function constrainHtmlField($el, value) {
+  const html = String(value ?? "");
+  if (/<(?!br\s*\/?>)[a-z][\s\S]*>/i.test(html)) return html;
+  return constrainTextToWordCount(html, dataWordCount($el));
+}
+
+function splitAboutParagraphs(value) {
+  const text = String(value || "")
+    .replace(/\r/g, "")
+    .replace(/<br\s*\/?>\s*<br\s*\/?>/gi, "\n\n")
+    .replace(/<br\s*\/?>/gi, "\n")
+    .trim();
+  if (!text) return [];
+
+  const explicit = text.split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
+  if (explicit.length > 1) return explicit;
+
+  const sentences = splitSentences(text);
+  if (wordCount(text) < 70 || sentences.length < 4) return [text];
+
+  const targetCount = sentences.length >= 6 ? 3 : 2;
+  const perParagraph = Math.ceil(sentences.length / targetCount);
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += perParagraph) {
+    paragraphs.push(sentences.slice(i, i + perParagraph).join(" "));
+  }
+  return paragraphs.filter(Boolean);
+}
+
+function copySafeAttrs($from, $to) {
+  for (const attr of ["class", "style"]) {
+    const value = $from.attr(attr);
+    if (value !== undefined) $to.attr(attr, value);
+  }
+}
+
+function renderAboutFullField($, $el, value) {
+  const raw = String(value ?? "").trim();
+  if (/<(?!br\s*\/?>)[a-z][\s\S]*>/i.test(raw)) {
+    if ($el.is("p") && /<\/?(?:p|div|ul|ol|section|article)\b/i.test(raw)) $el.replaceWith(raw);
+    else $el.html(raw);
+    $el.removeAttr("data-html-field");
+    return;
+  }
+
+  const paragraphs = splitAboutParagraphs(raw);
+  if (!paragraphs.length) {
+    $el.empty();
+    $el.removeAttr("data-html-field");
+    return;
+  }
+
+  if ($el.is("p")) {
+    const nodes = paragraphs.map(paragraph => {
+      const $p = $("<p></p>").text(paragraph);
+      copySafeAttrs($el, $p);
+      return $p;
+    });
+    $el.replaceWith(nodes);
+    return;
+  }
+
+  $el.empty();
+  paragraphs.forEach(paragraph => {
+    $el.append($("<p></p>").text(paragraph));
+  });
+  $el.removeAttr("data-html-field");
 }
 
 function normalizeLabelArray(values) {
@@ -176,7 +303,19 @@ function listTemplateChildren($, $listEl) {
   return $shallow.length ? $shallow : $all;
 }
 
-function renderList($, listEl, values, { missing = "remove" } = {}) {
+function nearestSectionKey($, $el) {
+  const self = $el.attr("data-section");
+  if (self) return self;
+  const parent = $el.parents("[data-section]").first();
+  return parent.length ? parent.attr("data-section") : "";
+}
+
+function shouldMimicTemplateShape($, $el, sectionKeyOverride = "") {
+  const sectionKey = sectionKeyOverride || nearestSectionKey($, $el);
+  return !RESUME_DRIVEN_SECTIONS.has(sectionKey);
+}
+
+function renderList($, listEl, values, { missing = "remove", sectionKey = "" } = {}) {
   const $listEl = $(listEl);
 
   if (!Array.isArray(values)) {
@@ -202,6 +341,9 @@ function renderList($, listEl, values, { missing = "remove" } = {}) {
     $listEl.removeAttr("data-list");
     return;
   }
+  if (shouldMimicTemplateShape($, $listEl, sectionKey) && $templateChildren.length > 1) {
+    values = values.slice(0, $templateChildren.length);
+  }
 
   const preferredField =
     $templateChild.attr("data-field") ||
@@ -214,7 +356,7 @@ function renderList($, listEl, values, { missing = "remove" } = {}) {
     const entry = entryFromValue(val, preferredField);
 
     if (markers === 0) {
-      $clone.text(valueToText(val, preferredField));
+      $clone.text(constrainTextToWordCount(valueToText(val, preferredField), dataWordCount($clone)));
       $clone.removeAttr("data-field data-html-field data-attr-href data-attr-src data-item");
       $clone.find("[data-field], [data-html-field], [data-attr-href], [data-attr-src], [data-item]").each((_, el) => {
         $(el).removeAttr("data-field data-html-field data-attr-href data-attr-src data-item");
@@ -279,11 +421,169 @@ function flattenedSectionList($, container, items) {
   return values.length ? values : null;
 }
 
+function labelValues(values) {
+  return normalizeLabelArray(values).map(value => valueToText(value, "label")).filter(Boolean);
+}
+
+function copyPresentationAttrs($from, $to) {
+  for (const attr of ["class", "style"]) {
+    const value = $from.attr(attr);
+    if (value !== undefined) $to.attr(attr, value);
+  }
+}
+
+function normalizedContactHref(kind, value) {
+  const text = String(value || "").trim();
+  if (!text) return "";
+  if (kind === "email" && !/^mailto:/i.test(text)) return `mailto:${text}`;
+  if (kind === "phone" && !/^tel:/i.test(text)) {
+    const dial = text.replace(/[^\d+]/g, "");
+    return dial ? `tel:${dial}` : text;
+  }
+  return text;
+}
+
+function renderHeroLinks($, $body, entry) {
+  const existingResume = $body.find("a").filter((_, el) => {
+    const href = String($(el).attr("href") || "");
+    const label = $(el).text();
+    return href === "#resume" || /resume/i.test(label);
+  }).first();
+  const resumeLink = existingResume.length
+    ? { label: existingResume.text().trim() || "Resume", href: existingResume.attr("href") || "#resume" }
+    : null;
+
+  const links = [
+    entry.linkedin ? { label: "LinkedIn", href: entry.linkedin } : null,
+    entry.github ? { label: "GitHub", href: entry.github } : null,
+    entry.website ? { label: "Website", href: entry.website } : null,
+    entry.email ? { label: "Email", href: normalizedContactHref("email", entry.email) } : null,
+    entry.phone ? { label: "Phone", href: normalizedContactHref("phone", entry.phone) } : null,
+    resumeLink,
+  ].filter(link => link?.href);
+
+  $body.removeAttr("data-hero-body");
+  if (!links.length) return false;
+
+  const $existingP = $body.is("p") ? $body : $body.find("p").first();
+  const $p = $("<p></p>");
+  const style = $existingP.attr("style");
+  if (style) $p.attr("style", style);
+
+  links.forEach((link, index) => {
+    if (index) $p.append(" · ");
+    const $a = $("<a></a>").attr("href", link.href).text(link.label);
+    if (/^https?:\/\//i.test(link.href)) {
+      $a.attr("target", "_blank");
+      $a.attr("rel", "noopener");
+    }
+    $p.append($a);
+  });
+
+  if ($body.is("p")) {
+    $body.empty().append($p.contents());
+  } else {
+    $body.empty().append($p);
+  }
+  return true;
+}
+
+function renderHeroValues($, $body, values) {
+  if (!values.length) {
+    $body.removeAttr("data-hero-body");
+    return false;
+  }
+
+  const $existingList = $body.is("ul,ol") ? $body : $body.find("ul,ol").first();
+  if ($existingList.length) {
+    $existingList.empty();
+    values.forEach(value => {
+      $existingList.append($("<li></li>").text(value));
+    });
+    if ($body[0] !== $existingList[0]) {
+      $body.children().not($existingList).remove();
+    }
+    $body.removeAttr("data-hero-body");
+    return true;
+  }
+
+  const $sampleChip = $body.find(".chip,.pill,.tag,[data-item='tag'],[data-item='tech']").first();
+  const tagName = $sampleChip[0]?.tagName || $sampleChip[0]?.name || "div";
+  const $template = $sampleChip.length ? $sampleChip : $("<div></div>").addClass("chip");
+
+  $body.empty();
+  values.forEach(value => {
+    const $node = $(`<${tagName}></${tagName}>`).text(value);
+    copyPresentationAttrs($template, $node);
+    $node.removeAttr("data-item data-field data-html-field data-attr-href data-attr-src");
+    $body.append($node);
+  });
+  $body.removeAttr("data-hero-body");
+  return true;
+}
+
+function renderHeroBody($, bodyEl, entry) {
+  const $body = $(bodyEl);
+  if (
+    $body.attr("data-list") !== undefined ||
+    $body.attr("data-field") !== undefined ||
+    $body.attr("data-html-field") !== undefined
+  ) {
+    $body.removeAttr("data-hero-body");
+    return false;
+  }
+
+  if (entry.is_links) return renderHeroLinks($, $body, entry);
+
+  const values = entry.is_highlights
+    ? labelValues(entry.highlights)
+    : entry.is_snapshot
+      ? labelValues(entry.snapshot)
+      : labelValues(entry.skills);
+
+  return renderHeroValues($, $body, values);
+}
+
+function canUseIndexedSectionTemplates($, $sectionItems) {
+  if ($sectionItems.length < 2) return false;
+  return $sectionItems.toArray().every(el => fieldMarkerCount($, $(el)) > 0);
+}
+
+function constrainSectionItemsToTemplate($, container, items, $sectionItems) {
+  if (!Array.isArray(items)) return items;
+  if (!shouldMimicTemplateShape($, $(container))) return items;
+  if ($sectionItems.length <= 1) return items;
+  return items.slice(0, $sectionItems.length);
+}
+
+function renderIndexedSection($, container, items, $sectionItems) {
+  const sectionKey = $(container).attr("data-section") || "";
+  const templates = $sectionItems.toArray().map(el => $(el).clone());
+  let $lastRendered = null;
+
+  items.forEach((entry, index) => {
+    let $target = $sectionItems.eq(index);
+    if (!$target.length) {
+      $target = templates[index % templates.length].clone();
+      if ($lastRendered?.length) $lastRendered.after($target);
+      else $(container).append($target);
+    }
+
+    fillItem($, $target, entryFromValue(entry), { sectionKey });
+    $lastRendered = $target;
+  });
+
+  $sectionItems.each((index, el) => {
+    if (index >= items.length) $(el).remove();
+  });
+  $(container).removeAttr("data-section");
+}
+
 // ── Per-item fill ─────────────────────────────────────────────────────────────
 // Fills all data-* attributes within $item (including $item itself) from entry.
 // Removes the data-* attrs after fill so they are not re-processed by the top-level pass.
 
-function fillItem($, $item, entry) {
+function fillItem($, $item, entry, { sectionKey = "" } = {}) {
   // data-if on descendants
   $item.find("[data-if]").each((_, el) => {
     const key = $(el).attr("data-if");
@@ -297,21 +597,32 @@ function fillItem($, $item, entry) {
   $item.find("[data-list]").each((_, listEl) => listEls.push(listEl));
   for (const listEl of listEls) {
     const listKey = $(listEl).attr("data-list");
-    renderList($, listEl, resolveFieldValue(entry, listKey));
+    renderList($, listEl, resolveFieldValue(entry, listKey), { sectionKey });
+  }
+
+  const heroBodyEls = [];
+  if ($item.attr("data-hero-body") !== undefined) heroBodyEls.push($item[0]);
+  $item.find("[data-hero-body]").each((_, bodyEl) => heroBodyEls.push(bodyEl));
+  for (const bodyEl of heroBodyEls) {
+    renderHeroBody($, bodyEl, entry);
   }
 
   // Scalar/html/attr fields on $item itself
   const selfField = $item.attr("data-field");
   const selfValue = selfField ? resolveFieldValue(entry, selfField) : undefined;
   if (selfField && selfValue !== undefined) {
-    $item.text(valueToText(selfValue, selfField));
+    $item.text(constrainFieldText($item, selfValue, selfField));
     $item.removeAttr("data-field");
   }
   const selfHtmlField = $item.attr("data-html-field");
   const selfHtmlValue = selfHtmlField ? resolveFieldValue(entry, selfHtmlField) : undefined;
   if (selfHtmlField && selfHtmlValue !== undefined) {
-    $item.html(String(selfHtmlValue));
-    $item.removeAttr("data-html-field");
+    const htmlValue = constrainHtmlField($item, selfHtmlValue);
+    if (selfHtmlField === "about_full") renderAboutFullField($, $item, htmlValue);
+    else {
+      $item.html(htmlValue);
+      $item.removeAttr("data-html-field");
+    }
   }
   const selfHref = $item.attr("data-attr-href");
   const selfHrefValue = selfHref ? resolveFieldValue(entry, selfHref) : undefined;
@@ -330,15 +641,19 @@ function fillItem($, $item, entry) {
   $item.find("[data-field]").each((_, el) => {
     const key = $(el).attr("data-field");
     const value = resolveFieldValue(entry, key);
-    if (value !== undefined) $(el).text(valueToText(value, key));
+    if (value !== undefined) $(el).text(constrainFieldText($(el), value, key));
     $(el).removeAttr("data-field");
   });
 
   $item.find("[data-html-field]").each((_, el) => {
     const key = $(el).attr("data-html-field");
     const value = resolveFieldValue(entry, key);
-    if (value !== undefined) $(el).html(String(value));
-    $(el).removeAttr("data-html-field");
+    if (value !== undefined) {
+      const htmlValue = constrainHtmlField($(el), value);
+      if (key === "about_full") renderAboutFullField($, $(el), htmlValue);
+      else $(el).html(htmlValue);
+    }
+    if ($(el).attr("data-html-field") !== undefined) $(el).removeAttr("data-html-field");
   });
 
   $item.find("[data-attr-href]").each((_, el) => {
@@ -355,6 +670,8 @@ function fillItem($, $item, entry) {
     $(el).removeAttr("data-attr-src");
   });
 
+  if ($item.attr("data-hero-body") !== undefined) $item.removeAttr("data-hero-body");
+  $item.find("[data-hero-body]").removeAttr("data-hero-body");
   $item.removeAttr("data-item data-section");
 }
 
@@ -428,9 +745,16 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
       return;
     }
 
-    const clones = items.map(entry => {
+    const shapedItems = constrainSectionItemsToTemplate($, container, items, $sectionItems);
+
+    if (canUseIndexedSectionTemplates($, $sectionItems)) {
+      renderIndexedSection($, container, shapedItems, $sectionItems);
+      return;
+    }
+
+    const clones = shapedItems.map(entry => {
       const $clone = $templateItem.clone();
-      fillItem($, $clone, entryFromValue(entry));
+      fillItem($, $clone, entryFromValue(entry), { sectionKey });
       return $clone;
     });
 
@@ -449,7 +773,7 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
   $("[data-field]").each((_, el) => {
     const key = $(el).attr("data-field");
     const value = resolveFieldValue(d, key);
-    if (value !== undefined) $(el).text(valueToText(value, key));
+    if (value !== undefined) $(el).text(constrainFieldText($(el), value, key));
     $(el).removeAttr("data-field");
   });
 
@@ -457,8 +781,12 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
   $("[data-html-field]").each((_, el) => {
     const key = $(el).attr("data-html-field");
     const value = resolveFieldValue(d, key);
-    if (value !== undefined) $(el).html(String(value));
-    $(el).removeAttr("data-html-field");
+    if (value !== undefined) {
+      const htmlValue = constrainHtmlField($(el), value);
+      if (key === "about_full") renderAboutFullField($, $(el), htmlValue);
+      else $(el).html(htmlValue);
+    }
+    if ($(el).attr("data-html-field") !== undefined) $(el).removeAttr("data-html-field");
   });
 
   // ── 5. Top-level href overrides ──────────────────────────────────────────────
