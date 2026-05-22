@@ -5596,6 +5596,24 @@ input[type="color"].split-color::-moz-color-swatch {
       const source = selectedTemplateSource();
       return (source === "keyword" || source === "file") && !isSlotFillMode() && !isDirectDesignMode();
     }
+    // Console diagnostic — read the closure-scoped routing state from outside the IIFE.
+    // Returns a snapshot of which pipeline page-4 Next would currently invoke.
+    window._debugRoutingState = () => ({
+      templateSource:      selectedTemplateSource(),
+      modelTemplateValue:  document.getElementById("modelTemplate")?.value?.trim() || "",
+      extractTemplateMode: document.getElementById("extractTemplateMode")?.value || "(default)",
+      hasExtractedCache:   !!extractedTemplateCache,
+      cacheTemplateMode:   extractedTemplateCache?.templateMode || null,
+      cacheTemplateInputKind: extractedTemplateCache?.templateInputKind || null,
+      lastExtractedTemplate: lastExtractedTemplate || null,
+      wantsSlotFill:       wantsSlotFillMode(),
+      isSlotFill:          isSlotFillMode(),
+      isBraid:             isBraidMode(),
+      isDirectDesign:      isDirectDesignMode(),
+      templateExtractStatus: document.getElementById("templateExtractStatus")?.textContent?.trim() || "",
+      pipelineThatWillRun: isSlotFillMode() ? "slot-fill" : isBraidMode() ? "braid" : isDirectDesignMode() ? "direct-design" : "(none)",
+    });
+
     function applyBraidColorOverrides(result) {
       if (!result?.site_html) return;
       result.site_html = composeBraidPreviewHtml(result);

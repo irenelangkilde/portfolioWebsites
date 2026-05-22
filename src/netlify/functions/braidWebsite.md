@@ -111,6 +111,42 @@ Usage constraints:
 PART 3 — CONTENT SUBSTITUTION
 ═══════════════════════════════════════════════════
 
+CONTENT vs. STRUCTURE — the fundamental rule:
+  - The TEMPLATE (sample_website_html) determines page LAYOUT, section ORDER, hero
+    panel structure, card grid shapes, decorative sub-elements (rings, waveforms,
+    badges, diagonal dividers, etc.), and the VISUAL vocabulary.
+  - The RESUME DATA (resume_facts) determines what CONTENT fills each container.
+  - These two are orthogonal. The template tells you HOW MANY skill cards / experience
+    rows / project tiles to lay out; the resume tells you WHAT GOES IN each one.
+  - When the resume has more or fewer items than the template's sample shows, adjust
+    the COUNT of cards to match the resume — do NOT pad the resume to match the
+    template's count, and do NOT omit resume items to keep the template's count.
+
+THE SAMPLE'S TEXT IS PLACEHOLDER — DISCARD IT:
+  The sample HTML contains realistic-looking placeholder content (example skill chips
+  like "Phonology, Syntax, Morphology" for a linguistics template; example project names
+  like "Cross-Linguistic Vowel Analysis"; example experience entries; example bullet
+  points). NONE OF THIS PLACEHOLDER TEXT MAY APPEAR IN THE OUTPUT.
+
+  Sample → output transformation:
+  - Sample's hardcoded skill items (chips, list items, level labels) → REPLACE with
+    items from `resume_facts.factual_profile.skills`. If the resume has 5 programming
+    languages and 3 tools, render exactly those 8 items in the appropriate categories.
+  - Sample's hardcoded project cards/titles/descriptions → REPLACE with entries from
+    `resume_facts.factual_profile.projects`.
+  - Sample's hardcoded experience entries (company, title, dates, bullets) → REPLACE
+    with entries from `resume_facts.factual_profile.experience`.
+  - Sample's hardcoded education entries → REPLACE with entries from `education`.
+  - Sample's hardcoded about/bio paragraphs → REPLACE with content derived from the
+    resume, written in `resolved_strategy.editorial_direction.recommended_tone`.
+  - Sample's hardcoded section titles ("Core Competencies", "Selected Work") → MAY be
+    kept verbatim or rewritten in the same register, your choice.
+
+  Self-check before emitting output: search the generated HTML for every literal text
+  string that appeared in the sample. If ANY of them survives (a skill name, a project
+  title, a company name, a date, a bullet) and that string isn't ALSO in the candidate's
+  resume_facts, regenerate that section — you've left a placeholder behind.
+
 Use ONLY the data provided — never fabricate facts.
 
   hero headline     → resolved_strategy.positioning.headline
@@ -119,11 +155,45 @@ Use ONLY the data provided — never fabricate facts.
   value proposition → resolved_strategy.editorial.core_story (first 1–2 sentences)
   open-to roles     → resolved_strategy.desired_roles (render as pill chips)
   name / contact    → resume_facts.personal.*
-  education         → resume_facts.education[] — all entries
-  experience        → resume_facts.experience[] — all entries, all bullet points
-  projects          → resume_facts.projects[] — all entries
-  skills            → resume_facts.skills — all categories and items
-  links             → resume_facts.personal.linkedin, github, website
+  education         → resume_facts.factual_profile.education[]
+  experience        → resume_facts.factual_profile.experience[]
+  projects          → resume_facts.factual_profile.projects[]
+  skills            → resume_facts.factual_profile.skills
+  links             → resume_facts.identity.contact.linkedin, other_links
+
+═══════════════════════════════════════════════════
+HARD ANTI-FABRICATION RULES (resume-driven sections)
+═══════════════════════════════════════════════════
+
+SKILLS — render ONLY items listed in `resume_facts.factual_profile.skills`.
+  - Do NOT add a "Python" chip if Python isn't in the resume's skills list.
+  - Do NOT add a "Communication" soft skill if it isn't stated.
+  - Do NOT add a category that has zero items (e.g. if `programming_languages`
+    is empty, omit the "Programming Languages" subgroup entirely).
+  - Do NOT generalize ("MATLAB" → "Numerical Computing") — keep the exact term.
+  - Do NOT split or merge entries to fill more chips. A single "React" item is one chip.
+
+EDUCATION — render ONLY entries in `resume_facts.factual_profile.education[]`.
+  - Use institution, degree, major, minor, graduation_date, gpa, honors as written.
+  - Do NOT invent coursework, activities, awards, or thesis topics that aren't in
+    that education entry.
+  - If a field on an entry is empty, omit it from the card.
+
+EXPERIENCE — render ONLY entries in `resume_facts.factual_profile.experience[]`.
+  - Use company, title, dates, location, bullets as written.
+  - Do NOT invent additional responsibilities, metrics, technologies, or
+    accomplishments that aren't already in `bullets` or `technologies`.
+  - The number of experience cards = the number of entries in the array. No more, no fewer.
+
+PROJECTS, CERTIFICATIONS, PUBLICATIONS, LICENSES, PATENTS, HONORS, LEADERSHIP,
+VOLUNTEER, ORGANIZATIONS, COURSES, TEST SCORES, LANGUAGES, PROFESSIONAL_INTERESTS:
+  - Render exactly what's in the corresponding `resume_facts.factual_profile.*` array.
+  - Omit the whole section if its source array is empty.
+
+The only place creative writing is allowed is in the AI-generated `editorial_direction`
+fields (headline, subheadline, core_story) and the section TITLES (e.g. "What I've Built"
+instead of "Projects"). The actual factual content (names, dates, hex skills, bullets,
+metrics) is verbatim from `resume_facts`.
 
   Headshot: {{HEADSHOT_HTML}}
   If headshot is empty, render the styled monogram placeholder described in PART 4 using initials: {{CANDIDATE_INITIALS}}

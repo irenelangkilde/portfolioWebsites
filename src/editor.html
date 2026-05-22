@@ -3650,24 +3650,48 @@
 	    }
 
 	    function parseRootCustomPropertyHexes(html) {
-	      const vars = new Map();
+	      const rawVars = new Map();
 	      const text = String(html || "");
 	      const styleRe = /<style([^>]*)>([\s\S]*?)<\/style>/gi;
 	      let styleMatch;
 	      while ((styleMatch = styleRe.exec(text)) !== null) {
 	        const attrs = styleMatch[1] || "";
-	        if (/id\s*=\s*["'](?:extracted-theme|iw-editor-color-theme)["']/i.test(attrs)) continue;
+	        if (/id\s*=\s*["']extracted-theme["']/i.test(attrs)) continue;
 	        const css = styleMatch[2] || "";
 	        const rootRe = /:root\s*\{([\s\S]*?)\}/gi;
 	        let rootMatch;
 	        while ((rootMatch = rootRe.exec(css)) !== null) {
-	          const varRe = /(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\b[^;]*;/g;
+	          const varRe = /(--[\w-]+)\s*:\s*([^;{}]+);/g;
 	          let varMatch;
 	          while ((varMatch = varRe.exec(rootMatch[1])) !== null) {
-	            vars.set(varMatch[1], toHexColor(varMatch[2]));
+	            rawVars.set(varMatch[1], String(varMatch[2] || "").trim());
 	          }
 	        }
 	      }
+	      const vars = new Map();
+	      const resolving = new Set();
+	      const resolveVar = varName => {
+	        if (vars.has(varName)) return vars.get(varName);
+	        if (resolving.has(varName)) return "";
+	        resolving.add(varName);
+	        const raw = rawVars.get(varName) || "";
+	        let hex = "";
+	        const directHex = raw.match(/^\s*(#[0-9a-fA-F]{3,8})\b/);
+	        if (directHex) {
+	          hex = toHexColor(directHex[1]);
+	        } else {
+	          const exactVar = raw.match(/^\s*var\(\s*(--[\w-]+)\s*(?:,[^)]+)?\)\s*$/);
+	          if (exactVar) hex = resolveVar(exactVar[1]);
+	          else {
+	            const colorHex = cssColorToHex(raw);
+	            if (colorHex) hex = toHexColor(colorHex);
+	          }
+	        }
+	        resolving.delete(varName);
+	        if (hex) vars.set(varName, hex);
+	        return hex;
+	      };
+	      for (const varName of rawVars.keys()) resolveVar(varName);
 	      return vars;
 	    }
 
@@ -4939,8 +4963,8 @@
 
 	    function cssPropertyCandidates(prop) {
 	      const kebab = String(prop || "").replace(/[A-Z]/g, m => "-" + m.toLowerCase());
-	      if (kebab === "background-color") return ["background-color", "background"];
-	      if (kebab === "background-image") return ["background-image", "background"];
+	      if (kebab === "background-color") return ["background-color"];
+	      if (kebab === "background-image") return ["background-image"];
 	      if (kebab === "text-decoration-color") return ["text-decoration-color", "text-decoration"];
 	      if (kebab.endsWith("-color") && kebab.startsWith("border-")) {
 	        const edge = kebab.replace(/-color$/, "");
@@ -4993,6 +5017,40 @@
 	          continue;
 	        }
 	        const match = matchStyleDeclarationColor(rule.style, props, doc);
+	        if (match) return match;
+	      }
+	      return null;
+	    }
+
+	    function matchBackgroundDeclarationColor(style, rect, point, doc) {
+	      if (!style) return null;
+	      for (const prop of ["background-image", "background"]) {
+	        const value = style.getPropertyValue?.(prop) || "";
+	        if (!value || !/gradient\(/i.test(value)) continue;
+	        const match = matchBackgroundImageColor(value, rect, point, doc);
+	        if (match) return match;
+	      }
+	      for (const prop of ["background-color", "background"]) {
+	        const value = style.getPropertyValue?.(prop) || "";
+	        if (!value || /gradient\(/i.test(value)) continue;
+	        const match = matchWorkbenchColorValue(value, doc);
+	        if (match) return match;
+	      }
+	      return null;
+	    }
+
+	    function matchAuthoredElementBackground(el, rect, point, doc) {
+	      const inlineMatch = matchBackgroundDeclarationColor(el?.style, rect, point, doc);
+	      if (inlineMatch) return inlineMatch;
+	      const rules = colorHoverCssRules(doc);
+	      for (let i = rules.length - 1; i >= 0; i--) {
+	        const rule = rules[i];
+	        try {
+	          if (!el.matches(rule.selectorText)) continue;
+	        } catch {
+	          continue;
+	        }
+	        const match = matchBackgroundDeclarationColor(rule.style, rect, point, doc);
 	        if (match) return match;
 	      }
 	      return null;
@@ -5141,7 +5199,7 @@
 	      const s = String(value || "").trim();
 	      const hex = s.match(/#[0-9a-fA-F]{3,8}\b/);
 	      const candidates = [
-	        ...["rgb", "rgba", "oklch", "color"].map(name => {
+	        ...["var", "rgb", "rgba", "oklch", "color"].map(name => {
 	          const index = s.toLowerCase().indexOf(`${name}(`);
 	          return index >= 0 ? { index, token: balancedCssFunctionAt(s, index) } : null;
 	        }).filter(Boolean),
@@ -5161,10 +5219,11 @@
 	      const stops = args.map((arg, index) => {
 	        const token = firstCssColorToken(arg);
 	        const hex = cssColorToHex(token);
-	        if (!hex) return null;
+	        if (!hex && !/^var\(/i.test(token)) return null;
 	        const afterColor = token ? arg.slice(arg.indexOf(token) + token.length) : arg;
 	        const pctMatch = afterColor.match(/(-?[\d.]+)%/);
 	        return {
+	          token,
 	          hex,
 	          index,
 	          position: pctMatch ? Math.max(0, Math.min(1, parseFloat(pctMatch[1]) / 100)) : null,
@@ -5215,7 +5274,10 @@
 	        const t = gradientPointPosition(layer, rect, point);
 	        const ordered = [...stops].sort((a, b) => Math.abs(a.position - t) - Math.abs(b.position - t));
 	        for (const stop of ordered) {
-	          const match = matchWorkbenchColor(stop.hex) || matchWorkbenchColorValue(stop.hex, doc);
+	          const match =
+	            matchWorkbenchColorValue(stop.token, doc) ||
+	            (stop.hex ? matchWorkbenchColor(stop.hex) : null) ||
+	            (stop.hex ? matchWorkbenchColorValue(stop.hex, doc) : null);
 	          if (match) return match;
 	        }
 	      }
@@ -5305,15 +5367,15 @@
 	          const rect = el.getBoundingClientRect();
 	          if (rect.width <= 0 || rect.height <= 0) continue;
 	          const cs = win.getComputedStyle(el);
+	          const authoredBgMatch = matchAuthoredElementBackground(el, rect, point, doc);
+	          if (authoredBgMatch) return authoredBgMatch;
 	          for (const prop of backgroundProps) {
 	            const match =
 	              matchWorkbenchColorValue(cs[prop], doc) ||
 	              matchAuthoredElementColor(el, cssPropertyCandidates(prop), doc);
 	            if (match) return match;
 	          }
-	          const gradientMatch =
-	            matchBackgroundImageColor(cs.backgroundImage, rect, point, doc) ||
-	            matchAuthoredElementColor(el, cssPropertyCandidates("backgroundImage"), doc);
+	          const gradientMatch = matchBackgroundImageColor(cs.backgroundImage, rect, point, doc);
 	          if (gradientMatch) return gradientMatch;
 	          for (const [colorProp, widthProp, styleProp] of borderProps) {
 	            if (parseFloat(cs[widthProp]) <= 0 || cs[styleProp] === "none") continue;
