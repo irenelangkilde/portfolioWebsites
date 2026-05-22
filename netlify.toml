@@ -1,5 +1,9 @@
 [build]
-  command = "cd blog && bundle exec jekyll build --destination ../blog-built"
+  # Netlify's Ruby buildpack only auto-runs `bundle install` when it finds a
+  # Gemfile at the repo root. Our Gemfile lives in blog/, so we have to run
+  # `bundle install` ourselves before invoking jekyll — otherwise the build
+  # fails with "bundler: command not found: jekyll".
+  command = "cd blog && bundle install && bundle exec jekyll build --destination ../blog-built"
   publish = "."
   functions = "src/netlify/functions"
   edge_functions = "netlify/edge-functions"
