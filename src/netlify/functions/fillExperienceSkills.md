@@ -127,6 +127,10 @@ Put resolved.content_strategy.skills_to_surface items first within their groups.
 The number of skill groups and skills per group must be constrained by the resume facts,
 not by any template layout. Include the meaningful resume-supported groups and skills;
 do not add filler groups or filler skills to satisfy a visual pattern.
+HARD RULE: Every skill string you output must be explicitly present in
+resume_facts.factual_profile.skills or in a resume-listed project/experience
+technologies array. Do not infer adjacent skills, prerequisites, tools, methods,
+frameworks, or software packages.
 Use 1–6 groups depending on the resume, and allow thin groups when the resume genuinely
 contains only a few skills in that area. Each group should usually have 2–10 skills.
 

@@ -137,6 +137,57 @@ describe("renderPortfolio", () => {
     expect(rendered).not.toContain("data-hero-body");
   });
 
+  it("emits color overrides for new --c palette variables and legacy --color variables", () => {
+    const html = `
+      <html>
+        <head>
+          <style id="extracted-theme">
+            :root {
+              --c-1: oklch(50% 0.2 10);
+              --c-2: oklch(60% 0.2 20);
+              --c-3: oklch(70% 0.2 30);
+              --c-4: oklch(80% 0.2 40);
+              --c-5: oklch(90% 0.2 50);
+              --c-6: oklch(30% 0 0);
+              --color-primary: #111111;
+            }
+          </style>
+          <script type="application/json" id="color-palette">
+            {
+              "scheme": {
+                "--c-1": { "hex": "#ff0000" },
+                "--c-2": { "hex": "#00ff00" },
+                "--c-3": { "hex": "#0000ff" },
+                "--c-4": { "hex": "#ffff00" },
+                "--c-5": { "hex": "#111111" },
+                "--c-6": { "hex": "#777777" }
+              }
+            }
+          </script>
+        </head>
+        <body><h1 data-field="headline">Old headline</h1></body>
+      </html>
+    `;
+
+    const rendered = renderPortfolio(html, { headline: "New headline" }, {
+      primary: "#0b3dff",
+      secondary: "#f23420",
+      accent: "#10c850",
+      quaternary: "#101010",
+      quinary: "#f3d62b",
+    });
+
+    expect(rendered).toContain("--c-1: #f23420;");
+    expect(rendered).toContain("--c-2: #10c850;");
+    expect(rendered).toContain("--c-3: #0b3dff;");
+    expect(rendered).toContain("--c-4: #f3d62b;");
+    expect(rendered).toContain("--c-5: #101010;");
+    expect(rendered).toMatch(/--c-6:\s*#[0-9a-f]{6};/i);
+    expect(rendered).not.toContain("--c-6: #777777;");
+    expect(rendered).toContain("--color-primary: #0b3dff;");
+    expect(rendered).toContain("--color-quinary: #f3d62b;");
+  });
+
   it("renders about_full as multiple paragraphs when a template marks one paragraph node", () => {
     const html = `
       <section class="about-section">

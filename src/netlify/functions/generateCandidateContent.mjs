@@ -137,6 +137,232 @@ function removeRepeatedLeadSentence(body, avoid = []) {
   return nextParagraphs.length ? nextParagraphs.join("\n\n") : text;
 }
 
+function isRecord(value) {
+  return value && typeof value === "object" && !Array.isArray(value);
+}
+
+function cleanSkillLabel(value) {
+  return String(value ?? "")
+    .replace(/\s+/g, " ")
+    .replace(/^[\s,;|•/&]+|[\s,;|•/&]+$/g, "")
+    .trim();
+}
+
+function normalizeSkillKey(value) {
+  return cleanSkillLabel(value)
+    .normalize("NFKC")
+    .toLowerCase()
+    .replace(/\+/g, " plus ")
+    .replace(/#/g, " sharp ")
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function skillText(value) {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "string" || typeof value === "number") return cleanSkillLabel(value);
+  if (!isRecord(value)) return "";
+  for (const key of ["skill", "technology", "tool", "name", "label", "title", "value"]) {
+    const text = cleanSkillLabel(value[key]);
+    if (text) return text;
+  }
+  return "";
+}
+
+function splitCompositeSkill(value) {
+  return cleanSkillLabel(value)
+    .split(/\s*(?:,|;|\||•|\n|&)\s*/i)
+    .map(cleanSkillLabel)
+    .filter(Boolean);
+}
+
+function skillLabelVariants(value) {
+  const label = cleanSkillLabel(value);
+  if (!label) return [];
+
+  const variants = new Set([label]);
+  const withoutParentheticals = cleanSkillLabel(label.replace(/\s*\([^)]*\)/g, " "));
+  if (withoutParentheticals) variants.add(withoutParentheticals);
+
+  for (const match of label.matchAll(/\(([^)]*)\)/g)) {
+    for (const part of splitCompositeSkill(match[1])) variants.add(part);
+  }
+
+  for (const part of splitCompositeSkill(label)) {
+    variants.add(part);
+    if (part.includes("/") && !/^https?:\/\//i.test(part)) {
+      for (const slashPart of part.split(/\s*\/\s*/).map(cleanSkillLabel).filter(Boolean)) {
+        variants.add(slashPart);
+      }
+    }
+  }
+
+  return [...variants].filter(Boolean);
+}
+
+function addAllowedSkill(allowed, value) {
+  const label = cleanSkillLabel(value);
+  if (!label) return;
+  for (const variant of skillLabelVariants(label)) {
+    const key = normalizeSkillKey(variant);
+    if (key && !allowed.has(key)) allowed.set(key, variant);
+  }
+}
+
+function collectSkillValues(value, add) {
+  if (!value) return;
+  if (typeof value === "string" || typeof value === "number") {
+    add(value);
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach(item => collectSkillValues(item, add));
+    return;
+  }
+  if (!isRecord(value)) return;
+
+  const direct = skillText(value);
+  if (direct) add(direct);
+
+  for (const key of [
+    "skills",
+    "technologies",
+    "technology",
+    "tools",
+    "programming_languages",
+    "technical",
+    "domains",
+    "soft_skills",
+    "other",
+    "items",
+  ]) {
+    if (value[key] !== undefined) collectSkillValues(value[key], add);
+  }
+}
+
+function resumeProfile(resumeFacts) {
+  const facts = resumeFacts?.resume_facts ?? resumeFacts ?? {};
+  return facts.factual_profile ?? facts;
+}
+
+function asArray(value) {
+  return Array.isArray(value) ? value : [];
+}
+
+function buildAllowedSkillMap(resumeFacts) {
+  const profile = resumeProfile(resumeFacts);
+  const allowed = new Map();
+  const add = value => addAllowedSkill(allowed, value);
+
+  collectSkillValues(profile.skills, add);
+  for (const entry of asArray(profile.experience)) collectSkillValues(entry.technologies, add);
+  for (const project of asArray(profile.projects)) collectSkillValues(project.technologies, add);
+
+  return allowed;
+}
+
+function groupLabelMap(resolved) {
+  return Object.fromEntries(
+    (resolved?.website_copy_seed?.skills_subcategory_labels || [])
+      .map(({ group, label }) => [group, cleanSkillLabel(label)])
+      .filter(([group, label]) => group && label)
+  );
+}
+
+function uniqueSkillLabels(values) {
+  const seen = new Set();
+  const labels = [];
+  collectSkillValues(values, value => {
+    const label = cleanSkillLabel(value);
+    const key = normalizeSkillKey(label);
+    if (!key || seen.has(key)) return;
+    seen.add(key);
+    labels.push(label);
+  });
+  return labels;
+}
+
+function deterministicResumeSkillGroups(resumeFacts, resolved) {
+  const profile = resumeProfile(resumeFacts);
+  const skills = isRecord(profile.skills) ? profile.skills : {};
+  const labels = groupLabelMap(resolved);
+  const defaultLabels = {
+    programming_languages: "Programming Languages",
+    technical: "Technical Skills",
+    tools: "Tools",
+    domains: "Domains",
+    soft_skills: "Soft Skills",
+    other: "Other",
+  };
+  const used = new Set();
+  const groups = Object.keys(defaultLabels)
+    .map(key => {
+      const groupSkills = uniqueSkillLabels(skills[key]).filter(skill => {
+        const skillKey = normalizeSkillKey(skill);
+        if (!skillKey || used.has(skillKey)) return false;
+        used.add(skillKey);
+        return true;
+      });
+      return groupSkills.length ? {
+        group_name: labels[key] || defaultLabels[key],
+        skills: groupSkills,
+      } : null;
+    })
+    .filter(Boolean);
+
+  const technologies = uniqueSkillLabels([
+    ...asArray(profile.experience).flatMap(entry => entry.technologies || []),
+    ...asArray(profile.projects).flatMap(project => project.technologies || []),
+  ]).filter(skill => {
+    const key = normalizeSkillKey(skill);
+    if (!key || used.has(key)) return false;
+    used.add(key);
+    return true;
+  });
+  if (technologies.length) groups.push({ group_name: "Tools & Technologies", skills: technologies });
+
+  return groups;
+}
+
+function matchAllowedSkill(value, allowed) {
+  const text = skillText(value);
+  for (const variant of skillLabelVariants(text)) {
+    const key = normalizeSkillKey(variant);
+    if (key && allowed.has(key)) return { key, label: allowed.get(key) };
+  }
+  return null;
+}
+
+function sanitizeSkillGroups(skillGroups, resumeFacts, resolved) {
+  const allowed = buildAllowedSkillMap(resumeFacts);
+  if (!allowed.size) return [];
+
+  const used = new Set();
+  const sanitized = (Array.isArray(skillGroups) ? skillGroups : [])
+    .map(group => {
+      const skills = Array.isArray(group?.skills)
+        ? group.skills
+        : Array.isArray(group?.items)
+          ? group.items
+          : [];
+      const filteredSkills = [];
+      for (const skill of skills) {
+        const match = matchAllowedSkill(skill, allowed);
+        if (!match || used.has(match.key)) continue;
+        used.add(match.key);
+        filteredSkills.push(match.label);
+      }
+      return filteredSkills.length
+        ? { ...(isRecord(group) ? group : {}), skills: filteredSkills }
+        : null;
+    })
+    .filter(Boolean);
+
+  return sanitized.length ? sanitized : deterministicResumeSkillGroups(resumeFacts, resolved);
+}
+
 const SYSTEM = "Return only a valid JSON object. No markdown. No explanation. No code fences.";
 
 /**
@@ -206,7 +432,7 @@ export async function generateCandidateContent(callAIFn, {
     console.warn("[generateCandidateContent] fillExperienceSkills failed:", expSkillsResult.reason?.message);
 
   // ── Step 3: Merge ─────────────────────────────────────────────────────────
-  const sg = expSkillsData?.skill_groups ?? [];
+  const sg = sanitizeSkillGroups(expSkillsData?.skill_groups, resumeFacts, resolved);
   const projects = projectsData?.projects ?? [];
   const experience = expSkillsData?.experience ?? [];
   const education = expSkillsData?.education ?? [];

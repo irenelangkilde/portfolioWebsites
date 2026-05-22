@@ -611,85 +611,92 @@ async function annotateHtml(major, sampleHtml) {
 
 // ─── Main loop ────────────────────────────────────────────────────────────────
 
-if (__isCli) {
-const canAnnotate = !skipAnnotate && !!ANTHROPIC_API_KEY;
-console.log(`Preprocessing ${majors.length} template(s): ${majors.join(", ")}${dryRun ? " [dry-run]" : ""}${canAnnotate ? "" : " [normalize only]"}\n`);
+async function runCli() {
+  const canAnnotate = !skipAnnotate && !!ANTHROPIC_API_KEY;
+  console.log(`Preprocessing ${majors.length} template(s): ${majors.join(", ")}${dryRun ? " [dry-run]" : ""}${canAnnotate ? "" : " [normalize only]"}\n`);
 
-for (const major of majors) {
-  const srcPath = join(TEMPLATES, major, "sample.html");
-  const rawPath = join(TEMPLATES, major, "annotation.html");  // AI output, original colors
-  const annPath = join(TEMPLATES, major, "annotated.html");   // color-normalized final output
+  for (const major of majors) {
+    const srcPath = join(TEMPLATES, major, "sample.html");
+    const rawPath = join(TEMPLATES, major, "annotation.html");  // AI output, original colors
+    const annPath = join(TEMPLATES, major, "annotated.html");   // color-normalized final output
 
-  if (!existsSync(srcPath)) {
-    console.warn(`⚠ Skipping ${major}: no sample.html`);
-    continue;
-  }
-
-  if (dryRun) {
-    console.log(`[dry-run] ${major}/sample.html${canAnnotate ? " → annotation.html (AI)" : ""} → annotated.html (colors)`);
-    continue;
-  }
-
-  process.stdout.write(`Processing: ${major} … `);
-
-  const sampleHtml = readFileSync(srcPath, "utf-8");
-
-  // Stage 1: AI annotation — saves to annotation.html (original colors preserved).
-  // Color re-runs read annotation.html as their source, so AI is never re-invoked.
-  if (canAnnotate) {
-    process.stdout.write("annotating …");
-    try {
-      const { annotated, usage } = await annotateHtml(major, sampleHtml);
-      writeFileSync(rawPath, annotated, "utf-8");
-      const fieldCount   = (annotated.match(/data-field=/g)   || []).length;
-      const sectionCount = (annotated.match(/data-section=/g) || []).length;
-      const listCount    = (annotated.match(/data-list=/g)     || []).length;
-      process.stdout.write(` (${usage?.input_tokens}→${usage?.output_tokens} tok, ${fieldCount} fields, ${sectionCount} sections, ${listCount} lists) … `);
-    } catch (e) {
-      process.stdout.write(` ⚠ annotation failed: ${e.message} … `);
+    if (!existsSync(srcPath)) {
+      console.warn(`⚠ Skipping ${major}: no sample.html`);
+      continue;
     }
-  }
 
-  // Stage 2: Color normalization
-
-  // Step 1: rename image paths in sample.html (for masthead metadata only)
-  const { renameMap } = renameImagePaths(sampleHtml);
-
-  // Update masthead metadata to reflect renamed paths
-  const mastheadMeta = analyzeSampleMasthead(sampleHtml);
-  const oldCssUrl = mastheadMeta.sampleRasterCssUrl;
-  if (oldCssUrl && renameMap.has(oldCssUrl)) {
-    const newName = renameMap.get(oldCssUrl);
-    mastheadMeta.sampleRasterCssUrl = newName;
-    if (mastheadMeta.sampleRasterBackgroundDecl) {
-      mastheadMeta.sampleRasterBackgroundDecl =
-        mastheadMeta.sampleRasterBackgroundDecl.split(oldCssUrl).join(newName);
+    if (dryRun) {
+      console.log(`[dry-run] ${major}/sample.html${canAnnotate ? " → annotation.html (AI)" : ""} → annotated.html (colors)`);
+      continue;
     }
+
+    process.stdout.write(`Processing: ${major} … `);
+
+    const sampleHtml = readFileSync(srcPath, "utf-8");
+
+    // Stage 1: AI annotation — saves to annotation.html (original colors preserved).
+    // Color re-runs read annotation.html as their source, so AI is never re-invoked.
+    if (canAnnotate) {
+      process.stdout.write("annotating …");
+      try {
+        const { annotated, usage } = await annotateHtml(major, sampleHtml);
+        writeFileSync(rawPath, annotated, "utf-8");
+        const fieldCount   = (annotated.match(/data-field=/g)   || []).length;
+        const sectionCount = (annotated.match(/data-section=/g) || []).length;
+        const listCount    = (annotated.match(/data-list=/g)    || []).length;
+        process.stdout.write(` (${usage?.input_tokens}→${usage?.output_tokens} tok, ${fieldCount} fields, ${sectionCount} sections, ${listCount} lists) … `);
+      } catch (e) {
+        process.stdout.write(` ⚠ annotation failed: ${e.message} … `);
+      }
+    }
+
+    // Stage 2: Color normalization
+
+    // Step 1: rename image paths in sample.html (for masthead metadata only)
+    const { renameMap } = renameImagePaths(sampleHtml);
+
+    // Update masthead metadata to reflect renamed paths
+    const mastheadMeta = analyzeSampleMasthead(sampleHtml);
+    const oldCssUrl = mastheadMeta.sampleRasterCssUrl;
+    if (oldCssUrl && renameMap.has(oldCssUrl)) {
+      const newName = renameMap.get(oldCssUrl);
+      mastheadMeta.sampleRasterCssUrl = newName;
+      if (mastheadMeta.sampleRasterBackgroundDecl) {
+        mastheadMeta.sampleRasterBackgroundDecl =
+          mastheadMeta.sampleRasterBackgroundDecl.split(oldCssUrl).join(newName);
+      }
+    }
+
+    const renames = renameMap.size > 0 ? `  [${[...renameMap.values()].join(", ")}]` : "";
+
+    // Step 2: apply color transforms to annotation.html → annotated.html.
+    // Colors are extracted from annotation.html (after un-rewriting prior CSS vars back to hex)
+    // so the rewrite map matches whatever hex values actually appear in the file.
+    const rawExists = existsSync(rawPath) && statSync(rawPath).size > 0;
+    if (rawExists) {
+      const existing                = readFileSync(rawPath, "utf-8");
+      const unRewrote               = unRewriteOldVars(existing);
+      const rawAnnotated            = stripColorThemeBlocks(unRewrote);
+      const { html: annImgRenamed } = renameImagePaths(rawAnnotated);
+      const { injection, k, hexExprMap, rgbMap } = computeColorTheme(annImgRenamed);
+      const annColorized            = insertThemeInjection(annImgRenamed, injection);
+      const annVarified             = rewriteCssVars(annColorized, hexExprMap, rgbMap);
+      const annFinal                = embedMastheadMetaComment(annVarified, mastheadMeta);
+      writeFileSync(annPath, annFinal, "utf-8");
+      process.stdout.write(`normalized (${(annFinal.length / 1024).toFixed(1)} KB, k=${k})${renames}`);
+    } else {
+      process.stdout.write(`⚠ no annotation.html (run without --skip-annotate first)`);
+    }
+
+    console.log();
   }
 
-  const renames = renameMap.size > 0 ? `  [${[...renameMap.values()].join(", ")}]` : "";
-
-  // Step 2: apply color transforms to annotation.html → annotated.html.
-  // Colors are extracted from annotation.html (after un-rewriting prior CSS vars back to hex)
-  // so the rewrite map matches whatever hex values actually appear in the file.
-  const rawExists = existsSync(rawPath) && statSync(rawPath).size > 0;
-  if (rawExists) {
-    const existing                = readFileSync(rawPath, "utf-8");
-    const unRewrote               = unRewriteOldVars(existing);
-    const rawAnnotated            = stripColorThemeBlocks(unRewrote);
-    const { html: annImgRenamed } = renameImagePaths(rawAnnotated);
-    const { injection, k, hexExprMap, rgbMap } = computeColorTheme(annImgRenamed);
-    const annColorized            = insertThemeInjection(annImgRenamed, injection);
-    const annVarified             = rewriteCssVars(annColorized, hexExprMap, rgbMap);
-    const annFinal                = embedMastheadMetaComment(annVarified, mastheadMeta);
-    writeFileSync(annPath, annFinal, "utf-8");
-    process.stdout.write(`normalized (${(annFinal.length / 1024).toFixed(1)} KB, k=${k})${renames}`);
-  } else {
-    process.stdout.write(`⚠ no annotation.html (run without --skip-annotate first)`);
-  }
-
-  console.log();
+  console.log("\nDone.");
 }
 
-console.log("\nDone.");
-} // end if (__isCli)
+if (__isCli) {
+  runCli().catch(err => {
+    console.error(err);
+    process.exitCode = 1;
+  });
+}

@@ -483,6 +483,12 @@
     }
     #cwStatus.ok  { display: block; color: rgba(160,230,160,.9); background: rgba(0,180,80,.12); }
     #cwStatus.err { display: block; color: rgba(255,160,160,.9); background: rgba(200,60,60,.15); }
+    input[type="color"].split-color::-webkit-color-swatch {
+      background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+    }
+    input[type="color"].split-color::-moz-color-swatch {
+      background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+    }
     .color-workbench-note {
       margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
@@ -559,6 +565,28 @@
       color: rgba(255,255,255,.95); text-shadow: 0 1px 3px rgba(0,0,0,.85);
       font-size: 12px; font-weight: 900; cursor: pointer; user-select: none;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.28), 0 1px 5px rgba(0,0,0,.28);
+      position: relative; overflow: hidden; isolation: isolate;
+      background: var(--ewb-current, transparent);
+    }
+    .ewb-swatch::before {
+      content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+      background: transparent;
+    }
+    .ewb-swatch.has-substitute {
+      background: var(--ewb-original, transparent);
+    }
+    .ewb-swatch.has-substitute::before {
+      background: var(--ewb-current, transparent);
+      clip-path: polygon(0 0, 100% 0, 0 100%);
+    }
+    .ewb-swatch.ewb-click-blink {
+      background: #ff1010 !important;
+    }
+    .ewb-swatch.ewb-click-blink::before {
+      display: none;
+    }
+    .ewb-swatch-label {
+      position: relative; z-index: 1;
     }
     .ewb-swatch:hover { outline: 2px solid rgba(141,186,255,.65); outline-offset: 1px; }
     .ewb-swatch.ewb-inspector-blink {
@@ -3621,6 +3649,84 @@
 	      return normalized.sort((a, b) => (b.score || 0) - (a.score || 0));
 	    }
 
+	    function parseRootCustomPropertyHexes(html) {
+	      const vars = new Map();
+	      const text = String(html || "");
+	      const styleRe = /<style([^>]*)>([\s\S]*?)<\/style>/gi;
+	      let styleMatch;
+	      while ((styleMatch = styleRe.exec(text)) !== null) {
+	        const attrs = styleMatch[1] || "";
+	        if (/id\s*=\s*["'](?:extracted-theme|iw-editor-color-theme)["']/i.test(attrs)) continue;
+	        const css = styleMatch[2] || "";
+	        const rootRe = /:root\s*\{([\s\S]*?)\}/gi;
+	        let rootMatch;
+	        while ((rootMatch = rootRe.exec(css)) !== null) {
+	          const varRe = /(--[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})\b[^;]*;/g;
+	          let varMatch;
+	          while ((varMatch = varRe.exec(rootMatch[1])) !== null) {
+	            vars.set(varMatch[1], toHexColor(varMatch[2]));
+	          }
+	        }
+	      }
+	      return vars;
+	    }
+
+	    function embeddedPaletteOriginalHexesByVar(html) {
+	      const originals = new Map();
+	      const match = String(html || "").match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
+	      if (!match) return originals;
+	      try {
+	        const scheme = JSON.parse(match[1])?.scheme || {};
+	        for (const [varName, entry] of Object.entries(scheme)) {
+	          if (entry?.hex) originals.set(varName, toHexColor(entry.hex));
+	        }
+	      } catch {}
+	      return originals;
+	    }
+
+	    function remeasureWorkbenchColorItem(item) {
+	      const ok = hexToOklch(item.hex);
+	      item.chroma = ok?.c ?? 0;
+	      item.score = Number(item.count || 0) * item.chroma;
+	    }
+
+	    function restoreEmbeddedOriginalPaletteHexes(rows, html) {
+	      const originals = embeddedPaletteOriginalHexesByVar(html);
+	      if (!originals.size) return rows;
+	      for (const row of rows || []) {
+	        if (row.sourceVarName && originals.has(row.sourceVarName)) {
+	          row.hex = originals.get(row.sourceVarName);
+	          remeasureWorkbenchColorItem(row);
+	        }
+	        for (const dep of row.deps || []) {
+	          if (dep.sourceVarName && originals.has(dep.sourceVarName)) {
+	            dep.hex = originals.get(dep.sourceVarName);
+	            remeasureWorkbenchColorItem(dep);
+	          }
+	        }
+	      }
+	      return rows;
+	    }
+
+	    function applyActivePaletteVarsToRows(rows, html) {
+	      restoreEmbeddedOriginalPaletteHexes(rows, html);
+	      const activeVars = parseRootCustomPropertyHexes(html);
+	      if (!activeVars.size) return rows;
+	      for (const row of rows || []) {
+	        if (row.sourceVarName && activeVars.has(row.sourceVarName) && !row.substitute) {
+	          const activeHex = toHexColor(activeVars.get(row.sourceVarName));
+	          if (activeHex.toLowerCase() !== toHexColor(row.hex).toLowerCase()) row.substitute = activeHex;
+	        }
+	        for (const dep of row.deps || []) {
+	          if (dep.sourceVarName && activeVars.has(dep.sourceVarName) && !dep.substitute) {
+	            const activeHex = toHexColor(activeVars.get(dep.sourceVarName));
+	            if (activeHex.toLowerCase() !== toHexColor(dep.hex).toLowerCase()) dep.substitute = activeHex;
+	          }
+	        }
+	      }
+	      return rows;
+	    }
+
 	    function buildFullPaletteSwatches(html, dedupDist = 0.1) {
 	      // Fastest path: restore the editor's saved full-swatch state.
 	      const editorStateMatch = String(html).match(new RegExp(`<script[^>]*id=["']${EDITOR_COLOR_STATE_ID}["'][^>]*>([\\s\\S]*?)<\\/script>`, "i"));
@@ -3628,7 +3734,7 @@
 	        try {
 	          const saved = JSON.parse(editorStateMatch[1]);
 	          if (Array.isArray(saved?.rows) && saved.rows.length) {
-	            return normalizeColorWorkbenchRows(saved.rows);
+	            return applyActivePaletteVarsToRows(normalizeColorWorkbenchRows(saved.rows), html);
 	          }
 	        } catch {}
 	      }
@@ -3640,12 +3746,12 @@
 	          const saved = JSON.parse(savedMatch[1]);
 	          if (Array.isArray(saved) && saved.length) {
 	            // Normalise deps — may be hex strings (old format) or {hex,count,score} objects.
-	            return normalizeColorWorkbenchRows(saved.map(r => ({
+	            return applyActivePaletteVarsToRows(normalizeColorWorkbenchRows(saved.map(r => ({
 	              ...r,
 	              deps: (r.deps || []).map(d =>
 	                typeof d === "string" ? { hex: d, count: 0, score: 0 } : d
 	              ),
-	            })));
+	            }))), html);
 	          }
 	        } catch {}
 	      }
@@ -3658,12 +3764,14 @@
 	        let scheme;
 	        try { scheme = JSON.parse(match[1])?.scheme; } catch {}
 	        if (scheme) {
+	          const activeVars = parseRootCustomPropertyHexes(html);
 	          rawRows = [];
 	          raw = [];
 	          let schemeIndex = 0;
 	          for (const [varName, entry] of Object.entries(scheme)) {
 	            const repHex = entry?.hex ? toHexColor(entry.hex) : "";
 	            if (repHex) {
+	              const activeHex = activeVars.has(varName) ? toHexColor(activeVars.get(varName)) : "";
 	              const repOk = hexToOklch(repHex);
 	              const repChroma = repOk?.c ?? 0;
 	              const repScore = Number(entry.aggregateScore ?? entry.score ?? ((entry.count || 0) * repChroma)) || 0;
@@ -3690,7 +3798,7 @@
 	                chroma: repChroma,
 	                score: repScore,
 	                sourceVarName: varName,
-	                substitute: "",
+	                substitute: activeHex && activeHex.toLowerCase() !== repHex.toLowerCase() ? activeHex : "",
 	                deps,
 	              });
 	              schemeIndex++;
@@ -3763,7 +3871,6 @@
 	    let colorWorkbenchRows = [];
 	    let activeWorkbenchItemId = "";
 	    let activeSubstituteRowId = "";
-	    const pendingPriorColorById = new Map();
 	    let dependencyInputRowId = "";
 	    const colorWorkbenchHost = document.getElementById("editorSwatchRows");
 	    const colorHoverInspectorToggle = document.getElementById("colorHoverInspectorToggle");
@@ -3787,6 +3894,7 @@
 	    let _paletteCountdownStart = 0;
 	    let colorHoverInspectorEnabled = false;
 	    let colorHoverMatchCache = null;
+	    let colorHoverRuleCache = null;
 	    let colorHoverLastItemId = "";
 	    let colorHoverPendingPoint = null;
 	    let colorHoverRaf = 0;
@@ -3978,16 +4086,27 @@
 	      const rgb = cssRgbToHex(s);
 	      if (rgb) return rgb;
 	      const ok = s.match(/oklch\(\s*([\d.]+%?)\s+([\d.]+)\s+([\d.]+|none)(?:\s*\/\s*([\d.]+%?))?\s*\)/i);
-	      if (!ok) return "";
-	      let l = parseFloat(ok[1]);
-	      if (String(ok[1]).endsWith("%")) l /= 100;
-	      const c = parseFloat(ok[2]);
-	      const h = (ok[3] === "none" || isNaN(parseFloat(ok[3]))) ? 0 : parseFloat(ok[3]);
-	      if (ok[4] !== undefined) {
-	        const alpha = String(ok[4]).endsWith("%") ? parseFloat(ok[4])/100 : parseFloat(ok[4]);
-	        if (alpha <= 0.02) return "";
+	      if (ok) {
+	        let l = parseFloat(ok[1]);
+	        if (String(ok[1]).endsWith("%")) l /= 100;
+	        const c = parseFloat(ok[2]);
+	        const h = (ok[3] === "none" || isNaN(parseFloat(ok[3]))) ? 0 : parseFloat(ok[3]);
+	        if (ok[4] !== undefined) {
+	          const alpha = String(ok[4]).endsWith("%") ? parseFloat(ok[4])/100 : parseFloat(ok[4]);
+	          if (alpha <= 0.02) return "";
+	        }
+	        return oklchToHex(l, c, h);
 	      }
-	      return oklchToHex(l, c, h);
+	      const keyword = s.toLowerCase();
+	      if (/^[a-z]+$/i.test(s) && !["transparent", "currentcolor", "inherit", "initial", "unset", "revert"].includes(keyword)) {
+	        const el = document.createElement("span");
+	        el.style.color = s;
+	        document.body.appendChild(el);
+	        const hex = cssRgbToHex(getComputedStyle(el).color);
+	        el.remove();
+	        return hex;
+	      }
+	      return "";
 	    }
 
 	    function complementHex(hex) {
@@ -4037,7 +4156,7 @@
 	        const rowValue = row.substitute || row.hex;
 	        lines.push(`  ${rowVar}: ${rowValue};`);
 	        lines.push(`  --iw-original-${row.ordinal.toLowerCase()}: ${row.hex};`);
-	        if (row.sourceVarName) lines.push(`  ${row.sourceVarName}: var(${rowVar});`);
+	        if (shouldApplyWorkbenchSourceVar(row)) lines.push(`  ${row.sourceVarName}: var(${rowVar});`);
 	        const parentOk = hexToOklch(row.hex);
 	        for (const dep of row.deps || []) {
 	          const depVar = colorWorkbenchVarName(dep);
@@ -4049,7 +4168,7 @@
 	            : parentOk && depOk ? relColorExpr(rowVar, depOk, parentOk) : `var(${rowVar})`;
 	          lines.push(`  ${depVar}: ${depValue};`);
 	          lines.push(`  --iw-original-${dep.ordinal.toLowerCase()}: ${dep.hex};`);
-	          if (dep.sourceVarName) lines.push(`  ${dep.sourceVarName}: var(${depVar});`);
+	          if (shouldApplyWorkbenchSourceVar(dep, row)) lines.push(`  ${dep.sourceVarName}: var(${depVar});`);
 	        }
 	      }
 	      lines.push("}");
@@ -4074,8 +4193,66 @@
 	        .replace(new RegExp(`\\s*<script[^>]*id=["']${EDITOR_COLOR_STATE_ID}["'][^>]*>[\\s\\S]*?<\\/script>\\s*`, "gi"), "\n");
 	    }
 
+	    function shouldApplyWorkbenchSourceVar(item, parent = null) {
+	      if (!item?.sourceVarName) return false;
+	      return !!(item.substitute || item.preserveHex || parent?.substitute || parent?.preserveHex);
+	    }
+
+	    function managedWorkbenchInlineVarNames() {
+	      const names = new Set();
+	      for (const row of colorWorkbenchRows || []) {
+	        names.add(colorWorkbenchVarName(row));
+	        if (row.sourceVarName) names.add(row.sourceVarName);
+	        if (row.ordinal) names.add(`--iw-original-${String(row.ordinal).toLowerCase()}`);
+	        for (const dep of row.deps || []) {
+	          names.add(colorWorkbenchVarName(dep));
+	          if (dep.sourceVarName) names.add(dep.sourceVarName);
+	          if (dep.ordinal) names.add(`--iw-original-${String(dep.ordinal).toLowerCase()}`);
+	        }
+	      }
+	      return names;
+	    }
+
+	    function isManagedWorkbenchInlineVar(varName, managed = managedWorkbenchInlineVarNames()) {
+	      return /^--iw-(?:color|original)-/i.test(varName) || managed.has(varName);
+	    }
+
+	    function stripManagedWorkbenchStyleDeclarations(css, managed = managedWorkbenchInlineVarNames()) {
+	      return String(css || "")
+	        .split(";")
+	        .map(part => part.trim())
+	        .filter(part => {
+	          if (!part) return false;
+	          const name = part.split(":")[0]?.trim();
+	          return !isManagedWorkbenchInlineVar(name, managed);
+	        })
+	        .join("; ");
+	    }
+
+	    function stripManagedWorkbenchRootInlineStyles(html) {
+	      const managed = managedWorkbenchInlineVarNames();
+	      return String(html || "").replace(/<html\b([^>]*)>/i, (match, attrs) => {
+	        let changed = false;
+	        const nextAttrs = attrs.replace(/\sstyle\s*=\s*(["'])([\s\S]*?)\1/i, (styleMatch, quote, css) => {
+	          const cleaned = stripManagedWorkbenchStyleDeclarations(css, managed);
+	          changed = true;
+	          return cleaned ? ` style=${quote}${cleaned}${quote}` : "";
+	        });
+	        return changed ? `<html${nextAttrs}>` : match;
+	      });
+	    }
+
+	    function clearManagedWorkbenchRootInlineStyles(root) {
+	      if (!root?.style) return;
+	      const managed = managedWorkbenchInlineVarNames();
+	      for (let i = root.style.length - 1; i >= 0; i--) {
+	        const varName = root.style[i];
+	        if (isManagedWorkbenchInlineVar(varName, managed)) root.style.removeProperty(varName);
+	      }
+	    }
+
 	    function insertColorWorkbenchBlocks(html) {
-	      const clean = stripColorWorkbenchBlocks(html);
+	      const clean = stripManagedWorkbenchRootInlineStyles(stripColorWorkbenchBlocks(html));
 	      const injection = colorWorkbenchInjection();
 	      if (/<\/head>/i.test(clean)) return clean.replace(/<\/head>/i, `${injection}\n</head>`);
 	      if (/<body\b/i.test(clean)) return clean.replace(/<body\b/i, `${injection}\n<body`);
@@ -4093,6 +4270,7 @@
 	    function applyColorWorkbenchToFrame() {
 	      if (!colorWorkbenchRows.length) return;
 	      colorHoverMatchCache = null;
+	      colorHoverRuleCache = null;
 	      try {
 	        const doc = frame.contentDocument;
 	        if (!doc) return;
@@ -4104,32 +4282,34 @@
 	        }
 	        style.textContent = buildColorWorkbenchStyle();
 	        const root = doc.documentElement;
-	        for (const row of colorWorkbenchRows) {
-	          const rowVar = colorWorkbenchVarName(row);
-	          root.style.setProperty(rowVar, row.substitute || row.hex);
-	          if (row.sourceVarName) root.style.setProperty(row.sourceVarName, `var(${rowVar})`);
-	          const parentOk = hexToOklch(row.hex);
-	          for (const dep of row.deps || []) {
-	            const depVar = colorWorkbenchVarName(dep);
-	            const depOk = hexToOklch(dep.hex);
-	            const depValue = dep.substitute
-	              ? dep.substitute
-	              : dep.preserveHex
-	                ? dep.hex
-	              : parentOk && depOk ? relColorExpr(rowVar, depOk, parentOk) : `var(${rowVar})`;
-	            root.style.setProperty(depVar, depValue);
-	            if (dep.sourceVarName) root.style.setProperty(dep.sourceVarName, `var(${depVar})`);
-	          }
-	        }
+	        clearManagedWorkbenchRootInlineStyles(root);
 	      } catch {}
 	    }
 
+	    function swatchVisualState(item, color) {
+	      const original = toHexColor(item?.hex || "#000000");
+	      const current = toHexColor(color || original);
+	      const overridden = current.toLowerCase() !== original.toLowerCase();
+	      return { original, current, overridden };
+	    }
+
+	    function applySwatchButtonVisual(button, item, color) {
+	      if (!button) return;
+	      const state = swatchVisualState(item, color);
+	      button.classList.toggle("has-substitute", state.overridden);
+	      button.style.setProperty("--ewb-current", state.current);
+	      button.style.setProperty("--ewb-original", state.original);
+	      button.title = state.overridden
+	        ? `${state.current} (original ${state.original})`
+	        : state.original;
+	    }
+
 	    function renderSwatchButton(item, className, action, color, isBlank = false) {
-	      const bg = isBlank ? "" : ` style="background:${escapeHtml(color)}"`;
-	      const title = color && toHexColor(color).toLowerCase() !== toHexColor(item.hex).toLowerCase()
-	        ? `${toHexColor(color)} (original ${toHexColor(item.hex)})`
-	        : toHexColor(item.hex);
-	      return `<button type="button" class="ewb-swatch ${className}${isBlank ? " blank" : ""}" data-action="${action}" data-id="${escapeHtml(item.id)}"${bg} title="${escapeHtml(title)}">${escapeHtml(displayOrdinal(item.ordinal))}</button>`;
+	      const state = swatchVisualState(item, color);
+	      const cls = `ewb-swatch ${className}${isBlank ? " blank" : ""}${state.overridden ? " has-substitute" : ""}`;
+	      const style = isBlank ? "" : ` style="--ewb-current:${escapeHtml(state.current)};--ewb-original:${escapeHtml(state.original)};"`;
+	      const title = state.overridden ? `${state.current} (original ${state.original})` : state.original;
+	      return `<button type="button" class="${cls}" data-action="${action}" data-id="${escapeHtml(item.id)}"${style} title="${escapeHtml(title)}"><span class="ewb-swatch-label">${escapeHtml(displayOrdinal(item.ordinal))}</span></button>`;
 	    }
 
 	    function renderColorWorkbenchPanel(rows = null) {
@@ -4161,57 +4341,15 @@
 
 	    function updateSubstituteDom(row) {
 	      const button = colorWorkbenchHost?.querySelector(`.ewb-swatch[data-id="${cssEscape(row.id)}"]`);
-	      if (button) button.style.background = currentWorkbenchColor(row);
+	      if (button) applySwatchButtonVisual(button, row, currentWorkbenchColor(row));
 	    }
 
-	    function movePriorColorToDependents(hit, priorHex, nextHex) {
-	      const parentRow = hit?.parent || hit?.row;
-	      if (!parentRow || !priorHex) return;
-	      const prior = toHexColor(priorHex);
-	      const next = nextHex ? toHexColor(nextHex) : "";
-	      if (next && prior.toLowerCase() === next.toLowerCase()) return;
-	      const activeItem = hit.item;
-	      const oldOrdinal = String(activeItem?.ordinal || nextWorkbenchOrdinal()).toUpperCase();
-	      const replacementOrdinal = nextWorkbenchOrdinal();
-	      const existingPrior = [parentRow, ...(parentRow.deps || [])].find(item =>
-	        item !== activeItem && toHexColor(item.hex).toLowerCase() === prior.toLowerCase()
-	      );
-	      activeItem.ordinal = replacementOrdinal;
-	      if (existingPrior) {
-	        existingPrior.ordinal = oldOrdinal;
-	        return { parentRow, dep: existingPrior };
-	      }
-	      const ok = hexToOklch(prior);
-	      const chroma = ok?.c ?? 0;
-	      const dep = {
-	        id: `swatch-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
-	        ordinal: oldOrdinal,
-	        hex: prior,
-	        count: activeItem?.count || 0,
-	        chroma,
-	        score: (activeItem?.count || 0) * chroma,
-	        varToken: uniqueWorkbenchVarToken(`prior-${oldOrdinal}`),
-	        sourceVarName: "",
-	        substitute: "",
-	        preserveHex: true,
-	        deps: [],
-	      };
-	      parentRow.deps = [...(parentRow.deps || []), dep];
-	      return { parentRow, dep };
-	    }
-
-	    function setRowSubstitute(rowId, color, { rerender = true, movePrior = false } = {}) {
+	    function setRowSubstitute(rowId, color, { rerender = true } = {}) {
 	      const hit = findWorkbenchItem(rowId);
 	      if (!hit) return;
 	      const nextColor = color ? toHexColor(color) : "";
-	      let movedPrior = null;
-	      if (movePrior && nextColor && pendingPriorColorById.has(rowId)) {
-	        const prior = pendingPriorColorById.get(rowId);
-	        movedPrior = movePriorColorToDependents(hit, prior, nextColor);
-	        pendingPriorColorById.delete(rowId);
-	      }
 	      hit.item.substitute = nextColor;
-	      if (rerender || movedPrior) renderColorWorkbenchPanel();
+	      if (rerender) renderColorWorkbenchPanel();
 	      else {
 	        updateSubstituteDom(hit.item);
 	      }
@@ -4759,6 +4897,107 @@
 	      return best;
 	    }
 
+	    function cssVarNamesInValue(value) {
+	      return Array.from(String(value || "").matchAll(/var\(\s*(--[\w-]+)/g), m => m[1]);
+	    }
+
+	    function matchWorkbenchVariableName(varName) {
+	      const name = String(varName || "").trim();
+	      if (!name) return null;
+	      for (const entry of buildColorHoverMatchCache()) {
+	        const ordinal = String(entry.item?.ordinal || "").toLowerCase();
+	        if (
+	          name === colorWorkbenchVarName(entry.item) ||
+	          name === entry.item?.sourceVarName ||
+	          (ordinal && name === `--iw-original-${ordinal}`)
+	        ) {
+	          return entry;
+	        }
+	      }
+	      return null;
+	    }
+
+	    function matchWorkbenchColorValue(value, doc = null, seenVars = new Set()) {
+	      const raw = String(value || "").trim();
+	      if (!raw) return null;
+	      const hex = cssColorToHex(raw);
+	      const hexMatch = hex ? matchWorkbenchColor(hex) : null;
+	      if (hexMatch) return hexMatch;
+	      for (const varName of cssVarNamesInValue(raw)) {
+	        const direct = matchWorkbenchVariableName(varName);
+	        if (direct) return direct;
+	        if (!doc || seenVars.has(varName)) continue;
+	        seenVars.add(varName);
+	        try {
+	          const customValue = doc.defaultView?.getComputedStyle(doc.documentElement).getPropertyValue(varName);
+	          const nested = matchWorkbenchColorValue(customValue, doc, seenVars);
+	          if (nested) return nested;
+	        } catch {}
+	      }
+	      return null;
+	    }
+
+	    function cssPropertyCandidates(prop) {
+	      const kebab = String(prop || "").replace(/[A-Z]/g, m => "-" + m.toLowerCase());
+	      if (kebab === "background-color") return ["background-color", "background"];
+	      if (kebab === "background-image") return ["background-image", "background"];
+	      if (kebab === "text-decoration-color") return ["text-decoration-color", "text-decoration"];
+	      if (kebab.endsWith("-color") && kebab.startsWith("border-")) {
+	        const edge = kebab.replace(/-color$/, "");
+	        return [kebab, "border-color", edge, "border"];
+	      }
+	      if (kebab === "outline-color") return ["outline-color", "outline"];
+	      return [kebab];
+	    }
+
+	    function matchStyleDeclarationColor(style, props, doc) {
+	      if (!style) return null;
+	      for (const prop of props) {
+	        const value = style.getPropertyValue?.(prop) || "";
+	        const match = matchWorkbenchColorValue(value, doc);
+	        if (match) return match;
+	      }
+	      return null;
+	    }
+
+	    function collectCssStyleRules(ruleList, out = []) {
+	      if (!ruleList) return out;
+	      for (const rule of Array.from(ruleList)) {
+	        if (rule?.style && rule?.selectorText) out.push(rule);
+	        if (rule?.cssRules) {
+	          try { collectCssStyleRules(rule.cssRules, out); } catch {}
+	        }
+	      }
+	      return out;
+	    }
+
+	    function colorHoverCssRules(doc) {
+	      if (colorHoverRuleCache?.doc === doc) return colorHoverRuleCache.rules;
+	      const rules = [];
+	      for (const sheet of Array.from(doc?.styleSheets || [])) {
+	        try { collectCssStyleRules(sheet.cssRules, rules); } catch {}
+	      }
+	      colorHoverRuleCache = { doc, rules };
+	      return rules;
+	    }
+
+	    function matchAuthoredElementColor(el, props, doc) {
+	      const inlineMatch = matchStyleDeclarationColor(el?.style, props, doc);
+	      if (inlineMatch) return inlineMatch;
+	      const rules = colorHoverCssRules(doc);
+	      for (let i = rules.length - 1; i >= 0; i--) {
+	        const rule = rules[i];
+	        try {
+	          if (!el.matches(rule.selectorText)) continue;
+	        } catch {
+	          continue;
+	        }
+	        const match = matchStyleDeclarationColor(rule.style, props, doc);
+	        if (match) return match;
+	      }
+	      return null;
+	    }
+
 	    function setColorInspectorBlink(itemId, force = false) {
 	      if (!force && colorHoverLastItemId === itemId) return;
 	      if (colorHoverLastItemId) {
@@ -4797,6 +5036,38 @@
 	      return out;
 	    }
 
+	    function colorHoverTextElementFromRangesAt(doc, x, y) {
+	      try {
+	        const startEl = doc.elementFromPoint?.(x, y);
+	        if (!startEl) return null;
+	        const win = doc.defaultView || window;
+	        const filter = win.NodeFilter || NodeFilter;
+	        for (let root = startEl; root && root.nodeType === 1 && root !== doc.documentElement; root = root.parentElement) {
+	          const walker = doc.createTreeWalker(root, filter.SHOW_TEXT, {
+	            acceptNode(node) {
+	              return node.nodeValue?.trim() ? filter.FILTER_ACCEPT : filter.FILTER_REJECT;
+	            },
+	          });
+	          let count = 0;
+	          while (walker.nextNode() && count++ < 120) {
+	            const node = walker.currentNode;
+	            const range = doc.createRange();
+	            range.selectNodeContents(node);
+	            const rects = Array.from(range.getClientRects());
+	            range.detach?.();
+	            if (rects.some(rect =>
+	              x >= rect.left - 2 && x <= rect.right + 2 &&
+	              y >= rect.top - 2 && y <= rect.bottom + 2
+	            )) {
+	              return node.parentElement;
+	            }
+	          }
+	          if (root === doc.body) break;
+	        }
+	      } catch {}
+	      return null;
+	    }
+
 	    function colorHoverTextElementAt(doc, x, y) {
 	      try {
 	        let node = null;
@@ -4810,7 +5081,10 @@
 	          node = pos?.offsetNode || null;
 	          offset = pos?.offset || 0;
 	        }
-	        if (!node || node.nodeType !== Node.TEXT_NODE || !node.nodeValue?.trim()) return null;
+	        const textNodeType = doc.defaultView?.Node?.TEXT_NODE || Node.TEXT_NODE;
+	        if (!node || node.nodeType !== textNodeType || !node.nodeValue?.trim()) {
+	          return colorHoverTextElementFromRangesAt(doc, x, y);
+	        }
 	        const text = node.nodeValue;
 	        let start = Math.max(0, Math.min(text.length - 1, offset));
 	        if (/\s/.test(text[start] || "") && start > 0) start--;
@@ -4823,9 +5097,9 @@
 	          x >= rect.left - 2 && x <= rect.right + 2 &&
 	          y >= rect.top - 2 && y <= rect.bottom + 2
 	        );
-	        return onGlyph ? node.parentElement : null;
+	        return onGlyph ? node.parentElement : colorHoverTextElementFromRangesAt(doc, x, y);
 	      } catch {
-	        return null;
+	        return colorHoverTextElementFromRangesAt(doc, x, y);
 	      }
 	    }
 
@@ -4927,18 +5201,76 @@
 	      return y;
 	    }
 
-	    function matchBackgroundImageColor(backgroundImage, rect, point) {
+	    function matchBackgroundImageColor(backgroundImage, rect, point, doc = null) {
 	      const image = String(backgroundImage || "");
 	      if (!image || image === "none") return null;
 	      const layers = splitCssTopLevelCommas(image).filter(layer => /gradient\(/i.test(layer));
 	      for (const layer of layers) {
 	        const stops = parseGradientColorStops(layer);
-	        if (!stops.length) continue;
+	        if (!stops.length) {
+	          const authoredMatch = matchWorkbenchColorValue(layer, doc);
+	          if (authoredMatch) return authoredMatch;
+	          continue;
+	        }
 	        const t = gradientPointPosition(layer, rect, point);
 	        const ordered = [...stops].sort((a, b) => Math.abs(a.position - t) - Math.abs(b.position - t));
 	        for (const stop of ordered) {
-	          const match = matchWorkbenchColor(stop.hex);
+	          const match = matchWorkbenchColor(stop.hex) || matchWorkbenchColorValue(stop.hex, doc);
 	          if (match) return match;
+	        }
+	      }
+	      return null;
+	    }
+
+	    function workbenchColorHexMatches(hex, renderedHex, originalHex, threshold = 0.02) {
+	      if (!hex) return false;
+	      const normalized = toHexColor(hex).toLowerCase();
+	      if (normalized === renderedHex || normalized === originalHex) return true;
+	      const cur = hexToOklab(normalized);
+	      const rendered = hexToOklab(renderedHex);
+	      const original = hexToOklab(originalHex);
+	      const renderedDist = cur && rendered ? oklabDist(cur, rendered) : Infinity;
+	      const originalDist = cur && original ? oklabDist(cur, original) : Infinity;
+	      return Math.min(renderedDist, originalDist) < threshold;
+	    }
+
+	    function backgroundImageUsesWorkbenchColor(backgroundImage, renderedHex, originalHex) {
+	      const image = String(backgroundImage || "");
+	      if (!image || image === "none") return false;
+	      const layers = splitCssTopLevelCommas(image).filter(layer => /gradient\(/i.test(layer));
+	      for (const layer of layers) {
+	        for (const stop of parseGradientColorStops(layer)) {
+	          if (workbenchColorHexMatches(stop.hex, renderedHex, originalHex)) return true;
+	        }
+	      }
+	      return false;
+	    }
+
+	    function isVisibleElement(el) {
+	      const rect = el?.getBoundingClientRect?.();
+	      return !!rect && rect.width > 0 && rect.height > 0;
+	    }
+
+	    function firstElementFromCssRulesUsingVars(doc, varNames = []) {
+	      const names = varNames.filter(Boolean);
+	      if (!doc || !names.length) return null;
+	      for (const styleEl of doc.querySelectorAll("style")) {
+	        const css = styleEl.textContent || "";
+	        if (!names.some(name => css.includes(name))) continue;
+	        const ruleRe = /([^{}]+)\{([^{}]*)\}/g;
+	        let rule;
+	        while ((rule = ruleRe.exec(css)) !== null) {
+	          const body = rule[2] || "";
+	          if (!names.some(name => body.includes(name))) continue;
+	          for (const selector of (rule[1] || "").split(",")) {
+	            const sel = selector.trim();
+	            if (!sel || sel.startsWith("@")) continue;
+	            try {
+	              for (const el of doc.querySelectorAll(sel)) {
+	                if (isVisibleElement(el)) return el;
+	              }
+	            } catch {}
+	          }
 	        }
 	      }
 	      return null;
@@ -4953,7 +5285,9 @@
 	        if (textEl) {
 	          const cs = win.getComputedStyle(textEl);
 	          for (const prop of ["color", "textDecorationColor", "fill", "stroke"]) {
-	            const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	            const match =
+	              matchWorkbenchColorValue(cs[prop], doc) ||
+	              matchAuthoredElementColor(textEl, cssPropertyCandidates(prop), doc);
 	            if (match) return match;
 	          }
 	        }
@@ -4972,20 +5306,27 @@
 	          if (rect.width <= 0 || rect.height <= 0) continue;
 	          const cs = win.getComputedStyle(el);
 	          for (const prop of backgroundProps) {
-	            const hex = cssColorToHex(cs[prop]);
-	            const match = matchWorkbenchColor(hex);
+	            const match =
+	              matchWorkbenchColorValue(cs[prop], doc) ||
+	              matchAuthoredElementColor(el, cssPropertyCandidates(prop), doc);
 	            if (match) return match;
 	          }
-	          const gradientMatch = matchBackgroundImageColor(cs.backgroundImage, rect, point);
+	          const gradientMatch =
+	            matchBackgroundImageColor(cs.backgroundImage, rect, point, doc) ||
+	            matchAuthoredElementColor(el, cssPropertyCandidates("backgroundImage"), doc);
 	          if (gradientMatch) return gradientMatch;
 	          for (const [colorProp, widthProp, styleProp] of borderProps) {
 	            if (parseFloat(cs[widthProp]) <= 0 || cs[styleProp] === "none") continue;
-	            const match = matchWorkbenchColor(cssColorToHex(cs[colorProp]));
+	            const match =
+	              matchWorkbenchColorValue(cs[colorProp], doc) ||
+	              matchAuthoredElementColor(el, cssPropertyCandidates(colorProp), doc);
 	            if (match) return match;
 	          }
 	          if (win.SVGElement && el instanceof win.SVGElement) {
 	            for (const prop of ["fill", "stroke"]) {
-	              const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	              const match =
+	                matchWorkbenchColorValue(cs[prop], doc) ||
+	                matchAuthoredElementColor(el, cssPropertyCandidates(prop), doc);
 	              if (match) return match;
 	            }
 	          }
@@ -4995,7 +5336,9 @@
 	          if (rect.width <= 0 || rect.height <= 0) continue;
 	          const cs = win.getComputedStyle(el);
 	          for (const prop of fallbackTextProps) {
-	            const match = matchWorkbenchColor(cssColorToHex(cs[prop]));
+	            const match =
+	              matchWorkbenchColorValue(cs[prop], doc) ||
+	              matchAuthoredElementColor(el, cssPropertyCandidates(prop), doc);
 	            if (match) return match;
 	          }
 	        }
@@ -5126,15 +5469,12 @@
 	            const cs = win.getComputedStyle(el);
 	            for (const prop of props) {
 	              const hex = cssColorToHex(cs[prop]);
-	              if (!hex) continue;
-	              const normalized = hex.toLowerCase();
-	              const exact = normalized === renderedHex || normalized === originalHex;
-	              const fuzzy = !exact && (() => {
-	                const tgt = hexToOklab(renderedHex) || hexToOklab(originalHex);
-	                const cur = hexToOklab(normalized);
-	                return tgt && cur && oklabDist(tgt, cur) < 0.02;
-	              })();
-	              if (!exact && !fuzzy) continue;
+	              if (!workbenchColorHexMatches(hex, renderedHex, originalHex)) continue;
+	              el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+	              scrolled = true;
+	              break outer;
+	            }
+	            if (backgroundImageUsesWorkbenchColor(cs.backgroundImage, renderedHex, originalHex)) {
 	              el.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
 	              scrolled = true;
 	              break outer;
@@ -5155,6 +5495,13 @@
 	              }
 	            }
 	          }
+	          if (!scrolled) {
+	            const varEl = firstElementFromCssRulesUsingVars(doc, [colorWorkbenchVarName(hit.item), hit.item.sourceVarName || ""]);
+	            if (varEl) {
+	              varEl.scrollIntoView({ block: "center", inline: "nearest", behavior: "smooth" });
+	              scrolled = true;
+	            }
+	          }
 	        }
 	      } catch {}
 	      startBlink(itemId);
@@ -5166,25 +5513,53 @@
 	    // Blink state
 	    let _ewbBlinkTimer = null;
 	    let _ewbBlinkItemId = null;
-	    let _ewbBlinkVarName = null;
+	    let _ewbBlinkVars = [];
+
+	    function blinkVariableNamesForItem(item) {
+	      return Array.from(new Set([
+	        colorWorkbenchVarName(item),
+	        item?.sourceVarName || "",
+	      ].filter(Boolean)));
+	    }
+
+	    function setBlinkVariables(hex) {
+	      try {
+	        const root = frame.contentDocument?.documentElement;
+	        if (!root) return;
+	        for (const record of _ewbBlinkVars) root.style.setProperty(record.name, hex, "important");
+	      } catch {}
+	    }
+
+	    function restoreBlinkVariables() {
+	      try {
+	        const root = frame.contentDocument?.documentElement;
+	        if (!root) return;
+	        for (const record of _ewbBlinkVars) {
+	          if (record.value) root.style.setProperty(record.name, record.value, record.priority);
+	          else root.style.removeProperty(record.name);
+	        }
+	      } catch {}
+	    }
 
 	    function stopBlink() {
-	      if (!_ewbBlinkTimer) return;
-	      clearInterval(_ewbBlinkTimer);
-	      _ewbBlinkTimer = null;
+	      if (_ewbBlinkTimer) {
+	        clearInterval(_ewbBlinkTimer);
+	        _ewbBlinkTimer = null;
+	      }
+	      if (!_ewbBlinkItemId && !_ewbBlinkVars.length) return;
 	      // Restore swatch
 	      if (_ewbBlinkItemId) {
 	        const hit = findWorkbenchItem(_ewbBlinkItemId);
 	        const color = hit ? currentWorkbenchColor(hit.item) : "";
 	        colorWorkbenchHost?.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(_ewbBlinkItemId)}"]`)
-	          .forEach(b => { b.style.background = color || ""; });
+	          .forEach(b => {
+	            b.classList.remove("ewb-click-blink");
+	            if (hit) applySwatchButtonVisual(b, hit.item, color);
+	          });
 	      }
-	      // Restore CSS variable in iframe
-	      if (_ewbBlinkVarName) {
-	        try { frame.contentDocument?.documentElement?.style.removeProperty(_ewbBlinkVarName); } catch {}
-	      }
+	      restoreBlinkVariables();
 	      _ewbBlinkItemId = null;
-	      _ewbBlinkVarName = null;
+	      _ewbBlinkVars = [];
 	    }
 
 	    function startBlink(itemId) {
@@ -5192,25 +5567,35 @@
 	      const hit = findWorkbenchItem(itemId);
 	      if (!hit) return;
 	      _ewbBlinkItemId = itemId;
-	      _ewbBlinkVarName = colorWorkbenchVarName(hit.item);
+	      const rootStyle = frame.contentDocument?.documentElement?.style || null;
+	      _ewbBlinkVars = blinkVariableNamesForItem(hit.item).map(name => ({
+	        name,
+	        value: rootStyle?.getPropertyValue(name) || "",
+	        priority: rootStyle?.getPropertyPriority(name) || "",
+	      }));
 	      let tick = 0;
-	      _ewbBlinkTimer = setInterval(() => {
+	      const paintBlinkTick = () => {
 	        tick++;
 	        const isRed = tick % 2 === 1;
 	        const btns = colorWorkbenchHost
 	          ? colorWorkbenchHost.querySelectorAll(`.ewb-swatch[data-id="${cssEscape(itemId)}"]`)
 	          : [];
 	        if (isRed) {
-	          btns.forEach(b => { b.style.background = "#ee1111"; });
-	          try { frame.contentDocument?.documentElement?.style.setProperty(_ewbBlinkVarName, "#ee1111"); } catch {}
+	          btns.forEach(b => b.classList.add("ewb-click-blink"));
+	          setBlinkVariables("#ff1010");
 	        } else {
 	          const h = findWorkbenchItem(itemId);
 	          const color = h ? currentWorkbenchColor(h.item) : "";
-	          btns.forEach(b => { b.style.background = color || ""; });
-	          try { frame.contentDocument?.documentElement?.style.removeProperty(_ewbBlinkVarName); } catch {}
+	          btns.forEach(b => {
+	            b.classList.remove("ewb-click-blink");
+	            if (h) applySwatchButtonVisual(b, h.item, color);
+	          });
+	          restoreBlinkVariables();
 	        }
 	        if (tick >= 6) stopBlink();
-	      }, 500);
+	      };
+	      paintBlinkTick();
+	      _ewbBlinkTimer = setInterval(paintBlinkTick, 650);
 	    }
 
 	    function positionNativeColorInput(anchorEl) {
@@ -5230,7 +5615,6 @@
 	      clearTimeout(_ewbClickTimer);
 	      activeWorkbenchItemId = id;
 	      activeSubstituteRowId = id;
-	      pendingPriorColorById.set(id, toHexColor(hit.item.hex));
 	      dependencyInputRowId = "";
 	      renderColorWorkbenchPanel();
 	      const freshAnchor = colorWorkbenchHost?.querySelector(`.ewb-swatch[data-id="${cssEscape(id)}"]`) || anchorEl;
@@ -5244,9 +5628,8 @@
 	    function applyNativeSubstituteColor(final = false) {
 	      const id = colorWorkbenchNativeInput.dataset.id || activeSubstituteRowId;
 	      if (!id) return;
-	      setRowSubstitute(id, colorWorkbenchNativeInput.value, { rerender: false, movePrior: true });
+	      setRowSubstitute(id, colorWorkbenchNativeInput.value, { rerender: false });
 	      if (final) {
-	        pendingPriorColorById.delete(id);
 	        if (activeSubstituteRowId === id) activeSubstituteRowId = "";
 	        delete colorWorkbenchNativeInput.dataset.id;
 	      }
@@ -5303,7 +5686,6 @@
 	    // A later click means the native color picker was dismissed or focus moved on.
 	    document.addEventListener("click", (e) => {
 	      if (!activeSubstituteRowId) return;
-	      pendingPriorColorById.delete(activeSubstituteRowId);
 	      activeSubstituteRowId = "";
 	      delete colorWorkbenchNativeInput.dataset.id;
 	      renderColorWorkbenchPanel();
@@ -5341,7 +5723,6 @@
 	        row.substitute = "";
 	        for (const dep of row.deps || []) dep.substitute = "";
 	      }
-	      pendingPriorColorById.clear();
 	      activeSubstituteRowId = "";
 	      delete colorWorkbenchNativeInput.dataset.id;
 	      dependencyInputRowId = "";
@@ -6429,20 +6810,22 @@
       setTimeout(() => URL.revokeObjectURL(a.href), 600);
     }
 
-    function buildHtmlString() {
-      let html;
-      if (viewMode === "code" || viewMode === "split") {
-        html = getCodeContent();
-      } else {
-        html = getVisualContent();
-	      }
-	      html = stripEditorBaseTag(html);
-	      if (!colorWorkbenchRows.length) {
-	        const overrides = Object.entries(currentColors)
-	          .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
-	          .join(" ");
-	        if (overrides) html = html.replace("</head>", `<style>:root{${overrides}}</style>\n</head>`);
-	      }
+	    function buildHtmlString() {
+	      let html;
+	      if (viewMode === "code" || viewMode === "split") {
+	        html = getCodeContent();
+	      } else {
+	        html = getVisualContent();
+		      }
+		      html = stripManagedWorkbenchRootInlineStyles(stripEditorBaseTag(html));
+		      if (colorWorkbenchRows.length) {
+		        html = insertColorWorkbenchBlocks(html);
+		      } else {
+		        const overrides = Object.entries(currentColors)
+		          .flatMap(([k, v]) => getOverrideVarNames(k).map(varName => `${varName}:${v};`))
+		          .join(" ");
+		        if (overrides) html = html.replace("</head>", `<style>:root{${overrides}}</style>\n</head>`);
+		      }
 	      return html;
 	    }
 

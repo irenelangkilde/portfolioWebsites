@@ -9,7 +9,7 @@
  *
  *   const html = renderPortfolio(annotatedHtml, candidateData, colorSpec);
  *
- * colorSpec (optional): { primary, secondary, accent, background, text } — hex strings.
+ * colorSpec (optional): { primary, secondary, accent, quaternary, quinary } — hex strings.
  *   When provided, overrides the CSS custom properties from the extracted-theme block.
  */
 
@@ -24,6 +24,95 @@ function hexToRgb(hex) {
   if (h.length === 6)
     return { r: parseInt(h.slice(0, 2), 16), g: parseInt(h.slice(2, 4), 16), b: parseInt(h.slice(4, 6), 16) };
   return null;
+}
+
+function rgbToHexValue(r, g, b) {
+  return "#" + [r, g, b]
+    .map(v => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function normalizeHexValue(hex) {
+  if (!hex) return "";
+  const h = String(hex).trim().toLowerCase();
+  if (!/^#[0-9a-f]{3,8}$/.test(h)) return "";
+  if (h.length === 4) return "#" + h.slice(1).split("").map(ch => ch + ch).join("");
+  return h.slice(0, 7);
+}
+
+function clampValue(value, min, max) {
+  return Math.max(min, Math.min(max, value));
+}
+
+function srgbToLinear(value) {
+  const c = value / 255;
+  return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+}
+
+function linearToSrgb(value) {
+  const c = value <= 0.0031308 ? 12.92 * value : 1.055 * Math.pow(Math.max(0, value), 1 / 2.4) - 0.055;
+  return clampValue(c, 0, 1) * 255;
+}
+
+function hexToOklch(hex) {
+  const rgb = hexToRgb(normalizeHexValue(hex));
+  if (!rgb) return null;
+  const r = srgbToLinear(rgb.r);
+  const g = srgbToLinear(rgb.g);
+  const b = srgbToLinear(rgb.b);
+
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+
+  const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+  const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+  const c = Math.sqrt(A * A + B * B);
+  const h = ((Math.atan2(B, A) * 180 / Math.PI) + 360) % 360;
+  return { l: L, c, h };
+}
+
+function oklchToHex(ok) {
+  if (!ok) return "";
+  const hRad = ((ok.h ?? 0) * Math.PI) / 180;
+  const a = (ok.c ?? 0) * Math.cos(hRad);
+  const b = (ok.c ?? 0) * Math.sin(hRad);
+  const L = ok.l ?? 0;
+
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+
+  const l = l_ ** 3;
+  const m = m_ ** 3;
+  const s = s_ ** 3;
+
+  const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+  const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+  const blue = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+  return rgbToHexValue(linearToSrgb(r), linearToSrgb(g), linearToSrgb(blue));
+}
+
+function normalizeHue(hue) {
+  return ((hue % 360) + 360) % 360;
+}
+
+function shortestHueDelta(from, to) {
+  let delta = normalizeHue(to ?? 0) - normalizeHue(from ?? 0);
+  if (delta > 180) delta -= 360;
+  if (delta < -180) delta += 360;
+  return delta;
+}
+
+function oklchDistance(a, b) {
+  if (!a || !b) return Infinity;
+  const dL = (a.l - b.l) * 1.5;
+  const aA = (a.c ?? 0) * Math.cos(((a.h ?? 0) * Math.PI) / 180);
+  const aB = (a.c ?? 0) * Math.sin(((a.h ?? 0) * Math.PI) / 180);
+  const bA = (b.c ?? 0) * Math.cos(((b.h ?? 0) * Math.PI) / 180);
+  const bB = (b.c ?? 0) * Math.sin(((b.h ?? 0) * Math.PI) / 180);
+  return Math.sqrt(dL * dL + (aA - bA) ** 2 + (aB - bB) ** 2);
 }
 
 function isRecord(value) {
@@ -779,26 +868,224 @@ function fillItem($, $item, entry, { sectionKey = "" } = {}) {
 
 // ── Color override injection ──────────────────────────────────────────────────
 
-// Map of colorSpec key → CSS variable name in extracted-theme (5 ordinal vars only)
+// Map of colorSpec key → CSS variable names. New normalized templates use
+// --c-1…--c-5; older templates used semantic --color-* variables.
 const COLOR_VAR_MAP = {
-  primary:    "--color-primary",
-  secondary:  "--color-secondary",
-  accent:     "--color-tertiary",
-  tertiary:   "--color-tertiary",
-  quaternary: "--color-quaternary",
-  quinary:    "--color-quinary",
+  primary:    ["--c-1", "--color-primary"],
+  secondary:  ["--c-2", "--color-secondary"],
+  accent:     ["--c-3", "--color-tertiary"],
+  tertiary:   ["--c-3", "--color-tertiary"],
+  quaternary: ["--c-4", "--color-quaternary"],
+  quinary:    ["--c-5", "--color-quinary"],
 };
 
-function buildColorOverrideBlock(colorSpec) {
+const THEME_COLOR_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
+const NEUTRAL_CHROMA_THRESHOLD = 0.055;
+
+function themeFromColorSpec(colorSpec = {}) {
+  return {
+    primary:    normalizeHexValue(colorSpec.primary    || colorSpec.slot1),
+    secondary:  normalizeHexValue(colorSpec.secondary  || colorSpec.slot2),
+    accent:     normalizeHexValue(colorSpec.accent     || colorSpec.tertiary || colorSpec.slot3),
+    quaternary: normalizeHexValue(colorSpec.quaternary || colorSpec.foreground || colorSpec.accent2 || colorSpec.slot4),
+    quinary:    normalizeHexValue(colorSpec.quinary    || colorSpec.background || colorSpec.accent1 || colorSpec.slot5),
+  };
+}
+
+function parseEmbeddedPaletteScheme($) {
+  if (!$) return null;
+  const raw = $("#color-palette").first().html();
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw)?.scheme || null;
+  } catch {
+    return null;
+  }
+}
+
+function oklchFromSchemeEntry(entry) {
+  if (entry?.oklch) {
+    const l = Number(entry.oklch.l);
+    const c = Number(entry.oklch.c ?? 0);
+    const h = Number(entry.oklch.h ?? 0);
+    if ([l, c, h].every(Number.isFinite)) return { l, c, h: normalizeHue(h) };
+  }
+  return hexToOklch(entry?.hex);
+}
+
+function paletteEntriesFromScheme(scheme) {
+  return Object.entries(scheme || {})
+    .map(([varName, entry]) => {
+      const match = varName.match(/^--c-(\d+)$/);
+      if (!match) return null;
+      const ok = oklchFromSchemeEntry(entry);
+      if (!ok) return null;
+      return {
+        varName,
+        index: Number(match[1]),
+        hex: normalizeHexValue(entry?.hex),
+        ok,
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => a.index - b.index);
+}
+
+function paletteAnchorsFromTheme(theme) {
+  return THEME_COLOR_KEYS
+    .map((role, idx) => {
+      const hex = normalizeHexValue(theme?.[role]);
+      const ok = hexToOklch(hex);
+      return hex && ok ? { role, index: idx + 1, varName: `--c-${idx + 1}`, hex, ok } : null;
+    })
+    .filter(Boolean);
+}
+
+function mapAnchorsToNearestPaletteEntries(anchors, entries) {
+  if (!entries?.length || !anchors?.length) return anchors || [];
+  const pairs = [];
+  for (const anchor of anchors) {
+    for (const entry of entries) {
+      pairs.push({ anchor, entry, distance: oklchDistance(anchor.ok, entry.ok) });
+    }
+  }
+  pairs.sort((a, b) => a.distance - b.distance);
+
+  const assignedRoles = new Set();
+  const assignedEntries = new Set();
+  const mapped = [];
+  for (const pair of pairs) {
+    if (assignedRoles.has(pair.anchor.role) || assignedEntries.has(pair.entry.varName)) continue;
+    assignedRoles.add(pair.anchor.role);
+    assignedEntries.add(pair.entry.varName);
+    mapped.push({
+      ...pair.anchor,
+      index: pair.entry.index,
+      varName: pair.entry.varName,
+      sourceOk: pair.entry.ok,
+      sourceHex: pair.entry.hex,
+    });
+  }
+
+  for (const anchor of anchors) {
+    if (assignedRoles.has(anchor.role)) continue;
+    const nearest = nearestPaletteEntry(entries, anchor.ok);
+    mapped.push(nearest ? {
+      ...anchor,
+      index: nearest.index,
+      varName: nearest.varName,
+      sourceOk: nearest.ok,
+      sourceHex: nearest.hex,
+    } : anchor);
+  }
+
+  return mapped.sort((a, b) => a.index - b.index);
+}
+
+function nearestPaletteEntry(entries, ok) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const entry of entries || []) {
+    const distance = oklchDistance(entry.ok, ok);
+    if (distance < bestDistance) {
+      best = entry;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function nearestAnchorBySource(anchors, ok) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const anchor of anchors || []) {
+    const sourceOk = anchor.sourceOk || anchor.ok;
+    const distance = oklchDistance(sourceOk, ok);
+    if (distance < bestDistance) {
+      best = anchor;
+      bestDistance = distance;
+    }
+  }
+  return best;
+}
+
+function derivePaletteHex(entry, entries, anchors) {
+  const directAnchor = anchors.find(anchor => anchor.index === entry.index);
+  if (directAnchor) return directAnchor.hex;
+  if (!anchors.length || !entry?.ok) return "";
+
+  const selectedBase = nearestAnchorBySource(anchors, entry.ok) || anchors[0];
+  const sourceOk = selectedBase?.sourceOk
+    || entries.find(e => e.index === selectedBase?.index)?.ok
+    || selectedBase?.ok;
+  if (!sourceOk || !selectedBase) return "";
+
+  if ((entry.ok.c ?? 0) <= NEUTRAL_CHROMA_THRESHOLD) {
+    const neutralChroma = Math.min(Math.max((selectedBase.ok.c ?? 0) * 0.14, 0.004), 0.035);
+    const edgeChroma = entry.ok.l < 0.14 || entry.ok.l > 0.94 ? Math.min(neutralChroma, 0.012) : neutralChroma;
+    return oklchToHex({
+      l: clampValue(entry.ok.l, 0.03, 0.985),
+      c: edgeChroma,
+      h: selectedBase.ok.h,
+    });
+  }
+
+  return oklchToHex({
+    l: clampValue(selectedBase.ok.l + (entry.ok.l - sourceOk.l), 0.03, 0.985),
+    c: clampValue(selectedBase.ok.c + ((entry.ok.c ?? 0) - (sourceOk.c ?? 0)), 0.004, 0.36),
+    h: normalizeHue(selectedBase.ok.h + shortestHueDelta(sourceOk.h, entry.ok.h)),
+  });
+}
+
+function fullPaletteOverrides(colorSpec, scheme) {
+  const theme = themeFromColorSpec(colorSpec);
+  const entries = paletteEntriesFromScheme(scheme);
+  const anchors = mapAnchorsToNearestPaletteEntries(paletteAnchorsFromTheme(theme), entries);
+  if (!anchors.length) return [];
+
+  const pairs = [];
+  const emitted = new Set();
+
+  for (const entry of entries) {
+    const hex = derivePaletteHex(entry, entries, anchors);
+    if (!hex) continue;
+    pairs.push([entry.varName, hex]);
+    emitted.add(entry.varName);
+  }
+
+  for (const anchor of anchors) {
+    if (emitted.has(anchor.varName)) continue;
+    pairs.push([anchor.varName, anchor.hex]);
+  }
+
+  return pairs;
+}
+
+function addColorOverride(lines, emitted, cssVar, hex) {
+  const normalized = normalizeHexValue(hex);
+  if (!cssVar || !normalized || emitted.has(cssVar)) return;
+  emitted.add(cssVar);
+  const rgb = hexToRgb(normalized);
+  lines.push(`  ${cssVar}: ${normalized};`);
+  if (rgb) lines.push(`  ${cssVar}-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`);
+}
+
+function buildColorOverrideBlock(colorSpec, $ = null) {
   const lines = [":root {"];
   const emitted = new Set();
-  for (const [key, cssVar] of Object.entries(COLOR_VAR_MAP)) {
-    const hex = colorSpec[key];
-    if (!hex || emitted.has(cssVar)) continue;
-    emitted.add(cssVar);
-    const rgb = hexToRgb(hex);
-    lines.push(`  ${cssVar}: ${hex};`);
-    if (rgb) lines.push(`  ${cssVar}-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`);
+
+  const scheme = parseEmbeddedPaletteScheme($);
+  for (const [cssVar, hex] of fullPaletteOverrides(colorSpec, scheme)) {
+    addColorOverride(lines, emitted, cssVar, hex);
+  }
+
+  const theme = themeFromColorSpec(colorSpec);
+  for (const [key, cssVars] of Object.entries(COLOR_VAR_MAP)) {
+    const hex = theme[key] || (key === "tertiary" ? theme.accent : normalizeHexValue(colorSpec?.[key]));
+    if (!hex) continue;
+    for (const cssVar of cssVars) {
+      addColorOverride(lines, emitted, cssVar, hex);
+    }
   }
   lines.push("}");
   return lines.join("\n");
@@ -809,7 +1096,7 @@ function buildColorOverrideBlock(colorSpec) {
 /**
  * @param {string}  annotatedHtml  Output of annotateTemplate pipeline.
  * @param {object}  candidateData  Output of generateCandidateContent.
- * @param {object}  [colorSpec]    Optional: { primary, secondary, accent, background, text } as hex strings.
+ * @param {object}  [colorSpec]    Optional: { primary, secondary, accent, quaternary, quinary } as hex strings.
  * @returns {string} Rendered HTML.
  */
 export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) {
@@ -912,7 +1199,7 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
 
   // ── 7. Color override ────────────────────────────────────────────────────────
   if (colorSpec && Object.values(colorSpec).some(Boolean)) {
-    const overrideCss = buildColorOverrideBlock(colorSpec);
+    const overrideCss = buildColorOverrideBlock(colorSpec, $);
     const overrideTag = `<style id="color-override">\n${overrideCss}\n</style>`;
     if ($("head").length) {
       $("head").append(overrideTag);

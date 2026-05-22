@@ -1116,7 +1116,7 @@ ${pseudoSelectors} {
       const colorVarAliases = [];
       const firstStyleMatch = html.match(/<style[\s\S]*?<\/style>/i);
       if (firstStyleMatch) {
-        const colorVarRe = /(--color-[\w-]+)\s*:[^;]+;\s*\/\*\s*(\d+)\./g;
+        const colorVarRe = /(--(?:color|c)-[\w-]+)\s*:[^;]+;\s*\/\*\s*(\d+)\./g;
         let m;
         while ((m = colorVarRe.exec(firstStyleMatch[0])) !== null) {
           const cssVarName = m[1];
@@ -1128,7 +1128,10 @@ ${pseudoSelectors} {
         }
       }
 
-      const overridePairs = [
+      const fullCVarOverrides = buildFullCVarOverridePairs(html, theme);
+	      const overridePairs = [
+	        // Full normalized palette vars, including derived variants beyond --c-5
+	        ...fullCVarOverrides,
         // Canonical semantic names
         ["--background", theme.background],
         ["--foreground", theme.foreground],
@@ -1141,6 +1144,12 @@ ${pseudoSelectors} {
         ["--color-primary",    theme.primary],
         ["--color-secondary",  theme.secondary],
         ["--color-tertiary",   theme.accent],
+        // New normalized template palette vars
+        ["--c-1", theme.primary],
+        ["--c-2", theme.secondary],
+        ["--c-3", theme.accent],
+        ["--c-4", theme.quaternary],
+        ["--c-5", theme.quinary],
         // Backward-compatible aliases for older generated HTML
         ["--dominant", theme.primary],
         ["--tertiary", theme.accent],
@@ -1171,13 +1180,18 @@ ${pseudoSelectors} {
         ["--bp-tertiary", theme.accent],
         ["--bp-accent2", theme.foreground],
         ["--bp-accent1", theme.background],
-        // Template-specific --color-* aliases inferred from numbered slot comments
-        ...colorVarAliases
-      ];
-      const overrides = overridePairs
-        .filter(([, v]) => !!v)
-        .map(([k, v]) => `${k}: ${v};`)
-        .join(" ");
+	        // Template-specific --color-* aliases inferred from numbered slot comments
+	        ...colorVarAliases
+	      ];
+	      const emittedOverrideVars = new Set();
+	      const overrides = overridePairs
+	        .filter(([k, v]) => {
+	          if (!v || emittedOverrideVars.has(k)) return false;
+	          emittedOverrideVars.add(k);
+	          return true;
+	        })
+	        .map(([k, v]) => `${k}: ${v};`)
+	        .join(" ");
       if (!overrides) return html;
       const overrideBlock = `<style id="braid-user-colors">:root { ${overrides} }</style>`;
       if (/id="braid-user-colors"/i.test(html)) {
@@ -2059,6 +2073,7 @@ ${pseudoSelectors} {
       ++_normalizeRunId;
       templatePaletteRendered = false;
       userHasSelectedPalette  = false;
+      userHasCustomizedColors = false;
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
@@ -2606,10 +2621,10 @@ ${pseudoSelectors} {
       style.id = "iw-split-color-input-style";
       style.textContent = `
 input[type="color"].split-color::-webkit-color-swatch {
-  background: linear-gradient(90deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+  background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
 }
 input[type="color"].split-color::-moz-color-swatch {
-  background: linear-gradient(90deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
+  background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
 }`;
       document.head?.appendChild(style);
     }
@@ -2643,6 +2658,246 @@ input[type="color"].split-color::-moz-color-swatch {
         g: parseInt(n.slice(3, 5), 16),
         b: parseInt(n.slice(5, 7), 16)
       };
+    }
+
+    function clampNumber(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function srgbToLinearChannel(value) {
+      const c = value / 255;
+      return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    }
+
+    function linearToSrgbChannel(value) {
+      const c = value <= 0.0031308 ? 12.92 * value : 1.055 * Math.pow(Math.max(0, value), 1 / 2.4) - 0.055;
+      return clampNumber(c, 0, 1) * 255;
+    }
+
+    function hexToOklchColor(hex) {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return null;
+      const r = srgbToLinearChannel(rgb.r);
+      const g = srgbToLinearChannel(rgb.g);
+      const b = srgbToLinearChannel(rgb.b);
+
+      const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+      const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+      const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+
+      const L = 0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s;
+      const A = 1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s;
+      const B = 0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s;
+      return {
+        l: L,
+        c: Math.sqrt(A * A + B * B),
+        h: ((Math.atan2(B, A) * 180 / Math.PI) + 360) % 360
+      };
+    }
+
+    function oklchToHexColor(ok) {
+      if (!ok) return "";
+      const hRad = ((ok.h ?? 0) * Math.PI) / 180;
+      const a = (ok.c ?? 0) * Math.cos(hRad);
+      const b = (ok.c ?? 0) * Math.sin(hRad);
+      const L = ok.l ?? 0;
+
+      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+      const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+
+      const l = l_ ** 3;
+      const m = m_ ** 3;
+      const s = s_ ** 3;
+
+      const r = 4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+      const g = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+      const blue = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+      return rgbToHex(linearToSrgbChannel(r), linearToSrgbChannel(g), linearToSrgbChannel(blue));
+    }
+
+    function normalizeHue(hue) {
+      return ((hue % 360) + 360) % 360;
+    }
+
+    function shortestHueDelta(from, to) {
+      let delta = normalizeHue(to ?? 0) - normalizeHue(from ?? 0);
+      if (delta > 180) delta -= 360;
+      if (delta < -180) delta += 360;
+      return delta;
+    }
+
+    function oklchColorDistance(a, b) {
+      if (!a || !b) return Infinity;
+      const dL = (a.l - b.l) * 1.5;
+      const aA = (a.c ?? 0) * Math.cos(((a.h ?? 0) * Math.PI) / 180);
+      const aB = (a.c ?? 0) * Math.sin(((a.h ?? 0) * Math.PI) / 180);
+      const bA = (b.c ?? 0) * Math.cos(((b.h ?? 0) * Math.PI) / 180);
+      const bB = (b.c ?? 0) * Math.sin(((b.h ?? 0) * Math.PI) / 180);
+      return Math.sqrt(dL * dL + (aA - bA) ** 2 + (aB - bB) ** 2);
+    }
+
+    function parseEmbeddedPaletteSchemeFromHtml(html) {
+      if (!html) return null;
+      const m = html.match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
+      if (!m) return null;
+      try {
+        return JSON.parse(m[1])?.scheme || null;
+      } catch {
+        return null;
+      }
+    }
+
+    function oklchFromPaletteSchemeEntry(entry) {
+      if (entry?.oklch) {
+        const l = Number(entry.oklch.l);
+        const c = Number(entry.oklch.c ?? 0);
+        const h = Number(entry.oklch.h ?? 0);
+        if ([l, c, h].every(Number.isFinite)) return { l, c, h: normalizeHue(h) };
+      }
+      return hexToOklchColor(entry?.hex);
+    }
+
+    function paletteEntriesFromScheme(scheme) {
+      return Object.entries(scheme || {})
+        .map(([varName, entry]) => {
+          const match = varName.match(/^--c-(\d+)$/);
+          if (!match) return null;
+          const ok = oklchFromPaletteSchemeEntry(entry);
+          if (!ok) return null;
+          return { varName, index: Number(match[1]), hex: normalizeHex(entry?.hex), ok };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.index - b.index);
+    }
+
+    function paletteAnchorsFromTheme(theme) {
+      return THEME_ROLE_KEYS
+        .map((role, idx) => {
+          const hex = normalizeHex(theme?.[role]);
+          const ok = hexToOklchColor(hex);
+          return hex && ok ? { role, index: idx + 1, varName: `--c-${idx + 1}`, hex, ok } : null;
+        })
+        .filter(Boolean);
+    }
+
+    function mapAnchorsToNearestPaletteEntries(anchors, entries) {
+      if (!entries?.length || !anchors?.length) return anchors || [];
+      const pairs = [];
+      anchors.forEach(anchor => {
+        entries.forEach(entry => {
+          pairs.push({ anchor, entry, distance: oklchColorDistance(anchor.ok, entry.ok) });
+        });
+      });
+      pairs.sort((a, b) => a.distance - b.distance);
+
+      const assignedRoles = new Set();
+      const assignedEntries = new Set();
+      const mapped = [];
+      pairs.forEach(pair => {
+        if (assignedRoles.has(pair.anchor.role) || assignedEntries.has(pair.entry.varName)) return;
+        assignedRoles.add(pair.anchor.role);
+        assignedEntries.add(pair.entry.varName);
+        mapped.push({
+          ...pair.anchor,
+          index: pair.entry.index,
+          varName: pair.entry.varName,
+          sourceOk: pair.entry.ok,
+          sourceHex: pair.entry.hex
+        });
+      });
+
+      anchors.forEach(anchor => {
+        if (assignedRoles.has(anchor.role)) return;
+        const nearest = nearestPaletteEntry(entries, anchor.ok);
+        mapped.push(nearest ? {
+          ...anchor,
+          index: nearest.index,
+          varName: nearest.varName,
+          sourceOk: nearest.ok,
+          sourceHex: nearest.hex
+        } : anchor);
+      });
+
+      return mapped.sort((a, b) => a.index - b.index);
+    }
+
+    function nearestPaletteEntry(entries, ok) {
+      let best = null;
+      let bestDistance = Infinity;
+      (entries || []).forEach(entry => {
+        const distance = oklchColorDistance(entry.ok, ok);
+        if (distance < bestDistance) {
+          best = entry;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+
+    function nearestAnchorBySource(anchors, ok) {
+      let best = null;
+      let bestDistance = Infinity;
+      (anchors || []).forEach(anchor => {
+        const sourceOk = anchor.sourceOk || anchor.ok;
+        const distance = oklchColorDistance(sourceOk, ok);
+        if (distance < bestDistance) {
+          best = anchor;
+          bestDistance = distance;
+        }
+      });
+      return best;
+    }
+
+    function derivePaletteHex(entry, entries, anchors) {
+      const directAnchor = anchors.find(anchor => anchor.index === entry.index);
+      if (directAnchor) return directAnchor.hex;
+      if (!anchors.length || !entry?.ok) return "";
+
+      const selectedBase = nearestAnchorBySource(anchors, entry.ok) || anchors[0];
+      const sourceOk = selectedBase?.sourceOk
+        || entries.find(e => e.index === selectedBase?.index)?.ok
+        || selectedBase?.ok;
+      if (!sourceOk || !selectedBase) return "";
+
+      if ((entry.ok.c ?? 0) <= 0.055) {
+        const neutralChroma = Math.min(Math.max((selectedBase.ok.c ?? 0) * 0.14, 0.004), 0.035);
+        const edgeChroma = entry.ok.l < 0.14 || entry.ok.l > 0.94 ? Math.min(neutralChroma, 0.012) : neutralChroma;
+        return oklchToHexColor({
+          l: clampNumber(entry.ok.l, 0.03, 0.985),
+          c: edgeChroma,
+          h: selectedBase.ok.h
+        });
+      }
+
+      return oklchToHexColor({
+        l: clampNumber(selectedBase.ok.l + (entry.ok.l - sourceOk.l), 0.03, 0.985),
+        c: clampNumber(selectedBase.ok.c + ((entry.ok.c ?? 0) - (sourceOk.c ?? 0)), 0.004, 0.36),
+        h: normalizeHue(selectedBase.ok.h + shortestHueDelta(sourceOk.h, entry.ok.h))
+      });
+    }
+
+    function buildFullCVarOverridePairs(html, theme) {
+      const entries = paletteEntriesFromScheme(parseEmbeddedPaletteSchemeFromHtml(html));
+      const anchors = mapAnchorsToNearestPaletteEntries(paletteAnchorsFromTheme(theme), entries);
+      if (!anchors.length) return [];
+
+      const pairs = [];
+      const emitted = new Set();
+
+      entries.forEach(entry => {
+        const hex = derivePaletteHex(entry, entries, anchors);
+        if (!hex) return;
+        pairs.push([entry.varName, hex]);
+        emitted.add(entry.varName);
+      });
+
+      anchors.forEach(anchor => {
+        if (emitted.has(anchor.varName)) return;
+        pairs.push([anchor.varName, anchor.hex]);
+      });
+
+      return pairs;
     }
 
     function colorDistance(a, b) {
@@ -2833,12 +3088,13 @@ input[type="color"].split-color::-moz-color-swatch {
 
     function mapAiPaletteToUiSlots(colorsArray) {
       if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
+      const ordered = colorsArray.map(color => normalizeToHex(color) || null);
       return themeWithAliases({
-        background: normalizeToHex(colorsArray[0]) || null,
-        foreground: normalizeToHex(colorsArray[1]) || null,
-        primary: normalizeToHex(colorsArray[2]) || null,
-        secondary: normalizeToHex(colorsArray[3]) || null,
-        accent: normalizeToHex(colorsArray[4]) || null
+        primary: ordered[0],
+        secondary: ordered[1],
+        accent: ordered[2],
+        quaternary: ordered[3],
+        quinary: ordered[4]
       });
     }
 
@@ -3971,10 +4227,16 @@ input[type="color"].split-color::-moz-color-swatch {
       const resolvedStrategy = jobAdResult?.job_resolved || lastAnalysisData?.resume_resolved || null;
       const page3            = getPage3Colors();
       const userColors       = page3.theme;
-      const colorSpec        = userHasCustomizedColors && userColors?.primary ? userColors : {};
+      const colorSpec        = shouldSubmitPage4ColorSpec() && userColors?.primary ? userColors : {};
 
       try {
-        tracePortfolioPipeline("slot-fill:submit", { jobId, sampleHtmlLength: sampleHtml.length, provider: getAnalysisProvider() });
+        tracePortfolioPipeline("slot-fill:submit", {
+          jobId,
+          sampleHtmlLength: sampleHtml.length,
+          provider: getAnalysisProvider(),
+          colorSpecSubmitted: Object.values(colorSpec || {}).some(Boolean),
+          colorSpec,
+        });
         const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
@@ -4742,6 +5004,7 @@ input[type="color"].split-color::-moz-color-swatch {
       resumeAnalysisCache = null;
       lastAnalysisData = null;
       userHasSelectedPalette = false;
+      userHasCustomizedColors = false;
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
@@ -4766,6 +5029,7 @@ input[type="color"].split-color::-moz-color-swatch {
       lastAnalysisData     = null;
       resumeAnalysisCache  = null;
       userHasSelectedPalette = false;
+      userHasCustomizedColors = false;
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
@@ -4823,6 +5087,7 @@ input[type="color"].split-color::-moz-color-swatch {
       ++_normalizeRunId;
       templatePaletteRendered = false;
       userHasSelectedPalette = false;
+      userHasCustomizedColors = false;
       paletteSuggestionsLocked = false;
       displayedSuggestedPalettes = [];
       selectedSuggestedPaletteKey = "";
@@ -4846,13 +5111,18 @@ input[type="color"].split-color::-moz-color-swatch {
       if (page4Submitted) page4OpenEditorAction();
     }
 
-    function invalidateFromPage4() {
+    function invalidateFromPage4({ preserveComplements = false } = {}) {
       if (activePageId() !== "page4") return;
-      selectedPaletteComplements = null;
+      if (!preserveComplements) selectedPaletteComplements = null;
       updatePageColorInputSplitSwatches();
 
       if (slotFillInProgress || generationInProgress || braidInProgress) {
         tracePortfolioPipeline("page4:ignore-invalidation-during-generation", {});
+        return;
+      }
+
+      if (!page4Submitted && !generationResult && !bridgeResult) {
+        setOpenEditorReady(true);
         return;
       }
 
@@ -5139,7 +5409,7 @@ input[type="color"].split-color::-moz-color-swatch {
             const background = missingColor
               ? MISSING_PALETTE_SWATCH_BACKGROUND
               : complementColor
-                ? `linear-gradient(90deg, ${color} 0%, ${color} 50%, ${complementColor} 50%, ${complementColor} 100%)`
+                ? `linear-gradient(135deg, ${color} 0%, ${color} 50%, ${complementColor} 50%, ${complementColor} 100%)`
                 : color;
             const roleLabel = THEME_ROLE_LABELS[slot] || slot;
             s.title = missingColor
@@ -5165,11 +5435,16 @@ input[type="color"].split-color::-moz-color-swatch {
                 // Click (single or double): apply this swatch's color to the last-focused (or first) color picker
                 const applySwatchColor = e => {
                   stopSwatchClick(e);
+                  userHasSelectedPalette = true;
+                  userHasCustomizedColors = true;
+                  paletteSuggestionsLocked = true;
+                  selectedSuggestedPaletteKey = "";
                   selectedPaletteComplements = null;
                   const targetId = typeof focusedColorId !== "undefined" ? focusedColorId : "primary";
                   const input = document.getElementById(targetId);
                   if (input) input.value = rawColor;
                   updatePageColorInputSplitSwatches();
+                  invalidateFromPage4();
                 };
                 s.addEventListener("click", applySwatchColor);
                 s.addEventListener("dblclick", applySwatchColor);
@@ -5204,6 +5479,7 @@ input[type="color"].split-color::-moz-color-swatch {
             paletteSuggestionsLocked = true;
             selectedSuggestedPaletteKey = getPaletteKey(palette);
             applyColors(palette.colors);
+            invalidateFromPage4({ preserveComplements: true });
             copyBtn.dataset.state = "copied";
             copyBtn.textContent = "Copied! ✓";
             copyBtn.style.background = "#4CAF50";
@@ -5368,6 +5644,24 @@ input[type="color"].split-color::-moz-color-swatch {
         ? []
         : raw.filter(hex => /^#[0-9a-f]{6}$/.test(hex));
       return { mode, swatches, text };
+    }
+
+    function hasAnySubmittedThemeColor(theme) {
+      return THEME_ROLE_KEYS.some(role => /^#[0-9a-f]{6}$/i.test(normalizeHex(theme?.[role]) || ""));
+    }
+
+    function shouldSubmitPage4ColorSpec() {
+      const currentTheme = getPage3Colors().theme;
+      if (!hasAnySubmittedThemeColor(currentTheme)) return false;
+      if (userHasCustomizedColors || userHasSelectedPalette) return true;
+
+      // If the only palette present is the auto-applied original template palette,
+      // omit colorSpec so slot-fill can leave the sample untouched. If the visible
+      // swatches differ from the original, submit them as the user's selected colors.
+      const inputPalette = getInputPaletteSuggestion();
+      const inputKey = getPaletteKey(inputPalette);
+      if (!inputKey) return true;
+      return getPaletteKey({ colors: currentTheme }) !== inputKey;
     }
 
     function showPage4ColorError(message) {
@@ -5588,12 +5882,14 @@ input[type="color"].split-color::-moz-color-swatch {
       const msg = e.data;
       if (!msg || msg.type !== "colorPick") return;
       userHasSelectedPalette = true;
+      userHasCustomizedColors = true;
       paletteSuggestionsLocked = true;
       selectedSuggestedPaletteKey = "";
       selectedPaletteComplements = null;
       const el = document.getElementById(focusedColorId);
       if (el) el.value = msg.color;
       updatePageColorInputSplitSwatches();
+      invalidateFromPage4();
     });
 
     document.getElementById("submit_top")?.addEventListener("click", doPreview);
@@ -5621,6 +5917,7 @@ input[type="color"].split-color::-moz-color-swatch {
         if (!msg || msg.type !== "colorThemeSelected") return;
 
         userHasSelectedPalette = true;
+        userHasCustomizedColors = true;
         paletteSuggestionsLocked = true;
         selectedSuggestedPaletteKey = "";
         selectedPaletteComplements = null;
@@ -5629,10 +5926,11 @@ input[type="color"].split-color::-moz-color-swatch {
         const theme = themeWithAliases(t.base_colors || t);
 
         set("themeNumber", msg.number ?? "");
-        set("primary",   theme.background);
-        set("secondary", theme.foreground);
-        set("tertiary",  theme.primary);
-        set("accent2",   theme.secondary);
-        set("accent1",   theme.accent);
+        set("primary",   theme.primary);
+        set("secondary", theme.secondary);
+        set("tertiary",  theme.accent);
+        set("accent2",   theme.quaternary);
+        set("accent1",   theme.quinary);
         updatePageColorInputSplitSwatches();
+        invalidateFromPage4();
       });
