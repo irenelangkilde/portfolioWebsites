@@ -56,6 +56,7 @@ const SCALAR_FALLBACK_FIELDS = new Set([
 const RESUME_DRIVEN_SECTIONS = new Set([
   "education",
   "experience",
+  "skill_groups",
   "projects",
   "certifications",
   "publications",
@@ -80,6 +81,42 @@ function resolveFieldValue(entry, key) {
   }
 
   return undefined;
+}
+
+function isAboutContext($el) {
+  let $cur = $el;
+  while ($cur?.length) {
+    const id = String($cur.attr("id") || "").toLowerCase();
+    const cls = String($cur.attr("class") || "").toLowerCase();
+    const aria = `${$cur.attr("aria-label") || ""} ${$cur.attr("aria-labelledby") || ""}`.toLowerCase();
+    if (
+      id === "about" ||
+      /\babout\b/.test(cls) ||
+      /\babout\b/.test(aria)
+    ) return true;
+    const tag = String($cur[0]?.tagName || $cur[0]?.name || "").toLowerCase();
+    if (tag === "body" || tag === "html") break;
+    $cur = $cur.parent();
+  }
+  return false;
+}
+
+function resolveFieldValueForElement(entry, key, $el) {
+  const cls = String($el.attr("class") || "").toLowerCase();
+  const wordTarget = dataWordCount($el);
+  const aboutSubtitleLike = key === "subheadline" ||
+    (key === "value_proposition" && (
+      (wordTarget > 0 && wordTarget <= 20) ||
+      /\b(section-subtitle|subhead|subtitle|kicker)\b/.test(cls)
+    ));
+
+  if (aboutSubtitleLike && isAboutContext($el)) {
+    const aboutSubheadline = resolveFieldValue(entry, "about_section_subheadline");
+    if (aboutSubheadline !== undefined && aboutSubheadline !== null && String(aboutSubheadline).trim()) {
+      return aboutSubheadline;
+    }
+  }
+  return resolveFieldValue(entry, key);
 }
 
 function valueToText(value, preferredKey = "label") {
@@ -123,6 +160,12 @@ function dataWordCount($el) {
   return Number.isFinite(target) && target > 0 ? target : 0;
 }
 
+function shouldEnforceShortWordCount($el, preferredKey = "") {
+  const key = String(preferredKey || "").trim();
+  if (key === "headline" || key === "subheadline" || key === "about") return true;
+  return Boolean($el.closest(".hero, [data-section='hero_cards'], [data-item='hero_card']").length);
+}
+
 function splitSentences(value) {
   return String(value || "")
     .match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)
@@ -130,10 +173,12 @@ function splitSentences(value) {
     .filter(Boolean) || [];
 }
 
-function constrainTextToWordCount(value, targetWords) {
+function constrainTextToWordCount(value, targetWords, { enforceShort = false } = {}) {
   const text = String(value ?? "").trim();
-  if (!text || !targetWords || targetWords < 8) return value;
-  if (wordCount(text) <= targetWords * 1.35) return value;
+  if (!text || !targetWords) return value;
+  if (targetWords < 8 && !enforceShort) return value;
+  const allowedWords = targetWords < 8 ? targetWords : targetWords * 1.35;
+  if (wordCount(text) <= allowedWords) return value;
 
   const normalized = text.replace(/\s+/g, " ");
   const sentences = splitSentences(normalized);
@@ -158,7 +203,9 @@ function constrainTextToWordCount(value, targetWords) {
 
 function constrainFieldText($el, value, preferredKey) {
   const text = valueToText(value, preferredKey);
-  return constrainTextToWordCount(text, dataWordCount($el));
+  return constrainTextToWordCount(text, dataWordCount($el), {
+    enforceShort: shouldEnforceShortWordCount($el, preferredKey)
+  });
 }
 
 function constrainHtmlField($el, value) {
@@ -579,6 +626,61 @@ function renderIndexedSection($, container, items, $sectionItems) {
   $(container).removeAttr("data-section");
 }
 
+function addResponsiveHeroLayoutGuard($) {
+  const hasAccentBlockHero =
+    $(".hero .hero-card .hero-text").length &&
+    $(".hero .accent-block").length >= 3;
+  if (!hasAccentBlockHero || $("#iw-responsive-hero-layout-guard").length) return;
+
+  const css = `
+.hero {
+  height: clamp(620px, 100vh, 780px) !important;
+}
+.hero .hero-card {
+  min-height: 0 !important;
+  height: clamp(420px, 68vh, 560px);
+  max-height: 560px;
+}
+.hero .hero-text {
+  padding: clamp(26px, 4vh, 44px) 32px !important;
+  gap: clamp(10px, 1.8vh, 16px) !important;
+  max-width: 760px;
+}
+.hero .hero-photo {
+  width: clamp(88px, 13vh, 130px) !important;
+  height: clamp(88px, 13vh, 130px) !important;
+  flex: 0 0 auto;
+}
+.hero .hero-text h1 {
+  font-size: clamp(2.4rem, 6vw, 4rem) !important;
+  line-height: 1.05;
+  letter-spacing: 0 !important;
+  margin-bottom: 0 !important;
+  text-wrap: balance;
+}
+.hero .hero-text p {
+  font-size: clamp(1rem, 1.7vw, 1.15rem) !important;
+  line-height: 1.5 !important;
+  margin-bottom: clamp(12px, 2vh, 20px) !important;
+  max-width: 680px !important;
+}
+.hero .hero-cta {
+  padding: 12px 30px !important;
+}
+@media (max-height: 680px) {
+  .hero .hero-card { height: clamp(380px, 66vh, 470px); }
+  .hero .hero-photo { width: 82px !important; height: 82px !important; }
+  .hero .hero-text h1 { font-size: clamp(2rem, 5vw, 3.2rem) !important; }
+}
+@media (max-width: 640px) {
+  .hero .hero-card { height: auto; min-height: 430px !important; max-height: none; border-radius: 28px; }
+  .hero .hero-text { padding: 34px 22px !important; }
+}`;
+  const tag = `<style id="iw-responsive-hero-layout-guard">${css}</style>`;
+  if ($("head").length) $("head").append(tag);
+  else $.root().prepend(tag);
+}
+
 // ── Per-item fill ─────────────────────────────────────────────────────────────
 // Fills all data-* attributes within $item (including $item itself) from entry.
 // Removes the data-* attrs after fill so they are not re-processed by the top-level pass.
@@ -609,7 +711,7 @@ function fillItem($, $item, entry, { sectionKey = "" } = {}) {
 
   // Scalar/html/attr fields on $item itself
   const selfField = $item.attr("data-field");
-  const selfValue = selfField ? resolveFieldValue(entry, selfField) : undefined;
+  const selfValue = selfField ? resolveFieldValueForElement(entry, selfField, $item) : undefined;
   if (selfField && selfValue !== undefined) {
     $item.text(constrainFieldText($item, selfValue, selfField));
     $item.removeAttr("data-field");
@@ -640,7 +742,7 @@ function fillItem($, $item, entry, { sectionKey = "" } = {}) {
   // Scalar/html/attr fields on descendants
   $item.find("[data-field]").each((_, el) => {
     const key = $(el).attr("data-field");
-    const value = resolveFieldValue(entry, key);
+    const value = resolveFieldValueForElement(entry, key, $(el));
     if (value !== undefined) $(el).text(constrainFieldText($(el), value, key));
     $(el).removeAttr("data-field");
   });
@@ -772,7 +874,7 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
   // ── 3. Top-level scalar fields ───────────────────────────────────────────────
   $("[data-field]").each((_, el) => {
     const key = $(el).attr("data-field");
-    const value = resolveFieldValue(d, key);
+    const value = resolveFieldValueForElement(d, key, $(el));
     if (value !== undefined) $(el).text(constrainFieldText($(el), value, key));
     $(el).removeAttr("data-field");
   });
@@ -804,6 +906,9 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
     if (value) $(el).attr("src", String(value));
     $(el).removeAttr("data-attr-src");
   });
+
+  // ── 6.5. Defensive layout guards ────────────────────────────────────────────
+  addResponsiveHeroLayoutGuard($);
 
   // ── 7. Color override ────────────────────────────────────────────────────────
   if (colorSpec && Object.values(colorSpec).some(Boolean)) {

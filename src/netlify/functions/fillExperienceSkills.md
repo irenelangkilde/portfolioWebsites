@@ -124,7 +124,11 @@ Use resolved.website_copy_seed.skills_subcategory_labels for group names where t
 
 Organise skills by how a recruiter in this field scans for them — not by generic category.
 Put resolved.content_strategy.skills_to_surface items first within their groups.
-Limit to 3–6 groups; each group should have 3–10 skills.
+The number of skill groups and skills per group must be constrained by the resume facts,
+not by any template layout. Include the meaningful resume-supported groups and skills;
+do not add filler groups or filler skills to satisfy a visual pattern.
+Use 1–6 groups depending on the resume, and allow thin groups when the resume genuinely
+contains only a few skills in that area. Each group should usually have 2–10 skills.
 
 Good group names:
   "Languages & Frameworks"  (not "Programming Languages")
@@ -134,6 +138,7 @@ Good group names:
   "Areas of Expertise"      (for domains/subject areas)
 
 Only include groups that have at least 3 skills. Merge thin groups where it makes sense.
+Exception: keep a thin group when merging would hide a distinct, important resume-supported skill area.
 
 ══════════════════════════════════════════════════════════
 INPUTS

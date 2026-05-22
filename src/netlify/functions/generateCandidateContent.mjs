@@ -73,6 +73,70 @@ function firstNonEmpty(...values) {
   });
 }
 
+function splitSentences(value) {
+  return String(value || "")
+    .replace(/\r/g, "")
+    .match(/[^.!?]+[.!?]+(?:["')\]]+)?|[^.!?]+$/g)
+    ?.map(sentence => sentence.trim())
+    .filter(Boolean) || [];
+}
+
+function firstSentence(value) {
+  return splitSentences(value)[0] || String(value || "").trim();
+}
+
+function normalizeCopy(value) {
+  return String(value || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z0-9#]+;/gi, " ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function copyRepeats(a, b) {
+  const left = normalizeCopy(a);
+  const right = normalizeCopy(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+  if (Math.min(left.length, right.length) >= 32 && (left.includes(right) || right.includes(left))) return true;
+
+  const leftTokens = new Set(left.split(" ").filter(token => token.length > 2));
+  const rightTokens = new Set(right.split(" ").filter(token => token.length > 2));
+  if (leftTokens.size < 4 || rightTokens.size < 4) return false;
+  let overlap = 0;
+  for (const token of leftTokens) if (rightTokens.has(token)) overlap++;
+  return overlap / Math.min(leftTokens.size, rightTokens.size) >= 0.72;
+}
+
+function pickDistinctCopy(candidates = [], avoid = [], fallback = "") {
+  const avoidTexts = avoid.flatMap(value => [value, firstSentence(value)]).filter(Boolean);
+  for (const candidate of candidates) {
+    const text = String(candidate || "").replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    if (avoidTexts.some(other => copyRepeats(text, other))) continue;
+    return text;
+  }
+  return fallback;
+}
+
+function removeRepeatedLeadSentence(body, avoid = []) {
+  const text = String(body || "").trim();
+  if (!text) return text;
+  const avoidTexts = avoid.flatMap(value => [value, firstSentence(value)]).filter(Boolean);
+  const paragraphs = text.split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
+  if (!paragraphs.length) return text;
+
+  const leadSentences = splitSentences(paragraphs[0]);
+  const lead = leadSentences[0] || paragraphs[0];
+  if (!avoidTexts.some(other => copyRepeats(lead, other))) return text;
+
+  const remainingLead = leadSentences.slice(1).join(" ").trim();
+  const nextParagraphs = remainingLead ? [remainingLead, ...paragraphs.slice(1)] : paragraphs.slice(1);
+  return nextParagraphs.length ? nextParagraphs.join("\n\n") : text;
+}
+
 const SYSTEM = "Return only a valid JSON object. No markdown. No explanation. No code fences.";
 
 /**
@@ -185,6 +249,39 @@ export async function generateCandidateContent(callAIFn, {
       .filter(Boolean)
       .slice(0, 3),
   };
+
+  const aboutSectionSubheadline = pickDistinctCopy([
+    heroData.about_section_subheadline,
+    heroData.value_proposition,
+    resolved?.positioning?.value_proposition,
+    resolved?.website_copy_seed?.about_angle,
+    heroData.about,
+    "What I've built and where I'm headed."
+  ], [
+    heroData.subheadline,
+    firstSentence(heroData.about_full),
+    heroData.headline,
+  ], "What I've built and where I'm headed.");
+
+  candidateData.about_section_subheadline = aboutSectionSubheadline;
+  candidateData.about_full = removeRepeatedLeadSentence(candidateData.about_full, [
+    candidateData.subheadline,
+    candidateData.about_section_subheadline,
+    candidateData.value_proposition,
+    candidateData.about,
+    candidateData.headline,
+  ]);
+  if (copyRepeats(firstSentence(candidateData.about), candidateData.subheadline)) {
+    candidateData.about = pickDistinctCopy([
+      resolved?.positioning?.core_story,
+      resolved?.positioning?.value_proposition,
+      candidateData.value_proposition,
+    ], [
+      candidateData.subheadline,
+      candidateData.about_section_subheadline,
+      firstSentence(candidateData.about_full),
+    ], candidateData.about);
+  }
 
   // ── Token accounting ──────────────────────────────────────────────────────
   const tokenReports = [

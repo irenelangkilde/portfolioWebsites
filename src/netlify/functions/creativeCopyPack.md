@@ -18,6 +18,7 @@ OUTPUT SCHEMA
     "about":       "<creative title for the About section — omit key if has_about is false>"
   },
   "section_intros": {
+    "about":      "<one concise About section subtitle/bridge line — omit key if has_about is false>",
     "projects":   "<1–2 sentence bridge introducing the projects section>",
     "experience": "<1–2 sentence bridge introducing the experience section>"
   },
@@ -49,6 +50,7 @@ Each intro is 1–2 sentences that:
 - Connects the section to the candidate's story (not generic)
 - May reference the domain, key strength, or career goal
 - Ends with natural forward momentum into the section content below
+- For `about`, write a short subtitle/bridge for the About section. It must not repeat the hero subheadline, value proposition, or the first sentence of `about_full`.
 
 If the job_context is non-empty, at least one intro should weave in a keyword or framing from the job.
 
@@ -69,6 +71,7 @@ If the template asks for fewer than 3 paragraphs, combine those beats into the r
 
 Voice: first-person, matches resolved_strategy.editorial_direction.recommended_tone.
 Do NOT begin with "I am" or repeat the hero headline verbatim.
+Do NOT begin with the same sentence or phrase used in resolved_strategy.positioning.subheadline, resolved_strategy.positioning.value_proposition, or section_intros.about.
 Do NOT mention the candidate's name (it appears elsewhere on the page).
 
 ═══════════════════════════════════════════════════

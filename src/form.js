@@ -602,9 +602,14 @@
         const text = el?.textContent?.trim() || "";
         if (!text) continue;
         if (/not needed|credit limit reached/i.test(text)) continue;
-        const editorVisibleWarning = id === "colorsChosenStatus" && /masthead image/i.test(text);
+        // ✓ statuses are skipped — the editor already received the actual result via
+        // postMessage by the time success is shown, so re-broadcasting "✓ ready" would
+        // just be noise.
         if (/^✓/.test(text)) continue;
-        if (/^⚠/.test(text) && !editorVisibleWarning) continue;
+        // ⚠ warnings/errors DO forward — the user is most likely looking at the editor
+        // tab while waiting, and an actionable error (e.g. "Braid AI error:
+        // ReferenceError: module is not defined …") needs to surface there. Without this,
+        // the user stares at the trivia overlay until they think to check the form tab.
         return { text, color: el?.style?.color || "rgba(234,240,255,.6)" };
       }
       return null;

@@ -1183,6 +1183,62 @@ function splitTextSentences(value) {
     .filter(Boolean) || [];
 }
 
+function firstTextSentence(value) {
+  return splitTextSentences(value)[0] || String(value || "").trim();
+}
+
+function normalizeCopyText(value) {
+  return String(value || "")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&[a-z0-9#]+;/gi, " ")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function copyRepeats(a, b) {
+  const left = normalizeCopyText(a);
+  const right = normalizeCopyText(b);
+  if (!left || !right) return false;
+  if (left === right) return true;
+  if (Math.min(left.length, right.length) >= 32 && (left.includes(right) || right.includes(left))) return true;
+
+  const leftTokens = new Set(left.split(" ").filter(token => token.length > 2));
+  const rightTokens = new Set(right.split(" ").filter(token => token.length > 2));
+  if (leftTokens.size < 4 || rightTokens.size < 4) return false;
+  let overlap = 0;
+  for (const token of leftTokens) if (rightTokens.has(token)) overlap++;
+  return overlap / Math.min(leftTokens.size, rightTokens.size) >= 0.72;
+}
+
+function pickDistinctCopy(candidates = [], avoid = [], fallback = "") {
+  const avoidTexts = avoid.flatMap(value => [value, firstTextSentence(value)]).filter(Boolean);
+  for (const candidate of candidates) {
+    const text = String(candidate || "").replace(/\s+/g, " ").trim();
+    if (!text) continue;
+    if (avoidTexts.some(other => copyRepeats(text, other))) continue;
+    return text;
+  }
+  return fallback;
+}
+
+function removeRepeatedLeadSentence(body, avoid = []) {
+  const text = String(body || "").trim();
+  if (!text) return text;
+  const avoidTexts = avoid.flatMap(value => [value, firstTextSentence(value)]).filter(Boolean);
+  const paragraphs = text.split(/\n{2,}/).map(part => part.trim()).filter(Boolean);
+  if (!paragraphs.length) return text;
+
+  const leadSentences = splitTextSentences(paragraphs[0]);
+  const lead = leadSentences[0] || paragraphs[0];
+  if (!avoidTexts.some(other => copyRepeats(lead, other))) return text;
+
+  const remainingLead = leadSentences.slice(1).join(" ").trim();
+  const nextParagraphs = remainingLead ? [remainingLead, ...paragraphs.slice(1)] : paragraphs.slice(1);
+  return nextParagraphs.length ? nextParagraphs.join("\n\n") : text;
+}
+
 function shapeParagraphText(value, targetParagraphs = 0, targetWords = 0) {
   const trimmed = trimAboutToLength(value, targetWords);
   if (!targetParagraphs || targetParagraphs <= 1 || /\n\s*\n/.test(trimmed)) return trimmed;
@@ -1458,6 +1514,44 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
   const td = normalizedTheme.foreground || "#0f172a";
   const tb = normalizedTheme.background || "#f8fafc";
   const ta = normalizedTheme.accent || "#8de0ff";
+  const rawAbout = trimAboutToLength(
+    resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "",
+    heroAboutWordCount
+  );
+  const rawAboutFull = shapeParagraphText(
+    creativePack?.about_full || resumeJson?.summary || _coreStory || "",
+    aboutFullParagraphCount,
+    aboutFullWordCount
+  );
+  const aboutSectionSubheadline = pickDistinctCopy([
+    creativePack?.section_intros?.about,
+    copySeed.about_angle,
+    pos.value_proposition,
+    _coreStory,
+    "What I've built and where I'm headed."
+  ], [
+    pos.subheadline,
+    firstTextSentence(rawAboutFull),
+    pos.headline,
+  ], "What I've built and where I'm headed.");
+  const aboutFull = removeRepeatedLeadSentence(rawAboutFull, [
+    pos.subheadline,
+    aboutSectionSubheadline,
+    pos.value_proposition,
+    rawAbout,
+    pos.headline,
+  ]);
+  const about = copyRepeats(firstTextSentence(rawAbout), pos.subheadline)
+    ? pickDistinctCopy([
+      _coreStory,
+      pos.value_proposition,
+      copySeed.about_angle,
+    ], [
+      pos.subheadline,
+      aboutSectionSubheadline,
+      firstTextSentence(aboutFull),
+    ], rawAbout)
+    : rawAbout;
 
   return {
     // ── Theme colors ──
@@ -1474,8 +1568,9 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",
-    about:             trimAboutToLength(resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "", heroAboutWordCount),
-    about_full:        shapeParagraphText(creativePack?.about_full || resumeJson?.summary || _coreStory || "", aboutFullParagraphCount, aboutFullWordCount),
+    about,
+    about_full:        aboutFull,
+    about_section_subheadline: aboutSectionSubheadline,
     email:             personal.email    || "",
     phone:             personal.phone    || "",
     linkedin:          personal.linkedin || "",

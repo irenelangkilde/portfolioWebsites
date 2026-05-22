@@ -180,6 +180,82 @@ describe("renderPortfolio", () => {
     expect(rendered).not.toContain("I am especially interested");
   });
 
+  it("honors short hero word-count hints", () => {
+    const html = `
+      <section class="hero">
+        <h1 data-field="headline" data-word-count="2">Old headline</h1>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      headline: "Language systems shaped by evidence",
+    });
+
+    expect(rendered).toContain(">Language systems...</h1>");
+    expect(rendered).not.toContain("shaped by evidence");
+  });
+
+  it("adds a layout guard for accent-block hero templates", () => {
+    const html = `
+      <section class="hero">
+        <div class="accent-block"></div>
+        <div class="accent-block"></div>
+        <div class="accent-block"></div>
+        <div class="hero-card">
+          <div class="hero-text"><h1 data-field="headline">Old headline</h1></div>
+        </div>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      headline: "Generated headline",
+    });
+
+    expect(rendered).toContain('id="iw-responsive-hero-layout-guard"');
+    expect(rendered).toContain(".hero .hero-card");
+  });
+
+  it("uses a dedicated about subheadline when an about section is annotated as subheadline", () => {
+    const html = `
+      <section class="hero">
+        <p data-field="subheadline">Old hero subheadline</p>
+      </section>
+      <section id="about">
+        <h2>About Me</h2>
+        <p data-field="subheadline">Old about subheadline</p>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      subheadline: "Two summers at Raytheon put me on the bench.",
+      about_section_subheadline: "What I've built and where I'm headed.",
+    });
+
+    expect(rendered).toContain(">Two summers at Raytheon put me on the bench.</p>");
+    expect(rendered).toContain(">What I've built and where I'm headed.</p>");
+    expect(rendered.match(/Two summers at Raytheon/g)).toHaveLength(1);
+  });
+
+  it("uses a dedicated about subheadline for subtitle-sized about value propositions", () => {
+    const html = `
+      <section class="hero">
+        <p data-field="subheadline">Old hero subheadline</p>
+      </section>
+      <section id="about">
+        <p class="section-subtitle" data-field="value_proposition" data-word-count="8">Old about subtitle</p>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      subheadline: "Two summers at Raytheon put me on the bench.",
+      value_proposition: "Two summers at Raytheon put me on the bench.",
+      about_section_subheadline: "What I've built and where I'm headed.",
+    });
+
+    expect(rendered).toContain(">What I've built and where I'm headed.</p>");
+    expect(rendered.match(/Two summers at Raytheon/g)).toHaveLength(1);
+  });
+
   it("renders a section item that is also a data-list container", () => {
     const html = `
       <div data-section="skill_groups">
@@ -223,6 +299,44 @@ describe("renderPortfolio", () => {
     expect(rendered).not.toContain("Old skill");
     expect(rendered).not.toContain("data-section=");
     expect(rendered).not.toContain("data-list=");
+  });
+
+  it("does not cap skill group cards or skill chips to the template count", () => {
+    const html = `
+      <section data-section="skill_groups">
+        <article class="skill-card primary" data-item="skill_group">
+          <h3 data-field="group_name">Old first group</h3>
+          <div data-list="skills">
+            <span data-item="tag">Old one</span>
+            <span data-item="tag">Old two</span>
+          </div>
+        </article>
+        <article class="skill-card secondary" data-item="skill_group">
+          <h3 data-field="group_name">Old second group</h3>
+          <div data-list="skills">
+            <span data-item="tag">Old one</span>
+            <span data-item="tag">Old two</span>
+          </div>
+        </article>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      skill_groups: [
+        { group_name: "Statistics", skills: ["R", "SPSS", "Survey design"] },
+        { group_name: "Research", skills: ["Sampling", "Interview coding", "Data cleaning"] },
+        { group_name: "Communication", skills: ["Technical writing", "Presentation"] },
+      ],
+    });
+
+    expect(rendered).toContain(">Statistics</h3>");
+    expect(rendered).toContain(">Research</h3>");
+    expect(rendered).toContain(">Communication</h3>");
+    expect(rendered).toContain(">Survey design</span>");
+    expect(rendered).toContain(">Data cleaning</span>");
+    expect(rendered).toContain(">Presentation</span>");
+    expect(rendered).not.toContain("Old first group");
+    expect(rendered).not.toContain("Old second group");
   });
 
   it("caps specialty sub-lists to the template's concrete item count", () => {

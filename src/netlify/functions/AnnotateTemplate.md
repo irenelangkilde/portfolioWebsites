@@ -58,6 +58,7 @@ Top-level scalars
   name · first_name · last_name
   headline · subheadline · value_proposition
   about                    (hero lead paragraph — short)
+  about_section_subheadline (subtitle/bridge directly under the About section heading)
   about_full               (dedicated About section body — use data-html-field)
   email · phone · linkedin · github · website · location
   major · specialization · graduation_date · current_year
@@ -68,6 +69,7 @@ Section titles  (the first <h2> of each primary section)
   contact_section_title · about_section_title
 
 Bridge / intro copy  (1–2 sentence intros after a section heading)
+  about_section_subheadline
   projects_intro    wrap with data-if="has_projects_intro"
   experience_intro  wrap with data-if="has_experience_intro"
 
@@ -106,6 +108,8 @@ Recognise candidate-specific content by these signals:
 2. HERO TEXT: the large headline and subheadline in the masthead/hero area
    are role-focused copy → data-field="headline" / data-field="subheadline".
    The short lead paragraph near the hero → data-field="about".
+   Do NOT use data-field="subheadline" for a subtitle inside the About section;
+   use data-field="about_section_subheadline" instead.
 
 3. SECTION HEADINGS: replace only the five primary section headings
    (projects/work, skills, experience, contact, about) with

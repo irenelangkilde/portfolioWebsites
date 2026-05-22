@@ -51,6 +51,7 @@ OUTPUT SCHEMA
   "value_proposition": "<see VALUE PROPOSITION RULES>",
   "about":             "<see ABOUT RULES>",
   "about_full":        "<see ABOUT_FULL RULES>",
+  "about_section_subheadline": "<see ABOUT SECTION SUBHEADLINE RULES — omit key if has_about is false>",
   "open_to":           "<see OPEN_TO RULES>",
   "cta_tagline":       "<see CTA_TAGLINE RULES>",
 
@@ -93,6 +94,7 @@ SUBHEADLINE  (supporting line under headline — 10–20 words)
   - Draw an explicit thread from their background to the target role.
   - Name one or two concrete skills or proof points from resolved.content_strategy.feature_early.
   - Complement the headline; do not repeat it.
+  - This is hero copy only. Do not write a sentence that you also plan to use in about, about_full, value_proposition, or about_section_subheadline.
   Good: "CS senior with two shipped production features and a thesis on distributed caching."
   Weak: "I am a passionate and dedicated software engineer."
 
@@ -115,6 +117,13 @@ ABOUT_FULL  (dedicated About section body — 150–250 words, 2–3 paragraphs)
   Para 3 — Where they are going and how their skills align to the target role/business direction.
             If job_context is non-empty, name the employer's problem space explicitly.
   Voice: first-person. Do not begin with "I am". Do not name the candidate (it appears elsewhere).
+  Do not begin with the same sentence or phrase used in subheadline, value_proposition, about, or about_section_subheadline.
+
+ABOUT SECTION SUBHEADLINE  (short subtitle/bridge under the About heading)
+  - One concise line, 6–14 words.
+  - Use a different angle from the hero subheadline.
+  - Do not repeat the first sentence of about_full or the value_proposition.
+  - Good: "What I've built and where I'm headed."
 
 SECTION TITLES
   Must vary meaningfully from generic defaults ("Projects", "Skills", "Experience").

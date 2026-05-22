@@ -170,13 +170,7 @@ OUTPUT JSON SHAPE
     },
     "compatible_color_schemes": [
       {
-        "base_colors": {
-          "background": "",
-          "foreground": "",
-          "primary": "",
-          "secondary": "",
-          "accent": ""
-        },
+        "colors": [],
         "how_used": ""
       }
     ]
@@ -358,28 +352,25 @@ CTA OPTIONS
 Write 2-3 specific calls to action appropriate for this candidate's career stage and field. Avoid generic "Get in Touch" — make them action-specific and honest. Examples: "See my research", "View my projects", "Download my resume", "Let's talk about your team's needs". Pair with context: what page action or link they point to.
 
 6. SUBJECT-INSPIRED COLOR STRATEGY
-Conjure five colors inspired by the candidate's field and subject matter. Output them in `base_colors` using these slot names:
+Conjure 2-5 palette colors inspired by the candidate's field and subject matter. Output them in `colors` as hex strings ordered by visual prominence:
 
-  background — the dominant page canvas. Treat as a CHROMATIC surface, not a default white. Examples: deep cosmic navy, warm cream, dusty rose, forest green, paper-bag tan, ink slate.
-  foreground — the main readable ink color. Treat as a CHROMATIC dark/contrast tone, not a default black. Examples: deep burgundy, ink blue, espresso brown, dark teal, forest umber.
-  primary — the strongest action / emphasis color. Pops against the background.
-  secondary — a distinct supporting color used for hierarchy, chips, or panels.
-  accent — a fifth orthogonal highlight color that adds new contrast.
+  #1 — the most dominant or prominent color in the palette.
+  #2-#5 — lesser supporting colors, each with a clearly different visual job and subject-matter inspiration.
 
-HARD RULES — all five colors must satisfy these or the palette is rejected:
+Do NOT assign semantic website role labels such as background, foreground, primary, secondary, or accent. Do NOT imply where the colors must be used in the UI. Think like a field-inspired palette maker: choose colors from the candidate's domain, materials, tools, environments, data, culture, or subject matter, then rank them by prominence.
+
+HARD RULES — every generated color must satisfy these or the palette is rejected:
+- Generate at least 2 and at most 5 colors.
 - Every color must have chroma > 0.02 in OKLCH. NO pure black (#000000), NO pure white (#ffffff), NO desaturated grays.
-- `background` must NOT be #ffffff, #f8f9fa, #fafafa, or any near-white at chroma < 0.02. Pick a chromatic surface tone (light or dark) that reads as "designed."
-- `foreground` must NOT be #000000, #111111, #1a1a1a, or any near-black at chroma < 0.02. Pick a chromatic dark/contrast tone.
-- `foreground` must be readable on `background` (WCAG AA contrast ≥ 4.5:1).
-- All five colors must be genuinely distinct in OKLCH space (pairwise distance ≥ 0.10).
+- All generated colors must be genuinely distinct in OKLCH space (pairwise distance ≥ 0.10).
 
 Examples of field-inspired palettes that follow these rules:
-  Astrophysics: background=#1a1f4a (deep cosmic navy), foreground=#fff3d6 (warm star-cream), primary=#ff6b5b (nebula coral), secondary=#d4a017 (stellar gold), accent=#4ec9b0 (photon teal)
-  Marine biology: background=#0a3d5c (deep ocean), foreground=#f4ecd4 (pale sand), primary=#e85d4d (coral red), secondary=#3a8c5f (kelp green), accent=#9fdfd2 (seafoam mint)
-  Civil engineering: background=#2c3640 (steel slate, NOT pure black), foreground=#f0e7d5 (concrete cream, NOT pure white), primary=#e57825 (safety orange), secondary=#3d7ba8 (steel blue), accent=#e5c63b (caution yellow)
-  Statistics: background=#fdfaf3 (warm paper, NOT pure white), foreground=#3a2f5f (deep aubergine, NOT pure black), primary=#5b8dd8 (data blue), secondary=#c84b6e (signal rose), accent=#7ec488 (chart mint)
+  Astrophysics: #1=#1a1f4a (deep cosmic navy), #2=#fff3d6 (warm star-cream), #3=#ff6b5b (nebula coral), #4=#d4a017 (stellar gold), #5=#4ec9b0 (photon teal)
+  Marine biology: #1=#0a3d5c (deep ocean), #2=#f4ecd4 (pale sand), #3=#e85d4d (coral red), #4=#3a8c5f (kelp green), #5=#9fdfd2 (seafoam mint)
+  Civil engineering: #1=#2c3640 (steel slate, NOT pure black), #2=#f0e7d5 (concrete cream, NOT pure white), #3=#e57825 (safety orange), #4=#3d7ba8 (steel blue), #5=#e5c63b (caution yellow)
+  Statistics: #1=#fdfaf3 (warm paper, NOT pure white), #2=#3a2f5f (deep aubergine, NOT pure black), #3=#5b8dd8 (data blue), #4=#c84b6e (signal rose), #5=#7ec488 (chart mint)
 
-In `how_used`, describe the overall palette mood and field connection in one sentence.
+In `how_used`, describe the overall palette mood and field connection in one sentence without assigning UI roles to individual colors.
 
 7. RESOLVED / SYNTHESIZED SECTIONS (resume_resolved)
 resume_resolved is a separate top-level output — not nested inside resume_strategy. It contains five resolved sections plus selected copy fields derived from the working material in resume_strategy. Downstream rendering stages consume resume_resolved directly. Treat editorial_direction, motifs, and website_copy_seed in resume_strategy as raw material; treat resume_resolved as the final decisions.
