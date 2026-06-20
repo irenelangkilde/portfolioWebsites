@@ -3,6 +3,7 @@ layout: post
 title: "How much of an improvement in salary might be expected for a candidate with a portfolio website versus one without?"
 date: 2026-02-05
 author: "Irene Langkilde"
+pattern_variant: 7
 ---
 
 <div dir="ltr" aria-busy="false" aria-live="polite" id="model-response-message-contentr_cd0f98f9fd77c4af">

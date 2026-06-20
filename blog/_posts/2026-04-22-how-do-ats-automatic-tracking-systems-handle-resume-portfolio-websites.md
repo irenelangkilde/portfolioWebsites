@@ -3,6 +3,7 @@ layout: post
 title: "How do ATS (Automatic Tracking Systems) handle resume portfolio websites?"
 date: 2026-04-22
 author: "Irene Langkilde"
+pattern_variant: 2
 ---
 
 <p><span>Quotes from https://www.linkedin.com/pulse/what-know-applicant-tracking-systems-2026-andrew-seaman-mzz8e/ on ATS tracing systems.</span></p>

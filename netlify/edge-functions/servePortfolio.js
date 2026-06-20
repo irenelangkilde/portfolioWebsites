@@ -31,15 +31,19 @@ function isSystemHost(host, primaryDomain) {
   // Collect all known site hostnames from explicit config and Netlify's auto env vars.
   const candidates = new Set();
 
-  if (primaryDomain) {
-    for (const d of primaryDomain.split(",")) {
+  const addDomainList = (raw) => {
+    if (!raw) return;
+    for (const d of raw.split(",")) {
       const h = d.trim().toLowerCase();
-      if (h) {
-        candidates.add(h);
-        for (const v of apexAndWww(h)) candidates.add(v);
-      }
+      if (!h) continue;
+      candidates.add(h);
+      for (const v of apexAndWww(h)) candidates.add(v);
     }
-  }
+  };
+
+  addDomainList(primaryDomain);
+  // Additional hostnames to treat as aliases of the main site (comma-separated).
+  addDomainList(Netlify.env.get("ALIAS_DOMAINS"));
 
   // Netlify always sets URL = primary site URL. Use it as a reliable fallback.
   const siteUrl = Netlify.env.get("URL") || "";

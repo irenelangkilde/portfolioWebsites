@@ -3,6 +3,7 @@ layout: post
 title: "LinkedIn weighs in on changes in the world of work and what we all need to do to thrive in it."
 date: 2026-02-26
 author: "Irene Langkilde"
+pattern_variant: 3
 ---
 
 <p><span>Below are a few highlights from an article released today by LinkedIn: </span></p>

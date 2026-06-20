@@ -3,6 +3,7 @@ layout: post
 title: "Why a Portfolio Website From Irene's Webworks Beats a Traditional Resume (or Resume Services)"
 date: 2026-02-20
 author: "Irene Langkilde"
+pattern_variant: 5
 ---
 
 <h1>Why a Portfolio Website From Irene's Webworks Beats a Traditional Resume (and Most Resume Services)</h1>

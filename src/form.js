@@ -2253,12 +2253,14 @@ ${pseudoSelectors} {
       if (!source) return;
       if (source === "none") {
         setTemplateExtractStatus("Design options selected", "rgba(234,240,255,.45)");
+        tracePortfolioPipeline("template-extract:none", { source });
         return;
       }
 
       // Keyword source defaults to mustache (slot-fill path); file uploads stay on analysis/braid.
       const extractMode = document.getElementById("extractTemplateMode")?.value
         || (source === "keyword" ? "mustache" : "analysis");
+      tracePortfolioPipeline("template-extract:start", { source, extractMode });
 
       let key = "";
       let templateInputKind = "template";
@@ -2270,6 +2272,7 @@ ${pseudoSelectors} {
 
         // Keyword — try pre-compiled file first, fall back to API
         const srcPath = templateLabelToPath(val);
+        tracePortfolioPipeline("template-extract:keyword", { keyword: val, srcPath, extractMode });
 
         // Each mode has its own pre-compiled path:
         //   annotated → annotated.html  (preferred: Cheerio slot-fill)
@@ -2328,6 +2331,13 @@ ${pseudoSelectors} {
           rawTemplateHtml = rawTemplateHtml || html;
           mastheadMeta = mastheadMeta || normalizedTemplateResult?.mastheadMeta || null;
           extractedTemplateCache = { templateHtml: html, rawTemplateHtml, mastheadMeta, embeddedJson: null, templateMode: "braid", templateInputKind: "template" };
+          tracePortfolioPipeline("template-extract:loaded", {
+            keyword: val,
+            usedKey,
+            extractMode,
+            resolvedMode: "braid",
+            templateHtmlLength: html.length
+          });
           setTemplateExtractStatus(
             usedKey === normalizedKey ? "✓ Sample website loaded (pre-normalized)" : "✓ Sample website loaded",
             "rgba(118,176,34,.9)"
@@ -2363,6 +2373,13 @@ ${pseudoSelectors} {
             const isMustacheFallback = candidateKey.endsWith("/mustache.html") && !isAnnotated;
             const resolvedMode = isAnnotated ? "annotated" : isMustacheFallback ? "mustache" : "analysis";
             extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode, templateInputKind: "template" };
+            tracePortfolioPipeline("template-extract:loaded", {
+              keyword: val,
+              usedKey: candidateKey,
+              extractMode,
+              resolvedMode,
+              templateHtmlLength: templateHtml.length
+            });
             const label = isAnnotated ? "✓ Template loaded" : isMustacheFallback ? "✓ Template loaded (annotated.html not yet generated)" : "✓ Template loaded (analysis fallback)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
@@ -5246,6 +5263,13 @@ input[type="color"].split-color::-moz-color-swatch {
 
     function page3Action() {
       const source = document.querySelector('input[name="templateSource"]:checked')?.value;
+      tracePortfolioPipeline("page3:submit", {
+        source,
+        keyword: document.getElementById("modelTemplate")?.value?.trim() || "",
+        extractTemplateMode: document.getElementById("extractTemplateMode")?.value || "(default)",
+        hasExtractedCache: !!extractedTemplateCache,
+        cacheTemplateMode: extractedTemplateCache?.templateMode || null
+      });
 
       function showSourceMsg(text) {
         let msg = document.getElementById("_msg_templateSource");
@@ -5284,6 +5308,14 @@ input[type="color"].split-color::-moz-color-swatch {
 
       if (source !== "none") {
         extractTemplateInBackground().then(() => {
+          tracePortfolioPipeline("page3:template-ready", {
+            source,
+            keyword: document.getElementById("modelTemplate")?.value?.trim() || "",
+            cacheTemplateMode: extractedTemplateCache?.templateMode || null,
+            isSlotFill: isSlotFillMode(),
+            isBraid: isBraidMode(),
+            pipelineThatWillRun: isSlotFillMode() ? "slot-fill" : isBraidMode() ? "braid" : "(none)"
+          });
           if (isDebugMode() && extractedTemplateCache) {
             populateTemplateExtractPanel(extractedTemplateCache);
             document.getElementById("templateExtractPanel")?.classList.remove("hidden");
@@ -5534,6 +5566,9 @@ input[type="color"].split-color::-moz-color-swatch {
     document.getElementById("back3_from_preview")?.addEventListener("click", () => setStep(2));
     const _next3Handler = () => {
       if (!page3Action()) return;
+      tracePortfolioPipeline("page3:next", {
+        routingSnapshot: window._debugRoutingState?.() || null
+      });
       window.umami?.track("form-step-complete", { step: 3 });
       // Just navigate to page 4. Braid/slot-fill kickoff happens on the page-4 Next click,
       // so the user's color choices (page 4) get folded into the request.

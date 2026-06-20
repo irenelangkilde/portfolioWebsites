@@ -16,14 +16,15 @@ Requirements:
 - Use the resume facts as the source of truth for factual content.
 - Prioritize the resolved strategy JSON for what to emphasize, ordering, tone, and positioning.
 - Follow the design spec closely for composition, style, density, render mode, emoji/icon usage, and section alternation.
-- Use the provided five-color scheme directly for the core palette. Keep neutrals and utility colors hardcoded when needed.
-- Declare the five supplied colors as semantic CSS variables in `:root`:
-  `--background`, `--foreground`, `--primary`, `--secondary`, `--accent`.
+- Use the provided color scheme as key colors. Feel free to add complementary shades, neutrals and utility colors as needed.
+- Declare the supplied colors as semantic CSS variables in `:root`:
+  `--c-1`, `--c-2`, `--c-3`, `--c-4`, `--c-5`, and so forth.
 - Build the rest of the color system from those variables using reusable derived tokens for surfaces,
-  borders, muted text, shadows, chips, and overlays. Prefer `color-mix()`-based derived variables and
+  borders, muted text, shadows, chips, and overlays. Use only `color-mix()`-based derived variables and
   mixin-like reusable classes/component recipes rather than ad hoc hardcoded colors throughout the stylesheet.
 - Build a polished, editable portfolio website with real sections, not a wireframe.
-- Include a clear hero, projects/work section, skills, about/profile, and contact/resume CTA.
+- Make sections alternate between constrasting light and dark themes.
+- Include a clear hero, about/profile, projects/work section, skills, and contact/resume CTA.
 - Include a headshot area that follows the headshot guidance.
 - Prefer concise, strong copy. Do not invent employers, degrees, awards, metrics, links, or dates.
 - If the resolved strategy conflicts with raw resume facts, keep the facts correct and use the strategy only for emphasis and organization.
@@ -40,7 +41,7 @@ Requirements:
 Implementation guidance:
 - Let the design spec drive the overall composition.
 - Let the resolved strategy drive narrative emphasis and section priority.
-- Derive nearby colors with CSS functions from the five supplied colors when useful.
+- Derive nearby colors with CSS functions from the supplied colors when useful.
 - Keep the palette architecture explicit and reusable:
   - base semantic variables in `:root`
   - derived component tokens from those base variables
@@ -56,4 +57,4 @@ Implementation guidance:
   other inline SVG/data-URI image treatment that feels specific to the project.
 - Icons or emoji may be used as supporting accents, but they must not be the only project visual.
 - If a fact is missing, omit it cleanly instead of inserting placeholders like "TBD".
-- Keep the site self-contained: inline CSS and any lightweight JS in the HTML file.
+- Keep the site self-contained except for images: inline CSS and any lightweight JS in the HTML file.  Insert "a href" placeholders for png/jpg images.

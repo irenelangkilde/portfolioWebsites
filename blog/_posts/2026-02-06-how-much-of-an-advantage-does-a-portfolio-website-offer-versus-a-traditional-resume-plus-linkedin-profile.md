@@ -3,6 +3,7 @@ layout: post
 title: "How much of an advantage does a portfolio website offer versus a traditional resume plus LinkedIn profile?"
 date: 2026-02-06
 author: "Irene Langkilde"
+pattern_variant: 6
 ---
 
 <p>A portfolio website provides a <strong>meaningful but situational advantage</strong> over a resume + LinkedIn alone. It’s not universally decisive, but for graduating seniors and early-career candidates, it can <strong>materially increase visibility, interview rates, and perceived credibility</strong>. The magnitude depends on role, industry, and execution quality.</p>

@@ -236,6 +236,20 @@
       background: #fff;
     }
 
+    .preview-link {
+      display: block;
+      border-radius: 18px;
+      text-decoration: none;
+      outline: none;
+    }
+
+    .preview-link:focus-visible .preview-shell {
+      border-color: rgba(142, 162, 255, 0.68);
+      box-shadow:
+        0 0 0 4px rgba(142, 162, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
     .card-body {
       display: grid;
       gap: 10px;
@@ -253,12 +267,24 @@
       gap: 8px;
       width: fit-content;
       padding: 10px 14px;
+      border: 0;
       border-radius: 999px;
       background: rgba(142, 162, 255, 0.12);
       color: var(--accent);
       font-size: 0.86rem;
       font-weight: 800;
       letter-spacing: 0.03em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .cta:hover,
+    .cta:focus-visible {
+      background: rgba(142, 162, 255, 0.22);
+      color: var(--ink);
+      outline: none;
+      transform: translateY(-1px);
     }
 
     .empty {
@@ -275,6 +301,112 @@
 
     .empty.show {
       display: block;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(5, 10, 24, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .learn-modal {
+      width: min(720px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      overflow: auto;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 24px;
+      background: rgba(22, 33, 62, 0.97);
+      box-shadow: var(--shadow-strong);
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .modal-kicker {
+      margin: 0 0 8px;
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .learn-modal h2 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      line-height: 1;
+    }
+
+    .modal-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus-visible {
+      background: rgba(142, 162, 255, 0.18);
+      outline: none;
+    }
+
+    .modal-body {
+      display: grid;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.68;
+    }
+
+    .modal-body p {
+      margin: 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .modal-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      border-radius: 999px;
+      background: rgba(126, 215, 193, 0.15);
+      color: var(--accent-2);
+      font-size: 0.88rem;
+      font-weight: 900;
+      text-decoration: none;
     }
 
     @media (max-width: 820px) {
@@ -327,8 +459,8 @@
         <div>
           <h1>Personal Portfolio Previews</h1>
           <p>
-            Browse our public portfolio variants. Each card shows a live scaled preview. Click any preview to open the full
-            site in a new tab.
+            Browse our public portfolio variants. Each card shows a live scaled preview. Click a preview to open the full
+            site, or choose Learn More for a short description.
           </p>
         </div>
         <div class="hero-tools">
@@ -344,6 +476,22 @@
     <section class="gallery" id="gallery" aria-label="Grad website gallery"></section>
     <div class="empty" id="emptyState">No gallery cards match that filter.</div>
   </main>
+
+  <div class="modal-backdrop" id="learnMoreModal" hidden>
+    <section class="learn-modal" role="dialog" aria-modal="true" aria-labelledby="learnMoreTitle">
+      <div class="modal-top">
+        <div>
+          <p class="modal-kicker">Learn More</p>
+          <h2 id="learnMoreTitle">Template</h2>
+        </div>
+        <button class="modal-close" id="learnMoreClose" type="button" aria-label="Close learn more dialog">Close</button>
+      </div>
+      <div class="modal-body" id="learnMoreBody"></div>
+      <div class="modal-actions">
+        <a class="modal-link" id="learnMoreOpenLink" href="#" target="_blank" rel="noopener noreferrer">Open Website</a>
+      </div>
+    </section>
+  </div>
 
   <script>
     const files = [
@@ -374,37 +522,114 @@
     const searchInput = document.getElementById("searchInput");
     const resultCount = document.getElementById("resultCount");
     const emptyState = document.getElementById("emptyState");
+    const learnMoreModal = document.getElementById("learnMoreModal");
+    const learnMoreTitle = document.getElementById("learnMoreTitle");
+    const learnMoreBody = document.getElementById("learnMoreBody");
+    const learnMoreClose = document.getElementById("learnMoreClose");
+    const learnMoreOpenLink = document.getElementById("learnMoreOpenLink");
+
+    const blurbCache = new Map();
+    let lastFocusedElement = null;
 
     function enrichEntry(entry) {
       return { ...entry, searchText: [entry.major, entry.variant, entry.href].join(" ").toLowerCase() };
     }
 
+    function templateTitle(entry) {
+      return entry.variant === "Base" ? entry.major : `${entry.major} ${entry.variant}`;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function learnMoreHtml(markdownText) {
+      const paragraphs = String(markdownText || "")
+        .split(/\n{2,}/)
+        .map((paragraph) => paragraph.trim())
+        .filter(Boolean);
+
+      return paragraphs
+        .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+        .join("");
+    }
+
+    function blurbHref(entry) {
+      return entry.href.replace(/sample\.html$/, "blurb.txt");
+    }
+
+    function loadBlurb(entry) {
+      const href = blurbHref(entry);
+      if (!blurbCache.has(href)) {
+        blurbCache.set(href, fetch(href, { cache: "no-cache" })
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`${href} returned ${response.status}`);
+            }
+            return response.text();
+          }));
+      }
+      return blurbCache.get(href);
+    }
+
+    async function openLearnMore(entry, triggerElement) {
+      lastFocusedElement = triggerElement || document.activeElement;
+      learnMoreTitle.textContent = templateTitle(entry);
+      learnMoreBody.innerHTML = "<p>Loading details...</p>";
+      learnMoreOpenLink.href = entry.href;
+      learnMoreModal.hidden = false;
+      document.body.classList.add("modal-open");
+      learnMoreClose.focus();
+
+      try {
+        const blurb = await loadBlurb(entry);
+        learnMoreBody.innerHTML = learnMoreHtml(blurb || "Details for this template are not available yet.");
+      } catch (error) {
+        learnMoreBody.innerHTML = "<p>Learn More details could not be loaded.</p>";
+      }
+    }
+
+    function closeLearnMore() {
+      learnMoreModal.hidden = true;
+      document.body.classList.remove("modal-open");
+      if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+        lastFocusedElement.focus();
+      }
+    }
+
     function createCard(entry) {
-      const card = document.createElement("a");
+      const card = document.createElement("article");
       card.className = "card";
-      card.href = entry.href;
-      card.target = "_blank";
-      card.rel = "noopener noreferrer";
-      card.setAttribute("aria-label", `Open ${entry.major} ${entry.variant} website`);
       card.dataset.search = entry.searchText;
 
       card.innerHTML = `
-        <div class="preview-shell" aria-hidden="true">
-          <div class="preview-stage">
-            <iframe
-              class="preview-frame"
-              src="${entry.href}"
-              title="${entry.major} ${entry.variant} preview"
-              loading="lazy"
-              tabindex="-1"
-            ></iframe>
+        <a class="preview-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${templateTitle(entry)} website">
+          <div class="preview-shell" aria-hidden="true">
+            <div class="preview-stage">
+              <iframe
+                class="preview-frame"
+                src="${entry.href}"
+                title="${templateTitle(entry)} preview"
+                loading="lazy"
+                tabindex="-1"
+              ></iframe>
+            </div>
           </div>
-        </div>
+        </a>
         <div class="card-body">
-          <h2>${entry.major}</h2>
-          <span class="cta">Open Full Website</span>
+          <h2>${templateTitle(entry)}</h2>
+          <button class="cta" type="button" aria-label="Learn more about ${templateTitle(entry)}">Learn More</button>
         </div>
       `;
+
+      card.querySelector(".cta").addEventListener("click", (event) => {
+        openLearnMore(entry, event.currentTarget);
+      });
 
       return card;
     }
@@ -440,6 +665,17 @@
     }
 
     searchInput.addEventListener("input", updateFilter);
+    learnMoreClose.addEventListener("click", closeLearnMore);
+    learnMoreModal.addEventListener("click", (event) => {
+      if (event.target === learnMoreModal) {
+        closeLearnMore();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !learnMoreModal.hidden) {
+        closeLearnMore();
+      }
+    });
     renderGallery();
   </script>
 </body>

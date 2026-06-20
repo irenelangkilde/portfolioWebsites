@@ -390,6 +390,36 @@ describe("renderPortfolio", () => {
     expect(rendered).not.toContain("Old second group");
   });
 
+  it("replaces all sample list items in resume-driven skill lists", () => {
+    const html = `
+      <section data-section="skill_groups">
+        <article class="skill-card" data-item="skill_group">
+          <h3 data-field="group_name">Old group</h3>
+          <ul data-list="skills">
+            <li data-item="tag">Template skill one</li>
+            <li>Template skill two should not leak</li>
+            <li>Template skill three should not leak</li>
+          </ul>
+        </article>
+      </section>
+    `;
+
+    const rendered = renderPortfolio(html, {
+      skill_groups: [
+        { group_name: "Documented Skills", skills: ["Praat", "ELAN"] },
+      ],
+    });
+
+    expect(rendered).toContain(">Documented Skills</h3>");
+    expect(rendered).toContain(">Praat</li>");
+    expect(rendered).toContain(">ELAN</li>");
+    expect(rendered).not.toContain("Template skill one");
+    expect(rendered).not.toContain("Template skill two should not leak");
+    expect(rendered).not.toContain("Template skill three should not leak");
+    expect(rendered).not.toContain("data-list=");
+    expect(rendered).not.toContain("data-item=");
+  });
+
   it("caps specialty sub-lists to the template's concrete item count", () => {
     const html = `
       <aside data-section="hero_cards">

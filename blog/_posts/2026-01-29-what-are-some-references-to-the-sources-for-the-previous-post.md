@@ -3,6 +3,7 @@ layout: post
 title: "What are some references to the sources for the previous post?"
 date: 2026-01-29
 author: "Irene Langkilde"
+pattern_variant: 9
 ---
 
 <p>Below are <strong>credible, citable sources</strong> that support the claim that <strong>portfolio websites, work samples, and personal sites improve hiring outcomes</strong>, especially for early-career candidates. These are the sources recruiters, universities, and career offices regularly reference.</p>

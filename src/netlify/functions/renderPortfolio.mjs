@@ -431,6 +431,11 @@ function stripListProtocolAttrs($, $listEl) {
 }
 
 function listTemplateChildren($, $listEl) {
+  if ($listEl.is("ul,ol")) {
+    const $items = $listEl.children("li");
+    if ($items.length) return $items;
+  }
+
   const container = $listEl[0];
   const $all = $listEl.find("[data-item]");
   const $shallow = $all.filter((_, el) => (

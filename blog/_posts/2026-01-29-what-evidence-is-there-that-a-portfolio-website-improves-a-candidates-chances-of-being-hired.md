@@ -3,6 +3,7 @@ layout: post
 title: "What evidence is there that a portfolio website improves a candidate's chances of being hired?"
 date: 2026-01-29
 author: "Irene Langkilde"
+pattern_variant: 8
 ---
 
 <p>There is <strong>credible, multi-source evidence</strong>—from recruiters, hiring managers, and hiring-process data—that a <strong>portfolio website improves a candidate’s chances of being noticed, interviewed, and hired</strong>, especially for early-career and knowledge-based roles. While it’s not a guarantee, it is a <strong>statistically meaningful advantage</strong>.</p>

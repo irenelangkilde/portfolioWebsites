@@ -8,11 +8,13 @@ layout: default
 
 <div class="post-list">
   {% for post in site.posts %}
-  <article class="post-card">
+  {% assign pattern_variant = post.pattern_variant | default: forloop.index %}
+  <article class="post-card pattern-{{ pattern_variant }}">
     <div class="post-meta">{{ post.date | date: "%B %-d, %Y" }}</div>
     <h2><a href="{{ post.url | relative_url }}">{{ post.title }}</a></h2>
     {% if post.excerpt %}
-    <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: 40 }}</p>
+    {% assign excerpt_words = post.excerpt_words | default: 40 %}
+    <p class="post-excerpt">{{ post.excerpt | strip_html | truncatewords: excerpt_words }}</p>
     {% endif %}
     <a href="{{ post.url | relative_url }}" class="read-more">Read more →</a>
   </article>
