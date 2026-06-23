@@ -313,19 +313,38 @@
 
     /* Left rail — quick-action icons (Resume / Job / Design) */
     #leftRail {
-      width: 72px; flex-shrink: 0; background: #16213e;
+      width: 56px; flex-shrink: 0; background: #16213e;
       border-right: 1px solid rgba(255,255,255,.1);
       display: flex; flex-direction: column; align-items: stretch;
-      padding: 10px 6px; gap: 6px; overflow-y: auto;
+      padding: 10px 7px; gap: 6px; overflow: visible;
+      position: relative; z-index: 80; isolation: isolate;
+    }
+    .left-rail-drawer {
+      position: absolute;
+      top: 0; bottom: 0; left: 56px;
+      width: 132px;
+      background: #16213e;
+      border-right: 1px solid rgba(255,255,255,.1);
+      box-shadow: 18px 0 40px rgba(0,0,0,.22);
+      transform: translateX(-132px);
+      transition: transform .2s ease;
+      z-index: 0;
+    }
+    #leftRail:hover .left-rail-drawer,
+    #leftRail:focus-within .left-rail-drawer {
+      transform: translateX(0);
     }
     body.code-mode #leftRail { display: none; }
     .left-rail-btn {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 4px; padding: 10px 4px; border-radius: 8px; cursor: pointer;
+      position: relative; z-index: 2;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 44px; padding: 10px 0; border-radius: 8px; cursor: pointer;
       background: transparent; color: rgba(234,240,255,.78);
       border: 1px solid rgba(255,255,255,.08);
-      font: inherit; font-size: 10px; font-weight: 700; letter-spacing: .02em;
+      font: inherit; font-size: 12px; font-weight: 800; letter-spacing: .01em;
       transition: background .15s, color .15s, border-color .15s;
+      white-space: nowrap;
+      overflow: visible;
     }
     .left-rail-btn:hover, .left-rail-btn:focus-visible {
       background: rgba(141,186,255,.12);
@@ -333,8 +352,30 @@
       border-color: rgba(141,186,255,.32);
       outline: none;
     }
-    .left-rail-btn .lr-icon { font-size: 20px; line-height: 1; }
-    .left-rail-btn .lr-label { font-size: 10px; }
+    .left-rail-btn .lr-icon {
+      flex: 0 0 22px;
+      font-size: 20px;
+      line-height: 1;
+      text-align: center;
+    }
+    .left-rail-btn .lr-label {
+      position: absolute;
+      left: calc(100% + 17px);
+      top: 50%;
+      transform: translate(-132px, -50%);
+      min-width: 112px;
+      opacity: 0;
+      pointer-events: auto;
+      text-align: left;
+      color: rgba(255,255,255,.94);
+      transition: transform .2s ease, opacity .1s ease;
+    }
+    #leftRail:hover .left-rail-btn .lr-label,
+    #leftRail:focus-within .left-rail-btn .lr-label {
+      opacity: 1;
+      transform: translate(0, -50%);
+      transition-delay: 0s, .06s;
+    }
 
     /* Visual pane */
     #visualPane { flex: 1; min-width: 0; overflow: hidden; position: relative; }
@@ -486,7 +527,7 @@
 
     /* ── Color panel ──────────────────────────────────────────────── */
     #colorPanel {
-      width: 264px; flex-shrink: 0; background: #16213e;
+      width: 177px; flex-shrink: 0; background: #16213e;
       border-left: 1px solid rgba(255,255,255,.1);
       display: flex; flex-direction: column; overflow: hidden;
       transition: width .2s, opacity .2s;
@@ -657,7 +698,7 @@
     }
     /* ── Palette slide panel ─────────────────────────────────── */
     #paletteSlidePanel {
-      display: none; position: absolute; top: 0; left: 0; right: 264px; bottom: 0;
+      display: none; position: absolute; top: 0; left: 0; right: 177px; bottom: 0;
       z-index: 50; background: #0d1528; flex-direction: column; overflow: hidden;
     }
     #paletteSlidePanel.open { display: flex; }
@@ -1178,17 +1219,18 @@
 
   <div id="editorLayout">
     <aside id="leftRail" aria-label="Quick actions">
-      <button class="left-rail-btn" id="btnNewResume" type="button" title="Start with a new resume">
+      <div class="left-rail-drawer" aria-hidden="true"></div>
+      <button class="left-rail-btn" id="btnNewResume" type="button" title="Start with a new resume" aria-label="New resume">
         <span class="lr-icon" aria-hidden="true">📄</span>
-        <span class="lr-label">Resume</span>
+        <span class="lr-label">New resume</span>
       </button>
-      <button class="left-rail-btn" id="btnNewJob" type="button" title="Start a new job description">
+      <button class="left-rail-btn" id="btnNewJob" type="button" title="Start a new job description" aria-label="New Job">
         <span class="lr-icon" aria-hidden="true">💼</span>
-        <span class="lr-label">Job</span>
+        <span class="lr-label">New Job</span>
       </button>
-      <button class="left-rail-btn" id="btnNewDesign" type="button" title="Start a new design">
+      <button class="left-rail-btn" id="btnNewDesign" type="button" title="Start a new design" aria-label="New Design">
         <span class="lr-icon" aria-hidden="true">✨</span>
-        <span class="lr-label">Design</span>
+        <span class="lr-label">New Design</span>
       </button>
     </aside>
     <div id="visualPane">
@@ -7426,6 +7468,32 @@
       }
     };
 
+    // ── Intake form revision shortcuts ────────────────────────────────────────
+    const intakeRevisionLabels = {
+      resume: "New resume",
+      job: "New Job",
+      design: "New Design",
+    };
+
+    function requestIntakeRevision(kind) {
+      const label = intakeRevisionLabels[kind] || "Revision";
+      if (!window.opener || window.opener.closed) {
+        setEditStatus("Open the intake form to revise inputs and regenerate.", "error");
+        return;
+      }
+      try {
+        window.opener.postMessage({ type: "editor_request_intake_revision", kind }, location.origin);
+        window.opener.focus?.();
+        setEditStatus(`${label}: update the intake form, then click Next to regenerate.`, "ok");
+      } catch (err) {
+        setEditStatus(`Could not contact the intake form: ${err?.message || err}`, "error");
+      }
+    }
+
+    document.getElementById("btnNewResume")?.addEventListener("click", () => requestIntakeRevision("resume"));
+    document.getElementById("btnNewJob")?.addEventListener("click", () => requestIntakeRevision("job"));
+    document.getElementById("btnNewDesign")?.addEventListener("click", () => requestIntakeRevision("design"));
+
     // ── Live update from form window ───────────────────────────────────────────
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
@@ -7450,6 +7518,10 @@
       }
       if (e.data?.type === "editor_process_status_clear") {
         window.__editorTickerClearProcess?.();
+        return;
+      }
+      if (e.data?.type === "editor_revision_status") {
+        setEditStatus(e.data.message || "", e.data.level === "error" ? "error" : "ok");
       }
     });
 

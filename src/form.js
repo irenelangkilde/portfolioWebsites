@@ -74,6 +74,8 @@
     // after upstream inputs change on pages 1–4.
     let page3Submitted = false;  // set when page 3 Next fires in braid mode
     let page4Submitted = false;  // set when page 4 Next fires in slot-fill/design-options mode
+    let editorRerunRequest = null; // { kind, requestedAt } from editor quick actions
+    let editorRerunInProgress = false;
 
     function tracePortfolioPipeline(stage, details = {}) {
       try {
@@ -5164,6 +5166,123 @@ input[type="color"].split-color::-moz-color-swatch {
       setHeaderStatus("generatingWebsiteStatus", "");
     }
 
+    const EDITOR_REVISION_STEPS = { resume: 1, job: 2, design: 3 };
+    const EDITOR_REVISION_LABELS = { resume: "New resume", job: "New Job", design: "New Design" };
+
+    function postEditorRevisionStatus(kind, message, level = "ok") {
+      const editorWin = window.__portfolioEditorWindow;
+      if (!editorWin || editorWin.closed) return;
+      try {
+        editorWin.postMessage({ type: "editor_revision_status", kind, message, level }, location.origin);
+      } catch {}
+    }
+
+    function requestEditorInputRevision(kind, sourceWindow = null) {
+      const step = EDITOR_REVISION_STEPS[kind];
+      const label = EDITOR_REVISION_LABELS[kind] || "Revision";
+      if (!step) {
+        postEditorRevisionStatus(kind, "Unknown revision request.", "error");
+        return;
+      }
+
+      if (sourceWindow && !sourceWindow.closed) window.__portfolioEditorWindow = sourceWindow;
+      editorRerunRequest = { kind, requestedAt: Date.now() };
+      // Pause page-4 auto-restarts while the user is editing earlier inputs.
+      page4Submitted = false;
+      setOpenEditorReady(false);
+      setHeaderStatus(
+        "editorAutoOpenStatus",
+        `${label}: update this step, then click Next to regenerate.`,
+        "rgba(141,224,255,.75)"
+      );
+      setStep(step);
+      try { window.focus(); } catch {}
+      postEditorRevisionStatus(kind, `${label}: update the intake form, then click Next to regenerate.`);
+    }
+
+    function resetGeneratedPortfolioForEditorRerun(kind) {
+      const label = EDITOR_REVISION_LABELS[kind] || "revised inputs";
+      ++_braidRunId;
+      ++_slotFillRunId;
+      ++_bridgeRunId;
+      ++_generationRunId;
+      ++_mastheadImageRunId;
+
+      generationResult = null;
+      generationError = null;
+      generationInProgress = false;
+      braidInProgress = false;
+      slotFillInProgress = false;
+      bridgeInProgress = false;
+      autoMastheadImageTriggered = false;
+      mastheadImageInProgress = false;
+      mastheadImageResult = null;
+      mastheadImageError = null;
+      mastheadImageStartTimestamp = null;
+      clearInterval(mastheadImageTicker);
+      clearInterval(mastheadWaitTicker);
+      mastheadImageTicker = null;
+      mastheadWaitTicker = null;
+
+      clearColorRelatedStatusMessages();
+      setApplyBtnState(false);
+      setOpenEditorReady(false);
+      greyRendererButtons(true);
+      const message = `Regenerating portfolio from ${label.toLowerCase()}…`;
+      setHeaderStatus("editorAutoOpenStatus", message, "rgba(141,224,255,.75)");
+      pushPreviewHtmlUpdate(editorLoadingHtml(message));
+    }
+
+    function scheduleEditorRevisionRerun(completedKind) {
+      if (!editorRerunRequest || editorRerunInProgress) return;
+      setTimeout(() => { continueEditorRevisionRerun(completedKind); }, 0);
+    }
+
+    async function continueEditorRevisionRerun(completedKind) {
+      const request = editorRerunRequest;
+      if (!request || editorRerunInProgress) return;
+      const kind = request.kind;
+      if (
+        completedKind !== kind &&
+        !(completedKind === "design" && (kind === "resume" || kind === "job"))
+      ) {
+        return;
+      }
+
+      editorRerunInProgress = true;
+      try {
+        if (kind === "resume" && completedKind === "resume") {
+          page2Action();
+          if (!page3Action()) {
+            setStep(3);
+            setHeaderStatus("editorAutoOpenStatus", "Choose a design, then click Next to regenerate.", "rgba(141,224,255,.75)");
+            postEditorRevisionStatus(kind, "Choose a design in the intake form, then click Next to regenerate.");
+            return;
+          }
+        } else if (kind === "job" && completedKind === "job") {
+          if (!page3Action()) {
+            setStep(3);
+            setHeaderStatus("editorAutoOpenStatus", "Choose a design, then click Next to regenerate.", "rgba(141,224,255,.75)");
+            postEditorRevisionStatus(kind, "Choose a design in the intake form, then click Next to regenerate.");
+            return;
+          }
+        }
+
+        setStep(4);
+        postEditorRevisionStatus(kind, "Preparing to regenerate portfolio from revised inputs.");
+        const started = await page4OpenEditorAction({ forceRegenerateKind: kind });
+        if (!started) {
+          postEditorRevisionStatus(kind, "Fix the color choice on page 4, then click Open Editor to regenerate.", "error");
+        }
+      } catch (err) {
+        const message = err?.message || String(err);
+        setHeaderStatus("editorAutoOpenStatus", `⚠ Regeneration could not start: ${message}`, "rgba(251,171,156,.9)");
+        postEditorRevisionStatus(kind, `Regeneration could not start: ${message}`, "error");
+      } finally {
+        editorRerunInProgress = false;
+      }
+    }
+
     // Page 1 inputs
     ["major", "specialization"].forEach(id => {
       document.getElementById(id)?.addEventListener("input", invalidateFromPage1);
@@ -5230,6 +5349,7 @@ input[type="color"].split-color::-moz-color-swatch {
       window.umami?.track("form-step-complete", { step: 1 });
       if (resumeUpload.files?.[0] && hasCreditsRemaining()) analyzeResumeInBackground(resumeUpload.files[0]);
       setStep(2);
+      scheduleEditorRevisionRerun("resume");
     });
     document.getElementById("dbgSubmit1")?.addEventListener("click", () => { page1Action(); });
 
@@ -5550,7 +5670,12 @@ input[type="color"].split-color::-moz-color-swatch {
     // Page 2 (Job)
     function page2Action() { page2Submitted = true; onEnterPage2(); doAnalyzeAndExtractJobAd(); }
     document.getElementById("back5")?.addEventListener("click", () => setStep(1));
-    document.getElementById("submit_bottom")?.addEventListener("click", () => { page2Action(); window.umami?.track("form-step-complete", { step: 2 }); setStep(3); });
+    document.getElementById("submit_bottom")?.addEventListener("click", () => {
+      page2Action();
+      window.umami?.track("form-step-complete", { step: 2 });
+      setStep(3);
+      scheduleEditorRevisionRerun("job");
+    });
     document.getElementById("dbgSubmit2")?.addEventListener("click", page2Action);
 
     // Page 3 (Design) — Back returns to Job; Next validates then advances to Colors
@@ -5566,6 +5691,7 @@ input[type="color"].split-color::-moz-color-swatch {
       // Just navigate to page 4. Braid/slot-fill kickoff happens on the page-4 Next click,
       // so the user's color choices (page 4) get folded into the request.
       setStep(4);
+      scheduleEditorRevisionRerun("design");
     };
     document.getElementById("next3_bottom")?.addEventListener("click", _next3Handler);
     document.getElementById("next3")?.addEventListener("click", _next3Handler);
@@ -5764,13 +5890,18 @@ input[type="color"].split-color::-moz-color-swatch {
       return null;
     }
 
-    async function page4OpenEditorAction() {
+    async function page4OpenEditorAction(options = {}) {
+      const actionOptions = options && typeof options === "object" && !("type" in options && "target" in options)
+        ? options
+        : {};
+      const forceRegenerateKind = actionOptions.forceRegenerateKind || editorRerunRequest?.kind || "";
       tracePortfolioPipeline("page4:click-start", {
         source: selectedTemplateSource(),
         extractTemplatePending: !!extractTemplatePending,
         slotFillMode: isSlotFillMode(),
         directDesignMode: isDirectDesignMode(),
-        braidMode: isBraidMode()
+        braidMode: isBraidMode(),
+        forceRegenerateKind
       });
       // Grey the button immediately — re-enabled when the editor opens.
       const openBtn = document.getElementById("next2_bottom");
@@ -5783,7 +5914,12 @@ input[type="color"].split-color::-moz-color-swatch {
         tracePortfolioPipeline("page4:color-validation-error", { colorError });
         showPage4ColorError(colorError);
         if (openBtn) { openBtn.disabled = false; openBtn.style.opacity = ""; openBtn.style.cursor = ""; }
-        return;
+        return false;
+      }
+
+      if (forceRegenerateKind) {
+        editorRerunRequest = null;
+        resetGeneratedPortfolioForEditorRerun(forceRegenerateKind);
       }
 
       // Resubmit colors every time.
@@ -5819,7 +5955,7 @@ input[type="color"].split-color::-moz-color-swatch {
           tracePortfolioPipeline("page4:skip-slot-fill-start", { slotFillInProgress, hasGenerationResult: !!generationResult });
         }
         setOpenEditorReady(true);
-        return;
+        return true;
       }
 
       if (isDirectDesignMode()) {
@@ -5837,7 +5973,7 @@ input[type="color"].split-color::-moz-color-swatch {
         while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
         doPreview();
         setOpenEditorReady(true);
-        return;
+        return true;
       }
 
       // Braid mode.
@@ -5869,6 +6005,7 @@ input[type="color"].split-color::-moz-color-swatch {
 
       doPreview();
       setOpenEditorReady(true);
+      return true;
     }
     document.getElementById("back4")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
     document.getElementById("next4")?.addEventListener("click", page4OpenEditorAction);
@@ -5913,6 +6050,11 @@ input[type="color"].split-color::-moz-color-swatch {
     window.addEventListener("message", e => {
       if (!e.data || e.data.type !== "editor_process_status_request") return;
       forwardEditorProcessStatus();
+    });
+
+    window.addEventListener("message", e => {
+      if (!e.data || e.data.type !== "editor_request_intake_revision") return;
+      requestEditorInputRevision(e.data.kind, e.source);
     });
 
     window.addEventListener("message", e => {
