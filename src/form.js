@@ -58,7 +58,7 @@
         : "Masthead image still generating in background… finalizing";
     }
 
-    // Slot-fill (fast mustache path)
+    // Slot-fill (fast Cheerio path against annotated.html)
     let slotFillInProgress = false;
     let userHasCustomizedColors = false;  // true only when user manually edits a color input
 
@@ -73,7 +73,7 @@
     // Set true when the braid/generate pipeline is first triggered; enables auto-restart
     // after upstream inputs change on pages 1–4.
     let page3Submitted = false;  // set when page 3 Next fires in braid mode
-    let page4Submitted = false;  // set when page 4 Next fires in mustache/design-options mode
+    let page4Submitted = false;  // set when page 4 Next fires in slot-fill/design-options mode
 
     function tracePortfolioPipeline(stage, details = {}) {
       try {
@@ -601,7 +601,7 @@
         const el = document.getElementById(id);
         const text = el?.textContent?.trim() || "";
         if (!text) continue;
-        if (/not needed|credit limit reached/i.test(text)) continue;
+        if (/not needed|credit limit reached|design options selected/i.test(text)) continue;
         // ✓ statuses are skipped — the editor already received the actual result via
         // postMessage by the time success is shown, so re-broadcasting "✓ ready" would
         // just be noise.
@@ -1063,7 +1063,7 @@ ${pseudoSelectors} {
         return enforceSampleMastheadBackground(nextHtml, imageUrl, mastheadMeta);
       }
 
-      // Path 3: canonical Mustache masthead slot (--hero-bg-image CSS variable).
+      // Path 3: canonical masthead slot (--hero-bg-image CSS variable).
       // With a URL the value is tiny so CSS custom properties work fine in srcdoc iframes.
       if (/--hero-bg-image\s*:/i.test(nextHtml)) {
         console.log("[masthead] Path 3: --hero-bg-image CSS var");
@@ -1234,8 +1234,8 @@ ${pseudoSelectors} {
       }
     }
 
-    function editorLoadingHtml(message = "Preparing editor…") {
-      const safeMessage = String(message || "Preparing editor…").replace(/[&<>"']/g, ch => ({
+    function editorLoadingHtml(message = "Preparing website…") {
+      const safeMessage = String(message || "Preparing website…").replace(/[&<>"']/g, ch => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
@@ -2093,10 +2093,12 @@ ${pseudoSelectors} {
       updateSubmitReadiness();
     });
 
-    // Convert a user-entered label → local file path
-    // "Biology"                  → /templates/biology/sample.html
-    // "Biology B"                → /templates/biology-b/sample.html
-    // "Electrical Engineering B" → /templates/electrical-engineering-b/sample.html
+    // Convert a user-entered label → local file path.
+    // Labels are subject first names (see templates/templates.json), and the
+    // directory name matches the lowercased first name.
+    // "Marcus"   → /templates/marcus/sample.html
+    // "Hal"      → /templates/hal/sample.html
+    // "Mellissa" → /templates/mellissa/sample.html
     function templateLabelToPath(val) {
       const slug = val.trim().toLowerCase().replace(/\s+/g, "-");
       return `/templates/${slug}/sample.html`;
@@ -2130,8 +2132,8 @@ ${pseudoSelectors} {
       const htmlStr  = result?.templateHtml || null;
 
       // Activate spec.json buttons whenever the template has loaded (same caching as template.html).
-      // If there's no embedded JSON (e.g. mustache templates), show a placeholder object.
-      const specStr  = htmlStr ? (jsonStr ?? JSON.stringify({ note: "mustache template — no embedded spec" }, null, 2)) : null;
+      // If there's no embedded JSON, show a placeholder object.
+      const specStr  = htmlStr ? (jsonStr ?? JSON.stringify({ note: "no embedded spec" }, null, 2)) : null;
       wireDebugRow("TemplateJson", specStr, "spec.json");
 
       const dlHtml = document.getElementById("dlTemplateHtml");
@@ -2257,9 +2259,9 @@ ${pseudoSelectors} {
         return;
       }
 
-      // Keyword source defaults to mustache (slot-fill path); file uploads stay on analysis/braid.
+      // Keyword source defaults to annotated (slot-fill path); file uploads stay on analysis/braid.
       const extractMode = document.getElementById("extractTemplateMode")?.value
-        || (source === "keyword" ? "mustache" : "analysis");
+        || (source === "keyword" ? "annotated" : "analysis");
       tracePortfolioPipeline("template-extract:start", { source, extractMode });
 
       let key = "";
@@ -2275,18 +2277,17 @@ ${pseudoSelectors} {
         tracePortfolioPipeline("template-extract:keyword", { keyword: val, srcPath, extractMode });
 
         // Each mode has its own pre-compiled path:
-        //   annotated → annotated.html  (preferred: Cheerio slot-fill)
-        //   mustache  → mustache.html   (legacy: Mustache slot-fill)
+        //   annotated → annotated.html  (Cheerio slot-fill)
         //   analysis  → template.html   (braid/analysis path)
-        const modeFile    = (extractMode === "mustache" || extractMode === "annotated") ? "annotated" : "template";
+        const modeFile    = extractMode === "annotated" ? "annotated" : "template";
         const compiledKey = srcPath.replace(/\/sample\.html$/, `/${modeFile}.html`);
-        if (extractMode === "mustache" || extractMode === "annotated") requestBody.targetOutputPath = compiledKey;
+        if (extractMode === "annotated") requestBody.targetOutputPath = compiledKey;
 
         // Braid path: prefer annotated.html (pre-processed offline) over raw HTML.
         // Only taken when extractMode is explicitly set to analysis/braid (debug override).
-        if (extractMode !== "mustache") {
+        if (extractMode === "analysis") {
           const normalizedKey = srcPath.replace(/\/sample\.html$/, "/annotated.html");
-          // Cache key includes extractMode so changing the dropdown (mustache ↔ analysis/braid)
+          // Cache key includes extractMode so changing the dropdown (annotated ↔ analysis)
           // invalidates this entry and forces a re-extraction in the new mode.
           const cacheKey = normalizedKey + "#" + extractMode;
           if (cacheKey === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
@@ -2347,19 +2348,12 @@ ${pseudoSelectors} {
         }
 
         // Same mode-aware cache key as the braid path above — without this, switching
-        // the dropdown from analysis/braid to mustache (or vice versa) wouldn't trigger
+        // the dropdown from analysis to annotated (or vice versa) wouldn't trigger
         // a fresh extraction, and the cache would keep its previously-resolved templateMode.
         if ((compiledKey + "#" + extractMode) === lastExtractedTemplate && hasUsableExtractedTemplate()) return;
 
         // Try pre-compiled version (fast path, no API call).
-        // If mustache file is missing, fall back to the _template.html variant.
-        // Fallback chain: annotated.html → mustache.html → template.html
         const candidateKeys = [compiledKey];
-        if (extractMode === "mustache" || extractMode === "annotated") {
-          candidateKeys.push(srcPath.replace(/\/sample\.html$/, "/mustache.html"));
-        } else {
-          candidateKeys.push(srcPath.replace(/\/sample\.html$/, "/template.html"));
-        }
         for (const candidateKey of candidateKeys) {
           try {
             const res = await fetch(candidateKey);
@@ -2370,8 +2364,7 @@ ${pseudoSelectors} {
             if (commentMatch) { try { embeddedJson = JSON.parse(commentMatch[1]); } catch {} }
             lastExtractedTemplate = candidateKey + "#" + extractMode;
             const isAnnotated = candidateKey.endsWith("/annotated.html");
-            const isMustacheFallback = candidateKey.endsWith("/mustache.html") && !isAnnotated;
-            const resolvedMode = isAnnotated ? "annotated" : isMustacheFallback ? "mustache" : "analysis";
+            const resolvedMode = isAnnotated ? "annotated" : "analysis";
             extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode, templateInputKind: "template" };
             tracePortfolioPipeline("template-extract:loaded", {
               keyword: val,
@@ -2380,7 +2373,7 @@ ${pseudoSelectors} {
               resolvedMode,
               templateHtmlLength: templateHtml.length
             });
-            const label = isAnnotated ? "✓ Template loaded" : isMustacheFallback ? "✓ Template loaded (annotated.html not yet generated)" : "✓ Template loaded (analysis fallback)";
+            const label = isAnnotated ? "✓ Template loaded" : "✓ Template loaded (analysis fallback)";
             setTemplateExtractStatus(label, "rgba(118,176,34,.9)");
             populateTemplateExtractPanel(extractedTemplateCache);
             renderSuggestedPalettes();
@@ -3330,7 +3323,7 @@ input[type="color"].split-color::-moz-color-swatch {
         }
       }
       const modeSelect = document.getElementById("extractTemplateMode");
-      if (modeSelect && !modeSelect.value) modeSelect.value = "mustache";
+      if (modeSelect && !modeSelect.value) modeSelect.value = "annotated";
       document.getElementById("tplUrlWrap")?.classList.toggle("hidden", source !== "keyword");
       document.getElementById("tplFileWrap")?.classList.toggle("hidden", source !== "file");
       const modeRow = document.getElementById("templateModeRow");
@@ -4195,7 +4188,7 @@ input[type="color"].split-color::-moz-color-swatch {
         return;
       }
       const loadedMode = extractedTemplateCache?.templateMode;
-      if (loadedMode !== "mustache" && loadedMode !== "annotated") {
+      if (loadedMode !== "annotated") {
         tracePortfolioPipeline("slot-fill:bad-template-mode", { loadedMode, hasTemplateHtml: !!extractedTemplateCache?.templateHtml });
         slotFillInProgress = false;
         if (extractedTemplateCache?.templateHtml) {
@@ -4735,7 +4728,7 @@ input[type="color"].split-color::-moz-color-swatch {
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
-      // In mustache mode the bridge is skipped — don't clear accumulated job-ad tokens here;
+      // In slot-fill mode the bridge is skipped — don't clear accumulated job-ad tokens here;
       // mergeTokenReport overwrites by stage key so re-renders stay clean.
       setApplyBtnState(false);
       setOpenEditorReady(false);
@@ -4974,7 +4967,7 @@ input[type="color"].split-color::-moz-color-swatch {
       }
       // Push the final HTML to the already-open editor window via postMessage
       // even when there were no artifact edits; otherwise the editor can stay
-      // stuck on the pre-opened "Preparing editor…" placeholder.
+      // stuck on the pre-opened "Preparing website…" placeholder.
       pushPreviewHtmlUpdate(finalHtml);
 
       const resumeData = getPage1();
@@ -5124,7 +5117,7 @@ input[type="color"].split-color::-moz-color-swatch {
       setOpenEditorReady(false);
       // Re-run extraction if a template source is already selected (restores the status message)
       extractTemplateInBackground();
-      // Auto-restart: braid triggers from page 3, mustache/design-options from page 4
+      // Auto-restart: braid triggers from page 3, slot-fill/design-options from page 4
       if (page4Submitted) page4OpenEditorAction();
     }
 
@@ -5152,7 +5145,7 @@ input[type="color"].split-color::-moz-color-swatch {
         return;
       }
 
-      // Mustache / design-options: colors changed — generation is stale
+      // Slot-fill / design-options: colors changed — generation is stale
       tracePortfolioPipeline("page4:invalidate-colors", {});
       page4Submitted = false;
       clearColorRelatedStatusMessages();
@@ -5617,12 +5610,12 @@ input[type="color"].split-color::-moz-color-swatch {
     function wantsSlotFillMode() {
       const source = selectedTemplateSource();
       if (source !== "keyword") return false;
-      const mode = document.getElementById("extractTemplateMode")?.value || "mustache";
-      return mode === "mustache";
+      const mode = document.getElementById("extractTemplateMode")?.value || "annotated";
+      return mode === "annotated";
     }
     function isSlotFillMode() {
       const mode = extractedTemplateCache?.templateMode;
-      return mode === "annotated" || mode === "mustache" || (!extractedTemplateCache && wantsSlotFillMode());
+      return mode === "annotated" || (!extractedTemplateCache && wantsSlotFillMode());
     }
     function isDirectDesignMode() {
       return selectedTemplateSource() === "none";

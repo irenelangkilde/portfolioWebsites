@@ -311,6 +311,31 @@
     }
     body.code-mode #editorLayout { height: calc(100vh - 48px); }
 
+    /* Left rail — quick-action icons (Resume / Job / Design) */
+    #leftRail {
+      width: 72px; flex-shrink: 0; background: #16213e;
+      border-right: 1px solid rgba(255,255,255,.1);
+      display: flex; flex-direction: column; align-items: stretch;
+      padding: 10px 6px; gap: 6px; overflow-y: auto;
+    }
+    body.code-mode #leftRail { display: none; }
+    .left-rail-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 4px; padding: 10px 4px; border-radius: 8px; cursor: pointer;
+      background: transparent; color: rgba(234,240,255,.78);
+      border: 1px solid rgba(255,255,255,.08);
+      font: inherit; font-size: 10px; font-weight: 700; letter-spacing: .02em;
+      transition: background .15s, color .15s, border-color .15s;
+    }
+    .left-rail-btn:hover, .left-rail-btn:focus-visible {
+      background: rgba(141,186,255,.12);
+      color: rgba(255,255,255,.96);
+      border-color: rgba(141,186,255,.32);
+      outline: none;
+    }
+    .left-rail-btn .lr-icon { font-size: 20px; line-height: 1; }
+    .left-rail-btn .lr-label { font-size: 10px; }
+
     /* Visual pane */
     #visualPane { flex: 1; min-width: 0; overflow: hidden; position: relative; }
     body.code-mode #visualPane { display: none; }
@@ -1152,6 +1177,20 @@
   </div>
 
   <div id="editorLayout">
+    <aside id="leftRail" aria-label="Quick actions">
+      <button class="left-rail-btn" id="btnNewResume" type="button" title="Start with a new resume">
+        <span class="lr-icon" aria-hidden="true">📄</span>
+        <span class="lr-label">Resume</span>
+      </button>
+      <button class="left-rail-btn" id="btnNewJob" type="button" title="Start a new job description">
+        <span class="lr-icon" aria-hidden="true">💼</span>
+        <span class="lr-label">Job</span>
+      </button>
+      <button class="left-rail-btn" id="btnNewDesign" type="button" title="Start a new design">
+        <span class="lr-icon" aria-hidden="true">✨</span>
+        <span class="lr-label">Design</span>
+      </button>
+    </aside>
     <div id="visualPane">
       <iframe id="visualFrame"></iframe>
       <div id="triviaOverlay" aria-live="polite">
@@ -3095,7 +3134,7 @@
     }
 
     // Once the user clicks Dismiss, we stop showing the trivia overlay for the rest
-    // of the session — even when fresh "Preparing editor…" placeholders arrive later.
+    // of the session — even when fresh "Preparing website…" placeholders arrive later.
     // Cleared only by a full page reload, not by hideTriviaOverlay (which fires on every
     // real-portfolio postMessage and shouldn't suppress the next placeholder by itself).
     let _triviaDismissedBySession = false;
@@ -3162,7 +3201,7 @@
     });
 
     // Show trivia overlay only while the editor is waiting for portfolio generation.
-    // The form's ensureEditorWindow() seeds the iframe with a "Preparing editor…" placeholder
+    // The form's ensureEditorWindow() seeds the iframe with a "Preparing website…" placeholder
     // (editorLoadingHtml in form.js) before posting the real portfolio HTML via postMessage.
     // Detect that placeholder and show trivia; otherwise stay hidden (e.g., user reopened
     // the editor with an existing portfolio).

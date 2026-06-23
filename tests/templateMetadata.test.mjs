@@ -7,7 +7,7 @@ import {
 
 describe("inferHeroCardMapFromAnnotatedHtml", () => {
   it("preserves the electrical engineering hero card order from annotated templates", () => {
-    const html = readFileSync("templates/electrical-engineering/annotated.html", "utf8");
+    const html = readFileSync("templates/caleb/annotated.html", "utf8");
     const heroCardMap = inferHeroCardMapFromAnnotatedHtml(html);
 
     expect(heroCardMap.map(card => card.original_label)).toEqual([
@@ -25,7 +25,7 @@ describe("inferHeroCardMapFromAnnotatedHtml", () => {
   });
 
   it("captures nested hero list counts from the BiologyB hero card", () => {
-    const html = readFileSync("templates/biology-b/annotated.html", "utf8");
+    const html = readFileSync("templates/naomi/annotated.html", "utf8");
     const heroCardMap = inferHeroCardMapFromAnnotatedHtml(html);
 
     expect(heroCardMap).toHaveLength(1);
@@ -38,7 +38,7 @@ describe("inferHeroCardMapFromAnnotatedHtml", () => {
 
 describe("inferAboutMetaFromTemplateHtml", () => {
   it("detects the Statistics About section without requiring id=about", () => {
-    const html = readFileSync("templates/statistics/annotated.html", "utf8");
+    const html = readFileSync("templates/lucy/annotated.html", "utf8");
     const aboutMeta = inferAboutMetaFromTemplateHtml(html);
 
     expect(aboutMeta).toEqual({

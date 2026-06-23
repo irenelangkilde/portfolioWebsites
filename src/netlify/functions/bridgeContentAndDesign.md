@@ -4,8 +4,7 @@ You will receive four inputs:
 1. content_strategy_json — the candidate's job-oriented positioning, story, content plan (no color data)
 2. color_spec_json — the five-color palette chosen by the user
 3. example_website — HTML or image of a reference/inspiration website (may be absent)
-4. template_mode — one of: "mustache" | "analysis" | "none"
-   - "mustache": example_website is a Mustache template — {{variable}} placeholders are already in place; content_slots in extraction should use the existing placeholder names verbatim
+4. template_mode — one of: "analysis" | "none"
    - "analysis": example_website is a structurally-extracted template with an embedded JSON spec in an HTML comment; identify content locations and define new placeholder tokens
    - "none": no example_website provided; skip extraction entirely, rely on description only
 

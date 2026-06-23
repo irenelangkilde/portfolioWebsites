@@ -704,7 +704,7 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
   };
 }
 
-// ─── Post-render CSS color injection for Mustache templates ──────────────────
+// ─── Post-render CSS color injection ─────────────────────────────────────────
 // Replaces --color-* hex values in the rendered HTML using the user's colorSpec
 // and the template's embedded default_color_scheme metadata comment.
 function injectCssColors(html, colorSpec, templateHtml) {
@@ -1012,71 +1012,6 @@ function fixMojibakeDeep(val) {
   return val;
 }
 
-// ─── Mustache template helpers ───────────────────────────────────────────────
-
-/**
- * Returns true when the HTML string contains Mustache tokens from our schema.
- * Used to detect whether the template should be filled programmatically.
- */
-function isMustacheTemplate(html) {
-  return /\{\{#\w+\}\}/.test(html);
-}
-
-/**
- * Minimal Mustache renderer (no external dependency).
- * Supports: {{scalar}}, {{#section}}...{{/section}}, {{.}} in loops.
- * Does NOT HTML-escape values (resume data is trusted).
- */
-function renderMustache(template, data) {
-  // Process sections in passes until stable — inner same-name sections render first,
-  // then outer wrappers (e.g. {{#certs}}<section>{{#certs}}<item>{{/certs}}</section>{{/certs}})
-  // are picked up on the next pass without conflicting with the inner closing tag.
-  const sectionRe  = /\{\{#(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
-  const invertedRe = /\{\{\^(\w+)\}\}([\s\S]*?)\{\{\/\1\}\}/g;
-  let result = template;
-  let prev;
-  do {
-    prev = result;
-    // Positive sections
-    result = result.replace(sectionRe, (_, key, inner) => {
-      const val = data[key];
-      if (!val || (Array.isArray(val) && val.length === 0)) return "";
-      if (Array.isArray(val)) {
-        return val.map(item => {
-          if (typeof item !== "object" || item === null) {
-            return inner.replace(/\{\{\.\}\}/g, String(item));
-          }
-          return renderMustache(inner, { ...data, ...item });
-        }).join("");
-      }
-      // truthy scalar — render inner block once
-      return renderMustache(inner, data);
-    });
-    // Inverted sections — render only when value is falsy / empty array
-    result = result.replace(invertedRe, (_, key, inner) => {
-      const val = data[key];
-      if (!val || (Array.isArray(val) && val.length === 0)) {
-        return renderMustache(inner, data);
-      }
-      return "";
-    });
-  } while (result !== prev);
-
-  // Replace scalar tokens {{key}}
-  result = result.replace(/\{\{([^#\/!{][^}]*)\}\}/g, (_, key) => {
-    const trimmed = key.trim();
-    if (trimmed === ".") return data["."] != null ? String(data["."]) : "";
-    const val = data[trimmed];
-    return val != null ? String(val) : "";
-  });
-
-  // Strip any orphaned closing or opening tags left after processing
-  // (e.g. {{/is_links}}, {{#tag}} whose section had no matching close)
-  result = result.replace(/\{\{[#\/][^}]*\}\}/g, "");
-
-  return result;
-}
-
 /**
  * Normalizes either the new split schema (resume_facts with identity/factual_profile)
  * or the old flat schema (personal, education, etc. at top level) to the flat format
@@ -1132,8 +1067,8 @@ function toFlatResumeSchema(f) {
 }
 
 /**
- * Maps contentJson + resumeJson into a flat Mustache data object
- * matching the schema in ExtractMustacheTemplate.md.
+ * Maps contentJson + resumeJson into a flat data object consumed by the slot-fill
+ * renderer (Cheerio-based, against annotated.html).
  * colorSpec: { background, foreground, primary, secondary, accent } — user's palette choice
  */
 function trimAboutToLength(text, targetWords) {
@@ -1443,8 +1378,6 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
   };
 
   // Build hero_cards from hero_card_map (metadata mapping original title → type → display label).
-  // Type keys and field sources are defined in the HERO CARD CLASSIFICATION & FIELD MAPPING table
-  // in ExtractMustacheTemplate.md — keep both in sync when adding new card types.
   // Falls back to a default three-card set for old templates without hero_card_map.
   let hero_cards;
   const heroListSources = {
@@ -1507,7 +1440,7 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     ...(resumeJson?.extracurricular|| []).map(e => ({ role: e.role, organization: e.organization, dates: e.dates, description: e.description }))
   ].filter(l => (l.role && l.organization) || l.description);
 
-  // Theme color variables for Mustache templates that expose CSS custom properties
+  // Theme color variables for templates that expose CSS custom properties
   const normalizedTheme = normalizeColorSpec(colorSpec);
   const tp = normalizedTheme.primary || "#2563eb";
   const ts = normalizedTheme.secondary || "#22c55e";
@@ -1892,7 +1825,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
 
   const flatResumeFacts = toFlatResumeSchema(resumeFacts);
 
-  // Derive template metadata from the embedded JSON comment in the mustache file
+  // Derive template metadata from the embedded JSON comment in the template HTML
   const metaMatch  = sampleHtml.match(/<!--\s*(\{[\s\S]*?\})\s*-->/);
   const metaJson   = metaMatch ? (() => { try { return JSON.parse(metaMatch[1]); } catch { return {}; } })() : {};
   const aboutMeta  = inferAboutMetaFromTemplateHtml(sampleHtml);
@@ -2479,59 +2412,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 
   let siteHtml, usedModel, truncated;
 
-  if (isMustacheTemplate(rendererSampleHtml)) {
-    // ── Mustache path: fill programmatically, skip AI renderer ─────────────
-    const templateMeta   = parseTemplateMetadata(rendererSampleHtml);
-    const aboutMeta      = inferAboutMetaFromTemplateHtml(rendererSampleHtml);
-    const aboutWordCount = templateMeta.about_word_count || aboutMeta.about_word_count || 0;
-    const fullTemplateMeta = {
-      ...templateMeta,
-      about_word_count: aboutWordCount,
-      hero_about_word_count: templateMeta.hero_about_word_count || aboutMeta.hero_about_word_count || aboutWordCount,
-      about_full_word_count: templateMeta.about_full_word_count || aboutMeta.about_full_word_count || 0,
-      about_full_paragraph_count: templateMeta.about_full_paragraph_count || aboutMeta.about_full_paragraph_count || 0,
-    };
-    // HERO CARD CLASSIFICATION & FIELD MAPPING (mirrors table in ExtractMustacheTemplate.md)
-    //   type          unified JSON field read by renderer              default display_label
-    //   highlights  → resumeJson.experience[*].bullets[0] (max 3)  → "Highlights"
-    //   snapshot    → strategy.editorial_direction                  → "Strengths Snapshot"
-    //                   .strengths_to_emphasize (max 4)
-    //   links       → resumeJson.{email,phone,linkedin,github,       → "Links"
-    //                   website}
-    //   skill_group → resumeJson.skills.{programming_languages,     → "" (use group_name from data)
-    //                   technical, tools, soft_skills, other}
-    let heroCardMap = templateMeta.hero_card_map || null;
-    // Backward-compat: convert legacy hero_card_types array to hero_card_map format
-    if (!heroCardMap && Array.isArray(templateMeta.hero_card_types)) {
-      const DEFAULT_LABELS = { highlights: "Highlights", snapshot: "Strengths Snapshot", links: "Links" };
-      const skillGroupCount = Math.max(0, Number(templateMeta.hero_card_skill_groups) || 0);
-      const legacyTypes = [
-        ...Array.from({ length: skillGroupCount }, () => "skill_group"),
-        ...templateMeta.hero_card_types
-      ];
-      heroCardMap = legacyTypes.map(type => ({
-        original_label: type,
-        type,
-        display_label: DEFAULT_LABELS[type] || ""
-      }));
-    }
-    const mustacheData = flattenCandidateData(
-      coreContent.strategy,
-      toFlatResumeSchema(resumeFacts),
-      colorSpec,
-      resumeStrategy,
-      aboutWordCount,
-      heroCardMap,
-      null,
-      null,
-      fullTemplateMeta
-    );
-    siteHtml = cleanHtml(renderMustache(rendererSampleHtml, fixMojibakeDeep(mustacheData)));
-    siteHtml = injectCssColors(siteHtml, colorSpec, rendererSampleHtml);
-    usedModel = "mustache";
-    truncated = false;
-    tokenReport.push({ stage: "5 · Renderer", model: "mustache (no AI call)", input: 0, output: 0 });
-  } else {
+  {
     // ── AI renderer path ─────────────────────────────────────────────────────
     const rendererPrompt = loadPromptFile("rendererPrompt.md")
       .replace("{{CONTENT_JSON}}",    JSON.stringify(contentJson, null, 2))
@@ -2804,7 +2685,7 @@ async function handleBuildWebsiteBackground(event) {
       return { statusCode: 202 };
     }
 
-    // slot-fill: fast mustache-based pipeline with parallel creative LLM calls
+    // slot-fill: fast Cheerio-based pipeline (annotated.html) with parallel creative LLM calls
     if (mode === "slot-fill") {
       await slotFillPortfolioWebsite(provider, creds, store, jobId, body, userId);
       return { statusCode: 202 };

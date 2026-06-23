@@ -5,7 +5,6 @@
  *
  * Output: templates/<major>/annotated.html
  *
- * Works on any portfolio HTML file — no mustache.html required.
  * The prompt (AnnotateTemplate.md) identifies candidate-specific content
  * semantically from the HTML itself.
  *

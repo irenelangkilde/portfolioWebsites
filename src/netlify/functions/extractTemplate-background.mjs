@@ -1,57 +1,8 @@
-import { accessSync, constants as fsConstants, existsSync, readFileSync } from "fs";
-import { dirname, resolve, sep as pathSep } from "path";
-import { fileURLToPath } from "url";
+import { readFileSync } from "fs";
+import { resolve } from "path";
 import https from "https";
 import http from "http";
 import { getStore } from "@netlify/blobs";
-
-function findProjectTemplatesRoot() {
-  const startDirs = [];
-  if (typeof process.cwd === "function") {
-    try { startDirs.push(process.cwd()); } catch {}
-  }
-  try {
-    if (typeof import.meta !== "undefined" && import.meta?.url) {
-      startDirs.push(dirname(fileURLToPath(import.meta.url)));
-    }
-  } catch {}
-
-  for (const startDir of startDirs.filter(Boolean)) {
-    let dir = startDir;
-    for (let i = 0; i < 8; i += 1) {
-      const candidate = resolve(dir, "templates");
-      if (existsSync(candidate)) return candidate;
-      const parent = dirname(dir);
-      if (parent === dir) break;
-      dir = parent;
-    }
-  }
-
-  throw new Error("Could not locate the project's templates directory from extractTemplate-background.");
-}
-
-function resolveMustacheOutputPath(relPath) {
-  const normalized = String(relPath || "").replace(/\\/g, "/").replace(/^\//, "").trim();
-  if (!normalized) throw new Error("Missing targetOutputPath for mustache extraction.");
-  if (!/^templates\/.+\/mustache\.html$/i.test(normalized)) {
-    throw new Error("targetOutputPath must point to a templates/*/mustache.html file.");
-  }
-  const templatesRoot = findProjectTemplatesRoot();
-  const projectRoot = dirname(templatesRoot);
-  const abs = resolve(projectRoot, normalized);
-  if (!(abs === templatesRoot || abs.startsWith(templatesRoot + pathSep))) {
-    throw new Error("targetOutputPath must stay within the templates directory.");
-  }
-  return abs;
-}
-
-function ensureWritableOutputPath(absPath) {
-  if (existsSync(absPath)) {
-    accessSync(absPath, fsConstants.W_OK);
-    return;
-  }
-  accessSync(dirname(absPath), fsConstants.W_OK);
-}
 
 /** Fetch HTML via Node's http/https module — tolerant of SSL chain issues */
 function fetchHtmlNode(url) {
@@ -117,8 +68,6 @@ export async function handler(event) {
       major = "",
       specialization = "",
       provider = "claude",
-      templateMode = "analysis",   // "analysis" | "mustache"
-      targetOutputPath = ""
     } = body;
 
     if (!templateUrl && !templateHtmlBase64 && !templateImageBase64 && !templateJsonStr) {
@@ -126,32 +75,11 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    // Output path validation only applies when running locally — on Netlify the
-    // filesystem is read-only so we skip the write and return the result in the blob only.
-    const isNetlify = !!(process.env.NETLIFY || process.env.NETLIFY_LOCAL);
-    if (templateMode === "mustache" && targetOutputPath && !isNetlify) {
-      try {
-        const absOutputPath = resolveMustacheOutputPath(targetOutputPath);
-        ensureWritableOutputPath(absOutputPath);
-      } catch (e) {
-        await store.set(jobId, JSON.stringify({
-          status: "error",
-          error: `Mustache extraction aborted before AI call: ${e.message}`
-        }), { ttl: 3600 });
-        return { statusCode: 202 };
-      }
-    }
-
-    // Load prompt — ConstructTemplate for image/JSON, ExtractMustacheTemplate for mustache mode, else EEWT
+    // Load prompt — ConstructTemplate for image/JSON, otherwise ExtractExampleWebsiteTemplate
     const useConstructTemplate = !!(templateImageBase64 || templateJsonStr);
-    let promptFileName;
-    if (useConstructTemplate) {
-      promptFileName = "ConstructTemplate.md";
-    } else if (templateMode === "mustache") {
-      promptFileName = "ExtractMustacheTemplate.md";
-    } else {
-      promptFileName = "ExtractExampleWebsiteTemplate.md";
-    }
+    const promptFileName = useConstructTemplate
+      ? "ConstructTemplate.md"
+      : "ExtractExampleWebsiteTemplate.md";
     const cwd = process.cwd();
     let promptTemplate;
     for (const candidate of [
@@ -166,9 +94,7 @@ export async function handler(event) {
       return { statusCode: 202 };
     }
 
-    // Substitute placeholders used by the various prompt templates
-    // {{MAJOR}} / {{SPECIALIZATION}} used by ConstructTemplate.md
-    // {{EXAMPLE_HTML}} used by ExtractMustacheTemplate.md (resolved after htmlText is known)
+    // Substitute placeholders used by ConstructTemplate.md
     promptTemplate = promptTemplate
       .replace(/\{\{MAJOR\}\}/g, major)
       .replace(/\{\{SPECIALIZATION\}\}/g, specialization);
@@ -217,11 +143,6 @@ export async function handler(event) {
       htmlText = htmlText.slice(0, 120000) + "\n<!-- truncated -->";
     }
 
-    // ExtractMustacheTemplate.md embeds the HTML inline via {{EXAMPLE_HTML}}
-    if (templateMode === "mustache" && htmlText) {
-      promptTemplate = promptTemplate.replace("{{EXAMPLE_HTML}}", htmlText);
-    }
-
     let rawHtml;
 
     if (provider === "openai") {
@@ -230,14 +151,11 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-      // mustache mode: HTML already embedded in promptTemplate via {{EXAMPLE_HTML}}
       const oaiContent = imageBase64
         ? [
             { type: "input_image", image_url: `data:${imageMime};base64,${imageBase64}` },
             { type: "input_text", text: "Convert this website screenshot into a portfolio template following the instructions. Return valid HTML only." }
           ]
-        : templateMode === "mustache"
-        ? [{ type: "input_text", text: "Convert the example HTML into a Mustache template per the instructions. Return valid HTML only." }]
         : [
             { type: "input_text", text: htmlText },
             { type: "input_text", text: "Convert this into a portfolio template following the instructions. Return valid HTML only." }
@@ -261,14 +179,11 @@ export async function handler(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "ANTHROPIC_API_KEY is not set." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-      // mustache mode: HTML already embedded in promptTemplate via {{EXAMPLE_HTML}}
       const messageContent = imageBase64
         ? [
             { type: "image", source: { type: "base64", media_type: imageMime, data: imageBase64 } },
             { type: "text", text: "Convert this website screenshot into a portfolio template following the instructions. Return valid HTML only." }
           ]
-        : templateMode === "mustache"
-        ? [{ type: "text", text: "Convert the example HTML into a Mustache template per the instructions. Return valid HTML only." }]
         : [
             { type: "text", text: htmlText },
             { type: "text", text: "Convert this into a portfolio template following the instructions. Return valid HTML only." }

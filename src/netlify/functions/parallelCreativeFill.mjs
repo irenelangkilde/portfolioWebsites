@@ -2,7 +2,7 @@
  * parallelCreativeFill.mjs
  *
  * Fires two small LLM calls in parallel to generate the creative content slots
- * that go beyond what flattenToMustacheData() can produce deterministically:
+ * that go beyond what flattenCandidateData() can produce deterministically:
  *
  *   creativeCopyPack  → section_arc titles, section bridge copy, about_full, cta_tagline
  *   projectAugment    → job-targeted rewrites of the top-N most relevant projects

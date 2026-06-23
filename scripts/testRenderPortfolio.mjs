@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Smoke-test for renderPortfolio: loads templates/psychology/annotated.html,
+ * Smoke-test for renderPortfolio: loads templates/sarah/annotated.html,
  * injects synthetic candidate data, writes output to harness/runs/test-render-psychology.html.
  *
  * Usage:
@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = join(__dirname, "..");
 
 const annotatedHtml = readFileSync(
-  join(ROOT, "templates/psychology/annotated.html"), "utf-8"
+  join(ROOT, "templates/sarah/annotated.html"), "utf-8"
 );
 
 // Synthetic candidateData matching the schema from generateCandidateContent

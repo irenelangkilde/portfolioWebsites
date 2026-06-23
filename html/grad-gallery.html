@@ -495,27 +495,27 @@
 
   <script>
     const files = [
-      { href: "../templates/accounting/sample.html",                  major: "Accounting",                variant: "Base" },
-      { href: "../templates/anthropology/sample.html",                major: "Anthropology",              variant: "Base" },
-      { href: "../templates/art/sample.html",                         major: "Art",                       variant: "Base" },
-      { href: "../templates/biology/sample.html",                     major: "Biology",                   variant: "Base" },
-      { href: "../templates/biology-b/sample.html",                   major: "Biology",                   variant: "B"    },
-      { href: "../templates/chemistry/sample.html",                   major: "Chemistry",                 variant: "Base" },
-      { href: "../templates/civil-engineering/sample.html",           major: "Civil Engineering",         variant: "Base" },
-      { href: "../templates/data-science/sample.html",                major: "Data Science",              variant: "Base" },
-      { href: "../templates/data-science-b/sample.html",              major: "Data Science",              variant: "B"    },
-      { href: "../templates/early-childhood-education/sample.html",   major: "Early Childhood Education", variant: "Base" },
-      { href: "../templates/electrical-engineering/sample.html",      major: "Electrical Engineering",    variant: "Base" },
-      { href: "../templates/electrical-engineering-b/sample.html",    major: "Electrical Engineering",    variant: "B"    },
-      { href: "../templates/finance/sample.html",                     major: "Finance",                   variant: "Base" },
-      { href: "../templates/history/sample.html",                     major: "History",                   variant: "Base" },
-      { href: "../templates/linguistics/sample.html",                 major: "Linguistics",               variant: "Base" },
-      { href: "../templates/management/sample.html",                  major: "Management",                variant: "Base" },
-      { href: "../templates/physics/sample.html",                     major: "Physics",                   variant: "Base" },
-      { href: "../templates/psychology/sample.html",                  major: "Psychology",                variant: "Base" },
-      { href: "../templates/spanish/sample.html",                     major: "Spanish",                   variant: "Base" },
-      { href: "../templates/spanish-b/sample.html",                   major: "Spanish",                   variant: "B"    },
-      { href: "../templates/statistics/sample.html",                  major: "Statistics",                variant: "Base" },
+      { href: "../templates/marcus/sample.html",                      major: "Accounting",                variant: "Base" },
+      { href: "../templates/owen/sample.html",                        major: "Anthropology",              variant: "Base" },
+      { href: "../templates/maya/sample.html",                        major: "Art",                       variant: "Base" },
+      { href: "../templates/hal/sample.html",                         major: "Biology",                   variant: "Base" },
+      { href: "../templates/naomi/sample.html",                       major: "Biology",                   variant: "B"    },
+      { href: "../templates/alex/sample.html",                        major: "Chemistry",                 variant: "Base" },
+      { href: "../templates/jordan/sample.html",                      major: "Civil Engineering",         variant: "Base" },
+      { href: "../templates/riley/sample.html",                       major: "Data Science",              variant: "Base" },
+      { href: "../templates/devin/sample.html",                       major: "Data Science",              variant: "B"    },
+      { href: "../templates/josh/sample.html",                        major: "Early Childhood Education", variant: "Base" },
+      { href: "../templates/caleb/sample.html",                       major: "Electrical Engineering",    variant: "Base" },
+      { href: "../templates/avery/sample.html",                       major: "Electrical Engineering",    variant: "B"    },
+      { href: "../templates/alexandra/sample.html",                   major: "Finance",                   variant: "Base" },
+      { href: "../templates/jake/sample.html",                        major: "History",                   variant: "Base" },
+      { href: "../templates/jamie/sample.html",                       major: "Linguistics",               variant: "Base" },
+      { href: "../templates/amy/sample.html",                         major: "Management",                variant: "Base" },
+      { href: "../templates/aria/sample.html",                        major: "Physics",                   variant: "Base" },
+      { href: "../templates/sarah/sample.html",                       major: "Psychology",                variant: "Base" },
+      { href: "../templates/sofia/sample.html",                       major: "Spanish",                   variant: "Base" },
+      { href: "../templates/mellissa/sample.html",                    major: "Spanish",                   variant: "B"    },
+      { href: "../templates/lucy/sample.html",                        major: "Statistics",                variant: "Base" },
     ];
 
     const gallery = document.getElementById("gallery");
@@ -536,7 +536,9 @@
     }
 
     function templateTitle(entry) {
-      return entry.variant === "Base" ? entry.major : `${entry.major} ${entry.variant}`;
+      const match = entry.href.match(/\/templates\/([^/]+)\//);
+      const slug = match ? match[1] : entry.major;
+      return slug.charAt(0).toUpperCase() + slug.slice(1);
     }
 
     function escapeHtml(value) {
