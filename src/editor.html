@@ -3119,8 +3119,32 @@
     frame.addEventListener("load", attachIframeSelectionTracker);
     frame.addEventListener("load", attachColorHoverInspector);
 
+    let lastIframeSrcdoc = "";
+    let lastIframeCanonicalHtml = "";
+    window._debugEditorIframeLoads = [];
+    function canonicalHtmlForIframeDedupe(html) {
+      return stripColorWorkbenchBlocks(String(html || ""))
+        .replace(/\s*<base\b[^>]*data-editor-base=["'][^"']*["'][^>]*>\s*/gi, "")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+    }
     function loadIframe(html) {
-      frame.srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
+      const srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
+      const canonicalHtml = canonicalHtmlForIframeDedupe(html);
+      const entry = {
+        at: new Date().toISOString(),
+        length: srcdoc.length,
+        canonicalLength: canonicalHtml.length,
+        skipped: srcdoc === lastIframeSrcdoc || (!!canonicalHtml && canonicalHtml === lastIframeCanonicalHtml),
+        title: String(html || "").match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1]?.trim() || "",
+      };
+      window._debugEditorIframeLoads.push(entry);
+      if (window._debugEditorIframeLoads.length > 50) window._debugEditorIframeLoads.shift();
+      if (entry.skipped) return false;
+      lastIframeSrcdoc = srcdoc;
+      lastIframeCanonicalHtml = canonicalHtml;
+      frame.srcdoc = srcdoc;
+      return true;
     }
 
     // ── Trivia overlay (shown while the portfolio is generating) ─────────────
@@ -3336,6 +3360,7 @@
     }
     let previewCachePoll = null;
     let lastIncomingPortfolioHtml = "";
+    let lastDisplayedIncomingPortfolioHtml = "";
     function stopPreviewCachePoll() {
       if (previewCachePoll) {
         clearInterval(previewCachePoll);
@@ -3454,6 +3479,7 @@
       if (waiting) {
         workbenchChoiceForCurrentIncoming = "";
         queuedIncomingPortfolioHtml = "";
+        lastDisplayedIncomingPortfolioHtml = "";
       }
       if (!waiting && workbenchEditsPromptPromise) {
         queuedIncomingPortfolioHtml = html;
@@ -3465,16 +3491,27 @@
         return true;
       }
       if (!waiting) lastIncomingPortfolioHtml = html;
+      const effectiveWorkbenchChoice = !waiting ? (workbenchChoice || workbenchChoiceForCurrentIncoming) : "";
+      const shouldAskAboutWorkbench = !waiting && !effectiveWorkbenchChoice && workbenchHasUserEdits();
+      const prepared = !waiting && !shouldAskAboutWorkbench && effectiveWorkbenchChoice !== "keep"
+        ? ensureEditorColorPreprocessed(html)
+        : null;
+      const displayHtml = prepared?.html || html;
+      if (!waiting && displayHtml === lastDisplayedIncomingPortfolioHtml) {
+        requestProcessStatusFromOpener();
+        return true;
+      }
       if (waiting) {
         showTriviaOverlay();
       } else {
         stopPreviewCachePoll();
         try { hideTriviaOverlay(); } catch {}
       }
-      currentHtml = html;
-      cachePreviewHtml(html);
-      loadIframe(html);
-      setCodeContent(html);
+      currentHtml = displayHtml;
+      cachePreviewHtml(displayHtml);
+      loadIframe(displayHtml);
+      if (!waiting) lastDisplayedIncomingPortfolioHtml = displayHtml;
+      setCodeContent(displayHtml);
       if (!waiting) {
         if (requestProcessStatusFromOpener()) {
           setTimeout(requestProcessStatusFromOpener, 150);
@@ -3486,10 +3523,12 @@
         //   - Prior edits exist → ask the user whether to keep their edits or discard them.
         //     The iframe + code view already updated above, so the page content reflects the
         //     new HTML either way; the choice only affects the workbench panel.
-        const effectiveWorkbenchChoice = workbenchChoice || workbenchChoiceForCurrentIncoming;
-        if (effectiveWorkbenchChoice) {
-          if (effectiveWorkbenchChoice === "discard") reinitWorkbenchFromHtml(html);
-        } else if (workbenchHasUserEdits()) {
+        if (prepared) {
+          renderColorWorkbenchPanel(prepared.rows);
+          try { autoFetchSuggestedPalettes?.(); } catch (e) { console.warn("autoFetchSuggestedPalettes failed:", e); }
+        } else if (effectiveWorkbenchChoice === "discard") {
+          reinitWorkbenchFromHtml(html);
+        } else if (shouldAskAboutWorkbench) {
           askUserAboutWorkbenchEdits().then(choice => {
             const queuedHtml = queuedIncomingPortfolioHtml;
             queuedIncomingPortfolioHtml = "";
@@ -3501,8 +3540,6 @@
             // "keep" → leave workbench rows as-is. Substitutes may not visibly apply
             // to the new HTML if its --c-N structure differs, but the user opted in.
           });
-        } else {
-          reinitWorkbenchFromHtml(html);
         }
       }
       return !waiting;

@@ -1224,11 +1224,18 @@ ${pseudoSelectors} {
       return String(result.site_html || "");
     }
 
+    let lastPreviewHtmlPushed = "";
     function pushPreviewHtmlUpdate(html) {
-      cachePreviewHtml(html || "");
+      const nextHtml = String(html || "");
+      if (nextHtml && nextHtml === lastPreviewHtmlPushed) {
+        forwardEditorProcessStatus();
+        return;
+      }
+      lastPreviewHtmlPushed = nextHtml;
+      cachePreviewHtml(nextHtml);
       const editorWin = window.__portfolioEditorWindow;
       if (editorWin && !editorWin.closed) {
-        try { editorWin.postMessage({ type: "portfolio_html", html }, location.origin); } catch {}
+        try { editorWin.postMessage({ type: "portfolio_html", html: nextHtml }, location.origin); } catch {}
         try {
           setTimeout(forwardEditorProcessStatus, 0);
           setTimeout(forwardEditorProcessStatus, 250);
@@ -4942,13 +4949,14 @@ input[type="color"].split-color::-moz-color-swatch {
       // Set localStorage with the current HTML *before* opening the window so the
       // editor never reads an empty slot. The popup-blocker rule only fires on
       // window.open(), not on localStorage writes.
-      cachePreviewHtml(previewHtml);
+      const existingEditorWin = window.__portfolioEditorWindow;
+      const hasExistingEditorWin = !!(existingEditorWin && !existingEditorWin.closed);
+      if (!hasExistingEditorWin) cachePreviewHtml(previewHtml);
       // Pass page 4 colors so the editor can offer a "Reset to default" option
       const p4Colors = getPage3Colors().theme;
       cachePage4Colors(p4Colors);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: p4Colors });
-      const existingEditorWin = window.__portfolioEditorWindow;
-      const editorWin = existingEditorWin && !existingEditorWin.closed
+      const editorWin = hasExistingEditorWin
         ? existingEditorWin
         : window.open("editor.html", "_blank");
       window.__portfolioEditorWindow = editorWin;
