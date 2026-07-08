@@ -836,6 +836,20 @@
     .esp-palette-body { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
     .esp-palette-note { color: rgba(234,240,255,.54); font-size: 11px; line-height: 1.35; }
     .esp-palette-note strong { color: rgba(234,240,255,.92); font-weight: 850; }
+    .esp-source-badge {
+      display: inline-block; margin-right: 6px; padding: 1px 6px;
+      border-radius: 999px; font-size: 9px; font-weight: 800;
+      letter-spacing: .06em; text-transform: uppercase; vertical-align: middle;
+      border: 1px solid transparent;
+    }
+    .esp-source-ai {
+      background: rgba(126,215,193,.16); color: rgba(126,215,193,.95);
+      border-color: rgba(126,215,193,.35);
+    }
+    .esp-source-local {
+      background: rgba(234,240,255,.06); color: rgba(234,240,255,.6);
+      border-color: rgba(234,240,255,.14);
+    }
     .esp-palette-actions { display: flex; align-items: center; gap: 8px; }
     .esp-swatch-strip { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0; }
     .esp-swatch {
@@ -1366,7 +1380,7 @@
         </button>
         <p class="color-workbench-note">Hovering over preview identifies swatch.</p>
       </div>
-      <div id="editorSwatchHead" aria-hidden="true"><span>Rep</span><span>Dep</span></div>
+      <div id="editorSwatchHead" aria-hidden="true"><span>Primary</span><span>Secondary</span></div>
       <div id="editorSwatchRows" aria-live="polite"></div>
       <div style="padding: 4px 14px 10px;">
         <ul class="color-workbench-footer-note" style="padding-left:16px;margin:0 0 8px;">
@@ -3329,11 +3343,19 @@
       }
     }
     // True if the workbench has any user-applied substitutes or preserve flags.
+    // Substitutes tagged `substituteFromPalette` were set by applyActivePaletteVarsToRows
+    // during HTML preprocessing (reflecting the loaded HTML's baked-in palette vars) —
+    // they are NOT user edits and must not trigger the "Keep your color edits?" prompt.
+    function itemIsUserEdit(item) {
+      if (!item) return false;
+      if (item.preserveHex) return true;
+      return !!item.substitute && !item.substituteFromPalette;
+    }
     function workbenchHasUserEdits() {
       if (!Array.isArray(colorWorkbenchRows) || !colorWorkbenchRows.length) return false;
       return colorWorkbenchRows.some(row => {
-        if (row.substitute || row.preserveHex) return true;
-        return Array.isArray(row.deps) && row.deps.some(d => d.substitute || d.preserveHex);
+        if (itemIsUserEdit(row)) return true;
+        return Array.isArray(row.deps) && row.deps.some(itemIsUserEdit);
       });
     }
 
@@ -3749,6 +3771,7 @@
 	          varToken: sanitizeWorkbenchToken(item?.varToken || item?.cssToken || ""),
 	          sourceVarName: item?.sourceVarName || item?.varName || "",
 	          substitute: item?.substitute ? toHexColor(item.substitute) : "",
+	          substituteFromPalette: !!item?.substituteFromPalette,
 	          preserveHex: !!item?.preserveHex,
 	          deps: Array.isArray(item?.deps) ? item.deps.map((dep, depIndex) => {
 	            const depHex = toHexColor(dep?.hex || "#000000");
@@ -3766,6 +3789,7 @@
 	              varToken: sanitizeWorkbenchToken(dep?.varToken || dep?.cssToken || ""),
 	              sourceVarName: dep?.sourceVarName || dep?.varName || "",
 	              substitute: dep?.substitute ? toHexColor(dep.substitute) : "",
+	              substituteFromPalette: !!dep?.substituteFromPalette,
 	              preserveHex: !!dep?.preserveHex,
 	              deps: [],
 	            };
@@ -3892,12 +3916,18 @@
 	      for (const row of rows || []) {
 	        if (row.sourceVarName && activeVars.has(row.sourceVarName) && !row.substitute) {
 	          const activeHex = toHexColor(activeVars.get(row.sourceVarName));
-	          if (activeHex.toLowerCase() !== toHexColor(row.hex).toLowerCase()) row.substitute = activeHex;
+	          if (activeHex.toLowerCase() !== toHexColor(row.hex).toLowerCase()) {
+	            row.substitute = activeHex;
+	            row.substituteFromPalette = true;
+	          }
 	        }
 	        for (const dep of row.deps || []) {
 	          if (dep.sourceVarName && activeVars.has(dep.sourceVarName) && !dep.substitute) {
 	            const activeHex = toHexColor(activeVars.get(dep.sourceVarName));
-	            if (activeHex.toLowerCase() !== toHexColor(dep.hex).toLowerCase()) dep.substitute = activeHex;
+	            if (activeHex.toLowerCase() !== toHexColor(dep.hex).toLowerCase()) {
+	              dep.substitute = activeHex;
+	              dep.substituteFromPalette = true;
+	            }
 	          }
 	        }
 	      }
@@ -4306,6 +4336,7 @@
 	          varToken: row.varToken || "",
 	          sourceVarName: row.sourceVarName || "",
 	          substitute: row.substitute || "",
+	          substituteFromPalette: !!row.substituteFromPalette,
 	          preserveHex: !!row.preserveHex,
 	          deps: (row.deps || []).map(dep => ({
 	            id: dep.id,
@@ -4317,6 +4348,7 @@
 	            varToken: dep.varToken || "",
 	            sourceVarName: dep.sourceVarName || "",
 	            substitute: dep.substitute || "",
+	            substituteFromPalette: !!dep.substituteFromPalette,
 	            preserveHex: !!dep.preserveHex,
 	          })),
 	        })),
@@ -4523,6 +4555,7 @@
 	      if (!hit) return;
 	      const nextColor = color ? toHexColor(color) : "";
 	      hit.item.substitute = nextColor;
+	      hit.item.substituteFromPalette = false;
 	      if (rerender) renderColorWorkbenchPanel();
 	      else {
 	        updateSubstituteDom(hit.item);
@@ -4746,15 +4779,19 @@
 	        ? ""
 	        : "No AI suggestions loaded yet.";
 	      palettes.forEach((palette, index) => {
+	        const isLocal = palette.source === "local";
 	        const paletteEl = document.createElement("div");
-	        paletteEl.className = "esp-palette" + (palette._isInversion ? " esp-palette-inversion" : "");
+	        paletteEl.className = "esp-palette"
+	          + (palette._isInversion ? " esp-palette-inversion" : "")
+	          + (isLocal ? " esp-palette-local" : " esp-palette-ai");
 	        paletteEl.dataset.paletteIndex = String(index);
 
 	        const note = document.createElement("div");
 	        note.className = "esp-palette-note";
 	        const title = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
 	        const rationale = String(palette.rationale || "").trim();
-	        note.innerHTML = `<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
+	        const badge = `<span class="esp-source-badge esp-source-${isLocal ? "local" : "ai"}">${isLocal ? "Rule-based" : "AI"}</span>`;
+	        note.innerHTML = `${badge}<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
 
 	        const strip = document.createElement("div");
 	        strip.className = "esp-swatch-strip";
@@ -4917,8 +4954,8 @@
 	      // Apply to workbench
 	      colorWorkbenchRows.forEach((row, i) => {
 	        const hex = byId.get(row.id) || byOrdinal.get(String(row.ordinal || "").toUpperCase()) || byId.get(`__index_${i}`);
-	        if (hex) row.substitute = toHexColor(hex);
-	        for (const dep of row.deps || []) dep.substitute = "";
+	        if (hex) { row.substitute = toHexColor(hex); row.substituteFromPalette = false; }
+	        for (const dep of row.deps || []) { dep.substitute = ""; dep.substituteFromPalette = false; }
 	      });
 	      activeSubstituteRowId = "";
 	      dependencyInputRowId = "";
@@ -4982,6 +5019,7 @@
 	        colorWorkbenchRows.forEach((row, i) => {
 	          if (i >= themeColors.length) return;
 	          row.substitute = toHexColor(themeColors[i]);
+	          row.substituteFromPalette = false;
 	        });
 	        renderColorWorkbenchPanel();
 	        applyColorWorkbenchToFrame();
@@ -7810,7 +7848,7 @@
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
       "Color Workbench: click a swatch to scroll to its first use (the swatch blinks red). Double-click to substitute a color.",
-      "Color Workbench: shift-click a primary swatch to absorb another primary as its dependent — type the other Rep's number and press Enter.",
+      "Color Workbench: shift-click a Primary swatch to absorb another Primary as its Secondary — type the other Primary's number and press Enter.",
     ];
 
     const ticker  = document.getElementById("sbTicker");

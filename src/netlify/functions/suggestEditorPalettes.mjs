@@ -421,17 +421,30 @@ function invertedLightness(lightness) {
   return clamp(1 - lightness, 0.28, 0.72);
 }
 
+// Warm targets sweep 8°–52° (red-orange → orange → amber → warm yellow) so a warm
+// palette lands squarely in the warm half of the color wheel regardless of the
+// user's anchor colors.
+const WARM_TARGETS = [24 / 360, 36 / 360, 12 / 360, 48 / 360, 8 / 360, 30 / 360];
+
 function fallbackColorForSwatch(swatch, anchorHex, spec, index) {
   const baseHex = normalizeHex(swatch.current || swatch.original) || "#777777";
   const base = rgbToHslObj(hexToRgbObj(baseHex) || { r: 119, g: 119, b: 119 });
   const anchor = rgbToHslObj(hexToRgbObj(anchorHex) || { r: 102, g: 126, b: 234 });
   const neutral = base.s < 0.08;
+
+  // Warm mode ignores the anchor's hue and pulls every swatch toward a warm target,
+  // so the result is unmistakably warm even when the anchors are cool.
+  const targetHue = spec.warmMode
+    ? WARM_TARGETS[index % WARM_TARGETS.length]
+    : rotateHue(anchor.h, spec.hueShift);
+
   const h = neutral
-    ? rotateHue(anchor.h, spec.hueShift + index * 5)
-    : mixHue(base.h, rotateHue(anchor.h, spec.hueShift), spec.hueWeight);
+    ? (spec.warmMode ? targetHue : rotateHue(anchor.h, spec.hueShift + index * 5))
+    : mixHue(base.h, targetHue, spec.hueWeight);
+  const anchorSatRef = spec.warmMode ? Math.max(anchor.s, 0.5) : anchor.s;
   const s = neutral
-    ? clamp(anchor.s * spec.neutralSat, 0.025, spec.inversion ? 0.16 : 0.24)
-    : clamp(base.s * spec.baseSat + anchor.s * spec.anchorSat, 0.08, 0.78);
+    ? clamp(anchorSatRef * spec.neutralSat, 0.025, spec.inversion ? 0.16 : 0.24)
+    : clamp(base.s * spec.baseSat + anchorSatRef * spec.anchorSat, 0.08, 0.78);
   const l = spec.inversion
     ? invertedLightness(base.l)
     : clamp(base.l + spec.lightnessShift, 0.07, 0.96);
@@ -443,7 +456,7 @@ function fallbackPalettes({ preferredColors, swatches, reason = "" }) {
   const specs = [
     { name: "Preferred Balance", hueShift: 0, hueWeight: 0.56, baseSat: 0.35, anchorSat: 0.52, neutralSat: 0.22, lightnessShift: 0, inversion: false, rationale: "Uses the requested colors while preserving the current light and dark structure." },
     { name: "Cool Contrast", hueShift: -34, hueWeight: 0.68, baseSat: 0.28, anchorSat: 0.66, neutralSat: 0.28, lightnessShift: -0.015, inversion: false, rationale: "Turns the requested colors into a cooler, higher-contrast palette." },
-    { name: "Warm Editorial", hueShift: 28, hueWeight: 0.62, baseSat: 0.25, anchorSat: 0.58, neutralSat: 0.26, lightnessShift: 0.018, inversion: false, rationale: "Warms the requested colors into a softer editorial palette." },
+    { name: "Warm Editorial", warmMode: true, hueShift: 30, hueWeight: 0.78, baseSat: 0.14, anchorSat: 0.62, neutralSat: 0.32, lightnessShift: 0.015, inversion: false, rationale: "Pulls every swatch into a warm red–amber range for a magazine-style editorial feel." },
     { name: "Light/Dark Inversion", hueShift: 8, hueWeight: 0.5, baseSat: 0.25, anchorSat: 0.45, neutralSat: 0.16, lightnessShift: 0, inversion: true, rationale: "Flips the original light and dark structure while keeping the requested colors as accents." },
   ];
   const suffix = reason ? " Generated locally because the AI palette request was unavailable or too slow." : "";
@@ -458,21 +471,6 @@ function fallbackPalettes({ preferredColors, swatches, reason = "" }) {
       hex: fallbackColorForSwatch(swatch, anchors[(index + paletteIndex) % anchors.length] || "#667eea", spec, index),
     })),
   }));
-}
-
-function mergeWithFallback(palettes, fallback) {
-  const out = [...palettes];
-  const hasInversion = out.some(palette => palette._isInversion);
-  for (const palette of fallback) {
-    if (out.length >= 4) break;
-    if (palette._isInversion && hasInversion) continue;
-    out.push(palette);
-  }
-  if (!out.some(palette => palette._isInversion) && fallback[3]) {
-    if (out.length >= 4) out[3] = fallback[3];
-    else out.push(fallback[3]);
-  }
-  return out.slice(0, 4);
 }
 
 function buildPrompt({ preferredColors, swatches, html }) {
@@ -510,7 +508,7 @@ Rules:
 - Palettes 1–3: preserve the current website's light/dark structure (dark swatches stay dark, light swatches stay light, accents shift freely). Set "inversion": false on all three.
   - Palette 1 should be the most faithful to the user's preferred colors.
   - Palette 2 should be a cooler or more technical/high-contrast interpretation.
-  - Palette 3 should be a warmer, editorial, or unexpected but still professional interpretation.
+  - Palette 3 MUST be visibly warmer than the site's current palette. Its non-neutral hues must land in the warm half of the color wheel (roughly 340°–65° — reds, oranges, ambers, warm yellows, terracotta, warm browns, cream). Cool blues, teals, purples, and cool greens are NOT acceptable as dominant colors here; they may only appear as small accents if strictly needed for contrast. If the user's preferred colors include a warm hue, feature it; if they don't, still shift the palette warm while keeping any brand accent from the preferred list recognizable. The result should read as an "editorial" magazine feel that is unmistakably warm — not muddy, not beige-on-beige, not lukewarm.
   - Between any two of these three palettes, at least half of the swatches must visibly change.
   - Do not return three palettes that share the same neutrals with only small accent variations.
 - Palette 4: a light/dark inversion of the original structure. If the original site has dark backgrounds and light text, palette 4 must use light or white backgrounds with dark text. If the original site has light backgrounds and dark text, palette 4 must use dark backgrounds with light text. Adapt the user's preferred colors to fit this inverted structure. Set "inversion": true on this palette.
@@ -604,7 +602,16 @@ export async function handler(event) {
 
   const html = summarizeHtmlForPalettePrompt(body.html);
   const prompt = buildPrompt({ preferredColors, swatches, html });
-  const fallback = fallbackPalettes({ preferredColors, swatches });
+
+  // Always compute the rule-based palettes; they now complement the AI palettes
+  // instead of replacing them. Every palette (AI or local) is tagged with `source`
+  // so the frontend can distinguish them without inspecting rationale text.
+  const localPalettes = fallbackPalettes({ preferredColors, swatches })
+    .map(palette => ({ ...palette, source: "local" }));
+
+  let aiPalettes = [];
+  let aiFailed = false;
+  let warning = "";
 
   try {
     const provider = body.provider === "openai" ? "openai" : "claude";
@@ -623,26 +630,24 @@ export async function handler(event) {
         throw err;
       }
     }
-
-    let parsed = parseJsonLoose(raw);
-    let palettes = normalizeAiResult(parsed, swatches);
-    palettes = mergeWithFallback(
-      palettes,
-      palettes.length < 4
-        ? fallbackPalettes({ preferredColors, swatches, reason: "AI returned incomplete palettes." })
-        : fallback
-    );
-    return jsonResponse(200, {
-      palettes,
-      requestedSwatchCount: swatches.length,
-      fallback: palettes.some(palette => /Generated locally/.test(palette.rationale || "")),
-    });
+    aiPalettes = normalizeAiResult(parseJsonLoose(raw), swatches)
+      .map(palette => ({ ...palette, source: "ai" }));
+    if (!aiPalettes.length) {
+      aiFailed = true;
+      warning = "AI returned no usable palettes.";
+    }
   } catch (err) {
-    return jsonResponse(200, {
-      palettes: fallbackPalettes({ preferredColors, swatches, reason: err?.message || String(err) }),
-      requestedSwatchCount: swatches.length,
-      fallback: true,
-      warning: err?.message || String(err),
-    });
+    aiFailed = true;
+    warning = err?.message || String(err);
   }
+
+  return jsonResponse(200, {
+    palettes: [...aiPalettes, ...localPalettes],
+    requestedSwatchCount: swatches.length,
+    aiFailed,
+    // Keep the legacy `fallback` field for older frontends — true when the entire
+    // set is local-only because AI didn't produce anything.
+    fallback: aiFailed,
+    ...(warning ? { warning } : {}),
+  });
 }
