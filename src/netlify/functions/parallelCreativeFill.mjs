@@ -85,6 +85,19 @@ function formatColorPreferencesGuidance(prefs) {
   if (prefs.mode === "swatches" && Array.isArray(prefs.swatches) && prefs.swatches.length) {
     const list = prefs.swatches.map(h => String(h)).filter(h => /^#[0-9a-fA-F]{3,8}$/.test(h)).join(", ");
     if (!list) return "";
+    const assignments = Array.isArray(prefs.assignments)
+      ? prefs.assignments
+          .map((item, index) => {
+            const hex = String(item?.hex || "").trim();
+            if (!/^#[0-9a-fA-F]{3,8}$/.test(hex)) return "";
+            const source = item?.sourceOrdinal ? ` from original/template swatch ${item.sourceOrdinal}` : "";
+            return `${index + 1}. ${hex}${source}`;
+          })
+          .filter(Boolean)
+      : [];
+    if (assignments.length) {
+      return `USER COLOR PREFERENCES: The user selected these ordered KEY anchor colors after reordering/reassigning template swatches: ${assignments.join("; ")}. Treat the order as a prominence/reassignment signal, not a complete palette.`;
+    }
     return `USER COLOR PREFERENCES: The user selected these as KEY anchor colors: ${list}. Treat them as anchors (not the complete palette) when copy references color choices.`;
   }
   if (prefs.mode === "text" && typeof prefs.text === "string" && prefs.text.trim()) {

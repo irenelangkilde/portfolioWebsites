@@ -573,6 +573,35 @@
     }
 
     // ----------------------------
+    function resumeFooterStatusText(text) {
+      const value = String(text || "").trim();
+      if (!value) return "";
+      return /resume/i.test(value) ? value : `Resume: ${value}`;
+    }
+
+    function shouldShowResumeFooterStatus() {
+      try {
+        const pageId = typeof activePageId === "function" ? activePageId() : "";
+        return !!pageId && pageId !== "page0" && pageId !== "page1";
+      } catch {
+        return false;
+      }
+    }
+
+    function syncResumeFooterStatus(text = null, color = "") {
+      const primaryEl = document.getElementById("resumeAnalysisStatus");
+      const rawText = text == null ? (primaryEl?.textContent || "") : text;
+      const rawColor = color || primaryEl?.style?.color || "rgba(234,240,255,.6)";
+      const footerText = resumeFooterStatusText(rawText);
+      const showFooter = shouldShowResumeFooterStatus();
+      document.querySelectorAll("[data-resume-status-footer]").forEach(el => {
+        el.textContent = footerText;
+        el.style.color = rawColor;
+        el.style.display = showFooter && footerText ? "block" : "none";
+      });
+      if (primaryEl) primaryEl.style.display = showFooter ? "none" : "";
+    }
+
     function setResumeAnalysisStatus(text, color = "rgba(234,240,255,.6)") {
       // Inline element (Page 1, beside upload): always updated
       const inlineEl = document.getElementById("resumeAnalysisStatusInline");
@@ -580,6 +609,7 @@
       // Nav-bar element: always updated so the editor ticker sees countdown text too
       const el = document.getElementById("resumeAnalysisStatus");
       if (el) { el.textContent = text; el.style.color = color; }
+      syncResumeFooterStatus(text, color);
       forwardEditorProcessStatus();
     }
 
@@ -1212,7 +1242,10 @@ ${pseudoSelectors} {
           result.masthead_meta || mastheadImageResult.masthead_meta || null
         );
       }
-      html = applyBraidColorOverridesToHtml(html);
+      const colorPrefs = result.colorPreferences || result.color_preferences || null;
+      if (colorPrefs?.mode !== "text") {
+        html = applyBraidColorOverridesToHtml(html);
+      }
       return html;
     }
 
@@ -1372,6 +1405,53 @@ ${pseudoSelectors} {
 
     function startAnalysisCountdown(timeoutSec) {
       return startCountdown("resumeAnalysisStatus", "Analyzing resume…", timeoutSec);
+    }
+
+    function setPipelineWaitStatus(statusId, text, color = "rgba(141,224,255,.75)") {
+      if (statusId === "resumeAnalysisStatus") setResumeAnalysisStatus(text, color);
+      else setHeaderStatus(statusId, text, color);
+    }
+
+    async function waitForResumeAnalysis(statusId, timeoutMs = 300000) {
+      if (lastAnalysisData) return true;
+
+      if (!resumeAnalysisPending) {
+        const file = document.getElementById("resumeUpload")?.files?.[0];
+        if (!file) {
+          setPipelineWaitStatus(statusId, "⚠ Resume PDF not found — please re-upload your resume.", "rgba(251,171,156,.9)");
+          return false;
+        }
+        setPipelineWaitStatus(statusId, "Starting resume analysis…", "rgba(141,224,255,.75)");
+        analyzeResumeInBackground(file);
+      }
+
+      const startedAt = Date.now();
+      let lastRemaining = null;
+      while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - startedAt < timeoutMs) {
+        const remaining = Math.max(0, Math.ceil((timeoutMs - (Date.now() - startedAt)) / 1000));
+        if (remaining !== lastRemaining) {
+          lastRemaining = remaining;
+          setPipelineWaitStatus(statusId, `Waiting for resume analysis… ${remaining}s`, "rgba(141,224,255,.75)");
+        }
+
+        if (!resumeAnalysisPending && !lastAnalysisData) {
+          const resumeStatus = document.getElementById("resumeAnalysisStatus")?.textContent?.trim() || "";
+          if (/failed|timed out|requires|credit|empty|could not|upgrade/i.test(resumeStatus)) {
+            setPipelineWaitStatus(
+              statusId,
+              resumeStatus.startsWith("⚠") ? resumeStatus : `⚠ ${resumeStatus}`,
+              "rgba(251,171,156,.9)"
+            );
+            return false;
+          }
+        }
+
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      if (lastAnalysisData) return true;
+      setPipelineWaitStatus(statusId, "⚠ Resume analysis did not complete.", "rgba(251,171,156,.9)");
+      return false;
     }
 
     function getCompatibleColorSchemes(data) {
@@ -1658,7 +1738,7 @@ ${pseudoSelectors} {
       // Generate a unique jobId for this analysis run
       const jobId = "resume_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 
-      _analysisCountdownTimer = startAnalysisCountdown(180);
+      _analysisCountdownTimer = startAnalysisCountdown(300);
 
       // Submit to background function (returns 202 immediately)
       try {
@@ -1835,6 +1915,7 @@ ${pseudoSelectors} {
       const target = document.getElementById(slotIdByPage[activePageId()] || "");
       if (target && panel.parentElement !== target) target.appendChild(panel);
       panel.classList.toggle("hidden", !target);
+      syncResumeFooterStatus();
     }
 
     function setStep(step){
@@ -3992,12 +4073,11 @@ input[type="color"].split-color::-moz-color-swatch {
     // unification step needed.
     // ----------------------------
     async function doAnalyzeAndExtractJobAd() {
-      // Block until Stage 1 (resume analysis) is finished
-      if (resumeAnalysisPending) {
-        setHeaderStatus("jobAnalysisStatus", "Job analysis waiting for resume analysis…", "rgba(141,224,255,.75)");
-      }
-      while (resumeAnalysisPending) {
-        await new Promise(r => setTimeout(r, 500));
+      const p4 = getPage4Job();
+      const rawText = [p4.desired_role, p4.job_ad].filter(Boolean).join("\n\n").trim();
+      // Block until Stage 1 only when there is job text to analyze.
+      if (rawText && !(await waitForResumeAnalysis("jobAnalysisStatus", 300000))) {
+        return;
       }
 
       await doExtractJobAd();
@@ -4037,18 +4117,10 @@ input[type="color"].split-color::-moz-color-swatch {
       await waitForTemplateExtraction("braidStatus");
 
       // Wait for resume analysis
-      if (resumeAnalysisPending || !lastAnalysisData) {
-        setHeaderStatus("braidStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
-        const t0 = Date.now();
-        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - t0 < 300000) {
-          await new Promise(r => setTimeout(r, 500));
-        }
-        if (!lastAnalysisData) {
-          setHeaderStatus("braidStatus", "⚠ Resume analysis did not complete.", "rgba(251,171,156,.9)");
-          braidInProgress = false;
-          setApplyBtnState(true);
-          return;
-        }
+      if (!(await waitForResumeAnalysis("braidStatus", 300000))) {
+        braidInProgress = false;
+        setApplyBtnState(true);
+        return;
       }
 
       // Wait for job ad if in flight
@@ -4131,7 +4203,7 @@ input[type="color"].split-color::-moz-color-swatch {
           } catch {}
           if (data.status === "done") {
             clearInterval(braidCountdown);
-            generationResult    = { ...data, base_site_html: data.site_html || "" };
+            generationResult    = { ...data, base_site_html: data.site_html || "", colorPreferences };
             braidInProgress     = false;
             generationInProgress = false;
             window.umami?.track("portfolio-generated");
@@ -4210,15 +4282,10 @@ input[type="color"].split-color::-moz-color-swatch {
         return;
       }
 
-      setHeaderStatus("braidStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
       tracePortfolioPipeline("slot-fill:waiting-resume", { hasLastAnalysisData: !!lastAnalysisData, resumeAnalysisPending });
-      const analysisWaitStart = Date.now();
-      while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - analysisWaitStart < 120000) {
-        await new Promise(r => setTimeout(r, 500));
-      }
-      if (!lastAnalysisData) {
-        tracePortfolioPipeline("slot-fill:no-resume-analysis", { waitedMs: Date.now() - analysisWaitStart });
-        setHeaderStatus("braidStatus", "⚠ Resume analysis did not complete.", "rgba(251,171,156,.9)");
+      const resumeWaitStart = Date.now();
+      if (!(await waitForResumeAnalysis("braidStatus", 300000))) {
+        tracePortfolioPipeline("slot-fill:no-resume-analysis", { waitedMs: Date.now() - resumeWaitStart });
         slotFillInProgress = false;
         setApplyBtnState(true);
         return;
@@ -4314,7 +4381,7 @@ input[type="color"].split-color::-moz-color-swatch {
               setApplyBtnState(true);
               return;
             }
-            generationResult     = { ...data, base_site_html: data.site_html || "" };
+            generationResult     = { ...data, base_site_html: data.site_html || "", colorPreferences };
             try {
               window._debugSlotFillData = {
                 rawSiteHtmlLength: (data.site_html || "").length,
@@ -4522,17 +4589,9 @@ input[type="color"].split-color::-moz-color-swatch {
       await waitForTemplateExtraction("bridgeStatus");
 
       // Block until resume analysis is finished (bridge needs resume_facts + resume_strategy)
-      if (resumeAnalysisPending || !lastAnalysisData) {
-        setHeaderStatus("bridgeStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
-        const resumeWaitStart = Date.now();
-        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - resumeWaitStart < 300000) {
-          await new Promise(r => setTimeout(r, 500));
-        }
-        if (!lastAnalysisData) {
-          setHeaderStatus("bridgeStatus", "⚠ Resume analysis did not complete — cannot proceed.", "rgba(251,171,156,.9)");
-          bridgeInProgress = false;
-          return;
-        }
+      if (!(await waitForResumeAnalysis("bridgeStatus", 300000))) {
+        bridgeInProgress = false;
+        return;
       }
 
       // Block until job ad extraction is finished (bridge needs job_resolved)
@@ -4757,19 +4816,11 @@ input[type="color"].split-color::-moz-color-swatch {
       await waitForTemplateExtraction("generatingWebsiteStatus");
 
       // Block until resume analysis is finished — resume_facts and resume_strategy are required
-      if (resumeAnalysisPending || !lastAnalysisData) {
-        setHeaderStatus("generatingWebsiteStatus", "Waiting for resume analysis…", "rgba(141,224,255,.6)");
-        const resumeWaitStart = Date.now();
-        while ((resumeAnalysisPending || !lastAnalysisData) && Date.now() - resumeWaitStart < 300000) {
-          await new Promise(r => setTimeout(r, 500));
-        }
-        if (!lastAnalysisData) {
-          generationError = "Resume analysis did not complete. Please try re-uploading your resume.";
-          generationInProgress = false;
-          setHeaderStatus("generatingWebsiteStatus", "⚠ " + generationError, "rgba(251,171,156,.9)");
-          setApplyBtnState(true);
-          return;
-        }
+      if (!(await waitForResumeAnalysis("generatingWebsiteStatus", 300000))) {
+        generationError = "Resume analysis did not complete. Please try re-uploading your resume.";
+        generationInProgress = false;
+        setApplyBtnState(true);
+        return;
       }
 
       setHeaderStatus("generatingWebsiteStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
@@ -4856,7 +4907,7 @@ input[type="color"].split-color::-moz-color-swatch {
           setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
           if (data.status === "done") {
             clearInterval(renderCountdown);
-            generationResult    = data;
+            generationResult    = { ...data, colorPreferences };
             generationInProgress = false;
             onCreditUsed();
             setHeaderStatus("generatingWebsiteStatus", "✓ Website generated", "rgba(118,176,34,.9)");
@@ -5175,7 +5226,7 @@ input[type="color"].split-color::-moz-color-swatch {
     }
 
     const EDITOR_REVISION_STEPS = { resume: 1, job: 2, design: 3 };
-    const EDITOR_REVISION_LABELS = { resume: "New resume", job: "New Job", design: "New Design" };
+    const EDITOR_REVISION_LABELS = { resume: "New resume", job: "New Job", design: "New Design", palette: "AI color guidance" };
 
     function postEditorRevisionStatus(kind, message, level = "ok") {
       const editorWin = window.__portfolioEditorWindow;
@@ -5244,6 +5295,80 @@ input[type="color"].split-color::-moz-color-swatch {
             level: "error"
           }, location.origin);
         } catch {}
+      }
+    }
+
+    function sanitizeEditorPalettePreferences(value) {
+      if (!value || typeof value !== "object") return null;
+      if (value.mode === "text") {
+        const text = String(value.text || "").trim();
+        if (!text) return null;
+        return { mode: "text", text: text.slice(0, 500) };
+      }
+      const swatches = Array.isArray(value.swatches)
+        ? value.swatches.map(hex => normalizeToHex(hex)).filter(Boolean).slice(0, 8)
+        : [];
+      if (!swatches.length) return null;
+      const assignments = Array.isArray(value.assignments)
+        ? value.assignments.map((item, index) => ({
+            rank: Number.isFinite(Number(item?.rank)) ? Number(item.rank) : index + 1,
+            hex: normalizeToHex(item?.hex) || swatches[index] || "",
+            sourceOrdinal: item?.sourceOrdinal ?? null,
+            sourceVariable: String(item?.sourceVariable || "").slice(0, 80),
+            original: normalizeToHex(item?.original) || "",
+          })).filter(item => item.hex).slice(0, 8)
+        : [];
+      return { mode: "swatches", swatches, assignments };
+    }
+
+    function applyEditorPaletteSwatchesToPage4(swatches = []) {
+      const ids = ["primary", "secondary", "tertiary", "accent2", "accent1"];
+      ids.forEach((id, index) => {
+        const el = document.getElementById(id);
+        const hex = swatches[index];
+        if (el && hex) {
+          el.value = hex;
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      });
+      userHasCustomizedColors = true;
+      userHasSelectedPalette = true;
+      paletteSuggestionsLocked = true;
+      selectedSuggestedPaletteKey = "";
+      selectedPaletteComplements = null;
+      updatePageColorInputSplitSwatches();
+      cachePage4Colors(getPage3Colors().theme);
+    }
+
+    async function handleEditorPaletteRegeneration(msg, sourceWindow) {
+      if (sourceWindow && !sourceWindow.closed) window.__portfolioEditorWindow = sourceWindow;
+      const colorPreferences = sanitizeEditorPalettePreferences(msg?.colorPreferences);
+      if (!colorPreferences) {
+        postEditorRevisionStatus("palette", "Choose swatches or enter color instructions before regenerating.", "error");
+        return;
+      }
+
+      const colorError = await validatePage4ColorChoice(colorPreferences);
+      if (colorError) {
+        postEditorRevisionStatus("palette", colorError, "error");
+        return;
+      }
+
+      if (colorPreferences.mode === "swatches") {
+        applyEditorPaletteSwatchesToPage4(colorPreferences.swatches);
+      }
+
+      try {
+        postEditorRevisionStatus("palette", "Regenerating portfolio with AI color guidance.");
+        const started = await page4OpenEditorAction({
+          forceRegenerateKind: "palette",
+          colorPreferences,
+        });
+        if (!started) {
+          postEditorRevisionStatus("palette", "Regeneration did not start. Check the color guidance and try again.", "error");
+        }
+      } catch (err) {
+        postEditorRevisionStatus("palette", `Regeneration could not start: ${err?.message || err}`, "error");
       }
     }
 
@@ -5942,20 +6067,22 @@ input[type="color"].split-color::-moz-color-swatch {
         ? options
         : {};
       const forceRegenerateKind = actionOptions.forceRegenerateKind || editorRerunRequest?.kind || "";
+      const explicitColorPreferences = actionOptions.colorPreferences || null;
       tracePortfolioPipeline("page4:click-start", {
         source: selectedTemplateSource(),
         extractTemplatePending: !!extractTemplatePending,
         slotFillMode: isSlotFillMode(),
         directDesignMode: isDirectDesignMode(),
         braidMode: isBraidMode(),
-        forceRegenerateKind
+        forceRegenerateKind,
+        explicitColorPreferences: !!explicitColorPreferences
       });
       // Grey the button immediately — re-enabled when the editor opens.
       const openBtn = document.getElementById("next2_bottom");
       if (openBtn) { openBtn.disabled = true; openBtn.style.opacity = ".4"; openBtn.style.cursor = "not-allowed"; }
 
       // Collect + validate the user's color choice before any AI calls.
-      const colorPreferences = collectPage4ColorPreferences();
+      const colorPreferences = explicitColorPreferences || collectPage4ColorPreferences();
       const colorError = await validatePage4ColorChoice(colorPreferences);
       if (colorError) {
         tracePortfolioPipeline("page4:color-validation-error", { colorError });
@@ -6123,6 +6250,12 @@ input[type="color"].split-color::-moz-color-swatch {
       const msg = e.data;
       if (!msg || msg.type !== "editor_submit_new_resume") return;
       applyEditorSubmittedResume(msg, e.source);
+    });
+
+    window.addEventListener("message", e => {
+      const msg = e.data;
+      if (!msg || msg.type !== "editor_regenerate_with_palette") return;
+      handleEditorPaletteRegeneration(msg, e.source);
     });
 
     window.addEventListener("message", e => {

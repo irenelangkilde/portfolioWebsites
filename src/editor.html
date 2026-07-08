@@ -597,11 +597,15 @@
     .color-workbench-note {
       margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
+    .color-inspector-block {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 3px;
+      margin: 6px 0 8px;
+    }
     .color-workbench-footer-note {
       margin: 0 0 7px; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
     .color-workbench-footer-actions {
-      display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 7px; align-items: center;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; align-items: center;
     }
     .color-workbench-footer-actions button {
       min-height: 30px; border: none; border-radius: 6px; cursor: pointer;
@@ -613,12 +617,12 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(134,239,172,.18); }
       50% { box-shadow: 0 0 0 3px rgba(134,239,172,.55); background: rgba(22,163,74,.46); }
     }
-    #btnOpenPalettePanel.palette-ready { animation: paletteReadyPulse 1.05s ease-in-out infinite; color: #a3f0c0; }
-    #btnOpenPalettePanel.palette-generating { opacity: .75; cursor: wait; }
+    #btnWorkbenchPalettePanel.palette-ready { animation: paletteReadyPulse 1.05s ease-in-out infinite; color: #a3f0c0; }
+    #btnWorkbenchPalettePanel.palette-generating { opacity: .75; cursor: wait; }
     .color-workbench-footer-actions button:disabled {
       opacity: .55; cursor: wait;
     }
-    #btnResetColors { font-size: 14px; }
+    #btnResetColors { font-size: 12px; }
 
     .color-inspector-toggle {
       flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
@@ -671,14 +675,13 @@
     }
     .ewb-swatch::before {
       content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
-      background: transparent;
+      display: none;
     }
     .ewb-swatch.has-substitute {
-      background: var(--ewb-original, transparent);
+      background: var(--ewb-current, transparent);
     }
     .ewb-swatch.has-substitute::before {
-      background: var(--ewb-current, transparent);
-      clip-path: polygon(0 0, 100% 0, 0 100%);
+      display: none;
     }
     .ewb-swatch.ewb-click-blink {
       background: #ff1010 !important;
@@ -739,22 +742,18 @@
     #paletteSlidePanel.open { display: flex; }
     body.code-mode #paletteSlidePanel { left: 0; }
     #psp-top {
-      flex: 1 1 auto; display: flex; flex-direction: row; min-height: 0;
+      flex: 1 1 auto; display: flex; flex-direction: column; min-height: 150px;
       border-bottom: 1px solid rgba(255,255,255,.12); overflow: hidden;
-    }
-    #psp-question-col {
-      flex: 0 0 50%; min-height: 0; display: flex; flex-direction: column; gap: 9px;
-      padding: 12px; overflow-y: auto;
     }
     #psp-results-col {
       flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px;
-      padding: 12px; border-right: 1px solid rgba(255,255,255,.12); overflow-y: auto;
+      padding: 12px; overflow: hidden;
     }
     .psp-request-heading {
       margin: 0; color: rgba(234,240,255,.9); font-size: 26px; line-height: 1.1; font-weight: 850;
     }
     .psp-request-options {
-      display: flex; flex-direction: column;
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px; min-height: 118px; width: 100%;
     }
     .psp-request-option {
@@ -782,9 +781,12 @@
     #pspSlotList { display: flex; flex-direction: row; align-items: center; gap: 8px; }
     .psp-slot-wrap { position: relative; }
     .psp-slot {
-      display: block; width: 46px; height: 34px; border-radius: 7px; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      width: 46px; height: 34px; border-radius: 7px; cursor: pointer;
       border: 2px solid rgba(255,255,255,.28); background: rgba(255,255,255,.1);
       box-sizing: border-box; flex: 0 0 auto;
+      color: rgba(255,255,255,.96); font-size: 11px; font-weight: 900;
+      text-shadow: 0 1px 3px rgba(0,0,0,.85);
     }
     .psp-slot:hover { border-color: rgba(141,186,255,.65); }
     .psp-slot.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(141,186,255,.7); }
@@ -799,12 +801,12 @@
       display: flex; flex-direction: column; gap: 8px; min-width: 0; width: 100%;
     }
     #psp-bottom {
-      flex: 0 0 auto; min-height: 0; overflow: hidden; margin-top: auto;
-      border-radius: 8px 8px 0 0; background: #f5f5f5;
+      flex: 0 0 auto; min-height: 0; overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,.12); background: #f5f5f5;
     }
     #pspThemesFrame {
       width: 100%; height: 100%; border: none; display: block;
-      border-radius: 8px 8px 0 0; background: #f5f5f5;
+      background: #f5f5f5;
     }
     #pspCloseBtn {
       position: absolute; top: 50%; right: 0; transform: translateY(-50%);
@@ -814,6 +816,39 @@
       color: rgba(234,240,255,.9); font-size: 20px; cursor: pointer; z-index: 51;
     }
     #pspCloseBtn:hover { background: rgba(103,126,234,.7); color: #fff; }
+
+    #paletteRegenModal {
+      display: none; position: fixed; inset: 0; z-index: 200000;
+      background: rgba(0,0,0,.62); align-items: center; justify-content: center;
+    }
+    #paletteRegenModal.open { display: flex; }
+    #paletteRegenBox {
+      width: min(560px, 94vw); max-height: min(680px, 92vh); overflow-y: auto;
+      background: #0f1929; border: 1px solid rgba(255,255,255,.18);
+      border-radius: 12px; padding: 18px; box-shadow: 0 16px 48px rgba(0,0,0,.6);
+      color: #eaf0ff; display: flex; flex-direction: column; gap: 14px;
+    }
+    #paletteRegenBox h3 { margin: 0; font-size: 16px; color: #eaf0ff; }
+    #paletteRegenStatus {
+      min-height: 16px; font-size: 12px; color: rgba(234,240,255,.56);
+    }
+    .palette-regen-toolbar { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+    .palette-regen-toolbar button {
+      min-height: 28px; padding: 4px 10px; border: 1px solid rgba(255,255,255,.14);
+      border-radius: 6px; background: rgba(255,255,255,.08); color: rgba(234,240,255,.88);
+      font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    .palette-regen-toolbar button:hover { background: rgba(255,255,255,.16); color: #fff; }
+    .palette-regen-actions {
+      display: flex; justify-content: flex-end; gap: 8px; flex-wrap: wrap;
+    }
+    .palette-regen-actions button {
+      min-height: 32px; padding: 6px 14px; border: none; border-radius: 7px;
+      font: inherit; font-size: 12px; font-weight: 800; cursor: pointer;
+    }
+    #paletteRegenCancel { background: rgba(255,255,255,.10); color: #eaf0ff; }
+    #paletteRegenSubmit { background: #667eea; color: #fff; }
+    #paletteRegenSubmit:disabled { opacity: .55; cursor: wait; }
 
     .esp-help { color: rgba(234,240,255,.58); font-size: 12px; line-height: 1.45; }
     #editorSuggestedPaletteInput {
@@ -825,7 +860,10 @@
     #editorSuggestedPaletteStatus {
       min-height: 16px; color: rgba(234,240,255,.55); font-size: 12px; line-height: 1.35;
     }
-    #editorSuggestedPaletteRows { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; flex: 1; }
+    #editorSuggestedPaletteRows {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      align-content: start; gap: 9px; overflow-y: auto; flex: 1; min-height: 0;
+    }
     .esp-palette {
       border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.045);
       padding: 10px;
@@ -837,7 +875,7 @@
     .esp-palette-note { color: rgba(234,240,255,.54); font-size: 11px; line-height: 1.35; }
     .esp-palette-note strong { color: rgba(234,240,255,.92); font-weight: 850; }
     .esp-source-badge {
-      display: inline-block; margin-right: 6px; padding: 1px 6px;
+      display: inline-block; margin-left: 6px; padding: 1px 6px;
       border-radius: 999px; font-size: 9px; font-weight: 800;
       letter-spacing: .06em; text-transform: uppercase; vertical-align: middle;
       border: 1px solid transparent;
@@ -855,7 +893,11 @@
     .esp-swatch {
       width: 28px; height: 22px; border-radius: 4px; border: 1px solid rgba(255,255,255,.7);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.26);
+      padding: 0; cursor: pointer;
     }
+    .esp-swatch:hover { border-color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.26), 0 0 0 2px rgba(141,186,255,.45); }
+    .esp-swatch:focus-visible { outline: 2px solid rgba(141,186,255,.8); outline-offset: 2px; }
+    .esp-swatch.copied { box-shadow: inset 0 0 0 1px rgba(0,0,0,.26), 0 0 0 2px rgba(134,239,172,.75); }
     .esp-copy-all {
       flex: 0 0 auto; padding: 6px 10px; border-radius: 6px;
       border: 1px solid rgba(141,186,255,.32); background: rgba(102,126,234,.14);
@@ -1199,8 +1241,8 @@
     <h1>Irene's Webworks — Visual Editor v2.0</h1>
     <button class="tbtn tbtn-ghost" id="btnTips">Tips</button>
     <div id="sbWrap">
-      <span id="sbTicker"></span>
       <span id="sbStatus" aria-live="polite"></span>
+      <span id="sbTicker"></span>
     </div>
     <div id="openWrap">
       <button class="tbtn tbtn-ghost" id="btnOpenMenu">Open ▾</button>
@@ -1320,9 +1362,9 @@
         <span class="lr-icon" aria-hidden="true">✨</span>
         <span class="lr-label">New Design</span>
       </button>
-      <button class="left-rail-btn" id="btnOpenPalettePanel" type="button" title="Browse AI-suggested palettes" aria-label="Palettes">
+      <button class="left-rail-btn" id="btnPaletteRegenerate" type="button" title="Regenerate the website with AI color guidance" aria-label="AI colors">
         <span class="lr-icon" aria-hidden="true">🎨</span>
-        <span class="lr-label">Palettes</span>
+        <span class="lr-label">AI colors</span>
       </button>
     </aside>
     <div id="visualPane">
@@ -1374,11 +1416,6 @@
       <div id="colorWorkbenchHeader">
         <div class="color-workbench-title">Color workbench</div>
         <div id="cwStatus" role="status" aria-live="polite"></div>
-        <button type="button" class="color-inspector-toggle" id="colorHoverInspectorToggle" role="switch" aria-checked="false" title="Show the swatch ID for colors under the cursor in the visual editor.">
-          <span class="color-inspector-slider" aria-hidden="true"></span>
-          <span>Swatch Reporter</span>
-        </button>
-        <p class="color-workbench-note">Hovering over preview identifies swatch.</p>
       </div>
       <div id="editorSwatchHead" aria-hidden="true"><span>Primary</span><span>Secondary</span></div>
       <div id="editorSwatchRows" aria-live="polite"></div>
@@ -1388,41 +1425,25 @@
           <li><b>Double-click:</b> substitute color.</li>
           <li><b>Shift-click:</b> Swap Primary/Secondary status.</li>
         </ul>
+        <div class="color-inspector-block">
+          <button type="button" class="color-inspector-toggle" id="colorHoverInspectorToggle" role="switch" aria-checked="false" title="Show the swatch ID for colors under the cursor in the visual editor.">
+            <span class="color-inspector-slider" aria-hidden="true"></span>
+            <span>Swatch Reporter</span>
+          </button>
+          <p class="color-workbench-note">Hovering over preview shows swatch id.</p>
+        </div>
         <div class="color-workbench-footer-actions">
-          <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺</button>
+          <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺ Reset</button>
+          <button id="btnWorkbenchPalettePanel" type="button" title="Open suggested palettes and color themes.">Palettes</button>
         </div>
       </div>
     </div>
   <div id="paletteSlidePanel">
     <div id="psp-top">
       <div id="psp-results-col">
-        <p class="psp-request-heading">Change your preferred website colors:</p>
+        <p class="psp-request-heading">Suggested palettes</p>
         <div id="editorSuggestedPaletteStatus" aria-live="polite"></div>
         <div id="editorSuggestedPaletteRows"></div>
-      </div>
-      <div id="psp-question-col">
-        <div class="psp-request-options">
-          <div class="psp-request-option active" data-palette-request-option="swatches">
-          <label class="psp-request-label" for="pspRequestModeSwatches">
-            <input id="pspRequestModeSwatches" type="radio" name="pspRequestMode" value="swatches" checked>
-            <span>Use swatches</span>
-          </label>
-          <p class="psp-request-help">Click to select a swatch. Double-click to choose a color. Shift-click to delete a swatch.</p>
-          <div id="psp-swatches-col" class="psp-request-control">
-            <div id="pspSlotList"></div>
-            <button id="pspAddSlot" type="button" title="Add swatch slot">+</button>
-            </div>
-          </div>
-          <div class="psp-request-option" data-palette-request-option="text">
-            <label class="psp-request-label" for="pspRequestModeText">
-              <input id="pspRequestModeText" type="radio" name="pspRequestMode" value="text">
-              <span>Use text</span>
-            </label>
-            <div id="psp-suggested-col" class="psp-request-control">
-              <textarea id="editorSuggestedPaletteInput" placeholder="e.g. deep navy, warm copper, #f7f2e8" spellcheck="true"></textarea>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
     <div id="psp-bottom">
@@ -1430,6 +1451,41 @@
     </div>
     <button id="pspCloseBtn" type="button" title="Return to editor">&#8250;</button>
   </div>
+  </div>
+  <div id="paletteRegenModal" aria-hidden="true">
+    <div id="paletteRegenBox" role="dialog" aria-modal="true" aria-labelledby="paletteRegenTitle">
+      <h3 id="paletteRegenTitle">Regenerate colors with AI</h3>
+      <div class="psp-request-options">
+        <div class="psp-request-option active" data-palette-request-option="swatches">
+          <label class="psp-request-label">
+            <input type="radio" name="pspRequestMode" value="swatches" checked>
+            Use swatches
+          </label>
+          <p class="psp-request-help">Use the ordered workbench swatches as AI color anchors.</p>
+          <div class="psp-request-control" id="psp-swatches-col">
+            <div id="pspSlotList"></div>
+            <button id="pspAddSlot" type="button" title="Add a swatch">+</button>
+          </div>
+          <div class="palette-regen-toolbar" aria-label="Reorder swatches">
+            <button id="pspMoveLeft" type="button" title="Move selected swatch left">←</button>
+            <button id="pspMoveRight" type="button" title="Move selected swatch right">→</button>
+          </div>
+        </div>
+        <div class="psp-request-option" data-palette-request-option="text">
+          <label class="psp-request-label">
+            <input type="radio" name="pspRequestMode" value="text">
+            Use text
+          </label>
+          <p class="psp-request-help">Describe the color direction for the regenerated page.</p>
+          <textarea id="editorSuggestedPaletteInput" placeholder="Example: deep navy and clean white with precise electric-blue accents"></textarea>
+        </div>
+      </div>
+      <div id="paletteRegenStatus" aria-live="polite"></div>
+      <div class="palette-regen-actions">
+        <button id="paletteRegenCancel" type="button">Cancel</button>
+        <button id="paletteRegenSubmit" type="button">Regenerate</button>
+      </div>
+    </div>
   </div>
   <div id="colorHoverTooltip" role="status" aria-live="polite"></div>
 
@@ -3361,12 +3417,25 @@
     let previewCachePoll = null;
     let lastIncomingPortfolioHtml = "";
     let lastDisplayedIncomingPortfolioHtml = "";
+    let handledPortfolioHtmls = [];
     function stopPreviewCachePoll() {
       if (previewCachePoll) {
         clearInterval(previewCachePoll);
         previewCachePoll = null;
       }
     }
+    function rememberHandledPortfolioHtml(html) {
+      const value = String(html || "");
+      if (!value || isWaitingPlaceholderHtml(value)) return;
+      handledPortfolioHtmls = handledPortfolioHtmls.filter(item => item !== value);
+      handledPortfolioHtmls.push(value);
+      if (handledPortfolioHtmls.length > 8) handledPortfolioHtmls.shift();
+    }
+    function hasHandledPortfolioHtml(html) {
+      const value = String(html || "");
+      return !!value && handledPortfolioHtmls.includes(value);
+    }
+    rememberHandledPortfolioHtml(fullHtml);
     // True if the workbench has any user-applied substitutes or preserve flags.
     // Substitutes tagged `substituteFromPalette` were set by applyActivePaletteVarsToRows
     // during HTML preprocessing (reflecting the loaded HTML's baked-in palette vars) —
@@ -3420,6 +3489,8 @@
           loadIframe(nextHtml);
           setCodeContent(nextHtml);
         }
+        rememberHandledPortfolioHtml(html);
+        rememberHandledPortfolioHtml(nextHtml);
         // Once workbench swatches are populated, fire AI-suggested-palette auto-fetch (once per session).
         try { autoFetchSuggestedPalettes?.(); } catch (e) { console.warn("autoFetchSuggestedPalettes failed:", e); }
       } catch (err) {
@@ -3480,9 +3551,15 @@
         workbenchChoiceForCurrentIncoming = "";
         queuedIncomingPortfolioHtml = "";
         lastDisplayedIncomingPortfolioHtml = "";
+        handledPortfolioHtmls = [];
       }
       if (!waiting && workbenchEditsPromptPromise) {
         queuedIncomingPortfolioHtml = html;
+        requestProcessStatusFromOpener();
+        return true;
+      }
+      if (!waiting && hasHandledPortfolioHtml(html)) {
+        lastIncomingPortfolioHtml = html;
         requestProcessStatusFromOpener();
         return true;
       }
@@ -3511,6 +3588,10 @@
       cachePreviewHtml(displayHtml);
       loadIframe(displayHtml);
       if (!waiting) lastDisplayedIncomingPortfolioHtml = displayHtml;
+      if (!waiting) {
+        rememberHandledPortfolioHtml(html);
+        rememberHandledPortfolioHtml(displayHtml);
+      }
       setCodeContent(displayHtml);
       if (!waiting) {
         if (requestProcessStatusFromOpener()) {
@@ -4181,6 +4262,7 @@
 
 	    let colorWorkbenchRows = [];
 	    let activeWorkbenchItemId = "";
+	    let lastActivePrimaryWorkbenchItemId = "";
 	    let activeSubstituteRowId = "";
 	    let dependencyInputRowId = "";
 	    const colorWorkbenchHost = document.getElementById("editorSwatchRows");
@@ -4189,15 +4271,23 @@
 	    const suggestedPaletteInput = document.getElementById("editorSuggestedPaletteInput");
 	    const suggestedPaletteStatus = document.getElementById("editorSuggestedPaletteStatus");
 	    const suggestedPaletteRows = document.getElementById("editorSuggestedPaletteRows");
-	    const btnOpenPalettePanel = document.getElementById("btnOpenPalettePanel");
+	    const btnPaletteRegenerate = document.getElementById("btnPaletteRegenerate");
+	    const btnWorkbenchPalettePanel = document.getElementById("btnWorkbenchPalettePanel");
 	    const paletteSlidePanel = document.getElementById("paletteSlidePanel");
 	    const pspCloseBtn = document.getElementById("pspCloseBtn");
 	    const pspThemesFrame = document.getElementById("pspThemesFrame");
 	    const pspBottom = document.getElementById("psp-bottom");
 	    const pspSlotList = document.getElementById("pspSlotList");
 	    const pspAddSlot = document.getElementById("pspAddSlot");
+	    const pspMoveLeft = document.getElementById("pspMoveLeft");
+	    const pspMoveRight = document.getElementById("pspMoveRight");
+	    const paletteRegenModal = document.getElementById("paletteRegenModal");
+	    const paletteRegenCancel = document.getElementById("paletteRegenCancel");
+	    const paletteRegenSubmit = document.getElementById("paletteRegenSubmit");
+	    const paletteRegenStatus = document.getElementById("paletteRegenStatus");
 	    const paletteRequestModeRadios = [...document.querySelectorAll('input[name="pspRequestMode"]')];
 	    let paletteSlotColors = [""];
+	    let paletteSlotMeta = [];
 	    let activePaletteSlotIndex = null;
 	    let _paletteCountdownTimer = null;
 	    let _paletteCountdownStart = 0;
@@ -4262,7 +4352,7 @@
 	    }
 
 	    function resolveDependentWorkbenchColor(parent, dep) {
-	      if (dep?.substitute) return toHexColor(dep.substitute);
+	      if (dep?.substitute && !dep?.substituteFromPalette) return toHexColor(dep.substitute);
 	      if (dep?.preserveHex) return toHexColor(dep.hex);
 	      const parentOriginal = hexToOklch(parent?.hex || "");
 	      const depOriginal = hexToOklch(dep?.hex || "");
@@ -4471,7 +4561,7 @@
 	        for (const dep of row.deps || []) {
 	          const depVar = colorWorkbenchVarName(dep);
 	          const depOk = hexToOklch(dep.hex);
-	          const depValue = dep.substitute
+	          const depValue = dep.substitute && !dep.substituteFromPalette
 	            ? dep.substitute
 	            : dep.preserveHex
 	              ? dep.hex
@@ -4574,6 +4664,8 @@
 	      const sourceHtml = viewMode === "visual" ? getVisualContent() : getCodeContent();
 	      currentHtml = insertColorWorkbenchBlocks(stripEditorBaseTag(sourceHtml || currentHtml));
 	      setCodeContent(currentHtml);
+	      rememberHandledPortfolioHtml(currentHtml);
+	      lastDisplayedIncomingPortfolioHtml = currentHtml;
 	      try { cachePreviewHtml(currentHtml); } catch {}
 	    }
 
@@ -4594,6 +4686,7 @@
 	        const root = doc.documentElement;
 	        clearManagedWorkbenchRootInlineStyles(root);
 	      } catch {}
+	      refreshWorkbenchSwatchVisuals();
 	    }
 
 	    function swatchVisualState(item, color) {
@@ -4609,16 +4702,14 @@
 	      button.classList.toggle("has-substitute", state.overridden);
 	      button.style.setProperty("--ewb-current", state.current);
 	      button.style.setProperty("--ewb-original", state.original);
-	      button.title = state.overridden
-	        ? `${state.current} (original ${state.original})`
-	        : state.original;
+	      button.title = state.current;
 	    }
 
 	    function renderSwatchButton(item, className, action, color, isBlank = false) {
 	      const state = swatchVisualState(item, color);
 	      const cls = `ewb-swatch ${className}${isBlank ? " blank" : ""}${state.overridden ? " has-substitute" : ""}`;
 	      const style = isBlank ? "" : ` style="--ewb-current:${escapeHtml(state.current)};--ewb-original:${escapeHtml(state.original)};"`;
-	      const title = state.overridden ? `${state.current} (original ${state.original})` : state.original;
+	      const title = state.current;
 	      return `<button type="button" class="${cls}" data-action="${action}" data-id="${escapeHtml(item.id)}"${style} title="${escapeHtml(title)}"><span class="ewb-swatch-label">${escapeHtml(displayOrdinal(item.ordinal))}</span></button>`;
 	    }
 
@@ -4654,9 +4745,53 @@
 	      if (button) applySwatchButtonVisual(button, row, currentWorkbenchColor(row));
 	    }
 
+	    function refreshWorkbenchSwatchVisuals() {
+	      if (!colorWorkbenchHost) return;
+	      const refresh = item => {
+	        if (!item?.id) return;
+	        const color = currentWorkbenchColor(item);
+	        colorWorkbenchHost
+	          .querySelectorAll(`.ewb-swatch[data-id="${cssEscape(item.id)}"]`)
+	          .forEach(button => applySwatchButtonVisual(button, item, color));
+	      };
+	      for (const row of colorWorkbenchRows || []) {
+	        refresh(row);
+	        for (const dep of row.deps || []) refresh(dep);
+	      }
+	    }
+
+	    function isPrimaryWorkbenchItem(id) {
+	      const hit = findWorkbenchItem(id);
+	      return !!hit && !hit.parent;
+	    }
+
+	    function rememberActivePrimaryWorkbenchItem(id) {
+	      if (isPrimaryWorkbenchItem(id)) lastActivePrimaryWorkbenchItemId = id;
+	    }
+
+	    function paletteTargetWorkbenchItemId() {
+	      if (isPrimaryWorkbenchItem(activeWorkbenchItemId)) return activeWorkbenchItemId;
+	      if (isPrimaryWorkbenchItem(lastActivePrimaryWorkbenchItemId)) return lastActivePrimaryWorkbenchItemId;
+	      return "";
+	    }
+
+	    function copyColorToActiveWorkbenchSwatch(color) {
+	      const targetId = paletteTargetWorkbenchItemId();
+	      if (!targetId) {
+	        showTickerMessage("Click a primary Color Workbench swatch first to choose where to apply this color.", "info");
+	        return false;
+	      }
+	      setRowSubstitute(targetId, color);
+	      return true;
+	    }
+
 	    function setRowSubstitute(rowId, color, { rerender = true } = {}) {
 	      const hit = findWorkbenchItem(rowId);
 	      if (!hit) return;
+	      if (hit.parent) {
+	        setCwStatus("Secondary swatches are calculated from their primary swatch.", "info");
+	        return;
+	      }
 	      const nextColor = color ? toHexColor(color) : "";
 	      hit.item.substitute = nextColor;
 	      hit.item.substituteFromPalette = false;
@@ -4688,13 +4823,60 @@
 	      return paletteSlotColors.map(color => color ? toHexColor(color) : "").filter(Boolean);
 	    }
 
+	    function syncPaletteSlotMetaLength() {
+	      while (paletteSlotMeta.length < paletteSlotColors.length) paletteSlotMeta.push({});
+	      if (paletteSlotMeta.length > paletteSlotColors.length) paletteSlotMeta = paletteSlotMeta.slice(0, paletteSlotColors.length);
+	    }
+
+	    function paletteSlotLabel(index) {
+	      const meta = paletteSlotMeta[index] || {};
+	      return meta.ordinal ? String(meta.ordinal) : String(index + 1);
+	    }
+
+	    function loadPaletteSlotsFromWorkbench() {
+	      const rows = (Array.isArray(colorWorkbenchRows) ? colorWorkbenchRows : [])
+	        .map((row, index) => ({
+	          color: currentWorkbenchColor(row),
+	          meta: {
+	            id: row.id || "",
+	            ordinal: row.ordinal || index + 1,
+	            variable: colorWorkbenchVarName(row),
+	            sourceVariable: row.sourceVarName || "",
+	            original: toHexColor(row.hex),
+	          },
+	        }))
+	        .filter(item => /^#[0-9a-f]{6}$/i.test(item.color || ""));
+	      paletteSlotColors = rows.map(item => item.color);
+	      paletteSlotMeta = rows.map(item => item.meta);
+	      if (!paletteSlotColors.length) {
+	        paletteSlotColors = [""];
+	        paletteSlotMeta = [{}];
+	      }
+	      activePaletteSlotIndex = paletteSlotColors[0] ? 0 : null;
+	    }
+
+	    function moveActivePaletteSlot(delta) {
+	      if (activePaletteSlotIndex == null) return;
+	      const nextIndex = activePaletteSlotIndex + delta;
+	      if (nextIndex < 0 || nextIndex >= paletteSlotColors.length) return;
+	      [paletteSlotColors[activePaletteSlotIndex], paletteSlotColors[nextIndex]] =
+	        [paletteSlotColors[nextIndex], paletteSlotColors[activePaletteSlotIndex]];
+	      [paletteSlotMeta[activePaletteSlotIndex], paletteSlotMeta[nextIndex]] =
+	        [paletteSlotMeta[nextIndex], paletteSlotMeta[activePaletteSlotIndex]];
+	      activePaletteSlotIndex = nextIndex;
+	      renderPaletteSlots();
+	      updateThemesSwatchCount();
+	    }
+
 	    function deletePaletteSlot(index) {
 	      if (index < 0 || index >= paletteSlotColors.length) return;
 	      if (paletteSlotColors.length <= 1) {
 	        paletteSlotColors = [""];
+	        paletteSlotMeta = [{}];
 	        activePaletteSlotIndex = null;
 	      } else {
 	        paletteSlotColors.splice(index, 1);
+	        paletteSlotMeta.splice(index, 1);
 	        if (activePaletteSlotIndex === index) activePaletteSlotIndex = null;
 	        else if (activePaletteSlotIndex > index) activePaletteSlotIndex -= 1;
 	      }
@@ -4710,6 +4892,7 @@
 
 	    function renderPaletteSlots() {
 	      if (!pspSlotList) return;
+	      syncPaletteSlotMetaLength();
 	      pspSlotList.innerHTML = "";
 	      paletteSlotColors.forEach((color, i) => {
 	        const wrap = document.createElement("div");
@@ -4719,6 +4902,7 @@
 	        btn.className = "psp-slot" + (i === activePaletteSlotIndex ? " active" : "");
 	        btn.style.background = color || "rgba(255,255,255,.1)";
 	        btn.title = color ? color + " (double-click to edit; shift-click to delete)" : "Click to activate; shift-click to delete";
+	        btn.textContent = paletteSlotLabel(i);
 	        const input = document.createElement("input");
 	        input.type = "color";
 	        input.className = "psp-slot-input";
@@ -4726,6 +4910,7 @@
 	        const syncSlotColor = () => {
 	          setPaletteRequestMode("swatches");
 	          paletteSlotColors[i] = input.value;
+	          paletteSlotMeta[i] = { ...(paletteSlotMeta[i] || {}), manual: true };
 	          btn.style.background = input.value;
 	          btn.title = input.value + " (double-click to edit; shift-click to delete)";
 	        };
@@ -4769,7 +4954,7 @@
 	    function updateColorThemesFrameHeight(height) {
 	      if (!pspBottom || !height) return;
 	      const panelHeight = paletteSlidePanel?.clientHeight || window.innerHeight;
-	      const maxHeight = Math.max(140, Math.floor(panelHeight * 0.46));
+	      const maxHeight = Math.max(130, Math.floor(panelHeight * 0.34));
 	      const nextHeight = Math.max(120, Math.min(maxHeight, Math.ceil(Number(height) || 0)));
 	      pspBottom.style.height = `${nextHeight}px`;
 	    }
@@ -4783,13 +4968,10 @@
 	    function openPalettePanel() {
 	      resetPaletteBtn();
 	      paletteSlidePanel?.classList.add("open");
-	      renderPaletteSlots();
 	      renderSuggestedPaletteResults();
-	      updatePaletteRequestMode();
 	      setTimeout(() => {
 	        updateThemesSwatchCount();
 	        syncColorThemesFrameHeight();
-	        if (getPaletteRequestMode() === "text") suggestedPaletteInput?.focus();
 	      }, 80);
 	    }
 
@@ -4797,12 +4979,131 @@
 	      paletteSlidePanel?.classList.remove("open");
 	    }
 
+	    function setPaletteRegenStatus(message, kind = "info") {
+	      if (!paletteRegenStatus) return;
+	      paletteRegenStatus.textContent = message || "";
+	      paletteRegenStatus.style.color = kind === "error"
+	        ? "rgba(255,166,166,.9)"
+	        : kind === "ok"
+	          ? "rgba(170,240,190,.88)"
+	          : "rgba(234,240,255,.56)";
+	    }
+
+	    function openPaletteRegenerateModal() {
+	      loadPaletteSlotsFromWorkbench();
+	      renderPaletteSlots();
+	      updatePaletteRequestMode();
+	      setPaletteRegenStatus("");
+	      if (paletteRegenSubmit) paletteRegenSubmit.disabled = false;
+	      paletteRegenModal?.classList.add("open");
+	      paletteRegenModal?.setAttribute("aria-hidden", "false");
+	    }
+
+	    function closePaletteRegenerateModal() {
+	      paletteRegenModal?.classList.remove("open");
+	      paletteRegenModal?.setAttribute("aria-hidden", "true");
+	    }
+
+	    function editorHeuristicValidateColorText(text) {
+	      const trimmed = String(text || "").trim();
+	      if (trimmed.length < 10) return "Please describe your color preferences in at least 10 characters.";
+	      if (trimmed.length > 500) return "Please keep your color description under 500 characters.";
+	      if (!/[a-z]{3,}/i.test(trimmed)) return "Please describe your color preferences in words.";
+	      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastel|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
+	      if (!colorish.test(trimmed)) return "Please mention at least one color or descriptor.";
+	      return "";
+	    }
+
+	    async function editorAiValidateColorText(text) {
+	      try {
+	        const res = await fetch("/.netlify/functions/validateColorText", {
+	          method: "POST",
+	          headers: { "content-type": "application/json" },
+	          body: JSON.stringify({ text }),
+	        });
+	        const data = await res.json().catch(() => ({}));
+	        if (!res.ok) return { ok: true, error: "" };
+	        return { ok: !!data.valid, error: data.reason || "" };
+	      } catch {
+	        return { ok: true, error: "" };
+	      }
+	    }
+
+	    function editorPaletteAssignments() {
+	      syncPaletteSlotMetaLength();
+	      return paletteSlotColors
+	        .map((color, index) => {
+	          const hex = toHexColor(color);
+	          if (!hex) return null;
+	          const meta = paletteSlotMeta[index] || {};
+	          return {
+	            rank: index + 1,
+	            hex,
+	            sourceOrdinal: meta.ordinal || null,
+	            sourceVariable: meta.variable || meta.sourceVariable || "",
+	            original: meta.original || "",
+	          };
+	        })
+	        .filter(Boolean);
+	    }
+
+	    async function submitPaletteRegeneration() {
+	      const requestMode = getPaletteRequestMode();
+	      let colorPreferences = null;
+	      if (requestMode === "text") {
+	        const text = String(suggestedPaletteInput?.value || "").trim();
+	        const heuristicError = editorHeuristicValidateColorText(text);
+	        if (heuristicError) {
+	          setPaletteRegenStatus(heuristicError, "error");
+	          suggestedPaletteInput?.focus();
+	          return;
+	        }
+	        if (paletteRegenSubmit) paletteRegenSubmit.disabled = true;
+	        setPaletteRegenStatus("Validating color instructions…");
+	        const ai = await editorAiValidateColorText(text);
+	        if (!ai.ok) {
+	          if (paletteRegenSubmit) paletteRegenSubmit.disabled = false;
+	          setPaletteRegenStatus(ai.error || "That does not look like color guidance. Please rephrase.", "error");
+	          suggestedPaletteInput?.focus();
+	          return;
+	        }
+	        colorPreferences = { mode: "text", text };
+	      } else {
+	        const swatches = selectedPaletteSlotHexes();
+	        if (!swatches.length) {
+	          setPaletteRegenStatus("Choose at least one swatch color.", "error");
+	          return;
+	        }
+	        colorPreferences = {
+	          mode: "swatches",
+	          swatches,
+	          assignments: editorPaletteAssignments(),
+	        };
+	      }
+
+	      if (!window.opener || window.opener.closed) {
+	        if (paletteRegenSubmit) paletteRegenSubmit.disabled = false;
+	        setPaletteRegenStatus("Open the intake form to regenerate with AI colors.", "error");
+	        return;
+	      }
+
+	      try {
+	        window.opener.postMessage({ type: "editor_regenerate_with_palette", colorPreferences }, location.origin);
+	        window.opener.focus?.();
+	        closePaletteRegenerateModal();
+	        showTickerMessage("Regenerating portfolio with AI color guidance…", "info", 0);
+	      } catch (err) {
+	        if (paletteRegenSubmit) paletteRegenSubmit.disabled = false;
+	        setPaletteRegenStatus(`Could not start regeneration: ${err?.message || err}`, "error");
+	      }
+	    }
+
 	    const PALETTE_COUNTDOWN_FROM = 30;
 	    function startPaletteCountdown() {
 	      stopPaletteCountdown();
 	      _paletteCountdownStart = Date.now();
-	      btnOpenPalettePanel?.classList.add("palette-generating");
-	      btnOpenPalettePanel?.classList.remove("palette-ready");
+	      btnWorkbenchPalettePanel?.classList.add("palette-generating");
+	      btnWorkbenchPalettePanel?.classList.remove("palette-ready");
 	      function tick() {
 	        const elapsed = Math.floor((Date.now() - _paletteCountdownStart) / 1000);
 	        const remaining = Math.max(0, PALETTE_COUNTDOWN_FROM - elapsed);
@@ -4817,19 +5118,19 @@
 
 	    function stopPaletteCountdown() {
 	      if (_paletteCountdownTimer) { clearInterval(_paletteCountdownTimer); _paletteCountdownTimer = null; }
-	      btnOpenPalettePanel?.classList.remove("palette-generating");
+	      btnWorkbenchPalettePanel?.classList.remove("palette-generating");
 	      // Release the ticker so it can resume the tips carousel.
 	      window.__editorTickerClearProcess?.();
 	    }
 
 	    function setPaletteBtnReady() {
 	      stopPaletteCountdown();
-	      btnOpenPalettePanel?.classList.add("palette-ready");
+	      btnWorkbenchPalettePanel?.classList.add("palette-ready");
 	    }
 
 	    function resetPaletteBtn() {
 	      stopPaletteCountdown();
-	      btnOpenPalettePanel?.classList.remove("palette-ready");
+	      btnWorkbenchPalettePanel?.classList.remove("palette-ready");
 	    }
 
 	    function preferredColorTokenCount(value) {
@@ -4895,15 +5196,24 @@
 	        const title = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
 	        const rationale = String(palette.rationale || "").trim();
 	        const badge = `<span class="esp-source-badge esp-source-${isLocal ? "local" : "ai"}">${isLocal ? "Rule-based" : "AI"}</span>`;
-	        note.innerHTML = `${badge}<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
+	        note.innerHTML = `<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}${badge}`;
 
 	        const strip = document.createElement("div");
 	        strip.className = "esp-swatch-strip";
 	        (palette.colors || []).forEach(color => {
-	          const swatch = document.createElement("span");
+	          const hex = toHexColor(color.hex);
+	          const swatch = document.createElement("button");
+	          swatch.type = "button";
 	          swatch.className = "esp-swatch";
-	          swatch.style.background = toHexColor(color.hex);
-	          swatch.title = `${color.ordinal || ""} ${toHexColor(color.hex)}`.trim();
+	          swatch.style.background = hex;
+	          swatch.title = `Copy ${hex} to the active workbench swatch`;
+	          swatch.setAttribute("aria-label", `Copy suggested color ${hex} to the active workbench swatch`);
+	          swatch.addEventListener("click", ev => {
+	            ev.stopPropagation();
+	            if (!copyColorToActiveWorkbenchSwatch(hex)) return;
+	            swatch.classList.add("copied");
+	            setTimeout(() => swatch.classList.remove("copied"), 600);
+	          });
 	          strip.appendChild(swatch);
 	        });
 
@@ -5071,16 +5381,25 @@
 	      setEditStatus(`${palette.name || "Suggested palette"} applied.`, "ok");
 	    }
 
-	    btnOpenPalettePanel?.addEventListener("click", openPalettePanel);
+	    btnWorkbenchPalettePanel?.addEventListener("click", openPalettePanel);
+	    btnPaletteRegenerate?.addEventListener("click", openPaletteRegenerateModal);
 	    pspCloseBtn?.addEventListener("click", closePalettePanel);
 	    pspAddSlot?.addEventListener("click", () => {
 	      setPaletteRequestMode("swatches");
 	      if (paletteSlotColors.length < 8) {
 	        paletteSlotColors.push("");
+	        paletteSlotMeta.push({});
 	        activePaletteSlotIndex = paletteSlotColors.length - 1;
 	        renderPaletteSlots();
 	        updateThemesSwatchCount();
 	      }
+	    });
+	    pspMoveLeft?.addEventListener("click", () => moveActivePaletteSlot(-1));
+	    pspMoveRight?.addEventListener("click", () => moveActivePaletteSlot(1));
+	    paletteRegenCancel?.addEventListener("click", closePaletteRegenerateModal);
+	    paletteRegenSubmit?.addEventListener("click", submitPaletteRegeneration);
+	    paletteRegenModal?.addEventListener("click", ev => {
+	      if (ev.target === paletteRegenModal) closePaletteRegenerateModal();
 	    });
 	    paletteRequestModeRadios.forEach(radio => {
 	      radio.addEventListener("change", updatePaletteRequestMode);
@@ -5107,11 +5426,7 @@
 	      if (e.data.type === "colorPick" && e.data.color) {
 	        // A single swatch was clicked in the 20-Color-Themes gallery. Route it to the
 	        // Color Workbench's last-active swatch on the right rail.
-	        if (activeWorkbenchItemId) {
-	          setRowSubstitute(activeWorkbenchItemId, e.data.color);
-	        } else {
-	          showTickerMessage("Click a Color Workbench swatch first to choose where to apply this color.", "info");
-	        }
+	        copyColorToActiveWorkbenchSwatch(e.data.color);
 	        return;
 	      }
 	      if (e.data.type === "colorThemeSelected") {
@@ -5141,6 +5456,10 @@
 	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
 	      const moved = { ...source, substitute: "", deps: [] };
 	      target.deps = [...(target.deps || []), moved, ...(source.deps || [])];
+	      if (activeWorkbenchItemId === source.id || lastActivePrimaryWorkbenchItemId === source.id) {
+	        activeWorkbenchItemId = target.id;
+	        lastActivePrimaryWorkbenchItemId = target.id;
+	      }
 	      activeSubstituteRowId = "";
 	      dependencyInputRowId = "";
 	      renderColorWorkbenchPanel();
@@ -5160,6 +5479,10 @@
 	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
 	      const moved = { ...source, substitute: "", deps: [] };
 	      destRow.deps = [...(destRow.deps || []), moved, ...(source.deps || [])];
+	      if (activeWorkbenchItemId === source.id || lastActivePrimaryWorkbenchItemId === source.id) {
+	        activeWorkbenchItemId = destRow.id;
+	        lastActivePrimaryWorkbenchItemId = destRow.id;
+	      }
 	      dependencyInputRowId = "";
 	      renderColorWorkbenchPanel();
 	      applyColorWorkbenchToFrame();
@@ -5174,6 +5497,7 @@
 	        colorWorkbenchRows.push({ ...dep, deps: [] });
 	        sortWorkbenchRows();
 	        activeWorkbenchItemId = dep.id;
+	        lastActivePrimaryWorkbenchItemId = dep.id;
 	        renderColorWorkbenchPanel();
 	        applyColorWorkbenchToFrame();
 	        persistColorWorkbench();
@@ -5829,6 +6153,7 @@
 	      const hit = findWorkbenchItem(itemId);
 	      if (!hit) return;
 	      activeWorkbenchItemId = itemId;
+	      if (!hit.parent) rememberActivePrimaryWorkbenchItem(itemId);
 	      renderColorWorkbenchPanel();
 	      try {
 	        const doc = frame.contentDocument;
@@ -5885,6 +6210,15 @@
 	        }
 	      } catch {}
 	      startBlink(itemId);
+	    }
+
+	    function selectWorkbenchItemWithoutPreviewFlash(itemId) {
+	      const hit = findWorkbenchItem(itemId);
+	      if (!hit) return;
+	      activeWorkbenchItemId = itemId;
+	      if (!hit.parent) rememberActivePrimaryWorkbenchItem(itemId);
+	      stopBlink();
+	      renderColorWorkbenchPanel();
 	    }
 
 	    // Delay single-click actions so double-click can cancel them.
@@ -5992,8 +6326,13 @@
 	    function openNativeSubstitutePicker(id, anchorEl) {
 	      const hit = findWorkbenchItem(id);
 	      if (!hit) return;
+	      if (hit.parent) {
+	        setCwStatus("Secondary swatches are read-only; edit the primary swatch instead.", "info");
+	        return;
+	      }
 	      clearTimeout(_ewbClickTimer);
 	      activeWorkbenchItemId = id;
+	      rememberActivePrimaryWorkbenchItem(id);
 	      activeSubstituteRowId = id;
 	      dependencyInputRowId = "";
 	      renderColorWorkbenchPanel();
@@ -6044,7 +6383,13 @@
 	      // Plain click → scroll + blink, delayed so dblclick can cancel it.
 	      if (action === "activate-row" || action === "activate-dependent") {
 	        clearTimeout(_ewbClickTimer);
-	        _ewbClickTimer = setTimeout(() => activateWorkbenchItem(id), 220);
+	        _ewbClickTimer = setTimeout(() => {
+	          if (paletteSlidePanel?.classList.contains("open")) {
+	            selectWorkbenchItemWithoutPreviewFlash(id);
+	          } else {
+	            activateWorkbenchItem(id);
+	          }
+	        }, 220);
 	        return;
 	      }
 
@@ -6057,7 +6402,7 @@
 	      if (!target) return;
 	      const action = target.dataset.action;
 	      const id = target.dataset.id;
-	      if (action !== "activate-row" && action !== "activate-dependent") return;
+	      if (action !== "activate-row") return;
 	      ev.stopPropagation();
 	      ev.preventDefault();
 	      openNativeSubstitutePicker(id, target);
@@ -6188,6 +6533,8 @@
 	      renderColorWorkbenchPanel(prepared.rows);
 	      loadIframe(currentHtml);
 	      setCodeContent(currentHtml);
+	      rememberHandledPortfolioHtml(html);
+	      rememberHandledPortfolioHtml(currentHtml);
 	      document.getElementById("colorPanel").classList.remove("hidden");
 	    }
 
