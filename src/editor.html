@@ -3359,6 +3359,28 @@
       });
     }
 
+    window._debugWorkbenchUserEdits = () => {
+      const out = [];
+      const add = (item, parent = null) => {
+        if (!itemIsUserEdit(item)) return;
+        out.push({
+          id: item.id || "",
+          ordinal: item.ordinal || "",
+          parent: parent?.ordinal || parent?.id || "",
+          hex: item.hex || "",
+          substitute: item.substitute || "",
+          substituteFromPalette: !!item.substituteFromPalette,
+          preserveHex: !!item.preserveHex,
+          sourceVarName: item.sourceVarName || "",
+        });
+      };
+      for (const row of colorWorkbenchRows || []) {
+        add(row);
+        for (const dep of row.deps || []) add(dep, row);
+      }
+      return out;
+    };
+
     // Re-extract the palette from a new HTML doc and refresh the workbench rows.
     // Also re-applies any workbench overrides so the iframe stays in sync visually.
     function reinitWorkbenchFromHtml(html) {
@@ -3380,17 +3402,31 @@
       }
     }
 
+    let workbenchEditsPromptPromise = null;
+    let queuedIncomingPortfolioHtml = "";
+    let workbenchChoiceForCurrentIncoming = "";
+
     // Modal: "You have unsaved color edits — keep them or discard?"
     function askUserAboutWorkbenchEdits() {
-      return new Promise(resolve => {
+      if (workbenchEditsPromptPromise) return workbenchEditsPromptPromise;
+      workbenchEditsPromptPromise = new Promise(resolve => {
         const modal = document.getElementById("workbenchEditsModal");
         const keep    = document.getElementById("workbenchEditsKeep");
         const discard = document.getElementById("workbenchEditsDiscard");
-        if (!modal || !keep || !discard) return resolve("discard");
+        if (!modal || !keep || !discard) {
+          workbenchEditsPromptPromise = null;
+          return resolve("discard");
+        }
         function cleanup(choice) {
           modal.classList.remove("open");
           keep.removeEventListener("click", onKeep);
           discard.removeEventListener("click", onDiscard);
+          workbenchEditsPromptPromise = null;
+          showTickerMessage(
+            choice === "keep" ? "Keeping your color workbench edits." : "Using the new portfolio colors.",
+            "ok"
+          );
+          workbenchChoiceForCurrentIncoming = choice;
           resolve(choice);
         }
         const onKeep    = () => cleanup("keep");
@@ -3399,6 +3435,7 @@
         discard.addEventListener("click", onDiscard);
         modal.classList.add("open");
       });
+      return workbenchEditsPromptPromise;
     }
 
     function requestProcessStatusFromOpener() {
@@ -3411,9 +3448,18 @@
       }
     }
 
-    function loadIncomingPortfolioHtml(html, { allowPlaceholder = false } = {}) {
+    function loadIncomingPortfolioHtml(html, { allowPlaceholder = false, workbenchChoice = "" } = {}) {
       const waiting = isWaitingPlaceholderHtml(html);
       if (!html || (waiting && !allowPlaceholder)) return false;
+      if (waiting) {
+        workbenchChoiceForCurrentIncoming = "";
+        queuedIncomingPortfolioHtml = "";
+      }
+      if (!waiting && workbenchEditsPromptPromise) {
+        queuedIncomingPortfolioHtml = html;
+        requestProcessStatusFromOpener();
+        return true;
+      }
       if (!waiting && html === lastIncomingPortfolioHtml) {
         requestProcessStatusFromOpener();
         return true;
@@ -3440,8 +3486,17 @@
         //   - Prior edits exist → ask the user whether to keep their edits or discard them.
         //     The iframe + code view already updated above, so the page content reflects the
         //     new HTML either way; the choice only affects the workbench panel.
-        if (workbenchHasUserEdits()) {
+        const effectiveWorkbenchChoice = workbenchChoice || workbenchChoiceForCurrentIncoming;
+        if (effectiveWorkbenchChoice) {
+          if (effectiveWorkbenchChoice === "discard") reinitWorkbenchFromHtml(html);
+        } else if (workbenchHasUserEdits()) {
           askUserAboutWorkbenchEdits().then(choice => {
+            const queuedHtml = queuedIncomingPortfolioHtml;
+            queuedIncomingPortfolioHtml = "";
+            if (queuedHtml && queuedHtml !== html) {
+              loadIncomingPortfolioHtml(queuedHtml, { allowPlaceholder: true, workbenchChoice: choice });
+              return;
+            }
             if (choice === "discard") reinitWorkbenchFromHtml(html);
             // "keep" → leave workbench rows as-is. Substitutes may not visibly apply
             // to the new HTML if its --c-N structure differs, but the user opted in.
@@ -3914,17 +3969,27 @@
 	      const activeVars = parseRootCustomPropertyHexes(html);
 	      if (!activeVars.size) return rows;
 	      for (const row of rows || []) {
-	        if (row.sourceVarName && activeVars.has(row.sourceVarName) && !row.substitute) {
+	        if (row.sourceVarName && activeVars.has(row.sourceVarName)) {
 	          const activeHex = toHexColor(activeVars.get(row.sourceVarName));
-	          if (activeHex.toLowerCase() !== toHexColor(row.hex).toLowerCase()) {
+	          const originalHex = toHexColor(row.hex);
+	          const existingSubstitute = row.substitute ? toHexColor(row.substitute) : "";
+	          if (
+	            activeHex.toLowerCase() !== originalHex.toLowerCase() &&
+	            (!existingSubstitute || existingSubstitute.toLowerCase() === activeHex.toLowerCase())
+	          ) {
 	            row.substitute = activeHex;
 	            row.substituteFromPalette = true;
 	          }
 	        }
 	        for (const dep of row.deps || []) {
-	          if (dep.sourceVarName && activeVars.has(dep.sourceVarName) && !dep.substitute) {
+	          if (dep.sourceVarName && activeVars.has(dep.sourceVarName)) {
 	            const activeHex = toHexColor(activeVars.get(dep.sourceVarName));
-	            if (activeHex.toLowerCase() !== toHexColor(dep.hex).toLowerCase()) {
+	            const originalHex = toHexColor(dep.hex);
+	            const existingSubstitute = dep.substitute ? toHexColor(dep.substitute) : "";
+	            if (
+	              activeHex.toLowerCase() !== originalHex.toLowerCase() &&
+	              (!existingSubstitute || existingSubstitute.toLowerCase() === activeHex.toLowerCase())
+	            ) {
 	              dep.substitute = activeHex;
 	              dep.substituteFromPalette = true;
 	            }
@@ -3997,6 +4062,7 @@
 	                  score: Number(m.score ?? ((m.count || 0) * depChroma)) || 0,
 	                });
 	              }
+	              const paletteBakedSubstitute = activeHex && activeHex.toLowerCase() !== repHex.toLowerCase() ? activeHex : "";
 	              rawRows.push({
 	                id: `scheme-${schemeIndex + 1}`,
 	                ordinal: ordinalForIndex(schemeIndex),
@@ -4005,7 +4071,8 @@
 	                chroma: repChroma,
 	                score: repScore,
 	                sourceVarName: varName,
-	                substitute: activeHex && activeHex.toLowerCase() !== repHex.toLowerCase() ? activeHex : "",
+	                substitute: paletteBakedSubstitute,
+	                substituteFromPalette: !!paletteBakedSubstitute,
 	                deps,
 	              });
 	              schemeIndex++;
@@ -7788,7 +7855,7 @@
         return;
       }
       if (e.data?.type === "editor_revision_status") {
-        setEditStatus(e.data.message || "", e.data.level === "error" ? "error" : "ok");
+        showTickerMessage(e.data.message || "", e.data.level === "error" ? "error" : "ok");
       }
     });
 
