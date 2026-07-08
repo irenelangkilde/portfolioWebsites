@@ -17,6 +17,9 @@
   </script>
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
+    :root {
+      --left-rail-width: 56px;
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
     body.code-mode { padding-top: 48px; }
@@ -220,19 +223,29 @@
       width: 24px; height: 24px; border: none; border-radius: 4px;
       padding: 1px; cursor: pointer; background: rgba(255,255,255,.1);
     }
-    /* ── Suggestions carousel (inline in top toolbar) ───────────────── */
+    /* ── Suggestions carousel + status (inline in top toolbar) ───────── */
     #sbWrap {
       flex: 1; min-width: 0; position: relative;
-      display: flex; align-items: center;
+      display: flex; flex-direction: column; justify-content: center;
+      gap: 2px;
       margin-left: 24px;
       cursor: pointer;
     }
-    #sbTicker {
-      font-size: 11px; color: rgba(234,240,255,.45);
+    #sbTicker, #sbStatus {
+      display: block; max-width: 100%;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      cursor: pointer; max-width: 100%;
+      font-size: 11px; line-height: 1.25;
+    }
+    #sbTicker {
+      color: rgba(234,240,255,.45);
+      cursor: pointer;
     }
     #sbTicker:hover { color: rgba(234,240,255,.7); }
+    #sbStatus {
+      color: rgba(141,224,255,.85);
+      min-height: 14px;
+    }
+    #sbStatus:empty { min-height: 14px; }
     @keyframes sbSlide {
       0%   { opacity: 1; transform: translateY(0); }
       20%  { opacity: 0; transform: translateY(-8px); }
@@ -313,7 +326,7 @@
 
     /* Left rail — quick-action icons (Resume / Job / Design) */
     #leftRail {
-      width: 56px; flex-shrink: 0; background: #16213e;
+      width: var(--left-rail-width); flex-shrink: 0; background: #16213e;
       border-right: 1px solid rgba(255,255,255,.1);
       display: flex; flex-direction: column; align-items: stretch;
       padding: 10px 7px; gap: 6px; overflow: visible;
@@ -321,7 +334,7 @@
     }
     .left-rail-drawer {
       position: absolute;
-      top: 0; bottom: 0; left: 56px;
+      top: 0; bottom: 0; left: var(--left-rail-width);
       width: 132px;
       background: #16213e;
       border-right: 1px solid rgba(255,255,255,.1);
@@ -331,7 +344,7 @@
       z-index: 0;
     }
     #leftRail:hover .left-rail-drawer,
-    #leftRail:focus-within .left-rail-drawer {
+    #leftRail:has(:focus-visible) .left-rail-drawer {
       transform: translateX(0);
     }
     body.code-mode #leftRail { display: none; }
@@ -342,7 +355,7 @@
       background: transparent; color: rgba(234,240,255,.78);
       border: 1px solid rgba(255,255,255,.08);
       font: inherit; font-size: 12px; font-weight: 800; letter-spacing: .01em;
-      transition: background .15s, color .15s, border-color .15s;
+      transition: background .15s, color .15s, border-color .15s, border-radius .15s;
       white-space: nowrap;
       overflow: visible;
     }
@@ -352,6 +365,15 @@
       border-color: rgba(141,186,255,.32);
       outline: none;
     }
+    /* When hovered inside the open drawer, flatten the button's right edge so it merges
+       seamlessly with the label pill into a single continuous button. */
+    #leftRail:hover .left-rail-btn:hover,
+    #leftRail:hover .left-rail-btn:focus-visible,
+    #leftRail:has(:focus-visible) .left-rail-btn:focus-visible {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      border-right-color: transparent;
+    }
     .left-rail-btn .lr-icon {
       flex: 0 0 22px;
       font-size: 20px;
@@ -360,21 +382,38 @@
     }
     .left-rail-btn .lr-label {
       position: absolute;
-      left: calc(100% + 17px);
-      top: 50%;
-      transform: translate(-132px, -50%);
+      left: 100%;
+      top: 0;
+      bottom: 0;
+      transform: translateX(-132px);
       min-width: 112px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      border: 1px solid rgba(255,255,255,.08);
+      border-left: 0;
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+      background: transparent;
       opacity: 0;
       pointer-events: auto;
       text-align: left;
+      cursor: pointer;
       color: rgba(255,255,255,.94);
-      transition: transform .2s ease, opacity .1s ease;
+      transition: transform .2s ease, opacity .1s ease, background .12s ease, border-color .12s ease;
     }
     #leftRail:hover .left-rail-btn .lr-label,
-    #leftRail:focus-within .left-rail-btn .lr-label {
+    #leftRail:has(:focus-visible) .left-rail-btn .lr-label {
       opacity: 1;
-      transform: translate(0, -50%);
+      transform: translateX(0);
       transition-delay: 0s, .06s;
+    }
+    /* Label lights up together with its button so the pair reads as a single button. */
+    .left-rail-btn:hover .lr-label,
+    .left-rail-btn:focus-visible .lr-label {
+      background: rgba(141,186,255,.12);
+      border-color: rgba(141,186,255,.32);
+      color: #fff;
     }
 
     /* Visual pane */
@@ -575,15 +614,11 @@
       50% { box-shadow: 0 0 0 3px rgba(134,239,172,.55); background: rgba(22,163,74,.46); }
     }
     #btnOpenPalettePanel.palette-ready { animation: paletteReadyPulse 1.05s ease-in-out infinite; color: #a3f0c0; }
-    #btnOpenPalettePanel.palette-generating { opacity: .75; cursor: wait; font-size: 10px; }
+    #btnOpenPalettePanel.palette-generating { opacity: .75; cursor: wait; }
     .color-workbench-footer-actions button:disabled {
       opacity: .55; cursor: wait;
     }
     #btnResetColors { font-size: 14px; }
-    .esp-submit-note {
-      color: rgba(234,240,255,.45); font-size: 10.5px; line-height: 1.4; margin: 0;
-      font-style: italic;
-    }
 
     .color-inspector-toggle {
       flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px;
@@ -698,21 +733,22 @@
     }
     /* ── Palette slide panel ─────────────────────────────────── */
     #paletteSlidePanel {
-      display: none; position: absolute; top: 0; left: 0; right: 177px; bottom: 0;
+      display: none; position: absolute; top: 0; left: var(--left-rail-width); right: 177px; bottom: 0;
       z-index: 50; background: #0d1528; flex-direction: column; overflow: hidden;
     }
     #paletteSlidePanel.open { display: flex; }
+    body.code-mode #paletteSlidePanel { left: 0; }
     #psp-top {
       flex: 1 1 auto; display: flex; flex-direction: row; min-height: 0;
       border-bottom: 1px solid rgba(255,255,255,.12); overflow: hidden;
     }
     #psp-question-col {
       flex: 0 0 50%; min-height: 0; display: flex; flex-direction: column; gap: 9px;
-      padding: 12px; border-right: 1px solid rgba(255,255,255,.12); overflow-y: auto;
+      padding: 12px; overflow-y: auto;
     }
     #psp-results-col {
       flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 9px;
-      padding: 12px; overflow-y: auto;
+      padding: 12px; border-right: 1px solid rgba(255,255,255,.12); overflow-y: auto;
     }
     .psp-request-heading {
       margin: 0; color: rgba(234,240,255,.9); font-size: 26px; line-height: 1.1; font-weight: 850;
@@ -786,41 +822,36 @@
       color: #eaf0ff; padding: 9px 10px; font: 12px/1.45 inherit; outline: none;
     }
     #editorSuggestedPaletteInput:focus { border-color: rgba(141,186,255,.58); box-shadow: 0 0 0 2px rgba(141,186,255,.12); }
-    .esp-actions { display: flex; justify-content: flex-end; gap: 8px; }
-    .esp-actions button, #editorSuggestedPaletteApply {
-      border: 0; border-radius: 7px; padding: 7px 11px; cursor: pointer;
-      font-size: 12px; font-weight: 800;
-    }
-    #editorSuggestedPaletteSubmit { background: #667eea; color: #fff; }
-    #editorSuggestedPaletteSubmit:hover { background: #5568d4; }
-    #editorSuggestedPaletteApply { background: rgba(88,166,255,.24); color: #bfe0ff; }
-    #editorSuggestedPaletteApply:hover:not(:disabled) { background: rgba(88,166,255,.38); color: #fff; }
-    #editorSuggestedPaletteApply:disabled { opacity: .48; cursor: not-allowed; }
-
     #editorSuggestedPaletteStatus {
       min-height: 16px; color: rgba(234,240,255,.55); font-size: 12px; line-height: 1.35;
     }
     #editorSuggestedPaletteRows { display: flex; flex-direction: column; gap: 9px; overflow-y: auto; flex: 1; }
     .esp-palette {
       border: 1px solid rgba(255,255,255,.1); border-radius: 8px; background: rgba(255,255,255,.045);
-      padding: 10px; display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 8px; cursor: pointer;
+      padding: 10px;
     }
-    .esp-palette:hover, .esp-palette:focus-visible {
-      border-color: rgba(141,186,255,.45); background: rgba(102,126,234,.12); outline: none;
+    .esp-palette:hover {
+      border-color: rgba(141,186,255,.45); background: rgba(102,126,234,.12);
     }
-    .esp-palette input { margin-top: 2px; accent-color: #8dbaff; }
-    .esp-palette:has(input:checked) { border-color: rgba(141,186,255,.65); background: rgba(102,126,234,.16); }
     .esp-palette-body { min-width: 0; display: flex; flex-direction: column; gap: 7px; }
     .esp-palette-note { color: rgba(234,240,255,.54); font-size: 11px; line-height: 1.35; }
     .esp-palette-note strong { color: rgba(234,240,255,.92); font-weight: 850; }
-    .esp-swatch-strip { display: flex; flex-wrap: wrap; gap: 4px; }
+    .esp-palette-actions { display: flex; align-items: center; gap: 8px; }
+    .esp-swatch-strip { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; min-width: 0; }
     .esp-swatch {
       width: 28px; height: 22px; border-radius: 4px; border: 1px solid rgba(255,255,255,.7);
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.26);
     }
-    .esp-apply-actions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 2px; }
+    .esp-copy-all {
+      flex: 0 0 auto; padding: 6px 10px; border-radius: 6px;
+      border: 1px solid rgba(141,186,255,.32); background: rgba(102,126,234,.14);
+      color: rgba(234,240,255,.92); font: inherit; font-size: 11px; font-weight: 800;
+      cursor: pointer; transition: background .12s ease, border-color .12s ease, color .12s ease;
+    }
+    .esp-copy-all:hover { background: rgba(102,126,234,.28); border-color: rgba(141,186,255,.6); color: #fff; }
+    .esp-copy-all:active { background: rgba(102,126,234,.42); }
     .esp-palette-inversion { border-color: rgba(255,200,100,.28); background: rgba(255,180,50,.06); }
-    .esp-palette-inversion:hover, .esp-palette-inversion:focus-visible { border-color: rgba(255,200,100,.55); background: rgba(255,180,50,.12); }
+    .esp-palette-inversion:hover { border-color: rgba(255,200,100,.55); background: rgba(255,180,50,.12); }
     /* ── Unified portfolio panel ─────────────────────────────── */
     #portfolioPanelOverlay {
       display: none; position: fixed; inset: 0; z-index: 200001;
@@ -1057,6 +1088,48 @@
     #authGateScreen p { color:rgba(234,240,255,.6); font-size:14px; margin:0; }
     #authGateScreen .tbtn { font-size:14px; padding:10px 28px; }
 
+    /* ── New Resume modal ── */
+    .newResumeModalOverlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
+      z-index:200020; display:none; align-items:center; justify-content:center;
+    }
+    .newResumeModalOverlay.open{ display:flex; }
+    .newResumeModalBox{
+      background:#101b31; border:1px solid rgba(255,255,255,.16);
+      border-radius:18px; box-shadow:0 24px 60px rgba(0,0,0,.5);
+      padding:24px; width:100%; max-width:440px;
+      display:flex; flex-direction:column; gap:14px;
+      color:rgba(236,243,255,.92);
+    }
+    .newResumeModalBox h3{ margin:0; font-size:17px; letter-spacing:-.02em; }
+    .newResumeModalBox > p{ margin:0; font-size:13px; color:rgba(236,243,255,.6); }
+    .newResumeModalBox label{
+      display:flex; flex-direction:column; gap:5px;
+      font-size:12px; font-weight:700; color:rgba(236,243,255,.78);
+    }
+    .newResumeModalBox input[type="text"]{
+      width:100%; padding:10px 13px; border-radius:10px;
+      border:1px solid rgba(255,255,255,.14); background:rgba(255,255,255,.07);
+      color:#ecf3ff; font:inherit; font-size:13px; font-weight:400;
+    }
+    .newResumeModalBox input[type="text"]:focus{
+      outline:none; border-color:rgba(141,224,255,.5);
+    }
+    .newResumeModalBox input[type="file"]{
+      font-size:12px; color:rgba(236,243,255,.78);
+    }
+    .newResumeFileLabel{
+      font-size:11px; color:rgba(118,176,34,.9); font-weight:600; min-height:13px;
+    }
+    .newResumeActions{
+      display:flex; gap:8px; justify-content:flex-end; margin-top:4px;
+    }
+    .newResumeActions .tbtn{ padding:9px 16px; border-radius:10px; font-size:13px; }
+    .newResumeStatus{ font-size:12px; min-height:16px; }
+    .newResumeStatus.err{ color:rgba(255,166,166,.88); }
+    .newResumeStatus.ok{ color:rgba(170,240,190,.88); }
+    .newResumeStatus.info{ color:rgba(141,224,255,.85); }
+
     /* ── Sign-in modal ── */
     .authModalOverlay{
       position:fixed; inset:0; background:rgba(0,0,0,.55); backdrop-filter:blur(4px);
@@ -1113,6 +1186,7 @@
     <button class="tbtn tbtn-ghost" id="btnTips">Tips</button>
     <div id="sbWrap">
       <span id="sbTicker"></span>
+      <span id="sbStatus" aria-live="polite"></span>
     </div>
     <div id="openWrap">
       <button class="tbtn tbtn-ghost" id="btnOpenMenu">Open ▾</button>
@@ -1232,6 +1306,10 @@
         <span class="lr-icon" aria-hidden="true">✨</span>
         <span class="lr-label">New Design</span>
       </button>
+      <button class="left-rail-btn" id="btnOpenPalettePanel" type="button" title="Browse AI-suggested palettes" aria-label="Palettes">
+        <span class="lr-icon" aria-hidden="true">🎨</span>
+        <span class="lr-label">Palettes</span>
+      </button>
     </aside>
     <div id="visualPane">
       <iframe id="visualFrame"></iframe>
@@ -1294,18 +1372,21 @@
         <ul class="color-workbench-footer-note" style="padding-left:16px;margin:0 0 8px;">
           <li><b>Single-click:</b> flash red.</li>
           <li><b>Double-click:</b> substitute color.</li>
-          <li><b>Shift-click:</b> Swap Rep/Dep status.</li>
+          <li><b>Shift-click:</b> Swap Primary/Secondary status.</li>
         </ul>
         <div class="color-workbench-footer-actions">
-          <button id="btnOpenPalettePanel" type="button" title="Browse palettes">&#8249; Palettes</button>
           <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺</button>
         </div>
       </div>
     </div>
   <div id="paletteSlidePanel">
     <div id="psp-top">
+      <div id="psp-results-col">
+        <p class="psp-request-heading">Change your preferred website colors:</p>
+        <div id="editorSuggestedPaletteStatus" aria-live="polite"></div>
+        <div id="editorSuggestedPaletteRows"></div>
+      </div>
       <div id="psp-question-col">
-        <p class="psp-request-heading">List your preferred website colors:</p>
         <div class="psp-request-options">
           <div class="psp-request-option active" data-palette-request-option="swatches">
           <label class="psp-request-label" for="pspRequestModeSwatches">
@@ -1327,17 +1408,6 @@
               <textarea id="editorSuggestedPaletteInput" placeholder="e.g. deep navy, warm copper, #f7f2e8" spellcheck="true"></textarea>
             </div>
           </div>
-        </div>
-        <p class="esp-submit-note">Panel closes while generating&#8202;—&#8202;watch the &#8249; Palettes button.</p>
-        <div class="esp-actions">
-          <button id="editorSuggestedPaletteSubmit" type="button">Get Suggestions</button>
-        </div>
-      </div>
-      <div id="psp-results-col">
-        <div id="editorSuggestedPaletteStatus" aria-live="polite"></div>
-        <div id="editorSuggestedPaletteRows"></div>
-        <div class="esp-apply-actions">
-          <button id="editorSuggestedPaletteApply" type="button" disabled>Apply Palette</button>
         </div>
       </div>
     </div>
@@ -3281,6 +3351,8 @@
           loadIframe(nextHtml);
           setCodeContent(nextHtml);
         }
+        // Once workbench swatches are populated, fire AI-suggested-palette auto-fetch (once per session).
+        try { autoFetchSuggestedPalettes?.(); } catch (e) { console.warn("autoFetchSuggestedPalettes failed:", e); }
       } catch (err) {
         console.warn("Workbench re-init failed:", err);
       }
@@ -3983,8 +4055,6 @@
 	    const suggestedPaletteInput = document.getElementById("editorSuggestedPaletteInput");
 	    const suggestedPaletteStatus = document.getElementById("editorSuggestedPaletteStatus");
 	    const suggestedPaletteRows = document.getElementById("editorSuggestedPaletteRows");
-	    const suggestedPaletteSubmit = document.getElementById("editorSuggestedPaletteSubmit");
-	    const suggestedPaletteApply = document.getElementById("editorSuggestedPaletteApply");
 	    const btnOpenPalettePanel = document.getElementById("btnOpenPalettePanel");
 	    const paletteSlidePanel = document.getElementById("paletteSlidePanel");
 	    const pspCloseBtn = document.getElementById("pspCloseBtn");
@@ -4004,7 +4074,6 @@
 	    let colorHoverPendingPoint = null;
 	    let colorHoverRaf = 0;
 	    let suggestedPaletteState = { status: "idle", palettes: [], error: "", requestedColors: "" };
-	    let selectedSuggestedPaletteIndex = -1;
 	    const COLOR_HOVER_CURSOR_STYLE_ID = "iw-color-hover-reporter-cursor";
 	    const colorWorkbenchNativeInput = document.createElement("input");
 	    colorWorkbenchNativeInput.type = "color";
@@ -4430,7 +4499,7 @@
 	          renderSwatchButton(dep, "ewb-dependent", "activate-dependent", currentWorkbenchColor(dep))
 	        ).join("");
 	        const input = dependencyInputRowId === row.id
-	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="3" autocomplete="off" placeholder="?" aria-label="Parent Rep number" />`
+	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="3" autocomplete="off" placeholder="?" aria-label="Parent Swatch number" />`
 	          : "";
 	        return `
 	          <div class="ewb-row${(activeWorkbenchItemId === row.id || (row.deps || []).some(dep => dep.id === activeWorkbenchItemId)) ? " active" : ""}" data-row-id="${escapeHtml(row.id)}">
@@ -4600,7 +4669,10 @@
 	      function tick() {
 	        const elapsed = Math.floor((Date.now() - _paletteCountdownStart) / 1000);
 	        const remaining = Math.max(0, PALETTE_COUNTDOWN_FROM - elapsed);
-	        if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = remaining > 0 ? `Generating… ${remaining}s` : "Generating…";
+	        showTickerMessage(remaining > 0
+	          ? `Generating palette suggestions… ${remaining}s`
+	          : "Generating palette suggestions…",
+	          "info", 0);
 	      }
 	      tick();
 	      _paletteCountdownTimer = setInterval(tick, 1000);
@@ -4609,17 +4681,17 @@
 	    function stopPaletteCountdown() {
 	      if (_paletteCountdownTimer) { clearInterval(_paletteCountdownTimer); _paletteCountdownTimer = null; }
 	      btnOpenPalettePanel?.classList.remove("palette-generating");
+	      // Release the ticker so it can resume the tips carousel.
+	      window.__editorTickerClearProcess?.();
 	    }
 
 	    function setPaletteBtnReady() {
 	      stopPaletteCountdown();
-	      if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = "Ready";
 	      btnOpenPalettePanel?.classList.add("palette-ready");
 	    }
 
 	    function resetPaletteBtn() {
 	      stopPaletteCountdown();
-	      if (btnOpenPalettePanel) btnOpenPalettePanel.textContent = "\u2039 Palettes";
 	      btnOpenPalettePanel?.classList.remove("palette-ready");
 	    }
 
@@ -4667,28 +4739,22 @@
 	      if (suggestedPaletteState.error) {
 	        suggestedPaletteStatus.textContent = suggestedPaletteState.error;
 	        suggestedPaletteStatus.style.color = "rgba(255,166,166,.9)";
-	        selectedSuggestedPaletteIndex = -1;
-	        updateSuggestedPaletteApplyButton();
 	        return;
 	      }
 	      suggestedPaletteStatus.style.color = "rgba(234,240,255,.55)";
 	      suggestedPaletteStatus.textContent = palettes.length
-	        ? "Choose a palette, then click Apply Palette."
+	        ? ""
 	        : "No AI suggestions loaded yet.";
-	      if (!palettes.length) selectedSuggestedPaletteIndex = -1;
-	      else if (selectedSuggestedPaletteIndex < 0 || selectedSuggestedPaletteIndex >= palettes.length) selectedSuggestedPaletteIndex = 0;
 	      palettes.forEach((palette, index) => {
-	        const paletteEl = document.createElement("label");
+	        const paletteEl = document.createElement("div");
 	        paletteEl.className = "esp-palette" + (palette._isInversion ? " esp-palette-inversion" : "");
 	        paletteEl.dataset.paletteIndex = String(index);
-	        paletteEl.setAttribute("for", `editorSuggestedPaletteChoice${index}`);
 
-	        const choice = document.createElement("input");
-	        choice.type = "radio";
-	        choice.name = "editorSuggestedPaletteChoice";
-	        choice.id = `editorSuggestedPaletteChoice${index}`;
-	        choice.value = String(index);
-	        choice.checked = index === selectedSuggestedPaletteIndex;
+	        const note = document.createElement("div");
+	        note.className = "esp-palette-note";
+	        const title = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
+	        const rationale = String(palette.rationale || "").trim();
+	        note.innerHTML = `<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
 
 	        const strip = document.createElement("div");
 	        strip.className = "esp-swatch-strip";
@@ -4700,37 +4766,77 @@
 	          strip.appendChild(swatch);
 	        });
 
-	        const note = document.createElement("div");
-	        note.className = "esp-palette-note";
-	        const title = (palette._isInversion ? "⇄ " : "") + (palette.name || `Palette ${index + 1}`);
-	        const rationale = String(palette.rationale || "").trim();
-	        note.innerHTML = `<strong>${escapeHtml(title)}${rationale ? ":" : ""}</strong>${rationale ? " " + escapeHtml(rationale) : ""}`;
+	        const copyBtn = document.createElement("button");
+	        copyBtn.type = "button";
+	        copyBtn.className = "esp-copy-all";
+	        copyBtn.textContent = "Copy All";
+	        copyBtn.title = `Apply "${palette.name || `Palette ${index + 1}`}" to the Color Workbench`;
+	        copyBtn.addEventListener("click", (ev) => {
+	          ev.stopPropagation();
+	          applySuggestedEditorPalette(index);
+	          copyBtn.textContent = "Copied! ✓";
+	          setTimeout(() => { copyBtn.textContent = "Copy All"; }, 1200);
+	        });
+
+	        const actions = document.createElement("div");
+	        actions.className = "esp-palette-actions";
+	        actions.append(strip, copyBtn);
 
 	        const body = document.createElement("div");
 	        body.className = "esp-palette-body";
-	        body.append(note, strip);
+	        body.append(note, actions);
 
-	        paletteEl.append(choice, body);
+	        paletteEl.append(body);
 	        suggestedPaletteRows.appendChild(paletteEl);
 	      });
-	      updateSuggestedPaletteApplyButton();
 	    }
 
-	    function updateSuggestedPaletteApplyButton() {
-	      if (!suggestedPaletteApply) return;
-	      const palettes = suggestedPaletteState.palettes || [];
-	      suggestedPaletteApply.disabled = !palettes.length || selectedSuggestedPaletteIndex < 0 || selectedSuggestedPaletteIndex >= palettes.length;
+	    // Derive an initial "preferred colors" string from (in priority order):
+	    //   1. The form's chosen page-4 colors (background/foreground/primary/secondary/accent)
+	    //   2. The current color-workbench swatches (i.e. the loaded template's defaults)
+	    function deriveAutoPreferredColors() {
+	      const page4 = (typeof getPage4Colors === "function") ? getPage4Colors() : null;
+	      const out = [];
+	      if (page4 && typeof page4 === "object") {
+	        for (const key of ["primary", "secondary", "accent", "background", "foreground"]) {
+	          const v = page4[key];
+	          if (typeof v === "string" && v.trim()) out.push(v.trim());
+	        }
+	      }
+	      if (out.length < 2 && Array.isArray(colorWorkbenchRows) && colorWorkbenchRows.length) {
+	        for (const row of colorWorkbenchRows) {
+	          const hex = currentWorkbenchColor(row);
+	          if (hex && !out.includes(hex)) out.push(hex);
+	          if (out.length >= 5) break;
+	        }
+	      }
+	      return out.slice(0, 5).join(", ");
 	    }
 
+	    let _autoFetchAttempted = false;
+	    function autoFetchSuggestedPalettes() {
+	      if (_autoFetchAttempted) return;
+	      if (suggestedPaletteState.status === "loading" || (suggestedPaletteState.palettes || []).length) return;
+	      const preferred = deriveAutoPreferredColors();
+	      if (!preferred) return;
+	      if (!Array.isArray(colorWorkbenchRows) || colorWorkbenchRows.length < 2) return;
+	      _autoFetchAttempted = true;
+	      // Fire the request with the derived colors, but do NOT touch the textarea
+	      // or the request-mode radio — leave the UI in its natural default state.
+	      requestSuggestedEditorPalettes({ preferredColors: preferred });
+	    }
 
-
-	    async function requestSuggestedEditorPalettes() {
+	    async function requestSuggestedEditorPalettes(overrides = {}) {
 	      if (suggestedPaletteState.status === "loading") return;
+	      const overridePreferred = overrides.preferredColors ? String(overrides.preferredColors).trim() : "";
 	      const requestMode = getPaletteRequestMode();
 	      const swatchColors = selectedPaletteSlotHexes();
 	      const textColors = String(suggestedPaletteInput?.value || "").trim();
-	      const requestedColors = requestMode === "text" ? textColors : swatchColors.join(", ");
-	      const colorTokenCount = requestMode === "text" ? preferredColorTokenCount(requestedColors) : swatchColors.length;
+	      const requestedColors = overridePreferred
+	        || (requestMode === "text" ? textColors : swatchColors.join(", "));
+	      const colorTokenCount = overridePreferred
+	        ? preferredColorTokenCount(requestedColors)
+	        : (requestMode === "text" ? preferredColorTokenCount(requestedColors) : swatchColors.length);
 	      if (!requestedColors) {
 	        suggestedPaletteState.error = requestMode === "text"
 	          ? "Please describe at least one preferred website color."
@@ -4750,11 +4856,8 @@
 	        return;
 	      }
 
-	      selectedSuggestedPaletteIndex = -1;
 	      suggestedPaletteState = { status: "loading", palettes: [], error: "", requestedColors };
-	      updateSuggestedPaletteApplyButton();
 	      startPaletteCountdown();
-	      if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = true; suggestedPaletteSubmit.textContent = "Generating…"; }
 	      if (suggestedPaletteStatus) suggestedPaletteStatus.textContent = "";
 	      closePalettePanel();
 
@@ -4778,8 +4881,6 @@
 	          requestedColors,
 	        };
 	        if (!suggestedPaletteState.palettes.length) throw new Error("No palettes returned.");
-	        selectedSuggestedPaletteIndex = 0;
-	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
 	        renderSuggestedPaletteResults();
 	        setPaletteBtnReady();
 	        setEditStatus(data.fallback ? "Suggested palettes ready using local fallback." : "Suggested palettes ready.", "ok");
@@ -4791,15 +4892,13 @@
 	          error: message,
 	          requestedColors,
 	        };
-	        selectedSuggestedPaletteIndex = -1;
-	        if (suggestedPaletteSubmit) { suggestedPaletteSubmit.disabled = false; suggestedPaletteSubmit.textContent = "Get Suggestions"; }
 	        resetPaletteBtn();
 	        renderSuggestedPaletteResults();
 	        setEditStatus(`Suggested palette generation failed: ${message}`, "err");
 	      }
 	    }
 
-	    function applySuggestedEditorPalette(index = selectedSuggestedPaletteIndex) {
+	    function applySuggestedEditorPalette(index) {
 	      const palette = suggestedPaletteState.palettes?.[index];
 	      if (!palette) return;
 	      const byId = new Map();
@@ -4853,7 +4952,6 @@
 	        if (option.dataset.paletteRequestOption === "text") suggestedPaletteInput?.focus();
 	      });
 	    });
-	    suggestedPaletteSubmit?.addEventListener("click", requestSuggestedEditorPalettes);
 	    suggestedPaletteInput?.addEventListener("focus", () => setPaletteRequestMode("text"));
 	    suggestedPaletteInput?.addEventListener("input", () => setPaletteRequestMode("text"));
 	    suggestedPaletteInput?.addEventListener("keydown", ev => {
@@ -4865,35 +4963,32 @@
 	        updateColorThemesFrameHeight(e.data.height);
 	        return;
 	      }
-	      if (e.data.type === "colorPick" && e.data.color && activePaletteSlotIndex !== null) {
-	        setPaletteRequestMode("swatches");
-	        paletteSlotColors[activePaletteSlotIndex] = e.data.color;
-	        renderPaletteSlots();
+	      if (e.data.type === "colorPick" && e.data.color) {
+	        // A single swatch was clicked in the 20-Color-Themes gallery. Route it to the
+	        // Color Workbench's last-active swatch on the right rail.
+	        if (activeWorkbenchItemId) {
+	          setRowSubstitute(activeWorkbenchItemId, e.data.color);
+	        } else {
+	          showTickerMessage("Click a Color Workbench swatch first to choose where to apply this color.", "info");
+	        }
 	        return;
 	      }
 	      if (e.data.type === "colorThemeSelected") {
-	        setPaletteRequestMode("swatches");
+	        // A theme name was clicked in the 20-Color-Themes gallery: apply the whole theme
+	        // to the top-N primary Color Workbench swatches in role order.
 	        const roleOrder = ["primary", "secondary", "tertiary", "quaternary", "quinary"];
 	        const themeColors = roleOrder.map(role => e.data.theme?.[role]).filter(Boolean);
-	        const n = Math.max(paletteSlotColors.length, themeColors.length);
-	        paletteSlotColors = themeColors.slice(0, n);
-	        while (paletteSlotColors.length < 1) paletteSlotColors.push("");
-	        activePaletteSlotIndex = null;
-	        renderPaletteSlots();
-	        updateThemesSwatchCount();
+	        if (!themeColors.length || !Array.isArray(colorWorkbenchRows) || !colorWorkbenchRows.length) return;
+	        colorWorkbenchRows.forEach((row, i) => {
+	          if (i >= themeColors.length) return;
+	          row.substitute = toHexColor(themeColors[i]);
+	        });
+	        renderColorWorkbenchPanel();
+	        applyColorWorkbenchToFrame();
+	        persistColorWorkbench();
+	        return;
 	      }
 	    });
-	    suggestedPaletteApply?.addEventListener("click", () => {
-	      applySuggestedEditorPalette();
-	    });
-	    suggestedPaletteRows?.addEventListener("change", ev => {
-	      const target = ev.target instanceof Element ? ev.target : ev.target?.parentElement;
-	      const choice = target?.closest('input[name="editorSuggestedPaletteChoice"]');
-	      if (!choice) return;
-	      selectedSuggestedPaletteIndex = Number(choice.value);
-	      updateSuggestedPaletteApplyButton();
-	    });
-
 	    function makeRowDependent(sourceId, targetOrdinal) {
 	      const sourceIndex = colorWorkbenchRows.findIndex(row => row.id === sourceId);
 	      const target = findIndependentByOrdinal(targetOrdinal);
@@ -4917,7 +5012,7 @@
 	        String(row.ordinal || "").toUpperCase() === String(sourceOrdinal || "").trim().toUpperCase()
 	      );
 	      if (!destRow || sourceIndex < 0 || colorWorkbenchRows[sourceIndex].id === destinationId) {
-	        setCwStatus("Rep not found or same as target.", "err");
+	        setCwStatus("Primary swatch not found or same as target.", "err");
 	        return;
 	      }
 	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
@@ -5788,8 +5883,8 @@
 	      const action = target.dataset.action;
 	      const id = target.dataset.id;
 
-	      // Shift+click rep → show input to absorb another Rep as a dependent.
-	      // Shift+click dependent → promote back to rep column.
+	      // Shift+click primary swatch → show input to absorb another primary swatch as a dependent.
+	      // Shift+click dependent → promote back to primary column.
 	      if ((action === "activate-row" || action === "activate-dependent") && ev.shiftKey) {
 	        ev.stopPropagation();
 	        ev.preventDefault();
@@ -5977,8 +6072,8 @@
         const file = ev.target.files?.[0];
         ev.target.value = "";
         if (!file) return;
-        const sbTicker = document.getElementById("sbTicker");
-        sbTicker.textContent = "Processing…";
+        const sbStatus = document.getElementById("sbStatus");
+        sbStatus.textContent = "Processing…";
         const raw = await file.text();
         const prepared = ensureEditorColorPreprocessed(raw);
         currentHtml = prepared.html;
@@ -5988,7 +6083,7 @@
         setCodeContent(currentHtml);
         renderColorWorkbenchPanel(prepared.rows);
         applyColorWorkbenchToFrame();
-        sbTicker.textContent = prepared.changed
+        sbStatus.textContent = prepared.changed
           ? `Opened and preprocessed: ${file.name}`
           : `Opened: ${file.name}`;
       };
@@ -6004,8 +6099,8 @@
         ev.target.value = "";
         if (!files.length) return;
 
-        const sbTicker = document.getElementById("sbTicker");
-        sbTicker.textContent = "Loading folder…";
+        const sbStatus = document.getElementById("sbStatus");
+        sbStatus.textContent = "Loading folder…";
 
         // Build a map from relative path (sans root dir) → File
         const fileMap = new Map();
@@ -6015,9 +6110,9 @@
         }
 
         const htmlFiles = sortFolderHtmlEntries([...fileMap.entries()].filter(([p]) => /\.html?$/i.test(p)));
-        if (!htmlFiles.length) { sbTicker.textContent = "No HTML file found in folder."; return; }
+        if (!htmlFiles.length) { sbStatus.textContent = "No HTML file found in folder."; return; }
         const selectedHtmlEntry = await chooseFolderMainHtmlFile(htmlFiles);
-        if (!selectedHtmlEntry) { sbTicker.textContent = "Folder open canceled."; return; }
+        if (!selectedHtmlEntry) { sbStatus.textContent = "Folder open canceled."; return; }
         const [htmlRel, htmlFileObj] = selectedHtmlEntry;
         const htmlBaseDir = getDirectoryPath(htmlRel || "");
 
@@ -6029,7 +6124,7 @@
         try {
           await importHtmlIntoEditorWithPreprocessing(rewritten, htmlRel || htmlFileObj.name);
         } catch (err) {
-          sbTicker.textContent = `Error: ${err.message}`;
+          sbStatus.textContent = `Error: ${err.message}`;
         }
       };
 
@@ -7468,6 +7563,118 @@
       }
     };
 
+    // ── New Resume modal ──────────────────────────────────────────────────────
+    // NOTE: this script runs *before* the modal HTML is parsed (the modal lives near
+    // the bottom of the body, after this script block), so element-bound listeners
+    // for #newResumeSubmit / #newResumeFileInput are attached lazily on first open.
+    let _newResumeValuesRequestId = 0;
+    let _newResumeListenersAttached = false;
+    function setNewResumeStatus(text, kind = "") {
+      const el = document.getElementById("newResumeStatus");
+      if (!el) return;
+      el.textContent = text || "";
+      el.className = "newResumeStatus" + (text && kind ? ` ${kind}` : "");
+    }
+    async function handleNewResumeSubmit() {
+      const fileEl  = document.getElementById("newResumeFileInput");
+      const majorEl = document.getElementById("newResumeMajor");
+      const specEl  = document.getElementById("newResumeSpecialization");
+      const file = fileEl?.files?.[0];
+      if (!file) {
+        setNewResumeStatus("Please choose a file.", "err");
+        return;
+      }
+      if (!window.opener || window.opener.closed) {
+        setNewResumeStatus("Intake form tab is closed — reopen it and try again.", "err");
+        return;
+      }
+      setNewResumeStatus("Sending…", "info");
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = String(reader.result || "");
+            const comma = result.indexOf(",");
+            resolve(comma >= 0 ? result.slice(comma + 1) : result);
+          };
+          reader.onerror = () => reject(new Error("Failed to read file"));
+          reader.readAsDataURL(file);
+        });
+        window.opener.postMessage({
+          type: "editor_submit_new_resume",
+          fileName: file.name,
+          fileMime: file.type || "application/octet-stream",
+          base64,
+          major: (majorEl?.value || "").trim(),
+          specialization: (specEl?.value || "").trim()
+        }, location.origin);
+        window.opener.focus?.();
+        closeNewResumeModal();
+        showTickerMessage("New resume sent to the intake form — regenerating…", "ok");
+      } catch (err) {
+        setNewResumeStatus(`Could not send: ${err?.message || err}`, "err");
+      }
+    }
+    function ensureNewResumeListeners() {
+      if (_newResumeListenersAttached) return;
+      const fileEl = document.getElementById("newResumeFileInput");
+      const submitEl = document.getElementById("newResumeSubmit");
+      if (!fileEl || !submitEl) return;
+      fileEl.addEventListener("change", (e) => {
+        const f = e.target.files?.[0];
+        const labelEl = document.getElementById("newResumeFileLabel");
+        if (labelEl) labelEl.textContent = f ? `✓ ${f.name}` : "";
+      });
+      submitEl.addEventListener("click", handleNewResumeSubmit);
+      _newResumeListenersAttached = true;
+    }
+    function openNewResumeModal() {
+      const overlay = document.getElementById("newResumeModalOverlay");
+      if (!overlay) return;
+      ensureNewResumeListeners();
+      const fileEl  = document.getElementById("newResumeFileInput");
+      const labelEl = document.getElementById("newResumeFileLabel");
+      const majorEl = document.getElementById("newResumeMajor");
+      const specEl  = document.getElementById("newResumeSpecialization");
+      if (fileEl)  fileEl.value = "";
+      if (labelEl) labelEl.textContent = "";
+      if (majorEl) majorEl.value = "";
+      if (specEl)  specEl.value  = "";
+      setNewResumeStatus("");
+      overlay.classList.add("open");
+      // Request current major/spec from the opener (form). Prefill arrives via postMessage response.
+      const reqId = ++_newResumeValuesRequestId;
+      if (window.opener && !window.opener.closed) {
+        try {
+          window.opener.postMessage({ type: "editor_request_intake_values", reqId }, location.origin);
+        } catch {}
+      }
+      setTimeout(() => fileEl?.focus(), 0);
+    }
+    function closeNewResumeModal() {
+      document.getElementById("newResumeModalOverlay")?.classList.remove("open");
+    }
+    window.closeNewResumeModal = closeNewResumeModal;
+
+    window.addEventListener("message", e => {
+      const msg = e.data;
+      if (!msg || msg.type !== "editor_intake_values_response") return;
+      if (msg.reqId !== _newResumeValuesRequestId) return;
+      const majorEl = document.getElementById("newResumeMajor");
+      const specEl  = document.getElementById("newResumeSpecialization");
+      // Only prefill if the user hasn't typed anything since opening the modal
+      if (majorEl && !majorEl.value) majorEl.value = msg.major || "";
+      if (specEl  && !specEl.value)  specEl.value  = msg.specialization || "";
+    });
+
+    // Close on Escape
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const overlay = document.getElementById("newResumeModalOverlay");
+        if (overlay?.classList.contains("open")) closeNewResumeModal();
+      }
+    });
+
     // ── Intake form revision shortcuts ────────────────────────────────────────
     const intakeRevisionLabels = {
       resume: "New resume",
@@ -7475,22 +7682,44 @@
       design: "New Design",
     };
 
+    const TICKER_KIND_COLORS = {
+      ok:    "rgba(170,240,190,.88)",
+      error: "rgba(255,166,166,.88)",
+      info:  "rgba(141,224,255,.85)"
+    };
+    let _tickerMessageTimer = null;
+    function showTickerMessage(text, kind = "info", autoClearMs = 8000) {
+      const color = TICKER_KIND_COLORS[kind] || TICKER_KIND_COLORS.info;
+      if (typeof window.__editorTickerShowProcess === "function") {
+        window.__editorTickerShowProcess(text, color);
+        clearTimeout(_tickerMessageTimer);
+        if (autoClearMs > 0) {
+          _tickerMessageTimer = setTimeout(() => {
+            window.__editorTickerClearProcess?.();
+          }, autoClearMs);
+        }
+      } else {
+        // Ticker not initialized yet — fall back to the toolbar status.
+        setEditStatus(text, kind === "ok" ? "ok" : kind === "error" ? "error" : "");
+      }
+    }
+
     function requestIntakeRevision(kind) {
       const label = intakeRevisionLabels[kind] || "Revision";
       if (!window.opener || window.opener.closed) {
-        setEditStatus("Open the intake form to revise inputs and regenerate.", "error");
+        showTickerMessage("Open the intake form to revise inputs and regenerate.", "error");
         return;
       }
       try {
         window.opener.postMessage({ type: "editor_request_intake_revision", kind }, location.origin);
         window.opener.focus?.();
-        setEditStatus(`${label}: update the intake form, then click Next to regenerate.`, "ok");
+        showTickerMessage(`${label}: update the intake form, then click Next to regenerate.`, "ok");
       } catch (err) {
-        setEditStatus(`Could not contact the intake form: ${err?.message || err}`, "error");
+        showTickerMessage(`Could not contact the intake form: ${err?.message || err}`, "error");
       }
     }
 
-    document.getElementById("btnNewResume")?.addEventListener("click", () => requestIntakeRevision("resume"));
+    document.getElementById("btnNewResume")?.addEventListener("click", openNewResumeModal);
     document.getElementById("btnNewJob")?.addEventListener("click", () => requestIntakeRevision("job"));
     document.getElementById("btnNewDesign")?.addEventListener("click", () => requestIntakeRevision("design"));
 
@@ -7581,10 +7810,11 @@
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
       "Color Workbench: click a swatch to scroll to its first use (the swatch blinks red). Double-click to substitute a color.",
-      "Color Workbench: shift-click a Rep swatch to absorb another Rep as its dependent — type the other Rep's number and press Enter.",
+      "Color Workbench: shift-click a primary swatch to absorb another primary as its dependent — type the other Rep's number and press Enter.",
     ];
 
     const ticker  = document.getElementById("sbTicker");
+    const statusEl = document.getElementById("sbStatus");
     const sbWrap  = document.getElementById("sbWrap");
     const btnTips = document.getElementById("btnTips");
     const modal   = document.getElementById("tipsModal");
@@ -7595,8 +7825,8 @@
     let idx = 0;
     let intervalId = null;
     let tickerDismissed = false;
-    let processStatusActive = false;
     const defaultTickerColor = "rgba(234,240,255,.45)";
+    const defaultStatusColor = "rgba(141,224,255,.85)";
 
     if (listEl) {
       listEl.innerHTML = "";
@@ -7620,12 +7850,12 @@
     }
 
     function startTipsCarousel() {
-      if (tickerDismissed || processStatusActive) return;
+      if (tickerDismissed) return;
       if (intervalId) clearInterval(intervalId);
       idx = idx % tips.length;
       setTickerText(tickerText(idx));
       intervalId = setInterval(() => {
-        if (processStatusActive || tickerDismissed) return;
+        if (tickerDismissed) return;
         idx = (idx + 1) % tips.length;
         setTickerText(tickerText(idx), defaultTickerColor, true);
       }, 5000);
@@ -7638,17 +7868,22 @@
       intervalId = null;
     }
 
+    function setStatusText(text, color) {
+      if (!statusEl) return;
+      statusEl.textContent = text || "";
+      statusEl.style.color = color || defaultStatusColor;
+    }
+
+    // The tips carousel and status share the same wrapper but live in separate rows,
+    // so showing a status message no longer needs to pause the tips.
     function showProcessStatus(text, color) {
-      processStatusActive = true;
-      stopTipsCarousel();
       if (sbWrap) sbWrap.style.display = "";
       if (btnTips) btnTips.style.display = tickerDismissed ? "" : "none";
-      setTickerText(text || "", color || "rgba(141,224,255,.75)");
+      setStatusText(text || "", color);
     }
 
     function clearProcessStatus() {
-      processStatusActive = false;
-      if (!tickerDismissed) startTipsCarousel();
+      setStatusText("", defaultStatusColor);
     }
 
     function updateTicker() {
@@ -7701,6 +7936,32 @@
       <strong>Tips</strong>
       <ol id="tipsList"></ol>
       <button id="btnTipsDismiss">Dismiss</button>
+    </div>
+  </div>
+  <!-- New Resume modal -->
+  <div class="newResumeModalOverlay" id="newResumeModalOverlay" role="dialog" aria-modal="true" aria-labelledby="newResumeModalTitle"
+       onclick="if(event.target===this)closeNewResumeModal()">
+    <div class="newResumeModalBox">
+      <h3 id="newResumeModalTitle">New Resume</h3>
+      <p>Upload a new resume and adjust major/specialization if needed. Saving will rerun resume analysis and regenerate your portfolio.</p>
+      <label>
+        <span>Resume file</span>
+        <input type="file" id="newResumeFileInput" accept=".pdf,.doc,.docx" />
+        <span id="newResumeFileLabel" class="newResumeFileLabel"></span>
+      </label>
+      <label>
+        <span>Major</span>
+        <input type="text" id="newResumeMajor" placeholder="e.g. Electrical Engineering" />
+      </label>
+      <label>
+        <span>Specialization</span>
+        <input type="text" id="newResumeSpecialization" placeholder="e.g. lasers, embedded systems (optional)" />
+      </label>
+      <div id="newResumeStatus" class="newResumeStatus"></div>
+      <div class="newResumeActions">
+        <button class="tbtn" type="button" onclick="closeNewResumeModal()">Cancel</button>
+        <button class="tbtn tbtn-primary" type="button" id="newResumeSubmit">Save & regenerate</button>
+      </div>
     </div>
   </div>
   <!-- Upgrade dialog -->

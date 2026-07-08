@@ -5200,6 +5200,45 @@ input[type="color"].split-color::-moz-color-swatch {
       postEditorRevisionStatus(kind, `${label}: update the intake form, then click Next to regenerate.`);
     }
 
+    function applyEditorSubmittedResume(msg, sourceWindow) {
+      try {
+        const majorEl = document.getElementById("major");
+        const specEl  = document.getElementById("specialization");
+        if (majorEl && typeof msg.major === "string")          majorEl.value = msg.major;
+        if (specEl  && typeof msg.specialization === "string") specEl.value  = msg.specialization;
+        majorEl?.dispatchEvent(new Event("input", { bubbles: true }));
+        specEl?.dispatchEvent(new Event("input", { bubbles: true }));
+
+        const fileInput = document.getElementById("resumeUpload");
+        if (fileInput && typeof msg.base64 === "string" && msg.base64) {
+          const byteString = atob(msg.base64);
+          const len = byteString.length;
+          const buf = new Uint8Array(len);
+          for (let i = 0; i < len; i++) buf[i] = byteString.charCodeAt(i);
+          const file = new File([buf], msg.fileName || "resume.pdf", { type: msg.fileMime || "application/pdf" });
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+          // Reuse the existing change-handler pipeline (filename display + auto-analysis kickoff).
+          fileInput.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+
+        // Switch the form to the resume step and queue the regen — same path as the
+        // existing "New resume" button flow.
+        requestEditorInputRevision("resume", sourceWindow);
+      } catch (err) {
+        console.error("[applyEditorSubmittedResume] error:", err);
+        try {
+          sourceWindow?.postMessage({
+            type: "editor_revision_status",
+            kind: "resume",
+            text: `Could not apply new resume: ${err?.message || err}`,
+            level: "error"
+          }, location.origin);
+        } catch {}
+      }
+    }
+
     function resetGeneratedPortfolioForEditorRerun(kind) {
       const label = EDITOR_REVISION_LABELS[kind] || "revised inputs";
       ++_braidRunId;
@@ -6055,6 +6094,27 @@ input[type="color"].split-color::-moz-color-swatch {
     window.addEventListener("message", e => {
       if (!e.data || e.data.type !== "editor_request_intake_revision") return;
       requestEditorInputRevision(e.data.kind, e.source);
+    });
+
+    window.addEventListener("message", e => {
+      const msg = e.data;
+      if (!msg || msg.type !== "editor_request_intake_values") return;
+      const majorEl = document.getElementById("major");
+      const specEl  = document.getElementById("specialization");
+      try {
+        e.source?.postMessage({
+          type: "editor_intake_values_response",
+          reqId: msg.reqId,
+          major:          (majorEl?.value || "").trim(),
+          specialization: (specEl?.value  || "").trim()
+        }, location.origin);
+      } catch {}
+    });
+
+    window.addEventListener("message", e => {
+      const msg = e.data;
+      if (!msg || msg.type !== "editor_submit_new_resume") return;
+      applyEditorSubmittedResume(msg, e.source);
     });
 
     window.addEventListener("message", e => {

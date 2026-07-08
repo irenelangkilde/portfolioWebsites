@@ -26,9 +26,16 @@
 
         h1 {
             text-align: center;
-            margin-bottom: 8px;
+            margin-bottom: 2px;
             color: #333;
             font-size: 0.9rem;
+        }
+        .theme-subtitle {
+            text-align: center;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 0.7rem;
+            font-style: italic;
         }
 
         .theme-grid {
@@ -63,7 +70,12 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            cursor: pointer;
+            user-select: none;
+            transition: color 0.15s ease;
         }
+        .theme-name:hover { color: #4CAF50; text-decoration: underline; }
+        .theme-name.copied { color: #4CAF50; }
 
         .color-boxes {
             display: flex;
@@ -87,31 +99,12 @@
             z-index: 10;
         }
 
-        .copy-btn {
-            margin-top: 3px;
-            width: 100%;
-            padding: 2px;
-            background: #333;
-            color: white;
-            border: none;
-            border-radius: 2px;
-            cursor: pointer;
-            font-size: 7px;
-            transition: background 0.2s ease;
-        }
-
-        .copy-btn:hover {
-            background: #555;
-        }
-
-        .copy-btn:active {
-            background: #4CAF50;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>🎨 20 Website Color Themes</h1>
+        <p class="theme-subtitle">Click theme name to copy all swatches of theme at once.</p>
         <div class="theme-grid" id="themeGrid"></div>
     </div>
 
@@ -240,6 +233,16 @@
             const themeName = document.createElement('div');
             themeName.className = 'theme-name';
             themeName.textContent = theme.name;
+            themeName.title = `Apply "${theme.name}" to all workbench swatches`;
+            themeName.addEventListener('click', () => {
+                window.parent.postMessage({
+                    type: 'colorThemeSelected',
+                    number: index + 1,
+                    theme: { ...theme.palette }
+                }, '*');
+                themeName.classList.add('copied');
+                setTimeout(() => themeName.classList.remove('copied'), 900);
+            });
 
             const colorBoxes = document.createElement('div');
             colorBoxes.className = 'color-boxes';
@@ -263,31 +266,10 @@
                 colorBoxes.appendChild(box);
             });
 
-            const copyBtn = document.createElement('button');
-            copyBtn.className = 'copy-btn';
-            copyBtn.textContent = 'Copy All';
-            copyBtn.addEventListener('click', () => {
-                const n = swatchCount;
-                const selectedColors = ROLE_ORDER.slice(0, n).map(role => theme.palette[role]);
-                copyToClipboard(selectedColors.join(', '));
-                window.parent.postMessage({
-                    type: 'colorThemeSelected',
-                    number: index + 1,
-                    theme: { ...theme.palette }
-                }, '*');
-                copyBtn.textContent = 'Copied! ✓';
-                copyBtn.style.background = '#4CAF50';
-                setTimeout(() => {
-                    copyBtn.textContent = 'Copy All';
-                    copyBtn.style.background = '#333';
-                }, 2000);
-            });
-
             const cardBody = document.createElement('div');
             cardBody.className = 'card-body';
             cardBody.appendChild(themeName);
             cardBody.appendChild(colorBoxes);
-            cardBody.appendChild(copyBtn);
 
             themeCard.appendChild(cardBody);
             themeGrid.appendChild(themeCard);

@@ -53,9 +53,6 @@
     }
 
     .hero {
-      position: sticky;
-      top: 0;
-      z-index: 20;
       margin-bottom: 28px;
       padding: 22px 24px;
       border: 1px solid var(--line);
@@ -77,18 +74,15 @@
     h1 {
       margin: 0;
       font-family: "Fraunces", Georgia, serif;
-      font-size: clamp(2.4rem, 5vw, 4.4rem);
+      font-size: clamp(1.8rem, 3.6vw, 3rem);
       font-weight: 600;
-      line-height: 0.95;
-      letter-spacing: -0.04em;
-      max-width: 10ch;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 28ch;
     }
 
     .hero-copy {
-      display: grid;
-      grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.9fr);
-      gap: 28px;
-      align-items: end;
+      display: block;
     }
 
     .hero p {
@@ -96,42 +90,6 @@
       color: var(--muted);
       font-size: 1rem;
       line-height: 1.7;
-    }
-
-    .hero-tools {
-      display: grid;
-      gap: 14px;
-      justify-items: stretch;
-    }
-
-    .search-wrap {
-      display: grid;
-      gap: 8px;
-    }
-
-    .search-label,
-    .count {
-      color: var(--muted);
-      font-size: 0.88rem;
-      font-weight: 700;
-    }
-
-    #searchInput {
-      width: 100%;
-      padding: 14px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 16px;
-      background: rgba(10, 15, 30, 0.46);
-      color: var(--ink);
-      font: inherit;
-      outline: none;
-      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
-    }
-
-    #searchInput:focus {
-      border-color: rgba(142, 162, 255, 0.55);
-      box-shadow: 0 0 0 4px rgba(142, 162, 255, 0.12);
-      transform: translateY(-1px);
     }
 
     .gallery {
@@ -287,22 +245,6 @@
       transform: translateY(-1px);
     }
 
-    .empty {
-      display: none;
-      padding: 40px 24px;
-      border: 1px dashed rgba(255, 255, 255, 0.18);
-      border-radius: 24px;
-      background: rgba(22, 33, 62, 0.6);
-      color: var(--muted);
-      text-align: center;
-      font-size: 1rem;
-      line-height: 1.6;
-    }
-
-    .empty.show {
-      display: block;
-    }
-
     body.modal-open {
       overflow: hidden;
     }
@@ -416,13 +358,8 @@
       }
 
       .hero {
-        position: static;
         padding: 18px;
         border-radius: 22px;
-      }
-
-      .hero-copy {
-        grid-template-columns: 1fr;
       }
     }
 
@@ -457,24 +394,16 @@
       <p class="eyebrow">HTML Template Gallery</p>
       <div class="hero-copy">
         <div>
-          <h1>Personal Portfolio Previews</h1>
+          <h1>Personal Resume/Portfolio Website Previews</h1>
           <p>
-            Browse our public portfolio variants. Each card shows a live scaled preview. Click a preview to open the full
-            site, or choose Learn More for a short description.
+            Browse our public portfolio samples for inspiration or use as a template. Each card shows a live scaled preview. Click a preview to open the full
+            site, or choose Learn More for a short description. Website samples exemplify a few example style and layout options---<em><strong>there is no need to limit your choice by major.</strong></em> Images are customizable by major specialization.
           </p>
-        </div>
-        <div class="hero-tools">
-          <div class="search-wrap">
-            <label class="search-label" for="searchInput">Filter by major or variant</label>
-            <input id="searchInput" type="search" placeholder="Try biology, biology B, electrical engineering,..." />
-          </div>
-          <div class="count" id="resultCount" aria-live="polite"></div>
         </div>
       </div>
     </section>
 
     <section class="gallery" id="gallery" aria-label="Grad website gallery"></section>
-    <div class="empty" id="emptyState">No gallery cards match that filter.</div>
   </main>
 
   <div class="modal-backdrop" id="learnMoreModal" hidden>
@@ -519,9 +448,6 @@
     ];
 
     const gallery = document.getElementById("gallery");
-    const searchInput = document.getElementById("searchInput");
-    const resultCount = document.getElementById("resultCount");
-    const emptyState = document.getElementById("emptyState");
     const learnMoreModal = document.getElementById("learnMoreModal");
     const learnMoreTitle = document.getElementById("learnMoreTitle");
     const learnMoreBody = document.getElementById("learnMoreBody");
@@ -530,10 +456,6 @@
 
     const blurbCache = new Map();
     let lastFocusedElement = null;
-
-    function enrichEntry(entry) {
-      return { ...entry, searchText: [entry.major, entry.variant, entry.href].join(" ").toLowerCase() };
-    }
 
     function templateTitle(entry) {
       const match = entry.href.match(/\/templates\/([^/]+)\//);
@@ -607,7 +529,6 @@
     function createCard(entry) {
       const card = document.createElement("article");
       card.className = "card";
-      card.dataset.search = entry.searchText;
 
       card.innerHTML = `
         <a class="preview-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${templateTitle(entry)} website">
@@ -637,36 +558,16 @@
     }
 
     function renderGallery() {
-      const entries = files.map(enrichEntry);
       const fragment = document.createDocumentFragment();
 
-      entries.forEach((entry) => {
+      files.forEach((entry) => {
         fragment.appendChild(createCard(entry));
       });
 
       gallery.innerHTML = "";
       gallery.appendChild(fragment);
-      updateFilter();
     }
 
-    function updateFilter() {
-      const query = searchInput.value.trim().toLowerCase();
-      const cards = [...gallery.querySelectorAll(".card")];
-      let visibleCount = 0;
-
-      cards.forEach((card) => {
-        const matches = !query || card.dataset.search.includes(query);
-        card.hidden = !matches;
-        if (matches) {
-          visibleCount += 1;
-        }
-      });
-
-      resultCount.textContent = `${visibleCount} of ${cards.length} templates visible`;
-      emptyState.classList.toggle("show", visibleCount === 0);
-    }
-
-    searchInput.addEventListener("input", updateFilter);
     learnMoreClose.addEventListener("click", closeLearnMore);
     learnMoreModal.addEventListener("click", (event) => {
       if (event.target === learnMoreModal) {
