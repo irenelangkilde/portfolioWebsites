@@ -602,7 +602,29 @@
       margin: 6px 0 8px;
     }
     .color-workbench-footer-note {
-      margin: 0 0 7px; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
+      margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
+    }
+    .color-workbench-instructions {
+      flex: 0 0 auto; padding: 6px 12px 4px; border-top: 1px solid rgba(255,255,255,.08);
+    }
+    .color-workbench-instructions ul {
+      padding-left: 16px;
+    }
+    .color-workbench-instructions li {
+      margin: 0 0 3px;
+    }
+    .cwb-info {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 13px; height: 13px; margin-left: 4px; border-radius: 50%;
+      border: 1px solid rgba(141,186,255,.5); color: rgba(141,186,255,.9);
+      font-size: 9px; font-weight: 900; line-height: 1; cursor: help;
+      vertical-align: text-top; background: rgba(141,186,255,.09);
+    }
+    .cwb-info:focus-visible {
+      outline: 2px solid rgba(141,186,255,.8); outline-offset: 2px;
+    }
+    .color-workbench-controls {
+      flex: 0 0 auto; padding: 4px 14px 10px;
     }
     .color-workbench-footer-actions {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; align-items: center;
@@ -1419,12 +1441,14 @@
       </div>
       <div id="editorSwatchHead" aria-hidden="true"><span>Primary</span><span>Secondary</span></div>
       <div id="editorSwatchRows" aria-live="polite"></div>
-      <div style="padding: 4px 14px 10px;">
-        <ul class="color-workbench-footer-note" style="padding-left:16px;margin:0 0 8px;">
-          <li><b>Single-click:</b> flash red.</li>
-          <li><b>Double-click:</b> substitute color.</li>
-          <li><b>Shift-click:</b> Swap Primary/Secondary status.</li>
+      <div class="color-workbench-instructions">
+        <ul class="color-workbench-footer-note">
+          <li><b>Single-click:</b> flash red.<span class="cwb-info" tabindex="0" title="Portions of website colored with clicked swatch will flash red." aria-label="Portions of website colored with clicked swatch will flash red.">i</span></li>
+          <li><b>Double-click:</b> substitute color.<span class="cwb-info" tabindex="0" title="Displays a popup to replace clicked color with a custom color" aria-label="Displays a popup to replace clicked color with a custom color">i</span></li>
+          <li><b>Shift-click:</b> Swap Primary vs Secondary status.<span class="cwb-info" tabindex="0" title="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change." aria-label="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change.">i</span></li>
         </ul>
+      </div>
+      <div class="color-workbench-controls">
         <div class="color-inspector-block">
           <button type="button" class="color-inspector-toggle" id="colorHoverInspectorToggle" role="switch" aria-checked="false" title="Show the swatch ID for colors under the cursor in the visual editor.">
             <span class="color-inspector-slider" aria-hidden="true"></span>
