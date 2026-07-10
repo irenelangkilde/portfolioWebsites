@@ -61,6 +61,7 @@
     // Slot-fill (fast Cheerio path against annotated.html)
     let slotFillInProgress = false;
     let userHasCustomizedColors = false;  // true only when user manually edits a color input
+    let suppressPage4Invalidation = false;
 
     // Epoch counters — increment to abort any in-flight poll loop for that task
     let _jobAdRunId      = 0;
@@ -623,6 +624,7 @@
       const candidates = [
         "generatingWebsiteStatus",
         "braidStatus",
+        "bridgeStatus",
         "colorsChosenStatus",
         "templateExtractStatus",
         "jobAnalysisStatus",
@@ -647,10 +649,27 @@
       return null;
     }
 
+    const EDITOR_PROCESS_STATUS_STORAGE_KEY = "portfolio_editor_process_status";
+
+    function persistEditorProcessStatus(status) {
+      try {
+        if (status) {
+          localStorage.setItem(EDITOR_PROCESS_STATUS_STORAGE_KEY, JSON.stringify({
+            text: status.text,
+            color: status.color,
+            at: Date.now()
+          }));
+        } else {
+          localStorage.removeItem(EDITOR_PROCESS_STATUS_STORAGE_KEY);
+        }
+      } catch {}
+    }
+
     function forwardEditorProcessStatus() {
+      const status = currentEditorProcessStatus();
+      persistEditorProcessStatus(status);
       const editorWin = window.__portfolioEditorWindow;
       if (!editorWin || editorWin.closed) return;
-      const status = currentEditorProcessStatus();
       try {
         editorWin.postMessage(
           status
@@ -1257,10 +1276,23 @@ ${pseudoSelectors} {
       return String(result.site_html || "");
     }
 
+    function isEditorLoadingHtml(html) {
+      return /<title>\s*Preparing Editor/i.test(String(html || ""));
+    }
+
+    function markEditorDeliveryHtml(html) {
+      const source = String(html || "");
+      if (!source || isEditorLoadingHtml(source)) return source;
+      const marker = `<!-- portfolio-editor-delivery:${Date.now()}:${Math.random().toString(36).slice(2)} -->`;
+      if (/<\/head>/i.test(source)) return source.replace(/<\/head>/i, `${marker}\n</head>`);
+      return `${marker}\n${source}`;
+    }
+
     let lastPreviewHtmlPushed = "";
-    function pushPreviewHtmlUpdate(html) {
-      const nextHtml = String(html || "");
-      if (nextHtml && nextHtml === lastPreviewHtmlPushed) {
+    function pushPreviewHtmlUpdate(html, options = {}) {
+      const rawHtml = String(html || "");
+      const nextHtml = options.fresh ? markEditorDeliveryHtml(rawHtml) : rawHtml;
+      if (!options.fresh && nextHtml && nextHtml === lastPreviewHtmlPushed) {
         forwardEditorProcessStatus();
         return;
       }
@@ -1341,18 +1373,30 @@ ${pseudoSelectors} {
       mastheadWaitTicker = null;
       if (generationResult?.base_site_html) {
         generationResult.site_html = composeBraidPreviewHtml(generationResult);
-        pushPreviewHtmlUpdate(generationResult.site_html || "");
+        pushPreviewHtmlUpdate(generationResult.site_html || "", { fresh: true });
         if (page4Submitted) doPreview();
       }
       setHeaderStatus("braidStatus", message, color);
       greyRendererButtons(false);
     }
 
-    function ensureEditorWindow() {
+    function editorShellUrl() {
+      return `editor.html?editorRun=${Date.now()}`;
+    }
+
+    function ensureEditorWindow(options = {}) {
       const existing = window.__portfolioEditorWindow;
-      if (existing && !existing.closed) return existing;
+      if (existing && !existing.closed) {
+        if (options.refresh) {
+          cachePreviewHtml(editorLoadingHtml(options.message || "Preparing website…"));
+          try {
+            existing.location.href = editorShellUrl();
+          } catch {}
+        }
+        return existing;
+      }
       cachePreviewHtml(editorLoadingHtml());
-      const win = window.open("editor.html", "_blank");
+      const win = window.open(editorShellUrl(), "_blank");
       window.__portfolioEditorWindow = win;
       return win;
     }
@@ -4185,7 +4229,12 @@ input[type="color"].split-color::-moz-color-swatch {
         const startTime = Date.now();
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 4000));
-          if (myRunId !== _braidRunId) { clearInterval(braidCountdown); braidInProgress = false; return; }
+          if (myRunId !== _braidRunId) {
+            clearInterval(braidCountdown);
+            braidInProgress = false;
+            setHeaderStatus("braidStatus", "⚠ Generation was interrupted by a newer request. Please try again.", "rgba(251,171,156,.9)");
+            return;
+          }
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed  = await readJsonResponseSafely(pollRes);
           const data    = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
@@ -4212,7 +4261,7 @@ input[type="color"].split-color::-moz-color-swatch {
             setHeaderStatus("braidStatus", "✓ Portfolio generated", "rgba(118,176,34,.9)");
             setApplyBtnState(true);
             if (isDebugMode()) mergeTokenReport(data?.token_report);
-            pushPreviewHtmlUpdate(generationResult.site_html || "");
+            pushPreviewHtmlUpdate(generationResult.site_html || "", { fresh: true });
             setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
             setHeaderStatus("bridgeStatus", "");
             greyRendererButtons(false);
@@ -4266,6 +4315,7 @@ input[type="color"].split-color::-moz-color-swatch {
       if (myRunId !== _slotFillRunId) {
         tracePortfolioPipeline("slot-fill:stale-after-template-wait", { myRunId, currentRunId: _slotFillRunId });
         slotFillInProgress = false;
+        setHeaderStatus("braidStatus", "⚠ Generation was interrupted before slot-fill started. Please try again.", "rgba(251,171,156,.9)");
         return;
       }
       const loadedMode = extractedTemplateCache?.templateMode;
@@ -4352,7 +4402,10 @@ input[type="color"].split-color::-moz-color-swatch {
           await new Promise(r => setTimeout(r, 3000));
           if (myRunId !== _slotFillRunId) {
             tracePortfolioPipeline("slot-fill:stale-during-poll", { myRunId, currentRunId: _slotFillRunId });
-            clearInterval(slotFillCountdown); slotFillInProgress = false; return;
+            clearInterval(slotFillCountdown);
+            slotFillInProgress = false;
+            setHeaderStatus("braidStatus", "⚠ Generation was interrupted by a newer request. Please try again.", "rgba(251,171,156,.9)");
+            return;
           }
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed  = await readJsonResponseSafely(pollRes);
@@ -4405,8 +4458,15 @@ input[type="color"].split-color::-moz-color-swatch {
             if (isDebugMode()) mergeTokenReport(data?.token_report);
             // Push the portfolio immediately so the editor shows the real page (with
             // placeholder masthead if the AI image isn't ready yet), not a dark loading screen.
-            pushPreviewHtmlUpdate(generationResult.site_html || "");
-            if (page4Submitted) { doPreview(); setOpenEditorReady(true); }
+            pushPreviewHtmlUpdate(generationResult.site_html || "", { fresh: true });
+            if (page4Submitted) {
+              try {
+                await doPreview();
+                setOpenEditorReady(true);
+              } catch (err) {
+                setHeaderStatus("editorAutoOpenStatus", `⚠ Could not display generated website: ${err?.message || err}`, "rgba(251,171,156,.9)");
+              }
+            }
             if (!holdPreviewForMasthead) {
               setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
               greyRendererButtons(false);
@@ -4513,7 +4573,7 @@ input[type="color"].split-color::-moz-color-swatch {
             onCreditUsed(!data.skipped);
             if (generationResult?.base_site_html && data.image_url) {
               generationResult.site_html = composeBraidPreviewHtml(generationResult);
-              pushPreviewHtmlUpdate(generationResult.site_html || "");
+              pushPreviewHtmlUpdate(generationResult.site_html || "", { fresh: true });
               if (page4Submitted) doPreview();
               setHeaderStatus("braidStatus", "✓ Alpha version ready", "rgba(118,176,34,.9)");
               greyRendererButtons(false);
@@ -4628,7 +4688,12 @@ input[type="color"].split-color::-moz-color-swatch {
         const startTime = Date.now();
         while (Date.now() - startTime < 300000) {
           await new Promise(r => setTimeout(r, 3000));
-          if (myRunId !== _bridgeRunId) { clearInterval(bridgeCountdown); bridgeInProgress = false; return; }
+          if (myRunId !== _bridgeRunId) {
+            clearInterval(bridgeCountdown);
+            bridgeInProgress = false;
+            setHeaderStatus("bridgeStatus", "⚠ Design planning was interrupted by a newer request. Please try again.", "rgba(251,171,156,.9)");
+            return;
+          }
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${encodeURIComponent(jobId)}`);
           const parsed = await readJsonResponseSafely(pollRes);
           const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
@@ -4896,7 +4961,11 @@ input[type="color"].split-color::-moz-color-swatch {
 
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, pollIntervalMs));
-          if (myRunId !== _generationRunId) { generationInProgress = false; return; }
+          if (myRunId !== _generationRunId) {
+            generationInProgress = false;
+            setHeaderStatus("generatingWebsiteStatus", "⚠ Generation was interrupted by a newer request. Please try again.", "rgba(251,171,156,.9)");
+            return;
+          }
           const remaining = Math.max(0, Math.round((maxWaitMs - (Date.now() - startTime)) / 1000));
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed = await readJsonResponseSafely(pollRes);
@@ -4981,6 +5050,8 @@ input[type="color"].split-color::-moz-color-swatch {
         if (!generationResult) return;
       }
 
+      setHeaderStatus("editorAutoOpenStatus", "Preparing website preview…", "rgba(141,224,255,.75)");
+
       if (isSlotFillMode() && currentTemplateNeedsMastheadImage() && !mastheadImageResult?.image_url) {
         const message = mastheadImageResult?.skipped
           ? "Masthead image skipped; using template masthead."
@@ -5009,7 +5080,7 @@ input[type="color"].split-color::-moz-color-swatch {
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: p4Colors });
       const editorWin = hasExistingEditorWin
         ? existingEditorWin
-        : window.open("editor.html", "_blank");
+        : window.open(editorShellUrl(), "_blank");
       window.__portfolioEditorWindow = editorWin;
 
       // Collect visuals and inject them (client-side, may be instant or async).
@@ -5029,7 +5100,15 @@ input[type="color"].split-color::-moz-color-swatch {
       // Push the final HTML to the already-open editor window via postMessage
       // even when there were no artifact edits; otherwise the editor can stay
       // stuck on the pre-opened "Preparing website…" placeholder.
-      pushPreviewHtmlUpdate(finalHtml);
+      setHeaderStatus("editorAutoOpenStatus", "Sending website to editor…", "rgba(141,224,255,.75)");
+      pushPreviewHtmlUpdate(finalHtml, { fresh: true });
+      setHeaderStatus("editorAutoOpenStatus", "Website sent to editor.", "rgba(141,224,255,.75)");
+      setTimeout(() => {
+        const el = document.getElementById("editorAutoOpenStatus");
+        if (el?.textContent?.trim() === "Website sent to editor.") {
+          setHeaderStatus("editorAutoOpenStatus", "");
+        }
+      }, 4000);
 
       const resumeData = getPage1();
       const designData = getPage2Template();
@@ -5056,7 +5135,7 @@ input[type="color"].split-color::-moz-color-swatch {
 
       // If the popup was blocked, editorWin is null — open now that localStorage is set.
       if (!editorWin || editorWin.closed) {
-        window.open("editor.html", "_blank");
+        window.open(editorShellUrl(), "_blank");
       }
     }
 
@@ -5184,6 +5263,7 @@ input[type="color"].split-color::-moz-color-swatch {
 
     function invalidateFromPage4({ preserveComplements = false } = {}) {
       if (activePageId() !== "page4") return;
+      if (suppressPage4Invalidation) return;
       if (!preserveComplements) selectedPaletteComplements = null;
       updatePageColorInputSplitSwatches();
 
@@ -5323,14 +5403,19 @@ input[type="color"].split-color::-moz-color-swatch {
 
     function applyEditorPaletteSwatchesToPage4(swatches = []) {
       const ids = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-      ids.forEach((id, index) => {
-        const el = document.getElementById(id);
-        const hex = swatches[index];
-        if (el && hex) {
-          el.value = hex;
-          el.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      });
+      suppressPage4Invalidation = true;
+      try {
+        ids.forEach((id, index) => {
+          const el = document.getElementById(id);
+          const hex = swatches[index];
+          if (el && hex) {
+            el.value = hex;
+            el.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+        });
+      } finally {
+        suppressPage4Invalidation = false;
+      }
       userHasCustomizedColors = true;
       userHasSelectedPalette = true;
       paletteSuggestionsLocked = true;
@@ -5818,18 +5903,19 @@ input[type="color"].split-color::-moz-color-swatch {
       const selectedVisiblePalette = selectedSuggestedPaletteKey
         ? visible.find(palette => palette && getPaletteKey(palette) === selectedSuggestedPaletteKey)
         : null;
+      const generationLocked = page4Submitted || slotFillInProgress || generationInProgress || braidInProgress || bridgeInProgress;
 
       // If a palette is already selected and the list rerendered (for example when an
       // uploaded-image palette arrives late), re-apply that palette to the actual
       // picker inputs so the left-side swatches stay in sync.
-      if (selectedVisiblePalette) {
+      if (selectedVisiblePalette && !generationLocked) {
         applyColors(selectedVisiblePalette.colors);
         return;
       }
 
       // Auto-apply the first available suggested palette the first time it arrives,
       // but only if the user hasn't already made an active palette or theme choice.
-      if (!userHasSelectedPalette && visible.length > 0) {
+      if (!generationLocked && !userHasSelectedPalette && visible.length > 0) {
         applyColors(visible[0].colors);
         selectedSuggestedPaletteKey = getPaletteKey(visible[0]);
         if (inputPalette && getPaletteKey(visible[0]) === getPaletteKey(inputPalette)) templatePaletteRendered = true;
@@ -6099,7 +6185,12 @@ input[type="color"].split-color::-moz-color-swatch {
       // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
-      ensureEditorWindow();
+      ensureEditorWindow({
+        refresh: !!forceRegenerateKind || !generationResult,
+        message: forceRegenerateKind
+          ? `Regenerating portfolio from ${(EDITOR_REVISION_LABELS[forceRegenerateKind] || "revised inputs").toLowerCase()}…`
+          : "Preparing website…"
+      });
       window.umami?.track("form-step-complete", { step: 4 });
 
       // Wait for extraction to settle so we route to the resolved pipeline.
@@ -6144,8 +6235,17 @@ input[type="color"].split-color::-moz-color-swatch {
         }
         await doGenerateWebsite(colorPreferences);
         setHeaderStatus("braidStatus", "");
+        if (!generationResult) {
+          setOpenEditorReady(true);
+          return false;
+        }
         while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
-        doPreview();
+        try {
+          await doPreview();
+        } catch (err) {
+          setHeaderStatus("editorAutoOpenStatus", `⚠ Could not display generated website: ${err?.message || err}`, "rgba(251,171,156,.9)");
+          return false;
+        }
         setOpenEditorReady(true);
         return true;
       }
@@ -6177,7 +6277,12 @@ input[type="color"].split-color::-moz-color-swatch {
         await new Promise(r => setTimeout(r, 500));
       }
 
-      doPreview();
+      try {
+        await doPreview();
+      } catch (err) {
+        setHeaderStatus("editorAutoOpenStatus", `⚠ Could not display generated website: ${err?.message || err}`, "rgba(251,171,156,.9)");
+        return false;
+      }
       setOpenEditorReady(true);
       return true;
     }

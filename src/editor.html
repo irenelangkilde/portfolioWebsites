@@ -3,6 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Google tag (gtag.js) + Consent Mode v2 defaults -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QHDQP5JY0X"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('consent', 'default', {
+    ad_storage:          'denied',
+    ad_user_data:        'denied',
+    ad_personalization:  'denied',
+    analytics_storage:   'denied',
+    functionality_storage: 'granted',
+    security_storage:      'granted',
+    wait_for_update: 500
+  });
+
+  gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true, debug_mode: true  });
+</script>
+<script defer src="/src/analytics-consent.js"></script>
   <title>Edit Portfolio — Irene's Webworks</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script>
@@ -605,7 +625,7 @@
       margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
     .color-workbench-instructions {
-      flex: 0 0 auto; padding: 6px 12px 4px; border-top: 1px solid rgba(255,255,255,.08);
+      flex: 0 0 auto; padding: 2px 12px 4px; border-top: 1px solid rgba(255,255,255,.08);
     }
     .color-workbench-instructions ul {
       padding-left: 16px;
@@ -677,7 +697,7 @@
       color: rgba(234,240,255,.42);
     }
     #editorSwatchRows {
-      flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 8px 10px 6px;
+      flex: 0 1 auto; min-height: 0; max-height: min(430px, 52vh); overflow-y: auto; padding: 8px 10px 2px;
     }
     .ewb-row {
       display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 6px;
@@ -749,12 +769,15 @@
     }
     #colorPanel hr { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 8px 14px; }
     #colorPanel .hint { font-size: 11px; color: rgba(234,240,255,.35); padding: 4px 14px 12px; line-height: 1.5; }
-    #colorHoverTooltip {
+    #colorHoverTooltip, #cwbInfoTooltip {
       position: fixed; z-index: 20002; display: none; pointer-events: none;
       max-width: 180px; padding: 5px 8px; border-radius: 6px;
       background: rgba(10,18,34,.94); color: rgba(234,240,255,.95);
       border: 1px solid rgba(141,186,255,.28); box-shadow: 0 6px 18px rgba(0,0,0,.38);
       font-size: 11px; font-weight: 800; letter-spacing: .02em;
+    }
+    #cwbInfoTooltip {
+      z-index: 20005; max-width: 250px; line-height: 1.35; font-weight: 700;
     }
     /* ── Palette slide panel ─────────────────────────────────── */
     #paletteSlidePanel {
@@ -1443,9 +1466,9 @@
       <div id="editorSwatchRows" aria-live="polite"></div>
       <div class="color-workbench-instructions">
         <ul class="color-workbench-footer-note">
-          <li><b>Single-click:</b> flash red.<span class="cwb-info" tabindex="0" title="Portions of website colored with clicked swatch will flash red." aria-label="Portions of website colored with clicked swatch will flash red.">i</span></li>
-          <li><b>Double-click:</b> substitute color.<span class="cwb-info" tabindex="0" title="Displays a popup to replace clicked color with a custom color" aria-label="Displays a popup to replace clicked color with a custom color">i</span></li>
-          <li><b>Shift-click:</b> Swap Primary vs Secondary status.<span class="cwb-info" tabindex="0" title="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change." aria-label="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change.">i</span></li>
+          <li><b>Single-click:</b> flash red.<span class="cwb-info" tabindex="0" data-tooltip="Portions of website colored with clicked swatch will flash red." aria-label="Portions of website colored with clicked swatch will flash red.">i</span></li>
+          <li><b>Double-click:</b> substitute color.<span class="cwb-info" tabindex="0" data-tooltip="Displays a popup to replace clicked color with a custom color" aria-label="Displays a popup to replace clicked color with a custom color">i</span></li>
+          <li><b>Shift-click:</b> Swap Primary vs Secondary status.<span class="cwb-info" tabindex="0" data-tooltip="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change. Enter a primary swatch id with which to group the clicked swatch." aria-label="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change. Enter a primary swatch id with which to group the clicked swatch.">i</span></li>
         </ul>
       </div>
       <div class="color-workbench-controls">
@@ -1457,8 +1480,8 @@
           <p class="color-workbench-note">Hovering over preview shows swatch id.</p>
         </div>
         <div class="color-workbench-footer-actions">
-          <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺ Reset</button>
           <button id="btnWorkbenchPalettePanel" type="button" title="Open suggested palettes and color themes.">Palettes</button>
+          <button id="btnResetColors" aria-label="Reset original colors" title="Reset substituted colors back to the original page colors.">↺ Reset</button>
         </div>
       </div>
     </div>
@@ -1512,6 +1535,7 @@
     </div>
   </div>
   <div id="colorHoverTooltip" role="status" aria-live="polite"></div>
+  <div id="cwbInfoTooltip" role="tooltip"></div>
 
   <!-- Unified publish / manage panel -->
   <div id="portfolioPanelOverlay">
@@ -3571,23 +3595,25 @@
     function loadIncomingPortfolioHtml(html, { allowPlaceholder = false, workbenchChoice = "" } = {}) {
       const waiting = isWaitingPlaceholderHtml(html);
       if (!html || (waiting && !allowPlaceholder)) return false;
+      const currentlyWaiting = isWaitingPlaceholderHtml(currentHtml);
       if (waiting) {
         workbenchChoiceForCurrentIncoming = "";
         queuedIncomingPortfolioHtml = "";
+        lastIncomingPortfolioHtml = "";
         lastDisplayedIncomingPortfolioHtml = "";
         handledPortfolioHtmls = [];
       }
-      if (!waiting && workbenchEditsPromptPromise) {
+      if (!waiting && !currentlyWaiting && workbenchEditsPromptPromise) {
         queuedIncomingPortfolioHtml = html;
         requestProcessStatusFromOpener();
         return true;
       }
-      if (!waiting && hasHandledPortfolioHtml(html)) {
+      if (!waiting && !currentlyWaiting && hasHandledPortfolioHtml(html)) {
         lastIncomingPortfolioHtml = html;
         requestProcessStatusFromOpener();
         return true;
       }
-      if (!waiting && html === lastIncomingPortfolioHtml) {
+      if (!waiting && !currentlyWaiting && html === lastIncomingPortfolioHtml) {
         requestProcessStatusFromOpener();
         return true;
       }
@@ -3598,7 +3624,7 @@
         ? ensureEditorColorPreprocessed(html)
         : null;
       const displayHtml = prepared?.html || html;
-      if (!waiting && displayHtml === lastDisplayedIncomingPortfolioHtml) {
+      if (!waiting && !currentlyWaiting && displayHtml === lastDisplayedIncomingPortfolioHtml) {
         requestProcessStatusFromOpener();
         return true;
       }
@@ -4292,6 +4318,7 @@
 	    const colorWorkbenchHost = document.getElementById("editorSwatchRows");
 	    const colorHoverInspectorToggle = document.getElementById("colorHoverInspectorToggle");
 	    const colorHoverTooltip = document.getElementById("colorHoverTooltip");
+	    const cwbInfoTooltip = document.getElementById("cwbInfoTooltip");
 	    const suggestedPaletteInput = document.getElementById("editorSuggestedPaletteInput");
 	    const suggestedPaletteStatus = document.getElementById("editorSuggestedPaletteStatus");
 	    const suggestedPaletteRows = document.getElementById("editorSuggestedPaletteRows");
@@ -4338,6 +4365,62 @@
 	      "z-index:20001",
 	    ].join(";");
 	    document.body.appendChild(colorWorkbenchNativeInput);
+
+	    let activeCwbInfoAnchor = null;
+
+	    function positionCwbInfoTooltip(anchor) {
+	      if (!cwbInfoTooltip || !anchor) return;
+	      const rect = anchor.getBoundingClientRect();
+	      const margin = 8;
+	      const width = cwbInfoTooltip.offsetWidth || 230;
+	      const height = cwbInfoTooltip.offsetHeight || 42;
+	      const left = Math.max(margin, Math.min(window.innerWidth - width - margin, rect.right - width));
+	      const top = Math.max(margin, Math.min(window.innerHeight - height - margin, rect.top - height - 8));
+	      cwbInfoTooltip.style.left = `${left}px`;
+	      cwbInfoTooltip.style.top = `${top}px`;
+	    }
+
+	    function showCwbInfoTooltip(anchor) {
+	      if (!cwbInfoTooltip || !anchor) return;
+	      const text = anchor.dataset.tooltip || anchor.getAttribute("aria-label") || "";
+	      if (!text) return;
+	      activeCwbInfoAnchor = anchor;
+	      cwbInfoTooltip.textContent = text;
+	      cwbInfoTooltip.style.display = "block";
+	      positionCwbInfoTooltip(anchor);
+	    }
+
+	    function hideCwbInfoTooltip(anchor = null) {
+	      if (anchor && activeCwbInfoAnchor && anchor !== activeCwbInfoAnchor) return;
+	      activeCwbInfoAnchor = null;
+	      if (cwbInfoTooltip) cwbInfoTooltip.style.display = "none";
+	    }
+
+	    document.addEventListener("pointerover", ev => {
+	      const target = ev.target instanceof Element ? ev.target.closest(".cwb-info") : null;
+	      if (target) showCwbInfoTooltip(target);
+	    });
+	    document.addEventListener("pointerout", ev => {
+	      const target = ev.target instanceof Element ? ev.target.closest(".cwb-info") : null;
+	      if (!target) return;
+	      const related = ev.relatedTarget instanceof Element ? ev.relatedTarget.closest(".cwb-info") : null;
+	      if (related === target) return;
+	      hideCwbInfoTooltip(target);
+	    });
+	    document.addEventListener("focusin", ev => {
+	      const target = ev.target instanceof Element && ev.target.classList.contains("cwb-info") ? ev.target : null;
+	      if (target) showCwbInfoTooltip(target);
+	    });
+	    document.addEventListener("focusout", ev => {
+	      const target = ev.target instanceof Element && ev.target.classList.contains("cwb-info") ? ev.target : null;
+	      if (target) hideCwbInfoTooltip(target);
+	    });
+	    window.addEventListener("resize", () => {
+	      if (activeCwbInfoAnchor) positionCwbInfoTooltip(activeCwbInfoAnchor);
+	    });
+	    document.addEventListener("keydown", ev => {
+	      if (ev.key === "Escape") hideCwbInfoTooltip();
+	    });
 
 	    function escapeHtml(value) {
 	      return String(value ?? "")
@@ -8430,6 +8513,46 @@
     window.__editorTickerShowProcess = showProcessStatus;
     window.__editorTickerClearProcess = clearProcessStatus;
 
+    const EDITOR_PROCESS_STATUS_STORAGE_KEY = "portfolio_editor_process_status";
+    const EDITOR_PROCESS_STATUS_MAX_AGE_MS = 20 * 60 * 1000;
+    let storedProcessStatusActive = false;
+    let lastStoredProcessStatus = "";
+
+    function readStoredProcessStatus() {
+      try {
+        const raw = localStorage.getItem(EDITOR_PROCESS_STATUS_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        const text = String(parsed?.text || "").trim();
+        const at = Number(parsed?.at || 0);
+        if (!text || !at || Date.now() - at > EDITOR_PROCESS_STATUS_MAX_AGE_MS) return null;
+        return {
+          text,
+          color: parsed?.color || defaultStatusColor
+        };
+      } catch {
+        return null;
+      }
+    }
+
+    function syncStoredProcessStatus() {
+      const status = readStoredProcessStatus();
+      if (status) {
+        const signature = `${status.text}\n${status.color}`;
+        storedProcessStatusActive = true;
+        if (signature !== lastStoredProcessStatus) {
+          lastStoredProcessStatus = signature;
+          showProcessStatus(status.text, status.color);
+        }
+        return;
+      }
+      if (storedProcessStatusActive) {
+        storedProcessStatusActive = false;
+        lastStoredProcessStatus = "";
+        clearProcessStatus();
+      }
+    }
+
     function requestInitialProcessStatus() {
       try {
         if (window.opener && !window.opener.closed) {
@@ -8440,6 +8563,11 @@
 
     requestInitialProcessStatus();
     setTimeout(requestInitialProcessStatus, 150);
+    syncStoredProcessStatus();
+    setInterval(syncStoredProcessStatus, 1000);
+    window.addEventListener("storage", ev => {
+      if (ev.key === EDITOR_PROCESS_STATUS_STORAGE_KEY) syncStoredProcessStatus();
+    });
   })();
   </script>
 
