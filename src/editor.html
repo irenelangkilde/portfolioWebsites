@@ -291,10 +291,18 @@
     }
     #tipsModal.open { display: flex; }
     #tipsModalBox {
+      position: relative;
       background: #0f1a35; border: 1px solid rgba(103,126,234,.4);
       border-radius: 10px; padding: 18px 22px 20px; min-width: 380px; max-width: 520px;
       box-shadow: 0 8px 32px rgba(0,0,0,.6); color: rgba(234,240,255,.85);
     }
+    #btnTipsClose {
+      position: absolute; top: 8px; right: 10px;
+      background: transparent; border: none; padding: 2px 6px;
+      color: rgba(234,240,255,.55); font-size: 18px; line-height: 1;
+      cursor: pointer; border-radius: 4px;
+    }
+    #btnTipsClose:hover { color: rgba(234,240,255,.95); background: rgba(255,255,255,.08); }
     #tipsModalBox strong {
       display: block; font-size: 10px; color: rgba(234,240,255,.45);
       letter-spacing: .07em; text-transform: uppercase; margin-bottom: 8px;
@@ -8413,9 +8421,13 @@
     const statusEl = document.getElementById("sbStatus");
     const sbWrap  = document.getElementById("sbWrap");
     const btnTips = document.getElementById("btnTips");
-    const modal   = document.getElementById("tipsModal");
-    const listEl  = document.getElementById("tipsList");
-    const dismiss = document.getElementById("btnTipsDismiss");
+    // Modal / dismiss / list elements live below this script in the DOM, so they
+    // aren't parsed yet when this IIFE runs. Resolve them lazily so callbacks
+    // that fire later (after full parse) can find them.
+    const getModal   = () => document.getElementById("tipsModal");
+    const getListEl  = () => document.getElementById("tipsList");
+    const getDismiss = () => document.getElementById("btnTipsDismiss");
+    const getClose   = () => document.getElementById("btnTipsClose");
     if (!ticker) return;
 
     let idx = 0;
@@ -8424,7 +8436,9 @@
     const defaultTickerColor = "rgba(234,240,255,.45)";
     const defaultStatusColor = "rgba(141,224,255,.85)";
 
-    if (listEl) {
+    function populateTipsList() {
+      const listEl = getListEl();
+      if (!listEl) return;
       listEl.innerHTML = "";
       tips.forEach((tip) => {
         const li = document.createElement("li");
@@ -8434,7 +8448,7 @@
     }
 
     function tickerText(i) {
-      return `${i + 1}. ${tips[i]}`;
+      return `Tip ${i + 1}: ${tips[i]}`;
     }
 
     function setTickerText(text, color = defaultTickerColor, animate = false) {
@@ -8488,8 +8502,11 @@
 
     startTipsCarousel();
 
-    function openModal() { modal?.classList.add("open"); }
-    function closeModal() { modal?.classList.remove("open"); }
+    function openModal() {
+      populateTipsList();       // populate lazily in case the modal wasn't parsed yet
+      getModal()?.classList.add("open");
+    }
+    function closeModal() { getModal()?.classList.remove("open"); }
 
     // Click on any visible tip area → open modal
     ticker.addEventListener("click", openModal);
@@ -8498,17 +8515,26 @@
     // Tips button (shown after dismiss) → open modal
     btnTips?.addEventListener("click", openModal);
 
-    // Dismiss → stop carousel, hide ticker area, show Tips button
-    dismiss?.addEventListener("click", () => {
-      closeModal();
-      tickerDismissed = true;
-      stopTipsCarousel();
-      if (sbWrap)  sbWrap.style.display  = "none";
-      if (btnTips) btnTips.style.display = "";
-    });
-
-    // Click outside modal box to close
-    modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+    // Modal element and its buttons live below this script in the DOM. Wait until
+    // the parser has finished before attaching their listeners.
+    function wireModalControls() {
+      const modal = getModal();
+      const dismiss = getDismiss();
+      const closeBtn = getClose();
+      // Dismiss → just close the modal. Ticker stays visible and the carousel
+      // keeps revolving; the toolbar buttons on the right stay put because we
+      // don't collapse #sbWrap or swap in the #btnTips fallback.
+      dismiss?.addEventListener("click", closeModal);
+      // Click outside modal box to close
+      modal?.addEventListener("click", e => { if (e.target === modal) closeModal(); });
+      // X button in the corner: just close, keep the ticker carousel running.
+      closeBtn?.addEventListener("click", closeModal);
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", wireModalControls, { once: true });
+    } else {
+      wireModalControls();
+    }
 
     window.__editorTickerShowProcess = showProcessStatus;
     window.__editorTickerClearProcess = clearProcessStatus;
@@ -8574,6 +8600,7 @@
   <!-- Tips modal -->
   <div id="tipsModal" role="dialog" aria-modal="true" aria-label="Tips">
     <div id="tipsModalBox">
+      <button id="btnTipsClose" type="button" aria-label="Close">×</button>
       <strong>Tips</strong>
       <ol id="tipsList"></ol>
       <button id="btnTipsDismiss">Dismiss</button>

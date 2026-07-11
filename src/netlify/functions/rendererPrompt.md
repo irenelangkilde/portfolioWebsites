@@ -106,6 +106,12 @@ STYLE REQUIREMENTS
 - If visual_direction.use_emoji_icons is true: use emoji (e.g. 🎓 📊 🔬) or Font Awesome for section icons and skill badges. If false: do not use any icons.
 - If visual_direction.alternate_sections is true: alternate background between dark and light for consecutive sections, making sure that the text color is complementary and contrasting. If false: use a consistent background treatment throughout.
 
+USER COLOR PREFERENCES
+
+{{COLOR_PREFERENCES_GUIDANCE}}
+
+When the block above contains guidance, treat it as the authoritative color direction from the user. Interpret their mood or hue words into the five palette variables (`--background`, `--foreground`, `--primary`, `--secondary`, `--accent`) and any derived tokens. If it is empty, follow the visual_direction defaults instead.
+
 CONTENT REQUIREMENTS
 
 - Highlight the most relevant projects and experience early

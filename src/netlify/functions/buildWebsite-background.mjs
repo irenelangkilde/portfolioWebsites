@@ -335,6 +335,63 @@ function normalizeColorSpec(colorSpec = {}) {
  * The framing intentionally calls them "key/anchor" colors rather than a complete palette,
  * so the AI knows it may fill remaining slots with neutrals and supporting tones.
  */
+// Converts a free-text color description ("neon tech with yellow and blue") into
+// a concrete 5-role palette. Returns null on empty input or when the LLM output
+// can't be coerced into five valid hexes. Used by pipelines that render with a
+// fixed colorSpec (slot-fill, render-annotated) — without this, text-mode prefs
+// fall through and the template's original palette wins.
+async function derivePaletteFromColorText(callAIFn, text) {
+  const clean = String(text || "").trim();
+  if (!clean) return null;
+  const prompt = `Convert this color description to a five-role website palette.
+Description: "${clean.slice(0, 500)}"
+
+Return ONLY compact JSON in this exact shape (no markdown, no prose):
+{"background":"#RRGGBB","foreground":"#RRGGBB","primary":"#RRGGBB","secondary":"#RRGGBB","accent":"#RRGGBB"}
+
+Rules:
+- background: page canvas color that matches the described mood.
+- foreground: main text color with strong readable contrast against background (WCAG AA at minimum).
+- primary: the strongest brand/emphasis hue the user named.
+- secondary: a distinct supporting hue that complements primary.
+- accent: a highlight color that pops against background without clashing with primary/secondary.
+- Honor explicit colors the user named ("yellow", "blue", "navy") and their overall vibe (neon, warm, muted, editorial, etc.). If they named two hues, put one in primary and the other in secondary or accent.
+- All six-digit hex (#RRGGBB); no shorthand, no named colors, no rgba.`;
+  try {
+    const res = await callAIFn({ userText: prompt, maxTokens: 300 });
+    const json = parseJsonResponse(res?.text || "");
+    const isHex = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
+    if (!json || !isHex(json.background) || !isHex(json.foreground) ||
+        !isHex(json.primary) || !isHex(json.secondary) || !isHex(json.accent)) {
+      return null;
+    }
+    return {
+      background: json.background.toLowerCase(),
+      foreground: json.foreground.toLowerCase(),
+      primary:    json.primary.toLowerCase(),
+      secondary:  json.secondary.toLowerCase(),
+      accent:     json.accent.toLowerCase(),
+    };
+  } catch (err) {
+    console.warn("[derivePaletteFromColorText] failed:", err?.message);
+    return null;
+  }
+}
+
+// True when the caller supplied only a text description and no swatches — the
+// signal for us to derive a palette from the text before rendering.
+function shouldDerivePaletteFromText(colorPreferences, colorSpec) {
+  if (!colorPreferences || typeof colorPreferences !== "object") return false;
+  if (colorPreferences.mode !== "text") return false;
+  if (!String(colorPreferences.text || "").trim()) return false;
+  const swatches = Array.isArray(colorPreferences.swatches) ? colorPreferences.swatches : [];
+  if (swatches.some(h => /^#[0-9a-fA-F]{6}$/.test(String(h || "").trim()))) return false;
+  const spec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
+  const anyHex = ["background", "foreground", "primary", "secondary", "accent"]
+    .some(role => /^#[0-9a-fA-F]{6}$/i.test(String(spec[role] || "").trim()));
+  return !anyHex;
+}
+
 function formatColorPreferencesGuidance(prefs) {
   if (!prefs || typeof prefs !== "object") return "";
   if (prefs.mode === "swatches" && Array.isArray(prefs.swatches) && prefs.swatches.length) {
@@ -1760,6 +1817,7 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
     resolved       = null,
     jobContext     = "",
     colorSpec      = {},
+    colorPreferences = null,
     headshotName   = "",
   } = body;
   const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
@@ -1791,13 +1849,25 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
 
   await store.set(jobId, JSON.stringify({ status: "pending", stage: "Assembling portfolio…" }), { ttl: 3600 });
 
+  // Same text-mode resolution as slot-fill — see derivePaletteFromColorText.
+  let derivedThemeFromText = null;
+  if (shouldDerivePaletteFromText(colorPreferences, safeColorSpec)) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Interpreting color description…"
+    }), { ttl: 3600 });
+    derivedThemeFromText = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
+    if (derivedThemeFromText) {
+      console.log("[renderAnnotated] derived palette from color text:", derivedThemeFromText);
+    }
+  }
+
   const normalizedColor = normalizeColorSpec({
-    background: safeColorSpec.background,
-    foreground: safeColorSpec.foreground,
-    primary:    safeColorSpec.primary,
-    secondary:  safeColorSpec.secondary,
-    accent:     safeColorSpec.accent,
-    use_sample_colors: safeColorSpec.use_sample_colors,
+    background: derivedThemeFromText?.background ?? safeColorSpec.background,
+    foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
+    primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
+    secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
+    accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
+    use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
   });
 
   if (headshotName) {
@@ -1906,13 +1976,27 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     status: "pending", stage: "Assembling portfolio…"
   }), { ttl: 3600 });
 
+  // If the user described colors in words with no swatches, resolve the text to
+  // concrete hexes here so the deterministic renderer honors the description
+  // instead of falling back to the template's original palette.
+  let derivedThemeFromText = null;
+  if (shouldDerivePaletteFromText(colorPreferences, safeColorSpec)) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Interpreting color description…"
+    }), { ttl: 3600 });
+    derivedThemeFromText = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
+    if (derivedThemeFromText) {
+      console.log("[slotFill] derived palette from color text:", derivedThemeFromText);
+    }
+  }
+
   const theme = normalizeColorSpec({
-    background: safeColorSpec.background,
-    foreground: safeColorSpec.foreground,
-    primary:    safeColorSpec.primary,
-    secondary:  safeColorSpec.secondary,
-    accent:     safeColorSpec.accent,
-    use_sample_colors: safeColorSpec.use_sample_colors,
+    background: derivedThemeFromText?.background ?? safeColorSpec.background,
+    foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
+    primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
+    secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
+    accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
+    use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
   });
 
   const candidateData = flattenCandidateData(
@@ -2222,7 +2306,8 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     resumeAnalysisJson, templateAnalysisJson, templateHtml,
     artifactsData = [],
     strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
-    bridgeJson   = null   // pre-computed by bridgeContentAndDesign mode — skips Stage 3
+    bridgeJson   = null,  // pre-computed by bridgeContentAndDesign mode — skips Stage 3
+    colorPreferences = null,  // { mode: "swatches"|"text", swatches: string[], text: string }
   } = opts;
   const tokenReport = [];
   const isDesignOptionsMode = (page1?.template_source || "").toLowerCase() === "none";
@@ -2450,6 +2535,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace("{{SAMPLE_HTML}}",     rendererSampleHtml)
       .replace("{{HEADSHOT}}",        headshotHint)
       .replace("{{TEMPLATE_USAGE}}",  templateUsageInstruction(page1.template_copyright_mode))
+      .replace("{{COLOR_PREFERENCES_GUIDANCE}}", formatColorPreferencesGuidance(colorPreferences))
       .replace("{{YEAR}}",            new Date().getFullYear().toString());
 
     const rendererSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Your sole task is to output a single complete HTML file as requested. This is a standard web development task. Output only raw HTML starting with <!DOCTYPE html> — no explanations, no refusals, no markdown, no commentary of any kind.";
@@ -2796,6 +2882,7 @@ async function handleBuildWebsiteBackground(event) {
       artifactsData,
       strategyJson,
       bridgeJson,
+      colorPreferences: body.colorPreferences || null,
       userId,
       provider
     });

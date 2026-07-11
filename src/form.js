@@ -3475,10 +3475,10 @@ input[type="color"].split-color::-moz-color-swatch {
     function updateTemplateUI() {
       let source = document.querySelector('input[name="templateSource"]:checked')?.value;
       if (!source) {
-        const defaultSource = document.getElementById("tplUrl");
+        const defaultSource = document.getElementById("tplNone");
         if (defaultSource) {
           defaultSource.checked = true;
-          source = "keyword";
+          source = "none";
         }
       }
       const modeSelect = document.getElementById("extractTemplateMode");
@@ -6133,13 +6133,14 @@ input[type="color"].split-color::-moz-color-swatch {
       setTimeout(() => { if (msgEl) msgEl.textContent = ""; }, 6000);
     }
 
-    // Heuristic check: enough length, has alphabetic words, includes at least
-    // one color-related term. Lets through grammatical English with a hint of color.
+    // Heuristic check: enough length, has some alphabetic content, includes at
+    // least one color-related term. The colorish check is the important one —
+    // length is deliberately low (3 chars) so terse inputs like "red" pass.
     function heuristicValidateColorText(text) {
       const trimmed = String(text || "").trim();
-      if (trimmed.length < 10)  return "Please describe your color preferences in at least 10 characters.";
+      if (trimmed.length < 3)   return "Please enter at least 3 characters describing your color preferences.";
       if (trimmed.length > 500) return "Please keep your color description under 500 characters.";
-      if (!/[a-z]{3,}/i.test(trimmed)) return "Please describe your color preferences in words.";
+      if (!/[a-z]/i.test(trimmed)) return "Please describe your color preferences in words.";
       const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastel|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
       if (!colorish.test(trimmed)) return "Please mention at least one color or descriptor (e.g. “deep navy”, “warm earth tones”).";
       return null; // valid

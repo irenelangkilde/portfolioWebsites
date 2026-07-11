@@ -1212,62 +1212,18 @@
       <div class="grid" style="gap:6px; margin-bottom:14px;">
         <label style="font-weight:900; font-size:13px; margin-bottom:0;">Model or template <span class="error">*</span></label>
 
-        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-          <input type="radio" name="templateSource" id="tplUrl" value="keyword" checked style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-          <div>
-            <strong style="font-size:13px;">Choose by name</strong>
-            <p class="hint" style="margin:2px 0 0; font-weight:400;">Enter a keyword to choose a <a href="../html/grad-gallery.html" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> (e.g. Marcus, Owen) that matches your style/layout preferences (ignoring content and major).</p>
-          </div>
-        </label>
-        <div id="tplUrlWrap" style="padding:0 4px 4px; margin-left:33px;">
-          <div style="display:flex; gap:6px; align-items:center;">
-            <input id="modelTemplate" type="text" placeholder="e.g., Marcus, Owen, Maya..." list="templateKeywords" autocomplete="off" style="flex:1;" />
-            <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Reload the available template names. This updates the list only and does not clear your current selection." style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
-            <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear the current template selection and remove its extracted colors/template state." style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
-          </div>
-          <datalist id="templateKeywords">
-            <!-- populated dynamically by listTemplates Netlify function -->
-          </datalist>
-        </div>
-
-        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-          <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-          <div>
-            <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
-            <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
-          </div>
-        </label>
-        <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px; margin-left:33px;">
-          <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
-          <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
-            <img id="templateScreenshotImg" src="" alt="Template preview"
-                 style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
-          </div>
-        </div>
-
-        <!-- Copyright mode — shown for external URL or uploaded file -->
-        <div id="templateCopyrightWrap" style="display:none; margin-left:33px; padding:10px 12px; background:rgba(0,0,0,.18); border:2px solid rgba(251,171,156,.7); border-radius:12px; box-shadow:0 0 12px rgba(251,171,156,.25);">
-          <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
-          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
-            <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-            <span>I am the author/owner of the copyright or have written permission from the owner to use it exactly.</span>
+        <!-- Design options: radio + sub-panel share one enclosing card so they read as a unit -->
+        <div style="border:1px solid rgba(255,255,255,.15); border-radius:12px; background:rgba(0,0,0,.18); overflow:hidden;">
+          <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; background:rgba(255,255,255,.03);">
+            <input type="radio" name="templateSource" id="tplNone" value="none" checked style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <div>
+              <strong style="font-size:13px;">Design options</strong>
+              <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose composition, style, and render mode. Defaults are influenced by your resume.</p>
+            </div>
           </label>
-          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
-            <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-            <span>Use it for inspiration only</span>
-          </label>
-        </div>
 
-        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-          <input type="radio" name="templateSource" id="tplNone" value="none" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
-          <div>
-            <strong style="font-size:13px;">Design options</strong>
-            <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose composition, style, and render mode. Defaults are influenced by your resume.</p>
-          </div>
-        </label>
-
-        <!-- Design options sub-panel — shown when "Design options" is selected -->
-        <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; background:rgba(0,0,0,.18); border:1px solid rgba(255,255,255,.12); border-radius:12px;">
+          <!-- Design options sub-panel — shown when "Design options" is selected -->
+          <div id="designOptionsWrap" class="hidden" style="padding:12px 14px; border-top:1px solid rgba(255,255,255,.1);">
           <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
 
             <!-- Composition -->
@@ -1350,6 +1306,53 @@
             </div>
 
           </div>
+          </div>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplUrl" value="keyword" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Choose in-house template by name</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Enter a keyword to choose a <a href="../html/grad-gallery.html" target="_blank" rel="noopener" style="color:rgba(141,224,255,.85);">model website from here</a> (e.g. Marcus, Owen) that matches your style/layout preferences (ignoring content and major).</p>
+          </div>
+        </label>
+        <div id="tplUrlWrap" style="padding:0 4px 4px; margin-left:33px;">
+          <div style="display:flex; gap:6px; align-items:center;">
+            <input id="modelTemplate" type="text" placeholder="e.g., Marcus, Owen, Maya..." list="templateKeywords" autocomplete="off" style="flex:1;" />
+            <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Reload the available template names. This updates the list only and does not clear your current selection." style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
+            <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear the current template selection and remove its extracted colors/template state." style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
+          </div>
+          <datalist id="templateKeywords">
+            <!-- populated dynamically by listTemplates Netlify function -->
+          </datalist>
+        </div>
+
+        <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
+          <input type="radio" name="templateSource" id="tplFile" value="file" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+          <div>
+            <strong style="font-size:13px;">Upload a screenshot or HTML file</strong>
+            <p class="hint" style="margin:2px 0 0; font-weight:400;">Upload a screenshot or HTML of a site to use as template.</p>
+          </div>
+        </label>
+        <div id="tplFileWrap" class="hidden" style="padding:0 4px 4px; margin-left:33px;">
+          <input type="file" id="templateScreenshot" accept="image/*,.html,.htm" />
+          <div id="templateScreenshotPreview" style="display:none; margin-top:6px;">
+            <img id="templateScreenshotImg" src="" alt="Template preview"
+                 style="max-width:100%; max-height:180px; border-radius:8px; border:1px solid rgba(255,255,255,.15); object-fit:contain;" />
+          </div>
+        </div>
+
+        <!-- Copyright mode — shown for external URL or uploaded file -->
+        <div id="templateCopyrightWrap" style="display:none; margin-left:33px; padding:10px 12px; background:rgba(0,0,0,.18); border:2px solid rgba(251,171,156,.7); border-radius:12px; box-shadow:0 0 12px rgba(251,171,156,.25);">
+          <p class="hint" style="margin:0 0 8px;">This template is from an external source. How may we use it?</p>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400; margin-bottom:6px;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightOwned" value="owned" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>I am the author/owner of the copyright or have written permission from the owner to use it exactly.</span>
+          </label>
+          <label style="display:flex; gap:8px; align-items:flex-start; cursor:pointer; font-size:14px; font-weight:400;">
+            <input type="radio" name="templateCopyrightMode" id="templateCopyrightInspiration" value="inspiration" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+            <span>Use it for inspiration only</span>
+          </label>
         </div>
 
       </div>
