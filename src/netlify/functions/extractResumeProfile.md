@@ -235,6 +235,17 @@ GUIDELINES
 1. IDENTITY
 Fill in the candidate identity and contact fields from the resume. Populate major and specialization from the form inputs.
 
+NAME (identity.name) — copy the candidate's name **verbatim** from the resume header. This is a proper noun and must be preserved exactly:
+- Include every name part the resume shows, in the order shown: first, any middle name(s) or middle initial(s), last name, and any suffix (Jr., Sr., II, III, PhD, etc.).
+- Preserve middle initials with their period ("Harrison S. Kaylor" — not "Harrison Kaylor").
+- Preserve hyphens ("Ana-María López-Ortiz"), apostrophes ("Sean O'Neill"), accents/diacritics ("François Dubé"), and non-Latin characters exactly as printed.
+- Preserve the resume's capitalization. Do not Title-Case or ALL-CAPS a name that appears otherwise.
+- Do NOT initialize any part ("Kaylor" → not "K."), abbreviate, drop middle names, translate, Anglicize, or "clean up" the name.
+- Do NOT redact for privacy, mask characters, or return a placeholder. If the resume has no name at all, return an empty string — but if a name is present, output it in full.
+- Do NOT paraphrase or reformat (no reordering to "Last, First"; no adding titles the resume doesn't show).
+
+The name goes into resume_facts.identity.name as one complete string. Downstream stages derive first_name, last_name, and initials from this field, so any dropped part breaks the whole pipeline.
+
 2. FACTUAL PROFILE
 Extract verbatim, structured content. Omit sections absent from the resume — never fabricate.
 - education: institution, degree, GPA, coursework, thesis, activities

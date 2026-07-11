@@ -20,7 +20,7 @@
     wait_for_update: 500
   });
 
-  gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true, debug_mode: true  });
+  gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
 </script>
 <script defer src="/src/analytics-consent.js"></script>
   <title>Edit Portfolio — Irene's Webworks</title>
@@ -5441,7 +5441,7 @@
 	        if (!suggestedPaletteState.palettes.length) throw new Error("No palettes returned.");
 	        renderSuggestedPaletteResults();
 	        setPaletteBtnReady();
-	        setEditStatus(data.fallback ? "Suggested palettes ready using local fallback." : "Suggested palettes ready.", "ok");
+	        showTickerMessage("Suggested palettes are ready", "ok");
 	      } catch (err) {
 	        const message = err?.message || String(err);
 	        suggestedPaletteState = {
@@ -5452,7 +5452,7 @@
 	        };
 	        resetPaletteBtn();
 	        renderSuggestedPaletteResults();
-	        setEditStatus(`Suggested palette generation failed: ${message}`, "err");
+	        showTickerMessage(`Suggested palette generation failed: ${message}`, "error");
 	      }
 	    }
 
@@ -5485,7 +5485,7 @@
 	      persistColorWorkbench();
 	      suggestedPaletteState.status = "idle";
 	      closePalettePanel();
-	      setEditStatus(`${palette.name || "Suggested palette"} applied.`, "ok");
+	      showTickerMessage(`${palette.name || "Suggested palette"} applied.`, "ok");
 	    }
 
 	    btnWorkbenchPalettePanel?.addEventListener("click", openPalettePanel);

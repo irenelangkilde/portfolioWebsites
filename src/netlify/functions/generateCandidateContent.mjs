@@ -401,6 +401,24 @@ export async function generateCandidateContent(callAIFn, {
     heroResult = { model: "error", usage: {}, text: "" };
   }
 
+  // Deterministically override name/first_name/last_name from the authoritative
+  // resume-extraction output. The LLM in fillHero sometimes truncates or
+  // abbreviates names (e.g. "Harrison S." instead of "Harrison Kaylor"); trusting
+  // resume_facts.identity.name avoids that class of bug entirely.
+  const identityName = String(
+    resumeFacts?.resume_facts?.identity?.name
+      ?? resumeFacts?.identity?.name
+      ?? ""
+  ).trim();
+  if (identityName) {
+    heroData.name = identityName;
+    const parts = identityName.split(/\s+/).filter(Boolean);
+    if (parts.length) {
+      heroData.first_name = parts[0];
+      heroData.last_name  = parts.length > 1 ? parts[parts.length - 1] : "";
+    }
+  }
+
   const heroOutputJson = JSON.stringify(heroData, null, 2);
 
   // ── Step 2: Projects + Experience/Skills (parallel) ───────────────────────
@@ -442,8 +460,24 @@ export async function generateCandidateContent(callAIFn, {
   const statusBadges = normalizeLabelArray(firstNonEmpty(heroData.status_badges, heroData.status_badges_inline));
   const openToRoles = normalizeLabelArray(firstNonEmpty(heroData.open_to_roles, heroData.open_to_items));
   const workDomains = normalizeLabelArray(heroData.work_domains);
+  // Derive initials from first_name + last_name (falling back to splitting `name`).
+  // Templates with monogram slots (`data-field="initials"`) render these directly.
+  const initialsSource = (() => {
+    const first = String(heroData?.first_name || "").trim();
+    const last  = String(heroData?.last_name  || "").trim();
+    if (first || last) return [first, last];
+    const parts = String(heroData?.name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return ["", ""];
+    if (parts.length === 1) return [parts[0], ""];
+    return [parts[0], parts[parts.length - 1]];
+  })();
+  const initials = (
+    (initialsSource[0][0] || "") + (initialsSource[1][0] || "")
+  ).toUpperCase();
+
   const candidateData = {
     ...heroData,
+    initials,
     projects,
     experience,
     education,

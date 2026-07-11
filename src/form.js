@@ -1703,6 +1703,20 @@ ${pseudoSelectors} {
       return `resumeAnalysis_v5:${file.name}:${file.size}:${file.lastModified}`;
     }
 
+    // Guard against caching error blobs like { error: "Netlify Blobs has generated
+    // an internal error (401 status code)" }. A well-formed analysis always carries
+    // an identity.name (either at resume_facts.identity or the top-level identity).
+    function isValidResumeAnalysis(data) {
+      if (!data || typeof data !== "object") return false;
+      if (data.status === "error") return false;
+      const identity = data?.resume_facts?.identity ?? data?.identity;
+      const name = String(identity?.name || "").trim();
+      if (!name) return false;
+      // If the payload also carries a top-level `error` string, treat it as poisoned.
+      if (typeof data.error === "string" && data.error.trim()) return false;
+      return true;
+    }
+
     function jobAdCacheKey(rawText) {
       // Include resume file identity so cache is invalidated when resume changes
       const file = resumeUpload?.files?.[0];
@@ -1734,7 +1748,7 @@ ${pseudoSelectors} {
         const cached = localStorage.getItem(resumeCacheKey(file));
         if (cached) {
           const parsed = JSON.parse(cached);
-          if (hasUsablePaletteData(parsed)) {
+          if (isValidResumeAnalysis(parsed) && hasUsablePaletteData(parsed)) {
             cachedData = parsed;
           } else {
             localStorage.removeItem(resumeCacheKey(file));
@@ -1844,7 +1858,10 @@ ${pseudoSelectors} {
         resumeAnalysisPending = false;
         updateSubmitReadiness();
 
-        if (result.status === "error") {
+        // Treat any non-"done" response (including a naked `{ error: "..." }` from
+        // getPreviewResult's own 500 handler) as an error. Otherwise the fall-through
+        // below would cache that error blob as if it were valid analysis data.
+        if (result.status !== "done") {
           if (result.quota) {
             setResumeAnalysisStatus("");
             showUpgradePrompt(result);
@@ -1869,8 +1886,16 @@ ${pseudoSelectors} {
           if (specialization) identity.specialization = specialization;
         }
 
-        // Persist to localStorage for reuse after refresh
-        try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
+        // Persist to localStorage for reuse after refresh — but only if the payload
+        // is a real analysis. Guards against caching error blobs (e.g. Netlify Blobs
+        // 401 responses) that would otherwise poison future runs against this file.
+        if (isValidResumeAnalysis(data)) {
+          try { localStorage.setItem(resumeCacheKey(file), JSON.stringify(data)); } catch {}
+        } else {
+          try { localStorage.removeItem(resumeCacheKey(file)); } catch {}
+          setResumeAnalysisStatus("Resume analysis returned incomplete data — try again.", "rgba(251,171,156,.8)");
+          return;
+        }
         onCreditUsed();
 
         lastAnalysisData = data;

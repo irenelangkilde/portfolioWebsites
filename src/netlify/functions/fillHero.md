@@ -30,8 +30,16 @@ VOICE RULES
 OUTPUT SCHEMA
 ══════════════════════════════════════════════════════════
 
+IDENTITY FIELDS — copy from resume_facts.identity.name verbatim.
+Do NOT abbreviate, initialize, drop middle names, or paraphrase.
+Do NOT redact for privacy. If resume_facts.identity.name is
+"Harrison Kaylor", output name: "Harrison Kaylor",
+first_name: "Harrison", last_name: "Kaylor".
+If it is "Harrison S. Kaylor", output name: "Harrison S. Kaylor",
+first_name: "Harrison", last_name: "Kaylor".
+
 {
-  "name":            "<full name>",
+  "name":            "<full name — verbatim from resume_facts.identity.name>",
   "first_name":      "<first name>",
   "last_name":       "<last name>",
   "email":           "<email or empty string>",

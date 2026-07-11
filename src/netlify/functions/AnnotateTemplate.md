@@ -55,7 +55,7 @@ FIELD NAME REFERENCE
 ──────────────────────────────────────────────
 
 Top-level scalars
-  name · first_name · last_name
+  name · first_name · last_name · initials
   headline · subheadline · value_proposition
   about                    (hero lead paragraph — short)
   about_section_subheadline (subtitle/bridge directly under the About section heading)
@@ -148,9 +148,21 @@ Recognise candidate-specific content by these signals:
 
 12. HEADSHOT IMAGE: the candidate's profile photo <img>
     → data-attr-src="headshot". Its src value is already "headshot.png"
-    after normalization.
+    after normalization. Also add data-attr-alt="name" so the alt text
+    tracks the current candidate rather than the template's original
+    subject.
 
-13. HERO CARD GRID: if the hero/masthead contains a sidebar grid of
+13. MONOGRAM / INITIALS: any short (typically 2–4 uppercase letters) element
+    that clearly represents the subject's initials — e.g. "AC" for
+    "Alex Chen", "MJK" for "Mary Kate Johnson" — often inside a circular
+    logo, badge, or avatar placeholder. Annotate with
+    data-field="initials" and data-word-count="1". Do NOT use "first_name"
+    or "name" for these; the renderer substitutes the candidate's
+    computed initials (first-initial + last-initial, uppercased).
+    Distinguish from cases where the full first name or full name appears
+    as short text in a nav — those keep data-field="first_name" or "name".
+
+14. HERO CARD GRID: if the hero/masthead contains a sidebar grid of
     small cards (highlights, snapshot, links, skill chips), apply the
     hero_cards special case. Classify each card type:
       "Highlights" / "At a Glance" / "Quick Highlights" → highlights

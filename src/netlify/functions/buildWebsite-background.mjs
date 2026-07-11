@@ -90,6 +90,15 @@ Use this exact schema (omit fields that are absent from the resume, but never fa
   ]
 }
 
+NAME (personal.name) — copy the candidate's name **verbatim** from the resume header. This is a proper noun and must be preserved exactly:
+- Include every name part shown, in the order shown: first, any middle name(s) or middle initial(s), last name, and any suffix (Jr., Sr., II, III, PhD, etc.).
+- Preserve middle initials with their period ("Harrison S. Kaylor" — not "Harrison Kaylor").
+- Preserve hyphens, apostrophes, accents/diacritics, and non-Latin characters exactly as printed.
+- Preserve the resume's capitalization. Do not Title-Case or ALL-CAPS a name that appears otherwise.
+- Do NOT initialize any part, abbreviate, drop middle names, translate, Anglicize, redact, mask, or "clean up" the name.
+- Do NOT reorder ("Last, First"). Output first-then-last order as one complete string.
+Downstream stages derive first_name, last_name, and monogram initials from this field, so any dropped or reformatted part propagates through the whole site.
+
 Output the JSON only. Do not add any commentary before or after it.`;
 
 // ─── Stage 2: JSON Validation Prompt ─────────────────────────────────────────
@@ -1511,6 +1520,13 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     name:              personal.name     || "",
     first_name:        (personal.name || "").split(" ")[0] || "",
     last_name:         (personal.name || "").split(" ").slice(1).join(" ") || "",
+    initials:          (() => {
+      const parts = String(personal.name || "").trim().split(/\s+/).filter(Boolean);
+      if (!parts.length) return "";
+      const first = parts[0][0] || "";
+      const last  = parts.length > 1 ? (parts[parts.length - 1][0] || "") : "";
+      return (first + last).toUpperCase();
+    })(),
     headline:          pos.headline      || "",
     subheadline:       pos.subheadline   || "",
     value_proposition: pos.value_proposition || "",

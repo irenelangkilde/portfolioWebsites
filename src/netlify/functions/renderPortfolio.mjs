@@ -290,8 +290,13 @@ function constrainTextToWordCount(value, targetWords, { enforceShort = false } =
   return normalized.split(/\s+/).slice(0, targetWords).join(" ") + "...";
 }
 
+// Fields whose value is a proper noun (name, initials) — never truncate by word count.
+// Names must be shown intact even if longer than the annotator's target.
+const NAME_FIELDS = new Set(["name", "first_name", "last_name", "initials", "display_name"]);
+
 function constrainFieldText($el, value, preferredKey) {
   const text = valueToText(value, preferredKey);
+  if (NAME_FIELDS.has(preferredKey)) return text;
   return constrainTextToWordCount(text, dataWordCount($el), {
     enforceShort: shouldEnforceShortWordCount($el, preferredKey)
   });
@@ -1193,10 +1198,28 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
 
   // ── 6. Top-level src overrides ───────────────────────────────────────────────
   $("[data-attr-src]").each((_, el) => {
-    const key = $(el).attr("data-attr-src");
+    const $el = $(el);
+    const key = $el.attr("data-attr-src");
     const value = resolveFieldValue(d, key);
-    if (value) $(el).attr("src", String(value));
-    $(el).removeAttr("data-attr-src");
+    if (value) $el.attr("src", String(value));
+    // Whenever we swap an <img> src (typically a headshot), also refresh alt to the
+    // candidate's name unless the annotation already provided an explicit data-attr-alt
+    // override. This prevents the template's original subject name from surfacing when
+    // the image fails to load.
+    const tag = String(el.tagName || el.name || "").toLowerCase();
+    if (tag === "img" && !$el.attr("data-attr-alt")) {
+      const candidateName = resolveFieldValue(d, "name");
+      if (candidateName) $el.attr("alt", String(candidateName));
+    }
+    $el.removeAttr("data-attr-src");
+  });
+  // ── 6.1. Top-level alt overrides (explicit annotation, if present) ──────────
+  $("[data-attr-alt]").each((_, el) => {
+    const $el = $(el);
+    const key = $el.attr("data-attr-alt");
+    const value = resolveFieldValue(d, key);
+    if (value) $el.attr("alt", String(value));
+    $el.removeAttr("data-attr-alt");
   });
 
   // ── 6.5. Defensive layout guards ────────────────────────────────────────────
