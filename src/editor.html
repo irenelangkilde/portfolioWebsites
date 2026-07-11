@@ -6643,6 +6643,20 @@
 	    }
 
 	    function initializeColorWorkbenchFromHtml(html) {
+	      // While the editor is still showing the "Preparing website…" placeholder
+	      // (typical when the user picked text-mode colors and the AI hasn't returned
+	      // the generated palette yet), keep the vertical palette blank. Once the
+	      // real portfolio HTML arrives via postMessage/storage, loadIncomingPortfolioHtml
+	      // will re-init the workbench from the actual generated colors.
+	      if (isWaitingPlaceholderHtml(html)) {
+	        currentHtml = html;
+	        colorWorkbenchRows = [];
+	        renderColorWorkbenchPanel([]);
+	        loadIframe(currentHtml);
+	        setCodeContent(currentHtml);
+	        document.getElementById("colorPanel").classList.remove("hidden");
+	        return;
+	      }
 	      const prepared = ensureEditorColorPreprocessed(html);
 	      currentHtml = prepared.html;
 	      renderColorWorkbenchPanel(prepared.rows);

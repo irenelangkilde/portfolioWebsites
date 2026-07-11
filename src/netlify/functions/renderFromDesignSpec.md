@@ -17,6 +17,8 @@ Requirements:
 - Prioritize the resolved strategy JSON for what to emphasize, ordering, tone, and positioning.
 - Follow the design spec closely for composition, style, density, render mode, emoji/icon usage, and section alternation.
 - Use the provided color scheme as key colors. Feel free to add complementary shades, neutrals and utility colors as needed.
+- USER COLOR PREFERENCES: {{COLOR_PREFERENCES_GUIDANCE}}
+  When the block above contains guidance, treat it as the authoritative color direction from the user. Interpret their mood or hue words into the semantic CSS variables (--c-1 … --c-5) and any derived tokens. The color spec JSON above already reflects this interpretation, so honor those hex values exactly.
 - Declare the supplied colors as semantic CSS variables in `:root`:
   `--c-1`, `--c-2`, `--c-3`, `--c-4`, `--c-5`, and so forth.
 - Build the rest of the color system from those variables using reusable derived tokens for surfaces,

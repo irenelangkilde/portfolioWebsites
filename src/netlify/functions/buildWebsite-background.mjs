@@ -380,16 +380,15 @@ Rules:
 
 // True when the caller supplied only a text description and no swatches — the
 // signal for us to derive a palette from the text before rendering.
-function shouldDerivePaletteFromText(colorPreferences, colorSpec) {
+function shouldDerivePaletteFromText(colorPreferences, /* colorSpec unused */ _colorSpec) {
+  // `mode === "text"` is the user's explicit choice on Page 4. Trust it — even if
+  // the theme inputs still hold hexes from a previously-loaded template palette,
+  // the user just told us to use their words. Deriving from text overrides those
+  // stale swatches. (If they wanted swatches, they'd have picked the swatches
+  // radio.)
   if (!colorPreferences || typeof colorPreferences !== "object") return false;
   if (colorPreferences.mode !== "text") return false;
-  if (!String(colorPreferences.text || "").trim()) return false;
-  const swatches = Array.isArray(colorPreferences.swatches) ? colorPreferences.swatches : [];
-  if (swatches.some(h => /^#[0-9a-fA-F]{6}$/.test(String(h || "").trim()))) return false;
-  const spec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
-  const anyHex = ["background", "foreground", "primary", "secondary", "accent"]
-    .some(role => /^#[0-9a-fA-F]{6}$/i.test(String(spec[role] || "").trim()));
-  return !anyHex;
+  return String(colorPreferences.text || "").trim().length > 0;
 }
 
 function formatColorPreferencesGuidance(prefs) {
@@ -2389,7 +2388,38 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       alternate_sections:  page1?.alternate_sections ?? true
     };
 
-    const directColorSpec = { ...theme, use_sample_colors: false };
+    // Design-options path — if the user described colors in words with no
+    // swatches, resolve the text to concrete hexes so `directColorSpec` carries
+    // real values instead of nulls (which the LLM sees as "you pick").
+    const directWillDerive = shouldDerivePaletteFromText(colorPreferences, theme);
+    console.log("[directDesign] palette-derivation gate:", {
+      willDerive: directWillDerive,
+      colorPreferencesMode: colorPreferences?.mode || null,
+      colorPreferencesTextLen: (colorPreferences?.text || "").length,
+      themeSummary: {
+        background: theme?.background || null,
+        foreground: theme?.foreground || null,
+        primary:    theme?.primary    || null,
+        secondary:  theme?.secondary  || null,
+        accent:     theme?.accent     || null,
+      }
+    });
+    let directDerivedTheme = null;
+    if (directWillDerive) {
+      await store.set(jobId, JSON.stringify({
+        status: "pending", stage: "Interpreting color description…"
+      }), { ttl: 3600 });
+      const callAIFn = (opts) => callAI(provider, creds, opts);
+      directDerivedTheme = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
+      if (directDerivedTheme) {
+        console.log("[directDesign] derived palette from color text:", directDerivedTheme);
+      } else {
+        console.warn("[directDesign] derivation returned null — text was:", (colorPreferences?.text || "").slice(0, 120));
+      }
+    }
+    const directColorSpec = directDerivedTheme
+      ? { ...theme, ...directDerivedTheme, use_sample_colors: false }
+      : { ...theme, use_sample_colors: false };
 
     const directPrompt = loadPromptFile("renderFromDesignSpec.md")
       .replace(/\{\{MAJOR\}\}/g, page1?.major || "")
@@ -2398,6 +2428,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace(/\{\{RESOLVED_STRATEGY_JSON\}\}/g, JSON.stringify(aiStrategy, null, 2))
       .replace(/\{\{DESIGN_SPEC_JSON\}\}/g, JSON.stringify(directDesignSpec, null, 2))
       .replace(/\{\{COLOR_SPEC_JSON\}\}/g, JSON.stringify(directColorSpec, null, 2))
+      .replace(/\{\{COLOR_PREFERENCES_GUIDANCE\}\}/g, formatColorPreferencesGuidance(colorPreferences))
       .replace(/\{\{HEADSHOT\}\}/g, headshotHint)
       .replace(/\{\{YEAR\}\}/g, new Date().getFullYear().toString());
 
@@ -2448,9 +2479,45 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     status: "pending", stage: "Assembling visual direction (3/4)…"
   }), { ttl: 3600 });
 
-  const colorSpec = page2?.use_sample_colors
+  // If the user described colors in words with no swatches, resolve the text to
+  // concrete hexes here. Otherwise buildVisualDirection() below emits literal
+  // role labels ("primary — main CTA...") that outrun the text guidance the AI
+  // sees later, so the description effectively gets ignored.
+  const willDerive = shouldDerivePaletteFromText(colorPreferences, theme);
+  console.log("[fullPipeline] palette-derivation gate:", {
+    willDerive,
+    colorPreferencesMode: colorPreferences?.mode || null,
+    colorPreferencesTextLen: (colorPreferences?.text || "").length,
+    colorPreferencesSwatches: Array.isArray(colorPreferences?.swatches) ? colorPreferences.swatches : null,
+    themeSummary: {
+      background: theme?.background || null,
+      foreground: theme?.foreground || null,
+      primary:    theme?.primary    || null,
+      secondary:  theme?.secondary  || null,
+      accent:     theme?.accent     || null,
+    }
+  });
+  let derivedThemeFromText = null;
+  if (willDerive) {
+    await store.set(jobId, JSON.stringify({
+      status: "pending", stage: "Interpreting color description…"
+    }), { ttl: 3600 });
+    const callAIFn = (opts) => callAI(provider, creds, opts);
+    derivedThemeFromText = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
+    if (derivedThemeFromText) {
+      console.log("[fullPipeline] derived palette from color text:", derivedThemeFromText);
+    } else {
+      console.warn("[fullPipeline] derivation returned null — text was:", (colorPreferences?.text || "").slice(0, 120));
+    }
+  }
+
+  const effectiveTheme = derivedThemeFromText
+    ? { ...theme, ...derivedThemeFromText, use_sample_colors: false }
+    : theme;
+
+  const colorSpec = page2?.use_sample_colors && !derivedThemeFromText
     ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
-    : normalizeColorSpec({ ...theme, use_sample_colors: false });
+    : normalizeColorSpec({ ...effectiveTheme, use_sample_colors: false });
 
   // Enrich user-supplied artifacts with source and colorized fields.
   const COLORIZABLE_TYPES = new Set(["image", "html", "text"]);
