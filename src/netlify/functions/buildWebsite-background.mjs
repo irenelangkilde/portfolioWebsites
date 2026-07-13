@@ -176,7 +176,7 @@ function normalizeFunctionResponse(result) {
   return result;
 }
 
-async function writeFatalJobError(event, message) {
+async function writeFatalJobError(event, message, extras = {}) {
   let jobId = "";
   try {
     jobId = JSON.parse(event?.body || "{}")?.jobId || "";
@@ -184,7 +184,11 @@ async function writeFatalJobError(event, message) {
   if (!jobId) return;
   try {
     const { store } = getPreviewResultsStore();
-    await store?.set(jobId, JSON.stringify({ status: "error", error: message }), { ttl: 3600 });
+    await store?.set(jobId, JSON.stringify({
+      status: "error",
+      error: message,
+      ...extras
+    }), { ttl: 3600 });
   } catch (storeErr) {
     console.error("[buildWebsite-background] Could not write fatal job error:", storeErr?.message || storeErr);
   }
@@ -2864,10 +2868,23 @@ export async function handler(event) {
   try {
     return normalizeFunctionResponse(await handleBuildWebsiteBackground(event));
   } catch (err) {
-    const msg = explainBlobStoreError(err);
-    console.error("[buildWebsite-background] top-level fatal:", msg, err?.stack);
-    await writeFatalJobError(event, msg);
-    return { statusCode: 202, body: JSON.stringify({ error: msg }) };
+    // Netlify's background-functions beta doesn't retain function log history,
+    // so a crash otherwise surfaces to the client as an opaque
+    // "Internal Error. ID: …" banner. Persist the raw error + stack into the
+    // preview-results blob so the client's poller can display something usable.
+    const rawMsg = err?.message || String(err);
+    const stack  = err?.stack || "";
+    const blobMsg = explainBlobStoreError(err);
+    // Use the Blobs-friendly message when it's a Blobs error, otherwise the raw
+    // error message so we don't get an unrelated "Netlify Blobs" wrapper text.
+    const isBlobErr = blobMsg && /netlify blobs/i.test(blobMsg);
+    const surfaced = isBlobErr ? blobMsg : rawMsg;
+    console.error("[buildWebsite-background] top-level fatal:", surfaced, stack);
+    await writeFatalJobError(event, surfaced, {
+      error_detail: rawMsg,
+      error_stack: stack.slice(0, 4000)
+    });
+    return { statusCode: 202, body: JSON.stringify({ error: surfaced }) };
   }
 }
 
