@@ -3638,6 +3638,14 @@
       }
       if (waiting) {
         showTriviaOverlay();
+        // Transitioning back to a "Preparing website…" state (typically when the
+        // user kicks off a new generation from Page 4). Blank the vertical
+        // workbench so leftover swatches from the previous generation don't
+        // linger while the new palette is being derived.
+        colorWorkbenchRows = [];
+        try { renderColorWorkbenchPanel([]); } catch (err) {
+          console.warn("workbench clear during waiting failed:", err);
+        }
       } else {
         stopPreviewCachePoll();
         try { hideTriviaOverlay(); } catch {}
@@ -5496,7 +5504,14 @@
 	      showTickerMessage(`${palette.name || "Suggested palette"} applied.`, "ok");
 	    }
 
-	    btnWorkbenchPalettePanel?.addEventListener("click", openPalettePanel);
+	    btnWorkbenchPalettePanel?.addEventListener("click", () => {
+	      // Toggle: if the modal is already open, treat the button as a close.
+	      if (paletteSlidePanel?.classList.contains("open")) {
+	        closePalettePanel();
+	      } else {
+	        openPalettePanel();
+	      }
+	    });
 	    btnPaletteRegenerate?.addEventListener("click", openPaletteRegenerateModal);
 	    pspCloseBtn?.addEventListener("click", closePalettePanel);
 	    pspAddSlot?.addEventListener("click", () => {
@@ -7618,18 +7633,46 @@
 
     // ── Build final HTML ───────────────────────────────────────────────────────
     async function downloadPortfolioAsZip(html, zipName = "portfolio") {
-      const urlPattern = /\/\.netlify\/functions\/getPreviewImage\?key=[^"') \n]+/g;
+      // Match both the masthead/preview image endpoint and the scene-based hero
+      // image endpoint. Each returns a different MIME type, so we detect the
+      // extension per-image at fetch time rather than hard-coding it.
+      const urlPattern = /\/\.netlify\/functions\/get(?:Preview|Scene)Image\?key=[^"') \n]+/g;
       const imageUrls = [...new Set(html.match(urlPattern) || [])];
 
+      // Fetches an image and returns { bytes, filename } where filename has the
+      // right extension based on the response's content-type.
+      async function fetchImage(url, indexHint = 0) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) return null;
+          const contentType = (res.headers.get("content-type") || "").toLowerCase();
+          const ext = /jpeg|jpg/.test(contentType) ? "jpg"
+                    : /png/.test(contentType)      ? "png"
+                    : /webp/.test(contentType)     ? "webp"
+                    : "img";
+          const isScene = /getSceneImage/.test(url);
+          const base = isScene ? "hero-scene" : "hero";
+          const suffix = indexHint > 0 ? `-${indexHint + 1}` : "";
+          return {
+            bytes: await res.arrayBuffer(),
+            filename: `${base}${suffix}.${ext}`,
+            url
+          };
+        } catch {
+          return null;
+        }
+      }
+
       if (!imageUrls.length || typeof JSZip === "undefined") {
-        if (imageUrls.length) {
+        // Standalone-HTML fallback: inline every referenced image as a data URI
+        // so the downloaded file works offline.
+        for (const url of imageUrls) {
           try {
-            const res = await fetch(imageUrls[0]);
-            if (res.ok) {
-              const blob = await res.blob();
-              const dataUri = await new Promise(r => { const fr = new FileReader(); fr.onloadend = () => r(fr.result); fr.readAsDataURL(blob); });
-              html = html.replaceAll(imageUrls[0], dataUri);
-            }
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const blob = await res.blob();
+            const dataUri = await new Promise(r => { const fr = new FileReader(); fr.onloadend = () => r(fr.result); fr.readAsDataURL(blob); });
+            html = html.replaceAll(url, dataUri);
           } catch {}
         }
         const a = document.createElement("a");
@@ -7640,21 +7683,19 @@
         return;
       }
 
-      let imgBytes = null;
-      try {
-        const res = await fetch(imageUrls[0]);
-        if (res.ok) imgBytes = await res.arrayBuffer();
-      } catch {}
-
-      const heroFilename = "hero.png";
+      // Zip path: pull every referenced image into its own file, rewrite the
+      // HTML to point at the local relative path.
+      const fetched = (await Promise.all(imageUrls.map((url, i) => fetchImage(url, i)))).filter(Boolean);
       let indexHtml = html;
-      for (const url of imageUrls) {
-        indexHtml = indexHtml.replaceAll(url, `./${heroFilename}`);
+      for (const item of fetched) {
+        indexHtml = indexHtml.replaceAll(item.url, `./${item.filename}`);
       }
 
       const zip = new JSZip();
       zip.file("index.html", indexHtml);
-      if (imgBytes) zip.file(heroFilename, imgBytes);
+      for (const item of fetched) {
+        zip.file(item.filename, item.bytes);
+      }
 
       const zipBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
       const a = document.createElement("a");
@@ -8345,6 +8386,40 @@
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
       loadIncomingPortfolioHtml(e.data.html, { allowPlaceholder: true });
+    });
+
+    // The intake form sends a provisional_palette message as soon as the backend
+    // has derived the palette from the user's text description (before the full
+    // HTML render finishes). Populate the vertical workbench with those five
+    // hexes so the user sees color feedback right away instead of a blank rail.
+    // The real HTML (with the full palette) arrives later via portfolio_html and
+    // will re-init the workbench from the actual generated colors.
+    window.addEventListener("message", e => {
+      if (e.data?.type !== "provisional_palette" || !e.data.palette) return;
+      const p = e.data.palette;
+      const hexes = [p.primary, p.secondary, p.accent, p.foreground, p.background]
+        .map(h => String(h || "").trim())
+        .filter(h => /^#[0-9a-f]{6}$/i.test(h));
+      if (!hexes.length) return;
+      // Build minimal workbench rows — one primary per hex, no dependents. This
+      // reuses renderColorWorkbenchPanel's row schema so styling matches the
+      // eventual real palette.
+      const rows = hexes.map((hex, idx) => ({
+        id: `provisional-${idx + 1}`,
+        ordinal: String(idx + 1),
+        hex,
+        count: 0,
+        chroma: 0,
+        score: 0,
+        deps: [],
+        substituteFromPalette: false,
+        preserveHex: false,
+      }));
+      try {
+        renderColorWorkbenchPanel(rows);
+      } catch (err) {
+        console.warn("provisional_palette render failed:", err);
+      }
     });
     try {
       window.opener?.postMessage({ type: "portfolio_editor_ready" }, location.origin);

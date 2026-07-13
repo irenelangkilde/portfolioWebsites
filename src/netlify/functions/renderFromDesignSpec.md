@@ -19,6 +19,8 @@ Requirements:
 - Use the provided color scheme as key colors. Feel free to add complementary shades, neutrals and utility colors as needed.
 - USER COLOR PREFERENCES: {{COLOR_PREFERENCES_GUIDANCE}}
   When the block above contains guidance, treat it as the authoritative color direction from the user. Interpret their mood or hue words into the semantic CSS variables (--c-1 … --c-5) and any derived tokens. The color spec JSON above already reflects this interpretation, so honor those hex values exactly.
+- HERO IMAGE: {{SCENE_HERO_IMAGE_INSTRUCTION}}
+- Regardless of composition, ALWAYS declare `--hero-bg-image: none;` in `:root` and use `background-image: var(--hero-bg-image)` on the hero section, layered over the color gradient (e.g. `background: linear-gradient(...), var(--hero-bg-image) center/cover no-repeat`). A separate AI image call may or may not supply an image; when it does, we override the `--hero-bg-image` variable client-side. When it doesn't, `none` renders as a no-op and the gradient shows alone.
 - Declare the supplied colors as semantic CSS variables in `:root`:
   `--c-1`, `--c-2`, `--c-3`, `--c-4`, `--c-5`, and so forth.
 - Build the rest of the color system from those variables using reusable derived tokens for surfaces,

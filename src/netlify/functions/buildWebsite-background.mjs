@@ -1,4 +1,5 @@
 import OpenAI, { toFile } from "openai";
+import sharp from "sharp";
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -651,6 +652,49 @@ function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
   );
 }
 
+// Downscale a PNG data URI (typically ~3 MB from gpt-image-1) to a JPEG at 85%
+// quality with a max width of 1600px. Returns the raw JPEG buffer. Cuts scene
+// hero images from ~3 MB to ~250–500 KB, which keeps the final HTML small
+// enough for both Netlify Blobs and browser localStorage caps.
+async function downscaleImageDataUri(dataUri) {
+  const match = String(dataUri || "").match(/^data:image\/[^;]+;base64,(.+)$/);
+  if (!match) return null;
+  const inputBuffer = Buffer.from(match[1], "base64");
+  const jpegBuffer = await sharp(inputBuffer)
+    .resize({ width: 1600, height: 1067, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer();
+  return jpegBuffer;
+}
+
+// Save a JPEG buffer to the preview-images blob store under a scene-specific
+// key and return the URL the browser will hit to fetch it. The getSceneImage
+// serving function reads by the same key and returns image/jpeg.
+async function persistSceneImageToBlobs(jobId, jpegBuffer) {
+  const { store, configError } = getPreviewImagesStore();
+  if (!store) throw new Error(`Preview images store unavailable: ${configError || "no store"}`);
+  const key = `scene:${jobId}`;
+  await store.set(key, jpegBuffer.toString("base64"), { ttl: 3600 });
+  return `/.netlify/functions/getSceneImage?key=${encodeURIComponent(key)}`;
+}
+
+// Prompt for the "scene-based" hero image on the Design-options path. Instead
+// of an abstract masthead wash, produce a scene environment that reads as
+// "someone in this major/specialization works here" — lab bench, engineering
+// workshop, field site, studio, etc. — with no visible people.
+function buildSceneHeroImagePrompt(page1 = {}, colorSpec = {}) {
+  const { major = "", specialization = "" } = page1;
+  const paletteGuide = serializePaletteForImagePrompt(colorSpec);
+  return (
+    `Generate a cinematic wide hero background image showing the working environment of a ${major}${specialization ? ` (${specialization})` : ""} professional. ` +
+    `Depict the setting itself — the lab bench, workshop, studio, field site, control room, drafting desk, or characteristic domain space — with the tools, instruments, apparatus, or subject matter of ${specialization || major} clearly visible and specific to that discipline. ` +
+    `Do NOT depict any people, human figures, faces, hands, silhouettes, or body parts. The scene is unpopulated — the environment is the subject. ` +
+    `Use the candidate's palette as guiding colors: ${paletteGuide}. ` +
+    `Compose it as a wide horizontal masthead image that remains readable behind headline text: strong midtone/dark values, no washed-out white background, no pastel haze, no fog or blank areas. ` +
+    `The image must contain absolutely no text, words, letters, numbers, watermarks, captions, labels, or any written characters.`
+  );
+}
+
 function buildEditorImagePrompt(page1 = {}, colorSpec = {}, imageContext = {}) {
   const { major = "", specialization = "" } = page1;
   const paletteGuide = serializePaletteForImagePrompt(colorSpec);
@@ -683,7 +727,7 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
     .split(/[\s,]+/)
     .map(s => s.trim())
     .filter(Boolean);
-  const imageModels = [...configuredModels, "gpt-image-1", "gpt-image-1-mini"]
+  const imageModels = [...configuredModels, "gpt-image-1", "gpt-image-1-mini", "dall-e-3"]
     .filter((model, idx, arr) => model && arr.indexOf(model) === idx);
   console.log(
     `[buildWebsite-background] ${stageLabel} API key candidates:`,
@@ -703,7 +747,7 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
   const maxAttempts = 1;
   for (let keyIndex = 0; keyIndex < keyCandidates.length; keyIndex += 1) {
     const [openaiKeySource, openaiKey] = keyCandidates[keyIndex];
-    const openaiImgClient = new OpenAI({ apiKey: openaiKey, timeout: imageRequestTimeoutMs, maxRetries: 0 });
+    console.log(`[buildWebsite-background] Using key from env var "${openaiKeySource}" (starts "${(openaiKey || "").slice(0, 12)}", ends "${(openaiKey || "").slice(-4)}", length ${(openaiKey || "").length})`);
     let tryNextKey = false;
     for (let modelIndex = 0; modelIndex < imageModels.length; modelIndex += 1) {
       const imageModel = imageModels[modelIndex];
@@ -713,20 +757,47 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
             `[buildWebsite-background] ${stageLabel} generation attempt ${attempt}/${maxAttempts} ` +
             `using ${openaiKeySource} and ${imageModel}`
           );
+          // Per-model request shape. gpt-image-1 supports wide sizes and returns
+          // base64 by default; dall-e-3 only accepts fixed sizes and needs an
+          // explicit response_format flag to get base64 instead of a URL.
+          const isDallE3 = /^dall-e-3$/i.test(imageModel);
+          const perModelSize = isDallE3
+            ? (size === "1536x1024" ? "1792x1024" : (size === "1024x1536" ? "1024x1792" : "1024x1024"))
+            : size;
+          const requestPayload = isDallE3
+            ? { model: imageModel, prompt, n: 1, size: perModelSize, response_format: "b64_json" }
+            : { model: imageModel, prompt, n: 1, size: perModelSize };
           console.log(
-            `[buildWebsite-background] Image request payload: ${JSON.stringify({
-              model: imageModel,
-              prompt,
-              n: 1,
-              size
-            })}`
+            `[buildWebsite-background] Image request payload: ${JSON.stringify(requestPayload)}`
           );
-          imgResp = await openaiImgClient.images.generate({
-            model: imageModel,
-            prompt,
-            n: 1,
-            size
-          }, { timeout: imageRequestTimeoutMs });
+          // Use raw fetch instead of the OpenAI SDK — Netlify's AI Gateway hooks
+          // the SDK client and swaps the Authorization header with a per-invocation
+          // JWT that routes the request through Netlify's servers, which fails when
+          // the real key has an IP allowlist. A direct fetch to api.openai.com
+          // bypasses the SDK-level interception entirely.
+          const controller = new AbortController();
+          const timer = setTimeout(() => controller.abort(), imageRequestTimeoutMs);
+          let httpResp;
+          try {
+            httpResp = await fetch("https://api.openai.com/v1/images/generations", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${openaiKey}`
+              },
+              body: JSON.stringify(requestPayload),
+              signal: controller.signal
+            });
+          } finally {
+            clearTimeout(timer);
+          }
+          if (!httpResp.ok) {
+            const errText = await httpResp.text().catch(() => "");
+            const err = new Error(`${httpResp.status} ${httpResp.statusText}${errText ? `: ${errText.slice(0, 300)}` : ""}`);
+            err.status = httpResp.status;
+            throw err;
+          }
+          imgResp = await httpResp.json();
           successfulModel = imageModel;
           lastImgErr = null;
           break;
@@ -750,7 +821,14 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
             throw new Error(`OpenAI authentication failed for image generation (401). Check ${openaiKeySource}; the key is missing, expired, revoked, or from the wrong project.`);
           }
           if (status === 403) {
-            throw new Error(`OpenAI image generation is not allowed for this key or project (403). Check access to ${imageModel} for ${openaiKeySource}.`);
+            // 403 usually means this key doesn't have access to THIS particular
+            // model (e.g. gpt-image-1 requires org verification). Try the next
+            // model instead of aborting — dall-e-3 is universally accessible.
+            if (modelIndex < imageModels.length - 1) {
+              console.warn(`[buildWebsite-background] ${imageModel} not allowed for ${openaiKeySource} (403); trying ${imageModels[modelIndex + 1]}`);
+              break;
+            }
+            throw new Error(`OpenAI image generation is not allowed for this key or project (403). Tried models: ${imageModels.join(", ")}. Check access for ${openaiKeySource}.`);
           }
           if (modelUnavailable && modelIndex < imageModels.length - 1) {
             console.warn(`[buildWebsite-background] ${imageModel} unavailable; trying ${imageModels[modelIndex + 1]}`);
@@ -2421,6 +2499,49 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       ? { ...theme, ...directDerivedTheme, use_sample_colors: false }
       : { ...theme, use_sample_colors: false };
 
+    // Publish the derived palette immediately so the client can populate the
+    // editor's vertical workbench while the HTML render is still in flight.
+    // The final "status: done" write below carries the full site_html.
+    if (directDerivedTheme) {
+      await store.set(jobId, JSON.stringify({
+        status: "pending",
+        stage: `Generating portfolio website (3/${totalStages})…`,
+        derived_palette: directDerivedTheme
+      }), { ttl: 3600 });
+    }
+
+    // Kick off scene-hero image generation in parallel with the HTML renderer
+    // when the user chose "scene-based" composition. The renderer prompt gets
+    // the URI so the AI can bake it into the hero background directly.
+    const wantsSceneHero = String(directDesignSpec?.composition || "").toLowerCase() === "scene-based";
+    console.log("[directDesign] scene-hero gate:", {
+      wantsSceneHero,
+      composition: directDesignSpec?.composition || "",
+      major: page1?.major || "",
+      specialization: page1?.specialization || ""
+    });
+    // Kick off the scene image call and return just its data URI (the function
+    // itself returns { dataUri, model }). Log entry + settlement explicitly so
+    // we can tell from logs whether the call fired, succeeded, or failed.
+    let sceneImagePromise;
+    if (wantsSceneHero) {
+      console.log("[directDesign] scene image request starting…");
+      sceneImagePromise = generateImageDataUri({
+        prompt: buildSceneHeroImagePrompt(page1, directColorSpec),
+        size: "1536x1024",
+        stageLabel: "Scene hero image"
+      }).then(result => {
+        const uri = result?.dataUri || "";
+        console.log(`[directDesign] scene image call resolved — model=${result?.model || "unknown"}, dataUri length=${uri.length}`);
+        return uri || null;
+      }).catch(err => {
+        console.warn("[directDesign] scene hero image failed:", err?.message || err);
+        return null;
+      });
+    } else {
+      sceneImagePromise = Promise.resolve(null);
+    }
+
     const directPrompt = loadPromptFile("renderFromDesignSpec.md")
       .replace(/\{\{MAJOR\}\}/g, page1?.major || "")
       .replace(/\{\{SPECIALIZATION\}\}/g, page1?.specialization || "")
@@ -2430,17 +2551,41 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace(/\{\{COLOR_SPEC_JSON\}\}/g, JSON.stringify(directColorSpec, null, 2))
       .replace(/\{\{COLOR_PREFERENCES_GUIDANCE\}\}/g, formatColorPreferencesGuidance(colorPreferences))
       .replace(/\{\{HEADSHOT\}\}/g, headshotHint)
+      .replace(/\{\{SCENE_HERO_IMAGE_INSTRUCTION\}\}/g, wantsSceneHero
+        ? `The user picked "scene-based" composition. A separate AI call is generating a hero background image in parallel. Your job is only to set up a CSS slot for it. Follow these rules EXACTLY:
+
+1. In :root declare BOTH of these:
+     --hero-bg-image: none;
+     --hero-overlay-gradient: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.15));
+
+2. On the hero section, use this composed background (the gradient stacks on top of the image so headline text stays readable). Example — adapt the selector to whatever class/element you use for the hero:
+     .hero {
+       background-image: var(--hero-overlay-gradient), var(--hero-bg-image);
+       background-size: cover, cover;
+       background-position: center, center;
+       background-repeat: no-repeat, no-repeat;
+       background-color: var(--c-1);
+     }
+
+3. Do NOT use the "background" shorthand on the hero, and do NOT inline any URL, data URI, or image reference yourself. The post-render step will override --hero-bg-image with the actual image URL. If you break rule 2 (e.g. write "background: linear-gradient(...);" alone), the image will not appear.`
+        : "No scene-based hero image is required for this composition. Keep --hero-bg-image: none in :root.")
       .replace(/\{\{YEAR\}\}/g, new Date().getFullYear().toString());
 
     const directSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Output exactly one complete HTML file starting with <!DOCTYPE html>. Do not output markdown, explanations, or commentary.";
-    const directResponse = await callAI(provider, creds, {
-      system: directSystem,
-      userText: directPrompt,
-      maxTokens: 32000
-    });
+    const [directResponse, sceneImageUri] = await Promise.all([
+      callAI(provider, creds, {
+        system: directSystem,
+        userText: directPrompt,
+        maxTokens: 32000
+      }),
+      sceneImagePromise
+    ]);
     tokenReport.push({ stage: "3 · Direct renderer", model: directResponse.model, ...directResponse.usage });
+    if (wantsSceneHero) {
+      console.log("[directDesign] scene image ready:", sceneImageUri ? `data URI (${sceneImageUri.length} chars)` : "null");
+    }
 
-    const siteHtml = cleanHtml(directResponse.text);
+    let siteHtml = cleanHtml(directResponse.text);
     if (!/<[a-z]/i.test(siteHtml)) {
       let reason;
       if (!directResponse.text?.trim()) {
@@ -2452,6 +2597,34 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       }
       await store.set(jobId, JSON.stringify({ status: "error", error: reason }), { ttl: 3600 });
       return;
+    }
+
+    // Downscale the PNG to JPEG, save it to Netlify Blobs, then inject a
+    // `--hero-bg-image` CSS override that references the blob URL. Keeps the
+    // returned HTML small (no 3 MB data URI inlined) and stays under blob +
+    // localStorage size limits.
+    if (wantsSceneHero && sceneImageUri) {
+      try {
+        const jpegBuffer = await downscaleImageDataUri(sceneImageUri);
+        if (!jpegBuffer) {
+          console.warn("[directDesign] scene image downscale returned null; skipping injection");
+        } else {
+          const kb = Math.round(jpegBuffer.length / 1024);
+          console.log(`[directDesign] scene image downscaled: PNG ${sceneImageUri.length} chars → JPEG ${kb} KB`);
+          const sceneImageUrl = await persistSceneImageToBlobs(jobId, jpegBuffer);
+          console.log(`[directDesign] scene image persisted to blob: ${sceneImageUrl}`);
+          const overrideStyle = `<style id="scene-hero-image-override">:root { --hero-bg-image: url("${sceneImageUrl}") !important; }</style>`;
+          const before = siteHtml.length;
+          if (/<\/head>/i.test(siteHtml)) {
+            siteHtml = siteHtml.replace(/<\/head>/i, `${overrideStyle}\n</head>`);
+          } else {
+            siteHtml = `${overrideStyle}\n${siteHtml}`;
+          }
+          console.log(`[directDesign] scene image URL injected via --hero-bg-image override: HTML ${before} → ${siteHtml.length} chars`);
+        }
+      } catch (err) {
+        console.warn("[directDesign] scene image persist/inject failed:", err?.message || err);
+      }
     }
 
     await store.set(jobId, JSON.stringify({

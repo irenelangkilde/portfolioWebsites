@@ -4984,6 +4984,10 @@ input[type="color"].split-color::-moz-color-swatch {
         const maxWaitMs = 720000;
         const pollIntervalMs = 4000;
 
+        // Track whether we've forwarded the intermediate derived_palette to the
+        // editor yet. Only send it once — subsequent polls carry the same payload
+        // until "status: done" arrives with the finished HTML.
+        let forwardedDerivedPalette = false;
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, pollIntervalMs));
           if (myRunId !== _generationRunId) {
@@ -4995,6 +4999,18 @@ input[type="color"].split-color::-moz-color-swatch {
           const pollRes = await fetch(`/.netlify/functions/getPreviewResult?jobId=${jobId}`);
           const parsed = await readJsonResponseSafely(pollRes);
           const data = parsed.data ?? { poll_status: pollRes.status, raw_body: parsed.text };
+          // As soon as the backend publishes the derived palette (before HTML
+          // is finished), push it to the editor so the vertical workbench fills
+          // in early instead of staying blank until "done".
+          if (!forwardedDerivedPalette && data?.derived_palette) {
+            forwardedDerivedPalette = true;
+            const editorWin = window.__portfolioEditorWindow;
+            if (editorWin && !editorWin.closed) {
+              try {
+                editorWin.postMessage({ type: "provisional_palette", palette: data.derived_palette }, location.origin);
+              } catch {}
+            }
+          }
           const stageMsg = data.stage
             ? `${data.stage} (${remaining}s)`
             : `Generating portfolio… ${remaining}s`;
@@ -6211,12 +6227,18 @@ input[type="color"].split-color::-moz-color-swatch {
       // Resubmit colors every time.
       cachePage4Colors(getPage3Colors().theme);
       cacheImageGenerationContext({ page1: getPage1(), colorSpec: getPage3Colors().theme });
+      const editorLoadingMessage = forceRegenerateKind
+        ? `Regenerating portfolio from ${(EDITOR_REVISION_LABELS[forceRegenerateKind] || "revised inputs").toLowerCase()}…`
+        : "Preparing website…";
       ensureEditorWindow({
         refresh: !!forceRegenerateKind || !generationResult,
-        message: forceRegenerateKind
-          ? `Regenerating portfolio from ${(EDITOR_REVISION_LABELS[forceRegenerateKind] || "revised inputs").toLowerCase()}…`
-          : "Preparing website…"
+        message: editorLoadingMessage
       });
+      // Push the "Preparing website…" placeholder to the editor even when we
+      // didn't force a page reload — this triggers the editor's waiting branch,
+      // which now clears the vertical workbench so leftover swatches from the
+      // previous generation don't linger while the new palette is being derived.
+      pushPreviewHtmlUpdate(editorLoadingHtml(editorLoadingMessage));
       window.umami?.track("form-step-complete", { step: 4 });
 
       // Wait for extraction to settle so we route to the resolved pipeline.
