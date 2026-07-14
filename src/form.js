@@ -1308,14 +1308,18 @@ ${pseudoSelectors} {
       }
     }
 
-    function editorLoadingHtml(message = "Preparing website…") {
-      const safeMessage = String(message || "Preparing website…").replace(/[&<>"']/g, ch => ({
+    function editorLoadingHtml(message = "Preparing website…\nWhy not sign in while you wait? (It's free!) Click in the top right corner.") {
+      const escaped = String(message || "Preparing website…").replace(/[&<>"']/g, ch => ({
         "&": "&amp;",
         "<": "&lt;",
         ">": "&gt;",
         '"': "&quot;",
         "'": "&#39;"
       }[ch]));
+      // Preserve newlines in the placeholder message so callers can drop in
+      // multi-line nudges (e.g. "Preparing website…\nWhy not sign in…") and
+      // have them render as separate lines.
+      const safeMessage = escaped.replace(/\n/g, "<br>");
       return `<!doctype html>
 <html lang="en">
 <head>
@@ -6274,26 +6278,35 @@ input[type="color"].split-color::-moz-color-swatch {
       if (isDirectDesignMode()) {
         tracePortfolioPipeline("page4:route-direct-design", {});
         page4Submitted = true;
-        setHeaderStatus("braidStatus", "Generating portfolio…", "rgba(141,224,255,.75)");
+        // Design-options uses `generatingWebsiteStatus` (with a countdown) from
+        // doGenerateWebsite() below. Don't also write to `braidStatus` — that
+        // element belongs to the braid pipeline and would duplicate the
+        // "Generating portfolio…" line on Page 4 without a countdown.
+        setHeaderStatus("braidStatus", "");
         if (!autoMastheadImageTriggered && currentTemplateNeedsMastheadImage()) {
           autoMastheadImageTriggered = true;
           startMastheadImageGeneration();
         } else {
           autoMastheadImageTriggered = true;
         }
-        await doGenerateWebsite(colorPreferences);
-        setHeaderStatus("braidStatus", "");
-        if (!generationResult) {
-          setOpenEditorReady(true);
-          return false;
-        }
-        while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
-        try {
-          await doPreview();
-        } catch (err) {
-          setHeaderStatus("editorAutoOpenStatus", `⚠ Could not display generated website: ${err?.message || err}`, "rgba(251,171,156,.9)");
-          return false;
-        }
+        // Fire-and-forget so the intake form returns immediately and the user
+        // naturally moves to the editor window (which is already open with the
+        // "Preparing website…" placeholder + trivia overlay). Matches slot-fill's
+        // pattern — the caller doesn't await; completion handling happens inside
+        // the async chain below.
+        (async () => {
+          await doGenerateWebsite(colorPreferences);
+          setHeaderStatus("braidStatus", "");
+          if (!generationResult) return;
+          while (mastheadImageInProgress) { await new Promise(r => setTimeout(r, 500)); }
+          // Push the finished HTML to the editor and swap the placeholder out.
+          pushPreviewHtmlUpdate(generationResult.site_html || "", { fresh: true });
+          try {
+            await doPreview();
+          } catch (err) {
+            setHeaderStatus("editorAutoOpenStatus", `⚠ Could not display generated website: ${err?.message || err}`, "rgba(251,171,156,.9)");
+          }
+        })();
         setOpenEditorReady(true);
         return true;
       }

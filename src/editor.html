@@ -3240,8 +3240,65 @@
         .replace(/\n{3,}/g, "\n\n")
         .trim();
     }
+    function ensureDesignModeOn(context = "unknown") {
+      // Retry a few times because setting srcdoc doesn't produce a writable
+      // contentDocument instantly; the iframe first navigates to about:blank,
+      // then the new document appears. If the AI-generated site includes any
+      // script that resets designMode after load, this catches that too.
+      let attempts = 0;
+      const maxAttempts = 8;
+      const attempt = () => {
+        attempts += 1;
+        try {
+          const doc = frame.contentDocument;
+          if (!doc) throw new Error("no contentDocument");
+          if (doc.readyState === "loading") throw new Error(`readyState=${doc.readyState}`);
+          if (doc.designMode !== "on") doc.designMode = "on";
+          if (doc.designMode !== "on") throw new Error("designMode did not stick");
+        } catch (err) {
+          if (attempts < maxAttempts) {
+            setTimeout(attempt, 120 * attempts);
+          } else {
+            console.warn(`[editor] designMode enable failed (${context}) after ${attempts} tries:`, err?.message || err);
+          }
+        }
+      };
+      attempt();
+    }
+
+    // Editor-owned <script> ids we must never strip (workbench state, palette).
+    const EDITOR_OWNED_SCRIPT_IDS = new Set([
+      EDITOR_COLOR_STATE_ID,
+      "color-palette",
+      "fp-user-clusters",
+    ]);
+
+    // Strip AI-generated inline scripts from the HTML we hand to the iframe.
+    // Portfolio scripts (smooth-scroll nav, menu toggles, etc.) hijack clicks
+    // and interfere with designMode. Removing them is safe because the editor
+    // is only for editing — the original scripts survive in the source view
+    // and downloaded file (see buildHtmlString / stripEditorBaseTag paths,
+    // which read from currentHtml, not from the iframe DOM).
+    function stripPortfolioInlineScripts(html) {
+      return String(html || "").replace(
+        /<script\b([^>]*)>([\s\S]*?)<\/script>/gi,
+        (match, attrs) => {
+          const idMatch = attrs.match(/\bid\s*=\s*["']([^"']+)["']/i);
+          if (idMatch && EDITOR_OWNED_SCRIPT_IDS.has(idMatch[1])) return match;
+          // External src scripts are also safe to drop for the same reason,
+          // but preserve anything that identifies as JSON data.
+          if (/type\s*=\s*["']application\/json["']/i.test(attrs)) return match;
+          return "";
+        }
+      );
+    }
+
     function loadIframe(html) {
-      const srcdoc = injectEditorBaseTag(html, currentDocumentBaseHref);
+      // Strip AI-generated inline scripts BEFORE injecting the base tag so we
+      // don't have to worry about ordering. currentHtml (the source of truth
+      // for saves) is unchanged — only the copy going into srcdoc is neutered.
+      const editableHtml = stripPortfolioInlineScripts(html);
+      const srcdoc = injectEditorBaseTag(editableHtml, currentDocumentBaseHref);
       const canonicalHtml = canonicalHtmlForIframeDedupe(html);
       const entry = {
         at: new Date().toISOString(),
@@ -3256,6 +3313,10 @@
       lastIframeSrcdoc = srcdoc;
       lastIframeCanonicalHtml = canonicalHtml;
       frame.srcdoc = srcdoc;
+      // Proactively enable designMode after the srcdoc change. The frame's
+      // "load" event handler also does this, but it swallows errors silently
+      // and can miss timing on some browsers.
+      ensureDesignModeOn("loadIframe");
       return true;
     }
 
@@ -3267,7 +3328,6 @@
       { question: "How many distinct colors can the average human eye distinguish?", answer: "Roughly 10 million." },
       { fact: "Around 8% of men and 0.5% of women have some form of color blindness — usually red-green deficiency." },
       { question: "Why do most banks pick blue logos?", answer: "Blue is the color most associated with trust, stability, and security." },
-      { fact: "Personal portfolios with even a short intro video typically get 3× more inbound contacts than text-only sites." },
       { question: "What was the world's most expensive blue pigment?", answer: "Ultramarine — made from ground lapis lazuli, once worth more than gold." },
       { fact: "Studies show portfolio sites with a clear value proposition above the fold get up to 80% longer engagement." },
       { question: "Why are warning signs typically yellow or orange?", answer: "These hues activate the brain's alertness centers fastest of any color." },
@@ -3362,27 +3422,16 @@
     }
 
     function advanceWaitingOverlay() {
-      // Step through the sequence and start trivia once the earlier cards are done.
-      if (!_signinNudgeSkipped) {
-        // Re-check sign-in status — user may have just signed in.
-        isUserSignedIn().then(signedIn => {
-          if (signedIn) _signinNudgeSkipped = true;
-          if (!_signinNudgeSkipped) {
-            showOverlayCard("signinNudgeCard");
-            return;
-          }
-          continueAfterSignin();
-        });
-        return;
-      }
-      continueAfterSignin();
+      // Sign-in gating is now handled in showTriviaOverlay before this fires,
+      // so by the time we're here the user is either signed in or has chosen
+      // to skip. Just start trivia.
+      startTrivia();
     }
 
     function continueAfterSignin() {
-      if (!hasSeenIntroVideo()) {
-        showOverlayCard("firstTimeVideoCard");
-        return;
-      }
+      // Skip the "Welcome to the editor: Quick tour" card while the tour video
+      // is not yet produced (the card just shows a "Video coming soon"
+      // placeholder). Go straight to trivia.
       startTrivia();
     }
 
@@ -3405,8 +3454,47 @@
       if (_triviaDismissedBySession) return;
       const overlay = document.getElementById("triviaOverlay");
       if (!overlay) return;
+      // If the user isn't signed in yet, gate the trivia overlay behind the
+      // sign-in modal so the modal appears on top of the editor screen rather
+      // than on top of the trivia-overlay's dark backdrop. Trivia starts once
+      // the modal is closed or the user signs in.
+      if (!_signinNudgeSkipped && !_authGateAwaiting) {
+        isUserSignedIn().then(signedIn => {
+          if (signedIn) {
+            _signinNudgeSkipped = true;
+            overlay.classList.remove("hidden");
+            advanceWaitingOverlay();
+            return;
+          }
+          _authGateAwaiting = true;
+          try { openAuthModal && openAuthModal(); } catch {}
+          // When the modal closes (either by cancel/close button OR by
+          // successful sign-in), release the gate and reveal trivia.
+          waitForAuthModalToClose(() => {
+            _authGateAwaiting = false;
+            _signinNudgeSkipped = true;
+            if (_triviaDismissedBySession) return;
+            overlay.classList.remove("hidden");
+            advanceWaitingOverlay();
+          });
+        });
+        return;
+      }
       overlay.classList.remove("hidden");
       advanceWaitingOverlay();
+    }
+
+    let _authGateAwaiting = false;
+    function waitForAuthModalToClose(cb) {
+      const modal = document.getElementById("authModalOverlay");
+      if (!modal) { cb(); return; }
+      const observer = new MutationObserver(() => {
+        if (!modal.classList.contains("open")) {
+          observer.disconnect();
+          cb();
+        }
+      });
+      observer.observe(modal, { attributes: true, attributeFilter: ["class"] });
     }
 
     function hideTriviaOverlay() {
@@ -3706,11 +3794,9 @@
     });
 
 	    frame.addEventListener("load", () => {
-	      try {
-	        if (frame.contentDocument) frame.contentDocument.designMode = "on";
-	        applyColorOverrides();
-	        applyColorWorkbenchToFrame();
-	      } catch {}
+	      ensureDesignModeOn("iframe-load-event");
+	      try { applyColorOverrides(); } catch (err) { console.warn("applyColorOverrides failed:", err); }
+	      try { applyColorWorkbenchToFrame(); } catch (err) { console.warn("applyColorWorkbenchToFrame failed:", err); }
 	    });
 
     function applyColorOverrides() {
@@ -8823,7 +8909,11 @@
         });
       }
     }
-    requireAuthGate();
+    // Previously: requireAuthGate() ran unconditionally at load, showing a
+    // full-screen gate that hid the entire editor behind the auth modal. That
+    // gate is now opt-in — the trivia overlay's showTriviaOverlay() calls
+    // openAuthModal() instead, which opens the modal on top of the actual
+    // editor UI (with a visible Cancel button) rather than a blank backdrop.
 
     // ── Upgrade modal ─────────────────────────────────────────────────────────
     function openUpgradeModal(message) {

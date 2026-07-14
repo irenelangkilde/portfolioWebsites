@@ -1836,12 +1836,32 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
       : [{ type: "text", text: userText }];
     const reqBody = { model: claudeModel, max_tokens: maxTokens, messages: [{ role: "user", content: userContent }] };
     if (system) reqBody.system = system;
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": creds.claudeKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify(reqBody),
-      signal: AbortSignal.timeout(600000) // 10 minutes max per AI call
-    });
+    // Retry transient network-level failures (undici's "fetch failed" — no HTTP
+    // status: DNS blip, TLS reset, socket hang-up). HTTP errors from Anthropic
+    // (rate limits, invalid requests) still short-circuit as before.
+    const maxAttempts = 3;
+    let lastNetErr = null;
+    let res = null;
+    for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+      try {
+        res = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-api-key": creds.claudeKey, "anthropic-version": "2023-06-01" },
+          body: JSON.stringify(reqBody),
+          signal: AbortSignal.timeout(600000) // 10 minutes max per AI call
+        });
+        lastNetErr = null;
+        break;
+      } catch (err) {
+        lastNetErr = err;
+        const msg = err?.message || String(err);
+        const isNetErr = /fetch failed|network|econnreset|enotfound|eai_again|socket hang up/i.test(msg);
+        console.warn(`[callAI] Claude fetch attempt ${attempt}/${maxAttempts} failed: ${msg}`);
+        if (!isNetErr || attempt === maxAttempts) throw err;
+        await sleep(1000 * attempt); // 1s, 2s backoff between retries
+      }
+    }
+    if (!res) throw lastNetErr || new Error("Claude fetch failed after retries");
     const json = await res.json();
     if (!res.ok) throw new Error("Claude API error: " + (json.error?.message || JSON.stringify(json).slice(0, 200)));
     const text = (json.content || []).filter(b => b.type === "text").map(b => b.text).join("");
