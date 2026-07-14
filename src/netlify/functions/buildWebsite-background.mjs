@@ -751,7 +751,12 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
     .split(/[\s,]+/)
     .map(s => s.trim())
     .filter(Boolean);
-  const imageModels = [...configuredModels, "gpt-image-1", "gpt-image-1-mini", "dall-e-3"]
+  // Try gpt-image-2 first (newer, if available on the caller's project), then
+  // gpt-image-1 / mini, then dall-e-3 as a universally accessible fallback.
+  // If gpt-image-2 isn't recognized by the caller's account (404 "invalid
+  // model" or 403 "not allowed"), the existing per-model fallback logic below
+  // walks to the next entry.
+  const imageModels = [...configuredModels, "gpt-image-2", "gpt-image-1", "gpt-image-1-mini", "dall-e-3"]
     .filter((model, idx, arr) => model && arr.indexOf(model) === idx);
   console.log(
     `[buildWebsite-background] ${stageLabel} API key candidates:`,
