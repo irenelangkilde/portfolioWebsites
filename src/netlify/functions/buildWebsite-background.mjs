@@ -1,5 +1,7 @@
 import OpenAI, { toFile } from "openai";
-import sharp from "sharp";
+// sharp is loaded lazily (see loadSharp() below) so a native-binary load
+// failure on the deploy target doesn't crash the whole module at import time
+// and take out every generation, not just scene-based ones.
 import { readFileSync } from "fs";
 import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
@@ -656,6 +658,23 @@ function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
   );
 }
 
+// Lazy-load sharp on first use. If the native binary can't load on this
+// runtime (missing platform build, wrong Node version, etc.), throw a clear
+// error that surfaces via writeFatalJobError instead of blowing up the whole
+// module at import time.
+let _sharpModulePromise = null;
+async function loadSharp() {
+  if (!_sharpModulePromise) {
+    _sharpModulePromise = import("sharp").then(m => m.default || m).catch(err => {
+      _sharpModulePromise = null; // let the next call retry
+      const msg = `sharp module failed to load: ${err?.message || String(err)}`;
+      console.error("[buildWebsite-background]", msg);
+      throw new Error(msg);
+    });
+  }
+  return _sharpModulePromise;
+}
+
 // Downscale a PNG data URI (typically ~3 MB from gpt-image-1) to a JPEG at 85%
 // quality with a max width of 1600px. Returns the raw JPEG buffer. Cuts scene
 // hero images from ~3 MB to ~250–500 KB, which keeps the final HTML small
@@ -663,6 +682,7 @@ function buildMastheadImagePrompt(page1 = {}, colorSpec = {}) {
 async function downscaleImageDataUri(dataUri) {
   const match = String(dataUri || "").match(/^data:image\/[^;]+;base64,(.+)$/);
   if (!match) return null;
+  const sharp = await loadSharp();
   const inputBuffer = Buffer.from(match[1], "base64");
   const jpegBuffer = await sharp(inputBuffer)
     .resize({ width: 1600, height: 1067, fit: "inside", withoutEnlargement: true })
