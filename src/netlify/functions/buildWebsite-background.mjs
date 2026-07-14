@@ -2904,7 +2904,26 @@ async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
   }), { ttl: 3600 });
 }
 
+// Emitted at module-load time. If we see this in production logs, the module
+// itself loaded successfully — any subsequent failure is at handler runtime,
+// not at import.
+console.log("[buildWebsite-background] module loaded at", new Date().toISOString());
+
 export async function handler(event) {
+  console.log("[buildWebsite-background] HANDLER ENTRY");
+  // Write a heartbeat to the preview-results blob so the client's poll can
+  // surface something even if the handler crashes below.
+  try {
+    const jobId = (() => { try { return JSON.parse(event?.body || "{}")?.jobId || ""; } catch { return ""; } })();
+    if (jobId) {
+      try {
+        const { store } = getPreviewResultsStore();
+        await store?.set(jobId, JSON.stringify({ status: "pending", stage: "Handler entered — no crash yet" }), { ttl: 3600 });
+      } catch (heartbeatErr) {
+        console.error("[buildWebsite-background] heartbeat write failed:", heartbeatErr?.message || heartbeatErr);
+      }
+    }
+  } catch {}
   try {
     return normalizeFunctionResponse(await handleBuildWebsiteBackground(event));
   } catch (err) {
