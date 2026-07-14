@@ -5024,7 +5024,10 @@ input[type="color"].split-color::-moz-color-swatch {
         }
 
         const startTime = Date.now();
-        const maxWaitMs = 720000;
+        // Netlify background functions have a 15-minute hard cap, so wait right
+        // up to that ceiling. Long resumes (multi-page PDFs) can push Stage 1
+        // extraction alone past the previous 12-minute cap.
+        const maxWaitMs = 900000; // 15 min
         const pollIntervalMs = 4000;
 
         // Track whether we've forwarded the intermediate derived_palette to the
@@ -5076,7 +5079,7 @@ input[type="color"].split-color::-moz-color-swatch {
             throw new Error(data.error || "Generation failed.");
           }
         }
-        throw new Error("Generation timed out after 12 minutes.");
+        throw new Error("Generation timed out after 15 minutes.");
       } catch (e) {
         clearInterval(renderCountdown);
         generationError     = e.message;
