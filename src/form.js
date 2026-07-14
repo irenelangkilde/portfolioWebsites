@@ -4963,13 +4963,39 @@ input[type="color"].split-color::-moz-color-swatch {
       const headshotName = headshotInput?.files?.[0]?.name || "";
       const jobId = crypto.randomUUID();
 
+      // Netlify rejects background-function POSTs above ~150 KB with a platform
+      // 500 before the function runs. A base64 resume PDF is typically 100–250 KB,
+      // so upload it separately (small handler → blob store) and pass just a
+      // blob key in the main generation POST.
+      let resumePdfBlobKey = "";
+      try {
+        const upRes = await fetch("/.netlify/functions/uploadResumePdf", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ jobId, resumePdfBase64 })
+        });
+        if (upRes.ok) {
+          const upData = await upRes.json().catch(() => ({}));
+          if (upData?.key) resumePdfBlobKey = upData.key;
+        } else {
+          console.warn("[doGenerateWebsite] resume PDF upload failed with", upRes.status, "— falling back to inline base64");
+        }
+      } catch (upErr) {
+        console.warn("[doGenerateWebsite] resume PDF upload threw — falling back to inline base64:", upErr?.message || upErr);
+      }
+
       try {
         const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
             page1, page2, page3, artifactsData: [],
-            jobId, resumePdfBase64, headshotName,
+            jobId,
+            // Prefer the blob key over inline base64 to keep the POST body small.
+            // Fall back to inline base64 only if the upload step failed (the
+            // backend also accepts either).
+            ...(resumePdfBlobKey ? { resumePdfBlobKey } : { resumePdfBase64 }),
+            headshotName,
             resumeAnalysisJson:   lastAnalysisData || null,
             templateAnalysisJson: extractedTemplateCache?.embeddedJson || null,
             templateHtml:         extractedTemplateCache?.templateHtml || null,

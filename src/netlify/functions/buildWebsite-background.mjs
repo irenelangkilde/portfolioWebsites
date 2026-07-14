@@ -2987,7 +2987,7 @@ async function handleBuildWebsiteBackground(event) {
     await store.set(jobId, JSON.stringify({ status: "pending" }), { ttl: 3600 });
     logBuildStage("pending status written", { jobId });
 
-    const {
+    let {
       page1 = {}, page2 = {}, page3 = {},
       artifactsData = [],
       resumePdfBase64 = "", headshotName = "",
@@ -2996,8 +2996,25 @@ async function handleBuildWebsiteBackground(event) {
       strategyJson = null,    // pre-computed strategy from analyzeJob mode
       bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
       provider = "claude",    // "claude" (default) | "openai"
-      userId = null           // Supabase user UUID — sent by client when logged in
+      userId = null,          // Supabase user UUID — sent by client when logged in
+      resumePdfBlobKey = ""   // Blob key set by uploadResumePdf; loaded here so
+                              // the direct POST body stays under Netlify's
+                              // background-function payload ceiling (~150 KB).
     } = body;
+    if (!resumePdfBase64 && resumePdfBlobKey) {
+      try {
+        const { store } = getPreviewImagesStore();
+        const stored = await store?.get(resumePdfBlobKey);
+        if (stored) {
+          resumePdfBase64 = String(stored);
+          logBuildStage("resume pdf loaded from blob", { jobId, blobKey: resumePdfBlobKey, length: resumePdfBase64.length });
+        } else {
+          logBuildStage("resume pdf blob missing", { jobId, blobKey: resumePdfBlobKey });
+        }
+      } catch (blobErr) {
+        logBuildStage("resume pdf blob load failed", { jobId, blobKey: resumePdfBlobKey, error: blobErr?.message || String(blobErr) });
+      }
+    }
     logBuildStage("dispatching mode", { jobId, mode, provider });
 
     // ── Quota check (billable AI generation steps) ──
