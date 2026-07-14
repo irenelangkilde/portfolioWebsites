@@ -1306,6 +1306,7 @@
         <p class="open-hint">Folder mode rewrites image/CSS paths so assets load from the chosen directory.</p>
       </div>
     </div>
+    <button class="tbtn tbtn-ghost" id="btnRestart" title="Return to the intake form and start a fresh portfolio">Restart</button>
     <input type="file" id="openFileInput" accept=".html,text/html" style="display:none">
     <input type="file" id="openDirInput"  webkitdirectory style="display:none">
     <div id="viewToggle">
@@ -6770,6 +6771,30 @@
 
 	    // Initialize the right-side color workbench after the first document load.
 	    initializeColorWorkbenchFromHtml(currentHtml || fullHtml);
+
+	    // ── Restart button — return to the intake form for a fresh start ─────────
+    document.getElementById("btnRestart")?.addEventListener("click", () => {
+      const confirmed = window.confirm(
+        "Restart? This closes the editor and returns you to the intake form. Any unsaved edits to the current portfolio will be lost."
+      );
+      if (!confirmed) return;
+      // Clear the cached preview HTML so a stale portfolio doesn't reload the
+      // next time the editor opens.
+      try { localStorage.removeItem("portfolio_preview_html"); } catch {}
+      // If the intake form opened this window, focus it and close the editor.
+      // Otherwise, navigate this window to the overview page.
+      const opener = window.opener;
+      const overviewUrl = "/src/overview";
+      try {
+        if (opener && !opener.closed) {
+          try { opener.location.href = overviewUrl; } catch {}
+          try { opener.focus(); } catch {}
+          window.close();
+          return;
+        }
+      } catch {}
+      window.location.href = overviewUrl;
+    });
 
 	    // ── Open menu (HTML file / folder / URL) ─────────────────────────────────
     (function () {

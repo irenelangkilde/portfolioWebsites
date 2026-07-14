@@ -1686,8 +1686,21 @@ ${pseudoSelectors} {
         data?.resume_strategy?.website_copy_seed?.compatible_color_schemes,
         data?.color_strategy?.compatible_color_schemes
       ];
-      const found = candidates.find(arr => Array.isArray(arr) && arr.length);
-      return found || fallbackPalettes;
+      const ai = candidates.find(arr => Array.isArray(arr) && arr.length) || [];
+      // Show AI palettes first (they're tailored to the specific resume), then
+      // the rule-based fallbacks derived from the major/specialization keywords.
+      // The renderer dedupes by hex signature, so any accidental overlap is
+      // collapsed automatically. If the AI hasn't returned anything yet, the
+      // fallback set stands alone so the user always sees something.
+      const combined = [...ai, ...fallbackPalettes];
+      // Tag each palette with its origin so the renderer / labels can
+      // distinguish them if useful. Uses a fresh object per palette to avoid
+      // mutating the underlying analysis JSON in place.
+      const tagged = combined.map((p, idx) => ({
+        ...p,
+        _paletteSource: idx < ai.length ? "ai" : "rule"
+      }));
+      return tagged.length ? tagged : fallbackPalettes;
     }
 
     function hasUsablePaletteData(data) {
@@ -5789,19 +5802,29 @@ input[type="color"].split-color::-moz-color-swatch {
       if (!container || !rows) return;
       const inputPalette = getInputPaletteSuggestion();
 
-      // Following slots: up to 3 AI palettes from resume analysis
+      // Combined slots: AI palettes from resume analysis first, then rule-based
+      // fallback palettes derived from the major/specialization. The renderer
+      // dedupes by hex signature so identical suggestions across the two sets
+      // collapse automatically.
       const resolvedData = analysisData ?? lastAnalysisData;
       const aiPalettes = getCompatibleColorSchemes(resolvedData);
+      // Track counters so the labels reset per source (e.g. "AI palette 1/2"
+      // and "Suggested palette 1/2") rather than counting globally.
+      let aiCounter = 0;
+      let ruleCounter = 0;
       const aiRows = aiPalettes
         .filter(p => (Array.isArray(p.colors) && p.colors.length) || p.base_colors || p.background || p.foreground || p.primary || p.secondary || p.accent || p.tertiary)
-        .slice(0, 3)
-        .map((p, i) => {
+        .slice(0, 6)
+        .map(p => {
           // New format: semantic base colors
           // Legacy format: ordered slot array or named slot aliases
           const colors = Array.isArray(p.colors)
             ? mapAiPaletteToUiSlots(p.colors)
             : themeWithAliases(p.base_colors || p);
-          return { label: p.how_used || `AI palette ${i + 1}`, colors };
+          const isRule = p._paletteSource === "rule";
+          const idx = isRule ? ++ruleCounter : ++aiCounter;
+          const defaultLabel = isRule ? `Suggested palette ${idx}` : `AI palette ${idx}`;
+          return { label: p.how_used || defaultLabel, colors };
         });
 
       const dedupePalettes = list => {
@@ -5815,7 +5838,9 @@ input[type="color"].split-color::-moz-color-swatch {
         });
       };
 
-      const MAX = inputPalette ? 5 : 4;
+      // Bumped from 4/5 to 6/7 so both the AI-generated palettes and the
+      // rule-based fallback palettes fit side-by-side.
+      const MAX = inputPalette ? 7 : 6;
       const incoming = dedupePalettes([...(inputPalette ? [inputPalette] : []), ...aiRows]);
       let visible;
       if (paletteSuggestionsLocked && displayedSuggestedPalettes.length) {
