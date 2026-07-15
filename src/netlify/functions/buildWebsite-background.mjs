@@ -2569,10 +2569,12 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       major: page1?.major || "",
       specialization: page1?.specialization || ""
     });
-    // Kick off the scene image call and return just its data URI (the function
-    // itself returns { dataUri, model }). Log entry + settlement explicitly so
-    // we can tell from logs whether the call fired, succeeded, or failed.
+    // Kick off the scene image call and capture both the data URI AND the
+    // model name so we can surface the model to the client via the done blob
+    // (Netlify's background-function log history is unreliable, so writing to
+    // the poll result is the sturdy channel).
     let sceneImagePromise;
+    let sceneImageModel = null; // set inside the promise resolution below
     if (wantsSceneHero) {
       console.log("[directDesign] scene image request starting…");
       sceneImagePromise = generateImageDataUri({
@@ -2581,7 +2583,8 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
         stageLabel: "Scene hero image"
       }).then(result => {
         const uri = result?.dataUri || "";
-        console.log(`[directDesign] scene image call resolved — model=${result?.model || "unknown"}, dataUri length=${uri.length}`);
+        sceneImageModel = result?.model || null;
+        console.log(`[directDesign] scene image call resolved — model=${sceneImageModel || "unknown"}, dataUri length=${uri.length}`);
         return uri || null;
       }).catch(err => {
         console.warn("[directDesign] scene hero image failed:", err?.message || err);
@@ -2679,6 +2682,10 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     await store.set(jobId, JSON.stringify({
       status: "done",
       model: directResponse.model,
+      // Which image model actually ran (after the fallback chain settled).
+      // Null when scene-based composition wasn't requested or the image call
+      // failed entirely. Visible in DevTools Network → getPreviewResult response.
+      scene_image_model: sceneImageModel,
       site_html: siteHtml,
       resume_json: resumeJson,
       strategy_json: coreContent.strategy,

@@ -1513,168 +1513,98 @@ ${pseudoSelectors} {
       ].filter(Boolean).join(" ").toLowerCase();
 
       const fallbackPalettes = (() => {
+        // Design rule: within a set, at least background + primary differ across
+        // palettes so the choices feel meaningfully distinct — not "same navy,
+        // different accent." Include at least one light-background option per
+        // set where it fits, and vary warm vs cool by palette.
         if (!text) return [
           {
-            how_used: "Fallback professional palette with navy structure and bright accent.",
-            base_colors: {
-              background: "#0f172a",
-              foreground: "#f8fafc",
-              primary: "#2563eb",
-              secondary: "#94a3b8",
-              accent: "#22c55e"
-            }
+            how_used: "Dark professional — navy structure with emerald accent.",
+            base_colors: { background: "#0f172a", foreground: "#f8fafc", primary: "#2563eb", secondary: "#94a3b8", accent: "#22c55e" }
           },
           {
-            how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
-            base_colors: {
-              background: "#1f2937",
-              foreground: "#fff7ed",
-              primary: "#ea580c",
-              secondary: "#cbd5e1",
-              accent: "#f59e0b"
-            }
+            how_used: "Warm editorial — cream canvas, deep espresso ink, terracotta emphasis.",
+            base_colors: { background: "#fdf6ec", foreground: "#2b1f18", primary: "#b8410e", secondary: "#8a7862", accent: "#e6a545" }
           }
         ];
         if (/bio|chem|health|medical|nurs|clinic|pharma|environment|ecolog|lab|science/.test(text)) return [
           {
-            how_used: "Science-forward palette with deep slate, clinical blue, and laboratory green.",
-            base_colors: {
-              background: "#102a43",
-              foreground: "#f8fbff",
-              primary: "#2c7be5",
-              secondary: "#9fb3c8",
-              accent: "#2bb673"
-            }
+            how_used: "Clinical dark — deep slate canvas, medical-blue primary, lab-green accent.",
+            base_colors: { background: "#102a43", foreground: "#f8fbff", primary: "#2c7be5", secondary: "#9fb3c8", accent: "#2bb673" }
           },
           {
-            how_used: "Natural research palette with evergreen depth and mineral teal accents.",
-            base_colors: {
-              background: "#163a34",
-              foreground: "#f6fff8",
-              primary: "#1f8a70",
-              secondary: "#a7b8a5",
-              accent: "#8fd694"
-            }
+            how_used: "Field-research light — cream paper canvas, forest-green ink, mineral-teal primary.",
+            base_colors: { background: "#f6f4ee", foreground: "#1b3a30", primary: "#0e766e", secondary: "#8a9a8f", accent: "#c78538" }
+          },
+          {
+            how_used: "Molecular indigo — indigo depth, violet-purple primary, pale cyan detail.",
+            base_colors: { background: "#1e1b4b", foreground: "#eef2ff", primary: "#8b5cf6", secondary: "#a5b4c8", accent: "#67e8f9" }
           }
         ];
         if (/engineer|electrical|mechanical|computer|software|data|ai|robot|technical|hardware|systems|cyber/.test(text)) return [
           {
-            how_used: "Technical palette with navy canvas, electric blue interaction, and mint accent.",
-            base_colors: {
-              background: "#0b132b",
-              foreground: "#f5faff",
-              primary: "#3a86ff",
-              secondary: "#98a7c1",
-              accent: "#2ec4b6"
-            }
+            how_used: "Signal-lab dark — near-black canvas, electric-blue primary, mint accent.",
+            base_colors: { background: "#0b132b", foreground: "#f5faff", primary: "#3a86ff", secondary: "#98a7c1", accent: "#2ec4b6" }
           },
           {
-            how_used: "Hardware-inspired palette with graphite structure and signal-amber highlights.",
-            base_colors: {
-              background: "#1f2937",
-              foreground: "#f9fafb",
-              primary: "#2563eb",
-              secondary: "#94a3b8",
-              accent: "#f59e0b"
-            }
+            how_used: "Blueprint light — off-white canvas, engineering-graphite ink, blueprint-blue primary, safety-orange accent.",
+            base_colors: { background: "#f7f5f0", foreground: "#232b36", primary: "#1e4b8f", secondary: "#7d8798", accent: "#e07b1a" }
           },
           {
-            how_used: "Data-tech palette with deep indigo base and vivid cyan emphasis.",
-            base_colors: {
-              background: "#111827",
-              foreground: "#eef2ff",
-              primary: "#4f46e5",
-              secondary: "#9ca3af",
-              accent: "#06b6d4"
-            }
+            how_used: "Neon-terminal — deep purple-black canvas, magenta primary, cyan accent.",
+            base_colors: { background: "#1a0b2e", foreground: "#f0e8ff", primary: "#d946ef", secondary: "#8b7aa1", accent: "#06e2f0" }
           }
         ];
         if (/business|finance|account|econom|market|consult|admin|operations|sales/.test(text)) return [
           {
-            how_used: "Corporate palette with navy credibility and gold confidence cues.",
-            base_colors: {
-              background: "#14213d",
-              foreground: "#fffdf7",
-              primary: "#1d4ed8",
-              secondary: "#9ca3af",
-              accent: "#d4a017"
-            }
+            how_used: "Executive dark — navy structure, gold accent, restrained gray support.",
+            base_colors: { background: "#14213d", foreground: "#fffdf7", primary: "#1d4ed8", secondary: "#9ca3af", accent: "#d4a017" }
           },
           {
-            how_used: "Finance palette with charcoal structure and emerald growth accents.",
-            base_colors: {
-              background: "#1f2933",
-              foreground: "#f8fafc",
-              primary: "#0f766e",
-              secondary: "#a7b0bb",
-              accent: "#22c55e"
-            }
+            how_used: "Boardroom light — bone-white canvas, deep-emerald primary, burgundy accent.",
+            base_colors: { background: "#f8f5ee", foreground: "#1b2417", primary: "#0f5132", secondary: "#8a8578", accent: "#8b1a2b" }
+          },
+          {
+            how_used: "Fintech twilight — graphite canvas, teal primary, saffron accent.",
+            base_colors: { background: "#1f2933", foreground: "#f8fafc", primary: "#0f766e", secondary: "#a7b0bb", accent: "#f7b955" }
           }
         ];
         if (/design|art|media|film|architecture|creative|illustration|fashion/.test(text)) return [
           {
-            how_used: "Creative palette with rich plum foundation and vivid coral energy.",
-            base_colors: {
-              background: "#2d1e2f",
-              foreground: "#fff7fb",
-              primary: "#c026d3",
-              secondary: "#b8a3b9",
-              accent: "#fb7185"
-            }
+            how_used: "Studio noir — plum-black canvas, magenta primary, coral pop.",
+            base_colors: { background: "#2d1e2f", foreground: "#fff7fb", primary: "#c026d3", secondary: "#b8a3b9", accent: "#fb7185" }
           },
           {
-            how_used: "Editorial palette with warm charcoal, sand neutrals, and citrus pop.",
-            base_colors: {
-              background: "#2f2a24",
-              foreground: "#fffbeb",
-              primary: "#d97706",
-              secondary: "#b9afa1",
-              accent: "#facc15"
-            }
+            how_used: "Gallery light — bone-cream canvas, ink-black text, ultramarine primary, cadmium-red accent.",
+            base_colors: { background: "#f4efe6", foreground: "#181818", primary: "#1e40af", secondary: "#8a8378", accent: "#d63a2f" }
+          },
+          {
+            how_used: "Editorial spice — warm charcoal canvas, terracotta primary, citron accent.",
+            base_colors: { background: "#2f2a24", foreground: "#fffbeb", primary: "#c25a2b", secondary: "#b9afa1", accent: "#e2c744" }
           }
         ];
         if (/education|teaching|psych|social|history|english|policy|community|public/.test(text)) return [
           {
-            how_used: "Warm professional palette with indigo structure and approachable amber accents.",
-            base_colors: {
-              background: "#243b53",
-              foreground: "#fffdf7",
-              primary: "#4f46e5",
-              secondary: "#a8b2c1",
-              accent: "#f59e0b"
-            }
+            how_used: "Warm study dark — indigo depth, amber warmth, coral highlight.",
+            base_colors: { background: "#243b53", foreground: "#fffdf7", primary: "#4f46e5", secondary: "#a8b2c1", accent: "#f59e0b" }
           },
           {
-            how_used: "Human-centered palette with deep teal grounding and soft coral highlights.",
-            base_colors: {
-              background: "#164e63",
-              foreground: "#fffaf7",
-              primary: "#0ea5e9",
-              secondary: "#b6c2c9",
-              accent: "#fb7185"
-            }
+            how_used: "Bright classroom — buttermilk canvas, deep-plum ink, chalkboard-green primary.",
+            base_colors: { background: "#faf3e0", foreground: "#3b2145", primary: "#2b5f45", secondary: "#a1907f", accent: "#c94a3f" }
+          },
+          {
+            how_used: "Community teal — deep teal canvas, sky-blue primary, warm-coral accent.",
+            base_colors: { background: "#164e63", foreground: "#fffaf7", primary: "#38bdf8", secondary: "#b6c2c9", accent: "#fb7185" }
           }
         ];
         return [
           {
-            how_used: "Fallback professional palette with navy structure and bright accent.",
-            base_colors: {
-              background: "#0f172a",
-              foreground: "#f8fafc",
-              primary: "#2563eb",
-              secondary: "#94a3b8",
-              accent: "#22c55e"
-            }
+            how_used: "Dark professional — navy structure with emerald accent.",
+            base_colors: { background: "#0f172a", foreground: "#f8fafc", primary: "#2563eb", secondary: "#94a3b8", accent: "#22c55e" }
           },
           {
-            how_used: "Fallback editorial palette with charcoal foundation and warm coral emphasis.",
-            base_colors: {
-              background: "#1f2937",
-              foreground: "#fff7ed",
-              primary: "#ea580c",
-              secondary: "#cbd5e1",
-              accent: "#f59e0b"
-            }
+            how_used: "Warm editorial — cream canvas, deep espresso ink, terracotta emphasis.",
+            base_colors: { background: "#fdf6ec", foreground: "#2b1f18", primary: "#b8410e", secondary: "#8a7862", accent: "#e6a545" }
           }
         ];
       })();
