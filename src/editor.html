@@ -1012,6 +1012,49 @@
     #ppBtnOpen:hover { background: #5568d4; }
     .pp-divider { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 0; }
     .pp-hidden { display: none !important; }
+    /* Site-name picker */
+    #ppNameSection {
+      display: flex; flex-direction: column; gap: 6px;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .pp-name-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .06em; color: rgba(234,240,255,.4);
+    }
+    .pp-name-row {
+      display: flex; align-items: stretch;
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 6px; background: rgba(0,0,0,.35);
+      overflow: hidden;
+    }
+    .pp-name-prefix {
+      padding: 8px 8px 8px 10px;
+      font-size: 12px; color: rgba(234,240,255,.45);
+      border-right: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+    }
+    #ppSlugInput {
+      flex: 1; min-width: 0;
+      padding: 8px 10px; border: 0; outline: none;
+      background: transparent; color: #eaf0ff;
+      font-size: 13px; font-family: inherit;
+    }
+    .pp-name-status {
+      min-height: 16px; font-size: 12px;
+      color: rgba(234,240,255,.55);
+    }
+    .pp-name-status.ok    { color: #aef7c8; }
+    .pp-name-status.taken { color: rgba(255,166,166,.95); }
+    .pp-name-status.checking { color: rgba(234,240,255,.55); font-style: italic; }
+    .pp-name-actions { display: flex; justify-content: flex-end; }
+    #ppBtnPublishConfirm {
+      padding: 7px 18px; border: none; border-radius: 6px;
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      background: #667eea; color: #fff;
+    }
+    #ppBtnPublishConfirm:hover:not(:disabled) { background: #5568d4; }
+    #ppBtnPublishConfirm:disabled { opacity: .5; cursor: not-allowed; }
     .manage-section { display: flex; flex-direction: column; gap: 8px; padding: 14px 20px; }
     #portfolioPanelBox h4 { font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: .07em; color: rgba(234,240,255,.4); margin-bottom: 2px; }
@@ -1554,6 +1597,20 @@
       <div class="pp-header">
         <span id="ppTitle">Save Portfolio</span>
         <button id="ppClose" title="Close">✕</button>
+      </div>
+
+      <!-- Site name picker (visible before publish) -->
+      <div id="ppNameSection">
+        <label class="pp-name-label" for="ppSlugInput">Site name (URL)</label>
+        <div class="pp-name-row">
+          <span class="pp-name-prefix" id="ppSlugPrefix">…/u/</span>
+          <input type="text" id="ppSlugInput" spellcheck="false" autocomplete="off"
+                 placeholder="your-site-name" />
+        </div>
+        <div class="pp-name-status" id="ppSlugStatus" aria-live="polite">&nbsp;</div>
+        <div class="pp-name-actions">
+          <button id="ppBtnPublishConfirm" data-umami-event="editor-publish-confirm" disabled>Publish</button>
+        </div>
       </div>
 
       <!-- Publish status strip (visible during / after publish) -->
@@ -8199,6 +8256,7 @@
         showLinkedError(err.message); return;
       }
       document.getElementById("ppTitle").textContent = "Manage Portfolio";
+      document.getElementById("ppNameSection").classList.add("pp-hidden");
       document.getElementById("ppPublishStrip").classList.add("pp-hidden");
       document.getElementById("ppUrlSection").classList.add("pp-hidden");
       document.getElementById("manageDomainInput").value = "";
@@ -8284,21 +8342,149 @@
     };
 
     // ── Publish to Web ────────────────────────────────────────────────────────
+    // Sanitize on the client to match the server's rules; the server always re-sanitizes.
+    function clientSanitizeSlug(v) {
+      return String(v || "")
+        .toLowerCase().trim()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60);
+    }
+
+    let slugCheckTimer = null;
+    let slugCheckSeq = 0;
+    let lastCheckedAvailability = { slug: null, available: false };
+
+    function setSlugStatus(cls, text) {
+      const el = document.getElementById("ppSlugStatus");
+      el.className = "pp-name-status" + (cls ? " " + cls : "");
+      el.innerHTML = text || "&nbsp;";
+    }
+
+    function setPublishBtnEnabled(enabled) {
+      document.getElementById("ppBtnPublishConfirm").disabled = !enabled;
+    }
+
+    async function checkSlugAvailability(rawValue) {
+      const sanitized = clientSanitizeSlug(rawValue);
+      if (!sanitized) {
+        setSlugStatus("taken", "Enter a name using letters, numbers, or hyphens.");
+        setPublishBtnEnabled(false);
+        lastCheckedAvailability = { slug: null, available: false };
+        return;
+      }
+      setSlugStatus("checking", `Checking <code>${sanitized}</code>…`);
+      setPublishBtnEnabled(false);
+      const mySeq = ++slugCheckSeq;
+      try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) throw new Error("Not signed in.");
+        const res = await fetch("/.netlify/functions/publishPortfolio", {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ checkOnly: true, slug: sanitized })
+        });
+        if (mySeq !== slugCheckSeq) return; // stale response
+        const payload = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(payload?.error || `Check failed (${res.status})`);
+        lastCheckedAvailability = { slug: payload.sanitized, available: !!payload.available };
+        if (payload.available) {
+          const suffix = payload.ownedByYou ? " (your existing site)" : "";
+          setSlugStatus("ok", `✓ <code>${payload.sanitized}</code> is available${suffix}.`);
+          setPublishBtnEnabled(true);
+        } else {
+          setSlugStatus("taken", `✕ <code>${payload.sanitized}</code> is already taken by another user.`);
+          setPublishBtnEnabled(false);
+        }
+      } catch (err) {
+        if (mySeq !== slugCheckSeq) return;
+        setSlugStatus("taken", err?.message || "Availability check failed.");
+        setPublishBtnEnabled(false);
+      }
+    }
+
+    // Live availability check as user types (debounced).
+    document.getElementById("ppSlugInput").addEventListener("input", (e) => {
+      clearTimeout(slugCheckTimer);
+      setSlugStatus("checking", "…");
+      setPublishBtnEnabled(false);
+      slugCheckTimer = setTimeout(() => checkSlugAvailability(e.target.value), 350);
+    });
+
+    // Save ▾ → Publish opens the panel with a prefilled name; the user then confirms.
     document.getElementById("menuPublish").onclick = async () => {
       saveMenu.classList.remove("open");
-      const saveBtn = document.getElementById("btnSave");
-      saveBtn.disabled = true;
 
-      // Open panel immediately with spinner
       document.getElementById("ppTitle").textContent = "Save Portfolio";
-      ppSetPublishing();
+      document.getElementById("ppNameSection").classList.remove("pp-hidden");
+      document.getElementById("ppPublishStrip").classList.add("pp-hidden");
+      document.getElementById("ppUrlSection").classList.add("pp-hidden");
+
+      // Prefill: previously-published slug wins; otherwise fetch the server-computed default.
+      const input = document.getElementById("ppSlugInput");
+      const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
+      input.value = storedSlug || "";
+      setSlugStatus("checking", "Loading…");
+      setPublishBtnEnabled(false);
+
+      // Update the visible URL prefix (best-effort; the actual host is set by the server).
+      try {
+        const origin = window.location.origin.replace(/\/+$/, "");
+        document.getElementById("ppSlugPrefix").textContent = `${origin}/u/`;
+      } catch {}
+
       openPortfolioPanel();
+
+      try {
+        await ensureDeployAllowed();
+        if (!input.value) {
+          // No stored slug — ask the server for the default and prefill it.
+          const { data: { session } } = await supabaseClient.auth.getSession();
+          const res = await fetch("/.netlify/functions/publishPortfolio", {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ checkOnly: true })
+          });
+          const payload = await res.json().catch(() => ({}));
+          if (res.ok && payload.defaultSlug) input.value = payload.defaultSlug;
+        }
+        input.focus();
+        input.select();
+        await checkSlugAvailability(input.value);
+      } catch (err) {
+        setSlugStatus("taken", err?.message || "Could not initialize.");
+        setPublishBtnEnabled(false);
+      }
+    };
+
+    // Confirm button actually publishes.
+    document.getElementById("ppBtnPublishConfirm").onclick = async () => {
+      const input = document.getElementById("ppSlugInput");
+      const chosen = clientSanitizeSlug(input.value);
+      if (!chosen) return;
+      // Guard: re-check if the user typed something we haven't verified yet.
+      if (lastCheckedAvailability.slug !== chosen || !lastCheckedAvailability.available) {
+        await checkSlugAvailability(chosen);
+        if (!lastCheckedAvailability.available) return;
+      }
+
+      const confirmBtn = document.getElementById("ppBtnPublishConfirm");
+      const saveBtn = document.getElementById("btnSave");
+      confirmBtn.disabled = true;
+      saveBtn.disabled = true;
+      document.getElementById("ppNameSection").classList.add("pp-hidden");
+      ppSetPublishing();
 
       try {
         const { data: { session } } = await supabaseClient.auth.getSession();
         await ensureDeployAllowed();
 
-        const storedSlug = (localStorage.getItem("portfolio_publish_slug") || "").trim();
         const res = await fetch("/.netlify/functions/publishPortfolio", {
           method: "POST",
           headers: {
@@ -8307,7 +8493,7 @@
           },
           body: JSON.stringify({
             html: buildHtmlString(),
-            slug: storedSlug || undefined
+            slug: chosen
           })
         });
 
@@ -8328,7 +8514,10 @@
         console.error("Publish failed:", err);
         ppSetError(err?.message || "Save failed.");
         showLinkedError(err?.message || "Save failed.");
+        // Re-show the name section so the user can adjust and retry.
+        document.getElementById("ppNameSection").classList.remove("pp-hidden");
       } finally {
+        confirmBtn.disabled = false;
         saveBtn.disabled = false;
       }
     };

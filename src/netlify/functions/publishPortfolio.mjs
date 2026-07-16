@@ -72,12 +72,42 @@ export async function handler(event) {
     return json(400, { error: "Invalid JSON body." });
   }
 
+  const defaultSlug = defaultSlugForUser(user);
+  const requestedSlug = sanitizeSlug(payload.slug);
+
+  // "checkOnly" mode: return availability + default slug without publishing.
+  if (payload.checkOnly) {
+    const slugToCheck = requestedSlug || defaultSlug;
+    if (!slugToCheck) {
+      return json(400, { error: "Could not derive a valid publish slug." });
+    }
+    const { store: checkStore, configError: checkErr } = getNamedBlobStore(PUBLISHED_SITES_STORE);
+    if (!checkStore) {
+      return json(500, { error: checkErr });
+    }
+    try {
+      const rawMeta = await checkStore.get(`meta/${slugToCheck}.json`);
+      const meta = rawMeta ? JSON.parse(rawMeta) : null;
+      const takenByOther = !!(meta?.user_id && meta.user_id !== user.id);
+      return json(200, {
+        ok: true,
+        checkOnly: true,
+        sanitized: slugToCheck,
+        defaultSlug,
+        available: !takenByOther,
+        ownedByYou: !!(meta?.user_id && meta.user_id === user.id)
+      });
+    } catch (err) {
+      return json(500, { error: explainBlobStoreError(err) });
+    }
+  }
+
   let html = String(payload.html || "").trim();
   if (!html || !/<html[\s>]/i.test(html)) {
     return json(400, { error: "Missing complete HTML document." });
   }
 
-  const slug = sanitizeSlug(payload.slug) || defaultSlugForUser(user);
+  const slug = requestedSlug || defaultSlug;
   if (!slug) {
     return json(400, { error: "Could not derive a valid publish slug." });
   }
