@@ -1013,23 +1013,9 @@
     .pp-divider { border: none; border-top: 1px solid rgba(255,255,255,.08); margin: 0; }
     .pp-hidden { display: none !important; }
 
-    /* Streaming state — Stage 5 partial HTML is arriving; controls are gated. */
-    #streamingBanner {
-      position: fixed; top: 0; left: 0; right: 0;
-      background: linear-gradient(90deg, rgba(102,126,234,.85), rgba(102,126,234,.7));
-      color: #fff; padding: 8px 16px;
-      font-size: 12px; font-weight: 700;
-      text-align: center;
-      z-index: 10000;
-      box-shadow: 0 2px 8px rgba(0,0,0,.25);
-      display: none;
-    }
-    #streamingBanner.visible { display: block; }
-    #streamingBanner .pulse {
-      display: inline-block; margin-right: 6px;
-      animation: streamPulse 1.4s ease-in-out infinite;
-    }
-    @keyframes streamPulse { 0%,100%{opacity:.4;} 50%{opacity:1;} }
+    /* Streaming state — Stage 5 partial HTML is arriving; controls are gated.
+       The status/countdown in the intake tab tells the user what's happening;
+       here we just disable editor controls so they can't be clicked. */
     body.streaming-in-progress #toolbar,
     body.streaming-in-progress #editToolbar {
       opacity: 0.45;
@@ -1357,11 +1343,6 @@
   <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
 </head>
 <body class="visual-mode">
-
-  <div id="streamingBanner" aria-live="polite">
-    <span class="pulse">●</span>
-    <span>Portfolio is being generated — controls will unlock when it's complete.</span>
-  </div>
 
   <div id="toolbar">
     <h1>Irene's Webworks — Visual Editor v2.0</h1>
@@ -8819,13 +8800,9 @@
     // in-progress state). Controls stay disabled until the final HTML arrives.
     function enterStreamingPreviewState() {
       document.body.classList.add("streaming-in-progress");
-      const banner = document.getElementById("streamingBanner");
-      if (banner) banner.classList.add("visible");
     }
     function exitStreamingPreviewState() {
       document.body.classList.remove("streaming-in-progress");
-      const banner = document.getElementById("streamingBanner");
-      if (banner) banner.classList.remove("visible");
     }
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html_streaming" || typeof e.data.html !== "string") return;

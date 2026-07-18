@@ -5006,8 +5006,8 @@ input[type="color"].split-color::-moz-color-swatch {
             }
           }
           const stageMsg = data.stage
-            ? `${data.stage} (${remaining}s)`
-            : `Generating portfolio… ${remaining}s`;
+            ? `${data.stage} (${remaining}s) — Wait for completion to edit.`
+            : `Generating portfolio… ${remaining}s — Wait for completion to edit.`;
           setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
 
           // Stage 5 streaming: partial HTML available. Open the editor early
