@@ -2683,12 +2683,47 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace(/\{\{YEAR\}\}/g, new Date().getFullYear().toString());
 
     const directSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Output exactly one complete HTML file starting with <!DOCTYPE html>. Do not output markdown, explanations, or commentary.";
+
+    // Stream the direct renderer so the user sees the portfolio build up in
+    // the editor iframe during the ~5–10 min call. Mirrors the Stage 5 setup
+    // (see below); scene image download runs concurrently via Promise.all,
+    // as before.
+    const directCallPromise = (provider === "claude")
+      ? (() => {
+          let lastPartialWriteAt = 0;
+          let latestAccumulated = "";
+          const PARTIAL_WRITE_INTERVAL_MS = 1000;
+          const flushPartial = async () => {
+            try {
+              await store.set(jobId, JSON.stringify({
+                status: "streaming",
+                stage: "Rendering portfolio HTML (streaming)…",
+                partial_html: latestAccumulated,
+                model: resolveClaudeModel(modelOverride),
+              }), { ttl: 3600 });
+            } catch (err) {
+              console.warn("[Direct] partial write failed (non-fatal):", err?.message || err);
+            }
+          };
+          return callClaudeStream(creds, {
+            system: directSystem,
+            userText: directPrompt,
+            maxTokens: 32000,
+            modelOverride,
+            onChunk: (_delta, accumulated) => {
+              latestAccumulated = accumulated;
+              const now = Date.now();
+              if (now - lastPartialWriteAt >= PARTIAL_WRITE_INTERVAL_MS) {
+                lastPartialWriteAt = now;
+                flushPartial();
+              }
+            },
+          });
+        })()
+      : runAI({ system: directSystem, userText: directPrompt, maxTokens: 32000 });
+
     const [directResponse, sceneImageUri] = await Promise.all([
-      runAI({
-        system: directSystem,
-        userText: directPrompt,
-        maxTokens: 32000
-      }),
+      directCallPromise,
       sceneImagePromise
     ]);
     tokenReport.push({ stage: "3 · Direct renderer", model: directResponse.model, ...directResponse.usage });
