@@ -34,6 +34,13 @@ function getSupabaseAdmin() {
 }
 
 function buildPublishUrl(event, slug) {
+  // If a dedicated published-sites host is configured (e.g. webresu.me),
+  // emit URLs there instead of the request host. Value may include or omit protocol.
+  const configuredHost = (process.env.PUBLISHED_SITES_HOST || "").trim().replace(/\/+$/, "");
+  if (configuredHost) {
+    const base = /^https?:\/\//i.test(configuredHost) ? configuredHost : `https://${configuredHost}`;
+    return `${base}/u/${encodeURIComponent(slug)}`;
+  }
   const host = event.headers["x-forwarded-host"] || event.headers.host || "localhost";
   const isLocal = /^localhost(:\d+)?$/.test(host);
   const proto = isLocal
