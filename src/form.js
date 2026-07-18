@@ -525,6 +525,13 @@
           banner.textContent = `🐛 DEBUG MODE [${label}] — intermediate results and raw outputs will be available after generation`;
         }
       }
+      // Show the model picker only in debug mode + when we're running the Claude path.
+      const modelRow = document.getElementById("debugModelRow");
+      if (modelRow) {
+        const showModelPicker = debug && getAnalysisProvider() === "claude";
+        modelRow.classList.toggle("hidden", !showModelPicker);
+        modelRow.style.display = showModelPicker ? "flex" : "none";
+      }
       // Show/hide debug Submit buttons on all pages
       document.querySelectorAll(".dbg-submit-row").forEach(el => {
         el.style.display = debug ? "flex" : "none";
@@ -4946,7 +4953,13 @@ input[type="color"].split-color::-moz-color-swatch {
             bridgeJson:           isDebugMode() ? (bridgeResult?.bridge_json || null) : null,
             colorPreferences,
             provider:             getAnalysisProvider(),
-            userId:               currentUserId()
+            userId:               currentUserId(),
+            // Debug-mode Claude model override; empty string when unset. Server
+            // validates against an allowlist and falls back to the default if
+            // the value isn't recognized.
+            debugModel:           (isDebugMode() && getAnalysisProvider() === "claude"
+                                    ? (document.getElementById("debugModelSelect")?.value || "")
+                                    : "")
           })
         });
         if (!res.ok && res.status !== 202) {
@@ -4964,6 +4977,11 @@ input[type="color"].split-color::-moz-color-swatch {
         // editor yet. Only send it once — subsequent polls carry the same payload
         // until "status: done" arrives with the finished HTML.
         let forwardedDerivedPalette = false;
+        // For streaming previews: track the last partial HTML we pushed so we
+        // don't re-push identical content on every 4 s poll (the SDK writes
+        // partials every ~1 s, so many polls will see the same HTML).
+        let lastPartialHtmlPushed = "";
+        let editorOpenedForStreaming = false;
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, pollIntervalMs));
           if (myRunId !== _generationRunId) {
@@ -4991,6 +5009,29 @@ input[type="color"].split-color::-moz-color-swatch {
             ? `${data.stage} (${remaining}s)`
             : `Generating portfolio… ${remaining}s`;
           setHeaderStatus("generatingWebsiteStatus", stageMsg, "rgba(141,224,255,.75)");
+
+          // Stage 5 streaming: partial HTML available. Open the editor early
+          // (idempotent) and push each new partial. Controls stay disabled on
+          // the editor side until the final "done" HTML arrives.
+          if (data.status === "streaming" && typeof data.partial_html === "string") {
+            if (!editorOpenedForStreaming) {
+              editorOpenedForStreaming = true;
+              try { ensureEditorWindow(); } catch {}
+            }
+            if (data.partial_html && data.partial_html !== lastPartialHtmlPushed) {
+              lastPartialHtmlPushed = data.partial_html;
+              const editorWin = window.__portfolioEditorWindow;
+              if (editorWin && !editorWin.closed) {
+                try {
+                  editorWin.postMessage({
+                    type: "portfolio_html_streaming",
+                    html: data.partial_html,
+                  }, location.origin);
+                } catch {}
+              }
+            }
+          }
+
           if (data.status === "done") {
             clearInterval(renderCountdown);
             generationResult    = { ...data, colorPreferences };

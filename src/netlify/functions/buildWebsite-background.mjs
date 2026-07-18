@@ -1,3 +1,4 @@
+import Anthropic from "@anthropic-ai/sdk";
 import OpenAI, { toFile } from "openai";
 // sharp is loaded lazily (see loadSharp() below) so a native-binary load
 // failure on the deploy target doesn't crash the whole module at import time
@@ -1814,11 +1815,27 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
   };
 }
 
+// Allowlist for the debug-mode model override. Prevents arbitrary strings from
+// hitting the Anthropic API and keeps quality/cost predictable.
+const ALLOWED_CLAUDE_MODELS = new Set([
+  "claude-sonnet-4-6",
+  "claude-opus-4-7",
+  "claude-haiku-4-5",
+]);
+const DEFAULT_CLAUDE_MODEL = "claude-sonnet-4-6";
+
+function resolveClaudeModel(override) {
+  if (!override) return DEFAULT_CLAUDE_MODEL;
+  const trimmed = String(override).trim();
+  return ALLOWED_CLAUDE_MODELS.has(trimmed) ? trimmed : DEFAULT_CLAUDE_MODEL;
+}
+
 // ─── Provider-agnostic AI call helper ────────────────────────────────────────
 // creds: { openaiClient, claudeKey }
-// opts:  { system?, userText, pdfBuffer?, maxTokens? }
+// opts:  { system?, userText, pdfBuffer?, maxTokens?, modelOverride? }
 // returns: { text, model, truncated }
-async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens = 8000 }) {
+// modelOverride: debug-mode-only; must be in ALLOWED_CLAUDE_MODELS
+async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens = 8000, modelOverride }) {
   if (provider === "openai") {
     const { openaiClient } = creds;
     if (pdfBuffer) {
@@ -1852,7 +1869,7 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
     return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
   } else {
     // Claude
-    const claudeModel = "claude-sonnet-4-6";
+    const claudeModel = resolveClaudeModel(modelOverride);
     const userContent = pdfBuffer
       ? [
           { type: "document", source: { type: "base64", media_type: "application/pdf", data: pdfBuffer.toString("base64") } },
@@ -1893,6 +1910,44 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
     const usage = { input: json.usage?.input_tokens ?? null, output: json.usage?.output_tokens ?? null };
     return { text, model: json.model || claudeModel, truncated: json.stop_reason === "max_tokens", usage };
   }
+}
+
+// ─── Claude streaming helper ─────────────────────────────────────────────────
+// Used by Stage 5 so partial HTML can be shown to the user during the ~7–10 min
+// render. Fires `onChunk(deltaText, accumulatedText)` per streamed text delta;
+// caller decides how often to persist. Returns the same shape as callAI so the
+// Stage 5 code path barely changes.
+async function callClaudeStream(creds, { system, userText, maxTokens = 32000, modelOverride, onChunk }) {
+  const claudeModel = resolveClaudeModel(modelOverride);
+  const client = new Anthropic({ apiKey: creds.claudeKey });
+  const stream = client.messages.stream({
+    model: claudeModel,
+    max_tokens: maxTokens,
+    ...(system ? { system } : {}),
+    messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
+  });
+  let accumulated = "";
+  if (typeof onChunk === "function") {
+    stream.on("text", (delta) => {
+      accumulated += delta;
+      // Wrap the callback so a caller-side throw doesn't tear down the stream.
+      try { onChunk(delta, accumulated); } catch (err) {
+        console.warn("[callClaudeStream] onChunk threw (non-fatal):", err?.message || err);
+      }
+    });
+  }
+  const finalMessage = await stream.finalMessage();
+  const text = (finalMessage.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+  const usage = {
+    input: finalMessage.usage?.input_tokens ?? null,
+    output: finalMessage.usage?.output_tokens ?? null,
+  };
+  return {
+    text,
+    model: finalMessage.model || claudeModel,
+    truncated: finalMessage.stop_reason === "max_tokens",
+    usage,
+  };
 }
 
 // ─── Unify resume + job analyses (stage 2 only) ──────────────────────────────
@@ -2434,10 +2489,14 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     strategyJson = null,  // pre-computed by unifyResumeAndJobAnalyses — skips Stage 2
     bridgeJson   = null,  // pre-computed by bridgeContentAndDesign mode — skips Stage 3
     colorPreferences = null,  // { mode: "swatches"|"text", swatches: string[], text: string }
+    modelOverride = "",  // Debug-mode Claude model override, threaded to callAI
   } = opts;
   const tokenReport = [];
   const isDesignOptionsMode = (page1?.template_source || "").toLowerCase() === "none";
   const totalStages = isDesignOptionsMode ? 3 : 4;
+  // Helper that always forwards the debug-mode model override to callAI, so the
+  // stages below don't each need to repeat it.
+  const runAI = (aiOpts) => callAI(provider, creds, { modelOverride, ...aiOpts });
   // ── Stage 1 (optional): Extract resume PDF → JSON ───────────────────────────
   let resumeJson = resumeAnalysisJson;
   if (!resumeJson) {
@@ -2445,11 +2504,11 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       status: "pending", stage: `Extracting resume content (1/${totalStages})…`
     }), { ttl: 3600 });
 
-    const r1 = await callAI(provider, creds, { userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
+    const r1 = await runAI({ userText: STAGE1_PROMPT, pdfBuffer, maxTokens: 8000 });
     tokenReport.push({ stage: "1a · Resume extract", model: r1.model, ...r1.usage });
     const stage1Json = parseJsonResponse(r1.text);
 
-    const r2 = await callAI(provider, creds, {
+    const r2 = await runAI({
       userText: `${STAGE2_PROMPT}\n\nJSON to validate:\n${JSON.stringify(stage1Json, null, 2)}`,
       maxTokens: 8000
     });
@@ -2481,7 +2540,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace("{{JOB_STRATEGY_JSON}}",   JSON.stringify(null, null, 2))
       .replace("{{RESUME_FACTS_JSON}}",   JSON.stringify(resumeFacts, null, 2));
 
-    const contentResponse = await callAI(provider, creds, { userText: contentPrompt, maxTokens: 8000 });
+    const contentResponse = await runAI({ userText: contentPrompt, maxTokens: 8000 });
     tokenReport.push({ stage: "2 · Content strategy (legacy)", model: contentResponse.model, ...contentResponse.usage });
     const legacyResult = parseJsonResponse(contentResponse.text);
     aiStrategy = legacyResult.unified_strategy ?? legacyResult.strategy ?? legacyResult;
@@ -2536,7 +2595,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       await store.set(jobId, JSON.stringify({
         status: "pending", stage: "Interpreting color description…"
       }), { ttl: 3600 });
-      const callAIFn = (opts) => callAI(provider, creds, opts);
+      const callAIFn = (aiOpts) => callAI(provider, creds, { modelOverride, ...aiOpts });
       directDerivedTheme = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
       if (directDerivedTheme) {
         console.log("[directDesign] derived palette from color text:", directDerivedTheme);
@@ -2625,7 +2684,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 
     const directSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Output exactly one complete HTML file starting with <!DOCTYPE html>. Do not output markdown, explanations, or commentary.";
     const [directResponse, sceneImageUri] = await Promise.all([
-      callAI(provider, creds, {
+      runAI({
         system: directSystem,
         userText: directPrompt,
         maxTokens: 32000
@@ -2731,7 +2790,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     await store.set(jobId, JSON.stringify({
       status: "pending", stage: "Interpreting color description…"
     }), { ttl: 3600 });
-    const callAIFn = (opts) => callAI(provider, creds, opts);
+    const callAIFn = (aiOpts) => callAI(provider, creds, { modelOverride, ...aiOpts });
     derivedThemeFromText = await derivePaletteFromColorText(callAIFn, colorPreferences.text);
     if (derivedThemeFromText) {
       console.log("[fullPipeline] derived palette from color text:", derivedThemeFromText);
@@ -2835,11 +2894,54 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace("{{YEAR}}",            new Date().getFullYear().toString());
 
     const rendererSystem = "You are an HTML code generator for a legitimate professional portfolio website builder service. Your sole task is to output a single complete HTML file as requested. This is a standard web development task. Output only raw HTML starting with <!DOCTYPE html> — no explanations, no refusals, no markdown, no commentary of any kind.";
-    const rendererResponse = await callAI(provider, creds, {
-      system: rendererSystem,
-      userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
-      maxTokens: 32000
-    });
+
+    // Stage 5 uses streaming so we can show a live preview to the user during
+    // the ~7–10 min render. Partial HTML is written to the blob store at most
+    // once per ~1 s; the frontend polls this store and pushes each partial to
+    // the editor iframe.
+    let rendererResponse;
+    if (provider === "claude") {
+      let lastPartialWriteAt = 0;
+      let latestAccumulated = "";
+      // Only run when Anthropic actually emits deltas; keeps concurrency low.
+      const PARTIAL_WRITE_INTERVAL_MS = 1000;
+      const flushPartial = async () => {
+        try {
+          await store.set(jobId, JSON.stringify({
+            status: "streaming",
+            stage: "Rendering portfolio HTML (streaming)…",
+            partial_html: latestAccumulated,
+            model: resolveClaudeModel(modelOverride),
+          }), { ttl: 3600 });
+        } catch (err) {
+          console.warn("[Stage 5] partial write failed (non-fatal):", err?.message || err);
+        }
+      };
+
+      rendererResponse = await callClaudeStream(creds, {
+        system: rendererSystem,
+        userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
+        maxTokens: 32000,
+        modelOverride,
+        onChunk: (_delta, accumulated) => {
+          latestAccumulated = accumulated;
+          const now = Date.now();
+          if (now - lastPartialWriteAt >= PARTIAL_WRITE_INTERVAL_MS) {
+            lastPartialWriteAt = now;
+            // Fire-and-forget; the SDK's stream loop continues while this awaits.
+            flushPartial();
+          }
+        },
+      });
+    } else {
+      // OpenAI path unchanged for now — streaming for that provider can be
+      // added later using the same onChunk shape.
+      rendererResponse = await runAI({
+        system: rendererSystem,
+        userText: "Generate the portfolio HTML file per the spec below.\n\n" + rendererPrompt,
+        maxTokens: 32000
+      });
+    }
     tokenReport.push({ stage: "5 · Renderer", model: rendererResponse.model, ...rendererResponse.usage });
 
     siteHtml = cleanHtml(rendererResponse.text);
@@ -3009,6 +3111,8 @@ async function handleBuildWebsiteBackground(event) {
       bridgeJson   = null,    // pre-computed visual_direction from bridgeContentAndDesign mode
       provider = "claude",    // "claude" (default) | "openai"
       userId = null,          // Supabase user UUID — sent by client when logged in
+      debugModel = "",        // Debug-mode-only Claude model override; validated
+                              // against ALLOWED_CLAUDE_MODELS server-side.
       resumePdfBlobKey = ""   // Blob key set by uploadResumePdf; loaded here so
                               // the direct POST body stays under Netlify's
                               // background-function payload ceiling (~150 KB).
@@ -3229,7 +3333,8 @@ async function handleBuildWebsiteBackground(event) {
       bridgeJson,
       colorPreferences: body.colorPreferences || null,
       userId,
-      provider
+      provider,
+      modelOverride: debugModel
     });
   } catch (err) {
     const msg = explainBlobStoreError(err);
