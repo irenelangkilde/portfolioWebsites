@@ -134,6 +134,7 @@ export function getPreviewResultsStore() {
 
 const PREVIEW_IMAGES_STORE   = "preview-images";
 const PUBLISHED_IMAGES_STORE = "published-images";
+const PORTFOLIO_ASSETS_STORE = "portfolio-assets";
 
 export function getPreviewImagesStore() {
   return getNamedBlobStore(PREVIEW_IMAGES_STORE);
@@ -141,4 +142,11 @@ export function getPreviewImagesStore() {
 
 export function getPublishedImagesStore() {
   return getNamedBlobStore(PUBLISHED_IMAGES_STORE);
+}
+
+// Per-user assets uploaded via the editor: images, videos, PDFs. Keyed by
+// `{userId}/{sha256Prefix}.{ext}` for per-user dedup and namespace isolation.
+// Written by uploadPortfolioAsset, read by getPortfolioAsset.
+export function getPortfolioAssetsStore() {
+  return getNamedBlobStore(PORTFOLIO_ASSETS_STORE);
 }

@@ -1397,7 +1397,7 @@
     </div>
     <div id="editorAccount" aria-live="polite">
       <div id="editorAccountUser"><a href="#" onclick="event.preventDefault();openAuthModal()" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Signed out</a></div>
-      <div id="editorAccountQuota">Credits: - · Saves: -</div>
+      <div id="editorAccountQuota">Credits: - · Sites: -</div>
     </div>
   </div>
 
@@ -3240,7 +3240,47 @@
     };
     const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
-    document.getElementById("imgReplaceFile").onchange = e => {
+    // Upload a file (Blob or File) to the portfolio-assets store. Returns the
+    // stable public URL or null if the caller should fall back to inlining.
+    // Anonymous users (no session) always fall back — the endpoint is auth-gated.
+    async function uploadPortfolioAsset(file) {
+      let session;
+      try {
+        session = (await supabaseClient.auth.getSession()).data?.session;
+      } catch { session = null; }
+      if (!session?.access_token) return null;
+
+      // Encode as base64 (strip the "data:...;base64," prefix if present).
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload  = () => resolve(String(r.result || ""));
+        r.onerror = () => reject(r.error || new Error("read failed"));
+        r.readAsDataURL(file);
+      });
+      const commaIdx = dataUrl.indexOf(",");
+      const base64   = commaIdx >= 0 ? dataUrl.slice(commaIdx + 1) : dataUrl;
+
+      const res = await fetch("/.netlify/functions/uploadPortfolioAsset", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({
+          filename: file.name || "upload",
+          mimeType: file.type || "application/octet-stream",
+          data:     base64,
+        }),
+      });
+      if (!res.ok) {
+        const errText = await res.text().catch(() => "");
+        throw new Error(errText || `Upload failed (${res.status})`);
+      }
+      const payload = await res.json().catch(() => ({}));
+      return payload?.url || null;
+    }
+
+    document.getElementById("imgReplaceFile").onchange = async e => {
       const file = e.target.files?.[0];
       if (!file) return;
       if (file.size > IMG_MAX_BYTES) {
@@ -3248,15 +3288,38 @@
         e.target.value = "";
         return;
       }
-      const reader = new FileReader();
-      reader.onload = ev => {
-        const dataUrl = ev.target.result;
-        imgReplacePending = dataUrl;
-        setImageSourceMode("upload");
-        document.getElementById("imgReplacePreview").src = dataUrl;
-        document.getElementById("imgReplaceUrl").value = "";
-      };
-      reader.readAsDataURL(file);
+      // Read as data URI first so the preview updates immediately regardless
+      // of whether the upload succeeds. imgReplacePending starts as the data
+      // URI (fallback) and gets replaced with the returned URL on success.
+      const dataUrl = await new Promise((resolve, reject) => {
+        const r = new FileReader();
+        r.onload  = () => resolve(String(r.result || ""));
+        r.onerror = () => reject(r.error || new Error("read failed"));
+        r.readAsDataURL(file);
+      });
+      imgReplacePending = dataUrl;
+      setImageSourceMode("upload");
+      document.getElementById("imgReplacePreview").src = dataUrl;
+      document.getElementById("imgReplaceUrl").value = "";
+
+      // Try to upload to the asset store so the published HTML references a
+      // stable URL instead of a base64 blob. Fall back to inlining on any
+      // failure (network, not signed in, oversize, unsupported MIME) — the
+      // portfolio still works, it's just less efficient.
+      const errBox = document.getElementById("imgReplaceStatus");
+      if (errBox) errBox.textContent = "Uploading…";
+      try {
+        const url = await uploadPortfolioAsset(file);
+        if (url) {
+          imgReplacePending = url;
+          if (errBox) errBox.textContent = "";
+        } else {
+          if (errBox) errBox.textContent = "Sign in to save uploads to your account (using inline copy for now).";
+        }
+      } catch (err) {
+        console.warn("[imgReplace] asset upload failed, using inline data URI:", err?.message || err);
+        if (errBox) errBox.textContent = `Upload failed — using inline copy. (${err?.message || "unknown"})`;
+      }
     };
 
     function attachIframeImageClickHandler() {
@@ -7963,7 +8026,7 @@
       if (!userEl || !quotaEl) return;
       if (!supabaseClient) {
         userEl.textContent = "Account unavailable";
-        quotaEl.textContent = "Credits: - · Saves: -";
+        quotaEl.textContent = "Credits: - · Sites: -";
         return;
       }
 
@@ -7972,7 +8035,7 @@
         const user = session?.user || null;
         if (!user) {
           userEl.innerHTML = '<a href="#" onclick="event.preventDefault();openAuthModal()" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Sign in</a>';
-          quotaEl.textContent = "Credits: - · Saves: -";
+          quotaEl.textContent = "Credits: - · Sites: -";
           return;
         }
 
@@ -7998,10 +8061,10 @@
         const credits = formatQuotaValue(cRem, cLimit);
         const sites   = formatQuotaValue(dRem, dLimit);
         userEl.textContent = `${name} · ${tier} · ${status}`;
-        quotaEl.textContent = `Remaining: ${credits} credits · ${sites} saves`;
+        quotaEl.textContent = `Remaining: ${credits} credits · ${sites} sites`;
       } catch {
         userEl.textContent = "Account unavailable";
-        quotaEl.textContent = "Credits: - · Saves: -";
+        quotaEl.textContent = "Credits: - · Sites: -";
       }
     }
 
@@ -8276,6 +8339,11 @@
         });
       } catch (err) {
         statusEl.textContent = `Error loading deploys: ${err.message}`;
+        // Populate the picker with at least the "Latest (always current)" option
+        // so a failed list-fetch doesn't leave the user staring at the
+        // "loading deploys…" placeholder indefinitely. They can still assign
+        // custom domains to the latest deploy even without the version list.
+        populateVersionPicker(slug, []);
       }
     }
 

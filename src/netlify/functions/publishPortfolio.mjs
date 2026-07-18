@@ -133,25 +133,46 @@ export async function handler(event) {
     return json(500, { error: configError });
   }
 
-  // If the HTML references a preview image URL, promote it to permanent published storage.
-  const previewKeyMatch = html.match(/\/\.netlify\/functions\/getPreviewImage\?key=([^"') ]+)/);
-  if (previewKeyMatch) {
-    const previewKey = decodeURIComponent(previewKeyMatch[1]);
+  // Promote every ephemeral generation-time image URL to permanent published
+  // storage. Both preview-masthead and scene-hero images live in the
+  // preview-images blob store with a ~1 hour TTL — if we don't copy them out
+  // before that expires, deployed sites will 404 on their hero image.
+  //
+  // Each kind has its own URL scheme + rewrite target + published-store key:
+  //   preview → getPreviewImage?key=…  → getPublishedImage?slug=…              (PNG)
+  //   scene   → getSceneImage?key=…    → getPublishedImage?slug=…&kind=scene   (JPEG)
+  const imageKinds = [
+    {
+      kind: "preview",
+      matchRe:   /\/\.netlify\/functions\/getPreviewImage\?key=([^"') ]+)/,
+      replaceRe: /\/\.netlify\/functions\/getPreviewImage\?key=[^"') ]+/g,
+      publishedKey: slug,
+      publishedUrl: `/.netlify/functions/getPublishedImage?slug=${encodeURIComponent(slug)}`,
+    },
+    {
+      kind: "scene",
+      matchRe:   /\/\.netlify\/functions\/getSceneImage\?key=([^"') ]+)/,
+      replaceRe: /\/\.netlify\/functions\/getSceneImage\?key=[^"') ]+/g,
+      publishedKey: `${slug}:scene`,
+      publishedUrl: `/.netlify/functions/getPublishedImage?slug=${encodeURIComponent(slug)}&kind=scene`,
+    },
+  ];
+  for (const cfg of imageKinds) {
+    const m = html.match(cfg.matchRe);
+    if (!m) continue;
+    const previewKey = decodeURIComponent(m[1]);
     try {
       const { store: previewImgStore } = getPreviewImagesStore();
       const { store: publishedImgStore } = getPublishedImagesStore();
       if (previewImgStore && publishedImgStore) {
         const b64 = await previewImgStore.get(previewKey);
         if (b64) {
-          await publishedImgStore.set(slug, b64);
-          html = html.replace(
-            /\/\.netlify\/functions\/getPreviewImage\?key=[^"') ]+/g,
-            `/.netlify/functions/getPublishedImage?slug=${encodeURIComponent(slug)}`
-          );
+          await publishedImgStore.set(cfg.publishedKey, b64);
+          html = html.replace(cfg.replaceRe, cfg.publishedUrl);
         }
       }
     } catch (imgErr) {
-      console.warn("[publishPortfolio] image promotion failed (non-fatal):", imgErr?.message || imgErr);
+      console.warn(`[publishPortfolio] ${cfg.kind} image promotion failed (non-fatal):`, imgErr?.message || imgErr);
     }
   }
 
