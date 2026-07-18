@@ -8,6 +8,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { getNamedBlobStore, explainBlobStoreError } from "./blobStore.mjs";
+import { buildPublishUrl } from "./publishUrl.mjs";
 
 const PUBLISHED_SITES_STORE = "published-sites";
 
@@ -34,23 +35,6 @@ function sanitizeSlug(value) {
 function sanitizeDomain(value) {
   return String(value || "").toLowerCase().trim()
     .replace(/^https?:\/\//, "").replace(/\/.*$/, "").trim();
-}
-
-function buildPublishUrl(event, slug) {
-  // Mirror publishPortfolio.mjs: if a dedicated published-sites host is configured
-  // (e.g. webresu.me), emit URLs there instead of the request host. Keep these
-  // two functions in sync — they're both user-facing URL emitters for the same
-  // published portfolios.
-  const configuredHost = (process.env.PUBLISHED_SITES_HOST || "").trim().replace(/\/+$/, "");
-  if (configuredHost) {
-    const base = /^https?:\/\//i.test(configuredHost) ? configuredHost : `https://${configuredHost}`;
-    return `${base}/u/${encodeURIComponent(slug)}`;
-  }
-  const host = event.headers["x-forwarded-host"] || event.headers.host || "localhost";
-  const isLocal = /^localhost(:\d+)?$/.test(host);
-  const proto = isLocal ? "http"
-    : (event.headers["x-forwarded-proto"] || event.headers["X-Forwarded-Proto"] || "https");
-  return `${proto}://${host}/u/${encodeURIComponent(slug)}`;
 }
 
 async function addNetlifyDomainAlias(domain) {
