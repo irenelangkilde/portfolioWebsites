@@ -37,6 +37,15 @@ function sanitizeDomain(value) {
 }
 
 function buildPublishUrl(event, slug) {
+  // Mirror publishPortfolio.mjs: if a dedicated published-sites host is configured
+  // (e.g. webresu.me), emit URLs there instead of the request host. Keep these
+  // two functions in sync — they're both user-facing URL emitters for the same
+  // published portfolios.
+  const configuredHost = (process.env.PUBLISHED_SITES_HOST || "").trim().replace(/\/+$/, "");
+  if (configuredHost) {
+    const base = /^https?:\/\//i.test(configuredHost) ? configuredHost : `https://${configuredHost}`;
+    return `${base}/u/${encodeURIComponent(slug)}`;
+  }
   const host = event.headers["x-forwarded-host"] || event.headers.host || "localhost";
   const isLocal = /^localhost(:\d+)?$/.test(host);
   const proto = isLocal ? "http"
