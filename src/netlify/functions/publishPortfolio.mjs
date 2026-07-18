@@ -96,13 +96,18 @@ export async function handler(event) {
       const rawMeta = await checkStore.get(`meta/${slugToCheck}.json`);
       const meta = rawMeta ? JSON.parse(rawMeta) : null;
       const takenByOther = !!(meta?.user_id && meta.user_id !== user.id);
+      // Also return a preview of what the published URL will look like, so the
+      // frontend can render the correct host prefix (webresu.me vs the request
+      // host) in the site-name picker before the user hits Publish.
+      const previewUrl = buildPublishUrl(event, slugToCheck);
       return json(200, {
         ok: true,
         checkOnly: true,
         sanitized: slugToCheck,
         defaultSlug,
         available: !takenByOther,
-        ownedByYou: !!(meta?.user_id && meta.user_id === user.id)
+        ownedByYou: !!(meta?.user_id && meta.user_id === user.id),
+        previewUrl
       });
     } catch (err) {
       return json(500, { error: explainBlobStoreError(err) });

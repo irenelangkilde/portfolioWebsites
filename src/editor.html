@@ -8395,6 +8395,17 @@
       document.getElementById("ppBtnPublishConfirm").disabled = !enabled;
     }
 
+    // Rewrite the "…/u/" prefix chip from a canonical publish URL returned by
+    // the backend. We can't compute the correct host client-side because it
+    // depends on the server's PUBLISHED_SITES_HOST env var — but the checkOnly
+    // response carries a previewUrl we can strip down.
+    function updateSlugPrefixFromPreviewUrl(previewUrl) {
+      try {
+        const u = new URL(previewUrl);
+        document.getElementById("ppSlugPrefix").textContent = `${u.origin}/u/`;
+      } catch {}
+    }
+
     async function checkSlugAvailability(rawValue) {
       const sanitized = clientSanitizeSlug(rawValue);
       if (!sanitized) {
@@ -8421,6 +8432,10 @@
         const payload = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(payload?.error || `Check failed (${res.status})`);
         lastCheckedAvailability = { slug: payload.sanitized, available: !!payload.available };
+        // Update the URL prefix chip to reflect the real publish host that the
+        // server will emit (webresu.me vs. request host), derived from the
+        // previewUrl the backend returned.
+        if (payload.previewUrl) updateSlugPrefixFromPreviewUrl(payload.previewUrl);
         if (payload.available) {
           const suffix = payload.ownedByYou ? " (your existing site)" : "";
           setSlugStatus("ok", `✓ <code>${payload.sanitized}</code> is available${suffix}.`);
@@ -8460,10 +8475,19 @@
       setSlugStatus("checking", "Loading…");
       setPublishBtnEnabled(false);
 
-      // Update the visible URL prefix (best-effort; the actual host is set by the server).
+      // Prime the URL prefix chip with our best pre-check guess: the last
+      // published URL in localStorage (which already reflects the server's
+      // configured host) if present, otherwise fall back to the current origin.
+      // The subsequent checkSlugAvailability call will overwrite this with the
+      // authoritative host from the backend's previewUrl.
       try {
-        const origin = window.location.origin.replace(/\/+$/, "");
-        document.getElementById("ppSlugPrefix").textContent = `${origin}/u/`;
+        const lastPublishedUrl = (localStorage.getItem("portfolio_publish_url") || "").trim();
+        if (lastPublishedUrl) {
+          updateSlugPrefixFromPreviewUrl(lastPublishedUrl);
+        } else {
+          const origin = window.location.origin.replace(/\/+$/, "");
+          document.getElementById("ppSlugPrefix").textContent = `${origin}/u/`;
+        }
       } catch {}
 
       openPortfolioPanel();
