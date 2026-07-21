@@ -2137,10 +2137,18 @@ ${pseudoSelectors} {
     const TEMPLATE_CACHE_KEY = "templateKeywordsCache";
     const TEMPLATE_CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-    function applyTemplatesToDatalist(templates) {
-      const dl = document.getElementById("templateKeywords");
-      if (!dl || !Array.isArray(templates) || templates.length === 0) return;
-      dl.innerHTML = templates.map(t => `<option value="${t}">`).join("");
+    // Populate the #modelTemplate <select> with the curated template list from
+    // /templates/templates.json. Kept alphabetized so users can scan easily.
+    // Preserves the "— Select a template —" placeholder option at index 0 and
+    // (if the user has already picked one) re-selects it after re-populating.
+    function applyTemplatesToSelect(templates) {
+      const sel = document.getElementById("modelTemplate");
+      if (!sel || !Array.isArray(templates) || templates.length === 0) return;
+      const previous = sel.value;
+      const sorted = templates.slice().sort((a, b) => a.localeCompare(b));
+      sel.innerHTML =
+        `<option value="" disabled${previous ? "" : " selected"}>— Select a template —</option>` +
+        sorted.map(t => `<option value="${t}"${t === previous ? " selected" : ""}>${t}</option>`).join("");
     }
 
     async function loadTemplateSuggestions({ force = false } = {}) {
@@ -2150,7 +2158,7 @@ ${pseudoSelectors} {
         try {
           const cached = JSON.parse(localStorage.getItem(TEMPLATE_CACHE_KEY) || "null");
           if (cached && Date.now() - cached.timestamp < TEMPLATE_CACHE_TTL) {
-            applyTemplatesToDatalist(cached.templates);
+            applyTemplatesToSelect(cached.templates);
             return;
           }
         } catch {}
@@ -2162,7 +2170,7 @@ ${pseudoSelectors} {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         if (Array.isArray(data.templates) && data.templates.length > 0) {
-          applyTemplatesToDatalist(data.templates);
+          applyTemplatesToSelect(data.templates);
           localStorage.setItem(TEMPLATE_CACHE_KEY, JSON.stringify({ templates: data.templates, timestamp: Date.now() }));
         }
       } catch { /* silently skip */ }
@@ -5201,6 +5209,26 @@ input[type="color"].split-color::-moz-color-swatch {
     // Page button wiring
     // ----------------------------
     document.getElementById("toPage1")?.addEventListener("click", () => setStep(1));
+
+    // Design page (displayed Page 3) — track which template source the user
+    // picked, and if they picked "url" (Enter a name) capture the name they
+    // typed. This is a detail event with params, fired manually here instead
+    // of via data-umami-event on the button, because the mirror only picks up
+    // static data-umami-event-* attributes and we need the values at click
+    // time. Umami and GA both receive the same event with the same params.
+    document.getElementById("next2")?.addEventListener("click", () => {
+      const source = document.querySelector('input[name="templateSource"]:checked')?.value || "";
+      const params = { template_source: source };
+      // "keyword" is the "Pick a template" radio — the <select> value is a
+      // template name from templates.json (Marcus, Hal, etc.). Clean enum for
+      // analytics dashboards; no length cap needed.
+      if (source === "keyword") {
+        const name = document.getElementById("modelTemplate")?.value || "";
+        if (name) params.template_name = name;
+      }
+      try { window.umami?.track?.("intake-page3-complete", params); } catch {}
+      try { window.gtag?.("event", "intake_page3_complete", params); } catch {}
+    });
 
     // Page 1 — reset resets only page 1 fields (major, specialization, resume)
     const reset1 = document.getElementById("reset1");

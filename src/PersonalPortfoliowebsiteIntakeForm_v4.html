@@ -401,7 +401,7 @@
         </ol>
       </div>
       <div class="btnRow">
-        <button class="btn primary" type="button" id="toPage1">Start</button>
+        <button class="btn primary" type="button" id="toPage1" data-umami-event="intake-start">Start</button>
       </div>
     </section>
 
@@ -455,7 +455,7 @@
 
       <div class="btnRow">
         <button class="btn danger" type="button" id="reset1">Reset (double-click)</button>
-        <button class="btn primary" type="button" id="next1">Next</button>
+        <button class="btn primary" type="button" id="next1" data-umami-event="intake-page1-complete">Next</button>
       </div>
     </section>
 
@@ -471,7 +471,7 @@
 
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back5_top">Back</button>
-          <button class="btn primary" type="button" id="submit_top" disabled style="opacity:0.45; cursor:not-allowed;">Apply &amp; Preview</button>
+          <button class="btn primary" type="button" id="submit_top" disabled style="opacity:0.45; cursor:not-allowed;" data-umami-event="intake-submit">Apply &amp; Preview</button>
         </div>
 
         <!-- Headshot -->
@@ -663,7 +663,7 @@
 
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back5">Back</button>
-          <button class="btn primary" type="button" id="submit_bottom" disabled style="opacity:0.45; cursor:not-allowed;">Apply &amp; Preview</button>
+          <button class="btn primary" type="button" id="submit_bottom" disabled style="opacity:0.45; cursor:not-allowed;" data-umami-event="intake-submit">Apply &amp; Preview</button>
         </div>
       </div>
     </section>
@@ -681,14 +681,17 @@
           <div class="grid" style="gap:6px; margin-top:6px;">
 
             <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
-              <input type="radio" name="templateSource" id="tplUrl" value="url" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
+              <input type="radio" name="templateSource" id="tplUrl" value="keyword" style="margin-top:3px; flex-shrink:0; accent-color:var(--primary);" />
               <div>
-                <strong style="font-size:13px;">Enter a name </strong>
-                <p class="hint" style="margin:2px 0 0; font-weight:400;">Link or keyword for a portfolio to use as inspiration.</p>
+                <strong style="font-size:13px;">Pick a template</strong>
+                <p class="hint" style="margin:2px 0 0; font-weight:400;">Choose a curated portfolio design from our gallery to model yours after.</p>
               </div>
             </label>
             <div id="tplUrlWrap" class="hidden" style="padding:0 4px 4px;">
-              <input id="modelTemplate" type="text" placeholder="e.g., https://example.com/portfolio or 'civil engineering portfolio'" />
+              <select id="modelTemplate">
+                <option value="" disabled selected>— Select a template —</option>
+                <!-- Options populated from /templates/templates.json by applyTemplatesToSelect() in form.js -->
+              </select>
             </div>
 
             <label style="display:flex; gap:10px; align-items:flex-start; cursor:pointer; font-weight:400; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.15);">
@@ -827,7 +830,7 @@
           <button class="btn ghost" type="button" id="back3">Back</button>
           <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
             <p class="hint" style="margin:0;"><strong>Next</strong> generates a preview.</p>
-            <button class="btn primary" type="button" id="next3">Next</button>
+            <button class="btn primary" type="button" id="next3" data-umami-event="intake-page4-complete">Next</button>
           </div>
         </div>
       </div>
@@ -852,12 +855,12 @@
 
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back4_top">Back</button>
-          <button class="btn primary" type="button" id="next4_top">Next</button>
+          <button class="btn primary" type="button" id="next4_top" data-umami-event="intake-page2-complete">Next</button>
         </div>
 
         <div class="btnRow">
           <button class="btn ghost" type="button" id="back4">Back</button>
-          <button class="btn primary" type="button" id="next4">Next</button>
+          <button class="btn primary" type="button" id="next4" data-umami-event="intake-page2-complete">Next</button>
         </div>
       </div>
     </section>
