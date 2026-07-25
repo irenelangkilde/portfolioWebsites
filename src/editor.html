@@ -458,6 +458,14 @@
       transition: opacity .25s ease;
     }
     #triviaOverlay.hidden { opacity: 0; pointer-events: none; }
+    /* pointer-events doesn't inherit — a child with pointer-events: auto still
+       catches clicks when the parent is pointer-events: none. Without this rule,
+       an invisible-but-present triviaCard swallows every click that lands over
+       its old position. */
+    #triviaOverlay.hidden #triviaCard,
+    #triviaOverlay.hidden .overlay-card {
+      pointer-events: none;
+    }
     #triviaCard, .overlay-card {
       pointer-events: auto;
       max-width: 460px; width: calc(100% - 48px);
