@@ -8793,9 +8793,13 @@
     // ── Live update from form window ───────────────────────────────────────────
     window.addEventListener("message", e => {
       if (e.data?.type !== "portfolio_html" || !e.data.html) return;
-      // Final HTML arriving — exit streaming state (if we were in it) and run
-      // the full editor init on the completed document.
+      // Final HTML arriving — exit streaming state (if we were in it), hide
+      // the trivia overlay unconditionally (it was shown during the generation
+      // wait — inside loadIncomingPortfolioHtml several short-circuit branches
+      // can return before reaching the trivia hide, so we do it here for
+      // certainty), and run the full editor init on the completed document.
       exitStreamingPreviewState();
+      try { hideTriviaOverlay(); } catch {}
       loadIncomingPortfolioHtml(e.data.html, { allowPlaceholder: true });
     });
 
