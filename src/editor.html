@@ -3853,6 +3853,11 @@
         : null;
       const displayHtml = prepared?.html || html;
       if (!waiting && !currentlyWaiting && displayHtml === lastDisplayedIncomingPortfolioHtml) {
+        // Even if the HTML matches what's already displayed (common after
+        // streaming preview — the final "done" HTML equals the last streamed
+        // partial), we still need to clear the trivia overlay. Otherwise it
+        // stays up covering the iframe until the user manually dismisses it.
+        try { hideTriviaOverlay(); } catch {}
         requestProcessStatusFromOpener();
         return true;
       }
