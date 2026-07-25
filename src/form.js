@@ -6137,11 +6137,22 @@ input[type="color"].split-color::-moz-color-swatch {
     // treat the choice as "no preference" — that's the case when no template/palette
     // ever loaded and the user didn't pick anything either.
     function collectPage4ColorPreferences() {
+      // Send only the fields that belong to the selected mode. Previously this
+      // returned all three ({mode, swatches, text}) regardless, which let stale
+      // data from the other mode leak into the payload. The backend already
+      // gates on mode, so this is a client-side tightening: leaner payload,
+      // no cross-mode contamination if any code ever peeks at the "wrong" field.
       const mode = document.querySelector('input[name="colorChoiceMode"]:checked')?.value || "swatches";
+
+      if (mode === "text") {
+        const text = (document.getElementById("colorTextDescription")?.value || "").trim();
+        return { mode, text };
+      }
+
+      // mode === "swatches"
       const ids = ["primary", "secondary", "tertiary", "accent2", "accent1"];
       const raw = ids.map(id => document.getElementById(id)?.value?.toLowerCase() || "");
       const allUntouched = raw.every(h => h === "#000000");
-      const text = (document.getElementById("colorTextDescription")?.value || "").trim();
 
       // If the current swatches look like the template's auto-applied "Original template
       // colors" palette and the user hasn't manually edited any input, treat as "no anchors"
@@ -6162,7 +6173,7 @@ input[type="color"].split-color::-moz-color-swatch {
             const nonDefault = raw.filter(h => h !== "#000000");
             const allFromOriginal = nonDefault.length > 0 && nonDefault.every(h => origSet.has(h));
             if (allFromOriginal) {
-              return { mode, swatches: [], text };
+              return { mode, swatches: [] };
             }
           }
         } catch {} // fail open — fall through to the standard path on any error
@@ -6171,7 +6182,7 @@ input[type="color"].split-color::-moz-color-swatch {
       const swatches = allUntouched
         ? []
         : raw.filter(hex => /^#[0-9a-f]{6}$/.test(hex));
-      return { mode, swatches, text };
+      return { mode, swatches };
     }
 
     function hasAnySubmittedThemeColor(theme) {

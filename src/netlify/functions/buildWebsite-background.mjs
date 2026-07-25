@@ -363,7 +363,14 @@ Rules:
 - primary: the strongest brand/emphasis hue the user named.
 - secondary: a distinct supporting hue that complements primary.
 - accent: a highlight color that pops against background without clashing with primary/secondary.
-- Honor explicit colors the user named ("yellow", "blue", "navy") and their overall vibe (neon, warm, muted, editorial, etc.). If they named two hues, put one in primary and the other in secondary or accent.
+- CRITICAL — respect placement words in the description. If the user pairs a color with a location word, that color MUST fill the corresponding role:
+    "background" / "canvas" / "page" → background
+    "text" / "foreground" / "body copy" → foreground
+    "hero" / "brand" / "primary" / "header" → primary
+    "accent" / "highlight" / "pop" → accent
+    "secondary" / "supporting" → secondary
+  Example: for "sky-blue background", background MUST be a sky-blue hex (something like #87CEEB), not a supporting accent buried elsewhere in the palette.
+- Honor explicit colors the user named ("yellow", "blue", "navy") and their overall vibe (neon, warm, muted, editorial, etc.). If they named two hues without location cues, put one in primary and the other in secondary or accent.
 - All six-digit hex (#RRGGBB); no shorthand, no named colors, no rgba.`;
   try {
     const res = await callAIFn({ userText: prompt, maxTokens: 300 });
@@ -421,7 +428,7 @@ function formatColorPreferencesGuidance(prefs) {
   }
   if (prefs.mode === "text" && typeof prefs.text === "string" && prefs.text.trim()) {
     const text = prefs.text.trim().slice(0, 500);
-    return `USER COLOR PREFERENCES: The user described their color intent in words: "${text}". Interpret this as anchor preferences (not a fixed palette) and choose actual hex values that honor the described mood/colors. Add complementary neutrals and supporting tones as needed.`;
+    return `USER COLOR PREFERENCES: The user described their color intent in words: "${text}". Interpret the description LITERALLY — if the user pairs a color with a placement (e.g. "sky-blue background", "coral hero", "dark navbar", "yellow accent"), that color MUST visibly fill the named location on the rendered page. "background" means the primary visible page/hero background, not a hidden body-wrapping tone. Do not silently downgrade a named-with-placement color into a supporting accent. Fill complementary neutrals and supporting tones around the user's explicit choices, not over them.`;
   }
   return "";
 }
