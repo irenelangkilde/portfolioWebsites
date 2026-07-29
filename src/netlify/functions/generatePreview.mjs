@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { makeOpenAI, resolveOpenAIKey } from "./aiClients.mjs";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -48,7 +48,7 @@ export async function handler(event) {
       return { statusCode: 405, body: "Method Not Allowed" };
     }
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!resolveOpenAIKey()) {
       return {
         statusCode: 500,
         headers: { "content-type": "application/json" },
@@ -56,7 +56,7 @@ export async function handler(event) {
       };
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = makeOpenAI();
 
     const { page1 = {}, page2 = {}, resumeText = "" } = JSON.parse(event.body || "{}");
 

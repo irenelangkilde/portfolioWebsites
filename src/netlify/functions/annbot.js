@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import { makeAnthropic } from "./aiClients.mjs";
 import { createClient } from "@supabase/supabase-js";
 
 function getSupabase() {
@@ -86,7 +86,7 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "messages array required" }) };
   }
 
-  const client = new Anthropic();
+  const client = makeAnthropic();
 
   try {
     const response = await client.messages.create({

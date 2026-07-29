@@ -1,5 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
-import OpenAI, { toFile } from "openai";
+import { toFile } from "openai";
 // sharp is loaded lazily (see loadSharp() below) so a native-binary load
 // failure on the deploy target doesn't crash the whole module at import time
 // and take out every generation, not just scene-based ones.
@@ -8,6 +7,7 @@ import { dirname, resolve } from "path";
 import { fileURLToPath } from "url";
 import { load as loadHtml } from "cheerio";
 import { explainBlobStoreError, getPreviewImagesStore, getPreviewResultsStore } from "./blobStore.mjs";
+import { makeAnthropic, makeOpenAI } from "./aiClients.mjs";
 import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 import { parallelCreativeFill } from "./parallelCreativeFill.mjs";
@@ -1995,7 +1995,7 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
 async function callClaudeStream(creds, { system, userText, maxTokens = 32000, modelOverride, onChunk }) {
   try {
     const claudeModel = resolveClaudeModel(modelOverride);
-    const client = new Anthropic({ apiKey: creds.claudeKey });
+    const client = makeAnthropic({ apiKey: creds.claudeKey });
     const stream = client.messages.stream({
       model: claudeModel,
       max_tokens: maxTokens,
@@ -3296,7 +3296,7 @@ async function handleBuildWebsiteBackground(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "OPENAI_API_KEY is not set." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-      creds = { openaiClient: new OpenAI({ apiKey: openaiKey }) };
+      creds = { openaiClient: makeOpenAI({ apiKey: openaiKey }) };
     } else {
       const claudeKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
       if (!claudeKey) {

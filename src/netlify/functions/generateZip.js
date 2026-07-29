@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { makeOpenAI, resolveOpenAIKey } from "./aiClients.mjs";
 import JSZip from "jszip";
 import { SITE_JSON_SCHEMA } from "../shared/siteSchema.mjs";
 import { renderHTML } from "../shared/siteRender.mjs";
@@ -33,7 +33,7 @@ export async function handler(event) {
   try {
     if (event.httpMethod !== "POST") return { statusCode: 405, body: "Method Not Allowed" };
 
-    if (!process.env.OPENAI_API_KEY) {
+    if (!resolveOpenAIKey()) {
       return {
         statusCode: 500,
         headers: { "content-type": "application/json" },
@@ -41,7 +41,7 @@ export async function handler(event) {
       };
     }
 
-    const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    const client = makeOpenAI();
 
     const { page1, page2 } = JSON.parse(event.body || "{}");
     if (!page1?.name || !page1?.email) {

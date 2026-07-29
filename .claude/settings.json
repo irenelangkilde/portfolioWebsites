@@ -12,7 +12,15 @@
       "Bash(node scripts/preprocessSamples.mjs)",
       "Bash(tee /tmp/preprocess-samples.log)",
       "Bash(sleep 20 && head -50 /tmp/preprocess-samples.log 2>/dev/null)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(rm -f /tmp/netlify-dev.log)",
+      "Bash(netlify dev *)",
+      "Bash(env)",
+      "Bash(awk -F= '{printf \" %-34s len=%d prefix=%s\\\\n\", $1, length\\($2\\), substr\\($2,1,26\\)}')",
+      "Bash(node -e 'const p=require\\(\"/Users/irenelangkildegeary2015/git-il/Webworks/portfolioWebsites/node_modules/@anthropic-ai/sdk/package.json\"\\);console.log\\(\" project @anthropic-ai/sdk:\",p.version\\)')",
+      "Bash(node -e 'const p=require\\(\"/Users/irenelangkildegeary2015/node_modules/@anthropic-ai/sdk/package.json\"\\);console.log\\(\" home @anthropic-ai/sdk:\",p.version\\)')",
+      "Bash(curl -s -o /dev/null -w \"  gallery -> %{http_code}\\\\n\" http://localhost:8888/html/grad-gallery.html)",
+      "Bash(curl -s --max-time 60 -X POST http://localhost:8888/.netlify/functions/generateZip -H 'content-type: application/json' -d '{}' -w '\\\\n  HTTP %{http_code}\\\\n')"
     ]
   }
 }
