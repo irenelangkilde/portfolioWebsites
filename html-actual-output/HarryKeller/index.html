@@ -1,0 +1,1689 @@
+<html lang="en" style="--background: #e8c87a; --quinary: #e8c87a; --bp-slot5: #e8c87a; --bp-slot-5: #e8c87a; --slot5: #e8c87a; --slot-5: #e8c87a; --bp-accent1: #e8c87a; --accent1: #e8c87a; --foreground: #4a8c7f; --quaternary: #4a8c7f; --bp-slot4: #4a8c7f; --bp-slot-4: #4a8c7f; --slot4: #4a8c7f; --slot-4: #4a8c7f; --bp-accent2: #4a8c7f; --accent2: #4a8c7f; --primary: #c17f3a; --dominant: #c17f3a; --bp-slot1: #c17f3a; --bp-slot-1: #c17f3a; --slot1: #c17f3a; --slot-1: #c17f3a; --bp-primary: #c17f3a; --secondary: #2e4a52; --bp-slot2: #2e4a52; --bp-slot-2: #2e4a52; --slot2: #2e4a52; --slot-2: #2e4a52; --bp-secondary: #2e4a52; --accent: #f5ede0; --tertiary: #f5ede0; --bp-slot3: #f5ede0; --bp-slot-3: #f5ede0; --slot3: #f5ede0; --slot-3: #f5ede0; --bp-tertiary: #f5ede0"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Keller — Instructional Designer &amp; Training Specialist</title>
+<style>
+/* ============================================================
+   ROOT: SEMANTIC COLOR VARIABLES
+   ============================================================ */
+:root {
+  /* Core palette */
+  --c-1: var(--iw-color-a);   /* neon blue */
+  --c-2: var(--iw-color-b);   /* neon pink */
+  --c-3: var(--iw-color-c);   /* neon green */
+  --c-4: var(--iw-color-e);   /* warm amber */
+  --c-5: var(--iw-color-f);   /* teal-green */
+
+  /* Neutrals */
+  --bg-base:    var(--iw-color-d);
+  --bg-alt:     var(--iw-color-m);
+  --bg-surface: var(--iw-color-n);
+  --bg-card:    var(--iw-color-o);
+  --bg-card-alt:var(--iw-color-j);
+  --fg-primary: var(--iw-color-g);
+  --fg-muted:   var(--iw-color-i);
+  --fg-subtle:  var(--iw-color-h);
+  --border-dim: color-mix(in srgb, var(--iw-color-a) 15%, transparent);
+  --border-glow:color-mix(in srgb, var(--iw-color-a) 45%, transparent);
+
+  /* Light section palette */
+  --light-bg:      var(--iw-color-s);
+  --light-bg-alt:  var(--iw-color-t);
+  --light-surface: var(--iw-color-u);
+  --light-fg:      var(--iw-color-p);
+  --light-fg-muted:var(--iw-color-k);
+  --light-border:  color-mix(in srgb, var(--iw-color-f) 25%, transparent);
+
+  /* Hero image slot */
+  --hero-bg-image: none;
+  --hero-overlay-gradient: linear-gradient(to bottom, color-mix(in srgb, var(--iw-color-d) 72%, transparent), color-mix(in srgb, var(--iw-color-d) 35%, transparent));
+
+  /* Derived component tokens */
+  --chip-bg:        color-mix(in srgb, var(--c-1) 15%, transparent);
+  --chip-border:    color-mix(in srgb, var(--c-1) 40%, transparent);
+  --chip-text:      var(--c-1);
+
+  --chip-pink-bg:   color-mix(in srgb, var(--c-2) 15%, transparent);
+  --chip-pink-border:color-mix(in srgb, var(--c-2) 40%, transparent);
+  --chip-pink-text: var(--c-2);
+
+  --chip-green-bg:  color-mix(in srgb, var(--c-3) 12%, transparent);
+  --chip-green-border:color-mix(in srgb, var(--c-3) 35%, transparent);
+  --chip-green-text:var(--c-3);
+
+  --chip-amber-bg:  color-mix(in srgb, var(--c-4) 18%, transparent);
+  --chip-amber-border:color-mix(in srgb, var(--c-4) 40%, transparent);
+  --chip-amber-text:var(--c-4);
+
+  --shadow-glow-blue: 0 0 18px color-mix(in srgb, var(--c-1) 30%, transparent);
+  --shadow-glow-pink: 0 0 18px color-mix(in srgb, var(--c-2) 30%, transparent);
+  --shadow-card: 0 4px 24px color-mix(in srgb, var(--iw-color-l) 45%, transparent);
+
+  /* Typography */
+  --font-mono: 'Courier New', 'Lucida Console', monospace;
+  --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Georgia', 'Times New Roman', serif;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background-color: var(--bg-base);
+  color: var(--fg-primary);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+a { color: var(--c-1); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--c-3); }
+img { max-width: 100%; display: block; }
+
+/* ============================================================
+   SCANLINE OVERLAY (dark terminal aesthetic)
+   ============================================================ */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 3px,
+    color-mix(in srgb, var(--iw-color-l) 6%, transparent) 3px,
+    color-mix(in srgb, var(--iw-color-l) 6%, transparent) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--bg-base) 90%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-dim);
+  padding: 0 2rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--c-1);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.nav-brand span { color: var(--c-2); }
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--fg-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--c-1); }
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+.hero {
+  min-height: 100vh;
+  padding-top: 56px;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  background-image:var(--hero-overlay-gradient), var(--hero-bg-image);
+  background-size: cover, cover;
+  background-position: center, center;
+  background-repeat: no-repeat, no-repeat;
+  background-color: var(--bg-base);
+}
+
+/* Grid lines background */
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:linear-gradient(color-mix(in srgb, var(--iw-color-a) 4%, transparent) 1px, transparent 1px), linear-gradient(90deg, color-mix(in srgb, var(--iw-color-a) 4%, transparent) 1px, transparent 1px);
+  background-size: 48px 48px;
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4rem 2rem;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero-text { max-width: 640px; }
+
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--c-3);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.hero-label::before {
+  content: '';
+  display: inline-block;
+  width: 28px;
+  height: 1px;
+  background: var(--c-3);
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--fg-primary);
+  margin-bottom: 1rem;
+}
+.hero-headline .hl-blue { color: var(--c-1); }
+.hero-headline .hl-pink { color: var(--c-2); }
+
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--fg-muted);
+  margin-bottom: 2rem;
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.2rem;
+}
+.badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  padding: 0.28rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.badge-blue   { background: var(--chip-bg); border: 1px solid var(--chip-border); color: var(--chip-text); }
+.badge-pink   { background: var(--chip-pink-bg); border: 1px solid var(--chip-pink-border); color: var(--chip-pink-text); }
+.badge-amber  { background: var(--chip-amber-bg); border: 1px solid var(--chip-amber-border); color: var(--chip-amber-text); }
+.badge-green  { background: var(--chip-green-bg); border: 1px solid var(--chip-green-border); color: var(--chip-green-text); }
+
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.btn-primary {
+  background: var(--c-1);
+  color: var(--bg-base);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.6rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover {
+  background: var(--c-3);
+  color: var(--bg-base);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--c-3) 50%, transparent);
+}
+.btn-secondary {
+  background: transparent;
+  color: var(--c-1);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--c-1);
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-block;
+}
+.btn-secondary:hover {
+  background: color-mix(in srgb, var(--c-1) 12%, transparent);
+  box-shadow: var(--shadow-glow-blue);
+}
+
+/* Monogram headshot */
+.hero-headshot {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--c-1);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--c-1) 25%, transparent), var(--shadow-card);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+}
+.hero-headshot::before {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 40% 35%,
+    color-mix(in srgb, var(--c-1) 18%, var(--bg-card)),
+    color-mix(in srgb, var(--c-2) 10%, var(--bg-card)) 60%,
+    var(--bg-card));
+}
+.monogram {
+  position: relative;
+  z-index: 2;
+  font-family: var(--font-display);
+  font-size: 3.2rem;
+  font-weight: 700;
+  color: var(--fg-primary);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px color-mix(in srgb, var(--c-1) 60%, transparent);
+}
+.monogram-sub {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  color: var(--c-1);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ============================================================
+   SECTION SHARED
+   ============================================================ */
+section { padding: 5rem 0; }
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  max-width: 80px;
+  background: currentColor;
+  opacity: 0.4;
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+.section-desc {
+  font-size: 0.95rem;
+  max-width: 580px;
+  line-height: 1.7;
+  margin-bottom: 3rem;
+}
+
+/* Dark section defaults */
+.section-dark {
+  background: var(--bg-alt);
+}
+.section-dark .section-label { color: var(--c-1); }
+.section-dark .section-title { color: var(--fg-primary); }
+.section-dark .section-desc  { color: var(--fg-muted); }
+
+/* Light section */
+.section-light {
+  background: var(--light-bg);
+}
+.section-light .section-label { color: var(--c-5); }
+.section-light .section-title { color: var(--light-fg); }
+.section-light .section-desc  { color: var(--light-fg-muted); }
+
+/* Deeper dark section */
+.section-deeper {
+  background: var(--bg-base);
+}
+.section-deeper .section-label { color: var(--c-2); }
+.section-deeper .section-title { color: var(--fg-primary); }
+.section-deeper .section-desc  { color: var(--fg-muted); }
+
+/* ============================================================
+   ABOUT / PHILOSOPHY SECTION (DARK)
+   ============================================================ */
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.about-copy p {
+  color: var(--fg-muted);
+  margin-bottom: 1rem;
+  line-height: 1.8;
+  font-size: 0.97rem;
+}
+.about-copy p strong { color: var(--c-1); font-weight: 600; }
+
+.philosophy-cards {
+  display: grid;
+  gap: 1rem;
+}
+.phil-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 1.1rem 1.3rem;
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.phil-card:hover {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow-blue);
+}
+.phil-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 0.1rem;
+}
+.phil-title {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-1);
+  margin-bottom: 0.3rem;
+}
+.phil-body {
+  font-size: 0.88rem;
+  color: var(--fg-muted);
+  line-height: 1.6;
+}
+
+/* ============================================================
+   EXPERIENCE SECTION (LIGHT)
+   ============================================================ */
+/* Timeline wrapper */
+.timeline {
+  position: relative;
+  padding-left: 2.5rem;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 10px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    var(--c-5),
+    color-mix(in srgb, var(--c-5) 30%, transparent)
+  );
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2.2rem;
+}
+.timeline-item:last-child { margin-bottom: 0; }
+
+.timeline-dot {
+  position: absolute;
+  left: -2.5rem;
+  top: 0.4rem;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--c-5);
+  border: 2px solid var(--light-bg);
+  box-shadow: 0 0 0 3px var(--c-5);
+  transform: translateX(3px);
+}
+.timeline-dot.dot-primary {
+  background: var(--c-2);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-2) 40%, transparent);
+}
+
+.exp-card {
+  background: var(--light-surface);
+  border: 1px solid var(--light-border);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--iw-color-l) 7%, transparent);
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+.exp-card:hover {
+  border-color: var(--c-5);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--iw-color-f) 15%, transparent);
+}
+
+/* Visual panel for each experience card */
+.exp-visual {
+  height: 120px;
+  border-radius: var(--radius-md);
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+  position: relative;
+}
+
+/* MTC visual */
+.exp-visual-mtc {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c-5) 60%, var(--iw-color-p)),
+    color-mix(in srgb, var(--c-1) 30%, var(--iw-color-p))
+  );
+}
+
+/* Red Lobster visual */
+.exp-visual-rl {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c-4) 50%, var(--iw-color-q)),
+    color-mix(in srgb, var(--c-2) 30%, var(--iw-color-q))
+  );
+}
+
+/* Telos visual */
+.exp-visual-telos {
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c-5) 40%, var(--iw-color-r)),
+    color-mix(in srgb, var(--c-3) 20%, var(--iw-color-r))
+  );
+}
+
+.exp-visual svg {
+  width: 100%;
+  height: 100%;
+}
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 0.4rem;
+  flex-wrap: wrap;
+}
+.exp-title {
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--light-fg);
+}
+.exp-date {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--c-5);
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  padding: 0.2rem 0.6rem;
+  background: color-mix(in srgb, var(--c-5) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-5) 30%, transparent);
+  border-radius: 20px;
+}
+.exp-company {
+  font-size: 0.88rem;
+  color: var(--light-fg-muted);
+  margin-bottom: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.exp-company span { color: var(--c-5); font-size: 0.75em; }
+
+.exp-bullets {
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+.exp-bullets li {
+  font-size: 0.88rem;
+  color: var(--light-fg-muted);
+  line-height: 1.6;
+  padding-left: 1.2rem;
+  position: relative;
+}
+.exp-bullets li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--c-5);
+  font-size: 0.8rem;
+}
+
+/* Promotion badge */
+.promo-banner {
+  background: linear-gradient(90deg,
+    color-mix(in srgb, var(--c-2) 15%, transparent),
+    color-mix(in srgb, var(--c-4) 10%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--c-2) 35%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.9rem;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--c-2);
+  letter-spacing: 0.08em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ============================================================
+   SKILLS SECTION (DARK)
+   ============================================================ */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.skill-group {
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: 1.4rem;
+  transition: border-color 0.2s;
+}
+.skill-group:hover { border-color: var(--border-glow); }
+.skill-group-title {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-1);
+  margin-bottom: 1rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--border-dim);
+}
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+/* Dark section skill chips — uniform cyan */
+.skill-chip {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 0.28rem 0.7rem;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--chip-text);
+}
+
+/* ============================================================
+   EDUCATION SECTION (LIGHT)
+   ============================================================ */
+.edu-card {
+  background: var(--light-surface);
+  border: 1px solid var(--light-border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 700px;
+  box-shadow: 0 2px 12px color-mix(in srgb, var(--iw-color-l) 6%, transparent);
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+.edu-icon-box {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c-5) 30%, var(--light-bg-alt)),
+    color-mix(in srgb, var(--c-4) 25%, var(--light-bg-alt))
+  );
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  border: 1px solid var(--light-border);
+  flex-shrink: 0;
+}
+.edu-degree {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--light-fg);
+  margin-bottom: 0.25rem;
+}
+.edu-major {
+  font-size: 0.95rem;
+  color: var(--c-5);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.edu-detail {
+  font-size: 0.88rem;
+  color: var(--light-fg-muted);
+  margin-bottom: 0.9rem;
+}
+.edu-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+/* Light section chips — teal */
+.edu-chip {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.22rem 0.65rem;
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--c-5) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c-5) 30%, transparent);
+  color: var(--c-5);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   CONTACT / CTA SECTION (DEEP DARK)
+   ============================================================ */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.contact-copy p {
+  color: var(--fg-muted);
+  font-size: 0.97rem;
+  line-height: 1.8;
+  margin-bottom: 1rem;
+}
+.contact-copy p strong { color: var(--c-4); }
+
+.contact-items {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-md);
+  padding: 0.9rem 1.2rem;
+  transition: border-color 0.2s;
+}
+.contact-item:hover { border-color: var(--c-2); }
+.contact-item-icon { font-size: 1.3rem; flex-shrink: 0; }
+.contact-item-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--fg-subtle);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 0.15rem;
+}
+.contact-item-value {
+  font-size: 0.9rem;
+  color: var(--fg-primary);
+}
+
+.cta-panel {
+  background: var(--bg-card-alt);
+  border: 1px solid var(--border-dim);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+}
+.cta-panel-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--fg-primary);
+  margin-bottom: 0.75rem;
+}
+.cta-panel-body {
+  font-size: 0.9rem;
+  color: var(--fg-muted);
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+.open-to-list {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.8rem;
+}
+.open-to-item {
+  font-size: 0.88rem;
+  color: var(--fg-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.open-to-item::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-3);
+  flex-shrink: 0;
+}
+.cta-btns { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  background: var(--bg-base);
+  border-top: 1px solid var(--border-dim);
+  padding: 2rem;
+  text-align: center;
+}
+.footer-text {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--fg-subtle);
+  letter-spacing: 0.08em;
+}
+.footer-text span { color: var(--c-1); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px) {
+  .hero-inner { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+  .hero-label { justify-content: center; }
+  .hero-label::before { display: none; }
+  .hero-headshot { width: 150px; height: 150px; order: -1; }
+  .monogram { font-size: 2.4rem; }
+  .hero-badges { justify-content: center; }
+  .hero-ctas { justify-content: center; }
+  .hero-sub { margin-left: auto; margin-right: auto; }
+  .about-grid { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .edu-card { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 600px) {
+  section { padding: 3.5rem 0; }
+  .section-title { font-size: 1.5rem; }
+  .timeline { padding-left: 1.8rem; }
+  .timeline-dot { left: -1.8rem; }
+}
+</style>
+<style id="scene-hero-image-override">:root { --hero-bg-image: url("./hero-scene.jpg") !important; }</style>
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #00f0ff;
+  --iw-original-a: #00f0ff;
+  --iw-color-b: #ff2d78;
+  --iw-original-b: #ff2d78;
+  --iw-color-c: #39ff14;
+  --iw-original-c: #39ff14;
+  --iw-color-d: #0a0a1a;
+  --iw-original-d: #0a0a1a;
+  --iw-color-m: oklch(from var(--iw-color-d) calc(l + 0.0317) calc(c + 0.0198) calc(h - 1.9));
+  --iw-original-m: #0f0f2a;
+  --iw-color-n: oklch(from var(--iw-color-d) calc(l + 0.0488) calc(c + 0.0190) calc(h - 1.1));
+  --iw-original-n: #13132e;
+  --iw-color-o: oklch(from var(--iw-color-d) calc(l + 0.0715) calc(c + 0.0216) calc(h - 0.7));
+  --iw-original-o: #181835;
+  --iw-color-p: oklch(from var(--iw-color-d) calc(l + 0.0514) calc(c + 0.0276) calc(h + 13.1));
+  --iw-original-p: #1a1030;
+  --iw-color-q: oklch(from var(--iw-color-d) calc(l + 0.0583) calc(c + 0.0097) calc(h + 99.6));
+  --iw-original-q: #2a1010;
+  --iw-color-r: oklch(from var(--iw-color-d) calc(l + 0.0273) calc(c - 0.0012) calc(h + 1.0));
+  --iw-original-r: #101020;
+  --iw-color-e: #e8c87a;
+  --iw-original-e: #e8c87a;
+  --iw-color-f: #4a8c7f;
+  --iw-original-f: #4a8c7f;
+  --iw-color-g: #f0f0ff;
+  --iw-original-g: #f0f0ff;
+  --iw-color-s: oklch(from var(--iw-color-g) calc(l - 0.0107) calc(c - 0.0007) calc(h + 154.1));
+  --iw-original-s: #f5ede0;
+  --iw-color-t: oklch(from var(--iw-color-g) calc(l - 0.0381) calc(c + 0.0047) calc(h + 157.4));
+  --iw-original-t: #ede4d3;
+  --iw-color-u: oklch(from var(--iw-color-g) calc(l + 0.0268) calc(c - 0.0138) calc(h + 149.4));
+  --iw-original-u: #fdfaf6;
+  --iw-color-h: #5a5a88;
+  --iw-original-h: #5a5a88;
+  --iw-color-i: #9090bb;
+  --iw-original-i: #9090bb;
+  --iw-color-j: #1e1e40;
+  --iw-original-j: #1e1e40;
+  --iw-color-k: #4a3f5c;
+  --iw-original-k: #4a3f5c;
+  --iw-color-l: #000000;
+  --iw-original-l: #000000;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#00f0ff",
+      "count": 9,
+      "chroma": 0.1481438761707702,
+      "score": 1.333294885536932,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#ff2d78",
+      "count": 4,
+      "chroma": 0.24131237469682904,
+      "score": 0.9652494987873161,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#39ff14",
+      "count": 3,
+      "chroma": 0.2859694290411181,
+      "score": 0.8579082871233543,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#0a0a1a",
+      "count": 13,
+      "chroma": 0.033661136136059436,
+      "score": 0.43759476976877265,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-4-dep-1",
+          "ordinal": "M",
+          "hex": "#0f0f2a",
+          "count": 1,
+          "chroma": 0.05348613587899928,
+          "score": 0.05348613587899928,
+          "varToken": "m",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-2",
+          "ordinal": "N",
+          "hex": "#13132e",
+          "count": 1,
+          "chroma": 0.05265162758143789,
+          "score": 0.05265162758143789,
+          "varToken": "n",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-3",
+          "ordinal": "O",
+          "hex": "#181835",
+          "count": 1,
+          "chroma": 0.055237507275994524,
+          "score": 0.055237507275994524,
+          "varToken": "o",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-4",
+          "ordinal": "P",
+          "hex": "#1a1030",
+          "count": 3,
+          "chroma": 0.0613063739696788,
+          "score": 0.1839191219090364,
+          "varToken": "p",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-5",
+          "ordinal": "Q",
+          "hex": "#2a1010",
+          "count": 2,
+          "chroma": 0.04339409444882456,
+          "score": 0.08678818889764912,
+          "varToken": "q",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-6",
+          "ordinal": "R",
+          "hex": "#101020",
+          "count": 2,
+          "chroma": 0.03249806132699848,
+          "score": 0.06499612265399696,
+          "varToken": "r",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-5",
+      "ordinal": "E",
+      "hex": "#e8c87a",
+      "count": 3,
+      "chroma": 0.10378198695169306,
+      "score": 0.3113459608550792,
+      "varToken": "e",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-6",
+      "ordinal": "F",
+      "hex": "#4a8c7f",
+      "count": 3,
+      "chroma": 0.07097835674462975,
+      "score": 0.21293507023388925,
+      "varToken": "f",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-7",
+      "ordinal": "G",
+      "hex": "#f0f0ff",
+      "count": 4,
+      "chroma": 0.020022116035665588,
+      "score": 0.08008846414266235,
+      "varToken": "g",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-7-dep-1",
+          "ordinal": "S",
+          "hex": "#f5ede0",
+          "count": 1,
+          "chroma": 0.019315590660795186,
+          "score": 0.019315590660795186,
+          "varToken": "s",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-7-dep-2",
+          "ordinal": "T",
+          "hex": "#ede4d3",
+          "count": 1,
+          "chroma": 0.02469079209243982,
+          "score": 0.02469079209243982,
+          "varToken": "t",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-7-dep-3",
+          "ordinal": "U",
+          "hex": "#fdfaf6",
+          "count": 1,
+          "chroma": 0.006194290552717432,
+          "score": 0.006194290552717432,
+          "varToken": "u",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-8",
+      "ordinal": "H",
+      "hex": "#5a5a88",
+      "count": 1,
+      "chroma": 0.07324278663873451,
+      "score": 0.07324278663873451,
+      "varToken": "h",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-9",
+      "ordinal": "I",
+      "hex": "#9090bb",
+      "count": 1,
+      "chroma": 0.06333108294433151,
+      "score": 0.06333108294433151,
+      "varToken": "i",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-10",
+      "ordinal": "J",
+      "hex": "#1e1e40",
+      "count": 1,
+      "chroma": 0.06284027140566364,
+      "score": 0.06284027140566364,
+      "varToken": "j",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-11",
+      "ordinal": "K",
+      "hex": "#4a3f5c",
+      "count": 1,
+      "chroma": 0.05002208854511679,
+      "score": 0.05002208854511679,
+      "varToken": "k",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-12",
+      "ordinal": "L",
+      "hex": "#000000",
+      "count": 5,
+      "chroma": 0,
+      "score": 0,
+      "varToken": "l",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav class="nav">
+  <div class="nav-brand">H<span>.</span>Keller</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <div class="hero-label">Instructional Design &amp; Training</div>
+      <h1 class="hero-headline">
+        I design learning that<br>
+        <span class="hl-blue">changes</span> how people <span class="hl-pink">work.</span>
+      </h1>
+      <p class="hero-sub">
+        I design and deliver training for real organizations — not as coursework, but as my job.
+        Promoted from classroom teacher to curriculum designer and supervisor at one of Utah's largest training facilities.
+      </p>
+      <div class="hero-badges">
+        <span class="badge badge-blue">B.S. Applied Communication</span>
+        <span class="badge badge-pink">Instructional Design</span>
+        <span class="badge badge-amber">Class of Aug 2026</span>
+        <span class="badge badge-green">Open to L&amp;D Roles</span>
+      </div>
+      <div class="hero-ctas">
+        <a href="#experience" class="btn-primary">See My Training Work</a>
+        <a href="#contact" class="btn-secondary">Download Resume</a>
+      </div>
+    </div>
+
+    <div class="hero-headshot">
+      <div class="monogram">HSK</div>
+      <div class="monogram-sub">Harry Keller</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT / PHILOSOPHY (DARK)
+     ============================================================ -->
+<section class="section-dark" id="about">
+  <div class="container">
+    <div class="section-label">About</div>
+    <h2 class="section-title">Practitioner turned designer.</h2>
+    <p class="section-desc">
+      The full cycle — build it, teach it, evaluate it, improve it — is what most instructional design candidates only study.
+    </p>
+
+    <div class="about-grid">
+      <div class="about-copy">
+        <p>
+          I've spent the last two years designing and delivering training for a real organization — not as a practicum, but as my job.
+          I started as a classroom teacher at MTC and within a year was promoted to <strong>design the curriculum other teachers learn from</strong>.
+        </p>
+        <p>
+          That arc — practitioner to designer to supervisor — defines what I bring: I understand the learner's side of the room because I've been there,
+          and I understand the designer's side because it's now my job.
+        </p>
+        <p>
+          Every role I've held, from training facility supervisor to team lead to residential mentor, has required me to read a room,
+          communicate clearly, and help people improve. <strong>That's the skill I'm building a career on.</strong>
+        </p>
+        <p>
+          What keeps me in this field is the moment when someone's performance visibly improves because the instruction was built right.
+        </p>
+      </div>
+
+      <div class="philosophy-cards">
+        <div class="phil-card">
+          <div class="phil-icon">🎯</div>
+          <div>
+            <div class="phil-title">Design from the learner out</div>
+            <p class="phil-body">Effective training starts by understanding what the learner needs to do, not what the designer wants to say. I build backward from performance goals.</p>
+          </div>
+        </div>
+        <div class="phil-card">
+          <div class="phil-icon">🔄</div>
+          <div>
+            <div class="phil-title">Iterate on evidence</div>
+            <p class="phil-body">Performance evaluations and coaching sessions create feedback loops. I treat every cohort as a data point to sharpen the next version of the curriculum.</p>
+          </div>
+        </div>
+        <div class="phil-card">
+          <div class="phil-icon">🗣️</div>
+          <div>
+            <div class="phil-title">Communication is the delivery mechanism</div>
+            <p class="phil-body">Content is only as effective as its delivery. Clear, structured facilitation — in front of 5 or 500 — is a core part of the design process.</p>
+          </div>
+        </div>
+        <div class="phil-card">
+          <div class="phil-icon">🌱</div>
+          <div>
+            <div class="phil-title">Development is relational</div>
+            <p class="phil-body">Trust between coach and learner accelerates growth. Whether I'm evaluating a teacher or mentoring a struggling resident, relationship quality drives outcomes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE (LIGHT)
+     ============================================================ -->
+<section class="section-light" id="experience">
+  <div class="container">
+    <div class="section-label">Experience</div>
+    <h2 class="section-title">Where I've done the work.</h2>
+    <p class="section-desc">
+      Three roles, each requiring communication, leadership, and the ability to help people perform better.
+      The MTC role leads because it's where I've built and shipped curriculum.
+    </p>
+
+    <div class="timeline">
+
+      <!-- MTC -->
+      <div class="timeline-item">
+        <div class="timeline-dot dot-primary"></div>
+        <div class="exp-card">
+          <div class="exp-visual exp-visual-mtc">
+            <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <!-- Curriculum flow diagram -->
+              <defs>
+                <filter id="glow"><feGaussianBlur stdDeviation="2.5" result="coloredBlur"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+              </defs>
+              <!-- Background grid -->
+              <rect width="700" height="120" fill="none"></rect>
+              <line x1="0" y1="30" x2="700" y2="30" stroke="rgba(0,240,255,0.08)" stroke-width="1"></line>
+              <line x1="0" y1="60" x2="700" y2="60" stroke="rgba(0,240,255,0.08)" stroke-width="1"></line>
+              <line x1="0" y1="90" x2="700" y2="90" stroke="rgba(0,240,255,0.08)" stroke-width="1"></line>
+              <!-- Curriculum flow nodes -->
+              <rect x="30" y="42" width="90" height="36" rx="5" fill="rgba(0,240,255,0.15)" stroke="rgba(0,240,255,0.5)" stroke-width="1" filter="url(#glow)"></rect>
+              <text x="75" y="56" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-a)">NEEDS</text>
+              <text x="75" y="68" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-a)">ANALYSIS</text>
+              <line x1="120" y1="60" x2="155" y2="60" stroke="rgba(0,240,255,0.6)" stroke-width="1.5" marker-end="url(#arr)"></line>
+              <defs><marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(0,240,255,0.8)"></path></marker></defs>
+              <rect x="155" y="42" width="90" height="36" rx="5" fill="rgba(0,240,255,0.15)" stroke="rgba(0,240,255,0.5)" stroke-width="1" filter="url(#glow)"></rect>
+              <text x="200" y="56" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-a)">CURRICULUM</text>
+              <text x="200" y="68" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-a)">DESIGN</text>
+              <line x1="245" y1="60" x2="280" y2="60" stroke="rgba(0,240,255,0.6)" stroke-width="1.5" marker-end="url(#arr)"></line>
+              <rect x="280" y="42" width="90" height="36" rx="5" fill="rgba(57,255,20,0.12)" stroke="rgba(57,255,20,0.45)" stroke-width="1" filter="url(#glow)"></rect>
+              <text x="325" y="56" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-c)">DELIVERY</text>
+              <text x="325" y="68" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-c)">COACHING</text>
+              <line x1="370" y1="60" x2="405" y2="60" stroke="rgba(57,255,20,0.5)" stroke-width="1.5" marker-end="url(#arr)"></line>
+              <rect x="405" y="42" width="90" height="36" rx="5" fill="rgba(232,200,122,0.12)" stroke="rgba(232,200,122,0.45)" stroke-width="1" filter="url(#glow)"></rect>
+              <text x="450" y="56" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-e)">PERF.</text>
+              <text x="450" y="68" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-e)">EVAL</text>
+              <line x1="495" y1="60" x2="530" y2="60" stroke="rgba(232,200,122,0.5)" stroke-width="1.5" marker-end="url(#arr)"></line>
+              <rect x="530" y="42" width="90" height="36" rx="5" fill="rgba(255,45,120,0.12)" stroke="rgba(255,45,120,0.45)" stroke-width="1" filter="url(#glow)"></rect>
+              <text x="575" y="56" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-b)">ITERATE</text>
+              <text x="575" y="68" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-b)">IMPROVE</text>
+              <!-- Feedback loop arrow at bottom -->
+              <path d="M 620,80 Q 350,115 80,80" stroke="rgba(255,45,120,0.3)" stroke-width="1" fill="none" stroke-dasharray="4,3"></path>
+              <text x="350" y="113" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(255,45,120,0.5)">feedback loop</text>
+              <!-- Label -->
+              <text x="30" y="18" font-family="monospace" font-size="9" fill="rgba(0,240,255,0.5)" letter-spacing="2">INSTRUCTIONAL DESIGN CYCLE — MTC PROVO</text>
+            </svg>
+          </div>
+
+          <div class="promo-banner">
+            🏆 Promoted from Teacher → Supervisor/Trainer within one year
+          </div>
+
+          <div class="exp-header">
+            <div class="exp-title">Supervisor / Trainer / Teacher</div>
+            <div class="exp-date">Jul 2023 – Present</div>
+          </div>
+          <div class="exp-company">
+            🏢 <span>●</span> MTC, Church of Jesus Christ of Latter-Day Saints — Provo, UT
+          </div>
+          <ul class="exp-bullets">
+            <li>Designed and implemented training curriculum for teachers, focusing on pedagogy, classroom management, and communication skills.</li>
+            <li>Coached and mentored teachers individually, providing feedback, professional development, and performance evaluations to improve instructional effectiveness.</li>
+            <li>Managed administrative operations including payroll accuracy, promotions, and employee records to maintain organizational efficiency.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Red Lobster -->
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="exp-card">
+          <div class="exp-visual exp-visual-rl">
+            <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <defs>
+                <filter id="glow2"><feGaussianBlur stdDeviation="2" result="coloredBlur"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+              </defs>
+              <!-- Performance bars -->
+              <text x="30" y="18" font-family="monospace" font-size="9" fill="rgba(232,200,122,0.5)" letter-spacing="2">TEAM PERFORMANCE — LEADERSHIP &amp; COORDINATION</text>
+              <!-- Bar chart representing performance/leadership -->
+              <rect x="60" y="85" width="30" height="20" rx="2" fill="rgba(232,200,122,0.2)" stroke="rgba(232,200,122,0.4)" stroke-width="1"></rect>
+              <rect x="60" y="55" width="30" height="50" rx="2" fill="rgba(232,200,122,0.35)" stroke="rgba(232,200,122,0.6)" stroke-width="1" filter="url(#glow2)"></rect>
+              <rect x="110" y="70" width="30" height="35" rx="2" fill="rgba(232,200,122,0.2)" stroke="rgba(232,200,122,0.4)" stroke-width="1"></rect>
+              <rect x="110" y="45" width="30" height="60" rx="2" fill="rgba(232,200,122,0.35)" stroke="rgba(232,200,122,0.6)" stroke-width="1"></rect>
+              <rect x="160" y="75" width="30" height="30" rx="2" fill="rgba(232,200,122,0.2)" stroke="rgba(232,200,122,0.4)" stroke-width="1"></rect>
+              <rect x="160" y="30" width="30" height="75" rx="2" fill="rgba(255,45,120,0.4)" stroke="rgba(255,45,120,0.7)" stroke-width="1.5" filter="url(#glow2)"></rect>
+              <text x="175" y="26" text-anchor="middle" font-family="monospace" font-size="8" style="fill: var(--iw-color-b)">TOP</text>
+              <!-- Legend -->
+              <rect x="260" y="45" width="12" height="12" rx="2" fill="rgba(255,45,120,0.4)" stroke="rgba(255,45,120,0.7)" stroke-width="1"></rect>
+              <text x="278" y="55" font-family="monospace" font-size="8" fill="rgba(232,200,122,0.7)">Team Lead (you)</text>
+              <rect x="260" y="65" width="12" height="12" rx="2" fill="rgba(232,200,122,0.35)" stroke="rgba(232,200,122,0.6)" stroke-width="1"></rect>
+              <text x="278" y="75" font-family="monospace" font-size="8" fill="rgba(232,200,122,0.7)">Team members</text>
+              <!-- GM coordination icon -->
+              <circle cx="500" cy="60" r="28" fill="rgba(232,200,122,0.08)" stroke="rgba(232,200,122,0.3)" stroke-width="1" stroke-dasharray="4,3"></circle>
+              <text x="500" y="55" text-anchor="middle" font-size="18">🤝</text>
+              <text x="500" y="75" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(232,200,122,0.6)">GM Coordination</text>
+              <!-- Connector -->
+              <line x1="215" y1="60" x2="470" y2="60" stroke="rgba(232,200,122,0.2)" stroke-width="1" stroke-dasharray="3,3"></line>
+              <text x="340" y="56" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(232,200,122,0.35)">direct coordination</text>
+            </svg>
+          </div>
+
+          <div class="exp-header">
+            <div class="exp-title">Team Lead — Server</div>
+            <div class="exp-date">Oct 2022 – Jul 2023</div>
+          </div>
+          <div class="exp-company">
+            🍽️ <span>●</span> Red Lobster — Orem, UT
+          </div>
+          <ul class="exp-bullets">
+            <li>Consistently ranked as the top-performing server and led the team week over week, demonstrating leadership under pressure.</li>
+            <li>Coordinated directly with the general manager to improve team performance and employee well-being.</li>
+            <li>Achieved the highest volume of satisfied customers, reflected through repeat business and positive guest feedback.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Telos -->
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <div class="exp-card">
+          <div class="exp-visual exp-visual-telos">
+            <svg viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+              <defs>
+                <filter id="glow3"><feGaussianBlur stdDeviation="2" result="coloredBlur"></feGaussianBlur><feMerge><feMergeNode in="coloredBlur"></feMergeNode><feMergeNode in="SourceGraphic"></feMergeNode></feMerge></filter>
+              </defs>
+              <text x="30" y="18" font-family="monospace" font-size="9" fill="rgba(57,255,20,0.4)" letter-spacing="2">MENTORING &amp; TRUST RELATIONSHIP MODEL</text>
+              <!-- Relationship nodes -->
+              <circle cx="140" cy="70" r="25" fill="rgba(57,255,20,0.1)" stroke="rgba(57,255,20,0.4)" stroke-width="1.5" filter="url(#glow3)"></circle>
+              <text x="140" y="66" text-anchor="middle" font-size="14">🧑‍💼</text>
+              <text x="140" y="82" text-anchor="middle" font-family="monospace" font-size="7" fill="rgba(57,255,20,0.7)">Mentor</text>
+              <line x1="167" y1="60" x2="213" y2="50" stroke="rgba(57,255,20,0.35)" stroke-width="1.2" stroke-dasharray="3,2"></line>
+              <line x1="167" y1="70" x2="213" y2="70" stroke="rgba(57,255,20,0.35)" stroke-width="1.2" stroke-dasharray="3,2"></line>
+              <line x1="167" y1="80" x2="213" y2="90" stroke="rgba(57,255,20,0.35)" stroke-width="1.2" stroke-dasharray="3,2"></line>
+              <circle cx="235" cy="50" r="18" fill="rgba(57,255,20,0.08)" stroke="rgba(57,255,20,0.3)" stroke-width="1"></circle>
+              <text x="235" y="46" text-anchor="middle" font-size="10">🧑</text>
+              <text x="235" y="60" text-anchor="middle" font-family="monospace" font-size="6" fill="rgba(57,255,20,0.5)">resident</text>
+              <circle cx="235" cy="70" r="18" fill="rgba(57,255,20,0.08)" stroke="rgba(57,255,20,0.3)" stroke-width="1"></circle>
+              <text x="235" y="66" text-anchor="middle" font-size="10">🧑</text>
+              <text x="235" y="80" text-anchor="middle" font-family="monospace" font-size="6" fill="rgba(57,255,20,0.5)">resident</text>
+              <circle cx="235" cy="90" r="18" fill="rgba(57,255,20,0.08)" stroke="rgba(57,255,20,0.3)" stroke-width="1"></circle>
+              <text x="235" y="86" text-anchor="middle" font-size="10">🧑</text>
+              <text x="235" y="100" text-anchor="middle" font-family="monospace" font-size="6" fill="rgba(57,255,20,0.5)">resident</text>
+              <!-- Outcome column -->
+              <text x="340" y="40" font-family="monospace" font-size="8" fill="rgba(57,255,20,0.5)">Outcomes</text>
+              <text x="340" y="58" font-family="monospace" font-size="8" fill="rgba(57,255,20,0.4)">→ Trust &amp; Safety</text>
+              <text x="340" y="72" font-family="monospace" font-size="8" fill="rgba(57,255,20,0.4)">→ Therapy skill transfer</text>
+              <text x="340" y="86" font-family="monospace" font-size="8" fill="rgba(57,255,20,0.4)">→ Healthy living habits</text>
+              <text x="340" y="100" font-family="monospace" font-size="8" fill="rgba(57,255,20,0.4)">→ Day-to-day supervision</text>
+            </svg>
+          </div>
+
+          <div class="exp-header">
+            <div class="exp-title">Care Worker — Mentor</div>
+            <div class="exp-date">Mar 2022 – Oct 2022</div>
+          </div>
+          <div class="exp-company">
+            💙 <span>●</span> Telos — Orem, UT
+          </div>
+          <ul class="exp-bullets">
+            <li>Formed trust-based relationships that encouraged healthy living and behavioral growth.</li>
+            <li>Guided residents through the implementation of therapy skills in day-to-day living.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS (DARK)
+     ============================================================ -->
+<section class="section-dark" id="skills">
+  <div class="container">
+    <div class="section-label">Skills</div>
+    <h2 class="section-title">Areas of expertise.</h2>
+    <p class="section-desc">Built through two-plus years of active practice in training design and delivery — not just coursework.</p>
+
+    <div class="skills-grid">
+
+      <div class="skill-group">
+        <div class="skill-group-title">📐 Instructional Design</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Curriculum Development</span>
+          <span class="skill-chip">Pedagogy</span>
+          <span class="skill-chip">Adult Learning</span>
+          <span class="skill-chip">Classroom Management</span>
+          <span class="skill-chip">Instructional Design Principles</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">🎤 Training Delivery</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Facilitation</span>
+          <span class="skill-chip">Public Speaking</span>
+          <span class="skill-chip">Small Group Training</span>
+          <span class="skill-chip">Large Group Presentations</span>
+          <span class="skill-chip">Workshop Delivery</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">🤝 Coaching &amp; Mentoring</div>
+        <div class="skill-chips">
+          <span class="skill-chip">1:1 Coaching</span>
+          <span class="skill-chip">Performance Evaluation</span>
+          <span class="skill-chip">Professional Development</span>
+          <span class="skill-chip">Feedback Delivery</span>
+          <span class="skill-chip">Mentoring</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">🏗️ Leadership &amp; Operations</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Leadership Training</span>
+          <span class="skill-chip">Employee Management</span>
+          <span class="skill-chip">Administrative Operations</span>
+          <span class="skill-chip">Organizational Effectiveness</span>
+          <span class="skill-chip">Problem-Solving</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">💬 Communication</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Strategic Communication</span>
+          <span class="skill-chip">Stakeholder Communication</span>
+          <span class="skill-chip">Group Decision-Making</span>
+          <span class="skill-chip">Public Relations</span>
+          <span class="skill-chip">Customer Service</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-title">🔎 Process &amp; Evaluation</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Performance Analysis</span>
+          <span class="skill-chip">Training Iteration</span>
+          <span class="skill-chip">Payroll &amp; Records</span>
+          <span class="skill-chip">Operational Efficiency</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION (LIGHT)
+     ============================================================ -->
+<section class="section-light" id="education">
+  <div class="container">
+    <div class="section-label">Education</div>
+    <h2 class="section-title">Building the credentials to match the practice.</h2>
+    <p class="section-desc">
+      A communications degree with an instructional design specialization — the formal framework behind two years of hands-on curriculum work.
+    </p>
+
+    <div class="edu-card">
+      <div class="edu-icon-box">🎓</div>
+      <div>
+        <div class="edu-degree">Bachelor of Science (Expected)</div>
+        <div class="edu-major">Applied Communication — Instructional Design Specialization</div>
+        <div class="edu-detail">📅 Expected Graduation: August 2026</div>
+        <div class="edu-chips">
+          <span class="edu-chip">Applied Communication</span>
+          <span class="edu-chip">Instructional Design</span>
+          <span class="edu-chip">Leadership Excellence</span>
+          <span class="edu-chip">Strategic Public Relations</span>
+          <span class="edu-chip">Small Group Communication</span>
+          <span class="edu-chip">Collaborative Decision-Making</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT (DEEP DARK)
+     ============================================================ -->
+<section class="section-deeper" id="contact">
+  <div class="container">
+    <div class="section-label">Contact</div>
+    <h2 class="section-title">Let's talk about your L&amp;D needs.</h2>
+    <p class="section-desc">
+      I'm actively seeking entry-level instructional design, training &amp; development, and L&amp;D coordinator roles.
+    </p>
+
+    <div class="contact-grid">
+
+      <div class="contact-copy">
+        <p>
+          If you're looking for someone who has already <strong>designed curriculum, delivered it to adult learners, evaluated performance, and iterated</strong> — that full cycle is what I bring to an entry-level role.
+        </p>
+        <p>
+          I'm open to corporate, nonprofit, or education sectors. My degree completes in August 2026, and I'm available for full-time roles or internships in the meantime.
+        </p>
+
+        <div class="contact-items">
+          <a href="mailto:harry.keller@example.com" class="contact-item" style="text-decoration:none">
+            <div class="contact-item-icon">✉️</div>
+            <div>
+              <div class="contact-item-label">Email</div>
+              <div class="contact-item-value">harry.keller@example.com</div>
+            </div>
+          </a>
+          <a href="tel:5550136570" class="contact-item" style="text-decoration:none">
+            <div class="contact-item-icon">📞</div>
+            <div>
+              <div class="contact-item-label">Phone</div>
+              <div class="contact-item-value">555-013-6570</div>
+            </div>
+          </a>
+          <div class="contact-item">
+            <div class="contact-item-icon">📍</div>
+            <div>
+              <div class="contact-item-label">Location</div>
+              <div class="contact-item-value">Provo / Orem, Utah</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cta-panel">
+        <div class="cta-panel-title">Open to opportunities in</div>
+        <div class="open-to-list">
+          <div class="open-to-item">Instructional Design (Entry-Level)</div>
+          <div class="open-to-item">Training &amp; Development Specialist</div>
+          <div class="open-to-item">L&amp;D Coordinator</div>
+          <div class="open-to-item">Corporate Training Facilitator</div>
+          <div class="open-to-item">Curriculum Developer</div>
+          <div class="open-to-item">Employee Development Specialist</div>
+        </div>
+        <p class="cta-panel-body">
+          Corporate · Nonprofit · Education — any sector where well-designed training improves how people work.
+        </p>
+        <div class="cta-btns">
+          <a href="mailto:harry.keller@example.com" class="btn-primary">Get in Touch</a>
+          <a href="#" class="btn-secondary">Download Resume</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer">
+  <p class="footer-text">
+    <span>Harry Keller</span> · Instructional Designer &amp; Training Specialist · Applied Communication, B.S. Expected Aug 2026 · Built 2026
+  </p>
+</footer>
+
+
+</body></html>

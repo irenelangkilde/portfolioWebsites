@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Actual HTML Outputs</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --bg-deep: #16213e;
+      --panel: rgba(24, 34, 62, 0.86);
+      --panel-strong: #213055;
+      --ink: #eef3ff;
+      --muted: #aab6d3;
+      --line: rgba(255, 255, 255, 0.1);
+      --shadow: 0 18px 50px rgba(5, 10, 24, 0.34);
+      --shadow-strong: 0 24px 60px rgba(5, 10, 24, 0.5);
+      --accent: #8ea2ff;
+      --accent-2: #7ed7c1;
+      --preview-width: 1440;
+      --preview-height: 1024;
+      --preview-scale: 0.28;
+      --preview-frame-width: 357.14%;
+      --preview-shell-height: calc(30px + (var(--preview-height) * 1px * var(--preview-scale)));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(142, 162, 255, 0.16), transparent 34%),
+        radial-gradient(circle at top right, rgba(126, 215, 193, 0.14), transparent 28%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .page {
+      width: min(1500px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .hero {
+      margin-bottom: 28px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(22, 33, 62, 0.88);
+      backdrop-filter: blur(14px);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.8rem, 3.6vw, 3rem);
+      font-weight: 600;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+      max-width: 28ch;
+    }
+
+    .hero-copy {
+      display: block;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+
+    .review-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .review-summary {
+      color: var(--muted);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .review-summary strong {
+      color: var(--ink);
+      font-weight: 900;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toolbar-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      padding: 9px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.84rem;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .toolbar-btn:hover,
+    .toolbar-btn:focus-visible {
+      background: rgba(142, 162, 255, 0.18);
+      outline: none;
+    }
+
+    .copy-status {
+      min-height: 1.4em;
+      color: var(--accent-2);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+      gap: 22px;
+    }
+
+    .card {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      text-decoration: none;
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: auto -10% -35% auto;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(142, 162, 255, 0.18), transparent 70%);
+      z-index: -1;
+    }
+
+    .card[data-keep="false"] {
+      opacity: 0.48;
+      filter: grayscale(0.72);
+      border-style: dashed;
+    }
+
+    .card[data-keep="false"] .preview-link {
+      pointer-events: none;
+    }
+
+    .card:hover,
+    .card:focus-visible {
+      transform: translateY(-6px);
+      border-color: rgba(142, 162, 255, 0.28);
+      box-shadow: var(--shadow-strong);
+    }
+
+    .card:focus-visible {
+      outline: 3px solid rgba(142, 162, 255, 0.22);
+      outline-offset: 2px;
+    }
+
+    .preview-shell {
+      position: relative;
+      height: var(--preview-shell-height);
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background:
+        linear-gradient(180deg, rgba(126, 215, 193, 0.08), rgba(142, 162, 255, 0.08)),
+        var(--panel-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .preview-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 30px;
+      background: linear-gradient(180deg, rgba(142, 162, 255, 0.18), rgba(142, 162, 255, 0.06));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 2;
+    }
+
+    .preview-shell::after {
+      content: "";
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      width: 48px;
+      height: 10px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 5px 5px, #d97757 0 4px, transparent 4.1px),
+        radial-gradient(circle at 24px 5px, #d7a457 0 4px, transparent 4.1px),
+        radial-gradient(circle at 43px 5px, #5e9f86 0 4px, transparent 4.1px);
+      z-index: 3;
+    }
+
+    .preview-stage {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 30px);
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .preview-frame {
+      width: var(--preview-frame-width);
+      height: calc(var(--preview-height) * 1px);
+      border: 0;
+      transform: scale(var(--preview-scale));
+      transform-origin: top left;
+      pointer-events: none;
+      background: #fff;
+    }
+
+    .preview-link {
+      display: block;
+      border-radius: 18px;
+      text-decoration: none;
+      outline: none;
+    }
+
+    .preview-link:focus-visible .preview-shell {
+      border-color: rgba(142, 162, 255, 0.68);
+      box-shadow:
+        0 0 0 4px rgba(142, 162, 255, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    }
+
+    .card-body {
+      display: grid;
+      gap: 10px;
+    }
+
+    .keep-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      margin-bottom: -2px;
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 900;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .keep-checkbox {
+      position: absolute;
+      inline-size: 1px;
+      block-size: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .check-mark {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.26);
+      border-radius: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      color: transparent;
+      font-size: 0.9rem;
+      line-height: 1;
+    }
+
+    .keep-checkbox:checked + .check-mark {
+      border-color: rgba(126, 215, 193, 0.74);
+      background: var(--accent-2);
+      color: #10172a;
+    }
+
+    .keep-checkbox:focus-visible + .check-mark {
+      outline: 3px solid rgba(126, 215, 193, 0.26);
+      outline-offset: 2px;
+    }
+
+    .card h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      line-height: 1.2;
+    }
+
+    /* Two-line tag row: a pill for the design-style token from the
+       overview.html Style dropdown, and a short prose descriptor next to it. */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px 10px;
+      margin: -4px 0 -2px;
+    }
+    .style-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(142, 162, 255, 0.16);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+    .style-descriptor {
+      color: rgba(234, 240, 255, 0.7);
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .source-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(126, 215, 193, 0.14);
+      color: var(--accent-2);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+
+    .source-tag-template {
+      background: rgba(142, 162, 255, 0.16);
+      color: var(--accent);
+    }
+
+    .deployed-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(126, 215, 193, 0.14);
+      color: var(--accent-2);
+      font-size: 0.72rem;
+      font-weight: 900;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+
+    .card-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(142, 162, 255, 0.12);
+      color: var(--accent);
+      font-size: 0.86rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    }
+
+    .cta:hover,
+    .cta:focus-visible {
+      background: rgba(142, 162, 255, 0.22);
+      color: var(--ink);
+      outline: none;
+      transform: translateY(-1px);
+    }
+
+    .cta-link {
+      text-decoration: none;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: rgba(5, 10, 24, 0.72);
+      backdrop-filter: blur(8px);
+    }
+
+    .modal-backdrop[hidden] {
+      display: none;
+    }
+
+    .learn-modal {
+      width: min(720px, 100%);
+      max-height: min(760px, calc(100vh - 48px));
+      overflow: auto;
+      padding: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 24px;
+      background: rgba(22, 33, 62, 0.97);
+      box-shadow: var(--shadow-strong);
+    }
+
+    .modal-top {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .modal-kicker {
+      margin: 0 0 8px;
+      color: var(--accent-2);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .learn-modal h2 {
+      margin: 0;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      line-height: 1;
+    }
+
+    .modal-close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      font-weight: 900;
+    }
+
+    .modal-close:hover,
+    .modal-close:focus-visible {
+      background: rgba(142, 162, 255, 0.18);
+      outline: none;
+    }
+
+    .modal-body {
+      display: grid;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 1rem;
+      line-height: 1.68;
+    }
+
+    .modal-body p {
+      margin: 0;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    .modal-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 11px 16px;
+      border-radius: 999px;
+      background: rgba(126, 215, 193, 0.15);
+      color: var(--accent-2);
+      font-size: 0.88rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .modal-link[hidden] {
+      display: none;
+    }
+
+    .modal-link-secondary {
+      background: rgba(142, 162, 255, 0.14);
+      color: var(--accent);
+    }
+
+    @media (max-width: 820px) {
+      .page {
+        width: min(100vw - 18px, 1240px);
+        padding-top: 12px;
+      }
+
+      .hero {
+        padding: 18px;
+        border-radius: 22px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      :root {
+        --preview-scale: 0.22;
+        --preview-frame-width: 454.55%;
+      }
+
+      .gallery {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 14px;
+        border-radius: 20px;
+      }
+
+      .preview-shell {
+        border-radius: 16px;
+      }
+
+      h1 {
+        max-width: none;
+      }
+    }
+  </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="c5a157d9-8e58-47b8-a009-87d582934063"></script>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">Real Service Output Gallery</p>
+      <div class="hero-copy">
+        <div>
+          <h1>Actual HTML Outputs</h1>
+          <p>
+            Browse real HTML outputs from the service. Each card previews the curated copy in
+            <code>html-actual-output/*/*.html</code>, keeps the original source path visible, and includes
+            deployed links when the output exposes one.
+          </p>
+        </div>
+        <div class="review-toolbar" aria-label="Output review controls">
+          <div class="review-summary">
+            <strong id="keptCount">0</strong> kept of <strong id="totalCount">0</strong> outputs.
+            <span id="deployedCount">0 deployed links</span>.
+          </div>
+          <div class="toolbar-actions">
+            <button class="toolbar-btn" id="copyKeptButton" type="button">Copy kept paths</button>
+            <button class="toolbar-btn" id="copyDroppedButton" type="button">Copy dropped paths</button>
+            <button class="toolbar-btn" id="resetChecksButton" type="button">Reset checks</button>
+            <span class="copy-status" id="copyStatus" role="status" aria-live="polite"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="gallery" id="gallery" aria-label="Actual HTML output gallery"></section>
+  </main>
+
+  <div class="modal-backdrop" id="learnMoreModal" hidden>
+    <section class="learn-modal" role="dialog" aria-modal="true" aria-labelledby="learnMoreTitle">
+      <div class="modal-top">
+        <div>
+          <p class="modal-kicker">Output Details</p>
+          <h2 id="learnMoreTitle">Output</h2>
+        </div>
+        <button class="modal-close" id="learnMoreClose" type="button" aria-label="Close learn more dialog">Close</button>
+      </div>
+      <div class="modal-body" id="learnMoreBody"></div>
+      <div class="modal-actions">
+        <a class="modal-link" id="learnMoreOpenLink" href="#" target="_blank" rel="noopener noreferrer">Open Copy</a>
+        <a class="modal-link modal-link-secondary" id="learnMoreDeployedLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open Deployed</a>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    // Order: alphabetical by visible card label, then by file name.
+    const files = [
+      { href: "../html-actual-output/HarryKeller/index.html", owner: "HarryKeller", file: "index.html", title: "Harry Keller - Instructional Designer & Training Specialist", firstName: "Harry", style: "Terminal", layout: "Split left", label: "Harry - Terminal - Split left", designSourceType: "style", designSource: "Terminal" },
+      { href: "../html-actual-output/deployed/ilene-langley-profile.html", owner: "Deployed", file: "ilene-langley-profile.html", title: "Ilene Langley — NLP Scientist / Engineer", firstName: "Ilene", style: "Editorial", layout: "Split left", label: "Ilene - Editorial - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/ilene-langley/profile", sourceHref: "https://example.com/ilene-langley/profile" },
+      { href: "../html-actual-output/deployed/ilene-langley-9.html", owner: "Deployed", file: "ilene-langley-9.html", title: "Ilene Langley — NLP Scientist & Engineer", firstName: "Ilene", style: "Glassmorphism", layout: "Split left", label: "Ilene - Glassmorphism - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/ilene-langley/9", sourceHref: "https://example.com/ilene-langley/9" },
+      { href: "../html-actual-output/IleneLangley/index.html", owner: "IleneLangley", file: "index.html", title: "Ilene Langley - NLP Scientist & Senior ML Engineer", firstName: "Ilene", style: "Glassmorphism", layout: "Split left", label: "Ilene - Glassmorphism - Split left", designSourceType: "style", designSource: "Glassmorphism", deployedUrl: "https://example.com/ilene-langley" },
+      { href: "../html-actual-output/JackKarlsen/portfolio%20(17).html", owner: "JackKarlsen", file: "portfolio (17).html", title: "Jack Karlsen Portfolio", firstName: "Jack", style: "Bold", layout: "Split left", label: "Jack - Bold - Split left - Mellissa", designSourceType: "template", designSource: "Mellissa" },
+      { href: "../html-actual-output/JackKarlsen/jack-karlsen-portfolio-animated.html", owner: "JackKarlsen", file: "jack-karlsen-portfolio-animated.html", title: "Jack Karlsen | RF & Laser Systems Engineer", firstName: "Jack", style: "Modern", layout: "Abstract layered", label: "Jack - Modern - Abstract layered", designSourceType: "style", designSource: "Modern" },
+      { href: "../html-actual-output/JackKarlsen/JackKarlsen_neon.html", owner: "JackKarlsen", file: "JackKarlsen_neon.html", title: "Jack Karlsen | Electrical Engineering Portfolio", firstName: "Jack", style: "Neon tech", layout: "Central", label: "Jack - Neon tech - Central - Sarah", designSourceType: "template", designSource: "Sarah" },
+      { href: "../html-actual-output/JackKarlsen/jk-linguistics.html", owner: "JackKarlsen", file: "jk-linguistics.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Central", label: "Jack - Professional - Central - Jamie", designSourceType: "template", designSource: "Jamie" },
+      { href: "../html-actual-output/JackKarlsen/jk-psychology-blue.html", owner: "JackKarlsen", file: "jk-psychology-blue.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Central", label: "Jack - Professional - Central - Sarah", designSourceType: "template", designSource: "Sarah" },
+      { href: "../html-actual-output/deployed/jack-karlsen-published-12.html", owner: "Deployed", file: "jack-karlsen-published-12.html", title: "Jack Karlsen — Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Split left", label: "Jack - Professional - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/jack-karlsen/published-12", sourceHref: "https://example.com/jack-karlsen/published-12" },
+      { href: "../html-actual-output/JackKarlsen/gold_green_crimson_sidebar.html", owner: "JackKarlsen", file: "gold_green_crimson_sidebar.html", title: "Jack Karlsen - RF & Microwave Engineer", firstName: "Jack", style: "Professional", layout: "Split right", label: "Jack - Professional - Split right", designSourceType: "style", designSource: "Professional" },
+    ];
+
+    const TEMPLATE_STYLES = {
+      Alex: "Clean minimal",
+      Jamie: "Professional",
+      Mellissa: "Bold",
+      Riley: "Editorial",
+      Sarah: "Professional",
+    };
+
+    const gallery = document.getElementById("gallery");
+    const learnMoreModal = document.getElementById("learnMoreModal");
+    const learnMoreTitle = document.getElementById("learnMoreTitle");
+    const learnMoreBody = document.getElementById("learnMoreBody");
+    const learnMoreClose = document.getElementById("learnMoreClose");
+    const learnMoreOpenLink = document.getElementById("learnMoreOpenLink");
+    const learnMoreDeployedLink = document.getElementById("learnMoreDeployedLink");
+    const keptCount = document.getElementById("keptCount");
+    const totalCount = document.getElementById("totalCount");
+    const deployedCount = document.getElementById("deployedCount");
+    const copyKeptButton = document.getElementById("copyKeptButton");
+    const copyDroppedButton = document.getElementById("copyDroppedButton");
+    const resetChecksButton = document.getElementById("resetChecksButton");
+    const copyStatus = document.getElementById("copyStatus");
+
+    let lastFocusedElement = null;
+    let copyStatusTimer = null;
+    const keepStateStorageKey = "actual-html-outputs:keep-state:v1";
+    let keepState = loadKeepState();
+
+    function outputTitle(entry) {
+      return entry.title || entry.file || entry.href;
+    }
+
+    function outputStyle(entry) {
+      return entry.style || TEMPLATE_STYLES[entry.designSource] || entry.designSource || "Unknown";
+    }
+
+    function outputLayout(entry) {
+      return entry.layout || "Unknown";
+    }
+
+    function cardLabel(entry) {
+      if (entry.label) return entry.label;
+      const baseLabel = `${entry.firstName || outputTitle(entry).split(/\s+/)[0]} - ${outputStyle(entry)} - ${outputLayout(entry)}`;
+      return entry.designSourceType === "template" && entry.designSource
+        ? `${baseLabel} - ${entry.designSource}`
+        : baseLabel;
+    }
+
+    function escapeHtml(value) {
+      return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function designSourceKind(entry) {
+      if (entry.designSourceType === "published") return "Published";
+      return entry.designSourceType === "template" ? "Template" : "Style";
+    }
+
+    function designSourceLabel(entry) {
+      return `${designSourceKind(entry)}: ${entry.designSource || "Unknown"}`;
+    }
+
+    function designSourceDetail(entry) {
+      if (entry.designSourceType === "template" && TEMPLATE_STYLES[entry.designSource]) {
+        return `${designSourceLabel(entry)} (${TEMPLATE_STYLES[entry.designSource]} template style)`;
+      }
+      return designSourceLabel(entry);
+    }
+
+    function designSourceTagClass(entry) {
+      return entry.designSourceType === "template" ? "source-tag source-tag-template" : "source-tag";
+    }
+
+    function displayPath(href) {
+      try {
+        return decodeURIComponent(href.replace(/^\.\.\//, ""));
+      } catch (error) {
+        return href.replace(/^\.\.\//, "");
+      }
+    }
+
+    function sourceHref(entry) {
+      return entry.sourceHref || entry.href.replace("../html-actual-output/", "../users/");
+    }
+
+    function sourcePath(entry) {
+      return displayPath(sourceHref(entry));
+    }
+
+    function copyPath(entry) {
+      return displayPath(entry.href);
+    }
+
+    function outputId(entry) {
+      return `${entry.owner}/${entry.file}`;
+    }
+
+    function checkboxId(entry) {
+      return `keep-${outputId(entry).replace(/[^a-z0-9_-]+/gi, "-")}`;
+    }
+
+    function loadKeepState() {
+      try {
+        return JSON.parse(localStorage.getItem(keepStateStorageKey)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function saveKeepState() {
+      try {
+        localStorage.setItem(keepStateStorageKey, JSON.stringify(keepState));
+      } catch (error) {
+        // Ignore private browsing or file-protocol storage failures.
+      }
+    }
+
+    function isKept(entry) {
+      return keepState[outputId(entry)] !== false;
+    }
+
+    function setKeep(entry, keep) {
+      keepState[outputId(entry)] = Boolean(keep);
+      saveKeepState();
+    }
+
+    function setCopyStatus(message) {
+      copyStatus.textContent = message;
+      window.clearTimeout(copyStatusTimer);
+      copyStatusTimer = window.setTimeout(() => {
+        copyStatus.textContent = "";
+      }, 3000);
+    }
+
+    function updateReviewSummary() {
+      const kept = files.filter(isKept).length;
+      const deployed = files.filter((entry) => entry.deployedUrl).length;
+      keptCount.textContent = kept;
+      totalCount.textContent = files.length;
+      deployedCount.textContent = `${deployed} deployed ${deployed === 1 ? "link" : "links"}`;
+    }
+
+    function updateCardState(card, entry) {
+      const keep = isKept(entry);
+      const checkbox = card.querySelector(".keep-checkbox");
+      const keepText = card.querySelector(".keep-text");
+      card.dataset.keep = keep ? "true" : "false";
+      if (checkbox) {
+        checkbox.checked = keep;
+      }
+      if (keepText) {
+        keepText.textContent = keep ? "Keep" : "Drop";
+      }
+    }
+
+    function outputDetailsHtml(entry) {
+      const deployedHtml = entry.deployedUrl
+        ? `<p><strong>Deployed URL:</strong> <a href="${escapeHtml(entry.deployedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.deployedUrl)}</a></p>`
+        : `<p><strong>Deployed URL:</strong> Not found in the local output files.</p>`;
+      return [
+        `<p><strong>Card label:</strong> ${escapeHtml(cardLabel(entry))}</p>`,
+        `<p><strong>Style:</strong> ${escapeHtml(outputStyle(entry))}</p>`,
+        `<p><strong>Layout:</strong> ${escapeHtml(outputLayout(entry))}</p>`,
+        `<p><strong>Owner folder:</strong> ${escapeHtml(entry.owner)}</p>`,
+        `<p><strong>HTML file:</strong> ${escapeHtml(entry.file)}</p>`,
+        `<p><strong>Design source:</strong> ${escapeHtml(designSourceDetail(entry))}</p>`,
+        `<p><strong>Review status:</strong> ${isKept(entry) ? "Keep" : "Drop"}</p>`,
+        `<p><strong>Curated copy:</strong> ${escapeHtml(copyPath(entry))}</p>`,
+        `<p><strong>Original source:</strong> ${escapeHtml(sourcePath(entry))}</p>`,
+        deployedHtml
+      ].join("");
+    }
+
+    function openLearnMore(entry, triggerElement) {
+      lastFocusedElement = triggerElement || document.activeElement;
+      learnMoreTitle.textContent = outputTitle(entry);
+      learnMoreBody.innerHTML = outputDetailsHtml(entry);
+      learnMoreOpenLink.href = entry.href;
+      learnMoreDeployedLink.hidden = !entry.deployedUrl;
+      learnMoreDeployedLink.href = entry.deployedUrl || "#";
+      learnMoreModal.hidden = false;
+      document.body.classList.add("modal-open");
+      learnMoreClose.focus();
+    }
+
+    function closeLearnMore() {
+      learnMoreModal.hidden = true;
+      document.body.classList.remove("modal-open");
+      if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+        lastFocusedElement.focus();
+      }
+    }
+
+    function createCard(entry) {
+      const card = document.createElement("article");
+      card.className = "card";
+      const title = outputTitle(entry);
+      const label = cardLabel(entry);
+      const keep = isKept(entry);
+      const deployedTag = entry.deployedUrl ? `<span class="deployed-tag">Deployed</span>` : "";
+      const deployedAction = entry.deployedUrl
+        ? `<a class="cta cta-link" href="${escapeHtml(entry.deployedUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open deployed site for ${escapeHtml(label)}">Open Deployed</a>`
+        : "";
+
+      card.innerHTML = `
+        <a class="preview-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(label)} website">
+          <div class="preview-shell" aria-hidden="true">
+            <div class="preview-stage">
+              <iframe
+                class="preview-frame"
+                src="${entry.href}"
+                title="${escapeHtml(label)} preview"
+                loading="lazy"
+                tabindex="-1"
+              ></iframe>
+            </div>
+          </div>
+        </a>
+        <div class="card-body">
+          <label class="keep-toggle" for="${checkboxId(entry)}">
+            <input class="keep-checkbox" id="${checkboxId(entry)}" type="checkbox" ${keep ? "checked" : ""}>
+            <span class="check-mark" aria-hidden="true">&#10003;</span>
+            <span class="keep-text">${keep ? "Keep" : "Drop"}</span>
+          </label>
+          <h2>${escapeHtml(label)}</h2>
+          <div class="card-tags">
+            <span class="${designSourceTagClass(entry)}">${escapeHtml(designSourceLabel(entry))}</span>
+            <span class="style-tag">${escapeHtml(outputStyle(entry))}</span>
+            <span class="style-descriptor">${escapeHtml(outputLayout(entry))}</span>
+            ${deployedTag}
+          </div>
+          <div class="card-actions">
+            <button class="cta" type="button" aria-label="View details for ${escapeHtml(label)}">Details</button>
+            ${deployedAction}
+          </div>
+        </div>
+      `;
+
+      updateCardState(card, entry);
+      card.querySelector(".keep-checkbox").addEventListener("change", (event) => {
+        setKeep(entry, event.currentTarget.checked);
+        updateCardState(card, entry);
+        updateReviewSummary();
+      });
+      card.querySelector(".cta").addEventListener("click", (event) => {
+        openLearnMore(entry, event.currentTarget);
+      });
+
+      return card;
+    }
+
+    function copyTextFallback(value) {
+      const textarea = document.createElement("textarea");
+      textarea.value = value;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.top = "0";
+      textarea.style.left = "0";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const copied = document.execCommand("copy");
+      textarea.remove();
+      if (!copied) {
+        throw new Error("Copy command rejected");
+      }
+    }
+
+    async function copyText(value) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try {
+          await navigator.clipboard.writeText(value);
+          return;
+        } catch (error) {
+          copyTextFallback(value);
+          return;
+        }
+      }
+      copyTextFallback(value);
+    }
+
+    async function copyKeptPaths() {
+      const keptPaths = files.filter(isKept).map(copyPath);
+      if (!keptPaths.length) {
+        setCopyStatus("No kept paths selected.");
+        return;
+      }
+      try {
+        await copyText(keptPaths.join("\n"));
+        setCopyStatus(`${keptPaths.length} kept paths copied.`);
+      } catch (error) {
+        setCopyStatus("Copy failed.");
+      }
+    }
+
+    async function copyDroppedPaths() {
+      const droppedPaths = files.filter((entry) => !isKept(entry)).map(copyPath);
+      if (!droppedPaths.length) {
+        setCopyStatus("No dropped paths selected.");
+        return;
+      }
+      try {
+        await copyText(droppedPaths.join("\n"));
+        setCopyStatus(`${droppedPaths.length} dropped paths copied.`);
+      } catch (error) {
+        setCopyStatus("Copy failed.");
+      }
+    }
+
+    function resetChecks() {
+      keepState = {};
+      try {
+        localStorage.removeItem(keepStateStorageKey);
+      } catch (error) {
+        // Ignore private browsing or file-protocol storage failures.
+      }
+      renderGallery();
+      setCopyStatus("All outputs marked keep.");
+    }
+
+    function renderGallery() {
+      const fragment = document.createDocumentFragment();
+
+      files.forEach((entry) => {
+        fragment.appendChild(createCard(entry));
+      });
+
+      gallery.innerHTML = "";
+      gallery.appendChild(fragment);
+      updateReviewSummary();
+    }
+
+    copyKeptButton.addEventListener("click", copyKeptPaths);
+    copyDroppedButton.addEventListener("click", copyDroppedPaths);
+    resetChecksButton.addEventListener("click", resetChecks);
+    learnMoreClose.addEventListener("click", closeLearnMore);
+    learnMoreModal.addEventListener("click", (event) => {
+      if (event.target === learnMoreModal) {
+        closeLearnMore();
+      }
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !learnMoreModal.hidden) {
+        closeLearnMore();
+      }
+    });
+    renderGallery();
+  </script>
+</body>
+</html>

@@ -612,6 +612,42 @@
       padding: 10px 12px;
     }
     summary{ cursor:pointer; font-weight: 900; }
+    /* "More options" disclosure inside the Design options sub-panel. Resets the
+       boxed `details` styling above so it reads as an inline link rather than a
+       card nested inside the sub-panel's own card. */
+    details.more-options{
+      background: none;
+      border: 0;
+      border-radius: 0;
+      padding: 0;
+      margin-top: 10px;
+    }
+    details.more-options > summary{
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      width: fit-content;
+      font-size: 12px;
+      font-weight: 600;
+      color: rgba(141,224,255,.85);
+      list-style: none;
+    }
+    details.more-options > summary::-webkit-details-marker{ display: none; }
+    /* Border-drawn rather than a ▸ glyph: the Unicode *small* triangles render
+       near-invisibly at label size, and the full-size ▶/▼ risk being styled as
+       colour emoji. This is size-exact and inherits the label colour. */
+    details.more-options > summary::before{
+      content: "";
+      flex-shrink: 0;
+      width: 0;
+      height: 0;
+      border-left: 7px solid currentColor;
+      border-top: 5px solid transparent;
+      border-bottom: 5px solid transparent;
+      transition: transform .15s ease;
+    }
+    details.more-options[open] > summary::before{ transform: rotate(90deg); }
+    details.more-options > summary:hover{ text-decoration: underline; }
     pre{
       white-space: pre-wrap;
       word-break: break-word;
@@ -1234,10 +1270,10 @@
               <label for="designComposition">Composition</label>
               <select id="designComposition" name="designComposition">
                 <option value="">— choose —</option>
+                <option value="scene-based">Scene-based — lab, desk, workshop, field</option>
                 <option value="split-left">Split left — content left, visual right</option>
                 <option value="split-right">Split right — visual left, content right</option>
                 <option value="central">Central — symmetric centered hero</option>
-                <option value="scene-based">Scene-based — lab, desk, workshop, field</option>
                 <option value="abstract_layered">Abstract layered — motifs, rings, grids</option>
               </select>
             </div>
@@ -1250,12 +1286,12 @@
                 <option value="clean-minimal">Clean minimal</option>
                 <option value="elegant">Elegant</option>
                 <option value="modern">Modern</option>
+                <option value="professional">Professional</option>
                 <option value="fun">Fun</option>
                 <option value="bold">Bold</option>
                 <option value="glassmorphism">Glassmorphism</option>
-                <option value="glass-dark">Glass dark</option>
                 <option value="brutalist">Brutalist</option>
-                <option value="dark terminal">Dark terminal</option>
+                <option value="terminal">Terminal</option>
                 <option value="editorial">Editorial</option>
                 <option value="Swiss grid">Swiss grid</option>
                 <option value="neon-tech">Neon tech</option>
@@ -1280,35 +1316,59 @@
               </select>
             </div>
 
-            <!-- Density -->
-            <div>
-              <label for="designDensity">Density</label>
-              <select id="designDensity" name="designDensity">
-                <option value="compact" selected>Compact — tight padding, 3-col grids</option>
-                <option value="medium">Medium — balanced spacing</option>
-                <option value="spacious">Spacious — generous whitespace</option>
-              </select>
-            </div>
-
-            <!-- Use icons -->
-            <div>
-              <label for="useEmojiIcons">Use icons</label>
-              <select id="useEmojiIcons" name="useEmojiIcons">
-                <option value="yes" selected>Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-
-            <!-- Alternate sections -->
-            <div>
-              <label for="alternateSections">Alternate light &amp; dark sections</label>
-              <select id="alternateSections" name="alternateSections">
-                <option value="yes" selected>Yes</option>
-                <option value="no">No</option>
-              </select>
-            </div>
-
           </div>
+
+          <!-- Secondary design choices, collapsed behind "More options" so the
+               panel leads with just Composition and Style. Values still post
+               while collapsed: a details element keeps its content in the DOM,
+               so the getElementById reads in form.js need no changes. -->
+          <details class="more-options" id="designMoreOptions">
+            <summary>More options</summary>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px;">
+
+              <!-- Density -->
+              <div>
+                <label for="designDensity">Density</label>
+                <select id="designDensity" name="designDensity">
+                  <option value="compact">Compact — tight padding, 3-col grids</option>
+                  <option value="medium" selected>Medium — balanced spacing</option>
+                  <option value="spacious">Spacious — generous whitespace</option>
+                </select>
+              </div>
+
+              <!-- Use icons -->
+              <div>
+                <label for="useEmojiIcons">Use icons</label>
+                <select id="useEmojiIcons" name="useEmojiIcons">
+                  <option value="yes" selected>Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              <!-- Light vs dark main section — factors the light/dark axis out of
+                   the Style dropdown so users pick style and mode independently.
+                   Styles with intrinsic dark themes (Terminal, Neon tech) may
+                   not honor "Light" cleanly; the AI reconciles as best it can. -->
+              <div>
+                <label for="mainSectionMode">Light vs dark main section</label>
+                <select id="mainSectionMode" name="mainSectionMode">
+                  <option value="light" selected>Light</option>
+                  <option value="dark">Dark</option>
+                </select>
+              </div>
+
+              <!-- Alternate sections -->
+              <div>
+                <label for="alternateSections">Alternate light &amp; dark sections</label>
+                <select id="alternateSections" name="alternateSections">
+                  <option value="yes" selected>Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+            </div>
+          </details>
           </div>
         </div>
 

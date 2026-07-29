@@ -3750,7 +3750,11 @@ input[type="color"].split-color::-moz-color-swatch {
         design_render_mode:  document.getElementById("designRenderMode")?.value   || "",
         design_density:        document.getElementById("designDensity")?.value        || "medium",
         use_emoji_icons:       document.getElementById("useEmojiIcons")?.value       === "yes",
-        alternate_sections:    document.getElementById("alternateSections")?.value   !== "no"
+        alternate_sections:    document.getElementById("alternateSections")?.value   !== "no",
+        // Whether the main section (hero + primary content) uses a light or
+        // dark background. Kept as a separate axis from design_style so users
+        // can pick e.g. "Modern" + "Dark" without needing a "Dark modern" style.
+        main_section_mode:     document.getElementById("mainSectionMode")?.value     || "light"
       };
     }
 
@@ -5638,8 +5642,8 @@ input[type="color"].split-color::-moz-color-swatch {
     });
 
     // Page 3 inputs — template source radios, design selects, template keyword/file
-    ["designStyle", "designComposition", "designRenderMode", "designDensity",
-     "useEmojiIcons", "alternateSections", "modelTemplate"].forEach(id => {
+    ["designStyle", "designStyleOther", "designComposition", "designRenderMode", "designDensity",
+     "useEmojiIcons", "mainSectionMode", "alternateSections", "modelTemplate"].forEach(id => {
       const el = document.getElementById(id);
       el?.addEventListener("change", invalidateFromPage3);
       el?.addEventListener("input",  invalidateFromPage3);

@@ -19,8 +19,17 @@
       --accent-2: #7ed7c1;
       --preview-width: 1440;
       --preview-height: 1024;
-      --preview-scale: 0.19;
+      /* Thumbnail width in px, kept unitless so it can drive --preview-scale.
+         This is the only knob: raise it to widen the thumbnails. */
+      --thumb-width: 360;
+      /* Derived, never hand-tuned. A scale that disagrees with the column
+         width makes the 1440px-wide iframe overflow the stage, and the right
+         edge of every preview gets clipped by the stage's overflow:hidden.
+         Deriving it keeps the two in lockstep at every breakpoint. */
+      --preview-scale: calc(var(--thumb-width) / var(--preview-width));
       --preview-shell-height: calc(var(--preview-height) * 1px * var(--preview-scale));
+      /* Grid track: thumb + card padding (2x16) + card border + shell border. */
+      --thumb-column: calc(var(--thumb-width) * 1px + 36px);
     }
 
     * {
@@ -94,7 +103,11 @@
 
     .gallery {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      /* Fixed tracks rather than 1fr: the preview scale is pinned to a known
+         thumbnail width, so the track must not stretch. min(…, 100%) is a
+         safety valve so a track can never overflow a very narrow screen. */
+      grid-template-columns: repeat(auto-fit, min(var(--thumb-column), 100%));
+      justify-content: center;
       gap: 22px;
     }
 
@@ -217,6 +230,33 @@
       margin: 0;
       font-size: 1.15rem;
       line-height: 1.2;
+    }
+
+    /* Two-line tag row: a pill for the design-style token from the
+       overview.html Style dropdown, and a short prose descriptor next to it. */
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 6px 10px;
+      margin: -4px 0 -2px;
+    }
+    .style-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(142, 162, 255, 0.16);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      line-height: 1.5;
+    }
+    .style-descriptor {
+      color: rgba(234, 240, 255, 0.7);
+      font-size: 0.82rem;
+      line-height: 1.35;
     }
 
     .cta {
@@ -352,6 +392,11 @@
     }
 
     @media (max-width: 820px) {
+      /* Narrower thumbs so two tracks still fit a tablet-width page. */
+      :root {
+        --thumb-width: 330;
+      }
+
       .page {
         width: min(100vw - 18px, 1240px);
         padding-top: 12px;
@@ -365,12 +410,11 @@
 
     @media (max-width: 520px) {
       :root {
-        --preview-scale: 0.16;
+        --thumb-width: 300;
       }
 
-      .gallery {
-        grid-template-columns: 1fr;
-      }
+      /* No grid-template-columns override needed — auto-fit already collapses
+         to a single track once one fixed column is all that fits. */
 
       .card {
         padding: 14px;
@@ -423,28 +467,50 @@
   </div>
 
   <script>
+    // `style` maps to the Style dropdown in overview.html. `tagline`
+    // describes the STYLE itself (layout, typography, ornament patterns, and
+    // color-distribution shape) — not the specific template's colors — so
+    // templates sharing a style share a tagline. See STYLE_TAGLINES below
+    // for the single source of truth; keep this array in sync when you add
+    // new styles or tag-line copy.
+    const STYLE_TAGLINES = {
+      "Clean minimal":  "Whitespace-first, restrained hierarchy, single-focus per section",
+      "Elegant":        "Refined typography, generous pacing, subtle textures",
+      "Modern":         "Contemporary sans-serif hierarchy, 3D or gradient hero visuals",
+      "Corporate":      "Three-color brand palette, standard business layout",
+      "Fun":            "Playful cartoon accents and illustrative flourishes",
+      "Bold":           "Oversized display type, high-impact composition",
+      "Glassmorphism":  "Frosted-glass cards, blurred backdrop layering",
+      "Brutalist":      "Industrial capitals, raw grids, coarse textures",
+      "Terminal":       "Monospace typography and terminal-chrome layout",
+      "Editorial":      "Serif-forward with magazine-style hierarchy",
+      "Swiss grid":     "Visible grid system, systematic sans-serif composition",
+      "Neon tech":      "Saturated accents, futuristic technical vibe",
+    };
+
+    // Order: alphabetical by template first name (matches the slug in href).
     const files = [
-      { href: "../templates/marcus/sample.html",                      major: "Accounting",                variant: "Base" },
-      { href: "../templates/owen/sample.html",                        major: "Anthropology",              variant: "Base" },
-      { href: "../templates/maya/sample.html",                        major: "Art",                       variant: "Base" },
-      { href: "../templates/hal/sample.html",                         major: "Biology",                   variant: "Base" },
-      { href: "../templates/naomi/sample.html",                       major: "Biology",                   variant: "B"    },
-      { href: "../templates/alex/sample.html",                        major: "Chemistry",                 variant: "Base" },
-      { href: "../templates/jordan/sample.html",                      major: "Civil Engineering",         variant: "Base" },
-      { href: "../templates/riley/sample.html",                       major: "Data Science",              variant: "Base" },
-      { href: "../templates/devin/sample.html",                       major: "Data Science",              variant: "B"    },
-      { href: "../templates/josh/sample.html",                        major: "Early Childhood Education", variant: "Base" },
-      { href: "../templates/caleb/sample.html",                       major: "Electrical Engineering",    variant: "Base" },
-      { href: "../templates/avery/sample.html",                       major: "Electrical Engineering",    variant: "B"    },
-      { href: "../templates/alexandra/sample.html",                   major: "Finance",                   variant: "Base" },
-      { href: "../templates/jake/sample.html",                        major: "History",                   variant: "Base" },
-      { href: "../templates/jamie/sample.html",                       major: "Linguistics",               variant: "Base" },
-      { href: "../templates/amy/sample.html",                         major: "Management",                variant: "Base" },
-      { href: "../templates/aria/sample.html",                        major: "Physics",                   variant: "Base" },
-      { href: "../templates/sarah/sample.html",                       major: "Psychology",                variant: "Base" },
-      { href: "../templates/sofia/sample.html",                       major: "Spanish",                   variant: "Base" },
-      { href: "../templates/mellissa/sample.html",                    major: "Spanish",                   variant: "B"    },
-      { href: "../templates/lucy/sample.html",                        major: "Statistics",                variant: "Base" },
+      { href: "../templates/alex/sample.html",                        major: "Chemistry",                 variant: "Base", style: "Clean minimal" },
+      { href: "../templates/amy/sample.html",                         major: "Management",                variant: "Base", style: "Elegant"       },
+      { href: "../templates/aria/sample.html",                        major: "Physics",                   variant: "Base", style: "Corporate"     },
+      { href: "../templates/bryan/sample.html",                       major: "Electrical Engineering",    variant: "B",    style: "Corporate"     },
+      { href: "../templates/caleb/sample.html",                       major: "Electrical Engineering",    variant: "Base", style: "Modern"        },
+      { href: "../templates/devin/sample.html",                       major: "Data Science",              variant: "B",    style: "Modern"        },
+      { href: "../templates/hal/sample.html",                         major: "Biology",                   variant: "Base", style: "Clean minimal" },
+      { href: "../templates/jake/sample.html",                        major: "History",                   variant: "Base", style: "Editorial"     },
+      { href: "../templates/jamie/sample.html",                       major: "Linguistics",               variant: "Base", style: "Corporate"     },
+      { href: "../templates/jordan/sample.html",                      major: "Civil Engineering",         variant: "Base", style: "Corporate"     },
+      { href: "../templates/josh/sample.html",                        major: "Early Childhood Education", variant: "Base", style: "Editorial"     },
+      { href: "../templates/lucy/sample.html",                        major: "Statistics",                variant: "Base", style: "Clean minimal" },
+      { href: "../templates/marcus/sample.html",                      major: "Accounting",                variant: "Base", style: "Neon tech"     },
+      { href: "../templates/maya/sample.html",                        major: "Art",                       variant: "Base", style: "Modern"        },
+      { href: "../templates/mellissa/sample.html",                    major: "Spanish",                   variant: "B",    style: "Bold"          },
+      { href: "../templates/naomi/sample.html",                       major: "Biology",                   variant: "B",    style: "Editorial"     },
+      { href: "../templates/owen/sample.html",                        major: "Anthropology",              variant: "Base", style: "Editorial"     },
+      { href: "../templates/riley/sample.html",                       major: "Data Science",              variant: "Base", style: "Editorial"     },
+      { href: "../templates/sarah/sample.html",                       major: "Psychology",                variant: "Base", style: "Corporate"     },
+      { href: "../templates/sofia/sample.html",                       major: "Spanish",                   variant: "Base", style: "Modern"        },
+      { href: "../templates/zoey/sample.html",                        major: "Finance",                   variant: "Base", style: "Brutalist"     },
     ];
 
     const gallery = document.getElementById("gallery");
@@ -458,6 +524,9 @@
     let lastFocusedElement = null;
 
     function templateTitle(entry) {
+      // Prefer an explicit override when a template's displayed name differs
+      // from its URL slug. Fall back to capitalizing the slug from the href.
+      if (entry.title) return entry.title;
       const match = entry.href.match(/\/templates\/([^/]+)\//);
       const slug = match ? match[1] : entry.major;
       return slug.charAt(0).toUpperCase() + slug.slice(1);
@@ -546,6 +615,10 @@
         </a>
         <div class="card-body">
           <h2>${templateTitle(entry)}</h2>
+          <div class="card-tags">
+            ${entry.style ? `<span class="style-tag">${escapeHtml(entry.style)}</span>` : ""}
+            ${entry.style && STYLE_TAGLINES[entry.style] ? `<span class="style-descriptor">${escapeHtml(STYLE_TAGLINES[entry.style])}</span>` : ""}
+          </div>
           <button class="cta" type="button" aria-label="Learn more about ${templateTitle(entry)}">Learn More</button>
         </div>
       `;

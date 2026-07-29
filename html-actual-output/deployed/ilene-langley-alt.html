@@ -1,0 +1,2092 @@
+<html lang="en" style="--background: #7b5ea7; --quinary: #7b5ea7; --bp-slot5: #7b5ea7; --bp-slot-5: #7b5ea7; --slot5: #7b5ea7; --slot-5: #7b5ea7; --bp-accent1: #7b5ea7; --accent1: #7b5ea7; --foreground: #c8941a; --quaternary: #c8941a; --bp-slot4: #c8941a; --bp-slot-4: #c8941a; --slot4: #c8941a; --slot-4: #c8941a; --bp-accent2: #c8941a; --accent2: #c8941a; --primary: #1b2a4a; --dominant: #1b2a4a; --bp-slot1: #1b2a4a; --bp-slot-1: #1b2a4a; --slot1: #1b2a4a; --slot-1: #1b2a4a; --bp-primary: #1b2a4a; --secondary: #f5edd8; --bp-slot2: #f5edd8; --bp-slot-2: #f5edd8; --slot2: #f5edd8; --slot-2: #f5edd8; --bp-secondary: #f5edd8; --accent: #3a7d6e; --tertiary: #3a7d6e; --bp-slot3: #3a7d6e; --bp-slot-3: #3a7d6e; --slot3: #3a7d6e; --slot-3: #3a7d6e; --bp-tertiary: #3a7d6e"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ilene Langley — NLP Scientist / Engineer</title>
+<style>
+/* ============================================================
+   DESIGN TOKENS — COLOR SYSTEM
+   ============================================================ */
+:root {
+  /* Anchor palette */
+  --c-1: var(--iw-color-d);   /* deep navy */
+  --c-2: var(--iw-color-e);   /* warm cream */
+  --c-3: var(--iw-color-b);   /* teal green */
+  --c-4: var(--iw-color-a);   /* amber gold */
+  --c-5: var(--iw-color-c);   /* muted violet */
+
+  /* Hero image — overridden client-side if AI image is supplied */
+  --hero-bg-image: none;
+
+  /* Derived surface tokens */
+  --surface-dark:       var(--c-1);
+  --surface-mid:        color-mix(in srgb, var(--c-1) 80%, var(--c-3) 20%);
+  --surface-light:      var(--c-2);
+  --surface-teal:       var(--c-3);
+  --surface-amber:      color-mix(in srgb, var(--c-4) 15%, var(--c-2) 85%);
+  --surface-violet:     color-mix(in srgb, var(--c-5) 12%, var(--c-2) 88%);
+  --surface-card-dark:  color-mix(in srgb, var(--c-1) 90%, white 10%);
+  --surface-card-light: color-mix(in srgb, var(--c-2) 85%, white 15%);
+
+  /* Text tokens */
+  --text-on-dark:       var(--c-2);
+  --text-on-light:      var(--c-1);
+  --text-accent-gold:   var(--c-4);
+  --text-accent-teal:   var(--c-3);
+  --text-accent-violet: var(--c-5);
+  --text-muted-dark:    color-mix(in srgb, var(--c-2) 60%, var(--c-1) 40%);
+  --text-muted-light:   color-mix(in srgb, var(--c-1) 55%, white 45%);
+
+  /* Border tokens */
+  --border-dark:    color-mix(in srgb, var(--c-1) 60%, var(--c-3) 40%);
+  --border-light:   color-mix(in srgb, var(--c-2) 50%, var(--c-1) 50%);
+  --border-teal:    var(--c-3);
+  --border-amber:   var(--c-4);
+  --border-violet:  var(--c-5);
+
+  /* Chip tokens */
+  --chip-bg-dark:       color-mix(in srgb, var(--c-3) 25%, var(--c-1) 75%);
+  --chip-text-dark:     var(--c-2);
+  --chip-border-dark:   color-mix(in srgb, var(--c-3) 50%, var(--c-1) 50%);
+  --chip-bg-light:      color-mix(in srgb, var(--c-1) 10%, var(--c-2) 90%);
+  --chip-text-light:    var(--c-1);
+  --chip-border-light:  color-mix(in srgb, var(--c-1) 30%, var(--c-2) 70%);
+  --chip-bg-teal:       color-mix(in srgb, var(--c-3) 20%, var(--c-2) 80%);
+  --chip-text-teal:     color-mix(in srgb, var(--c-3) 90%, var(--c-1) 10%);
+  --chip-border-teal:   var(--c-3);
+
+  /* Shadow */
+  --shadow-sm:  0 2px 6px color-mix(in srgb, var(--c-1) 25%, transparent 75%);
+  --shadow-md:  0 4px 16px color-mix(in srgb, var(--c-1) 30%, transparent 70%);
+  --shadow-lg:  0 8px 32px color-mix(in srgb, var(--c-1) 35%, transparent 65%);
+
+  /* Layout */
+  --max-w: 1140px;
+  --section-pad: 5rem 1.5rem;
+  --grid-gap: 1.5rem;
+  --radius-sm: 4px;
+  --radius-md: 10px;
+  --radius-lg: 18px;
+
+  /* Typography */
+  --font-sans: 'Helvetica Neue', Arial, 'Liberation Sans', sans-serif;
+  --font-mono: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: var(--font-sans);
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  line-height: 1.65;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+/* ============================================================
+   UTILITY CLASSES
+   ============================================================ */
+.container { max-width: var(--max-w); margin: 0 auto; padding: 0 1.5rem; }
+.section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 0.5rem;
+}
+.section-title {
+  font-size: clamp(1.7rem, 3vw, 2.4rem);
+  font-weight: 800;
+  line-height: 1.15;
+  margin-bottom: 1.25rem;
+}
+.section-intro {
+  font-size: 1.05rem;
+  max-width: 680px;
+  line-height: 1.75;
+  opacity: 0.85;
+  margin-bottom: 2.5rem;
+}
+.grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--grid-gap); }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--grid-gap); }
+.grid-auto { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: var(--grid-gap); }
+
+/* Chip recipes */
+.chip-set { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 0.75rem; }
+.chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 0.25rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+.chip-dark {
+  background: var(--chip-bg-dark);
+  color: var(--chip-text-dark);
+  border-color: var(--chip-border-dark);
+}
+.chip-light {
+  background: var(--chip-bg-light);
+  color: var(--chip-text-light);
+  border-color: var(--chip-border-light);
+}
+.chip-teal {
+  background: var(--chip-bg-teal);
+  color: var(--chip-text-teal);
+  border-color: var(--chip-border-teal);
+}
+.chip-gold {
+  background: color-mix(in srgb, var(--c-4) 18%, var(--c-2) 82%);
+  color: color-mix(in srgb, var(--c-4) 85%, var(--c-1) 15%);
+  border-color: color-mix(in srgb, var(--c-4) 45%, var(--c-2) 55%);
+}
+.chip-violet {
+  background: color-mix(in srgb, var(--c-5) 18%, var(--c-2) 82%);
+  color: color-mix(in srgb, var(--c-5) 80%, var(--c-1) 20%);
+  border-color: color-mix(in srgb, var(--c-5) 40%, var(--c-2) 60%);
+}
+
+/* Badge */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  border: 1.5px solid;
+}
+.badge-gold {
+  background: color-mix(in srgb, var(--c-4) 20%, var(--c-1) 80%);
+  color: var(--c-4);
+  border-color: var(--c-4);
+}
+.badge-teal {
+  background: color-mix(in srgb, var(--c-3) 20%, var(--c-1) 80%);
+  color: var(--c-3);
+  border-color: var(--c-3);
+}
+.badge-violet {
+  background: color-mix(in srgb, var(--c-5) 20%, var(--c-1) 80%);
+  color: var(--c-5);
+  border-color: var(--c-5);
+}
+.badge-cream {
+  background: color-mix(in srgb, var(--c-2) 15%, var(--c-1) 85%);
+  color: var(--c-2);
+  border-color: color-mix(in srgb, var(--c-2) 40%, var(--c-1) 60%);
+}
+
+/* Swiss rule dividers */
+.swiss-rule {
+  width: 3.5rem;
+  height: 3px;
+  background: var(--c-4);
+  margin-bottom: 1.5rem;
+  border-radius: 2px;
+}
+.swiss-rule-teal { background: var(--c-3); }
+.swiss-rule-violet { background: var(--c-5); }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+#site-nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--c-1) 96%, transparent 4%);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border-dark);
+}
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+.nav-wordmark {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--c-2);
+}
+.nav-wordmark span { color: var(--c-4); }
+.nav-links {
+  display: flex;
+  gap: 1.75rem;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted-dark);
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--c-4); text-decoration: none; }
+.nav-cta {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 0.4rem 1rem;
+  background: var(--c-4);
+  color: var(--c-1);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s;
+}
+.nav-cta:hover { background: color-mix(in srgb, var(--c-4) 80%, white 20%); text-decoration: none; }
+
+/* ============================================================
+   HERO
+   ============================================================ */
+#hero {
+  padding-top: 56px;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg,
+    var(--c-1) 0%,
+    color-mix(in srgb, var(--c-1) 85%, var(--c-5) 15%) 45%,
+    color-mix(in srgb, var(--c-1) 75%, var(--c-3) 25%) 100%),
+    var(--hero-bg-image) center/cover no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Swiss grid decoration */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:linear-gradient(var(--border-dark) 1px, transparent 1px), linear-gradient(90deg, var(--border-dark) 1px, transparent 1px);
+  background-size: 60px 60px;
+  opacity: 0.18;
+  pointer-events: none;
+}
+
+/* Parse tree SVG decoration */
+#hero::after {
+  content: '';
+  position: absolute;
+  right: -2rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 520px;
+  height: 520px;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 520 520' xmlns='http://www.w3.org/2000/svg'%3E%3Cg opacity='0.10' fill='none' stroke='%23f5edd8' stroke-width='1.5'%3E%3Ccircle cx='260' cy='60' r='28'/%3E%3Ctext x='260' y='66' text-anchor='middle' font-size='13' fill='%23f5edd8' font-family='monospace'%3ES%3C/text%3E%3Ccircle cx='120' cy='170' r='24'/%3E%3Ccircle cx='260' cy='170' r='24'/%3E%3Ccircle cx='400' cy='170' r='24'/%3E%3Cline x1='260' y1='88' x2='120' y2='146'/%3E%3Cline x1='260' y1='88' x2='260' y2='146'/%3E%3Cline x1='260' y1='88' x2='400' y2='146'/%3E%3Ccircle cx='60' cy='280' r='20'/%3E%3Ccircle cx='150' cy='280' r='20'/%3E%3Ccircle cx='220' cy='280' r='20'/%3E%3Ccircle cx='300' cy='280' r='20'/%3E%3Ccircle cx='370' cy='280' r='20'/%3E%3Ccircle cx='440' cy='280' r='20'/%3E%3Cline x1='120' y1='194' x2='60' y2='260'/%3E%3Cline x1='120' y1='194' x2='150' y2='260'/%3E%3Cline x1='260' y1='194' x2='220' y2='260'/%3E%3Cline x1='260' y1='194' x2='300' y2='260'/%3E%3Cline x1='400' y1='194' x2='370' y2='260'/%3E%3Cline x1='400' y1='194' x2='440' y2='260'/%3E%3Ccircle cx='30' cy='370' r='16'/%3E%3Ccircle cx='80' cy='370' r='16'/%3E%3Ccircle cx='130' cy='370' r='16'/%3E%3Ccircle cx='175' cy='370' r='16'/%3E%3Ccircle cx='220' cy='370' r='16'/%3E%3Ccircle cx='265' cy='370' r='16'/%3E%3Ccircle cx='310' cy='370' r='16'/%3E%3Ccircle cx='360' cy='370' r='16'/%3E%3Ccircle cx='415' cy='370' r='16'/%3E%3Ccircle cx='460' cy='370' r='16'/%3E%3Cline x1='60' y1='300' x2='30' y2='354'/%3E%3Cline x1='60' y1='300' x2='80' y2='354'/%3E%3Cline x1='150' y1='300' x2='130' y2='354'/%3E%3Cline x1='150' y1='300' x2='175' y2='354'/%3E%3Cline x1='220' y1='300' x2='220' y2='354'/%3E%3Cline x1='300' y1='300' x2='265' y2='354'/%3E%3Cline x1='300' y1='300' x2='310' y2='354'/%3E%3Cline x1='370' y1='300' x2='360' y2='354'/%3E%3Cline x1='440' y1='300' x2='415' y2='354'/%3E%3Cline x1='440' y1='300' x2='460' y2='354'/%3E%3C/g%3E%3C/svg%3E") center/contain no-repeat;
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+/* Monogram headshot */
+.monogram-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+.monogram {
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: linear-gradient(135deg,
+    color-mix(in srgb, var(--c-5) 70%, var(--c-3) 30%) 0%,
+    var(--c-3) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  font-weight: 900;
+  color: var(--c-2);
+  letter-spacing: -0.02em;
+  border: 3px solid color-mix(in srgb, var(--c-4) 60%, transparent 40%);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--c-4) 15%, transparent 85%);
+  user-select: none;
+}
+.hero-status-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.hero-content {}
+.hero-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 0.6rem;
+}
+.hero-name {
+  font-size: clamp(2.4rem, 5vw, 3.8rem);
+  font-weight: 900;
+  line-height: 1.05;
+  color: var(--c-2);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+.hero-name span { color: var(--c-4); }
+.hero-title {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 600;
+  color: var(--c-3);
+  margin-bottom: 1.25rem;
+  letter-spacing: 0.01em;
+}
+.hero-headline {
+  font-size: clamp(1rem, 1.8vw, 1.15rem);
+  color: var(--text-muted-dark);
+  max-width: 600px;
+  line-height: 1.7;
+  margin-bottom: 0.75rem;
+}
+.hero-subheadline {
+  font-size: 0.9rem;
+  color: color-mix(in srgb, var(--c-2) 55%, var(--c-5) 45%);
+  max-width: 580px;
+  line-height: 1.65;
+  margin-bottom: 2rem;
+}
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+.btn-primary {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.6rem;
+  background: var(--c-4);
+  color: var(--c-1);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-primary:hover { background: color-mix(in srgb, var(--c-4) 80%, white 20%); transform: translateY(-1px); text-decoration: none; }
+.btn-secondary {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.6rem;
+  background: transparent;
+  color: var(--c-2);
+  border: 1.5px solid color-mix(in srgb, var(--c-2) 40%, transparent 60%);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.2s, color 0.2s, transform 0.15s;
+}
+.btn-secondary:hover { border-color: var(--c-2); color: var(--c-2); transform: translateY(-1px); text-decoration: none; }
+.btn-teal {
+  display: inline-block;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.7rem 1.6rem;
+  background: var(--c-3);
+  color: var(--c-2);
+  border-radius: var(--radius-sm);
+  transition: background 0.2s, transform 0.15s;
+}
+.btn-teal:hover { background: color-mix(in srgb, var(--c-3) 80%, white 20%); transform: translateY(-1px); text-decoration: none; }
+
+.hero-contact-row {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+}
+.hero-contact-row a { color: var(--c-3); transition: color 0.2s; }
+.hero-contact-row a:hover { color: var(--c-4); }
+
+/* ACL Hero Callout */
+.hero-award-callout {
+  margin-top: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1.2rem;
+  background: color-mix(in srgb, var(--c-4) 12%, var(--c-1) 88%);
+  border: 1px solid color-mix(in srgb, var(--c-4) 45%, transparent 55%);
+  border-radius: var(--radius-md);
+  max-width: 600px;
+}
+.hero-award-callout .award-icon { font-size: 1.6rem; flex-shrink: 0; }
+.hero-award-callout .award-text { font-size: 0.82rem; line-height: 1.5; color: var(--c-2); }
+.hero-award-callout .award-text strong { color: var(--c-4); font-weight: 700; }
+
+/* ============================================================
+   SECTION: RESEARCH & AWARDS  (LIGHT)
+   ============================================================ */
+#research {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: var(--section-pad);
+}
+#research .section-title { color: var(--c-1); }
+#research .section-intro { color: var(--text-muted-light); }
+
+.research-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--grid-gap);
+}
+.research-card {
+  background: var(--c-2);
+  border: 1.5px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.research-card-icon {
+  font-size: 2rem;
+  margin-bottom: 0.25rem;
+}
+.research-card-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted-light);
+}
+.research-card-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-1);
+  line-height: 1.35;
+}
+.research-card-body {
+  font-size: 0.875rem;
+  color: var(--text-muted-light);
+  line-height: 1.65;
+  flex: 1;
+}
+.research-card-meta {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-3);
+  border-top: 1px solid var(--border-light);
+  padding-top: 0.75rem;
+  margin-top: 0.5rem;
+}
+/* ACL feature card */
+.research-card.feature-card {
+  border-color: var(--c-4);
+  background: linear-gradient(135deg, var(--c-2) 70%, color-mix(in srgb, var(--c-4) 12%, var(--c-2) 88%) 100%);
+  grid-column: span 1;
+}
+@media (min-width: 900px) {
+  .research-card.feature-card { grid-column: span 2; }
+}
+
+/* ============================================================
+   SECTION: PROJECTS  (DARK)
+   ============================================================ */
+#projects {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-pad);
+}
+#projects .section-title { color: var(--c-2); }
+#projects .section-intro { color: var(--text-muted-dark); }
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--grid-gap);
+}
+
+/* Project card recipe — CONSISTENT across all siblings */
+.proj-card {
+  background: var(--surface-card-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+.proj-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+/* Visual region — specific to each project */
+.proj-visual {
+  width: 100%;
+  height: 170px;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.proj-visual svg { width: 100%; height: 100%; display: block; }
+
+.proj-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.5rem;
+}
+.proj-emoji { font-size: 1.25rem; }
+.proj-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-2);
+  line-height: 1.3;
+}
+.proj-dates {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--c-4);
+  text-transform: uppercase;
+}
+.proj-desc {
+  font-size: 0.85rem;
+  color: var(--text-muted-dark);
+  line-height: 1.65;
+  flex: 1;
+}
+.proj-bullets {
+  margin-top: 0.5rem;
+  padding-left: 1rem;
+  list-style: disc;
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+  line-height: 1.6;
+}
+.proj-bullets li { margin-bottom: 0.25rem; }
+.proj-footer {
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid var(--border-dark);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+/* All project chips use chip-dark uniformly */
+.proj-footer .chip { font-size: 0.68rem; }
+.proj-links {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.65rem;
+  flex-wrap: wrap;
+}
+.proj-link {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--c-3);
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.2s;
+}
+.proj-link:hover { color: var(--c-4); text-decoration: none; }
+
+/* ============================================================
+   SECTION: EXPERIENCE  (LIGHT)
+   ============================================================ */
+#experience {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: var(--section-pad);
+}
+#experience .section-title { color: var(--c-1); }
+#experience .section-intro { color: var(--text-muted-light); }
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 120px;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, var(--c-3), color-mix(in srgb, var(--c-3) 20%, var(--c-2) 80%));
+}
+.tl-entry {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0 2rem;
+  position: relative;
+  padding-bottom: 2rem;
+}
+.tl-entry:last-child { padding-bottom: 0; }
+.tl-dates {
+  text-align: right;
+  padding-top: 0.1rem;
+  padding-right: 1rem;
+}
+.tl-date-range {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--c-3);
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+}
+.tl-dot {
+  position: absolute;
+  left: 113px;
+  top: 0.45rem;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--c-4);
+  border: 2px solid var(--c-2);
+  box-shadow: 0 0 0 2px var(--c-4);
+  z-index: 1;
+}
+.tl-content { padding-left: 1.5rem; }
+.tl-company {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-muted-light);
+  margin-bottom: 0.2rem;
+}
+.tl-role {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--c-1);
+  margin-bottom: 0.4rem;
+  line-height: 1.25;
+}
+.tl-location {
+  font-size: 0.75rem;
+  color: var(--text-muted-light);
+  margin-bottom: 0.6rem;
+}
+.tl-bullets {
+  padding-left: 1rem;
+  list-style: disc;
+  font-size: 0.85rem;
+  color: var(--text-muted-light);
+  line-height: 1.65;
+}
+.tl-bullets li { margin-bottom: 0.3rem; }
+
+/* ============================================================
+   SECTION: SKILLS  (DARK / TEAL ACCENT)
+   ============================================================ */
+#skills {
+  background: color-mix(in srgb, var(--c-1) 93%, var(--c-3) 7%);
+  color: var(--text-on-dark);
+  padding: var(--section-pad);
+}
+#skills .section-title { color: var(--c-2); }
+#skills .section-intro { color: var(--text-muted-dark); }
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--grid-gap);
+}
+/* Skill group card — consistent recipe */
+.skill-group {
+  background: var(--surface-card-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  padding: 1.4rem;
+}
+.skill-group-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 0.2rem;
+}
+.skill-group-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-2);
+  margin-bottom: 1rem;
+  line-height: 1.2;
+}
+/* All skill chips within a skill-group use chip-dark */
+
+/* ============================================================
+   SECTION: PATENTS  (LIGHT / AMBER)
+   ============================================================ */
+#patents {
+  background: var(--surface-amber);
+  color: var(--text-on-light);
+  padding: var(--section-pad);
+}
+#patents .section-title { color: var(--c-1); }
+
+.patent-card {
+  background: var(--c-2);
+  border: 1.5px solid var(--c-4);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  max-width: 760px;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+.patent-icon { font-size: 2.4rem; flex-shrink: 0; }
+.patent-number {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 0.35rem;
+}
+.patent-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--c-1);
+  line-height: 1.35;
+  margin-bottom: 0.5rem;
+}
+.patent-date {
+  font-size: 0.8rem;
+  color: var(--text-muted-light);
+}
+
+/* ============================================================
+   SECTION: EDUCATION  (DARK)
+   ============================================================ */
+#education {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-pad);
+}
+#education .section-title { color: var(--c-2); }
+
+.edu-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--grid-gap);
+}
+/* Education card — consistent recipe */
+.edu-card {
+  background: var(--surface-card-dark);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.edu-degree-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-4);
+}
+.edu-degree {
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--c-2);
+  line-height: 1.15;
+}
+.edu-institution {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--c-3);
+}
+.edu-year {
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+}
+.edu-honors {
+  font-size: 0.8rem;
+  color: var(--c-4);
+  font-weight: 600;
+  font-style: italic;
+}
+.edu-thesis {
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+  line-height: 1.6;
+  border-top: 1px solid var(--border-dark);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+.edu-thesis strong { color: var(--c-2); font-weight: 600; font-style: italic; }
+
+/* ============================================================
+   SECTION: CONTACT  (VIOLET / LIGHT)
+   ============================================================ */
+#contact {
+  background: color-mix(in srgb, var(--c-5) 15%, var(--c-2) 85%);
+  color: var(--text-on-light);
+  padding: var(--section-pad);
+}
+#contact .section-title { color: var(--c-1); }
+
+.contact-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3rem;
+  align-items: start;
+}
+.contact-blurb {
+  font-size: 1.05rem;
+  line-height: 1.75;
+  color: var(--text-muted-light);
+  margin-bottom: 1.5rem;
+}
+.contact-open-to {
+  font-size: 0.9rem;
+  color: var(--c-1);
+  background: color-mix(in srgb, var(--c-5) 12%, var(--c-2) 88%);
+  border: 1px solid color-mix(in srgb, var(--c-5) 35%, var(--c-2) 65%);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.25rem;
+  line-height: 1.65;
+  margin-bottom: 1.5rem;
+}
+.contact-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+.contact-link-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+.contact-link-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.contact-link-icon.icon-email { background: color-mix(in srgb, var(--c-1) 10%, var(--c-2) 90%); }
+.contact-link-icon.icon-phone { background: color-mix(in srgb, var(--c-3) 15%, var(--c-2) 85%); }
+.contact-link-icon.icon-web   { background: color-mix(in srgb, var(--c-4) 15%, var(--c-2) 85%); }
+.contact-link-icon.icon-gh    { background: color-mix(in srgb, var(--c-5) 15%, var(--c-2) 85%); }
+.contact-link-text a { color: var(--c-3); font-weight: 600; }
+.contact-link-text a:hover { color: var(--c-5); }
+
+.resume-cta-box {
+  background: var(--c-1);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+  color: var(--c-2);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: var(--shadow-md);
+}
+.resume-cta-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--c-2);
+}
+.resume-cta-body {
+  font-size: 0.875rem;
+  color: var(--text-muted-dark);
+  line-height: 1.65;
+}
+.resume-cta-badges { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--c-1);
+  border-top: 1px solid var(--border-dark);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted-dark);
+}
+footer a { color: var(--c-3); }
+footer a:hover { color: var(--c-4); }
+
+/* ============================================================
+   PROBABILITY WAVEFORM DIVIDER
+   ============================================================ */
+.wave-divider {
+  width: 100%;
+  height: 40px;
+  overflow: hidden;
+  line-height: 0;
+}
+.wave-divider svg { display: block; width: 100%; height: 100%; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 2rem; }
+  #hero::after { opacity: 0.4; width: 300px; right: -4rem; }
+  .monogram-wrap { flex-direction: row; }
+  .hero-status-badges { flex-direction: row; }
+  .timeline::before { left: 0; }
+  .tl-entry { grid-template-columns: 1fr; padding-left: 1.5rem; }
+  .tl-dates { text-align: left; }
+  .tl-dot { left: -7px; }
+  .tl-content { padding-left: 0; }
+  .contact-layout { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+@media (max-width: 560px) {
+  .projects-grid { grid-template-columns: 1fr; }
+  .research-card.feature-card { grid-column: span 1; }
+}
+</style>
+<!-- portfolio-editor-delivery:1784419309013:w7w3qr6q6u -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #c8941a;
+  --iw-original-a: #c8941a;
+  --iw-color-b: #3a7d6e;
+  --iw-original-b: #3a7d6e;
+  --iw-color-c: #7b5ea7;
+  --iw-original-c: #7b5ea7;
+  --iw-color-d: #1b2a4a;
+  --iw-original-d: #1b2a4a;
+  --iw-color-f: oklch(from var(--iw-color-d) calc(l - 0.0387) calc(c - 0.0138) calc(h + 0.6));
+  --iw-original-f: #162139;
+  --iw-color-g: oklch(from var(--iw-color-d) calc(l - 0.0586) calc(c - 0.0151) calc(h - 4.8));
+  --iw-original-g: #0f1d33;
+  --iw-color-h: oklch(from var(--iw-color-d) calc(l - 0.0794) calc(c - 0.0305) calc(h + 0.7));
+  --iw-original-h: #111827;
+  --iw-color-i: oklch(from var(--iw-color-d) calc(l - 0.0706) calc(c - 0.0196) calc(h - 2.3));
+  --iw-original-i: #0f1a2e;
+  --iw-color-j: oklch(from var(--iw-color-d) calc(l - 0.0500) calc(c - 0.0303) calc(h - 11.1));
+  --iw-original-j: #14202e;
+  --iw-color-e: #f5edd8;
+  --iw-original-e: #f5edd8;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#c8941a",
+      "count": 44,
+      "chroma": 0.1377384061433748,
+      "score": 6.060489870308491,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#3a7d6e",
+      "count": 37,
+      "chroma": 0.07266133397649696,
+      "score": 2.6884693571303875,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#7b5ea7",
+      "count": 22,
+      "chroma": 0.1143423650761141,
+      "score": 2.5155320316745104,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#1b2a4a",
+      "count": 25,
+      "chroma": 0.062216706449470104,
+      "score": 1.5554176612367525,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-4-dep-1",
+          "ordinal": "F",
+          "hex": "#162139",
+          "count": 2,
+          "chroma": 0.048380999748552186,
+          "score": 0.09676199949710437,
+          "varToken": "f",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-2",
+          "ordinal": "G",
+          "hex": "#0f1d33",
+          "count": 2,
+          "chroma": 0.04712055508809489,
+          "score": 0.09424111017618977,
+          "varToken": "g",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-3",
+          "ordinal": "H",
+          "hex": "#111827",
+          "count": 1,
+          "chroma": 0.03176260518058358,
+          "score": 0.03176260518058358,
+          "varToken": "h",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-4",
+          "ordinal": "I",
+          "hex": "#0f1a2e",
+          "count": 1,
+          "chroma": 0.04259176250547222,
+          "score": 0.04259176250547222,
+          "varToken": "i",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-5",
+          "ordinal": "J",
+          "hex": "#14202e",
+          "count": 1,
+          "chroma": 0.03195481836090445,
+          "score": 0.03195481836090445,
+          "varToken": "j",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-5",
+      "ordinal": "E",
+      "hex": "#f5edd8",
+      "count": 44,
+      "chroma": 0.029030444930807246,
+      "score": 1.277339576955519,
+      "varToken": "e",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav id="site-nav" role="navigation" aria-label="Site navigation">
+  <div class="nav-inner">
+    <div class="nav-wordmark">Ilene <span>Langley</span></div>
+    <div class="nav-links">
+      <a href="#research">Research</a>
+      <a href="#projects">Projects</a>
+      <a href="#experience">Experience</a>
+      <a href="#skills">Skills</a>
+      <a href="#education">Education</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a class="nav-cta" href="#contact">Get in touch</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section id="hero" aria-label="Introduction">
+  <div class="hero-inner">
+
+    <div class="monogram-wrap">
+      <div class="monogram" aria-label="Initials: IL"><br><img src="../deployed-assets/ilene-langley-alt/ffa801f9847d77f0c7cb.png" alt="" style="height: 120px; width: 120px; object-fit: cover;"></div>
+      <div class="hero-status-badges">
+        <span class="badge badge-gold">🎓 Ph.D. CS</span>
+        <span class="badge badge-teal">🏆 ACL Award</span>
+        <span class="badge badge-violet">📜 Patent Holder</span>
+        <span class="badge badge-cream">cum laude B.S.</span>
+      </div>
+    </div>
+
+    <div class="hero-content">
+      <p class="hero-eyebrow">NLP Scientist / Engineer</p>
+      <h1 class="hero-name">Ilene <span>Langley</span></h1>
+      <p class="hero-title">Natural Language Processing · Conversational AI · Language Generation</p>
+      <p class="hero-headline">Building systems that understand and generate language — for three decades.</p>
+      <p class="hero-subheadline">NLP scientist and engineer with a patent, an ACL Test of Time Award, and two decades of shipping systems that understand language.</p>
+
+      <div class="hero-ctas">
+        <a class="btn-primary" href="#research">See my research</a>
+        <a class="btn-teal" href="#projects">View my projects</a>
+        <a class="btn-secondary" href="#contact">Contact me</a>
+      </div>
+
+      <div class="hero-contact-row">
+        <span>📧 <a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a></span>
+        <span>📞 (555) 010-1100</span>
+        <span>🌐 <a href="https://example.com/ilene-langley" target="_blank" rel="noopener">example.com/ilene-ventures</a></span>
+        <span>💻 <a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">GitHub</a></span>
+      </div>
+
+      <div class="hero-award-callout" role="complementary" aria-label="ACL Test of Time Award">
+        <span class="award-icon">🏆</span>
+        <div class="award-text">
+          <strong>ACL Test of Time Award</strong> — Association for Computational Linguistics, July 2023.<br>
+          Awarded for a 1998 paper recognized by peers as a landmark contribution to computational linguistics.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     RESEARCH & AWARDS  (LIGHT)
+     ============================================================ -->
+<section id="research" aria-labelledby="research-heading">
+  <div class="container">
+    <p class="section-label">Research &amp; Recognition</p>
+    <div class="swiss-rule"></div>
+    <h2 class="section-title" id="research-heading">Peer-Recognized Research Depth</h2>
+    <p class="section-intro">
+      I built my first natural language parser before most people had heard the term "machine learning." My career has moved between linguistic theory, production ASR systems, conversational AI startups, and now building AI-powered tools independently — and the thread through all of it is the same question: how do we get machines to handle language the way people do?
+    </p>
+
+    <div class="research-grid">
+
+      <!-- ACL Award — feature card -->
+      <div class="research-card feature-card">
+        <div class="research-card-icon">🏆</div>
+        <div class="research-card-label">Association for Computational Linguistics · July 2023</div>
+        <div class="research-card-title">Test of Time Award — 1998 Paper</div>
+        <div class="research-card-body">
+          Recognized by the ACL community twenty-five years after publication — a rare distinction that signals foundational impact on the field of computational linguistics. The award affirms that work done at the leading edge of statistical NLP in 1998 continues to shape how the field thinks about language modeling and generation.
+        </div>
+        <div class="research-card-meta">🎖 Association for Computational Linguistics · Received July 2023</div>
+      </div>
+
+      <!-- Ph.D. Thesis -->
+      <div class="research-card">
+        <div class="research-card-icon">📄</div>
+        <div class="research-card-label">Ph.D. Dissertation · USC 2002</div>
+        <div class="research-card-title">Automatic Sentence Generation Using a Hybrid Statistical Model of Lexical Collocations and Syntactic Relations</div>
+        <div class="research-card-body">
+          Developed a hybrid approach combining statistical lexical collocations with syntactic relational structure to automatically generate fluent sentences — a foundational contribution to natural language generation that predates the transformer era.
+        </div>
+        <div class="research-card-meta">📍 University of Southern California</div>
+      </div>
+
+      <!-- Patent -->
+      <div class="research-card">
+        <div class="research-card-icon">📜</div>
+        <div class="research-card-label">U.S. Patent · Granted June 2004</div>
+        <div class="research-card-title">Method And System For Predicting Understanding Errors In A Task Classification System</div>
+        <div class="research-card-body">
+          Invented and patented a method for predicting where task-classification systems will misunderstand inputs — addressing error prediction in NLP dialog systems at the production level.
+        </div>
+        <div class="research-card-meta">📋 US 6,751,591 · Granted 06-15-2004</div>
+      </div>
+
+      <!-- Publications -->
+      <div class="research-card">
+        <div class="research-card-icon">📚</div>
+        <div class="research-card-label">Academic Publications</div>
+        <div class="research-card-title">Publications in NLP &amp; Computational Linguistics</div>
+        <div class="research-card-body">
+          Research publications spanning natural language generation, statistical language modeling, lexical collocations, and syntactic parsing. The 1998 paper later awarded the ACL Test of Time Award represents a particularly impactful contribution.
+        </div>
+        <div class="research-card-meta">📩 Publications available upon request</div>
+      </div>
+
+      <!-- Dean's Fellowship -->
+      <div class="research-card">
+        <div class="research-card-icon">🎓</div>
+        <div class="research-card-label">University of Southern California · 1995</div>
+        <div class="research-card-title">Dean's Merit Fellowship for Doctoral Studies</div>
+        <div class="research-card-body">
+          Awarded Dean's Merit Fellowship upon entry to USC's doctoral program in Computer Science — competitive recognition of academic excellence and research potential at program admission.
+        </div>
+        <div class="research-card-meta">🏛 University of Southern California</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PROJECTS  (DARK)
+     ============================================================ -->
+<section id="projects" aria-labelledby="projects-heading">
+  <div class="container">
+    <p class="section-label">Selected Projects</p>
+    <div class="swiss-rule swiss-rule-teal"></div>
+    <h2 class="section-title" id="projects-heading">From Algorithms to Production</h2>
+    <p class="section-intro">
+      Research depth meeting production code. Each project spans the full NLP stack — from novel statistical algorithms through deployed conversational systems.
+    </p>
+
+    <div class="projects-grid">
+
+      <!-- Project 1: Lifepod Dialog Manager -->
+      <article class="proj-card" aria-label="Lifepod Custom Dialog Manager">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-f)"></rect>
+            <!-- Dialog flow diagram -->
+            <rect x="30" y="20" width="90" height="32" rx="6" style="fill: var(--iw-color-b)" opacity="0.9"></rect>
+            <text x="75" y="41" text-anchor="middle" font-size="11" style="fill: var(--iw-color-e)" font-family="monospace" font-weight="700">User Utterance</text>
+            <rect x="155" y="20" width="90" height="32" rx="6" style="fill: var(--iw-color-d)" stroke-width="1.5"></rect>
+            <text x="200" y="37" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Intent</text>
+            <text x="200" y="48" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Detection</text>
+            <rect x="280" y="20" width="90" height="32" rx="6" style="fill: var(--iw-color-d)" stroke-width="1.5"></rect>
+            <text x="325" y="37" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Sentiment</text>
+            <text x="325" y="48" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Classify</text>
+            <line x1="120" y1="36" x2="155" y2="36" style="stroke: var(--iw-color-b)" stroke-width="1.5" marker-end="url(#arr1)"></line>
+            <line x1="245" y1="36" x2="280" y2="36" style="stroke: var(--iw-color-a)" stroke-width="1.5" marker-end="url(#arr2)"></line>
+            <!-- Dialog state -->
+            <rect x="155" y="80" width="90" height="32" rx="6" style="fill: var(--iw-color-c)" opacity="0.85"></rect>
+            <text x="200" y="97" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Dialog</text>
+            <text x="200" y="108" text-anchor="middle" font-size="10" style="fill: var(--iw-color-e)" font-family="monospace">Manager</text>
+            <line x1="200" y1="52" x2="200" y2="80" style="stroke: var(--iw-color-c)" stroke-width="1.5" stroke-dasharray="4,2"></line>
+            <line x1="325" y1="52" x2="325" y2="96" style="stroke: var(--iw-color-a)" stroke-width="1" stroke-dasharray="4,2"></line>
+            <line x1="325" y1="96" x2="245" y2="96" style="stroke: var(--iw-color-a)" stroke-width="1" stroke-dasharray="4,2"></line>
+            <!-- Response box -->
+            <rect x="30" y="130" width="340" height="28" rx="5" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <text x="200" y="149" text-anchor="middle" font-size="10" style="fill: var(--iw-color-b)" font-family="monospace">Proactive Routine Response → Alexa / Dialogflow</text>
+            <line x1="200" y1="112" x2="200" y2="130" style="stroke: var(--iw-color-c)" stroke-width="1.5" stroke-dasharray="4,2"></line>
+            <defs>
+              <marker id="arr1" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2"></path></marker>
+              <marker id="arr2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.2"></path></marker>
+            </defs>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">💬</div>
+          <h3 class="proj-title">Lifepod Custom Dialog Manager</h3>
+          <p class="proj-dates">Jan 2019 – Jun 2021</p>
+          <p class="proj-desc">Production dialog manager for proactive conversational routines — combining custom intent detection, syntactic APIs, and sentiment classification to outperform pure ML baselines, with patentable innovations.</p>
+          <ul class="proj-bullets">
+            <li>Architected and implemented custom dialog manager for proactive routines with patentable innovations</li>
+            <li>Voice agents via Google Dialogflow and Amazon Alexa</li>
+            <li>Custom intent-detection logic on syntactic analysis APIs outperformed ML-only sentiment classification</li>
+            <li>Batch testing harness in Golang</li>
+          </ul>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">Google Dialogflow</span>
+          <span class="chip chip-dark">Amazon Alexa</span>
+          <span class="chip chip-dark">Golang</span>
+          <span class="chip chip-dark">Intent Detection</span>
+          <span class="chip chip-dark">Sentiment Analysis</span>
+        </div>
+      </article>
+
+      <!-- Project 2: Probabilistic Word Embeddings -->
+      <article class="proj-card" aria-label="Probabilistic Word Embeddings for Multi-Intent Detection">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-g)"></rect>
+            <!-- Probability distribution curve -->
+            <text x="20" y="18" font-size="9" style="fill: var(--iw-color-a)" font-family="monospace" opacity="0.8">P(w | context)</text>
+            <polyline points="20,140 40,138 60,130 80,110 100,82 120,60 140,50 160,56 180,72 200,90 220,105 240,115 260,122 280,130 300,136 320,140 340,142 360,143 380,143" fill="none" style="stroke: var(--iw-color-a)" stroke-width="2" opacity="0.9"></polyline>
+            <polyline points="20,143 40,141 60,136 80,124 100,108 120,92 140,85 160,90 180,105 200,118 220,128 240,135 260,139 280,142 300,143 320,144 340,144 360,144 380,144" fill="none" style="stroke: var(--iw-color-b)" stroke-width="2" opacity="0.8"></polyline>
+            <polyline points="20,145 40,143 60,140 80,132 100,120 120,110 140,108 160,112 180,122 200,130 220,138 240,142 260,144 280,145 300,145 320,145 340,145 360,145 380,145" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1.5" opacity="0.7"></polyline>
+            <!-- Axis -->
+            <line x1="20" y1="150" x2="390" y2="150" style="stroke: var(--iw-color-e)" stroke-width="0.8" opacity="0.3"></line>
+            <line x1="20" y1="20" x2="20" y2="150" style="stroke: var(--iw-color-e)" stroke-width="0.8" opacity="0.3"></line>
+            <!-- Legend -->
+            <rect x="240" y="25" width="10" height="3" rx="1" style="fill: var(--iw-color-a)"></rect>
+            <text x="255" y="32" font-size="9" style="fill: var(--iw-color-a)" font-family="monospace">intent-A</text>
+            <rect x="240" y="40" width="10" height="3" rx="1" style="fill: var(--iw-color-b)"></rect>
+            <text x="255" y="47" font-size="9" style="fill: var(--iw-color-b)" font-family="monospace">intent-B</text>
+            <rect x="240" y="55" width="10" height="3" rx="1" style="fill: var(--iw-color-c)"></rect>
+            <text x="255" y="62" font-size="9" style="fill: var(--iw-color-c)" font-family="monospace">intent-C</text>
+            <!-- Token count callout -->
+            <text x="200" y="165" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace" opacity="0.6">2.4 trillion tokens of parsed web-crawled training data</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">📊</div>
+          <h3 class="proj-title">Probabilistic Word Embeddings for Multi-Intent Detection</h3>
+          <p class="proj-dates">Jun 2021 – Mar 2022 · Aktify</p>
+          <p class="proj-desc">Novel probabilistic word embeddings trained on 2.4 trillion tokens of parsed web-crawled data, designed to push beyond single-intent classification in real conversational AI systems.</p>
+          <ul class="proj-bullets">
+            <li>Trained on 2.4T of parsed web-crawled data</li>
+            <li>Multi-intent detection of utterances in conversational AI</li>
+            <li>Contributed to dialog model and dialog management architecture design</li>
+          </ul>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">Julia</span>
+          <span class="chip chip-dark">Word Embeddings</span>
+          <span class="chip chip-dark">Probabilistic ML</span>
+          <span class="chip chip-dark">Multi-Intent Detection</span>
+        </div>
+      </article>
+
+      <!-- Project 3: Kaldi ASR -->
+      <article class="proj-card" aria-label="Kaldi ASR Production Engine Extension">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-f)"></rect>
+            <!-- Waveform bars -->
+            <g opacity="0.9">
+              <rect x="20" y="95" width="6" height="40" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="30" y="75" width="6" height="60" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="40" y="60" width="6" height="75" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="50" y="45" width="6" height="90" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="60" y="55" width="6" height="80" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="70" y="70" width="6" height="65" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="80" y="40" width="6" height="95" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="90" y="60" width="6" height="75" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="100" y="80" width="6" height="55" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="110" y="50" width="6" height="85" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="120" y="65" width="6" height="70" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="130" y="85" width="6" height="50" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="140" y="100" width="6" height="35" rx="2" style="fill: var(--iw-color-c)" opacity="0.8"></rect>
+              <rect x="150" y="110" width="6" height="25" rx="2" style="fill: var(--iw-color-c)" opacity="0.8"></rect>
+              <rect x="160" y="95" width="6" height="40" rx="2" style="fill: var(--iw-color-c)" opacity="0.8"></rect>
+              <rect x="170" y="80" width="6" height="55" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="180" y="55" width="6" height="80" rx="2" style="fill: var(--iw-color-a)"></rect>
+              <rect x="190" y="65" width="6" height="70" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="200" y="75" width="6" height="60" rx="2" style="fill: var(--iw-color-b)"></rect>
+              <rect x="210" y="90" width="6" height="45" rx="2" style="fill: var(--iw-color-c)" opacity="0.7"></rect>
+            </g>
+            <!-- Pipeline labels -->
+            <rect x="20" y="10" width="90" height="22" rx="4" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <text x="65" y="25" text-anchor="middle" font-size="9" style="fill: var(--iw-color-b)" font-family="monospace">Audio Input</text>
+            <rect x="150" y="10" width="100" height="22" rx="4" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <text x="200" y="25" text-anchor="middle" font-size="9" style="fill: var(--iw-color-a)" font-family="monospace">Kaldi ASR Engine</text>
+            <rect x="290" y="10" width="100" height="22" rx="4" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <text x="340" y="25" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="monospace">Domain LM</text>
+            <line x1="110" y1="21" x2="150" y2="21" style="stroke: var(--iw-color-a)" stroke-width="1.2" stroke-dasharray="3,2"></line>
+            <line x1="250" y1="21" x2="290" y2="21" style="stroke: var(--iw-color-c)" stroke-width="1.2" stroke-dasharray="3,2"></line>
+            <!-- Transcript output -->
+            <rect x="230" y="115" width="160" height="40" rx="4" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <text x="310" y="131" text-anchor="middle" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">"domain-specific</text>
+            <text x="310" y="146" text-anchor="middle" font-size="8" style="fill: var(--iw-color-b)" font-family="monospace">   transcript output"</text>
+            <text x="310" y="160" text-anchor="middle" font-size="7" style="fill: var(--iw-color-a)" font-family="monospace">C++ · Thrax CFG rules</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">🎙</div>
+          <h3 class="proj-title">Kaldi ASR Production Engine Extension</h3>
+          <p class="proj-dates">Jul 2015 – Sep 2018 · Cobalt Speech &amp; Language</p>
+          <p class="proj-desc">Extended Kaldi's open-source ASR engine for production deployment with custom domain-specific language models and context-free grammars compiled via Thrax.</p>
+          <ul class="proj-bullets">
+            <li>Trained custom domain-specific language models for production Kaldi ASR</li>
+            <li>Developed production ASR engine extension in C++</li>
+            <li>Specialty sub-domain language models via context-free grammar rules compiled with Thrax</li>
+          </ul>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">Kaldi</span>
+          <span class="chip chip-dark">C++</span>
+          <span class="chip chip-dark">Thrax</span>
+          <span class="chip chip-dark">Python</span>
+          <span class="chip chip-dark">Perl</span>
+          <span class="chip chip-dark">Bash</span>
+        </div>
+      </article>
+
+      <!-- Project 4: AI Portfolio Generator -->
+      <article class="proj-card" aria-label="AI-Powered Portfolio Website Generator">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-h)"></rect>
+            <!-- Browser chrome mockup -->
+            <rect x="20" y="15" width="170" height="140" rx="7" style="fill: var(--iw-color-d)" stroke-width="1.2"></rect>
+            <rect x="20" y="15" width="170" height="28" rx="7" fill="color-mix(in srgb, #1b2a4a 50%, #c8941a 50%)" opacity="0.35"></rect>
+            <circle cx="35" cy="29" r="4" style="fill: var(--iw-color-a)" opacity="0.7"></circle>
+            <circle cx="50" cy="29" r="4" style="fill: var(--iw-color-e)" opacity="0.3"></circle>
+            <circle cx="65" cy="29" r="4" style="fill: var(--iw-color-e)" opacity="0.2"></circle>
+            <rect x="80" y="22" width="100" height="14" rx="4" style="fill: var(--iw-color-g)"></rect>
+            <text x="130" y="33" text-anchor="middle" font-size="7" style="fill: var(--iw-color-b)" font-family="monospace">example.com/ilene-ventures</text>
+            <!-- Page content lines -->
+            <rect x="30" y="52" width="60" height="8" rx="2" style="fill: var(--iw-color-a)" opacity="0.6"></rect>
+            <rect x="30" y="66" width="145" height="5" rx="2" style="fill: var(--iw-color-e)" opacity="0.2"></rect>
+            <rect x="30" y="75" width="130" height="5" rx="2" style="fill: var(--iw-color-e)" opacity="0.15"></rect>
+            <rect x="30" y="84" width="140" height="5" rx="2" style="fill: var(--iw-color-e)" opacity="0.15"></rect>
+            <rect x="30" y="98" width="70" height="6" rx="2" style="fill: var(--iw-color-b)" opacity="0.7"></rect>
+            <rect x="30" y="110" width="145" height="4" rx="2" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <rect x="30" y="118" width="120" height="4" rx="2" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <rect x="30" y="130" width="100" height="4" rx="2" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <!-- Arrow -->
+            <text x="200" y="90" font-size="22" style="fill: var(--iw-color-a)" opacity="0.8" font-family="monospace">→</text>
+            <!-- Resume doc -->
+            <rect x="220" y="30" width="80" height="110" rx="5" style="fill: var(--iw-color-d)" stroke-width="1.2"></rect>
+            <rect x="228" y="40" width="60" height="6" rx="2" style="fill: var(--iw-color-c)" opacity="0.7"></rect>
+            <rect x="228" y="52" width="55" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.2"></rect>
+            <rect x="228" y="59" width="60" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.15"></rect>
+            <rect x="228" y="66" width="50" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.15"></rect>
+            <rect x="228" y="76" width="45" height="4" rx="1" style="fill: var(--iw-color-a)" opacity="0.5"></rect>
+            <rect x="228" y="84" width="60" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <rect x="228" y="91" width="55" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <rect x="228" y="98" width="40" height="3" rx="1" style="fill: var(--iw-color-e)" opacity="0.12"></rect>
+            <text x="260" y="125" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="monospace">Resume.json</text>
+            <!-- AI tag -->
+            <rect x="310" y="60" width="70" height="24" rx="6" style="fill: var(--iw-color-b)"></rect>
+            <text x="345" y="77" text-anchor="middle" font-size="11" style="fill: var(--iw-color-e)" font-family="monospace" font-weight="700">✦ AI</text>
+            <text x="345" y="105" text-anchor="middle" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace" opacity="0.7">solo-founder</text>
+            <text x="345" y="117" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">end-to-end</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">🌐</div>
+          <h3 class="proj-title">AI-Powered Portfolio Website Generator</h3>
+          <p class="proj-dates">Aug 2025 – present · Ilene's Ventures</p>
+          <p class="proj-desc">Turns a resume into a full portfolio website automatically — a working demonstration of applied AI product thinking shipped end-to-end as a solo founder.</p>
+          <ul class="proj-bullets">
+            <li>Vibe coded a service that accepts a resume as input and automatically generates a website using AI</li>
+          </ul>
+          <div class="proj-links">
+            <a class="proj-link" href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">💻 GitHub</a>
+            <a class="proj-link" href="https://example.com/ilene-langley" target="_blank" rel="noopener">🌐 Live Demo</a>
+          </div>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">AI / LLM</span>
+          <span class="chip chip-dark">Solo Founder</span>
+          <span class="chip chip-dark">Applied AI</span>
+        </div>
+      </article>
+
+      <!-- Project 5: Omni-Directional NL Parser -->
+      <article class="proj-card" aria-label="Omni-Directional NL Parser and Generator">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-i)"></rect>
+            <!-- Parse + Generate arrows showing bidirectionality -->
+            <rect x="30" y="65" width="110" height="40" rx="7" style="fill: var(--iw-color-d)" stroke-width="1.5"></rect>
+            <text x="85" y="82" text-anchor="middle" font-size="9" style="fill: var(--iw-color-b)" font-family="monospace" font-weight="700">Natural Language</text>
+            <text x="85" y="96" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace">"parse this"</text>
+            <!-- Central engine -->
+            <rect x="155" y="55" width="90" height="60" rx="8" style="fill: var(--iw-color-c)" opacity="0.9"></rect>
+            <text x="200" y="78" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace" font-weight="700">Omni-Dir</text>
+            <text x="200" y="91" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace">NL Engine</text>
+            <text x="200" y="104" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Mozart/Oz · Julia</text>
+            <!-- Right output -->
+            <rect x="260" y="65" width="110" height="40" rx="7" style="fill: var(--iw-color-d)" stroke-width="1.5"></rect>
+            <text x="315" y="82" text-anchor="middle" font-size="9" style="fill: var(--iw-color-a)" font-family="monospace" font-weight="700">Logical Form</text>
+            <text x="315" y="96" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace">+ Generation</text>
+            <!-- Bidirectional arrows -->
+            <line x1="140" y1="80" x2="155" y2="80" style="stroke: var(--iw-color-b)" stroke-width="1.5" marker-end="url(#arrt)"></line>
+            <line x1="155" y1="92" x2="140" y2="92" style="stroke: var(--iw-color-a)" stroke-width="1.5" marker-end="url(#arrt2)"></line>
+            <line x1="245" y1="80" x2="260" y2="80" style="stroke: var(--iw-color-a)" stroke-width="1.5" marker-end="url(#arrt3)"></line>
+            <line x1="260" y1="92" x2="245" y2="92" style="stroke: var(--iw-color-b)" stroke-width="1.5" marker-end="url(#arrt4)"></line>
+            <!-- Techniques row -->
+            <rect x="50" y="125" width="75" height="20" rx="4" style="fill: var(--iw-color-d)" stroke-width="0.8"></rect>
+            <text x="87" y="139" text-anchor="middle" font-size="8" style="fill: var(--iw-color-b)" font-family="monospace">Logical Constraints</text>
+            <rect x="162" y="125" width="76" height="20" rx="4" style="fill: var(--iw-color-d)" stroke-width="0.8"></rect>
+            <text x="200" y="139" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="monospace">Prob. Inference</text>
+            <rect x="275" y="125" width="76" height="20" rx="4" style="fill: var(--iw-color-d)" stroke-width="0.8"></rect>
+            <text x="313" y="139" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Interactive ML</text>
+            <!-- Duration badge -->
+            <text x="200" y="22" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace" opacity="0.5">7-year independent research project</text>
+            <defs>
+              <marker id="arrt" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2"></path></marker>
+              <marker id="arrt2" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.2"></path></marker>
+              <marker id="arrt3" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.2"></path></marker>
+              <marker id="arrt4" markerWidth="7" markerHeight="7" refX="5" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2"></path></marker>
+            </defs>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">🌳</div>
+          <h3 class="proj-title">Omni-Directional NL Parser &amp; Generator</h3>
+          <p class="proj-dates">Nov 2008 – 2015 · Independent Research</p>
+          <p class="proj-desc">Self-directed research system integrating logical constraints and probabilistic inference for both parsing and generation — built independently over seven years.</p>
+          <ul class="proj-bullets">
+            <li>Integrated logical constraints and probabilistic inference</li>
+            <li>Novel smoothing technique and more effective variant of logistic regression for text classification</li>
+            <li>Framework for interactive ML</li>
+          </ul>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">Mozart/Oz</span>
+          <span class="chip chip-dark">JuliaLang</span>
+          <span class="chip chip-dark">Parsing</span>
+          <span class="chip chip-dark">NL Generation</span>
+          <span class="chip chip-dark">Probabilistic Inference</span>
+        </div>
+      </article>
+
+      <!-- Project 6: REG Challenge -->
+      <article class="proj-card" aria-label="REG Challenge Template Realizer">
+        <div class="proj-visual">
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-j)"></rect>
+            <!-- Data table on left -->
+            <rect x="20" y="25" width="150" height="120" rx="6" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <rect x="20" y="25" width="150" height="22" rx="6" style="fill: var(--iw-color-b)" opacity="0.7"></rect>
+            <text x="95" y="40" text-anchor="middle" font-size="9" style="fill: var(--iw-color-e)" font-family="monospace" font-weight="700">Structured Data</text>
+            <text x="35" y="62" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Location:</text>
+            <text x="100" y="62" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">Boston, MA</text>
+            <text x="35" y="76" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Temp:</text>
+            <text x="100" y="76" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">42°F</text>
+            <text x="35" y="90" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Conditions:</text>
+            <text x="100" y="90" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">Cloudy</text>
+            <text x="35" y="104" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Wind:</text>
+            <text x="100" y="104" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">12 mph NW</text>
+            <text x="35" y="118" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">Rain:</text>
+            <text x="100" y="118" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">30% chance</text>
+            <text x="35" y="132" font-size="8" style="fill: var(--iw-color-a)" font-family="monospace">REG:</text>
+            <text x="100" y="132" font-size="8" style="fill: var(--iw-color-c)" font-family="monospace">Template</text>
+            <!-- Arrow -->
+            <text x="185" y="92" font-size="20" style="fill: var(--iw-color-a)" opacity="0.7" font-family="monospace">→</text>
+            <!-- Generated text on right -->
+            <rect x="210" y="25" width="175" height="120" rx="6" style="fill: var(--iw-color-d)" stroke-width="1"></rect>
+            <rect x="210" y="25" width="175" height="22" rx="6" style="fill: var(--iw-color-a)" opacity="0.6"></rect>
+            <text x="297" y="40" text-anchor="middle" font-size="9" style="fill: var(--iw-color-d)" font-family="monospace" font-weight="700">Generated Text</text>
+            <text x="220" y="62" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace" xml:space="preserve">"Boston will see cloudy</text>
+            <text x="220" y="74" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">skies today with temps</text>
+            <text x="220" y="86" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">around 42°F. Northwest</text>
+            <text x="220" y="98" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">winds at 12 mph and a</text>
+            <text x="220" y="110" font-size="8" style="fill: var(--iw-color-e)" font-family="monospace">30% chance of rain."</text>
+            <text x="220" y="130" font-size="7" style="fill: var(--iw-color-c)" font-family="monospace">REG Challenge · Univ. of Brighton</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-emoji">📝</div>
+          <h3 class="proj-title">REG Challenge Template Realizer</h3>
+          <p class="proj-dates">Jun 2007 – Nov 2008 · University of Brighton</p>
+          <p class="proj-desc">Tackled the Referring Expression Generation challenge by comparing manual and semi-automatic techniques for grounding language in structured data like weather reports and encyclopedia tables.</p>
+          <ul class="proj-bullets">
+            <li>Developed a template realizer for the REG Challenge</li>
+            <li>Compared manual and semi-automatic techniques for generating text from structured data</li>
+          </ul>
+        </div>
+        <div class="proj-footer">
+          <span class="chip chip-dark">NL Generation</span>
+          <span class="chip chip-dark">Template Realization</span>
+          <span class="chip chip-dark">REG Challenge</span>
+          <span class="chip chip-dark">Text-from-Data</span>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE  (LIGHT)
+     ============================================================ -->
+<section id="experience" aria-labelledby="experience-heading">
+  <div class="container">
+    <p class="section-label">Professional Experience</p>
+    <div class="swiss-rule swiss-rule-teal"></div>
+    <h2 class="section-title" id="experience-heading">Three Decades Across the Full NLP Stack</h2>
+    <p class="section-intro">
+      From university research labs to production conversational AI startups — and now independent applied research and entrepreneurship.
+    </p>
+
+    <div class="timeline" role="list">
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Aug 2025<br>— present</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Ilene's Ventures</p>
+          <p class="tl-role">Small Business Owner / Developer</p>
+          <p class="tl-location">South Jordan, UT (self-employed)</p>
+          <ul class="tl-bullets">
+            <li>Vibe coded a service (<a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">GitHub</a>) that accepts a resume as input and automatically generates a portfolio website using AI.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">AI / LLM</span>
+            <span class="chip chip-light">Solo Founder</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Mar 2023<br>— present</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">ClearWhite Model Programming</p>
+          <p class="tl-role">NLP Scientist / Engineer</p>
+          <p class="tl-location">Self-employed</p>
+          <ul class="tl-bullets">
+            <li>Applied a novel smoothing technique to POS tagging and dependency parsing using logistic regression and clustering.</li>
+            <li>Goal: increased automation of language data annotation and improved accuracy across applications.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">POS Tagging</span>
+            <span class="chip chip-light">Dependency Parsing</span>
+            <span class="chip chip-light">Logistic Regression</span>
+            <span class="chip chip-light">Clustering</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Jun 2021<br>— Mar 2022</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Aktify</p>
+          <p class="tl-role">Senior Data Scientist</p>
+          <ul class="tl-bullets">
+            <li>Developed novel probabilistic word embeddings trained on 2.4T of parsed web-crawled data, targeting multi-intent detection of utterances in conversational AI (written in Julia).</li>
+            <li>Contributed to design of dialog model and dialog management architecture.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">Julia</span>
+            <span class="chip chip-light">Word Embeddings</span>
+            <span class="chip chip-light">Multi-Intent Detection</span>
+            <span class="chip chip-light">Conversational AI</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Jan 2019<br>— Jun 2021</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Lifepod</p>
+          <p class="tl-role">Natural Language Processing Scientist / Engineer</p>
+          <ul class="tl-bullets">
+            <li>Architected and implemented custom dialog manager for proactive routines, with patentable innovations.</li>
+            <li>Developed voice-based conversational agents using Google Dialogflow and Amazon Alexa.</li>
+            <li>Wrote custom intent-detection logic on top of syntactic analysis APIs to classify utterance sentiment much more accurately than ML alone.</li>
+            <li>Wrote batch testing harness in Golang.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">Google Dialogflow</span>
+            <span class="chip chip-light">Amazon Alexa</span>
+            <span class="chip chip-light">Golang</span>
+            <span class="chip chip-light">Dialog Management</span>
+            <span class="chip chip-light">Intent Detection</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Jul 2015<br>— Sep 2018</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Cobalt Speech and Language</p>
+          <p class="tl-role">Research Scientist / Software Developer</p>
+          <ul class="tl-bullets">
+            <li>Trained custom domain-specific language models for Kaldi ASR.</li>
+            <li>Developed production ASR engine extension of Kaldi in C++.</li>
+            <li>Generated specialty sub-domain language models via context-free grammar rules compiled with Thrax.</li>
+            <li>Wrote and adapted Perl, Python, and Bash scripts to clean and prepare large data sets.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">Kaldi</span>
+            <span class="chip chip-light">C++</span>
+            <span class="chip chip-light">Thrax</span>
+            <span class="chip chip-light">ASR</span>
+            <span class="chip chip-light">Language Modeling</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Nov 2008<br>— 2015</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Independent</p>
+          <p class="tl-role">Research Hobbyist / At-Home Mother of Five</p>
+          <ul class="tl-bullets">
+            <li>Developed omni-directional NL parser and generator integrating logical constraints and probabilistic inference (initially Mozart/Oz, then JuliaLang).</li>
+            <li>Developed novel smoothing technique and more effective variant of logistic regression for text classification.</li>
+            <li>Developed framework for interactive ML.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">Mozart/Oz</span>
+            <span class="chip chip-light">JuliaLang</span>
+            <span class="chip chip-light">Parsing</span>
+            <span class="chip chip-light">NL Generation</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Jun 2007<br>— Nov 2008</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">University of Brighton, UK</p>
+          <p class="tl-role">Research Fellow</p>
+          <ul class="tl-bullets">
+            <li>Developed a template realizer for the REG (Referring Expression Generation) Challenge.</li>
+            <li>Compared manual and semi-automatic techniques for generating text from data (weather forecasts, Wikipedia fact tables).</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">NL Generation</span>
+            <span class="chip chip-light">REG Challenge</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="tl-entry" role="listitem">
+        <div class="tl-dates">
+          <div class="tl-date-range">Dec 2002<br>— Aug 2006</div>
+        </div>
+        <div class="tl-dot"></div>
+        <div class="tl-content">
+          <p class="tl-company">Brigham Young University</p>
+          <p class="tl-role">Assistant Professor of Computer Science</p>
+          <p class="tl-location">Provo, UT</p>
+          <ul class="tl-bullets">
+            <li>Supervised Masters theses in machine translation, surface realization, and decision tree optimization.</li>
+            <li>Taught CS 330 Programming Languages, CS 470 Artificial Intelligence, CS 601R Natural Language Processing.</li>
+          </ul>
+          <div class="chip-set">
+            <span class="chip chip-light">NLP Research</span>
+            <span class="chip chip-light">Teaching</span>
+            <span class="chip chip-light">Thesis Supervision</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS  (DARK)
+     ============================================================ -->
+<section id="skills" aria-labelledby="skills-heading">
+  <div class="container">
+    <p class="section-label">Skills &amp; Expertise</p>
+    <div class="swiss-rule"></div>
+    <h2 class="section-title" id="skills-heading">Full NLP Stack Fluency</h2>
+    <p class="section-intro">
+      Research depth to production code. From grammar-rule level through probabilistic models and modern ML pipelines.
+    </p>
+
+    <div class="skills-grid">
+
+      <div class="skill-group">
+        <div class="skill-group-label">NLP &amp; AI Domains</div>
+        <div class="skill-group-title">Domains</div>
+        <div class="chip-set">
+          <span class="chip chip-dark">Natural Language Processing</span>
+          <span class="chip chip-dark">Conversational AI</span>
+          <span class="chip chip-dark">Dialog Management</span>
+          <span class="chip chip-dark">NL Generation</span>
+          <span class="chip chip-dark">Automatic Speech Recognition</span>
+          <span class="chip chip-dark">Machine Learning</span>
+          <span class="chip chip-dark">Text Classification</span>
+          <span class="chip chip-dark">Language Modeling</span>
+          <span class="chip chip-dark">Sentiment Analysis</span>
+          <span class="chip chip-dark">Information Extraction</span>
+          <span class="chip chip-dark">Machine Translation</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">Methods &amp; Techniques</div>
+        <div class="skill-group-title">Algorithms</div>
+        <div class="chip-set">
+          <span class="chip chip-dark">Intent Detection</span>
+          <span class="chip chip-dark">POS Tagging</span>
+          <span class="chip chip-dark">Parsing &amp; Generation</span>
+          <span class="chip chip-dark">Probabilistic Inference</span>
+          <span class="chip chip-dark">Logistic Regression</span>
+          <span class="chip chip-dark">Word Embeddings</span>
+          <span class="chip chip-dark">K-Means Clustering</span>
+          <span class="chip chip-dark">Naive Bayes</span>
+          <span class="chip chip-dark">Decision Trees</span>
+          <span class="chip chip-dark">Semi-Supervised Interactive ML</span>
+          <span class="chip chip-dark">Dependency Parsing</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">Languages</div>
+        <div class="skill-group-title">Programming</div>
+        <div class="chip-set">
+          <span class="chip chip-dark">Python</span>
+          <span class="chip chip-dark">Julia</span>
+          <span class="chip chip-dark">C / C++</span>
+          <span class="chip chip-dark">Golang</span>
+          <span class="chip chip-dark">Perl</span>
+          <span class="chip chip-dark">Lisp</span>
+          <span class="chip chip-dark">JavaScript</span>
+          <span class="chip chip-dark">HTML / CSS</span>
+          <span class="chip chip-dark">Bash</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">Tools &amp; Platforms</div>
+        <div class="skill-group-title">Ecosystem</div>
+        <div class="chip-set">
+          <span class="chip chip-dark">SpaCy</span>
+          <span class="chip chip-dark">NLTK</span>
+          <span class="chip chip-dark">Stanford CoreNLP</span>
+          <span class="chip chip-dark">GATE</span>
+          <span class="chip chip-dark">Kaldi</span>
+          <span class="chip chip-dark">Thrax</span>
+          <span class="chip chip-dark">Tensorflow</span>
+          <span class="chip chip-dark">Google Dialogflow</span>
+          <span class="chip chip-dark">Amazon Alexa</span>
+          <span class="chip chip-dark">Amazon Lex</span>
+          <span class="chip chip-dark">Rasa</span>
+          <span class="chip chip-dark">AWS Comprehend</span>
+          <span class="chip chip-dark">AWS Sagemaker</span>
+          <span class="chip chip-dark">AWS EC2 / S3</span>
+          <span class="chip chip-dark">MySQL</span>
+          <span class="chip chip-dark">Git</span>
+          <span class="chip chip-dark">Jenkins</span>
+          <span class="chip chip-dark">Datadog</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PATENTS  (AMBER / LIGHT)
+     ============================================================ -->
+<section id="patents" aria-labelledby="patents-heading">
+  <div class="container">
+    <p class="section-label">Intellectual Property</p>
+    <div class="swiss-rule"></div>
+    <h2 class="section-title" id="patents-heading">Patent</h2>
+
+    <div class="patent-card" role="article">
+      <div class="patent-icon">📜</div>
+      <div>
+        <div class="patent-number">U.S. Patent · US 6,751,591</div>
+        <div class="patent-title">Method And System For Predicting Understanding Errors In A Task Classification System</div>
+        <div class="patent-date">Granted June 15, 2004</div>
+        <div class="chip-set" style="margin-top: 0.75rem;">
+          <span class="chip chip-light">NLP Dialog Systems</span>
+          <span class="chip chip-light">Error Prediction</span>
+          <span class="chip chip-light">Task Classification</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION  (DARK)
+     ============================================================ -->
+<section id="education" aria-labelledby="education-heading">
+  <div class="container">
+    <p class="section-label">Education</p>
+    <div class="swiss-rule swiss-rule-violet"></div>
+    <h2 class="section-title" id="education-heading">Academic Foundation</h2>
+
+    <div class="edu-grid">
+
+      <div class="edu-card">
+        <div class="edu-degree-label">Doctor of Philosophy · 2002</div>
+        <div class="edu-degree">Ph.D.</div>
+        <div class="edu-institution">University of Southern California</div>
+        <div class="edu-year">Computer Science</div>
+        <div class="edu-thesis"><strong>Thesis:</strong> Automatic Sentence Generation Using a Hybrid Statistical Model of Lexical Collocations and Syntactic Relations</div>
+        <div class="chip-set" style="margin-top: 0.5rem;">
+          <span class="chip chip-dark">NLP</span>
+          <span class="chip chip-dark">NL Generation</span>
+          <span class="chip chip-dark">Statistical Models</span>
+        </div>
+      </div>
+
+      <div class="edu-card">
+        <div class="edu-degree-label">Master of Science · 1999</div>
+        <div class="edu-degree">M.S.</div>
+        <div class="edu-institution">University of Southern California</div>
+        <div class="edu-year">Computer Science</div>
+        <div class="chip-set" style="margin-top: 0.5rem;">
+          <span class="chip chip-dark">Computer Science</span>
+        </div>
+      </div>
+
+      <div class="edu-card">
+        <div class="edu-degree-label">Bachelor of Science · 1995</div>
+        <div class="edu-degree">B.S.</div>
+        <div class="edu-institution">Brigham Young University</div>
+        <div class="edu-year">Computer Science</div>
+        <div class="edu-honors">Graduated cum laude</div>
+        <div class="chip-set" style="margin-top: 0.5rem;">
+          <span class="chip chip-dark">Computer Science</span>
+          <span class="chip chip-dark">cum laude</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT  (VIOLET LIGHT)
+     ============================================================ -->
+<section id="contact" aria-labelledby="contact-heading">
+  <div class="container">
+    <p class="section-label">Get in Touch</p>
+    <div class="swiss-rule swiss-rule-violet"></div>
+    <h2 class="section-title" id="contact-heading">Let's Talk NLP</h2>
+
+    <div class="contact-layout">
+      <div>
+        <p class="contact-blurb">
+          I have designed, implemented, and shipped language-understanding systems across academia, startups, and independent research — including a patented dialog architecture and word embeddings trained on 2.4 trillion tokens. I'm available for the right conversation.
+        </p>
+        <div class="contact-open-to">
+          <strong>Open to:</strong> NLP Scientist or Engineer roles at research-driven organizations or applied AI teams. Open to contract, full-time, or collaborative research arrangements.
+        </div>
+
+        <div class="contact-links-list">
+          <div class="contact-link-item">
+            <div class="contact-link-icon icon-email">📧</div>
+            <div class="contact-link-text">
+              <a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a>
+            </div>
+          </div>
+          <div class="contact-link-item">
+            <div class="contact-link-icon icon-phone">📞</div>
+            <div class="contact-link-text">
+              <a href="tel:+15550101100">(555) 010-1100</a>
+            </div>
+          </div>
+          <div class="contact-link-item">
+            <div class="contact-link-icon icon-web">🌐</div>
+            <div class="contact-link-text">
+              <a href="https://example.com/ilene-langley" target="_blank" rel="noopener">example.com/ilene-langley</a>
+            </div>
+          </div>
+          <div class="contact-link-item">
+            <div class="contact-link-icon icon-gh">💻</div>
+            <div class="contact-link-text">
+              <a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">example.com/ilene-langley/portfolio</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="resume-cta-box">
+        <div class="resume-cta-title">🎯 Ilene Langley</div>
+        <div class="resume-cta-body">
+          NLP Scientist / Engineer with three decades across the full language stack. Research depth to production code — from hybrid statistical NLG to deployed conversational AI. ACL-recognized, patent-granted, and actively building.
+        </div>
+        <div class="resume-cta-badges">
+          <span class="badge badge-gold">🏆 ACL Test of Time Award</span>
+          <span class="badge badge-teal">📜 Patent US 6,751,591</span>
+          <span class="badge badge-violet">🎓 Ph.D. USC 2002</span>
+          <span class="badge badge-cream">cum laude B.S. BYU</span>
+        </div>
+        <a class="btn-primary" href="mailto:ilene.langley@example.com" style="text-align:center; margin-top: 0.5rem;">
+          📩 Contact for Resume
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer role="contentinfo">
+  <div class="container">
+    <p>
+      © 2026 Ilene Langley ·
+      <a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a> ·
+      <a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">GitHub</a> ·
+      <a href="https://example.com/ilene-langley" target="_blank" rel="noopener">example.com/ilene-ventures</a>
+    </p>
+    <p style="margin-top: 0.5rem; font-size: 0.7rem; opacity: 0.6;">
+      This site was generated by the <a href="https://example.com/ilene-langley" target="_blank" rel="noopener">AI-Powered Portfolio Website Generator</a> — a project by Ilene's Ventures.
+    </p>
+  </div>
+</footer>
+
+
+</body></html>

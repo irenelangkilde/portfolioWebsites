@@ -30,7 +30,7 @@ HOW IT WORKS (6 stages):
 5. Edit — Refine the generated portfolio in the built-in editor
 6. Publish — Download as HTML or deploy to a hosted URL
 
-Design styles available: glassmorphism, clean minimal, brutalist, dark terminal, neon-tech, soft pastel editorial, Swiss grid, and more.
+Design styles available: clean minimal, elegant, modern, corporate, fun, bold, glassmorphism, brutalist, terminal, editorial, Swiss grid, neon-tech (light vs. dark backgrounds are a separate choice, independent of style).
 
 WHAT GETS DELIVERED:
 - Fully responsive HTML portfolio website, customized from resume + job target

@@ -9,10 +9,14 @@ function canUseLocalBlobFallback() {
   return process.env.NETLIFY_DEV === "true" || !process.env.AWS_LAMBDA_FUNCTION_NAME;
 }
 
+function isNetlifyManagedRuntime() {
+  return !!process.env.AWS_LAMBDA_FUNCTION_NAME || process.env.NETLIFY === "true";
+}
+
 function isLocalBlobFailure(err) {
   const message = err?.message || "";
   const causeMessage = err?.cause?.message || "";
-  return /invalid url|fetch failed|ECONNREFUSED|ENOTFOUND|ETIMEDOUT/i.test(`${message} ${causeMessage}`);
+  return /invalid url|fetch failed|ECONNREFUSED|ENOTFOUND|ETIMEDOUT|401 status code|403 status code|unauthorized|forbidden|environment has not been configured|MissingBlobsEnvironmentError/i.test(`${message} ${causeMessage}`);
 }
 
 function localBlobPath(name, key) {
@@ -86,15 +90,23 @@ export function explainBlobStoreError(err) {
     return `Netlify Blobs could not resolve a valid site/runtime URL.${missingText} Run this project with \`netlify dev\` from a linked site, or set valid Netlify credentials for local access. Underlying error: ${message}`;
   }
 
+  if (blobContext && /401 status code|403 status code|unauthorized|forbidden/i.test(message)) {
+    if (canUseLocalBlobFallback()) {
+      return `Netlify Blobs authentication failed locally, so the local fallback store should be used. Underlying error: ${message}`;
+    }
+    return `Netlify Blobs authentication failed. In deployed Netlify functions, remove stale NETLIFY_AUTH_TOKEN/NETLIFY_SITE_ID overrides or rotate the token, then redeploy. Underlying error: ${message}`;
+  }
+
   return message;
 }
 
 export function getNamedBlobStore(name) {
   const siteID = process.env.NETLIFY_SITE_ID;
   const token = process.env.NETLIFY_AUTH_TOKEN;
+  const useExplicitCredentials = !!(siteID && token && !isNetlifyManagedRuntime());
 
   try {
-    if (siteID && token) {
+    if (useExplicitCredentials) {
       return {
         store: withLocalFallback(getStore({ name, siteID, token }), name),
         configError: null

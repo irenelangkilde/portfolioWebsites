@@ -104,7 +104,8 @@ STYLE REQUIREMENTS
   Repeat that recipe across sibling cards.
 - ALWAYS declare `--hero-bg-image: none` in `:root` and apply it on the hero section as `background-image: var(--hero-bg-image)` (layered over the gradient). This property will be overridden client-side if the user supplies a background image.
 - If visual_direction.use_emoji_icons is true: use emoji (e.g. 🎓 📊 🔬) or Font Awesome for section icons and skill badges. If false: do not use any icons.
-- If visual_direction.alternate_sections is true: alternate background between dark and light for consecutive sections, making sure that the text color is complementary and contrasting. If false: use a consistent background treatment throughout.
+- Respect visual_direction.main_section_mode: "light" → the hero and primary content sections must use a light background (light --background, dark --foreground text). "dark" → the hero and primary content sections must use a dark background (dark --background, light --foreground text). This is independent of visual_direction.alternate_sections — main_section_mode dictates the baseline; alternate_sections dictates whether subsequent sections flip between light and dark.
+- If visual_direction.alternate_sections is true: alternate background between light and dark for consecutive sections (starting from the main_section_mode baseline), making sure that the text color is complementary and contrasting. If false: use a consistent background treatment throughout matching main_section_mode.
 
 USER COLOR PREFERENCES
 

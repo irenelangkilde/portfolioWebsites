@@ -80,7 +80,7 @@ This is a concept intended to lie between intent-level abstraction and template-
 
 
 STYLE TOKEN
-One of "glassmorphism", "glass-dark", "brutalist", "dark terminal", "soft pastel editorial", "Swiss grid", "neon-tech", "clean-minimal" or other.
+One of "clean-minimal", "elegant", "modern", "corporate", "fun", "bold", "glassmorphism", "brutalist", "terminal", "editorial", "Swiss grid", "neon-tech", or other. (Light-vs-dark background is a separate axis conveyed via the mainSectionMode field, not the style token.)
 
 RENDERING STYLE
 - stylized scientific illustration

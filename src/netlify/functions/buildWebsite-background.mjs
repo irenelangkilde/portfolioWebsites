@@ -1098,6 +1098,7 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const density            = designSpec?.density            || attrs.section_density || factors.density || "medium";
   const useEmojiIcons      = designSpec?.use_emoji_icons      ?? true;
   const alternateSections  = designSpec?.alternate_sections   ?? true;
+  const mainSectionMode    = designSpec?.main_section_mode    || "light";  // "light" | "dark"
   const visualMotifs = motifs?.potential_visual_motifs || [];
   const domain = motifs?.broad_primary_domain || "professional";
 
@@ -1162,6 +1163,7 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
       section_density:          density,
       use_emoji_icons:          useEmojiIcons,
       alternate_sections:       alternateSections,
+      main_section_mode:        mainSectionMode,
       visual_treatment:         attrs.visual_treatment || "clean with subtle depth and card layering",
       composition_choice:       factors.composition_option || "split",
       rendering_style:          rendering,
@@ -1837,6 +1839,60 @@ function resolveClaudeModel(override) {
   return ALLOWED_CLAUDE_MODELS.has(trimmed) ? trimmed : DEFAULT_CLAUDE_MODEL;
 }
 
+function providerErrorStatus(err) {
+  const direct = err?.status ?? err?.response?.status ?? err?.cause?.status;
+  if (Number.isFinite(Number(direct))) return Number(direct);
+  const msg = err?.message || String(err || "");
+  const match = msg.match(/\b(401|403|429|5\d\d)\b/);
+  return match ? Number(match[1]) : null;
+}
+
+function providerErrorMessage(err) {
+  if (!err) return "";
+  const pieces = [
+    err.message,
+    err.error?.message,
+    err.response?.data?.error?.message,
+    err.response?.data?.message,
+    err.cause?.message
+  ].filter(Boolean);
+  return pieces.join(" ");
+}
+
+function explainProviderError(provider, err, stage = "AI generation") {
+  const raw = providerErrorMessage(err) || String(err || "Unknown error");
+  const status = providerErrorStatus(err);
+  const providerName = String(provider || "").toLowerCase();
+  const stack = err?.stack || "";
+  const looksOpenAI = providerName === "openai" || /openai/i.test(stack);
+  const looksClaude = providerName === "claude" || providerName === "anthropic" || /anthropic/i.test(stack);
+  const authLike = status === 401 || /401 status code|unauthorized|invalid api key|incorrect api key|invalid x-api-key|authentication/i.test(raw);
+  const forbiddenLike = status === 403 || /403 status code|forbidden|not allowed|permission/i.test(raw);
+
+  if (looksOpenAI && authLike) {
+    return `OpenAI authentication failed during ${stage} (401). Check OPENAI_API_KEY_LOCAL/OPENAI_API_KEY; the key is missing, expired, revoked, or from the wrong project. If this is deployed on Netlify, update the site's environment variables and redeploy.`;
+  }
+  if (looksClaude && authLike) {
+    return `Anthropic authentication failed during ${stage} (401). Check ANTHROPIC_API_KEY_LOCAL/ANTHROPIC_API_KEY; the key is missing, expired, revoked, or from the wrong workspace. If this is deployed on Netlify, update the site's environment variables and redeploy.`;
+  }
+  if (looksOpenAI && forbiddenLike) {
+    return `OpenAI rejected ${stage} with a permissions error (403). Check model/project access for OPENAI_API_KEY_LOCAL/OPENAI_API_KEY.`;
+  }
+  if (looksClaude && forbiddenLike) {
+    return `Anthropic rejected ${stage} with a permissions error (403). Check workspace/model access for ANTHROPIC_API_KEY_LOCAL/ANTHROPIC_API_KEY.`;
+  }
+  return raw;
+}
+
+function wrapProviderError(provider, err, stage) {
+  const message = explainProviderError(provider, err, stage);
+  if (message === (err?.message || "")) return err;
+  const wrapped = new Error(message);
+  wrapped.status = providerErrorStatus(err);
+  wrapped.cause = err;
+  return wrapped;
+}
+
 // ─── Provider-agnostic AI call helper ────────────────────────────────────────
 // creds: { openaiClient, claudeKey }
 // opts:  { system?, userText, pdfBuffer?, maxTokens?, modelOverride? }
@@ -1844,36 +1900,40 @@ function resolveClaudeModel(override) {
 // modelOverride: debug-mode-only; must be in ALLOWED_CLAUDE_MODELS
 async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens = 8000, modelOverride }) {
   if (provider === "openai") {
-    const { openaiClient } = creds;
-    if (pdfBuffer) {
-      const uploadedFile = await openaiClient.files.create({
-        file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
-        purpose: "user_data"
-      });
-      try {
-        const r = await openaiClient.responses.create({
-          model: "gpt-4o",
-          ...(system ? { instructions: system } : {}),
-          input: [{ role: "user", content: [
-            { type: "input_file", file_id: uploadedFile.id },
-            { type: "input_text", text: userText }
-          ]}],
-          max_output_tokens: maxTokens
+    try {
+      const { openaiClient } = creds;
+      if (pdfBuffer) {
+        const uploadedFile = await openaiClient.files.create({
+          file: await toFile(pdfBuffer, "resume.pdf", { type: "application/pdf" }),
+          purpose: "user_data"
         });
-        const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
-      return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
-      } finally {
-        openaiClient.files.del(uploadedFile.id).catch(() => {});
+        try {
+          const r = await openaiClient.responses.create({
+            model: "gpt-4o",
+            ...(system ? { instructions: system } : {}),
+            input: [{ role: "user", content: [
+              { type: "input_file", file_id: uploadedFile.id },
+              { type: "input_text", text: userText }
+            ]}],
+            max_output_tokens: maxTokens
+          });
+          const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
+          return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
+        } finally {
+          openaiClient.files.del(uploadedFile.id).catch(() => {});
+        }
       }
+      const r = await openaiClient.responses.create({
+        model: "gpt-4o",
+        ...(system ? { instructions: system } : {}),
+        input: [{ role: "user", content: [{ type: "input_text", text: userText }] }],
+        max_output_tokens: maxTokens
+      });
+      const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
+      return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
+    } catch (err) {
+      throw wrapProviderError("openai", err, "portfolio generation");
     }
-    const r = await openaiClient.responses.create({
-      model: "gpt-4o",
-      ...(system ? { instructions: system } : {}),
-      input: [{ role: "user", content: [{ type: "input_text", text: userText }] }],
-      max_output_tokens: maxTokens
-    });
-    const usage = { input: r.usage?.input_tokens ?? null, output: r.usage?.output_tokens ?? null };
-    return { text: r.output_text, model: r.model || "gpt-4o", truncated: r.incomplete_details?.reason === "max_output_tokens", usage };
   } else {
     // Claude
     const claudeModel = resolveClaudeModel(modelOverride);
@@ -1911,8 +1971,16 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
       }
     }
     if (!res) throw lastNetErr || new Error("Claude fetch failed after retries");
-    const json = await res.json();
-    if (!res.ok) throw new Error("Claude API error: " + (json.error?.message || JSON.stringify(json).slice(0, 200)));
+    const textBody = await res.text().catch(() => "");
+    let json = {};
+    if (textBody) {
+      try { json = JSON.parse(textBody); } catch {}
+    }
+    if (!res.ok) {
+      const err = new Error(json.error?.message || textBody.slice(0, 300) || `${res.status} status code (no body)`);
+      err.status = res.status;
+      throw wrapProviderError("claude", err, "portfolio generation");
+    }
     const text = (json.content || []).filter(b => b.type === "text").map(b => b.text).join("");
     const usage = { input: json.usage?.input_tokens ?? null, output: json.usage?.output_tokens ?? null };
     return { text, model: json.model || claudeModel, truncated: json.stop_reason === "max_tokens", usage };
@@ -1925,36 +1993,40 @@ async function callAI(provider, creds, { system, userText, pdfBuffer, maxTokens 
 // caller decides how often to persist. Returns the same shape as callAI so the
 // Stage 5 code path barely changes.
 async function callClaudeStream(creds, { system, userText, maxTokens = 32000, modelOverride, onChunk }) {
-  const claudeModel = resolveClaudeModel(modelOverride);
-  const client = new Anthropic({ apiKey: creds.claudeKey });
-  const stream = client.messages.stream({
-    model: claudeModel,
-    max_tokens: maxTokens,
-    ...(system ? { system } : {}),
-    messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
-  });
-  let accumulated = "";
-  if (typeof onChunk === "function") {
-    stream.on("text", (delta) => {
-      accumulated += delta;
-      // Wrap the callback so a caller-side throw doesn't tear down the stream.
-      try { onChunk(delta, accumulated); } catch (err) {
-        console.warn("[callClaudeStream] onChunk threw (non-fatal):", err?.message || err);
-      }
+  try {
+    const claudeModel = resolveClaudeModel(modelOverride);
+    const client = new Anthropic({ apiKey: creds.claudeKey });
+    const stream = client.messages.stream({
+      model: claudeModel,
+      max_tokens: maxTokens,
+      ...(system ? { system } : {}),
+      messages: [{ role: "user", content: [{ type: "text", text: userText }] }],
     });
+    let accumulated = "";
+    if (typeof onChunk === "function") {
+      stream.on("text", (delta) => {
+        accumulated += delta;
+        // Wrap the callback so a caller-side throw doesn't tear down the stream.
+        try { onChunk(delta, accumulated); } catch (err) {
+          console.warn("[callClaudeStream] onChunk threw (non-fatal):", err?.message || err);
+        }
+      });
+    }
+    const finalMessage = await stream.finalMessage();
+    const text = (finalMessage.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+    const usage = {
+      input: finalMessage.usage?.input_tokens ?? null,
+      output: finalMessage.usage?.output_tokens ?? null,
+    };
+    return {
+      text,
+      model: finalMessage.model || claudeModel,
+      truncated: finalMessage.stop_reason === "max_tokens",
+      usage,
+    };
+  } catch (err) {
+    throw wrapProviderError("claude", err, "portfolio streaming generation");
   }
-  const finalMessage = await stream.finalMessage();
-  const text = (finalMessage.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-  const usage = {
-    input: finalMessage.usage?.input_tokens ?? null,
-    output: finalMessage.usage?.output_tokens ?? null,
-  };
-  return {
-    text,
-    model: finalMessage.model || claudeModel,
-    truncated: finalMessage.stop_reason === "max_tokens",
-    usage,
-  };
 }
 
 // ─── Unify resume + job analyses (stage 2 only) ──────────────────────────────
@@ -2578,7 +2650,8 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       render_mode:         page1?.design_render_mode || "",
       density:             page1?.design_density || "medium",
       use_emoji_icons:     page1?.use_emoji_icons ?? true,
-      alternate_sections:  page1?.alternate_sections ?? true
+      alternate_sections:  page1?.alternate_sections ?? true,
+      main_section_mode:   page1?.main_section_mode || "light",
     };
 
     // Design-options path — if the user described colors in words with no
@@ -2865,6 +2938,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     ...(page1.design_density     !== undefined && { density:           page1.design_density }),
     ...(page1.use_emoji_icons    !== undefined && { use_emoji_icons:   page1.use_emoji_icons }),
     ...(page1.alternate_sections !== undefined && { alternate_sections: page1.alternate_sections }),
+    ...(page1.main_section_mode  !== undefined && { main_section_mode: page1.main_section_mode }),
   };
   // If a pre-computed bridge_json was supplied by the bridgeContentAndDesign stage, use its
   // visual_direction directly and skip the code-level buildVisualDirection() call.
