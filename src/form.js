@@ -1164,7 +1164,7 @@ ${pseudoSelectors} {
     }
 
     function applyBraidColorOverridesToHtml(html) {
-      const theme = themeWithAliases(getPage3Colors().theme);
+      const theme = normalizeThemeColors(getPage3Colors().theme);
       if (!html || !theme) return html || "";
 
       // Parse --color-* variable names and their slot numbers from the first <style> block.
@@ -1206,8 +1206,8 @@ ${pseudoSelectors} {
         ["--c-1", theme.primary],
         ["--c-2", theme.secondary],
         ["--c-3", theme.accent],
-        ["--c-4", theme.quaternary],
-        ["--c-5", theme.quinary],
+        ["--c-4", theme.foreground],
+        ["--c-5", theme.background],
         // Backward-compatible aliases for older generated HTML
         ["--dominant", theme.primary],
         ["--tertiary", theme.accent],
@@ -2312,7 +2312,7 @@ ${pseudoSelectors} {
 
     // Converts parseColorRoles() output [{index, label, hex}] → semantic role object
     function colorRolesToSlots(colorRoles) {
-      return themeWithAliases({
+      return normalizeThemeColors({
         background: (colorRoles || []).find(r => r.index === 1)?.hex || null,
         foreground: (colorRoles || []).find(r => r.index === 2)?.hex || null,
         primary: (colorRoles || []).find(r => r.index === 3)?.hex || null,
@@ -2681,15 +2681,15 @@ ${pseudoSelectors} {
           primary:    hex(keys[0]),
           secondary:  hex(keys[1]),
           accent:     hex(keys[2]),
-          quaternary: hex(keys[3]),
-          quinary:    hex(keys[4]),
+          foreground: hex(keys[3]),
+          background:    hex(keys[4]),
         };
         const complements = {
           primary:    complementHex(keys[0]),
           secondary:  complementHex(keys[1]),
           accent:     complementHex(keys[2]),
-          quaternary: complementHex(keys[3]),
-          quinary:    complementHex(keys[4]),
+          foreground: complementHex(keys[3]),
+          background:    complementHex(keys[4]),
         };
         if (Object.values(complements).some(Boolean)) result.__complements = complements;
         return Object.values(result).some(Boolean) ? result : null;
@@ -3057,50 +3057,42 @@ input[type="color"].split-color::-moz-color-swatch {
       return hexMetrics(hex).chroma < 22;
     }
 
-    const THEME_ROLE_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
+    const THEME_ROLE_KEYS = ["primary", "secondary", "accent", "foreground", "background"];
     const THEME_INPUT_IDS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
     const ROLE_TO_INPUT_ID = {
       primary:    "primary",
       secondary:  "secondary",
       accent:     "tertiary",
-      quaternary: "accent2",
-      quinary:    "accent1",
+      foreground: "accent2",
+      background: "accent1",
     };
     const INPUT_ID_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_INPUT_ID).map(([role, id]) => [id, role]));
     const THEME_ROLE_LABELS = {
       primary:    "Primary",
       secondary:  "Secondary",
       accent:     "Accent",
-      quaternary: "Quaternary",
-      quinary:    "Quinary",
+      foreground: "Quaternary",
+      background:    "Quinary",
     };
 
+    // Canonical theme shape: five semantic roles, nothing else. Roles (not positional
+    // slots) are the right vocabulary HERE because the form reasons about meaning —
+    // background/foreground drive contrast and light/dark pairing. The backend converts
+    // to positional c1…c5 at its renderer boundary (toPositionalPalette).
+    //
+    // The `||` chains accept the spellings external palette data arrives in (embedded
+    // template schemes, suggestion payloads, uploaded-image palettes). That is input
+    // normalisation, not an alias fan-out: the OUTPUT is always exactly these five keys.
     function normalizeThemeColors(value = {}) {
       return {
         primary:    normalizeHex(value.primary    || value.slot1 || null),
         secondary:  normalizeHex(value.secondary  || value.slot2 || null),
         accent:     normalizeHex(value.accent     || value.tertiary || value.slot3 || null),
-        quaternary: normalizeHex(value.quaternary || value.foreground || value.accent2 || value.slot4 || null),
-        quinary:    normalizeHex(value.quinary    || value.background || value.accent1 || value.slot5 || null),
+        foreground: normalizeHex(value.foreground || value.quaternary || value.accent2 || value.slot4 || null),
+        background: normalizeHex(value.background || value.quinary    || value.accent1 || value.slot5 || null),
       };
     }
 
-    function themeWithAliases(value = {}) {
-      const theme = normalizeThemeColors(value);
-      return {
-        ...theme,
-        tertiary:   theme.accent,
-        background: theme.quinary,
-        foreground: theme.quaternary,
-        accent1:    theme.quinary,
-        accent2:    theme.quaternary,
-        slot1:      theme.primary,
-        slot2:      theme.secondary,
-        slot3:      theme.accent,
-        slot4:      theme.quaternary,
-        slot5:      theme.quinary,
-      };
-    }
 
     function inferPaletteFromImageFile(file) {
       return new Promise(resolve => {
@@ -3187,7 +3179,7 @@ input[type="color"].split-color::-moz-color-swatch {
               const secondary = chosen[1]?.hex || candidates.find(c => ![background.hex, foreground.hex, primary].includes(c.hex))?.hex || background.hex;
               const accent = chosen[2]?.hex || candidates.find(c => ![background.hex, foreground.hex, primary, secondary].includes(c.hex))?.hex || primary;
 
-              resolve(themeWithAliases({ background: background.hex, foreground: foreground.hex, primary, secondary, accent }));
+              resolve(normalizeThemeColors({ background: background.hex, foreground: foreground.hex, primary, secondary, accent }));
             } catch {
               resolve(null);
             }
@@ -3208,7 +3200,7 @@ input[type="color"].split-color::-moz-color-swatch {
     function mapRoleColorsToUiSlots(roleColors) {
       if (!Array.isArray(roleColors) || !roleColors.length) return null;
       const ordered = roleColors.map(item => normalizeHex(item?.hex) || null);
-      return themeWithAliases({
+      return normalizeThemeColors({
         background: ordered[0],
         foreground: ordered[1],
         primary: ordered[2],
@@ -3220,18 +3212,18 @@ input[type="color"].split-color::-moz-color-swatch {
     function mapAiPaletteToUiSlots(colorsArray) {
       if (!Array.isArray(colorsArray) || !colorsArray.length) return null;
       const ordered = colorsArray.map(color => normalizeToHex(color) || null);
-      return themeWithAliases({
+      return normalizeThemeColors({
         primary: ordered[0],
         secondary: ordered[1],
         accent: ordered[2],
-        quaternary: ordered[3],
-        quinary: ordered[4]
+        foreground: ordered[3],
+        background: ordered[4]
       });
     }
 
     function getPaletteKey(palette) {
       if (!palette?.colors) return "";
-      return THEME_ROLE_KEYS.map(slot => normalizeHex(themeWithAliases(palette.colors)[slot]) || "").join("|");
+      return THEME_ROLE_KEYS.map(slot => normalizeHex(normalizeThemeColors(palette.colors)[slot]) || "").join("|");
     }
 
     function hasNormalizedTemplatePalette(cache) {
@@ -3261,7 +3253,7 @@ input[type="color"].split-color::-moz-color-swatch {
         }
       }
 
-      const palette = themeWithAliases({
+      const palette = normalizeThemeColors({
         primary: embedded.primary || null,
         secondary: embedded.secondary || null,
         accent: embedded.accent || embedded.tertiary || null,
@@ -3332,7 +3324,7 @@ input[type="color"].split-color::-moz-color-swatch {
       });
 
       if (!Object.values(palette).some(Boolean)) return null;
-      return { label: "Template palette", colors: themeWithAliases(palette) };
+      return { label: "Template palette", colors: normalizeThemeColors(palette) };
     }
 
     function buildUploadedImagePalette(cache) {
@@ -3340,7 +3332,7 @@ input[type="color"].split-color::-moz-color-swatch {
       if (source !== "file") return null;
       const isImageUpload = uploadedImagePalette || cache?.templateInputKind === "image-upload";
       if (!isImageUpload) return null;
-      const palette = themeWithAliases(uploadedImagePalette || cache?.embeddedJson?.default_color_scheme || {});
+      const palette = normalizeThemeColors(uploadedImagePalette || cache?.embeddedJson?.default_color_scheme || {});
       if (!THEME_ROLE_KEYS.some(role => palette[role])) return null;
       return { label: "Uploaded image palette", colors: palette };
     }
@@ -3383,7 +3375,7 @@ input[type="color"].split-color::-moz-color-swatch {
           if (primary || secondary) {
             tplPalette = {
               label: "Template palette",
-              colors: themeWithAliases({ background: light, foreground: dark, primary, secondary, accent: null })
+              colors: normalizeThemeColors({ background: light, foreground: dark, primary, secondary, accent: null })
             };
           }
         }
@@ -3395,7 +3387,7 @@ input[type="color"].split-color::-moz-color-swatch {
     function applyColors(colors) {
       if (!colors) return;
       selectedPaletteComplements = getPaletteComplements(colors);
-      const theme = themeWithAliases(colors);
+      const theme = normalizeThemeColors(colors);
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
       Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
       updateColorRoleLabels();
@@ -3518,12 +3510,12 @@ input[type="color"].split-color::-moz-color-swatch {
         // Legacy ordered slot schema: [slot1, slot2, slot3, slot4, slot5]
         colors = mapAiPaletteToUiSlots(firstScheme.colors);
       } else if (firstScheme?.base_colors) {
-        colors = themeWithAliases(firstScheme.base_colors);
+        colors = normalizeThemeColors(firstScheme.base_colors);
       } else if (firstScheme?.background || firstScheme?.foreground || firstScheme?.accent) {
-        colors = themeWithAliases(firstScheme);
+        colors = normalizeThemeColors(firstScheme);
       } else if (firstScheme?.primary) {
         // Legacy named-slot schema
-        colors = themeWithAliases(firstScheme);
+        colors = normalizeThemeColors(firstScheme);
       } else {
         // Oldest legacy: compatible_color_scheme.five_key_colors array
         const arr = resumeJson?.compatible_color_scheme?.five_key_colors;
@@ -3789,9 +3781,11 @@ input[type="color"].split-color::-moz-color-swatch {
       const primary    = document.getElementById("primary").value.trim();
       const secondary  = document.getElementById("secondary").value.trim();
       const accent     = document.getElementById("tertiary").value.trim();
-      const quaternary = document.getElementById("accent2").value.trim();
-      const quinary    = document.getElementById("accent1").value.trim();
-      const theme = themeWithAliases({ primary, secondary, accent, quaternary, quinary });
+      // Input ids are historical and do not match the roles they feed:
+      // #tertiary -> accent, #accent2 -> foreground, #accent1 -> background.
+      const foreground = document.getElementById("accent2").value.trim();
+      const background = document.getElementById("accent1").value.trim();
+      const theme = normalizeThemeColors({ primary, secondary, accent, foreground, background });
       if (selectedPaletteComplements) theme.__complements = { ...selectedPaletteComplements };
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
@@ -5858,7 +5852,7 @@ input[type="color"].split-color::-moz-color-swatch {
           // Legacy format: ordered slot array or named slot aliases
           const colors = Array.isArray(p.colors)
             ? mapAiPaletteToUiSlots(p.colors)
-            : themeWithAliases(p.base_colors || p);
+            : normalizeThemeColors(p.base_colors || p);
           const isRule = p._paletteSource === "rule";
           const idx = isRule ? ++ruleCounter : ++aiCounter;
           const defaultLabel = isRule ? `Suggested palette ${idx}` : `AI palette ${idx}`;
@@ -6578,14 +6572,14 @@ input[type="color"].split-color::-moz-color-swatch {
         selectedPaletteComplements = null;
         const t = msg.theme || {};
         const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v || ""; };
-        const theme = themeWithAliases(t.base_colors || t);
+        const theme = normalizeThemeColors(t.base_colors || t);
 
         set("themeNumber", msg.number ?? "");
         set("primary",   theme.primary);
         set("secondary", theme.secondary);
         set("tertiary",  theme.accent);
-        set("accent2",   theme.quaternary);
-        set("accent1",   theme.quinary);
+        set("accent2",   theme.foreground);
+        set("accent1",   theme.background);
         updatePageColorInputSplitSwatches();
         invalidateFromPage4();
       });
