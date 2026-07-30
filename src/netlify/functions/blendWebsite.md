@@ -41,11 +41,9 @@ SCHEMA
     "animation_guidance": [],
     "template_inspiration_notes": "",
     "color_application": {
-      "background_use": "",
-      "foreground_use": "",
-      "primary_use": "",
-      "secondary_use": "",
-      "accent_use": "",
+      "palette": "",
+      "palette_use": "",
+      "role_assignment": "",
       "gradient_notes": ""
     },
     "visual_placements": [

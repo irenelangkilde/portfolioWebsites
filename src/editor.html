@@ -2134,11 +2134,14 @@
           return item?.memberCount > 0 && item?.hex ? item.hex : "";
         };
         return normalizeComplementMap({
-          primary:    complement("--color-primary"),
-          secondary:  complement("--color-secondary"),
-          accent:     complement("--color-tertiary"),
-          foreground: complement("--color-quaternary"),
-          background: complement("--color-quinary"),
+          // Positional --c-N is the only palette dialect the renderer emits now; the
+          // semantic --color-* mirror was retired in Stage 3. Slot order matches
+          // ROLE_TO_SLOT_ORDER in buildWebsite-background.mjs.
+          primary:    complement("--c-1"),
+          secondary:  complement("--c-2"),
+          accent:     complement("--c-3"),
+          foreground: complement("--c-4"),
+          background: complement("--c-5"),
         });
       } catch {
         return {};

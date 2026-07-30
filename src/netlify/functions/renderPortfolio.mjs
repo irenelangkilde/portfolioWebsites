@@ -9,7 +9,7 @@
  *
  *   const html = renderPortfolio(annotatedHtml, candidateData, colorSpec);
  *
- * colorSpec (optional): { primary, secondary, accent, quaternary, quinary } — hex strings.
+ * colorSpec (optional): { c1, c2, c3, c4, c5 } — hex strings, positional (c1 = most dominant).
  *   When provided, overrides the CSS custom properties from the extracted-theme block.
  */
 
@@ -878,28 +878,26 @@ function fillItem($, $item, entry, { sectionKey = "" } = {}) {
 
 // ── Color override injection ──────────────────────────────────────────────────
 
-// Map of colorSpec key → CSS variable names. New normalized templates use
-// --c-1…--c-5; older templates used semantic --color-* variables.
+// Map of colorSpec key → CSS variable name. Positional palette: slot N of the colorSpec drives --c-N. No semantic aliases and
+// no legacy --color-* mirror — slots carry no inherent meaning (a template's --c-4 may
+// be body text, an SVG fill, or a section background), so naming them after roles only
+// invited the wrong colour to be placed. Semantic intent travels separately, as an
+// explicit role request resolved against each template's actual variable usage.
 const COLOR_VAR_MAP = {
-  primary:    ["--c-1", "--color-primary"],
-  secondary:  ["--c-2", "--color-secondary"],
-  accent:     ["--c-3", "--color-tertiary"],
-  tertiary:   ["--c-3", "--color-tertiary"],
-  quaternary: ["--c-4", "--color-quaternary"],
-  quinary:    ["--c-5", "--color-quinary"],
+  c1: ["--c-1"],
+  c2: ["--c-2"],
+  c3: ["--c-3"],
+  c4: ["--c-4"],
+  c5: ["--c-5"],
 };
 
-const THEME_COLOR_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
+const THEME_COLOR_KEYS = ["c1", "c2", "c3", "c4", "c5"];
 const NEUTRAL_CHROMA_THRESHOLD = 0.055;
 
 function themeFromColorSpec(colorSpec = {}) {
-  return {
-    primary:    normalizeHexValue(colorSpec.primary    || colorSpec.slot1),
-    secondary:  normalizeHexValue(colorSpec.secondary  || colorSpec.slot2),
-    accent:     normalizeHexValue(colorSpec.accent     || colorSpec.tertiary || colorSpec.slot3),
-    quaternary: normalizeHexValue(colorSpec.quaternary || colorSpec.foreground || colorSpec.accent2 || colorSpec.slot4),
-    quinary:    normalizeHexValue(colorSpec.quinary    || colorSpec.background || colorSpec.accent1 || colorSpec.slot5),
-  };
+  const theme = {};
+  for (const key of THEME_COLOR_KEYS) theme[key] = normalizeHexValue(colorSpec?.[key]);
+  return theme;
 }
 
 function parseEmbeddedPaletteScheme($) {
@@ -1186,25 +1184,19 @@ function buildColorOverrideBlock(colorSpec, $ = null, roleAssignments = null, do
   const emitted = new Set();
 
   const scheme = parseEmbeddedPaletteScheme($);
-  const placedHexes = new Set();
   for (const [cssVar, hex] of fullPaletteOverrides(colorSpec, scheme, roleAssignments, dominanceOrder)) {
     addColorOverride(lines, emitted, cssVar, hex);
-    const normalized = normalizeHexValue(hex);
-    if (normalized) placedHexes.add(normalized.toLowerCase());
   }
 
-  // The legacy --color-* aliases are a compatibility shim for pages generated before
-  // templates moved to --c-N; the editor still probes them. Restrict them to colours
-  // that actually landed on a --c-N above. Otherwise a colour the pipeline synthesised
-  // to fill the five-role shape — but deliberately did NOT place, because the user
-  // never named it — still gets published here, and the editor reads it back as if it
-  // were part of the design. Placement is the source of truth; this only mirrors it.
+  // Fallback for templates with no embedded #color-palette block: fullPaletteOverrides
+  // returns nothing, so write the five slots straight through. When a scheme IS present
+  // every --c-N is already emitted above and addColorOverride skips them, so this loop
+  // is a no-op. (The placed-only guard that used to live here is gone with the
+  // --color-* mirror it protected: nothing unplaced can be published now.)
   const theme = themeFromColorSpec(colorSpec);
-  const restrictToPlaced = placedHexes.size > 0;
   for (const [key, cssVars] of Object.entries(COLOR_VAR_MAP)) {
-    const hex = theme[key] || (key === "tertiary" ? theme.accent : normalizeHexValue(colorSpec?.[key]));
+    const hex = theme[key];
     if (!hex) continue;
-    if (restrictToPlaced && !placedHexes.has(String(hex).toLowerCase())) continue;
     for (const cssVar of cssVars) {
       addColorOverride(lines, emitted, cssVar, hex);
     }
@@ -1218,7 +1210,7 @@ function buildColorOverrideBlock(colorSpec, $ = null, roleAssignments = null, do
 /**
  * @param {string}  annotatedHtml  Output of annotateTemplate pipeline.
  * @param {object}  candidateData  Output of generateCandidateContent.
- * @param {object}  [colorSpec]    Optional: { primary, secondary, accent, quaternary, quinary } as hex strings.
+ * @param {object}  [colorSpec]    Optional: { c1, c2, c3, c4, c5 } as hex strings (positional).
  * @param {object}  [roleAssignments] Optional: { "--c-8": "#87ceeb", … } — explicit
  *   slot decisions resolved from the user's semantic colour request. Pinned slots
  *   win over proximity-based anchor placement; everything else derives as usual.

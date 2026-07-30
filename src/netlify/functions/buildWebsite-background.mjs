@@ -267,21 +267,6 @@ function cleanHtml(rawHtml) {
   return html;
 }
 
-// ─── Color slot parser for pre-normalized templates ──────────────────────────
-// Reads the five --color-* hex values from a :root block that already has numbered
-// role comments (e.g. /* 1. Background — ... */). Returns { slot1: "#...", ... }.
-function parseNormalizedColorSlots(html) {
-  const rootMatch = (html || "").match(/:root\s*\{([\s\S]*?)\}/);
-  if (!rootMatch) return {};
-  const slots = {};
-  const re = /--color-[\w-]+\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*\s*(\d+)\./g;
-  let m;
-  while ((m = re.exec(rootMatch[1])) !== null) {
-    const idx = parseInt(m[2]);
-    if (idx >= 1 && idx <= 5) slots[`slot${idx}`] = m[1].toLowerCase();
-  }
-  return slots;
-}
 
 // ─── Prompt loaders ──────────────────────────────────────────────────────────
 function loadPromptFile(filename) {
@@ -309,27 +294,44 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
-const COLOR_ROLE_KEYS = ["primary", "secondary", "accent", "quaternary", "quinary"];
+// Canonical semantic roles. Kept semantic — not positional — because the
+// design-from-scratch render prompt describes what each colour is FOR, and the
+// role-request resolver reasons in these terms. Positional c1…c5 is a rendering
+// concern and is produced at the renderer boundary by toPositionalPalette().
+
+// Semantic role → positional slot, for the template renderer. Order preserves the
+// previous anchor identity (primary→c1 … background→c5) so proximity-fallback
+// placement is unchanged by the rename.
+const ROLE_TO_SLOT_ORDER = ["primary", "secondary", "accent", "foreground", "background"];
+
+// renderPortfolio takes a positional palette: { c1…c5 }. When the user named colours
+// their dominance order leads, so c1 is genuinely their most dominant colour;
+// otherwise ROLE_TO_SLOT_ORDER applies.
+function toPositionalPalette(spec = {}, dominanceOrder = null) {
+  const hexes = [];
+  const seen = new Set();
+  const push = (hex) => {
+    const h = typeof hex === "string" ? hex.trim().toLowerCase() : "";
+    if (!/^#[0-9a-f]{6}$/.test(h) || seen.has(h)) return;
+    seen.add(h);
+    hexes.push(h);
+  };
+  for (const hex of Array.isArray(dominanceOrder) ? dominanceOrder : []) push(hex);
+  for (const role of ROLE_TO_SLOT_ORDER) push(spec?.[role]);
+  const palette = { use_sample_colors: !!spec?.use_sample_colors };
+  hexes.slice(0, 5).forEach((hex, i) => { palette[`c${i + 1}`] = hex; });
+  if (spec?.note) palette.note = spec.note;
+  return palette;
+}
+
+// Positional palette: c1 (most dominant) … c5. Slots carry no inherent role — the
+// renderer maps them to --c-N, and the from-scratch prompt is told to assign roles
+// itself. Semantic intent arrives separately as explicit role requests.
+const POSITIONAL_SLOT_KEYS = ["c1", "c2", "c3", "c4", "c5"];
 
 function normalizeColorSpec(colorSpec = {}) {
   const normalized = { use_sample_colors: !!colorSpec?.use_sample_colors };
-  normalized.primary    = colorSpec?.primary    ?? colorSpec?.slot1 ?? null;
-  normalized.secondary  = colorSpec?.secondary  ?? colorSpec?.slot2 ?? null;
-  normalized.accent     = colorSpec?.accent     ?? colorSpec?.tertiary ?? colorSpec?.slot3 ?? null;
-  normalized.quaternary = colorSpec?.quaternary ?? colorSpec?.foreground ?? colorSpec?.accent2 ?? colorSpec?.slot4 ?? null;
-  normalized.quinary    = colorSpec?.quinary    ?? colorSpec?.background ?? colorSpec?.accent1 ?? colorSpec?.slot5 ?? null;
-
-  // Aliases for backward compatibility with older prompts and editor code.
-  normalized.tertiary   = normalized.accent;
-  normalized.background = normalized.quinary;
-  normalized.foreground = normalized.quaternary;
-  normalized.accent1    = normalized.quinary;
-  normalized.accent2    = normalized.quaternary;
-  normalized.slot1      = normalized.primary;
-  normalized.slot2      = normalized.secondary;
-  normalized.slot3      = normalized.accent;
-  normalized.slot4      = normalized.quaternary;
-  normalized.slot5      = normalized.quinary;
+  for (const slot of POSITIONAL_SLOT_KEYS) normalized[slot] = colorSpec?.[slot] ?? null;
   if (colorSpec?.note) normalized.note = colorSpec.note;
   return normalized;
 }
@@ -644,14 +646,9 @@ function formatColorPreferencesGuidance(prefs) {
 
 function serializeColorSpecForAI(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
-  return {
-    use_sample_colors: !!normalized.use_sample_colors,
-    primary:    normalized.primary,
-    secondary:  normalized.secondary,
-    accent:     normalized.accent,
-    quaternary: normalized.quaternary,
-    quinary:    normalized.quinary,
-  };
+  const out = { use_sample_colors: !!normalized.use_sample_colors };
+  for (const slot of POSITIONAL_SLOT_KEYS) out[slot] = normalized[slot];
+  return out;
 }
 
 function escapeRegExp(value) {
@@ -942,8 +939,8 @@ function buildMastheadImageInstruction(meta = {}, domainContext = "") {
 
 function serializePaletteForImagePrompt(colorSpec = {}) {
   const normalized = normalizeColorSpec(colorSpec);
-  return COLOR_ROLE_KEYS
-    .map((roleKey) => `${roleKey}=${normalized[roleKey] || "unspecified"}`)
+  return POSITIONAL_SLOT_KEYS
+    .map((slot) => `${slot}=${normalized[slot] || "unspecified"}`)
     .join(", ");
 }
 
@@ -1197,37 +1194,6 @@ async function generateImageDataUri({ prompt, size = "1024x1024", stageLabel = "
 }
 
 // ─── Post-render CSS color injection ─────────────────────────────────────────
-// Replaces --color-* hex values in the rendered HTML using the user's colorSpec
-// and the template's embedded default_color_scheme metadata comment.
-function injectCssColors(html, colorSpec, templateHtml) {
-  const normalizedColorSpec = normalizeColorSpec(colorSpec);
-  if (!normalizedColorSpec || normalizedColorSpec.use_sample_colors) return html;
-  // Parse --color-* variable declarations with their adjacent numbered role comments.
-  // Numbered sample slots map to semantic roles:
-  // 1→background, 2→foreground, 3→primary, 4→secondary, 5→accent.
-  const rootMatch = (templateHtml || "").match(/:root\s*\{([\s\S]*?)\}/);
-  if (!rootMatch) return html;
-  const colorVars = [];
-  const re = /(--color-[\w-]+)\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*\s*(\d+)\.\s*([^*]+)\*\//g;
-  let m;
-  while ((m = re.exec(rootMatch[1])) !== null) {
-    colorVars.push({ varName: m[1], hex: m[2], index: parseInt(m[3]), label: m[4].trim() });
-  }
-  if (!colorVars.length) return html;
-  colorVars.sort((a, b) => a.index - b.index);
-  const slots = ["background", "foreground", "primary", "secondary", "accent"];
-  const varToSlot = {};
-  colorVars.forEach((cv, i) => {
-    if (i < slots.length) varToSlot[cv.varName] = slots[i];
-  });
-
-  if (!Object.keys(varToSlot).length) return html;
-  return html.replace(/(--color-[\w-]+)(\s*:\s*)#[0-9a-fA-F]{3,8}/g, (match, varName, colon) => {
-    const slot = varToSlot[varName];
-    return (slot && normalizedColorSpec[slot]) ? varName + colon + normalizedColorSpec[slot] : match;
-  });
-}
-
 // ─── Template metadata comment parser ────────────────────────────────────────
 // Extracts the JSON payload from <!-- { ... } --> embedded in <head>.
 function parseTemplateMetadata(html) {
@@ -1412,20 +1378,22 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const isUseSampleColors = normalizedColorSpec?.use_sample_colors;
   const colorApp = isUseSampleColors
     ? {
-        background_use: "Preserve the sample's page canvas and large-area background treatment.",
-        foreground_use: "Preserve the sample's readable ink / text contrast treatment.",
-        primary_use: "Preserve the sample's main brand/action emphasis.",
-        secondary_use: "Preserve the sample's secondary accent and hierarchy support.",
-        accent_use: "Preserve the sample's fifth contrast color for highlights and supporting emphasis.",
+        palette: "Preserve the sample's own palette.",
+        palette_use: "Keep the sample's existing colour application: its page canvas, ink/text contrast, brand emphasis and highlight treatment.",
+        role_assignment: "No reassignment — retain the sample's colour roles as-is.",
         gradient_notes: "Use template's existing gradient patterns"
       }
     : {
-        background_use: `${normalizedColorSpec?.background || "background"} — page canvas, large surfaces, or atmospheric wash.`,
-        foreground_use: `${normalizedColorSpec?.foreground || "foreground"} — readable text, dark/light ink, and contrast support.`,
-        primary_use: `${normalizedColorSpec?.primary || "primary"} — main CTA, headline emphasis, and strongest brand/action color.`,
-        secondary_use: `${normalizedColorSpec?.secondary || "secondary"} — supporting accent used for chips, panels, or secondary emphasis.`,
-        accent_use: `${normalizedColorSpec?.accent || "accent"} — orthogonal highlight color for contrast, detail, and selective emphasis.`,
-        gradient_notes: `Preserve the template's gradient structure while using background/foreground for readability and primary/secondary/accent for hierarchy.`
+        // Positional, not role-named. The five slots are ordered by dominance; YOU
+        // decide which becomes canvas, ink, brand and highlight. Naming them after
+        // roles up front produced worse results, because a slot's best role depends
+        // on the layout being designed.
+        palette: POSITIONAL_SLOT_KEYS
+          .map((slot, i) => `${slot}=${normalizedColorSpec?.[slot] || "unspecified"}${i === 0 ? " (most dominant)" : ""}`)
+          .join(", "),
+        palette_use: "Assign these colours to roles yourself. c1 is the most dominant and should read as the site's dominant colour; later slots are progressively less prominent. Ensure text/background pairings meet WCAG AA regardless of which slots you choose for them.",
+        role_assignment: "State in your output which slot you used for the page canvas, body text, primary emphasis and highlights.",
+        gradient_notes: "Preserve the template's gradient structure; keep one high-contrast pair for readability and use the remaining slots for hierarchy."
       };
 
   const pace = (attrs.pacing || "").toLowerCase();
@@ -1936,11 +1904,12 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
 
   // Theme color variables for templates that expose CSS custom properties
   const normalizedTheme = normalizeColorSpec(colorSpec);
-  const tp = normalizedTheme.primary || "#2563eb";
-  const ts = normalizedTheme.secondary || "#22c55e";
-  const td = normalizedTheme.foreground || "#0f172a";
-  const tb = normalizedTheme.background || "#f8fafc";
-  const ta = normalizedTheme.accent || "#8de0ff";
+  // Positional slots (ROLE_TO_SLOT_ORDER: primary, secondary, accent, foreground, background).
+  const tp = normalizedTheme.c1 || "#2563eb";
+  const ts = normalizedTheme.c2 || "#22c55e";
+  const ta = normalizedTheme.c3 || "#8de0ff";
+  const td = normalizedTheme.c4 || "#0f172a";
+  const tb = normalizedTheme.c5 || "#f8fafc";
   const rawAbout = trimAboutToLength(
     resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "",
     heroAboutWordCount
@@ -2420,14 +2389,17 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
     }
   }
 
-  const normalizedColor = normalizeColorSpec({
+  // Semantic roles in, positional palette out. Dominance order leads so c1 is the
+  // user's most dominant colour; otherwise ROLE_TO_SLOT_ORDER applies.
+  const normalizedColor = toPositionalPalette({
     background: derivedThemeFromText?.background ?? safeColorSpec.background,
     foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
     primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
     secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
     accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
     use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
-  });
+  },
+  derivedThemeFromText?.dominanceOrder);
 
   if (headshotName) {
     candidateData.headshot = headshotName;
@@ -2575,14 +2547,17 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     }
   }
 
-  const theme = normalizeColorSpec({
+  // Semantic roles in, positional palette out. Dominance order leads so c1 is the
+  // user's most dominant colour; otherwise ROLE_TO_SLOT_ORDER applies.
+  const theme = toPositionalPalette({
     background: derivedThemeFromText?.background ?? safeColorSpec.background,
     foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
     primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
     secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
     accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
     use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
-  });
+  },
+  derivedThemeFromText?.dominanceOrder);
 
   const candidateData = flattenCandidateData(
     resolvedStrategy,
@@ -2687,7 +2662,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     ? `<img src="${headshotName}" alt="${name}" class="headshot" />`
     : "";
 
-  const theme = normalizeColorSpec({
+  const theme = toPositionalPalette({
     background: safeColorSpec.background,
     foreground: safeColorSpec.foreground,
     primary: safeColorSpec.primary,
@@ -3273,7 +3248,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 
   const colorSpec = page2?.use_sample_colors && !derivedThemeFromText
     ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
-    : normalizeColorSpec({ ...effectiveTheme, use_sample_colors: false });
+    : toPositionalPalette({ ...effectiveTheme, use_sample_colors: false });
 
   // Enrich user-supplied artifacts with source and colorized fields.
   const COLORIZABLE_TYPES = new Set(["image", "html", "text"]);
@@ -3477,7 +3452,10 @@ async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
     return;
   }
   const normalizedHtml = embedMastheadMetaComment(cleanHtml(r.text || ""), mastheadMeta);
-  const colorSlots = parseNormalizedColorSlots(normalizedHtml);
+  // Was parseNormalizedColorSlots(normalizedHtml): it read --color-* vars with numbered
+  // role comments, a dialect no current template emits, so it always returned {}.
+  // Retired with the rest of --color-*; kept as an explicit empty so the shape holds.
+  const colorSlots = {};
   await store.set(jobId, JSON.stringify({
     status: "done",
     normalizedHtml,
@@ -3782,7 +3760,7 @@ async function handleBuildWebsiteBackground(event) {
       return { statusCode: 202 };
     }
 
-    const theme = normalizeColorSpec({
+    const theme = toPositionalPalette({
       background: page2?.theme?.background,
       foreground: page2?.theme?.foreground,
       primary: page2?.theme?.primary,
