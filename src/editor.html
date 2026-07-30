@@ -4225,12 +4225,19 @@
 	    }
 
 	    function normalizeColorWorkbenchRows(rows) {
+	      // Chroma floor for count * chroma ranking: a pure neutral otherwise scores 0
+	      // however much of the page it covers, so it sorts last regardless of coverage.
+	      // Small enough that saturated colours still lead. Keep in sync with
+	      // SCORE_CHROMA_FLOOR in netlify/functions/renderPortfolio.mjs.
+	      const COLOR_SCORE_CHROMA_FLOOR = 0.02;
+	      const colorScore = (count, chroma) =>
+	        (Number(count) || 0) * Math.max(Number(chroma) || 0, COLOR_SCORE_CHROMA_FLOOR);
 	      const normalizeOne = (item, index) => {
 	        const hex = toHexColor(item?.hex || "#000000");
 	        const ok = hexToOklch(hex);
 	        const chroma = Number.isFinite(+item?.chroma) ? +item.chroma : (ok?.c ?? 0);
 	        const count = Number.isFinite(+item?.count) ? +item.count : 0;
-	        const score = Number.isFinite(+item?.score) ? +item.score : count * chroma;
+	        const score = Number.isFinite(+item?.score) ? +item.score : colorScore(count, chroma);
 	        const ordinal = String(item?.ordinal || ordinalForIndex(index)).toUpperCase();
 	        return {
 	          id: String(item?.id || `swatch-${index + 1}`),
@@ -4249,7 +4256,7 @@
 	            const depOk = hexToOklch(depHex);
 	            const depChroma = Number.isFinite(+dep?.chroma) ? +dep.chroma : (depOk?.c ?? 0);
 	            const depCount = Number.isFinite(+dep?.count) ? +dep.count : 0;
-	            const depScore = Number.isFinite(+dep?.score) ? +dep.score : depCount * depChroma;
+	            const depScore = Number.isFinite(+dep?.score) ? +dep.score : colorScore(depCount, depChroma);
 	            return {
 	              id: String(dep?.id || `${item?.id || `swatch-${index + 1}`}-dep-${depIndex + 1}`),
 	              ordinal: String(dep?.ordinal || ordinalForIndex(index + depIndex + 1)).toUpperCase(),
@@ -8841,20 +8848,35 @@
     window.addEventListener("message", e => {
       if (e.data?.type !== "provisional_palette" || !e.data.palette) return;
       const p = e.data.palette;
-      const hexes = [p.primary, p.secondary, p.accent, p.foreground, p.background]
-        .map(h => String(h || "").trim())
-        .filter(h => /^#[0-9a-f]{6}$/i.test(h));
-      if (!hexes.length) return;
+      // Preferred: backend-supplied per-role entries carrying a usage `count`
+      // (measured from the template variable a colour was pinned to, or a role
+      // area prior when rendering from scratch). We pass count through and leave
+      // chroma/score unset so normalizeOne derives chroma from the hex and ranks
+      // by count * chroma — the same basis as the real palette. Passing explicit
+      // zeros here is what previously defeated that and left the order fixed by
+      // role, with the background last.
+      const entries = Array.isArray(p.entries)
+        ? p.entries.filter(en => /^#[0-9a-f]{6}$/i.test(String(en?.hex || "").trim()))
+        : [];
+
+      // Fallback for a payload without entries (older backend): keep the previous
+      // role order rather than failing.
+      const source = entries.length
+        ? entries.map(en => ({ hex: String(en.hex).trim(), count: Number(en.count) || 1, role: en.role }))
+        : [p.primary, p.secondary, p.accent, p.foreground, p.background]
+            .map(h => String(h || "").trim())
+            .filter(h => /^#[0-9a-f]{6}$/i.test(h))
+            .map(hex => ({ hex, count: 1, role: undefined }));
+      if (!source.length) return;
+
       // Build minimal workbench rows — one primary per hex, no dependents. This
       // reuses renderColorWorkbenchPanel's row schema so styling matches the
       // eventual real palette.
-      const rows = hexes.map((hex, idx) => ({
+      const rows = source.map((item, idx) => ({
         id: `provisional-${idx + 1}`,
         ordinal: String(idx + 1),
-        hex,
-        count: 0,
-        chroma: 0,
-        score: 0,
+        hex: item.hex,
+        count: item.count,
         deps: [],
         substituteFromPalette: false,
         preserveHex: false,

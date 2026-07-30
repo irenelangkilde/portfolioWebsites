@@ -355,7 +355,7 @@ async function derivePaletteFromColorText(callAIFn, text) {
 Description: "${clean.slice(0, 500)}"
 
 Return ONLY compact JSON in this exact shape (no markdown, no prose):
-{"background":"#RRGGBB","foreground":"#RRGGBB","primary":"#RRGGBB","secondary":"#RRGGBB","accent":"#RRGGBB"}
+{"background":"#RRGGBB","foreground":"#RRGGBB","primary":"#RRGGBB","secondary":"#RRGGBB","accent":"#RRGGBB","requested_roles":["background"],"dominance_order":["#RRGGBB"]}
 
 Rules:
 - background: page canvas color that matches the described mood.
@@ -371,6 +371,26 @@ Rules:
     "secondary" / "supporting" → secondary
   Example: for "sky-blue background", background MUST be a sky-blue hex (something like #87CEEB), not a supporting accent buried elsewhere in the palette.
 - Honor explicit colors the user named ("yellow", "blue", "navy") and their overall vibe (neon, warm, muted, editorial, etc.). If they named two hues without location cues, put one in primary and the other in secondary or accent.
+- requested_roles: list ONLY the roles the user explicitly tied to a colour with a
+  placement word in their description. This drives whether we override the template's
+  own colour structure, so be strict:
+    "sky-blue background with rose accents" → ["background","accent"]
+    "warm earthy tones"                     → []              (no placement named)
+    "navy and gold"                         → []              (hues only, no roles)
+  An empty list is the correct and common answer. Never list a role just because you
+  filled it in above — every role is always filled; only some are ever requested.
+- dominance_order: the colours the user ACTUALLY NAMED, as hexes, in the order they
+  appear in the description. Users list colours most-dominant-first, so preserve their
+  order exactly — do not re-rank by your own judgement. Include only named colours, not
+  ones you invented to fill roles. Empty list if they named no specific colour.
+    "sky blue background with rose-colored accents" → ["#87CEEB","#E05578"]
+    "navy and gold"                                 → ["#1F3A5F","#D4AF37"]
+    "warm earthy tones"                             → []   (a mood, no named colours)
+  CRITICAL — every hex in dominance_order must be COPIED CHARACTER-FOR-CHARACTER from
+  one of the five role values you returned above. Do not emit a second, slightly
+  different shade of the same colour: if you put #F4A0B5 in "accent", then
+  dominance_order must contain #F4A0B5, not #E05578. A mismatch causes the same
+  requested colour to be applied twice in two different shades.
 - All six-digit hex (#RRGGBB); no shorthand, no named colors, no rgba.`;
   try {
     const res = await callAIFn({ userText: prompt, maxTokens: 300 });
@@ -380,15 +400,204 @@ Rules:
         !isHex(json.primary) || !isHex(json.secondary) || !isHex(json.accent)) {
       return null;
     }
+    // Roles the user actually named. Only these justify overriding the template's
+    // colour structure — the five hexes above are always synthesised, so their
+    // presence says nothing about intent.
+    const ROLE_NAMES = ["background", "foreground", "primary", "secondary", "accent"];
+    const requestedRoles = Array.isArray(json.requested_roles)
+      ? [...new Set(json.requested_roles
+          .map(r => String(r || "").trim().toLowerCase())
+          .filter(r => ROLE_NAMES.includes(r)))]
+      : [];
+    // Colours the user named, in the order they named them. Treated as dominance
+    // order on template paths: most-dominant first.
+    // Enforced, not merely requested: a dominance hex must be one of the five role
+    // hexes. Otherwise a near-duplicate shade of the same named colour gets placed
+    // alongside the role colour, applying one request twice. Dropping a mismatch is
+    // safe — an empty list just falls back to colour-similarity placement.
+    const roleHexes = new Set([json.background, json.foreground, json.primary, json.secondary, json.accent]
+      .map(h => String(h || "").trim().toLowerCase()));
+    const dominanceOrder = Array.isArray(json.dominance_order)
+      ? [...new Set(json.dominance_order
+          .map(h => String(h || "").trim().toLowerCase())
+          .filter(h => /^#[0-9a-f]{6}$/.test(h) && roleHexes.has(h)))]
+      : [];
     return {
       background: json.background.toLowerCase(),
       foreground: json.foreground.toLowerCase(),
       primary:    json.primary.toLowerCase(),
       secondary:  json.secondary.toLowerCase(),
       accent:     json.accent.toLowerCase(),
+      requestedRoles,
+      dominanceOrder,
     };
   } catch (err) {
     console.warn("[derivePaletteFromColorText] failed:", err?.message);
+    return null;
+  }
+}
+
+// ─── Semantic colour-role resolution ─────────────────────────────────────────
+// derivePaletteFromColorText gives us roles (background/foreground/accent/…), but
+// renderPortfolio places colours by OKLCH proximity, so a role-named colour lands
+// on whichever template variable is nearest it rather than the one that actually
+// fills that role. Templates make this unavoidable without help: they declare 4–18
+// `--c-N` variables with no role semantics, one variable often serves several roles
+// at once, and page backgrounds are frequently relative transforms
+// (`oklch(from var(--c-8) …)`) rather than direct references.
+//
+// So we resolve placement with the model, giving it deterministic usage facts.
+
+// Per-variable CSS usage: which properties consume each --c-N, and how often.
+// Deterministic input for the resolver — the model should not have to infer from
+// raw CSS what we can count exactly.
+function analyzePaletteVarUsage(html = "") {
+  const usage = {};
+  // Leading `--` is allowed so custom-property indirection is captured too
+  // (marcus does `--neon-orange: var(--c-5)`, which is how a slot earns its role).
+  const re = /((?:--)?[a-zA-Z][a-zA-Z-]*)\s*:\s*([^;{}]*var\(\s*--c-\d+\s*\)[^;{}]*)/g;
+  // `http`/`https` come from URLs that happen to contain a var() later in the same
+  // run; *-opacity carries no colour information.
+  const IGNORED_PROPS = new Set(["http", "https", "opacity", "stop-opacity", "fill-opacity", "stroke-opacity"]);
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const prop = m[1].toLowerCase();
+    if (IGNORED_PROPS.has(prop)) continue;
+    // A single declaration can reference several variables (gradients, color-mix).
+    const vars = m[2].match(/--c-\d+/g) || [];
+    for (const v of vars) {
+      usage[v] = usage[v] || {};
+      usage[v][prop] = (usage[v][prop] || 0) + 1;
+    }
+  }
+  return usage;
+}
+
+function parsePaletteSchemeFromHtml(html = "") {
+  const block = String(html).match(/id="color-palette"[^>]*>([\s\S]*?)<\/script>/);
+  if (!block) return null;
+  try {
+    const scheme = JSON.parse(block[1])?.scheme || null;
+    return scheme && Object.keys(scheme).length ? scheme : null;
+  } catch {
+    return null;
+  }
+}
+
+// Area-weighted prior for how prominent each role is on a finished page. Used only
+// when there is no template palette to borrow real usage counts from — design-options
+// mode renders from scratch, so at this point nothing has been counted yet. Page
+// background covers the most area, body text next, brand/accent colours least.
+const ROLE_AREA_PRIOR = { background: 100, foreground: 40, primary: 18, secondary: 10, accent: 6 };
+
+// Per-role entries for the editor's provisional colour workbench, which otherwise
+// renders in a hardcoded role order with background last — actively misleading when
+// the user asked for a dominant background.
+//
+// Supplies `count` only, deliberately: the editor already derives chroma from the
+// hex and sorts by count * chroma, so passing counts alone puts the provisional rail
+// on the same ordering basis as the real palette without duplicating OKLCH maths here.
+function buildProvisionalPaletteEntries(derivedTheme, { scheme = null, roleAssignments = null } = {}) {
+  if (!derivedTheme || typeof derivedTheme !== "object") return null;
+  const varByHex = new Map(
+    Object.entries(roleAssignments || {}).map(([varName, hex]) => [String(hex).toLowerCase(), varName])
+  );
+  const entries = [];
+  for (const [role, raw] of Object.entries(derivedTheme)) {
+    if (typeof raw !== "string" || !/^#[0-9a-f]{6}$/i.test(raw)) continue;
+    const hex = raw.toLowerCase();
+    const varName = varByHex.get(hex) || null;
+    const templateCount = varName ? Number(scheme?.[varName]?.count) : NaN;
+    const hasRealCount = Number.isFinite(templateCount) && templateCount > 0;
+    entries.push({
+      role,
+      hex,
+      varName,
+      count: hasRealCount ? templateCount : (ROLE_AREA_PRIOR[role] ?? 1),
+      countSource: hasRealCount ? "template" : "role-prior",
+    });
+  }
+  return entries.length ? entries : null;
+}
+
+function summarizePaletteForRoleResolver(scheme, usage) {
+  const rows = [];
+  for (const [varName, info] of Object.entries(scheme || {})) {
+    const props = Object.entries(usage?.[varName] || {})
+      .sort((a, b) => b[1] - a[1])
+      .map(([prop, n]) => `${prop}×${n}`)
+      .join(", ");
+    rows.push(`${varName}: ${info?.hex || "?"} (frequency ${info?.count ?? 0})${props ? ` — used as ${props}` : " — not directly referenced"}`);
+  }
+  return rows.join("\n");
+}
+
+// Returns { "--c-8": "#87ceeb", … } or null. Only variables that exist in the
+// template's palette are accepted, so a hallucinated slot cannot reach the render.
+async function resolveColorRoleAssignments(callAIFn, annotatedHtml, derivedTheme) {
+  // Only roles the user explicitly named. All five hexes are always synthesised, so
+  // pinning every one would impose invented semantics on the template and flatten
+  // design decisions the user never asked to change. No named role → no override,
+  // and no extra model call: the template's own structure stands and colours are
+  // placed by proximity as before.
+  const requestedRoles = Array.isArray(derivedTheme?.requestedRoles) ? derivedTheme.requestedRoles : [];
+  if (!requestedRoles.length || !annotatedHtml) return null;
+
+  const requests = requestedRoles
+    .map(role => [role, derivedTheme?.[role]])
+    .filter(([, hex]) => typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex));
+  if (!requests.length) return null;
+
+  const scheme = parsePaletteSchemeFromHtml(annotatedHtml);
+  if (!scheme) return null;
+
+  const usage = analyzePaletteVarUsage(annotatedHtml);
+  const prompt = `You are assigning user-requested colours to a website template's palette variables.
+
+TEMPLATE PALETTE (variable: current colour (frequency) — how it is used):
+${summarizePaletteForRoleResolver(scheme, usage)}
+
+USER REQUESTS (role → colour they want in that role):
+${requests.map(([role, hex]) => `- ${role}: ${hex}`).join("\n")}
+
+Decide which palette variable each requested colour should replace.
+
+Rules:
+- A requested colour must become the DOMINANT colour for its role — the one a viewer
+  would name if asked "what colour is the background/text/accent of this page?".
+- DOMINANT DOES NOT MEAN EXCLUSIVE. Templates legitimately use several colours as
+  section or card backgrounds. Leave those alone; only take over the variable that
+  carries the role most prominently. Do not try to flatten the design to one colour.
+- Prefer the variable with the highest usage frequency among those genuinely serving
+  that role. Frequency alone is not decisive — how it is used matters more.
+- A variable used for both text and backgrounds is a poor choice for either role;
+  prefer a variable dedicated to the role.
+- Assign at most one variable per requested role, and never the same variable twice.
+- If no variable genuinely serves a requested role, omit that role rather than
+  guessing. Omission is better than a wrong placement.
+
+Return ONLY compact JSON mapping variable name to the requested hex, no prose:
+{"--c-8":"#87ceeb"}`;
+
+  try {
+    const res = await callAIFn({ userText: prompt, maxTokens: 400 });
+    const json = parseJsonResponse(res?.text || "");
+    if (!json || typeof json !== "object") return null;
+    const requestedHexes = new Set(requests.map(([, hex]) => hex.toLowerCase()));
+    const out = {};
+    const usedHexes = new Set();
+    for (const [varName, hex] of Object.entries(json)) {
+      if (!/^--c-\d+$/.test(varName) || !Object.hasOwn(scheme, varName)) continue;
+      if (typeof hex !== "string" || !/^#[0-9a-f]{6}$/i.test(hex)) continue;
+      const lower = hex.toLowerCase();
+      // Only place colours the user actually asked for, once each.
+      if (!requestedHexes.has(lower) || usedHexes.has(lower)) continue;
+      usedHexes.add(lower);
+      out[varName] = lower;
+    }
+    return Object.keys(out).length ? out : null;
+  } catch (err) {
+    console.warn("[resolveColorRoleAssignments] failed:", err?.message);
     return null;
   }
 }
@@ -451,6 +660,96 @@ function escapeRegExp(value) {
 
 function stripCssComments(value = "") {
   return String(value).replace(/\/\*[\s\S]*?\*\//g, "").trim();
+}
+
+// Record the design choices and provenance that produced this page, as a JSON
+// comment just after the doctype. Mirrors embedMastheadMetaComment below: same
+// IW_*_META label convention, same idempotent replace, same insertion point.
+//
+// Labeled rather than bare JSON on purpose — extractTemplate.mjs treats any
+// comment opening directly onto `{` as a template's embedded-JSON block, so a
+// bare object here would be misread if a generated page were re-ingested.
+//
+// Records EFFECTIVE values — the value the pipeline actually rendered with,
+// including its fallback when the user left a control alone — so the comment
+// describes the page as built. `chosen` then lists which of those were active
+// human picks (from page1.design_chosen, tracked in form.js), since a submitted
+// value alone can't distinguish a deliberate "Medium" from the select's default.
+//
+// Options 2 and 3 (in-house template by name / uploaded screenshot or HTML) take
+// no design options, so their design choice is just the source kind.
+const DESIGN_EFFECTIVE_DEFAULTS = {
+  composition:        "",       // "" = no constraint given, AI decides
+  style:              "",
+  render_mode:        "",
+  density:            "medium",
+  use_emoji_icons:    true,
+  alternate_sections: true,
+  main_section_mode:  "light",
+};
+
+const DESIGN_PAGE1_KEYS = {
+  composition:        "design_composition",
+  style:              "design_style",
+  render_mode:        "design_render_mode",
+  density:            "design_density",
+  use_emoji_icons:    "use_emoji_icons",
+  alternate_sections: "alternate_sections",
+  main_section_mode:  "main_section_mode",
+};
+
+// none → design options; keyword → in-house template; file → image vs html upload.
+function resolveDesignChoice(page1 = null) {
+  const source = String(page1?.template_source || "").toLowerCase();
+  if (source === "none") return "design-options";
+  if (source === "keyword") return "keyword";
+  if (source === "file") {
+    const kind = String(page1?.template_input_kind || "").toLowerCase();
+    if (kind === "image-upload") return "image";
+    if (kind === "html-upload") return "html";
+    return "file";
+  }
+  return source || "";
+}
+
+function buildDesignMeta(page1 = null) {
+  if (!page1) return null;
+  const choice = resolveDesignChoice(page1);
+  // Options 2/3 don't take design options — the source kind IS the design choice.
+  if (choice && choice !== "design-options") return { choice };
+
+  const design = { choice: choice || "design-options" };
+  for (const [outKey, srcKey] of Object.entries(DESIGN_PAGE1_KEYS)) {
+    const v = page1[srcKey];
+    design[outKey] = v === undefined || v === null || v === ""
+      ? DESIGN_EFFECTIVE_DEFAULTS[outKey]
+      : v;
+  }
+  const touched = Array.isArray(page1.design_chosen) ? page1.design_chosen : [];
+  design.chosen = Object.keys(DESIGN_PAGE1_KEYS).filter(k => touched.includes(k));
+  return design;
+}
+
+function embedDesignMetaComment(html = "", page1 = null, model = "") {
+  if (!html) return html;
+  const design = buildDesignMeta(page1);
+  const meta = {
+    ...(design ? { design } : {}),
+    provenance: {
+      template_source: page1?.template_source || "",
+      model_template:  page1?.model_template || "",
+      model:           model || "",
+      generated_at:    new Date().toISOString(),
+    },
+  };
+  const comment = `<!-- IW_DESIGN_META: ${JSON.stringify(meta)} -->\n`;
+  if (/<!--\s*IW_DESIGN_META:/i.test(html)) {
+    return html.replace(/<!--\s*IW_DESIGN_META:\s*[\s\S]*?-->\s*/i, comment);
+  }
+  if (/<!DOCTYPE[^>]*>\s*/i.test(html)) {
+    return html.replace(/(<!DOCTYPE[^>]*>\s*)/i, `$1${comment}`);
+  }
+  return comment + html;
 }
 
 function embedMastheadMetaComment(html = "", mastheadMeta = null) {
@@ -2134,9 +2433,34 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
     candidateData.headshot = headshotName;
   }
 
+  // Place role-named colours on the variables that actually carry those roles,
+  // rather than letting OKLCH proximity decide. Null when the user gave no text
+  // description, or when no variable genuinely serves a requested role.
+  let roleAssignments = null;
+  if (derivedThemeFromText) {
+    roleAssignments = await resolveColorRoleAssignments(callAIFn, annotatedHtml, derivedThemeFromText);
+    if (roleAssignments) {
+      console.log("[renderAnnotated] resolved colour role assignments:", roleAssignments);
+    }
+    // Publish the palette for the editor's workbench rail with MEASURED counts:
+    // a pinned colour inherits the usage frequency of the template variable it
+    // took over, so the rail ranks colours the same way the final palette will.
+    const entries = buildProvisionalPaletteEntries(derivedThemeFromText, {
+      scheme: parsePaletteSchemeFromHtml(annotatedHtml),
+      roleAssignments,
+    });
+    if (entries) {
+      await store.set(jobId, JSON.stringify({
+        status: "pending",
+        stage: "Applying colors…",
+        derived_palette: { ...derivedThemeFromText, entries },
+      }), { ttl: 3600 });
+    }
+  }
+
   let siteHtml;
   try {
-    siteHtml = renderPortfolio(annotatedHtml, candidateData, normalizedColor);
+    siteHtml = renderPortfolio(annotatedHtml, candidateData, normalizedColor, roleAssignments, derivedThemeFromText?.dominanceOrder || null);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: "Render failed: " + (err?.message || String(err)) }), { ttl: 3600 });
     return;
@@ -2146,7 +2470,8 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
 
   await store.set(jobId, JSON.stringify({
     status:        "done",
-    site_html:     siteHtml,
+    // render-annotated takes no design options — provenance only, no design block.
+    site_html:     embedDesignMetaComment(siteHtml, null, "render-annotated"),
     masthead_meta: mastheadMeta,
     model:         "render-annotated",
     token_report:  tokenReports,
@@ -2273,9 +2598,31 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
 
   if (headshotName) candidateData.headshot = headshotName;
 
+  // See resolveColorRoleAssignments — pins role-named colours to the variables that
+  // actually carry those roles instead of relying on OKLCH proximity.
+  let roleAssignments = null;
+  if (derivedThemeFromText) {
+    roleAssignments = await resolveColorRoleAssignments(callAIFn, sampleHtml, derivedThemeFromText);
+    if (roleAssignments) {
+      console.log("[slotFill] resolved colour role assignments:", roleAssignments);
+    }
+    // See renderAnnotatedPortfolio — measured counts for the workbench rail.
+    const entries = buildProvisionalPaletteEntries(derivedThemeFromText, {
+      scheme: parsePaletteSchemeFromHtml(sampleHtml),
+      roleAssignments,
+    });
+    if (entries) {
+      await store.set(jobId, JSON.stringify({
+        status: "pending",
+        stage: "Applying colors…",
+        derived_palette: { ...derivedThemeFromText, entries },
+      }), { ttl: 3600 });
+    }
+  }
+
   let siteHtml;
   try {
-    siteHtml = renderPortfolio(sampleHtml, candidateData, theme);
+    siteHtml = renderPortfolio(sampleHtml, candidateData, theme, roleAssignments, derivedThemeFromText?.dominanceOrder || null);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: `Render failed: ${err.message}` }), { ttl: 3600 });
     return;
@@ -2290,7 +2637,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
 
   await store.set(jobId, JSON.stringify({
     status:       "done",
-    site_html:    siteHtml,
+    site_html:    embedDesignMetaComment(siteHtml, page1, "slot-fill"),
     masthead_meta: mastheadMeta,
     model:        "slot-fill",
     truncated,
@@ -2418,7 +2765,7 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
 
   await store.set(jobId, JSON.stringify({
     status: "done",
-    site_html:    siteHtml,
+    site_html:    embedDesignMetaComment(siteHtml, page1, r.model),
     masthead_meta: mastheadMeta,
     model:        r.model,
     truncated,
@@ -2694,7 +3041,13 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       await store.set(jobId, JSON.stringify({
         status: "pending",
         stage: `Generating portfolio website (3/${totalStages})…`,
-        derived_palette: directDerivedTheme
+        // `entries` carries per-role counts so the workbench rail orders by
+        // prominence. No template here (design-options renders from scratch), so
+        // counts come from the role prior rather than measured usage.
+        derived_palette: {
+          ...directDerivedTheme,
+          entries: buildProvisionalPaletteEntries(directDerivedTheme)
+        }
       }), { ttl: 3600 });
     }
 
@@ -2860,7 +3213,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       // Null when scene-based composition wasn't requested or the image call
       // failed entirely. Visible in DevTools Network → getPreviewResult response.
       scene_image_model: sceneImageModel,
-      site_html: siteHtml,
+      site_html: embedDesignMetaComment(siteHtml, page1, directResponse.model),
       resume_json: resumeJson,
       strategy_json: coreContent.strategy,
       visual_direction_json: directDesignSpec,
@@ -3081,7 +3434,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
   await store.set(jobId, JSON.stringify({
     status: "done",
     model: usedModel,
-    site_html: siteHtml,
+    site_html: embedDesignMetaComment(siteHtml, page1, usedModel),
     resume_json: resumeJson,
     strategy_json: coreContent.strategy,
     visual_direction_json: blendResult.visual_direction,

@@ -3543,6 +3543,28 @@ input[type="color"].split-color::-moz-color-swatch {
     // Also trigger extraction when a file is selected while source=file
     templateScreenshotInput?.addEventListener("change", extractTemplateInBackground);
 
+    // Which design controls the user actually touched. Every design <select> has
+    // a `selected` default, so the submitted value alone can't distinguish "user
+    // chose Medium" from "never opened More options". Recorded here and sent as
+    // design_chosen so the generated page's IW_DESIGN_META can mark which of its
+    // effective values were human choices rather than defaults.
+    const DESIGN_CONTROL_META_KEYS = {
+      designComposition: "composition",
+      designStyle:       "style",
+      designStyleOther:  "style",
+      designRenderMode:  "render_mode",
+      designDensity:     "density",
+      useEmojiIcons:     "use_emoji_icons",
+      alternateSections: "alternate_sections",
+      mainSectionMode:   "main_section_mode",
+    };
+    const designTouchedKeys = new Set();
+    Object.entries(DESIGN_CONTROL_META_KEYS).forEach(([id, metaKey]) => {
+      const el = document.getElementById(id);
+      el?.addEventListener("change", () => designTouchedKeys.add(metaKey));
+      el?.addEventListener("input",  () => designTouchedKeys.add(metaKey));
+    });
+
     // Re-extract when design option dropdowns change (option #3)
     ["designComposition", "designStyle", "designRenderMode", "designDensity", "useEmojiIcons", "alternateSections"].forEach(id => {
       document.getElementById(id)?.addEventListener("change", () => {
@@ -3754,7 +3776,12 @@ input[type="color"].split-color::-moz-color-swatch {
         // Whether the main section (hero + primary content) uses a light or
         // dark background. Kept as a separate axis from design_style so users
         // can pick e.g. "Modern" + "Dark" without needing a "Dark modern" style.
-        main_section_mode:     document.getElementById("mainSectionMode")?.value     || "light"
+        main_section_mode:     document.getElementById("mainSectionMode")?.value     || "light",
+        // "template" | "image-upload" | "html-upload" — lets the backend record
+        // an uploaded template as "image" vs "html" rather than a bare "file".
+        template_input_kind: extractedTemplateCache?.templateInputKind || "",
+        // Meta-keys of the design controls the user actively changed.
+        design_chosen: [...designTouchedKeys]
       };
     }
 
@@ -4852,6 +4879,11 @@ input[type="color"].split-color::-moz-color-swatch {
       generationResult    = null;
       generationError     = null;
       generationInProgress = true;
+      // Wipe any status text from a previous run up front. The first message this
+      // run writes is several awaits away (resume upload, template extraction,
+      // resume analysis), so without this a prior failure stays on screen and
+      // reads as if it belongs to the run just started.
+      setHeaderStatus("generatingWebsiteStatus", "");
       // In slot-fill mode the bridge is skipped — don't clear accumulated job-ad tokens here;
       // mergeTokenReport overwrites by stage key so re-renders stay clean.
       setApplyBtnState(false);

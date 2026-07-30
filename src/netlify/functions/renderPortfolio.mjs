@@ -1047,10 +1047,111 @@ function derivePaletteHex(entry, entries, anchors) {
   });
 }
 
-function fullPaletteOverrides(colorSpec, scheme) {
+// roleAssignments: { "--c-8": "#87ceeb", … } — an explicit slot decision resolved
+// upstream from the user's semantic request ("sky-blue background"). Without this,
+// anchors are placed purely by OKLCH proximity, so a colour named for a role lands
+// on whichever template variable happens to be nearest it — not on the variable
+// that actually fills that role. Pinned slots still act as anchors so neighbouring
+// colours derive around them; they are simply not up for proximity reassignment.
+// Rank a template's palette variables by prominence: usage frequency × chroma, the
+// same measure the editor's workbench uses. Neutrals fall to the bottom because
+// chroma ≈ 0 zeroes the product — intentional, since a near-grey is not what a
+// viewer would name as one of the site's colours.
+// Chroma floor: without it a pure neutral scores 0 no matter how much of the page it
+// covers, so it can never receive a requested colour — "charcoal and cream" would be
+// unplaceable, and an all-neutral template would rank every variable equally at zero.
+// The floor is small enough that saturated colours still outrank neutrals (on jamie the
+// four brand hues stay ahead of a count-30 white), but non-zero so neutrals order by
+// coverage among themselves. Keep in sync with COLOR_SCORE_CHROMA_FLOOR in editor.html.
+const SCORE_CHROMA_FLOOR = 0.02;
+
+function prominenceScore(count, chroma) {
+  return (Number(count) || 0) * Math.max(Number(chroma) || 0, SCORE_CHROMA_FLOOR);
+}
+
+function rankEntriesByProminence(entries, scheme) {
+  return entries
+    .map(entry => ({
+      entry,
+      score: prominenceScore(scheme?.[entry.varName]?.count, entry.ok?.c),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .map(x => x.entry);
+}
+
+// dominanceOrder: the user's named colours, most-dominant first. When present we
+// match rank-to-rank — their most dominant colour takes the template's most
+// prominent variable — instead of matching by colour similarity. Similarity
+// matching actively fights intent here: it sends a colour to whichever variable it
+// already resembles, which is precisely the variable whose appearance would change
+// least. Explicitly-requested roles are pinned first and win over rank order.
+function fullPaletteOverrides(colorSpec, scheme, roleAssignments = null, dominanceOrder = null) {
   const theme = themeFromColorSpec(colorSpec);
   const entries = paletteEntriesFromScheme(scheme);
-  const anchors = mapAnchorsToNearestPaletteEntries(paletteAnchorsFromTheme(theme), entries);
+
+  const pinned = [];
+  const pinnedVars = new Set();
+  for (const [varName, hex] of Object.entries(roleAssignments || {})) {
+    const normalized = normalizeHexValue(hex);
+    const ok = normalized ? hexToOklch(normalized) : null;
+    if (!normalized || !ok) continue;
+    const entry = entries.find(e => e.varName === varName);
+    pinnedVars.add(varName);
+    pinned.push({
+      role: `pinned:${varName}`,
+      index: entry?.index ?? null,
+      varName,
+      hex: normalized,
+      ok,
+      // Derive neighbours from the slot's ORIGINAL colour so the template's
+      // internal relationships are preserved around the substitution.
+      sourceOk: entry?.ok || ok,
+      sourceHex: entry?.hex || normalized,
+    });
+  }
+
+  const freeEntries = entries.filter(e => !pinnedVars.has(e.varName));
+
+  // A pinned colour must not ALSO be placed by proximity, or it lands twice and
+  // collapses the palette onto the requested hexes — dominance would become
+  // flattening. Roles left unassigned by the resolver still get proximity
+  // placement, so partial assignments behave sensibly.
+  const pinnedHexes = new Set(pinned.map(p => p.hex.toLowerCase()));
+
+  const orderedHexes = (dominanceOrder || [])
+    .map(h => normalizeHexValue(h))
+    .filter(Boolean)
+    .map(h => h.toLowerCase())
+    .filter(h => !pinnedHexes.has(h));
+
+  let placed;
+  if (orderedHexes.length) {
+    // Rank-to-rank: nth most dominant colour → nth most prominent free variable.
+    const ranked = rankEntriesByProminence(freeEntries, scheme);
+    placed = [];
+    orderedHexes.forEach((hex, i) => {
+      const entry = ranked[i];
+      const ok = entry ? hexToOklch(hex) : null;
+      if (!entry || !ok) return;
+      placed.push({
+        role: `dominance-${i + 1}`,
+        index: entry.index,
+        varName: entry.varName,
+        hex,
+        ok,
+        sourceOk: entry.ok,
+        sourceHex: entry.hex,
+      });
+    });
+  } else {
+    // No named colours (a mood like "warm earthy tones", or swatches mode) — nothing
+    // to rank, so fall back to colour-similarity placement.
+    const remainingThemeAnchors = paletteAnchorsFromTheme(theme)
+      .filter(a => !pinnedHexes.has(String(a.hex).toLowerCase()));
+    placed = mapAnchorsToNearestPaletteEntries(remainingThemeAnchors, freeEntries);
+  }
+
+  const anchors = [...pinned, ...placed];
   if (!anchors.length) return [];
 
   const pairs = [];
@@ -1080,19 +1181,30 @@ function addColorOverride(lines, emitted, cssVar, hex) {
   if (rgb) lines.push(`  ${cssVar}-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};`);
 }
 
-function buildColorOverrideBlock(colorSpec, $ = null) {
+function buildColorOverrideBlock(colorSpec, $ = null, roleAssignments = null, dominanceOrder = null) {
   const lines = [":root {"];
   const emitted = new Set();
 
   const scheme = parseEmbeddedPaletteScheme($);
-  for (const [cssVar, hex] of fullPaletteOverrides(colorSpec, scheme)) {
+  const placedHexes = new Set();
+  for (const [cssVar, hex] of fullPaletteOverrides(colorSpec, scheme, roleAssignments, dominanceOrder)) {
     addColorOverride(lines, emitted, cssVar, hex);
+    const normalized = normalizeHexValue(hex);
+    if (normalized) placedHexes.add(normalized.toLowerCase());
   }
 
+  // The legacy --color-* aliases are a compatibility shim for pages generated before
+  // templates moved to --c-N; the editor still probes them. Restrict them to colours
+  // that actually landed on a --c-N above. Otherwise a colour the pipeline synthesised
+  // to fill the five-role shape — but deliberately did NOT place, because the user
+  // never named it — still gets published here, and the editor reads it back as if it
+  // were part of the design. Placement is the source of truth; this only mirrors it.
   const theme = themeFromColorSpec(colorSpec);
+  const restrictToPlaced = placedHexes.size > 0;
   for (const [key, cssVars] of Object.entries(COLOR_VAR_MAP)) {
     const hex = theme[key] || (key === "tertiary" ? theme.accent : normalizeHexValue(colorSpec?.[key]));
     if (!hex) continue;
+    if (restrictToPlaced && !placedHexes.has(String(hex).toLowerCase())) continue;
     for (const cssVar of cssVars) {
       addColorOverride(lines, emitted, cssVar, hex);
     }
@@ -1107,9 +1219,12 @@ function buildColorOverrideBlock(colorSpec, $ = null) {
  * @param {string}  annotatedHtml  Output of annotateTemplate pipeline.
  * @param {object}  candidateData  Output of generateCandidateContent.
  * @param {object}  [colorSpec]    Optional: { primary, secondary, accent, quaternary, quinary } as hex strings.
+ * @param {object}  [roleAssignments] Optional: { "--c-8": "#87ceeb", … } — explicit
+ *   slot decisions resolved from the user's semantic colour request. Pinned slots
+ *   win over proximity-based anchor placement; everything else derives as usual.
  * @returns {string} Rendered HTML.
  */
-export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) {
+export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null, roleAssignments = null, dominanceOrder = null) {
   const $ = load(annotatedHtml, { decodeEntities: false });
   const d = normalizeCandidateData(candidateData);
 
@@ -1226,8 +1341,10 @@ export function renderPortfolio(annotatedHtml, candidateData, colorSpec = null) 
   addResponsiveHeroLayoutGuard($);
 
   // ── 7. Color override ────────────────────────────────────────────────────────
-  if (colorSpec && Object.values(colorSpec).some(Boolean)) {
-    const overrideCss = buildColorOverrideBlock(colorSpec, $);
+  const hasRoleAssignments = !!roleAssignments && Object.keys(roleAssignments).length > 0;
+  const hasDominanceOrder = Array.isArray(dominanceOrder) && dominanceOrder.length > 0;
+  if (hasRoleAssignments || hasDominanceOrder || (colorSpec && Object.values(colorSpec).some(Boolean))) {
+    const overrideCss = buildColorOverrideBlock(colorSpec, $, roleAssignments, dominanceOrder);
     const overrideTag = `<style id="color-override">\n${overrideCss}\n</style>`;
     if ($("head").length) {
       $("head").append(overrideTag);
