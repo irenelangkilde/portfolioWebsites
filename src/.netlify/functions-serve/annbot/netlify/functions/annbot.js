@@ -25668,7 +25668,7 @@ HOW IT WORKS (6 stages):
 1. Resume \u2014 Upload resume (PDF/DOCX) + enter major and specialization
 2. Job \u2014 Enter desired job position and optionally paste a job posting
 3. Design \u2014 Choose a template (by keyword from gallery, upload screenshot/HTML, or manual design options)
-4. Colors \u2014 Pick a 5-color palette (Background, Foreground, Primary, Secondary, Accent)
+4. Colors \u2014 Pick a palette of up to 5 colors (including background, foreground, accents)
 5. Edit \u2014 Refine the generated portfolio in the built-in editor
 6. Publish \u2014 Download as HTML or deploy to a hosted URL
 
