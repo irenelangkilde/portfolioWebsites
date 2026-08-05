@@ -93,63 +93,19 @@
       line-height: 1.7;
     }
 
-    .review-toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 18px;
-      padding-top: 16px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .review-summary {
+    /* Only shown when the form opened this tab, where clicks mean "pick", not "open". */
+    .picker-note {
+      margin: 0 0 20px;
+      padding: 12px 16px;
+      border: 1px solid rgba(142, 162, 255, 0.28);
+      border-radius: 14px;
+      background: rgba(142, 162, 255, 0.1);
       color: var(--muted);
-      font-size: 0.92rem;
-      line-height: 1.5;
+      font-size: 0.9rem;
+      line-height: 1.55;
     }
 
-    .review-summary strong {
-      color: var(--ink);
-      font-weight: 900;
-    }
-
-    .toolbar-actions {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .toolbar-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 38px;
-      padding: 9px 13px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--ink);
-      font: inherit;
-      font-size: 0.84rem;
-      font-weight: 850;
-      cursor: pointer;
-    }
-
-    .toolbar-btn:hover,
-    .toolbar-btn:focus-visible {
-      background: rgba(142, 162, 255, 0.18);
-      outline: none;
-    }
-
-    .copy-status {
-      min-height: 1.4em;
-      color: var(--accent-2);
-      font-size: 0.84rem;
-      font-weight: 800;
-    }
+    .picker-note[hidden] { display: none; }
 
     .gallery {
       display: grid;
@@ -181,16 +137,6 @@
       border-radius: 50%;
       background: radial-gradient(circle, rgba(142, 162, 255, 0.18), transparent 70%);
       z-index: -1;
-    }
-
-    .card[data-keep="false"] {
-      opacity: 0.48;
-      filter: grayscale(0.72);
-      border-style: dashed;
-    }
-
-    .card[data-keep="false"] .preview-link {
-      pointer-events: none;
     }
 
     .card:hover,
@@ -270,6 +216,22 @@
       outline: none;
     }
 
+    /* Same box as the <a>, but as a <button> when clicking selects a style rather than
+       navigating. Strip the UA button chrome so the two render identically. */
+    button.preview-link {
+      width: 100%;
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      color: inherit;
+      cursor: pointer;
+    }
+
+    .preview-link--pick:hover .preview-shell {
+      border-color: rgba(126, 215, 193, 0.55);
+    }
+
     .preview-link:focus-visible .preview-shell {
       border-color: rgba(142, 162, 255, 0.68);
       box-shadow:
@@ -282,58 +244,65 @@
       gap: 10px;
     }
 
-    .keep-toggle {
-      display: inline-flex;
+    .card-meta-row {
+      display: flex;
       align-items: center;
-      gap: 8px;
-      width: fit-content;
-      margin-bottom: -2px;
-      color: var(--ink);
-      font-size: 0.82rem;
-      font-weight: 900;
-      cursor: pointer;
-      user-select: none;
+      justify-content: space-between;
+      gap: 12px;
+      min-width: 0;
     }
 
-    .keep-checkbox {
-      position: absolute;
-      inline-size: 1px;
-      block-size: 1px;
+    .card-meta-row .card-tag {
+      flex: 0 1 auto;
+      min-width: 0;
+      max-width: calc(100% - 78px);
       overflow: hidden;
-      clip: rect(0 0 0 0);
+      text-overflow: ellipsis;
       white-space: nowrap;
-      clip-path: inset(50%);
-    }
-
-    .check-mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      border-radius: 7px;
-      background: rgba(255, 255, 255, 0.08);
-      color: transparent;
-      font-size: 0.9rem;
-      line-height: 1;
-    }
-
-    .keep-checkbox:checked + .check-mark {
-      border-color: rgba(126, 215, 193, 0.74);
-      background: var(--accent-2);
-      color: #10172a;
-    }
-
-    .keep-checkbox:focus-visible + .check-mark {
-      outline: 3px solid rgba(126, 215, 193, 0.26);
-      outline-offset: 2px;
     }
 
     .card h2 {
       margin: 0;
       font-size: 1.15rem;
       line-height: 1.2;
+    }
+
+    /* Card identity: one static tag reading "Style" or "Style (Template)". This replaced a
+       pair of editable <select>s; the Keep checkbox that sat above them is gone too. */
+    .card-tag {
+      display: inline-block;
+      width: fit-content;
+      max-width: 100%;
+      padding: 4px 12px;
+      border: 1px solid rgba(142, 162, 255, 0.28);
+      border-radius: 999px;
+      background: rgba(142, 162, 255, 0.14);
+      color: var(--accent);
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1.45;
+      font-family: inherit;
+    }
+
+    /* Only when this page was opened from the form's Style field. */
+    .card-tag--pick {
+      cursor: pointer;
+      transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    }
+
+    .card-tag--pick:hover,
+    .card-tag--pick:focus-visible {
+      background: rgba(142, 162, 255, 0.28);
+      border-color: rgba(142, 162, 255, 0.6);
+      color: var(--ink);
+      outline: none;
+    }
+
+    .card-tag--picked {
+      background: var(--accent-2);
+      border-color: var(--accent-2);
+      color: #10172a;
     }
 
     /* Two-line tag row: a pill for the design-style token from the
@@ -394,157 +363,37 @@
       line-height: 1.5;
     }
 
-    .card-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-
     .cta {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
       width: fit-content;
-      padding: 10px 14px;
+      min-height: 30px;
+      padding: 3px 0;
       border: 0;
-      border-radius: 999px;
-      background: rgba(142, 162, 255, 0.12);
-      color: var(--accent);
-      font-size: 0.86rem;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--accent-2);
+      font-size: 0.84rem;
       font-weight: 800;
-      letter-spacing: 0.03em;
+      letter-spacing: 0.02em;
       cursor: pointer;
       font-family: inherit;
-      transition: background 0.18s ease, color 0.18s ease, transform 0.18s ease;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 4px;
+      transition: color 0.18s ease, text-decoration-color 0.18s ease;
     }
 
     .cta:hover,
     .cta:focus-visible {
-      background: rgba(142, 162, 255, 0.22);
       color: var(--ink);
+      text-decoration-color: var(--ink);
       outline: none;
-      transform: translateY(-1px);
     }
 
     .cta-link {
       text-decoration: none;
-    }
-
-    body.modal-open {
-      overflow: hidden;
-    }
-
-    .modal-backdrop {
-      position: fixed;
-      inset: 0;
-      z-index: 100;
-      display: grid;
-      place-items: center;
-      padding: 24px;
-      background: rgba(5, 10, 24, 0.72);
-      backdrop-filter: blur(8px);
-    }
-
-    .modal-backdrop[hidden] {
-      display: none;
-    }
-
-    .learn-modal {
-      width: min(720px, 100%);
-      max-height: min(760px, calc(100vh - 48px));
-      overflow: auto;
-      padding: 28px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 24px;
-      background: rgba(22, 33, 62, 0.97);
-      box-shadow: var(--shadow-strong);
-    }
-
-    .modal-top {
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 18px;
-      margin-bottom: 18px;
-    }
-
-    .modal-kicker {
-      margin: 0 0 8px;
-      color: var(--accent-2);
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .learn-modal h2 {
-      margin: 0;
-      font-family: "Fraunces", Georgia, serif;
-      font-size: clamp(1.8rem, 4vw, 2.8rem);
-      line-height: 1;
-    }
-
-    .modal-close {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 42px;
-      height: 42px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      color: var(--ink);
-      cursor: pointer;
-      font: inherit;
-      font-weight: 900;
-    }
-
-    .modal-close:hover,
-    .modal-close:focus-visible {
-      background: rgba(142, 162, 255, 0.18);
-      outline: none;
-    }
-
-    .modal-body {
-      display: grid;
-      gap: 14px;
-      color: var(--muted);
-      font-size: 1rem;
-      line-height: 1.68;
-    }
-
-    .modal-body p {
-      margin: 0;
-    }
-
-    .modal-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      justify-content: flex-end;
-      margin-top: 24px;
-    }
-
-    .modal-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 11px 16px;
-      border-radius: 999px;
-      background: rgba(126, 215, 193, 0.15);
-      color: var(--accent-2);
-      font-size: 0.88rem;
-      font-weight: 900;
-      text-decoration: none;
-    }
-
-    .modal-link[hidden] {
-      display: none;
-    }
-
-    .modal-link-secondary {
-      background: rgba(142, 162, 255, 0.14);
-      color: var(--accent);
     }
 
     @media (max-width: 820px) {
@@ -593,89 +442,62 @@
         <div>
           <h1>Actual HTML Outputs</h1>
           <p>
-            Browse real HTML outputs from the service. Each card previews the curated copy in
-            <code>html-actual-output/*/*.html</code>, keeps the original source path visible, and includes
-            deployed links when the output exposes one.
+            Browse real HTML outputs from the service.
           </p>
-        </div>
-        <div class="review-toolbar" aria-label="Output review controls">
-          <div class="review-summary">
-            <strong id="keptCount">0</strong> kept of <strong id="totalCount">0</strong> outputs.
-            <span id="deployedCount">0 deployed links</span>.
-          </div>
-          <div class="toolbar-actions">
-            <button class="toolbar-btn" id="copyKeptButton" type="button">Copy kept paths</button>
-            <button class="toolbar-btn" id="copyDroppedButton" type="button">Copy dropped paths</button>
-            <button class="toolbar-btn" id="resetChecksButton" type="button">Reset checks</button>
-            <span class="copy-status" id="copyStatus" role="status" aria-live="polite"></span>
-          </div>
         </div>
       </div>
     </section>
+
+    <p class="picker-note" id="pickerNote" hidden></p>
 
     <section class="gallery" id="gallery" aria-label="Actual HTML output gallery"></section>
   </main>
 
-  <div class="modal-backdrop" id="learnMoreModal" hidden>
-    <section class="learn-modal" role="dialog" aria-modal="true" aria-labelledby="learnMoreTitle">
-      <div class="modal-top">
-        <div>
-          <p class="modal-kicker">Output Details</p>
-          <h2 id="learnMoreTitle">Output</h2>
-        </div>
-        <button class="modal-close" id="learnMoreClose" type="button" aria-label="Close learn more dialog">Close</button>
-      </div>
-      <div class="modal-body" id="learnMoreBody"></div>
-      <div class="modal-actions">
-        <a class="modal-link" id="learnMoreOpenLink" href="#" target="_blank" rel="noopener noreferrer">Open Copy</a>
-        <a class="modal-link modal-link-secondary" id="learnMoreDeployedLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Open Deployed</a>
-      </div>
-    </section>
-  </div>
-
   <script>
-    // Order: alphabetical by visible card label, then by file name.
+    // Source order is not meaningful — renderGallery() sorts by style, then template, then file.
     const files = [
-      { href: "../html-actual-output/HarryKeller/index.html", owner: "HarryKeller", file: "index.html", title: "Harry Keller - Instructional Designer & Training Specialist", firstName: "Harry", style: "Terminal", layout: "Split left", label: "Harry - Terminal - Split left", designSourceType: "style", designSource: "Terminal" },
+      { href: "../html-actual-output/HarryKeller/portfolio%20(55).html", owner: "HarryKeller", file: "portfolio (55).html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Modern", layout: "Central", label: "Harry - Modern - Central", designSourceType: "style", designSource: "Modern" },
+      { href: "../html-actual-output/HarryKeller/portfolio%20(53).html", owner: "HarryKeller", file: "portfolio (53).html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Modern", layout: "Split left", label: "Harry - Modern - Split left", designSourceType: "style", designSource: "Modern" },
+      { href: "../html-actual-output/HarryKeller/portfolio_brutalist.html", owner: "HarryKeller", file: "portfolio_brutalist.html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Brutalist", layout: "Central", label: "Harry - Brutalist - Central", designSourceType: "style", designSource: "Brutalist" },
+      { href: "../html-actual-output/HarryKeller/hsk_fun.html", owner: "HarryKeller", file: "hsk_fun.html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Fun", layout: "Central", label: "Harry - Fun - Central", designSourceType: "style", designSource: "Fun" },
+      { href: "../html-actual-output/HarryKeller/portfolio%20(56).html", owner: "HarryKeller", file: "portfolio (56).html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Clean minimal", layout: "Split left", label: "Harry - Clean minimal - Split left", designSourceType: "style", designSource: "Clean minimal" },
+      { href: "../html-actual-output/HarryKeller/portfolio%20(54).html", owner: "HarryKeller", file: "portfolio (54).html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Swiss grid", layout: "Split left", label: "Harry - Swiss grid - Split left", designSourceType: "style", designSource: "Swiss grid" },
+      { href: "../html-actual-output/HarryKeller/index.html", owner: "HarryKeller", file: "index.html", title: "Harry Keller — Instructional Designer & Training Specialist", firstName: "Harry", style: "Terminal", layout: "Split left", label: "Harry - Terminal - Split left", designSourceType: "style", designSource: "Terminal" },
       { href: "../html-actual-output/deployed/ilene-langley-profile.html", owner: "Deployed", file: "ilene-langley-profile.html", title: "Ilene Langley — NLP Scientist / Engineer", firstName: "Ilene", style: "Editorial", layout: "Split left", label: "Ilene - Editorial - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/ilene-langley/profile", sourceHref: "https://example.com/ilene-langley/profile" },
+      { href: "../html-actual-output/IleneLangley/portfolio_elegant_parchment.html", owner: "IleneLangley", file: "portfolio_elegant_parchment.html", title: "Ilene Langley — NLP Scientist & Engineer", firstName: "Ilene", style: "Elegant", layout: "Split right", label: "Ilene - Elegant - Split right", designSourceType: "style", designSource: "Elegant" },
       { href: "../html-actual-output/deployed/ilene-langley-9.html", owner: "Deployed", file: "ilene-langley-9.html", title: "Ilene Langley — NLP Scientist & Engineer", firstName: "Ilene", style: "Glassmorphism", layout: "Split left", label: "Ilene - Glassmorphism - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/ilene-langley/9", sourceHref: "https://example.com/ilene-langley/9" },
-      { href: "../html-actual-output/IleneLangley/index.html", owner: "IleneLangley", file: "index.html", title: "Ilene Langley - NLP Scientist & Senior ML Engineer", firstName: "Ilene", style: "Glassmorphism", layout: "Split left", label: "Ilene - Glassmorphism - Split left", designSourceType: "style", designSource: "Glassmorphism", deployedUrl: "https://example.com/ilene-langley" },
+      { href: "../html-actual-output/IleneLangley/index.html", owner: "IleneLangley", file: "index.html", title: "Ilene Langley — NLP Scientist & Senior ML Engineer", firstName: "Ilene", style: "Glassmorphism", layout: "Split left", label: "Ilene - Glassmorphism - Split left", designSourceType: "style", designSource: "Glassmorphism", deployedUrl: "https://example.com/ilene-langley" },
+      { href: "../html-actual-output/IleneLangley/blue_terminal_crimson_accent.html", owner: "IleneLangley", file: "blue_terminal_crimson_accent.html", title: "Ilene Langley — NLP Scientist & Engineer", firstName: "Ilene", style: "Terminal", layout: "Split right", label: "Ilene - Terminal - Split right", designSourceType: "style", designSource: "Terminal" },
       { href: "../html-actual-output/JackKarlsen/portfolio%20(17).html", owner: "JackKarlsen", file: "portfolio (17).html", title: "Jack Karlsen Portfolio", firstName: "Jack", style: "Bold", layout: "Split left", label: "Jack - Bold - Split left - Mellissa", designSourceType: "template", designSource: "Mellissa" },
       { href: "../html-actual-output/JackKarlsen/jack-karlsen-portfolio-animated.html", owner: "JackKarlsen", file: "jack-karlsen-portfolio-animated.html", title: "Jack Karlsen | RF & Laser Systems Engineer", firstName: "Jack", style: "Modern", layout: "Abstract layered", label: "Jack - Modern - Abstract layered", designSourceType: "style", designSource: "Modern" },
       { href: "../html-actual-output/JackKarlsen/JackKarlsen_neon.html", owner: "JackKarlsen", file: "JackKarlsen_neon.html", title: "Jack Karlsen | Electrical Engineering Portfolio", firstName: "Jack", style: "Neon tech", layout: "Central", label: "Jack - Neon tech - Central - Sarah", designSourceType: "template", designSource: "Sarah" },
-      { href: "../html-actual-output/JackKarlsen/jk-linguistics.html", owner: "JackKarlsen", file: "jk-linguistics.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Central", label: "Jack - Professional - Central - Jamie", designSourceType: "template", designSource: "Jamie" },
-      { href: "../html-actual-output/JackKarlsen/jk-psychology-blue.html", owner: "JackKarlsen", file: "jk-psychology-blue.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Central", label: "Jack - Professional - Central - Sarah", designSourceType: "template", designSource: "Sarah" },
-      { href: "../html-actual-output/deployed/jack-karlsen-published-12.html", owner: "Deployed", file: "jack-karlsen-published-12.html", title: "Jack Karlsen — Electrical Engineering Portfolio", firstName: "Jack", style: "Professional", layout: "Split left", label: "Jack - Professional - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/jack-karlsen/published-12", sourceHref: "https://example.com/jack-karlsen/published-12" },
-      { href: "../html-actual-output/JackKarlsen/gold_green_crimson_sidebar.html", owner: "JackKarlsen", file: "gold_green_crimson_sidebar.html", title: "Jack Karlsen - RF & Microwave Engineer", firstName: "Jack", style: "Professional", layout: "Split right", label: "Jack - Professional - Split right", designSourceType: "style", designSource: "Professional" },
+      { href: "../html-actual-output/JackKarlsen/jk-linguistics.html", owner: "JackKarlsen", file: "jk-linguistics.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Classic", layout: "Central", label: "Jack - Classic - Central - Jamie", designSourceType: "template", designSource: "Jamie" },
+      { href: "../html-actual-output/JackKarlsen/jk-psychology-blue.html", owner: "JackKarlsen", file: "jk-psychology-blue.html", title: "Jack Karlsen - Electrical Engineering Portfolio", firstName: "Jack", style: "Classic", layout: "Central", label: "Jack - Classic - Central - Sarah", designSourceType: "template", designSource: "Sarah" },
+      { href: "../html-actual-output/deployed/jack-karlsen-published-12.html", owner: "Deployed", file: "jack-karlsen-published-12.html", title: "Jack Karlsen — Electrical Engineering Portfolio", firstName: "Jack", style: "Classic", layout: "Split left", label: "Jack - Classic - Split left", designSourceType: "published", designSource: "Blob snapshot", deployedUrl: "https://example.com/jack-karlsen/published-12", sourceHref: "https://example.com/jack-karlsen/published-12" },
+      { href: "../html-actual-output/JackKarlsen/gold_green_crimson_sidebar.html", owner: "JackKarlsen", file: "gold_green_crimson_sidebar.html", title: "Jack Karlsen — RF & Microwave Engineer", firstName: "Jack", style: "Classic", layout: "Split right", label: "Jack - Classic - Split right", designSourceType: "style", designSource: "Classic" },
     ];
 
     const TEMPLATE_STYLES = {
       Alex: "Clean minimal",
-      Jamie: "Professional",
+      Jamie: "Classic",
       Mellissa: "Bold",
       Riley: "Editorial",
-      Sarah: "Professional",
+      Sarah: "Classic",
     };
 
+    // Dropdown vocabularies. Styles mirror the Style dropdown in src/overview.html;
+    // templates mirror templates/templates.json. Keep both in sync with their sources.
     const gallery = document.getElementById("gallery");
-    const learnMoreModal = document.getElementById("learnMoreModal");
-    const learnMoreTitle = document.getElementById("learnMoreTitle");
-    const learnMoreBody = document.getElementById("learnMoreBody");
-    const learnMoreClose = document.getElementById("learnMoreClose");
-    const learnMoreOpenLink = document.getElementById("learnMoreOpenLink");
-    const learnMoreDeployedLink = document.getElementById("learnMoreDeployedLink");
-    const keptCount = document.getElementById("keptCount");
-    const totalCount = document.getElementById("totalCount");
-    const deployedCount = document.getElementById("deployedCount");
-    const copyKeptButton = document.getElementById("copyKeptButton");
-    const copyDroppedButton = document.getElementById("copyDroppedButton");
-    const resetChecksButton = document.getElementById("resetChecksButton");
-    const copyStatus = document.getElementById("copyStatus");
 
-    let lastFocusedElement = null;
-    let copyStatusTimer = null;
-    const keepStateStorageKey = "actual-html-outputs:keep-state:v1";
-    let keepState = loadKeepState();
+    // The card tag reads straight from `files` — the localStorage override layer that once
+    // backed the editable style/template selects is gone with them.
+    function entryStyle(entry) {
+      return outputStyle(entry);
+    }
+
+    function entryTemplate(entry) {
+      return entry.designSourceType === "template" ? (entry.designSource || "") : "";
+    }
 
     function outputTitle(entry) {
       return entry.title || entry.file || entry.href;
@@ -706,26 +528,6 @@
         .replace(/'/g, "&#39;");
     }
 
-    function designSourceKind(entry) {
-      if (entry.designSourceType === "published") return "Published";
-      return entry.designSourceType === "template" ? "Template" : "Style";
-    }
-
-    function designSourceLabel(entry) {
-      return `${designSourceKind(entry)}: ${entry.designSource || "Unknown"}`;
-    }
-
-    function designSourceDetail(entry) {
-      if (entry.designSourceType === "template" && TEMPLATE_STYLES[entry.designSource]) {
-        return `${designSourceLabel(entry)} (${TEMPLATE_STYLES[entry.designSource]} template style)`;
-      }
-      return designSourceLabel(entry);
-    }
-
-    function designSourceTagClass(entry) {
-      return entry.designSourceType === "template" ? "source-tag source-tag-template" : "source-tag";
-    }
-
     function displayPath(href) {
       try {
         return decodeURIComponent(href.replace(/^\.\.\//, ""));
@@ -734,131 +536,32 @@
       }
     }
 
-    function sourceHref(entry) {
-      return entry.sourceHref || entry.href.replace("../html-actual-output/", "../users/");
-    }
-
-    function sourcePath(entry) {
-      return displayPath(sourceHref(entry));
-    }
-
     function copyPath(entry) {
       return displayPath(entry.href);
     }
 
-    function outputId(entry) {
-      return `${entry.owner}/${entry.file}`;
-    }
-
-    function checkboxId(entry) {
-      return `keep-${outputId(entry).replace(/[^a-z0-9_-]+/gi, "-")}`;
-    }
-
-    function loadKeepState() {
-      try {
-        return JSON.parse(localStorage.getItem(keepStateStorageKey)) || {};
-      } catch (error) {
-        return {};
-      }
-    }
-
-    function saveKeepState() {
-      try {
-        localStorage.setItem(keepStateStorageKey, JSON.stringify(keepState));
-      } catch (error) {
-        // Ignore private browsing or file-protocol storage failures.
-      }
-    }
-
-    function isKept(entry) {
-      return keepState[outputId(entry)] !== false;
-    }
-
-    function setKeep(entry, keep) {
-      keepState[outputId(entry)] = Boolean(keep);
-      saveKeepState();
-    }
-
-    function setCopyStatus(message) {
-      copyStatus.textContent = message;
-      window.clearTimeout(copyStatusTimer);
-      copyStatusTimer = window.setTimeout(() => {
-        copyStatus.textContent = "";
-      }, 3000);
-    }
-
-    function updateReviewSummary() {
-      const kept = files.filter(isKept).length;
-      const deployed = files.filter((entry) => entry.deployedUrl).length;
-      keptCount.textContent = kept;
-      totalCount.textContent = files.length;
-      deployedCount.textContent = `${deployed} deployed ${deployed === 1 ? "link" : "links"}`;
-    }
-
-    function updateCardState(card, entry) {
-      const keep = isKept(entry);
-      const checkbox = card.querySelector(".keep-checkbox");
-      const keepText = card.querySelector(".keep-text");
-      card.dataset.keep = keep ? "true" : "false";
-      if (checkbox) {
-        checkbox.checked = keep;
-      }
-      if (keepText) {
-        keepText.textContent = keep ? "Keep" : "Drop";
-      }
-    }
-
-    function outputDetailsHtml(entry) {
-      const deployedHtml = entry.deployedUrl
-        ? `<p><strong>Deployed URL:</strong> <a href="${escapeHtml(entry.deployedUrl)}" target="_blank" rel="noopener noreferrer">${escapeHtml(entry.deployedUrl)}</a></p>`
-        : `<p><strong>Deployed URL:</strong> Not found in the local output files.</p>`;
-      return [
-        `<p><strong>Card label:</strong> ${escapeHtml(cardLabel(entry))}</p>`,
-        `<p><strong>Style:</strong> ${escapeHtml(outputStyle(entry))}</p>`,
-        `<p><strong>Layout:</strong> ${escapeHtml(outputLayout(entry))}</p>`,
-        `<p><strong>Owner folder:</strong> ${escapeHtml(entry.owner)}</p>`,
-        `<p><strong>HTML file:</strong> ${escapeHtml(entry.file)}</p>`,
-        `<p><strong>Design source:</strong> ${escapeHtml(designSourceDetail(entry))}</p>`,
-        `<p><strong>Review status:</strong> ${isKept(entry) ? "Keep" : "Drop"}</p>`,
-        `<p><strong>Curated copy:</strong> ${escapeHtml(copyPath(entry))}</p>`,
-        `<p><strong>Original source:</strong> ${escapeHtml(sourcePath(entry))}</p>`,
-        deployedHtml
-      ].join("");
-    }
-
-    function openLearnMore(entry, triggerElement) {
-      lastFocusedElement = triggerElement || document.activeElement;
-      learnMoreTitle.textContent = outputTitle(entry);
-      learnMoreBody.innerHTML = outputDetailsHtml(entry);
-      learnMoreOpenLink.href = entry.href;
-      learnMoreDeployedLink.hidden = !entry.deployedUrl;
-      learnMoreDeployedLink.href = entry.deployedUrl || "#";
-      learnMoreModal.hidden = false;
-      document.body.classList.add("modal-open");
-      learnMoreClose.focus();
-    }
-
-    function closeLearnMore() {
-      learnMoreModal.hidden = true;
-      document.body.classList.remove("modal-open");
-      if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
-        lastFocusedElement.focus();
-      }
+    // For text going inside an HTML comment rather than a text node. escapeHtml() is wrong
+    // here — entities are not decoded in comments, so "&amp;" would show literally. What a
+    // comment actually cannot hold is "--" (and a leading ">" or "->"), so neutralize those.
+    function commentSafe(value) {
+      return String(value == null ? "" : value)
+        .replace(/-{2,}/g, (run) => "- ".repeat(run.length).trim())
+        .replace(/^[>]|^->/, " $&");
     }
 
     function createCard(entry) {
       const card = document.createElement("article");
       card.className = "card";
-      const title = outputTitle(entry);
       const label = cardLabel(entry);
-      const keep = isKept(entry);
-      const deployedTag = entry.deployedUrl ? `<span class="deployed-tag">Deployed</span>` : "";
-      const deployedAction = entry.deployedUrl
-        ? `<a class="cta cta-link" href="${escapeHtml(entry.deployedUrl)}" target="_blank" rel="noopener noreferrer" aria-label="Open deployed site for ${escapeHtml(label)}">Open Deployed</a>`
-        : "";
+      const currentStyle = entryStyle(entry);
+      const currentTemplate = entryTemplate(entry);
 
-      card.innerHTML = `
-        <a class="preview-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(label)} website">
+      // Identity reads as one tag: the style, plus the source template in parentheses when
+      // the output came from one. When this page was opened FROM the form's Style field, the
+      // tag becomes a button that sends its style back; standalone it is plain text.
+      const tagText = currentTemplate ? `${currentStyle} (${currentTemplate})` : currentStyle;
+
+      const previewInner = `
           <div class="preview-shell" aria-hidden="true">
             <div class="preview-stage">
               <iframe
@@ -869,136 +572,94 @@
                 tabindex="-1"
               ></iframe>
             </div>
-          </div>
-        </a>
+          </div>`;
+
+      // In picker mode the thumbnail selects the style instead of opening the output —
+      // that is the reason the form sent you here. "Details" still opens the real page,
+      // so nothing becomes unreachable.
+      const previewBlock = pickerOpener
+        ? `<button type="button" class="preview-link preview-link--pick" title="Use ${escapeHtml(currentStyle)} on the form" aria-label="Use ${escapeHtml(currentStyle)} on the form">${previewInner}</button>`
+        : `<a class="preview-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(label)} website">${previewInner}</a>`;
+
+      card.innerHTML = `
+        ${previewBlock}
         <div class="card-body">
-          <label class="keep-toggle" for="${checkboxId(entry)}">
-            <input class="keep-checkbox" id="${checkboxId(entry)}" type="checkbox" ${keep ? "checked" : ""}>
-            <span class="check-mark" aria-hidden="true">&#10003;</span>
-            <span class="keep-text">${keep ? "Keep" : "Drop"}</span>
-          </label>
-          <h2>${escapeHtml(label)}</h2>
-          <div class="card-tags">
-            <span class="${designSourceTagClass(entry)}">${escapeHtml(designSourceLabel(entry))}</span>
-            <span class="style-tag">${escapeHtml(outputStyle(entry))}</span>
-            <span class="style-descriptor">${escapeHtml(outputLayout(entry))}</span>
-            ${deployedTag}
+          <div class="card-meta-row">
+            ${pickerOpener
+              ? `<button type="button" class="card-tag card-tag--pick" data-style="${escapeHtml(currentStyle)}" title="Use ${escapeHtml(currentStyle)} on the form">${escapeHtml(tagText)}</button>`
+              : `<div class="card-tag">${escapeHtml(tagText)}</div>`}
+            <a class="cta cta-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(label)} website">Details</a>
           </div>
-          <div class="card-actions">
-            <button class="cta" type="button" aria-label="View details for ${escapeHtml(label)}">Details</button>
-            ${deployedAction}
-          </div>
+          <!-- ${commentSafe(copyPath(entry))} -->
         </div>
       `;
 
-      updateCardState(card, entry);
-      card.querySelector(".keep-checkbox").addEventListener("change", (event) => {
-        setKeep(entry, event.currentTarget.checked);
-        updateCardState(card, entry);
-        updateReviewSummary();
-      });
-      card.querySelector(".cta").addEventListener("click", (event) => {
-        openLearnMore(entry, event.currentTarget);
+      // Both the thumbnail and the tag send the same style. Confirmation always lands on
+      // the tag: it is the card's text, and the thumbnail is an iframe we cannot write into.
+      const tagButton = card.querySelector(".card-tag--pick");
+      card.querySelectorAll(".preview-link--pick, .card-tag--pick").forEach((trigger) => {
+        trigger.addEventListener("click", () => sendStyleToOpener(currentStyle, tagButton));
       });
 
       return card;
     }
 
-    function copyTextFallback(value) {
-      const textarea = document.createElement("textarea");
-      textarea.value = value;
-      textarea.setAttribute("readonly", "");
-      textarea.style.position = "fixed";
-      textarea.style.top = "0";
-      textarea.style.left = "0";
-      textarea.style.opacity = "0";
-      document.body.appendChild(textarea);
-      textarea.select();
-      const copied = document.execCommand("copy");
-      textarea.remove();
-      if (!copied) {
-        throw new Error("Copy command rejected");
-      }
-    }
+    // The window that opened this tab, when there is one. Set once: if the form tab is
+    // closed later, postMessage simply no-ops rather than throwing.
+    const pickerOpener = (() => {
+      try { return window.opener && !window.opener.closed ? window.opener : null; }
+      catch (error) { return null; }   // cross-origin opener
+    })();
 
-    async function copyText(value) {
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        try {
-          await navigator.clipboard.writeText(value);
-          return;
-        } catch (error) {
-          copyTextFallback(value);
-          return;
-        }
-      }
-      copyTextFallback(value);
-    }
+    // Same-origin in practice; falls back to "*" under file://, where origin is "null" and
+    // a targeted post would silently fail.
+    const pickerTargetOrigin = /^https?:$/.test(window.location.protocol) ? window.location.origin : "*";
 
-    async function copyKeptPaths() {
-      const keptPaths = files.filter(isKept).map(copyPath);
-      if (!keptPaths.length) {
-        setCopyStatus("No kept paths selected.");
+    function sendStyleToOpener(style, button) {
+      if (!pickerOpener || !style) return;
+      try {
+        pickerOpener.postMessage({ type: "styleSelected", style }, pickerTargetOrigin);
+      } catch (error) {
         return;
       }
-      try {
-        await copyText(keptPaths.join("\n"));
-        setCopyStatus(`${keptPaths.length} kept paths copied.`);
-      } catch (error) {
-        setCopyStatus("Copy failed.");
-      }
-    }
-
-    async function copyDroppedPaths() {
-      const droppedPaths = files.filter((entry) => !isKept(entry)).map(copyPath);
-      if (!droppedPaths.length) {
-        setCopyStatus("No dropped paths selected.");
-        return;
-      }
-      try {
-        await copyText(droppedPaths.join("\n"));
-        setCopyStatus(`${droppedPaths.length} dropped paths copied.`);
-      } catch (error) {
-        setCopyStatus("Copy failed.");
-      }
-    }
-
-    function resetChecks() {
-      keepState = {};
-      try {
-        localStorage.removeItem(keepStateStorageKey);
-      } catch (error) {
-        // Ignore private browsing or file-protocol storage failures.
-      }
-      renderGallery();
-      setCopyStatus("All outputs marked keep.");
+      // The form tab is in the background, so confirm here rather than there.
+      const previous = button.textContent;
+      button.classList.add("card-tag--picked");
+      button.textContent = `${style} → sent to form ✓`;
+      window.setTimeout(() => {
+        button.classList.remove("card-tag--picked");
+        button.textContent = previous;
+      }, 1600);
     }
 
     function renderGallery() {
+      const note = document.getElementById("pickerNote");
+      if (note) {
+        note.hidden = !pickerOpener;
+        if (pickerOpener) {
+          note.textContent = "Click any thumbnail or its style tag to send that style to the form. "
+            + "This tab stays open, and “Details” still opens the output itself.";
+        }
+      }
+
       const fragment = document.createDocumentFragment();
 
-      files.forEach((entry) => {
+      // Alphabetical by field 1 (style), then field 2 (template), then file name so the
+      // order is stable when two cards share a style. Sorted here rather than in the
+      // `files` literal because the style is editable at runtime.
+      const ordered = [...files].sort((a, b) =>
+        entryStyle(a).localeCompare(entryStyle(b))
+        || entryTemplate(a).localeCompare(entryTemplate(b))
+        || String(a.file).localeCompare(String(b.file)));
+
+      ordered.forEach((entry) => {
         fragment.appendChild(createCard(entry));
       });
 
       gallery.innerHTML = "";
       gallery.appendChild(fragment);
-      updateReviewSummary();
     }
 
-    copyKeptButton.addEventListener("click", copyKeptPaths);
-    copyDroppedButton.addEventListener("click", copyDroppedPaths);
-    resetChecksButton.addEventListener("click", resetChecks);
-    learnMoreClose.addEventListener("click", closeLearnMore);
-    learnMoreModal.addEventListener("click", (event) => {
-      if (event.target === learnMoreModal) {
-        closeLearnMore();
-      }
-    });
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && !learnMoreModal.hidden) {
-        closeLearnMore();
-      }
-    });
     renderGallery();
   </script>
 </body>

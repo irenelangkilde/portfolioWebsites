@@ -125,6 +125,50 @@
     .btn.accent-btn:hover{ background:color-mix(in oklab, var(--accent) 28%, rgba(255,255,255,.06)); }
     .btn.lg{ padding:13px 26px; border-radius:13px; font-size:15px; }
 
+    /* ── Resources dropdown ──────────────────── */
+    .nav-dropdown{ position:relative; }
+    .nav-dropdown .caret{ font-size:10px; opacity:.75; transition:transform .15s; }
+    .nav-dropdown .btn[aria-expanded="true"]{ background:rgba(255,255,255,.16); }
+    .nav-dropdown .btn[aria-expanded="true"] .caret{ transform:rotate(180deg); }
+    .nav-menu{
+      position:absolute;
+      top:calc(100% + 8px);
+      right:0;
+      z-index:50;
+      min-width:220px;
+      padding:6px;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:13px;
+      box-shadow:var(--shadow);
+    }
+    .nav-menu[hidden]{ display:none; }
+    .nav-menu a{
+      padding:9px 12px;
+      border-radius:9px;
+      color:var(--text);
+      font-weight:800;
+      font-size:13px;
+      text-decoration:none !important;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      white-space:nowrap;
+    }
+    .nav-menu a:hover,
+    .nav-menu a:focus-visible{ background:rgba(255,255,255,.12); outline:none; }
+    .nav-menu .ext{ font-size:11px; opacity:.7; }
+    /* The nav wraps on narrow screens; drop the menu back into the flow so it can't
+       hang off the right edge of the viewport. */
+    @media (max-width:560px){
+      .nav-dropdown{ width:100%; }
+      .nav-dropdown > .btn{ width:100%; justify-content:space-between; }
+      .nav-menu{ position:static; min-width:0; margin-top:6px; }
+    }
+
     /* ── Hero ────────────────────────────────── */
     .hero{
       margin-top:18px;
@@ -578,7 +622,18 @@
       <a href="src/pricing.html" class="btn" data-umami-event="home-nav-pricing">Pricing</a>
       <a href="src/landing_gift.html" class="btn" data-umami-event="home-nav-gift">🎁 Give a gift</a>
       <a href="src/about.html" class="btn" data-umami-event="home-nav-about">About</a>
-      <a href="blog/" class="btn" data-umami-event="home-nav-blog">Blog</a>
+      <div class="nav-dropdown">
+        <button type="button" class="btn" id="resourcesBtn" aria-expanded="false" aria-haspopup="true" aria-controls="resourcesMenu" data-umami-event="home-nav-resources">
+          Resources <span class="caret" aria-hidden="true">▾</span>
+        </button>
+        <div class="nav-menu" id="resourcesMenu" role="menu" aria-labelledby="resourcesBtn" hidden>
+          <a href="blog/" role="menuitem" data-umami-event="home-nav-blog">Blog</a>
+          <a href="html/actual-html-outputs.html" role="menuitem" data-umami-event="home-nav-outputs">Actual Outputs Gallery</a>
+          <a href="https://youtube.com/shorts/DOLnWsjTg2w?feature=share" role="menuitem" target="_blank" rel="noopener noreferrer" data-umami-event="home-nav-video">
+            Video <span class="ext" aria-hidden="true">↗</span>
+          </a>
+        </div>
+      </div>
       <a href="src/overview.html" class="btn primary" data-umami-event="cta-start-form" data-umami-event-location="home-nav">Get started →</a>
     </div>
   </nav>
@@ -747,7 +802,7 @@
         <div class="step">
           <div class="step-num">2</div>
           <h3>We build your site</h3>
-          <p>Our AI-powered pipeline extracts the best from your resume and crafts every section with editorial care.</p>
+          <p>Our AI-powered pipeline extracts the best from your resume and crafts every section with editorial care. See <a href="html/actual-html-outputs.html">some actual outputs</a>.</p>
         </div>
         <div class="step">
           <div class="step-num">3</div>
@@ -757,7 +812,7 @@
         <div class="step">
           <div class="step-num">4</div>
           <h3>Launch &amp; impress</h3>
-          <p>Go live! Hosting included with Premium plan.  Link your own custom domain, if you wish. Share the link in your resume or application and watch the interview invites roll in.</p>You can also download your website and host it yourself, at a lower cost.
+          <p>Go live! Hosting included with Premium plan.  Link your own custom domain, if you wish. Share the link in your resume or application and watch the interview invites roll in. You can also download your website and host it yourself, at a lower cost.</p>
         </div>
       </div>
     </div>
@@ -843,6 +898,36 @@
 </div>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // Resources dropdown. Click to toggle rather than hover, so it works on touch.
+  (function(){
+    var btn = document.getElementById('resourcesBtn');
+    var menu = document.getElementById('resourcesMenu');
+    if (!btn || !menu) return;
+
+    function setOpen(open){
+      menu.hidden = !open;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+
+    btn.addEventListener('click', function(event){
+      event.stopPropagation();          // else the document handler closes it again
+      setOpen(menu.hidden);
+    });
+
+    document.addEventListener('click', function(event){
+      if (!menu.hidden && !menu.contains(event.target)) setOpen(false);
+    });
+
+    document.addEventListener('keydown', function(event){
+      if (event.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); }
+    });
+
+    // Tabbing past the last item should close it too.
+    menu.addEventListener('focusout', function(event){
+      if (!menu.contains(event.relatedTarget) && event.relatedTarget !== btn) setOpen(false);
+    });
+  })();
 </script>
 <script src="/src/annbot-widget.js" defer></script>
 </body>

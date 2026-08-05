@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Design Style Miniatures</title>
+  <style>
+    :root {
+      --bg: #1a1a2e;
+      --bg-deep: #16213e;
+      --panel: rgba(24, 34, 62, 0.86);
+      --ink: #eef3ff;
+      --muted: #aab6d3;
+      --line: rgba(255, 255, 255, 0.1);
+      --shadow: 0 18px 50px rgba(5, 10, 24, 0.34);
+      --shadow-strong: 0 24px 60px rgba(5, 10, 24, 0.5);
+      --accent: #8ea2ff;
+      --accent-2: #7ed7c1;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      font-family: "Manrope", "Avenir Next", "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(142, 162, 255, 0.16), transparent 34%),
+        radial-gradient(circle at top right, rgba(126, 215, 193, 0.14), transparent 28%),
+        linear-gradient(180deg, var(--bg-deep) 0%, var(--bg) 100%);
+      min-height: 100vh;
+    }
+
+    .page {
+      width: min(1500px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .hero {
+      margin-bottom: 24px;
+      padding: 22px 24px;
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      background: rgba(22, 33, 62, 0.88);
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--accent);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-family: "Fraunces", Georgia, serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 600;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.98rem;
+      line-height: 1.65;
+      max-width: 78ch;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 20px;
+    }
+
+    /* Each card is the click target. As a <button> so keyboard and screen readers get it
+       for free; when the page is opened standalone it renders as a plain <div> instead. */
+    .style-card {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      color: inherit;
+      font: inherit;
+      text-align: left;
+      width: 100%;
+    }
+
+    button.style-card {
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    button.style-card:hover,
+    button.style-card:focus-visible {
+      transform: translateY(-5px);
+      border-color: rgba(142, 162, 255, 0.5);
+      box-shadow: var(--shadow-strong);
+      outline: none;
+    }
+
+    .style-shot {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      background: #fff;
+    }
+
+    /* bold.jpg and classic.jpg are full-page screenshots (3:2), while the rest were sliced
+       out of the source mockup as hero strips (~2.3:1 to 3:1). Left alone they would render
+       roughly twice as tall as their neighbours and show sections the others don't. Cropping
+       to the hero band here keeps the source files untouched. */
+    .style-shot--crop {
+      aspect-ratio: 12 / 5;
+      object-fit: cover;
+      object-position: top center;
+    }
+
+    /* Stand-in for styles that have no miniature yet — still selectable. */
+    .style-shot--missing {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px;
+      border-radius: 12px;
+      border: 1px dashed rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.04);
+      color: rgba(234, 240, 255, 0.5);
+      font-size: 0.86rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .style-foot {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .style-name {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+
+    .style-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+      line-height: 1.45;
+      flex: 1 1 100%;
+    }
+
+    .style-pick {
+      font-size: 0.74rem;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      white-space: nowrap;
+    }
+
+    .style-card--picked {
+      border-color: var(--accent-2);
+    }
+
+    .style-card--picked .style-pick {
+      color: var(--accent-2);
+    }
+
+    .note {
+      margin: 0 0 20px;
+      padding: 12px 16px;
+      border: 1px solid rgba(142, 162, 255, 0.28);
+      border-radius: 14px;
+      background: rgba(142, 162, 255, 0.1);
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.55;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <p class="eyebrow">Design styles</p>
+      <h1>Style miniatures</h1>
+      <p>
+        One card per style in the Style dropdown on page 3. Open this page from that field and
+        clicking a card sends the style straight back to the form.
+      </p>
+    </section>
+
+    <p class="note" id="modeNote"></p>
+
+    <section class="gallery" id="gallery" aria-label="Design style miniatures"></section>
+  </div>
+
+  <script>
+    // `shot` is the file name in assets/images/styles/, extension included — the sliced
+    // miniatures are PNG, the two full-page screenshots are JPEG (far smaller for
+    // photographic content). `style` must match a value or a visible label in the Style
+    // dropdown in src/overview.html — the form resolves either. `crop` marks a full-page
+    // screenshot that needs framing down to its hero band. Descriptions mirror the map in
+    // html/grad-gallery.html.
+    const STYLES = [
+      { style: "Bold",          shot: "bold.jpg",         crop: true, desc: "Oversized display type, high-impact composition" },
+      { style: "Brutalist",     shot: "brutalist.png",     desc: "Industrial capitals, raw grids, coarse textures" },
+      { style: "Classic",       shot: "classic.jpg",      crop: true, desc: "Conventional, brand-led business layout with structured sections" },
+      { style: "Clean minimal", shot: "clean-minimal.png", desc: "Whitespace-first, restrained hierarchy, single-focus per section" },
+      { style: "Editorial",     shot: "editorial.png",     desc: "Serif-forward with magazine-style hierarchy" },
+      { style: "Elegant",       shot: "elegant.png",       desc: "Refined typography, generous pacing, subtle textures" },
+      { style: "Fun",           shot: "fun.png",           desc: "Playful cartoon accents and illustrative flourishes" },
+      { style: "Glassmorphism", shot: "glassmorphism.png", desc: "Frosted-glass cards, blurred backdrop layering" },
+      { style: "Modern",        shot: "modern.png",        desc: "Contemporary sans-serif hierarchy, 3D or gradient hero visuals" },
+      { style: "Neon tech",     shot: "neon-tech.png",     desc: "Saturated accents, futuristic technical vibe" },
+      { style: "Swiss grid",    shot: "swiss-grid.png",    desc: "Visible grid system, systematic sans-serif composition" },
+      { style: "Terminal",      shot: "terminal.png",      desc: "Monospace typography and terminal-chrome layout" },
+    ];
+
+    // Set once. If the form tab closes later, postMessage no-ops rather than throwing.
+    const opener = (() => {
+      try { return window.opener && !window.opener.closed ? window.opener : null; }
+      catch (error) { return null; }   // cross-origin opener
+    })();
+
+    // Same-origin in practice; "*" under file://, where origin is "null" and a targeted
+    // post would silently fail.
+    const targetOrigin = /^https?:$/.test(window.location.protocol) ? window.location.origin : "*";
+
+    function escapeHtml(value) {
+      return String(value == null ? "" : value)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function sendStyle(style, card) {
+      if (!opener) return;
+      try {
+        opener.postMessage({ type: "styleSelected", style }, targetOrigin);
+      } catch (error) {
+        return;
+      }
+      // The form tab is in the background, so confirm here rather than there.
+      const pick = card.querySelector(".style-pick");
+      const previous = pick.textContent;
+      card.classList.add("style-card--picked");
+      pick.textContent = "Sent to form ✓";
+      window.setTimeout(() => {
+        card.classList.remove("style-card--picked");
+        pick.textContent = previous;
+      }, 1600);
+    }
+
+    function shotHtml(entry) {
+      return entry.shot
+        ? `<img class="style-shot${entry.crop ? " style-shot--crop" : ""}" src="../assets/images/styles/${escapeHtml(entry.shot)}"
+                alt="${escapeHtml(entry.style)} example" loading="lazy" />`
+        : `<div class="style-shot--missing">No miniature yet</div>`;
+    }
+
+    function render() {
+      const gallery = document.getElementById("gallery");
+      const note = document.getElementById("modeNote");
+      note.textContent = opener
+        ? "Click any style to send it to the form's Style field. This tab stays open so you can keep browsing."
+        : "Opened directly, so there is no form to send a selection to. Reach this page from the Style field on page 3 to pick a style.";
+
+      const fragment = document.createDocumentFragment();
+      for (const entry of STYLES) {
+        const card = document.createElement(opener ? "button" : "div");
+        card.className = "style-card";
+        if (opener) card.type = "button";
+        card.innerHTML = `
+          ${shotHtml(entry)}
+          <div class="style-foot">
+            <span class="style-name">${escapeHtml(entry.style)}</span>
+            ${opener ? `<span class="style-pick">Use this style</span>` : ""}
+            <span class="style-desc">${escapeHtml(entry.desc)}</span>
+          </div>
+        `;
+        if (opener) card.addEventListener("click", () => sendStyle(entry.style, card));
+        fragment.appendChild(card);
+      }
+      gallery.innerHTML = "";
+      gallery.appendChild(fragment);
+    }
+
+    render();
+  </script>
+</body>
+</html>
