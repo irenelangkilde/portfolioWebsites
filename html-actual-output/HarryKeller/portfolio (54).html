@@ -1,0 +1,1576 @@
+<html lang="en" style="--background: #e8c87a; --quinary: #e8c87a; --bp-slot5: #e8c87a; --bp-slot-5: #e8c87a; --slot5: #e8c87a; --slot-5: #e8c87a; --bp-accent1: #e8c87a; --accent1: #e8c87a; --foreground: #4a8c7f; --quaternary: #4a8c7f; --bp-slot4: #4a8c7f; --bp-slot-4: #4a8c7f; --slot4: #4a8c7f; --slot-4: #4a8c7f; --bp-accent2: #4a8c7f; --accent2: #4a8c7f; --primary: #c17f3a; --dominant: #c17f3a; --bp-slot1: #c17f3a; --bp-slot-1: #c17f3a; --slot1: #c17f3a; --slot-1: #c17f3a; --bp-primary: #c17f3a; --secondary: #2e4a52; --bp-slot2: #2e4a52; --bp-slot-2: #2e4a52; --slot2: #2e4a52; --slot-2: #2e4a52; --bp-secondary: #2e4a52; --accent: #f5ede0; --tertiary: #f5ede0; --bp-slot3: #f5ede0; --bp-slot-3: #f5ede0; --slot3: #f5ede0; --slot-3: #f5ede0; --bp-tertiary: #f5ede0"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Keller — Instructional Designer &amp; Training Specialist</title>
+<style>
+/* ============================================================
+   ROOT TOKENS — COLOR SYSTEM
+   ============================================================ */
+:root {
+  /* Base palette */
+  --c-1: var(--iw-color-c); /* cream */
+  --c-2: var(--iw-color-b); /* crimson */
+  --c-3: var(--iw-color-d); /* walnut */
+  --c-4: var(--iw-color-a); /* orange */
+  --c-5: var(--iw-color-e);
+
+  /* Derived surface tokens */
+  --surface-light: var(--c-1);
+  --surface-dark:  var(--c-3);
+  --surface-mid:   color-mix(in oklch, var(--c-3) 85%, var(--c-1));
+  --surface-card-light: color-mix(in oklch, var(--c-1) 92%, var(--c-3) 8%);
+  --surface-card-dark:  color-mix(in oklch, var(--c-3) 75%, black 25%);
+  --surface-accent: color-mix(in oklch, var(--c-2) 12%, var(--c-1));
+
+  /* Text tokens */
+  --text-on-light:  var(--c-3);
+  --text-on-dark:   var(--c-1);
+  --text-muted-light: color-mix(in oklch, var(--c-3) 60%, var(--c-1));
+  --text-muted-dark:  color-mix(in oklch, var(--c-1) 65%, var(--c-3));
+  --text-accent:    var(--c-2);
+  --text-highlight: var(--c-4);
+
+  /* Border / grid tokens */
+  --rule-light: color-mix(in oklch, var(--c-3) 30%, transparent);
+  --rule-dark:  color-mix(in oklch, var(--c-1) 30%, transparent);
+  --rule-major-light: color-mix(in oklch, var(--c-3) 45%, transparent);
+  --rule-major-dark:  color-mix(in oklch, var(--c-1) 45%, transparent);
+
+  /* Chip tokens */
+  --chip-bg-light:   color-mix(in oklch, var(--c-4) 20%, var(--c-1));
+  --chip-text-light: var(--c-3);
+  --chip-border-light: color-mix(in oklch, var(--c-4) 55%, var(--c-3) 20%);
+  --chip-bg-dark:    color-mix(in oklch, var(--c-4) 18%, var(--c-3));
+  --chip-text-dark:  var(--c-1);
+  --chip-border-dark: color-mix(in oklch, var(--c-4) 60%, transparent);
+
+  /* Shadow */
+  --shadow-sm: 0 2px 8px color-mix(in oklch, var(--c-3) 18%, transparent);
+  --shadow-md: 0 6px 24px color-mix(in oklch, var(--c-3) 22%, transparent);
+
+  /* Hero */
+  --hero-bg-image: none;
+
+  /* Typography */
+  --font-head: 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Helvetica Neue', 'Arial', sans-serif;
+
+  /* Grid */
+  --col-gap: 1px;
+  --max-w: 1120px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.65;
+  background: var(--surface-light);
+  color: var(--text-on-light);
+}
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+ul { list-style: none; }
+
+/* ============================================================
+   SWISS GRID UTILITIES
+   ============================================================ */
+.grid-container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Major section divider rule */
+.section-divider {
+  width: 100%;
+  height: 2px;
+  background: var(--rule-major-light);
+}
+.section-divider--dark {
+  background: var(--rule-major-dark);
+}
+
+/* Swiss grid layout: 12-col base */
+.swiss-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0;
+  border-left: 1px solid var(--rule-light);
+}
+.swiss-grid--dark {
+  border-left-color: var(--rule-dark);
+}
+
+/* Column cells with right rule */
+.sg-cell {
+  border-right: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+  padding: 2rem;
+}
+.sg-cell--no-border-b { border-bottom: none; }
+.sg-cell--no-pad { padding: 0; }
+
+.dark-section .sg-cell {
+  border-right-color: var(--rule-dark);
+  border-bottom-color: var(--rule-dark);
+}
+
+/* ============================================================
+   SECTION SHELLS
+   ============================================================ */
+.section-light {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: 5rem 0 4rem;
+  border-top: 2px solid var(--rule-major-light);
+}
+.section-dark {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: 5rem 0 4rem;
+  border-top: 2px solid var(--rule-major-dark);
+}
+.section-mid {
+  background: var(--surface-mid);
+  color: var(--text-on-dark);
+  padding: 5rem 0 4rem;
+  border-top: 2px solid var(--rule-major-dark);
+}
+
+/* Section label (overline) */
+.section-overline {
+  font-family: var(--font-body);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  margin-bottom: 0.5rem;
+  display: block;
+}
+.section-overline--dark { color: var(--text-highlight); }
+
+.section-title {
+  font-family: var(--font-head);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--text-on-light);
+  margin-bottom: 0.5rem;
+}
+.section-title--dark { color: var(--text-on-dark); }
+
+.section-rule {
+  width: 3rem;
+  height: 3px;
+  background: var(--c-2);
+  margin: 1rem 0 2.5rem;
+}
+.section-rule--orange { background: var(--c-4); }
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: var(--c-3);
+  border-bottom: 2px solid color-mix(in oklch, var(--c-4) 50%, var(--c-3));
+}
+.nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  border-left: 1px solid var(--rule-dark);
+  border-right: 1px solid var(--rule-dark);
+}
+.nav-logo {
+  font-family: var(--font-head);
+  font-size: 1rem;
+  color: var(--c-1);
+  letter-spacing: 0.04em;
+}
+.nav-logo span { color: var(--c-4); }
+.nav-links {
+  display: flex;
+  gap: 0;
+}
+.nav-links a {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted-dark);
+  padding: 0 1.1rem;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--rule-dark);
+  transition: color 0.2s, background 0.2s;
+}
+.nav-links a:hover {
+  color: var(--c-1);
+  background: color-mix(in oklch, var(--c-2) 20%, var(--c-3));
+}
+
+/* ============================================================
+   HERO
+   ============================================================ */
+.hero {
+  margin-top: 56px;
+  background: var(--c-3);
+  background-image:var(--hero-bg-image), none;
+  background-size: cover;
+  background-position: center;
+  color: var(--text-on-dark);
+  min-height: 92vh;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 2px solid var(--rule-major-dark);
+}
+
+/* Swiss grid lines inside hero */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:repeating-linear-gradient(
+      90deg,
+      color-mix(in oklch, var(--c-1) 8%, transparent) 0px,
+      color-mix(in oklch, var(--c-1) 8%, transparent) 1px,
+      transparent 1px,
+      transparent calc(100% / 6)
+    );
+  pointer-events: none;
+}
+
+.hero-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 5rem 2rem;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-left: 1px solid var(--rule-dark);
+  border-right: 1px solid var(--rule-dark);
+}
+
+.hero-content {
+  padding: 2rem 3rem 2rem 0;
+  border-right: 1px solid var(--rule-dark);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  border: 1px solid color-mix(in oklch, var(--c-4) 50%, transparent);
+  padding: 0.35rem 0.9rem;
+  width: fit-content;
+  margin-bottom: 0.5rem;
+}
+
+.hero-headline {
+  font-family: var(--font-head);
+  font-size: clamp(2.2rem, 5vw, 3.8rem);
+  line-height: 1.1;
+  color: var(--c-1);
+  font-weight: 400;
+}
+.hero-headline em {
+  font-style: normal;
+  color: var(--c-2);
+}
+
+.hero-sub {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--text-muted-dark);
+  max-width: 38ch;
+}
+
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.btn-primary {
+  display: inline-block;
+  background: var(--c-2);
+  color: var(--c-1);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.8rem;
+  border: 2px solid var(--c-2);
+  transition: background 0.2s, color 0.2s;
+}
+.btn-primary:hover {
+  background: transparent;
+  color: var(--c-2);
+}
+
+.btn-secondary {
+  display: inline-block;
+  background: transparent;
+  color: var(--c-1);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.85rem 1.8rem;
+  border: 2px solid color-mix(in oklch, var(--c-1) 50%, transparent);
+  transition: border-color 0.2s, color 0.2s;
+}
+.btn-secondary:hover {
+  border-color: var(--c-1);
+  color: var(--c-1);
+}
+
+/* Hero visual panel */
+.hero-visual {
+  padding: 2rem 0 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+/* Monogram headshot */
+.monogram-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+.monogram-ring {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  border: 3px solid var(--c-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in oklch, var(--c-3) 70%, var(--c-2) 8%);
+  box-shadow: 0 0 0 6px color-mix(in oklch, var(--c-4) 20%, transparent);
+}
+.monogram-text {
+  font-family: var(--font-head);
+  font-size: 3.2rem;
+  font-weight: 400;
+  color: var(--c-1);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  text-align: center;
+}
+.monogram-text sup {
+  font-size: 1.4rem;
+  vertical-align: super;
+  color: var(--c-4);
+}
+.monogram-label {
+  position: absolute;
+  bottom: -0.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--c-2);
+  color: var(--c-1);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  white-space: nowrap;
+}
+
+/* Status badges in hero */
+.hero-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  width: 100%;
+  border-top: 1px solid var(--rule-dark);
+  padding-top: 1.5rem;
+}
+.hero-badge-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+  color: var(--text-muted-dark);
+}
+.hero-badge-item span.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--c-4);
+  flex-shrink: 0;
+}
+
+/* ============================================================
+   ABOUT / PHILOSOPHY
+   ============================================================ */
+.about-grid {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 0;
+  border-left: 1px solid var(--rule-light);
+  border-right: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+}
+.about-left {
+  padding: 3rem 2.5rem 3rem 2rem;
+  border-right: 1px solid var(--rule-light);
+}
+.about-right {
+  padding: 3rem 2rem 3rem 2.5rem;
+}
+.about-philosophy {
+  font-family: var(--font-head);
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  line-height: 1.6;
+  color: var(--text-on-light);
+  font-style: italic;
+  border-left: 4px solid var(--c-2);
+  padding-left: 1.25rem;
+  margin-bottom: 2rem;
+}
+.about-body {
+  font-size: 0.95rem;
+  color: var(--text-muted-light);
+  line-height: 1.75;
+}
+.about-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.about-highlight-item {
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  gap: 0 1rem;
+  align-items: start;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--rule-light);
+}
+.about-highlight-item:last-child { border-bottom: none; }
+.ahi-emoji {
+  font-size: 1.4rem;
+  line-height: 1;
+  padding-top: 0.1rem;
+}
+.ahi-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  margin-bottom: 0.15rem;
+}
+.ahi-value {
+  font-size: 0.9rem;
+  color: var(--text-on-light);
+  font-weight: 500;
+}
+
+/* ============================================================
+   EXPERIENCE (dark section)
+   ============================================================ */
+.exp-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 0;
+  border-left: 1px solid var(--rule-dark);
+  border-right: 1px solid var(--rule-dark);
+}
+
+/* Timeline feature — MTC role spans full width with a visual timeline */
+.exp-feature {
+  grid-column: 1 / -1;
+  border-bottom: 2px solid var(--rule-major-dark);
+}
+
+.exp-feature-inner {
+  display: grid;
+  grid-template-columns: 3fr 4fr 5fr;
+  gap: 0;
+}
+
+.exp-meta {
+  padding: 2.5rem 2rem;
+  border-right: 1px solid var(--rule-dark);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.exp-company {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-highlight);
+}
+.exp-title {
+  font-family: var(--font-head);
+  font-size: 1.45rem;
+  line-height: 1.2;
+  color: var(--text-on-dark);
+}
+.exp-period {
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.exp-location {
+  font-size: 0.8rem;
+  color: var(--text-muted-dark);
+}
+.exp-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--c-2);
+  color: var(--c-1);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.35rem 0.8rem;
+  width: fit-content;
+  margin-top: 0.25rem;
+}
+
+/* Visual panel inside feature card */
+.exp-visual-panel {
+  padding: 2.5rem 2rem;
+  border-right: 1px solid var(--rule-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG illustration inline */
+.exp-svg-wrap {
+  width: 100%;
+  max-width: 280px;
+}
+
+.exp-bullets {
+  padding: 2.5rem 2rem;
+}
+.exp-bullets ul {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+.exp-bullets li {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--text-muted-dark);
+  line-height: 1.6;
+}
+.exp-bullets li::before {
+  content: '→';
+  color: var(--c-4);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+/* Secondary experience cards */
+.exp-secondary-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+}
+.exp-card-sec {
+  padding: 2.5rem 2rem;
+  border-right: 1px solid var(--rule-dark);
+  border-bottom: 1px solid var(--rule-dark);
+}
+.exp-card-sec:last-child { border-right: none; }
+.exp-sec-visual {
+  margin-bottom: 1.5rem;
+  height: 100px;
+  border-bottom: 1px solid var(--rule-dark);
+  padding-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+}
+
+/* ============================================================
+   SKILLS (light section)
+   ============================================================ */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border-left: 1px solid var(--rule-light);
+  border-right: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+}
+.skills-col {
+  padding: 2rem;
+  border-right: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+}
+.skills-col:last-child { border-right: none; }
+.skills-col-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--rule-light);
+}
+.chip-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.chip {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--chip-bg-light);
+  color: var(--chip-text-light);
+  border: 1px solid var(--chip-border-light);
+  padding: 0.3rem 0.75rem;
+  letter-spacing: 0.04em;
+}
+.chip--dark {
+  background: var(--chip-bg-dark);
+  color: var(--chip-text-dark);
+  border-color: var(--chip-border-dark);
+}
+
+/* Strength bars */
+.strength-item {
+  margin-bottom: 1.1rem;
+}
+.strength-label {
+  font-size: 0.82rem;
+  color: var(--text-on-light);
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  display: flex;
+  justify-content: space-between;
+}
+.strength-bar-track {
+  height: 4px;
+  background: color-mix(in oklch, var(--c-3) 12%, var(--c-1));
+  border: 1px solid var(--rule-light);
+}
+.strength-bar-fill {
+  height: 100%;
+  background: var(--c-2);
+}
+.strength-bar-fill--orange { background: var(--c-4); }
+
+/* ============================================================
+   EDUCATION (dark section)
+   ============================================================ */
+.edu-grid {
+  display: grid;
+  grid-template-columns: 5fr 7fr;
+  gap: 0;
+  border-left: 1px solid var(--rule-dark);
+  border-right: 1px solid var(--rule-dark);
+  border-bottom: 1px solid var(--rule-dark);
+}
+.edu-left {
+  padding: 3rem 2.5rem 3rem 2rem;
+  border-right: 1px solid var(--rule-dark);
+}
+.edu-right {
+  padding: 3rem 2rem 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.edu-degree {
+  font-family: var(--font-head);
+  font-size: 1.5rem;
+  color: var(--text-on-dark);
+  line-height: 1.2;
+  margin-bottom: 0.5rem;
+}
+.edu-major {
+  font-size: 0.95rem;
+  color: var(--text-highlight);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+.edu-detail {
+  font-size: 0.85rem;
+  color: var(--text-muted-dark);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.edu-spec-box {
+  margin-top: 2rem;
+  border: 1px solid var(--rule-dark);
+  padding: 1.25rem 1.5rem;
+  background: color-mix(in oklch, var(--c-3) 60%, var(--c-2) 8%);
+}
+.edu-spec-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 0.35rem;
+}
+.edu-spec-value {
+  font-size: 1rem;
+  color: var(--text-on-dark);
+  font-weight: 600;
+}
+
+/* Education visual (SVG) */
+.edu-visual-area {
+  width: 100%;
+  max-width: 340px;
+}
+
+/* ============================================================
+   CONTACT (light section)
+   ============================================================ */
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-left: 1px solid var(--rule-light);
+  border-right: 1px solid var(--rule-light);
+  border-bottom: 1px solid var(--rule-light);
+}
+.contact-left {
+  padding: 3rem 2.5rem 3rem 2rem;
+  border-right: 1px solid var(--rule-light);
+}
+.contact-right {
+  padding: 3rem 2rem 3rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.5rem;
+}
+.contact-heading {
+  font-family: var(--font-head);
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--text-on-light);
+  line-height: 1.2;
+  margin-bottom: 0.75rem;
+}
+.contact-body {
+  font-size: 0.92rem;
+  color: var(--text-muted-light);
+  line-height: 1.75;
+  margin-bottom: 1.5rem;
+}
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--rule-light);
+  font-size: 0.9rem;
+  color: var(--text-on-light);
+}
+.contact-item:last-child { border-bottom: none; }
+.contact-item-icon {
+  width: 36px;
+  height: 36px;
+  background: color-mix(in oklch, var(--c-2) 10%, var(--c-1));
+  border: 1px solid color-mix(in oklch, var(--c-2) 30%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.contact-item-detail { display: flex; flex-direction: column; }
+.contact-item-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted-light);
+  margin-bottom: 0.1rem;
+}
+.contact-item-value {
+  font-size: 0.9rem;
+  color: var(--text-on-light);
+  font-weight: 500;
+}
+.contact-cta-block {
+  background: var(--c-3);
+  padding: 2rem;
+  border-left: 4px solid var(--c-2);
+}
+.contact-cta-text {
+  font-size: 0.92rem;
+  color: var(--text-on-dark);
+  margin-bottom: 1.25rem;
+  line-height: 1.6;
+}
+.btn-lg {
+  display: inline-block;
+  background: var(--c-4);
+  color: var(--c-3);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 1rem 2rem;
+  border: 2px solid var(--c-4);
+  transition: background 0.2s, color 0.2s;
+}
+.btn-lg:hover {
+  background: transparent;
+  color: var(--c-4);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: color-mix(in oklch, var(--c-3) 95%, black 5%);
+  border-top: 2px solid var(--rule-major-dark);
+  padding: 1.5rem 2rem;
+}
+.footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.footer-name {
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  color: var(--text-muted-dark);
+}
+.footer-links {
+  display: flex;
+  gap: 1.5rem;
+}
+.footer-links a {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted-dark);
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--c-4); }
+.footer-tag {
+  font-size: 0.72rem;
+  color: color-mix(in oklch, var(--c-1) 35%, var(--c-3));
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .hero-inner {
+    grid-template-columns: 1fr;
+  }
+  .hero-content {
+    border-right: none;
+    border-bottom: 1px solid var(--rule-dark);
+    padding: 2rem 0;
+  }
+  .hero-visual {
+    padding: 2rem 0;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 1.5rem;
+  }
+  .about-grid { grid-template-columns: 1fr; }
+  .about-left { border-right: none; border-bottom: 1px solid var(--rule-light); }
+  .exp-feature-inner { grid-template-columns: 1fr; }
+  .exp-visual-panel { border-right: none; border-bottom: 1px solid var(--rule-dark); }
+  .exp-secondary-row { grid-template-columns: 1fr; }
+  .skills-grid { grid-template-columns: 1fr; }
+  .skills-col { border-right: none; }
+  .edu-grid { grid-template-columns: 1fr; }
+  .edu-left { border-right: none; border-bottom: 1px solid var(--rule-dark); }
+  .contact-grid { grid-template-columns: 1fr; }
+  .contact-left { border-right: none; border-bottom: 1px solid var(--rule-light); }
+  .nav-links { display: none; }
+}
+</style>
+<!-- portfolio-editor-delivery:1785610761083:0moqh2hzbyan -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #ffa500;
+  --iw-original-a: #ffa500;
+  --iw-color-b: #dc143c;
+  --iw-original-b: #dc143c;
+  --iw-color-c: #fffdd0;
+  --iw-original-c: #fffdd0;
+  --iw-color-e: oklch(from var(--iw-color-c) calc(l + 0.0156) calc(c - 0.0580) calc(h - 15.4));
+  --iw-original-e: #ffffff;
+  --iw-color-d: #4e3024;
+  --iw-original-d: #4e3024;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#ffa500",
+      "count": 23,
+      "chroma": 0.17102573047711597,
+      "score": 3.9335918009736672,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#dc143c",
+      "count": 6,
+      "chroma": 0.22193815309891118,
+      "score": 1.331628918593467,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#fffdd0",
+      "count": 21,
+      "chroma": 0.057994376273341114,
+      "score": 1.2178819017401634,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-3-dep-1",
+          "ordinal": "E",
+          "hex": "#ffffff",
+          "count": 1,
+          "chroma": 3.727399553519285e-8,
+          "score": 3.727399553519285e-8,
+          "varToken": "e",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#4e3024",
+      "count": 11,
+      "chroma": 0.04862663807353871,
+      "score": 0.5348930188089258,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<nav>
+  <div class="nav-inner">
+    <span class="nav-logo">Harry <span>Keller</span></span>
+    <div class="nav-links">
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#skills">Skills</a>
+      <a href="#education">Education</a>
+      <a href="#contact">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO
+     ============================================================ -->
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">✦ Instructional Designer &amp; Trainer</div>
+      <h1 class="hero-headline">I design learning<br>that <em>changes</em><br>how people work.</h1>
+      <p class="hero-sub">I design and deliver training for real organizations — not just as coursework. I've been promoted to do it full-time.</p>
+      <div class="hero-ctas">
+        <a href="#experience" class="btn-primary">See my training work</a>
+        <a href="#contact" class="btn-secondary">Download resume</a>
+      </div>
+    </div>
+
+    <div class="hero-visual">
+      <div class="monogram-wrap">
+        <div class="monogram-ring">
+          <div class="monogram-text">H<sup>S</sup>K</div>
+        </div>
+        <span class="monogram-label">Harry Keller</span>
+      </div>
+
+      <div class="hero-badges">
+        <div class="hero-badge-item">
+          <span class="dot"></span>
+          B.S. Applied Communication — Expected Aug 2026
+        </div>
+        <div class="hero-badge-item">
+          <span class="dot"></span>
+          Specialization: Instructional Design
+        </div>
+        <div class="hero-badge-item">
+          <span class="dot"></span>
+          Supervisor / Trainer — MTC, Provo UT
+        </div>
+        <div class="hero-badge-item">
+          <span class="dot"></span>
+          Open to L&amp;D, Training &amp; Development Roles
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT / PHILOSOPHY  (light)
+     ============================================================ -->
+<section class="section-light" id="about">
+  <div class="grid-container">
+    <span class="section-overline">Who I Am</span>
+    <h2 class="section-title">About &amp; Training Philosophy</h2>
+    <div class="section-rule"></div>
+
+    <div class="about-grid">
+      <div class="about-left">
+        <p class="about-philosophy">"What keeps me in this field is the moment when someone's performance visibly improves because the instruction was built right."</p>
+        <p class="about-body">I'm an Applied Communication major emphasizing leadership excellence, strategic public relations, and collaborative decision-making. I've spent the last two years designing and delivering training for a real organization — not as a practicum, but as my job.</p>
+        <br>
+        <p class="about-body">My arc — classroom teacher to curriculum designer to supervisor — means I understand both sides of the room. I've been the learner, I've been the teacher, and now I design what teachers learn from.</p>
+      </div>
+      <div class="about-right">
+        <div class="about-highlights">
+          <div class="about-highlight-item">
+            <div class="ahi-emoji">🎯</div>
+            <div>
+              <div class="ahi-label">Professional Identity</div>
+              <div class="ahi-value">Curriculum design, training delivery, and performance coaching — practiced in a real instructional environment</div>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="ahi-emoji">📈</div>
+            <div>
+              <div class="ahi-label">Career Arc</div>
+              <div class="ahi-value">Promoted from teacher to supervisor/trainer within one year at MTC Provo — the full design-to-delivery cycle is my job</div>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="ahi-emoji">🤝</div>
+            <div>
+              <div class="ahi-label">Approach</div>
+              <div class="ahi-value">People-centered, feedback-driven. I coach individuals, read groups, and iterate on instruction until performance improves</div>
+            </div>
+          </div>
+          <div class="about-highlight-item">
+            <div class="ahi-emoji">🎓</div>
+            <div>
+              <div class="ahi-label">Open To</div>
+              <div class="ahi-value">Entry-level instructional design, training &amp; development, or L&amp;D coordinator roles — corporate, nonprofit, or education</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE  (dark)
+     ============================================================ -->
+<section class="section-dark dark-section" id="experience">
+  <div class="grid-container">
+    <span class="section-overline section-overline--dark">Where I've Worked</span>
+    <h2 class="section-title section-title--dark">Experience</h2>
+    <div class="section-rule section-rule--orange"></div>
+
+    <div class="exp-grid">
+
+      <!-- FEATURE CARD: MTC -->
+      <div class="exp-feature">
+        <div class="exp-feature-inner">
+
+          <!-- Meta -->
+          <div class="exp-meta">
+            <div class="exp-company">🏫 MTC — Church of Jesus Christ of Latter-Day Saints</div>
+            <h3 class="exp-title">Supervisor / Trainer / Teacher</h3>
+            <div class="exp-period">📅 July 2023 — Present</div>
+            <div class="exp-location">📍 Provo, UT</div>
+            <span class="exp-promo-badge">⬆ Promoted to Supervisor/Trainer</span>
+            <p style="font-size:0.82rem; color: var(--text-muted-dark); margin-top:1rem; line-height:1.6;">
+              Started as a classroom teacher. Within one year, designed the curriculum other teachers now learn from. That promotion is the proof of concept.
+            </p>
+          </div>
+
+          <!-- Visual panel: career progression SVG diagram -->
+          <div class="exp-visual-panel">
+            <div class="exp-svg-wrap">
+              <svg viewBox="0 0 260 220" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+                <defs>
+                  <marker id="arr" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                    <path d="M0,0 L0,6 L8,3 z" style="fill: var(--iw-color-a)"></path>
+                  </marker>
+                </defs>
+                <!-- Track line -->
+                <line x1="50" y1="40" x2="50" y2="180" style="stroke: var(--iw-color-a)" stroke-width="2" stroke-dasharray="4,3" opacity="0.5"></line>
+                <!-- Node 1: Teacher -->
+                <circle cx="50" cy="50" r="16" style="fill: var(--iw-color-d)" stroke-width="2"></circle>
+                <text x="50" y="54" text-anchor="middle" font-size="11" style="fill: var(--iw-color-c)" font-family="Georgia">T</text>
+                <text x="78" y="46" font-size="10" style="fill: var(--iw-color-c)" font-family="Helvetica Neue,Arial">Classroom Teacher</text>
+                <text x="78" y="59" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue,Arial">2023</text>
+                <!-- Arrow -->
+                <line x1="50" y1="68" x2="50" y2="95" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arr)"></line>
+                <!-- Node 2: Designer -->
+                <circle cx="50" cy="110" r="16" style="fill: var(--iw-color-b)" stroke-width="2"></circle>
+                <text x="50" y="114" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="Georgia">C.D.</text>
+                <text x="78" y="106" font-size="10" style="fill: var(--iw-color-c)" font-family="Helvetica Neue,Arial">Curriculum Designer</text>
+                <text x="78" y="119" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue,Arial">2024</text>
+                <!-- Arrow -->
+                <line x1="50" y1="128" x2="50" y2="155" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arr)"></line>
+                <!-- Node 3: Supervisor -->
+                <circle cx="50" cy="170" r="18" style="fill: var(--iw-color-a)" stroke-width="2"></circle>
+                <text x="50" y="175" text-anchor="middle" font-size="9" style="fill: var(--iw-color-d)" font-weight="bold" font-family="Georgia">SUP</text>
+                <text x="78" y="166" font-size="10" style="fill: var(--iw-color-c)" font-weight="bold" font-family="Helvetica Neue,Arial">Supervisor / Trainer</text>
+                <text x="78" y="179" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue,Arial">Present</text>
+                <!-- Label -->
+                <text x="130" y="210" text-anchor="middle" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue,Arial" letter-spacing="1">CAREER PROGRESSION</text>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Bullets -->
+          <div class="exp-bullets">
+            <ul>
+              <li>Designed and implemented training curriculum for teachers, focusing on pedagogy, classroom management, and communication skills.</li>
+              <li>Managed administrative operations — including payroll accuracy, promotions, and employee records — to maintain organizational efficiency.</li>
+              <li>Coached and mentored teachers individually, providing feedback, professional development, and performance evaluations to improve instructional effectiveness.</li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+      <!-- /FEATURE CARD -->
+
+      <!-- SECONDARY ROW -->
+      <div class="exp-secondary-row">
+
+        <!-- Red Lobster -->
+        <div class="exp-card-sec">
+          <div class="exp-sec-visual">
+            <!-- Simple SVG: team leadership icon diagram -->
+            <svg viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;">
+              <!-- Central lead node -->
+              <circle cx="90" cy="40" r="18" style="fill: var(--iw-color-b)" stroke-width="2"></circle>
+              <text x="90" y="45" text-anchor="middle" font-size="10" style="fill: var(--iw-color-c)" font-family="Georgia">Lead</text>
+              <!-- Team nodes -->
+              <circle cx="30" cy="20" r="12" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></circle>
+              <text x="30" y="24" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">T1</text>
+              <circle cx="30" cy="60" r="12" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></circle>
+              <text x="30" y="64" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">T2</text>
+              <circle cx="150" cy="20" r="12" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></circle>
+              <text x="150" y="24" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">T3</text>
+              <circle cx="150" cy="60" r="12" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></circle>
+              <text x="150" y="64" text-anchor="middle" font-size="8" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">T4</text>
+              <!-- Lines -->
+              <line x1="72" y1="30" x2="42" y2="25" stroke="rgba(255,165,0,0.4)" stroke-width="1.5"></line>
+              <line x1="72" y1="50" x2="42" y2="55" stroke="rgba(255,165,0,0.4)" stroke-width="1.5"></line>
+              <line x1="108" y1="30" x2="138" y2="25" stroke="rgba(255,165,0,0.4)" stroke-width="1.5"></line>
+              <line x1="108" y1="50" x2="138" y2="55" stroke="rgba(255,165,0,0.4)" stroke-width="1.5"></line>
+            </svg>
+          </div>
+          <div class="exp-company">🦞 Red Lobster</div>
+          <h3 class="exp-title" style="font-size:1.15rem; margin: 0.4rem 0;">Team Lead — Server</h3>
+          <div class="exp-period" style="font-size:0.78rem; color:var(--text-muted-dark); margin-bottom:1rem;">October 2022 — July 2023 &nbsp;|&nbsp; Orem, UT</div>
+          <ul style="display:flex;flex-direction:column;gap:0.75rem;">
+            <li style="display:flex;gap:0.6rem;font-size:0.86rem;color:var(--text-muted-dark);line-height:1.55;">
+              <span style="color:var(--c-4);flex-shrink:0;">→</span>
+              Coordinated directly with the general manager to organize and improve team performance and employee well-being.
+            </li>
+            <li style="display:flex;gap:0.6rem;font-size:0.86rem;color:var(--text-muted-dark);line-height:1.55;">
+              <span style="color:var(--c-4);flex-shrink:0;">→</span>
+              Consistently ranked as top-performing server and team lead week over week; achieved highest volume of satisfied customers.
+            </li>
+          </ul>
+        </div>
+
+        <!-- Telos -->
+        <div class="exp-card-sec" style="border-right:none;">
+          <div class="exp-sec-visual">
+            <!-- Simple SVG: mentoring relationship diagram -->
+            <svg viewBox="0 0 180 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:200px;height:auto;">
+              <!-- Mentor -->
+              <circle cx="50" cy="40" r="20" style="fill: var(--iw-color-d)" stroke-width="2"></circle>
+              <text x="50" y="37" text-anchor="middle" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue" font-weight="bold">Men-</text>
+              <text x="50" y="49" text-anchor="middle" font-size="9" style="fill: var(--iw-color-a)" font-family="Helvetica Neue" font-weight="bold">tor</text>
+              <!-- Arrow double -->
+              <line x1="72" y1="40" x2="108" y2="40" style="stroke: var(--iw-color-b)" stroke-width="2"></line>
+              <polygon points="108,36 116,40 108,44" style="fill: var(--iw-color-b)"></polygon>
+              <polygon points="72,36 64,40 72,44" fill="rgba(255,165,0,0.6)"></polygon>
+              <!-- Resident -->
+              <circle cx="130" cy="40" r="20" fill="color-mix(in oklch,#4e3024 60%,#dc143c)" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></circle>
+              <text x="130" y="37" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">Resi-</text>
+              <text x="130" y="49" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">dent</text>
+              <!-- Trust label -->
+              <text x="90" y="28" text-anchor="middle" font-size="8" fill="rgba(255,165,0,0.7)" font-family="Helvetica Neue" letter-spacing="1">TRUST</text>
+            </svg>
+          </div>
+          <div class="exp-company">🏠 Telos</div>
+          <h3 class="exp-title" style="font-size:1.15rem; margin: 0.4rem 0;">Care Worker — Mentor</h3>
+          <div class="exp-period" style="font-size:0.78rem; color:var(--text-muted-dark); margin-bottom:1rem;">March 2022 — October 2022 &nbsp;|&nbsp; Orem, UT</div>
+          <ul style="display:flex;flex-direction:column;gap:0.75rem;">
+            <li style="display:flex;gap:0.6rem;font-size:0.86rem;color:var(--text-muted-dark);line-height:1.55;">
+              <span style="color:var(--c-4);flex-shrink:0;">→</span>
+              Formed trust-based relationships that encouraged healthy living and personal development.
+            </li>
+            <li style="display:flex;gap:0.6rem;font-size:0.86rem;color:var(--text-muted-dark);line-height:1.55;">
+              <span style="color:var(--c-4);flex-shrink:0;">→</span>
+              Guided residents through practical application of therapy skills in day-to-day living.
+            </li>
+          </ul>
+        </div>
+
+      </div>
+      <!-- /SECONDARY ROW -->
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS  (light)
+     ============================================================ -->
+<section class="section-light" id="skills">
+  <div class="grid-container">
+    <span class="section-overline">What I Bring</span>
+    <h2 class="section-title">Areas of Expertise</h2>
+    <div class="section-rule"></div>
+
+    <div class="skills-grid">
+
+      <!-- Column 1: Design & Delivery -->
+      <div class="skills-col">
+        <div class="skills-col-title">🎨 Design &amp; Delivery</div>
+        <div class="chip-wrap" style="margin-bottom:1.75rem;">
+          <span class="chip">Curriculum Development</span>
+          <span class="chip">Instructional Design</span>
+          <span class="chip">Training Delivery</span>
+          <span class="chip">Pedagogy</span>
+          <span class="chip">Adult Learning</span>
+          <span class="chip">Classroom Management</span>
+          <span class="chip">Facilitation</span>
+        </div>
+        <div class="skills-col-title" style="margin-top:0.5rem;">Core Strengths</div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Curriculum Design</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:92%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Training Delivery</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:88%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Facilitation</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:85%"></div></div>
+        </div>
+      </div>
+
+      <!-- Column 2: People & Leadership -->
+      <div class="skills-col">
+        <div class="skills-col-title">🤝 People &amp; Leadership</div>
+        <div class="chip-wrap" style="margin-bottom:1.75rem;">
+          <span class="chip">Coaching &amp; Mentoring</span>
+          <span class="chip">Performance Evaluation</span>
+          <span class="chip">Leadership Development</span>
+          <span class="chip">Employee Training</span>
+          <span class="chip">Employee Management</span>
+          <span class="chip">Team Leadership</span>
+        </div>
+        <div class="skills-col-title" style="margin-top:0.5rem;">Core Strengths</div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Coaching for Performance</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:90%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Leadership Development</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:86%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Employee Management</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill strength-bar-fill--orange" style="width:80%"></div></div>
+        </div>
+      </div>
+
+      <!-- Column 3: Communication & Operations -->
+      <div class="skills-col" style="border-right:none;">
+        <div class="skills-col-title">🗣 Communication &amp; Operations</div>
+        <div class="chip-wrap" style="margin-bottom:1.75rem;">
+          <span class="chip">Public Speaking</span>
+          <span class="chip">Group Presentations</span>
+          <span class="chip">Stakeholder Communication</span>
+          <span class="chip">Admin Operations</span>
+          <span class="chip">Problem-Solving</span>
+          <span class="chip">Organizational Effectiveness</span>
+        </div>
+        <div class="skills-col-title" style="margin-top:0.5rem;">Core Strengths</div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Public Speaking</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:88%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Clear Communication</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill" style="width:92%"></div></div>
+        </div>
+        <div class="strength-item">
+          <div class="strength-label"><span>Organizational Effectiveness</span></div>
+          <div class="strength-bar-track"><div class="strength-bar-fill strength-bar-fill--orange" style="width:78%"></div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION  (dark)
+     ============================================================ -->
+<section class="section-dark dark-section" id="education">
+  <div class="grid-container">
+    <span class="section-overline section-overline--dark">Academic Background</span>
+    <h2 class="section-title section-title--dark">Education</h2>
+    <div class="section-rule section-rule--orange"></div>
+
+    <div class="edu-grid">
+      <div class="edu-left" style="display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <!-- Education SVG: branching curriculum pathway -->
+        <div class="edu-visual-area">
+          <svg viewBox="0 0 300 200" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;">
+            <defs>
+              <marker id="arrE" markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto">
+                <path d="M0,0 L7,3.5 L0,7 z" style="fill: var(--iw-color-a)" opacity="0.8"></path>
+              </marker>
+            </defs>
+            <!-- Root: Degree -->
+            <rect x="100" y="10" width="100" height="36" rx="2" style="fill: var(--iw-color-b)" stroke-width="1.5"></rect>
+            <text x="150" y="25" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="Helvetica Neue" font-weight="bold">B.S. Applied</text>
+            <text x="150" y="38" text-anchor="middle" font-size="9" style="fill: var(--iw-color-c)" font-family="Helvetica Neue" font-weight="bold">Communication</text>
+            <!-- Trunk line -->
+            <line x1="150" y1="46" x2="150" y2="72" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arrE)"></line>
+            <!-- Branch node -->
+            <circle cx="150" cy="84" r="10" style="fill: var(--iw-color-a)" stroke-width="1.5"></circle>
+            <text x="150" y="88" text-anchor="middle" font-size="8" style="fill: var(--iw-color-d)" font-weight="bold" font-family="Helvetica Neue">Spec</text>
+            <!-- Left branch -->
+            <line x1="140" y1="84" x2="60" y2="120" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></line>
+            <rect x="10" y="120" width="100" height="28" rx="2" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.6)" stroke-width="1.5"></rect>
+            <text x="60" y="134" text-anchor="middle" font-size="8.5" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">Instructional Design</text>
+            <text x="60" y="144" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="Helvetica Neue">Specialization</text>
+            <!-- Right branch -->
+            <line x1="160" y1="84" x2="240" y2="120" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></line>
+            <rect x="190" y="120" width="100" height="28" rx="2" style="fill: var(--iw-color-d)" stroke="rgba(255,165,0,0.6)" stroke-width="1.5"></rect>
+            <text x="240" y="134" text-anchor="middle" font-size="8.5" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">Leadership &amp;</text>
+            <text x="240" y="144" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="Helvetica Neue">Public Relations</text>
+            <!-- Center branch down -->
+            <line x1="150" y1="94" x2="150" y2="120" stroke="rgba(255,165,0,0.5)" stroke-width="1.5"></line>
+            <rect x="100" y="120" width="100" height="28" rx="2" fill="color-mix(in oklch,#4e3024 75%,#dc143c)" stroke="rgba(255,165,0,0.6)" stroke-width="1.5"></rect>
+            <text x="150" y="134" text-anchor="middle" font-size="8.5" style="fill: var(--iw-color-c)" font-family="Helvetica Neue">Small Group</text>
+            <text x="150" y="144" text-anchor="middle" font-size="8" style="fill: var(--iw-color-a)" font-family="Helvetica Neue">Communication</text>
+            <!-- Expected date -->
+            <text x="150" y="185" text-anchor="middle" font-size="9" fill="rgba(255,253,208,0.6)" font-family="Helvetica Neue" letter-spacing="1">EXPECTED: AUGUST 2026</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="edu-right">
+        <h3 class="edu-degree">Bachelor of Science (Expected)</h3>
+        <div class="edu-major">Applied Communication</div>
+        <div class="edu-detail">🎓 <span>Expected Graduation: August 2026</span></div>
+        <div class="edu-detail">📚 <span>Specialization: Instructional Design</span></div>
+        <div class="edu-detail">🌟 <span>Emphasis: Leadership Excellence &amp; Strategic Public Relations</span></div>
+
+        <div class="edu-spec-box">
+          <div class="edu-spec-label">Specialization Focus</div>
+          <div class="edu-spec-value">Instructional Design</div>
+          <p style="font-size:0.83rem;color:var(--text-muted-dark);margin-top:0.5rem;line-height:1.6;">
+            Curriculum design, training delivery, adult learning principles, and collaborative decision-making within small groups and teams — applied through hands-on professional experience at MTC Provo alongside academic study.
+          </p>
+        </div>
+
+        <div style="margin-top:1.75rem;">
+          <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--c-4);margin-bottom:0.75rem;">Degree Badges</div>
+          <div class="chip-wrap">
+            <span class="chip chip--dark">Class of August 2026</span>
+            <span class="chip chip--dark">B.S. Applied Communication</span>
+            <span class="chip chip--dark">Instructional Design</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT  (light)
+     ============================================================ -->
+<section class="section-light" id="contact">
+  <div class="grid-container">
+    <span class="section-overline">Get In Touch</span>
+    <h2 class="section-title">Let's Talk L&amp;D</h2>
+    <div class="section-rule"></div>
+
+    <div class="contact-grid">
+      <div class="contact-left">
+        <h3 class="contact-heading">Ready to design learning that changes how people work?</h3>
+        <p class="contact-body">I'm actively seeking entry-level instructional design, training &amp; development, or L&amp;D coordinator roles. Whether you're in corporate, nonprofit, or education — if you're building training programs that actually work, I'd like to hear from you.</p>
+
+        <div class="contact-item">
+          <div class="contact-item-icon">📧</div>
+          <div class="contact-item-detail">
+            <span class="contact-item-label">Email</span>
+            <a href="mailto:hello@example.com" class="contact-item-value">hello@example.com</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">📞</div>
+          <div class="contact-item-detail">
+            <span class="contact-item-label">Phone</span>
+            <a href="tel:5551234567" class="contact-item-value">(555) 123-4567</a>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">📍</div>
+          <div class="contact-item-detail">
+            <span class="contact-item-label">Location</span>
+            <span class="contact-item-value">City, State — Open to Relocation</span>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon">🎓</div>
+          <div class="contact-item-detail">
+            <span class="contact-item-label">Status</span>
+            <span class="contact-item-value">Graduating August 2026 — Available for early hire / internship</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-right">
+        <div class="contact-cta-block">
+          <p class="contact-cta-text">
+            <strong style="color:var(--c-4);">Let's talk about your L&amp;D needs.</strong><br><br>
+            I've designed curriculum, delivered it to adult learners, evaluated their performance, and iterated — that full cycle is what most entry-level candidates only study. If your team needs someone who can step in and contribute on day one, let's connect.
+          </p>
+          <a href="mailto:hello@example.com" class="btn-lg">Send a Message</a>
+        </div>
+
+        <div style="border:1px solid var(--rule-light);padding:1.75rem;background:var(--surface-card-light);">
+          <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-accent);margin-bottom:1rem;">What I'm Looking For</div>
+          <div class="chip-wrap">
+            <span class="chip">Instructional Designer</span>
+            <span class="chip">Training Specialist</span>
+            <span class="chip">L&amp;D Coordinator</span>
+            <span class="chip">Curriculum Developer</span>
+            <span class="chip">Corporate Training</span>
+            <span class="chip">Education Sector</span>
+            <span class="chip">Nonprofit</span>
+          </div>
+        </div>
+
+        <div style="border:1px solid var(--rule-light);padding:1.25rem 1.75rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;">
+          <div>
+            <div style="font-size:0.68rem;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-muted-light);margin-bottom:0.25rem;">Resume</div>
+            <div style="font-size:0.88rem;color:var(--text-on-light);">Harry Keller — Available on request</div>
+          </div>
+          <a href="mailto:hello@example.com?subject=Resume Request — Harry Keller" class="btn-primary" style="white-space:nowrap;">Request Resume</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="footer-inner">
+    <span class="footer-name">Harry Keller — Instructional Designer &amp; Trainer</span>
+    <div class="footer-links">
+      <a href="#top">Top</a>
+      <a href="#about">About</a>
+      <a href="#experience">Experience</a>
+      <a href="#skills">Skills</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <span class="footer-tag">© 2026 Harry Keller</span>
+  </div>
+</footer>
+
+
+</body></html>

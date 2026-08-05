@@ -1,0 +1,2250 @@
+<html lang="en" style="--background: #caf0f8; --quinary: #caf0f8; --bp-slot5: #caf0f8; --bp-slot-5: #caf0f8; --slot5: #caf0f8; --slot-5: #caf0f8; --bp-accent1: #caf0f8; --accent1: #caf0f8; --foreground: #0096c7; --quaternary: #0096c7; --bp-slot4: #0096c7; --bp-slot-4: #0096c7; --slot4: #0096c7; --slot-4: #0096c7; --bp-accent2: #0096c7; --accent2: #0096c7; --primary: #03045e; --dominant: #03045e; --bp-slot1: #03045e; --bp-slot-1: #03045e; --slot1: #03045e; --slot-1: #03045e; --bp-primary: #03045e; --secondary: #023e8a; --bp-slot2: #023e8a; --bp-slot-2: #023e8a; --slot2: #023e8a; --slot-2: #023e8a; --bp-secondary: #023e8a; --accent: #7c2d41; --tertiary: #7c2d41; --bp-slot3: #7c2d41; --bp-slot-3: #7c2d41; --slot3: #7c2d41; --slot-3: #7c2d41; --bp-tertiary: #7c2d41"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ilene Langley — NLP Scientist &amp; Engineer</title>
+<style>
+/* ============================================================
+   ROOT: SEMANTIC COLOR VARIABLES
+   ============================================================ */
+:root {
+  /* Brand anchors */
+  --c-1: var(--iw-color-n);
+  --c-2: var(--iw-color-h);
+  --c-3: var(--iw-color-b);
+  --c-4: var(--iw-color-a);
+  --c-5: var(--iw-color-c);
+
+  /* Hero */
+  --hero-bg-image: none;
+
+  /* Surfaces */
+  --surface-dark:        var(--c-1);
+  --surface-mid:         var(--c-2);
+  --surface-accent:      var(--c-3);
+  --surface-bright:      var(--c-4);
+  --surface-pale:        var(--c-5);
+  --surface-light:       var(--iw-color-j);
+  --surface-white:       var(--iw-color-k);
+  --surface-code:        var(--iw-color-d);
+
+  /* Text */
+  --text-on-dark:        var(--iw-color-l);
+  --text-on-dark-muted:  color-mix(in oklch, var(--iw-color-l) 65%, transparent);
+  --text-on-light:       var(--iw-color-o);
+  --text-on-light-muted: color-mix(in oklch, var(--iw-color-o) 60%, transparent);
+  --text-accent:         var(--c-4);
+  --text-crimson:        var(--c-3);
+
+  /* Borders */
+  --border-dark:   color-mix(in oklch, var(--c-4) 30%, transparent);
+  --border-light:  color-mix(in oklch, var(--c-2) 20%, transparent);
+  --border-dim:    color-mix(in oklch, var(--c-5) 25%, transparent);
+
+  /* Chips — consistent family */
+  --chip-bg:       color-mix(in oklch, var(--c-4) 15%, var(--c-1));
+  --chip-text:     var(--c-5);
+  --chip-border:   color-mix(in oklch, var(--c-4) 40%, transparent);
+
+  --chip-light-bg:     color-mix(in oklch, var(--c-4) 12%, var(--iw-color-j));
+  --chip-light-text:   var(--c-2);
+  --chip-light-border: color-mix(in oklch, var(--c-4) 35%, transparent);
+
+  /* Cards */
+  --card-dark-bg:    color-mix(in oklch, var(--c-2) 40%, var(--c-1));
+  --card-dark-border:color-mix(in oklch, var(--c-4) 25%, transparent);
+  --card-light-bg:   var(--iw-color-k);
+  --card-light-border:color-mix(in oklch, var(--c-2) 18%, transparent);
+
+  /* Shadows */
+  --shadow-sm:  0 2px 8px color-mix(in oklch, var(--c-1) 35%, transparent);
+  --shadow-md:  0 4px 20px color-mix(in oklch, var(--c-1) 40%, transparent);
+
+  /* Terminal glow */
+  --glow-4:  0 0 12px color-mix(in oklch, var(--c-4) 50%, transparent);
+
+  /* Typography */
+  --font-mono: 'Courier New', 'Lucida Console', monospace;
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+
+  /* Spacing */
+  --section-pad: 80px 0;
+  --container:   1100px;
+  --gap-md:      24px;
+  --gap-lg:      40px;
+  --radius:      4px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-mono);
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+a { color: var(--c-4); text-decoration: none; }
+a:hover { text-decoration: underline; color: var(--c-5); }
+
+img { max-width: 100%; display: block; }
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+/* ============================================================
+   SECTION ALTERNATION
+   Baseline: LIGHT (main_section_mode: "light")
+   Alternation: light → dark → light → dark …
+   ============================================================ */
+.section-light {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: var(--section-pad);
+}
+.section-dark {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-pad);
+}
+
+/* ============================================================
+   TERMINAL CHROME — global decorative elements
+   ============================================================ */
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  background: color-mix(in oklch, var(--c-1) 85%, var(--iw-color-i));
+  border-radius: var(--radius) var(--radius) 0 0;
+  border-bottom: 1px solid var(--border-dark);
+}
+.term-bar .dot {
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.dot-r { background: var(--iw-color-f); }
+.dot-y { background: var(--iw-color-g); }
+.dot-g { background: var(--iw-color-e); }
+.term-bar .label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-dark-muted);
+  margin-left: 8px;
+  letter-spacing: 0.08em;
+}
+
+.term-window {
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface-code);
+}
+.term-body {
+  padding: 20px 22px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-5);
+  line-height: 1.9;
+}
+.term-prompt { color: var(--c-4); }
+.term-output { color: color-mix(in oklch, var(--c-5) 80%, white); }
+.term-comment { color: color-mix(in oklch, var(--c-4) 55%, var(--c-5)); }
+.term-string { color: var(--iw-color-m); }
+.term-cursor {
+  display: inline-block;
+  width: 9px; height: 15px;
+  background: var(--c-4);
+  vertical-align: middle;
+  animation: blink 1.1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
+
+/* ============================================================
+   SECTION HEADERS (terminal style)
+   ============================================================ */
+.section-header {
+  margin-bottom: 44px;
+}
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 6px;
+}
+.section-header h2 {
+  font-family: var(--font-mono);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.section-light .section-header h2 { color: var(--c-1); }
+.section-dark  .section-header h2 { color: var(--c-5); }
+.section-header .underline-bar {
+  margin-top: 10px;
+  width: 52px; height: 3px;
+  background: var(--c-3);
+  border-radius: 2px;
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: color-mix(in oklch, var(--c-1) 95%, transparent);
+  border-bottom: 1px solid var(--border-dark);
+  backdrop-filter: blur(8px);
+}
+.nav-inner {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 52px;
+}
+.nav-brand {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-5);
+  letter-spacing: 0.04em;
+}
+.nav-brand span { color: var(--c-4); }
+.nav-links {
+  display: flex;
+  gap: 26px;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-dark-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+.nav-links a:hover { color: var(--c-4); text-decoration: none; }
+
+/* ============================================================
+   HERO — split-right (visual LEFT, content RIGHT)
+   ============================================================ */
+#hero {
+  min-height: 100vh;
+  padding-top: 52px;
+  background: linear-gradient(135deg, var(--c-1) 0%, var(--c-2) 55%, color-mix(in oklch, var(--c-3) 30%, var(--c-2)) 100%),
+              var(--hero-bg-image) center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Background token-stream texture */
+#hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:repeating-linear-gradient(
+      90deg,
+      transparent 0,
+      transparent 119px,
+      color-mix(in oklch, var(--c-4) 6%, transparent) 120px
+    ), repeating-linear-gradient(
+      0deg,
+      transparent 0,
+      transparent 39px,
+      color-mix(in oklch, var(--c-4) 5%, transparent) 40px
+    );
+  pointer-events: none;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  width: 100%;
+}
+
+/* LEFT: Visual column */
+.hero-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* CSS Monogram */
+.monogram {
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: color-mix(in oklch, var(--c-3) 70%, var(--c-1));
+  border: 3px solid var(--c-4);
+  box-shadow: var(--glow-4), 0 0 40px color-mix(in oklch, var(--c-3) 30%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 56px;
+  font-weight: 700;
+  color: var(--c-5);
+  letter-spacing: -0.04em;
+  flex-shrink: 0;
+}
+
+/* Parse tree SVG decoration */
+.hero-parse-tree {
+  width: 100%;
+  max-width: 340px;
+}
+
+/* Hero terminal window */
+.hero-term {
+  width: 100%;
+  max-width: 340px;
+}
+
+/* RIGHT: Content column */
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.hero-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--c-4);
+}
+
+.hero-headline {
+  font-family: var(--font-mono);
+  font-size: clamp(26px, 3.8vw, 44px);
+  font-weight: 700;
+  color: var(--c-5);
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+.hero-headline em {
+  font-style: normal;
+  color: var(--c-4);
+}
+
+.hero-subheadline {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--text-on-dark-muted);
+  line-height: 1.75;
+  max-width: 500px;
+}
+
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+.hero-badge {
+  background: color-mix(in oklch, var(--c-4) 18%, var(--c-1));
+  border: 1px solid color-mix(in oklch, var(--c-4) 45%, transparent);
+  color: var(--c-5);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 12px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+}
+.btn-primary {
+  background: var(--c-4);
+  color: var(--c-1);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 11px 24px;
+  border-radius: var(--radius);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: background 0.2s, box-shadow 0.2s;
+  display: inline-block;
+}
+.btn-primary:hover { background: var(--c-5); text-decoration: none; color: var(--c-1); box-shadow: var(--glow-4); }
+.btn-secondary {
+  background: transparent;
+  color: var(--c-5);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 22px;
+  border-radius: var(--radius);
+  border: 1px solid color-mix(in oklch, var(--c-5) 50%, transparent);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: border-color 0.2s, color 0.2s;
+  display: inline-block;
+}
+.btn-secondary:hover { border-color: var(--c-4); color: var(--c-4); text-decoration: none; }
+
+.hero-contact-line {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-dark-muted);
+  margin-top: 4px;
+}
+.hero-contact-line a { color: var(--c-4); }
+
+/* ============================================================
+   ABOUT — LIGHT (baseline)
+   ============================================================ */
+#about { padding: var(--section-pad); background: var(--surface-light); }
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.about-copy p {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  color: var(--text-on-light);
+  line-height: 1.85;
+  margin-bottom: 16px;
+}
+.about-highlights {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.highlight-card {
+  background: var(--card-light-bg);
+  border: 1px solid var(--card-light-border);
+  border-left: 3px solid var(--c-3);
+  padding: 16px 18px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.highlight-card .hc-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-3);
+  margin-bottom: 4px;
+}
+.highlight-card .hc-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-on-light);
+  font-weight: 600;
+}
+
+.open-to-box {
+  margin-top: 28px;
+  padding: 16px 20px;
+  background: color-mix(in oklch, var(--c-4) 8%, var(--surface-light));
+  border: 1px solid color-mix(in oklch, var(--c-4) 30%, transparent);
+  border-radius: var(--radius);
+}
+.open-to-box .ot-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 5px;
+}
+.open-to-box p {
+  font-size: 12.5px;
+  color: var(--text-on-light);
+  margin: 0;
+}
+
+/* ============================================================
+   EXPERIENCE — DARK (alternating)
+   ============================================================ */
+#experience { background: var(--surface-dark); padding: var(--section-pad); }
+#experience .section-header h2 { color: var(--c-5); }
+
+.exp-list { display: flex; flex-direction: column; gap: 24px; }
+
+.exp-card {
+  background: var(--card-dark-bg);
+  border: 1px solid var(--card-dark-border);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.exp-card:hover { border-color: color-mix(in oklch, var(--c-4) 55%, transparent); }
+.exp-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 3px;
+  background: var(--c-3);
+  border-radius: var(--radius) 0 0 var(--radius);
+}
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.exp-title {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-5);
+}
+.exp-company {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-4);
+  margin-top: 2px;
+}
+.exp-meta {
+  text-align: right;
+}
+.exp-dates {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-dark-muted);
+  letter-spacing: 0.06em;
+}
+.exp-location {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-dark-muted);
+}
+
+.exp-bullets {
+  margin: 12px 0 0 0;
+  padding: 0;
+  list-style: none;
+}
+.exp-bullets li {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-on-dark-muted);
+  line-height: 1.75;
+  padding-left: 18px;
+  position: relative;
+  margin-bottom: 5px;
+}
+.exp-bullets li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--c-4);
+  font-size: 11px;
+  top: 2px;
+}
+
+.exp-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.exp-tag {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--chip-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 9px;
+  border-radius: 2px;
+  letter-spacing: 0.06em;
+}
+
+/* ============================================================
+   PROJECTS — LIGHT (alternating back)
+   ============================================================ */
+#projects { background: var(--surface-light); padding: var(--section-pad); }
+#projects .section-header h2 { color: var(--c-1); }
+
+.projects-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+
+.proj-card {
+  background: var(--card-light-bg);
+  border: 1px solid var(--card-light-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.25s, border-color 0.25s;
+}
+.proj-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: color-mix(in oklch, var(--c-4) 40%, transparent);
+}
+
+.proj-visual {
+  height: 170px;
+  background: var(--surface-dark);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proj-body {
+  padding: 20px 22px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.proj-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.proj-emoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.proj-dates {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-on-light-muted);
+  letter-spacing: 0.08em;
+  margin-left: auto;
+}
+.proj-title {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-1);
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+.proj-desc {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-on-light-muted);
+  line-height: 1.75;
+  flex: 1;
+}
+.proj-bullets {
+  margin: 10px 0;
+  padding: 0;
+  list-style: none;
+}
+.proj-bullets li {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-on-light-muted);
+  padding-left: 15px;
+  position: relative;
+  margin-bottom: 4px;
+  line-height: 1.6;
+}
+.proj-bullets li::before {
+  content: '▸';
+  position: absolute;
+  left: 0;
+  color: var(--c-3);
+  font-size: 10px;
+  top: 2px;
+}
+.proj-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 12px;
+}
+.proj-tag {
+  background: var(--chip-light-bg);
+  border: 1px solid var(--chip-light-border);
+  color: var(--chip-light-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  letter-spacing: 0.05em;
+}
+.proj-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 14px;
+}
+.proj-link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-4);
+  letter-spacing: 0.06em;
+  transition: color 0.2s;
+}
+.proj-link:hover { color: var(--c-3); text-decoration: underline; }
+
+/* ============================================================
+   SKILLS — DARK (alternating)
+   ============================================================ */
+#skills { background: var(--surface-dark); padding: var(--section-pad); }
+#skills .section-header h2 { color: var(--c-5); }
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+}
+.skill-group {
+  background: var(--card-dark-bg);
+  border: 1px solid var(--card-dark-border);
+  border-radius: var(--radius);
+  padding: 22px 24px;
+}
+.skill-group-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-dark);
+}
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+.skill-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--chip-text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 2px;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   PATENTS & AWARDS — LIGHT (alternating back)
+   ============================================================ */
+#honors { background: var(--surface-light); padding: var(--section-pad); }
+#honors .section-header h2 { color: var(--c-1); }
+
+.honors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+.honor-card {
+  background: var(--card-light-bg);
+  border: 1px solid var(--card-light-border);
+  border-top: 3px solid var(--c-3);
+  border-radius: var(--radius);
+  padding: 20px 20px;
+  box-shadow: var(--shadow-sm);
+}
+.honor-emoji {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+.honor-title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-1);
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+.honor-issuer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-3);
+  margin-bottom: 5px;
+}
+.honor-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-light-muted);
+}
+.honor-desc {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-on-light-muted);
+  margin-top: 6px;
+  line-height: 1.65;
+}
+
+/* ============================================================
+   EDUCATION — DARK (alternating)
+   ============================================================ */
+#education { background: var(--surface-dark); padding: var(--section-pad); }
+#education .section-header h2 { color: var(--c-5); }
+
+.edu-list { display: flex; flex-direction: column; gap: 18px; }
+.edu-card {
+  background: var(--card-dark-bg);
+  border: 1px solid var(--card-dark-border);
+  border-radius: var(--radius);
+  padding: 22px 26px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+.edu-degree {
+  font-family: var(--font-mono);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-5);
+}
+.edu-institution {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-4);
+  margin-top: 3px;
+}
+.edu-honors {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--c-3);
+  margin-top: 4px;
+  font-style: italic;
+}
+.edu-thesis {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-on-dark-muted);
+  margin-top: 8px;
+  line-height: 1.65;
+}
+.edu-thesis-label {
+  color: var(--c-4);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.edu-year {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-on-dark-muted);
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* ============================================================
+   CONTACT / RESUME CTA — LIGHT (alternating back)
+   ============================================================ */
+#contact { background: var(--surface-light); padding: var(--section-pad); }
+#contact .section-header h2 { color: var(--c-1); }
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+.contact-info { display: flex; flex-direction: column; gap: 14px; }
+.contact-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--card-light-bg);
+  border: 1px solid var(--card-light-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+.contact-icon {
+  font-size: 18px;
+  width: 28px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.contact-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-on-light-muted);
+}
+.contact-value {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--c-2);
+  font-weight: 600;
+}
+.contact-value a { color: var(--c-2); }
+.contact-value a:hover { color: var(--c-3); }
+
+.contact-cta-panel {
+  background: var(--surface-dark);
+  border-radius: var(--radius);
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  border: 1px solid var(--border-dark);
+}
+.cta-panel-heading {
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--c-5);
+}
+.cta-panel-sub {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  color: var(--text-on-dark-muted);
+  line-height: 1.75;
+}
+.cta-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: color-mix(in oklch, var(--c-1) 95%, var(--iw-color-i));
+  border-top: 1px solid var(--border-dark);
+  padding: 24px 28px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-on-dark-muted);
+}
+footer a { color: var(--c-4); }
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
+.mt-0 { margin-top: 0; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 36px; padding-top: 36px; padding-bottom: 36px; }
+  .hero-visual { order: -1; }
+  .about-grid { grid-template-columns: 1fr; }
+  .projects-grid { grid-template-columns: 1fr; }
+  .skills-grid { grid-template-columns: 1fr; }
+  .honors-grid { grid-template-columns: 1fr; }
+  .contact-grid { grid-template-columns: 1fr; }
+  .edu-card { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+}
+</style>
+<!-- portfolio-editor-delivery:1785872871050:fiyqh1fycsi -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #0096c7;
+  --iw-original-a: #0096c7;
+  --iw-color-b: #7c2d41;
+  --iw-original-b: #7c2d41;
+  --iw-color-c: #caf0f8;
+  --iw-original-c: #caf0f8;
+  --iw-color-j: oklch(from var(--iw-color-c) calc(l + 0.0445) calc(c - 0.0282) calc(h + 32.4));
+  --iw-original-j: #f0f8ff;
+  --iw-color-k: oklch(from var(--iw-color-c) calc(l + 0.0694) calc(c - 0.0408) calc(h - 122.0));
+  --iw-original-k: #ffffff;
+  --iw-color-l: oklch(from var(--iw-color-c) calc(l + 0.0287) calc(c - 0.0270) calc(h + 7.8));
+  --iw-original-l: #e8f4f8;
+  --iw-color-m: oklch(from var(--iw-color-c) calc(l - 0.0559) calc(c + 0.0041) calc(h - 36.8));
+  --iw-original-m: #b8e0d4;
+  --iw-color-d: #0a0e2e;
+  --iw-original-d: #0a0e2e;
+  --iw-color-n: oklch(from var(--iw-color-d) calc(l + 0.0414) calc(c + 0.0822) calc(h - 7.2));
+  --iw-original-n: #03045e;
+  --iw-color-o: oklch(from var(--iw-color-d) calc(l + 0.0494) calc(c + 0.0060) calc(h - 8.0));
+  --iw-original-o: #0d1b3e;
+  --iw-color-e: #27c93f;
+  --iw-original-e: #27c93f;
+  --iw-color-f: #ff5f56;
+  --iw-original-f: #ff5f56;
+  --iw-color-g: #ffbd2e;
+  --iw-original-g: #ffbd2e;
+  --iw-color-h: #023e8a;
+  --iw-original-h: #023e8a;
+  --iw-color-i: #000000;
+  --iw-original-i: #000000;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#0096c7",
+      "count": 70,
+      "chroma": 0.12638043002006008,
+      "score": 8.846630101404205,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#7c2d41",
+      "count": 43,
+      "chroma": 0.11095446781847143,
+      "score": 4.7710421161942715,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#caf0f8",
+      "count": 77,
+      "chroma": 0.040824591477217474,
+      "score": 3.1434935437457456,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-3-dep-1",
+          "ordinal": "J",
+          "hex": "#f0f8ff",
+          "count": 2,
+          "chroma": 0.01266140212592498,
+          "score": 0.02532280425184996,
+          "varToken": "j",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-3-dep-2",
+          "ordinal": "K",
+          "hex": "#ffffff",
+          "count": 2,
+          "chroma": 3.727399553519285e-8,
+          "score": 7.45479910703857e-8,
+          "varToken": "k",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-3-dep-3",
+          "ordinal": "L",
+          "hex": "#e8f4f8",
+          "count": 2,
+          "chroma": 0.013832203986668743,
+          "score": 0.027664407973337485,
+          "varToken": "l",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-3-dep-4",
+          "ordinal": "M",
+          "hex": "#b8e0d4",
+          "count": 1,
+          "chroma": 0.04495838423211328,
+          "score": 0.04495838423211328,
+          "varToken": "m",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#0a0e2e",
+      "count": 10,
+      "chroma": 0.06378237213837597,
+      "score": 0.6378237213837596,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-4-dep-1",
+          "ordinal": "N",
+          "hex": "#03045e",
+          "count": 3,
+          "chroma": 0.14599700733946255,
+          "score": 0.4379910220183877,
+          "varToken": "n",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-4-dep-2",
+          "ordinal": "O",
+          "hex": "#0d1b3e",
+          "count": 2,
+          "chroma": 0.06979260531383417,
+          "score": 0.13958521062766835,
+          "varToken": "o",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-5",
+      "ordinal": "E",
+      "hex": "#27c93f",
+      "count": 2,
+      "chroma": 0.21930288567225367,
+      "score": 0.43860577134450734,
+      "varToken": "e",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-6",
+      "ordinal": "F",
+      "hex": "#ff5f56",
+      "count": 2,
+      "chroma": 0.1965299578886907,
+      "score": 0.3930599157773814,
+      "varToken": "f",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-7",
+      "ordinal": "G",
+      "hex": "#ffbd2e",
+      "count": 2,
+      "chroma": 0.16182547085096857,
+      "score": 0.32365094170193714,
+      "varToken": "g",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-8",
+      "ordinal": "H",
+      "hex": "#023e8a",
+      "count": 1,
+      "chroma": 0.13864518959862657,
+      "score": 0.13864518959862657,
+      "varToken": "h",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-9",
+      "ordinal": "I",
+      "hex": "#000000",
+      "count": 2,
+      "chroma": 0,
+      "score": 0,
+      "varToken": "i",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-brand"><span>ilene@nlp</span>:~$</div>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#honors">Awards</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO — split-right: visual LEFT, content RIGHT
+     ============================================================ -->
+<section id="hero">
+  <div class="hero-inner">
+
+    <!-- LEFT: Visual -->
+    <div class="hero-visual">
+      <div class="monogram">IL</div>
+
+      <!-- Parse tree SVG illustration -->
+      <svg class="hero-parse-tree" viewBox="0 0 340 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <!-- Background panel -->
+        <rect width="340" height="140" rx="4" style="fill: var(--iw-color-d)" opacity="0.85"></rect>
+        <rect width="340" height="1" y="0" style="fill: var(--iw-color-a)" opacity="0.4"></rect>
+        <!-- Tree nodes -->
+        <!-- Root: S -->
+        <circle cx="170" cy="22" r="12" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.5"></circle>
+        <text x="170" y="27" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="11" font-weight="bold">S</text>
+        <!-- Level 2: NP, VP -->
+        <circle cx="80" cy="62" r="12" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.5"></circle>
+        <text x="80" y="67" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="11" font-weight="bold">NP</text>
+        <circle cx="260" cy="62" r="12" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.5"></circle>
+        <text x="260" y="67" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="11" font-weight="bold">VP</text>
+        <!-- Level 3 left: DT, NN -->
+        <circle cx="40" cy="102" r="10" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1"></circle>
+        <text x="40" y="107" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New, monospace" font-size="9">DT</text>
+        <circle cx="120" cy="102" r="10" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1"></circle>
+        <text x="120" y="107" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New, monospace" font-size="9">NN</text>
+        <!-- Level 3 right: VBZ, NP -->
+        <circle cx="210" cy="102" r="10" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1"></circle>
+        <text x="210" y="107" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New, monospace" font-size="9">VBZ</text>
+        <circle cx="300" cy="102" r="10" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1"></circle>
+        <text x="300" y="107" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New, monospace" font-size="9">NP</text>
+        <!-- Edges -->
+        <line x1="160" y1="30" x2="90" y2="52" style="stroke: var(--iw-color-a)" stroke-width="1" opacity="0.5"></line>
+        <line x1="180" y1="30" x2="250" y2="52" style="stroke: var(--iw-color-a)" stroke-width="1" opacity="0.5"></line>
+        <line x1="72" y1="70" x2="48" y2="92" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.5"></line>
+        <line x1="88" y1="70" x2="112" y2="92" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.5"></line>
+        <line x1="250" y1="70" x2="218" y2="92" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.5"></line>
+        <line x1="268" y1="70" x2="292" y2="92" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.5"></line>
+        <!-- Leaf labels -->
+        <text x="40" y="128" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="8" opacity="0.6">the</text>
+        <text x="120" y="128" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="8" opacity="0.6">model</text>
+        <text x="210" y="128" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="8" opacity="0.6">learns</text>
+        <text x="300" y="128" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New, monospace" font-size="8" opacity="0.6">data</text>
+      </svg>
+
+      <!-- Small terminal snippet -->
+      <div class="hero-term">
+        <div class="term-window">
+          <div class="term-bar">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+            <span class="label">nlp_pipeline.py</span>
+          </div>
+          <div class="term-body">
+            <div><span class="term-prompt">$ </span><span class="term-output">python pipeline.py</span></div>
+            <div><span class="term-comment"># corpus: 2.4T tokens</span></div>
+            <div><span class="term-output">tokenizing... </span><span class="term-string">✓</span></div>
+            <div><span class="term-output">pos_tag....... </span><span class="term-string">✓</span></div>
+            <div><span class="term-output">dep_parse..... </span><span class="term-string">✓</span></div>
+            <div><span class="term-output">embeddings.... </span><span class="term-cursor"></span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Content -->
+    <div class="hero-content">
+      <div class="hero-eyebrow">// NLP Scientist &amp; Engineer</div>
+      <h1 class="hero-headline">
+        Two decades of making<br>machines <em>understand</em><br>language.
+      </h1>
+      <p class="hero-subheadline">
+        PhD NLP scientist with deep experience managing, annotating, and preparing language data at production scale — from 2.4T-token corpora to annotation automation frameworks.
+      </p>
+      <div class="hero-badges">
+        <span class="hero-badge">🎓 Ph.D. Computer Science</span>
+        <span class="hero-badge">🏆 ACL Test of Time Award</span>
+        <span class="hero-badge">📋 Patent Holder</span>
+        <span class="hero-badge">✨ cum laude B.S.</span>
+      </div>
+      <div class="hero-ctas">
+        <a href="#contact" class="btn-primary">Get in Touch</a>
+        <a href="#projects" class="btn-secondary">View Projects</a>
+      </div>
+      <div class="hero-contact-line">
+        📧 <a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a>
+        &nbsp;·&nbsp; 📞 (555) 010-1100
+        &nbsp;·&nbsp; <a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">example.com</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT — LIGHT (baseline)
+     ============================================================ -->
+<section id="about" class="section-light">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 01 — profile</div>
+      <h2>About Ilene</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="about-grid">
+      <div class="about-copy">
+        <p>
+          I've spent two decades working with language data at every level — cleaning and preparing terabyte-scale corpora, designing annotation pipelines, building the models that learn from that data, and shipping the systems that run in production.
+        </p>
+        <p>
+          My PhD is in Computer Science (NLP focus) from USC. My independent research produced novel annotation automation techniques: a novel smoothing technique for p-o-s tagging and dependency parsing, and a framework for interactive ML. My recent production work includes training word embeddings on <strong>2.4 trillion tokens</strong> of web-crawled text at Aktify and building large-scale data preparation pipelines for speech recognition at Cobalt Speech and Language.
+        </p>
+        <p>
+          Managing language data well is not incidental to my work — it has been central to it. I bring both the technical depth to understand what the data needs and the engineering experience to build the infrastructure that manages it.
+        </p>
+        <div class="open-to-box">
+          <div class="ot-label">🎯 Open to</div>
+          <p>Data Manager or NLP Data roles at companies working with large-scale language data, conversational AI, or ML-driven text applications. Open to remote, contract, or full-time.</p>
+        </div>
+      </div>
+
+      <div class="about-highlights">
+        <div class="highlight-card">
+          <div class="hc-label">🔬 Research Depth</div>
+          <div class="hc-value">Ph.D. Computer Science — USC 2002<br><span style="font-weight:400;font-size:12px;color:var(--text-on-light-muted);">Thesis: Automatic Sentence Generation Using a Hybrid Statistical Model</span></div>
+        </div>
+        <div class="highlight-card">
+          <div class="hc-label">📊 Scale</div>
+          <div class="hc-value">2.4T tokens of parsed web-crawled data<br><span style="font-weight:400;font-size:12px;color:var(--text-on-light-muted);">Probabilistic word embeddings trained for multi-intent detection</span></div>
+        </div>
+        <div class="highlight-card">
+          <div class="hc-label">🛠️ Production Pipeline Experience</div>
+          <div class="hc-value">Cobalt Speech &amp; Language<br><span style="font-weight:400;font-size:12px;color:var(--text-on-light-muted);">Large-scale dataset cleaning, domain-specific LM pipelines, Thrax CFG compilation</span></div>
+        </div>
+        <div class="highlight-card">
+          <div class="hc-label">⚙️ Annotation Automation</div>
+          <div class="hc-value">Novel smoothing for POS tagging &amp; dep. parsing<br><span style="font-weight:400;font-size:12px;color:var(--text-on-light-muted);">Interactive ML framework for semi-supervised annotation (independent research)</span></div>
+        </div>
+        <div class="highlight-card">
+          <div class="hc-label">🏆 Recognition</div>
+          <div class="hc-value">ACL Test of Time Award — July 2023<br><span style="font-weight:400;font-size:12px;color:var(--text-on-light-muted);">For a 1998 paper; Patent US&nbsp;6,751,591</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE — DARK (alternating)
+     ============================================================ -->
+<section id="experience" class="section-dark">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 02 — experience</div>
+      <h2>Career Timeline</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="exp-list">
+
+      <!-- Ilene's Ventures -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Small Business Owner / Developer</div>
+            <div class="exp-company">Ilene's Ventures</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">August 2025 — present</div>
+            <div class="exp-location">South Jordan, UT (self-employed)</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Independently built and launched a service that accepts a resume as input and automatically generates a portfolio website using AI — end-to-end product delivery.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">AI</span>
+          <span class="exp-tag">GitHub</span>
+        </div>
+      </div>
+
+      <!-- ClearWhite -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">NLP Scientist / Engineer</div>
+            <div class="exp-company">ClearWhite Model Programming</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">March 2023 — present</div>
+            <div class="exp-location">self-employed</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Applied a novel smoothing technique to p-o-s tagging and dependency parsing using logistic regression and clustering — directly supporting increased automation of language data annotation.</li>
+          <li>Goal: improved annotation accuracy across a variety of NLP applications through semi-supervised pipeline design.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">logistic regression</span>
+          <span class="exp-tag">clustering</span>
+          <span class="exp-tag">annotation automation</span>
+          <span class="exp-tag">dependency parsing</span>
+        </div>
+      </div>
+
+      <!-- Aktify -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Senior Data Scientist</div>
+            <div class="exp-company">Aktify</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">June 2021 — March 2022</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Designed and executed a pipeline that ingested, parsed, and trained probabilistic word embeddings on <strong style="color:var(--c-5);">2.4T tokens</strong> of web-crawled data — the data engineering at this scale is as significant as the model itself.</li>
+          <li>Intended application: multi-intent detection of utterances in conversational AI.</li>
+          <li>Contributed to dialog model and dialog management architecture design.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">Julia</span>
+          <span class="exp-tag">word embeddings</span>
+          <span class="exp-tag">data pipelines</span>
+          <span class="exp-tag">conversational AI</span>
+        </div>
+      </div>
+
+      <!-- Lifepod -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Natural Language Processing Scientist / Engineer</div>
+            <div class="exp-company">Lifepod</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">January 2019 — June 2021</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Architected and implemented a custom dialog manager for proactive routines, with patentable innovations.</li>
+          <li>Developed voice-based conversational agents using Google Dialogflow and Amazon Alexa.</li>
+          <li>Wrote custom intent-detection logic on top of syntactic analysis APIs to classify utterance sentiment significantly more accurately than ML alone.</li>
+          <li>Built a batch testing harness in Golang — production-grade data quality infrastructure and systematic evaluation.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">Google Dialogflow</span>
+          <span class="exp-tag">Amazon Alexa</span>
+          <span class="exp-tag">Golang</span>
+          <span class="exp-tag">sentiment analysis</span>
+        </div>
+      </div>
+
+      <!-- Cobalt Speech -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Research Scientist / Software Developer</div>
+            <div class="exp-company">Cobalt Speech and Language</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">July 2015 — September 2018</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Trained custom domain-specific language models for use with the open-source Kaldi ASR engine.</li>
+          <li>Developed production ASR engine extension of Kaldi (C++ code).</li>
+          <li>Wrote and adapted Perl, Python, and Bash scripts to clean and prepare large datasets — core data management work at production scale.</li>
+          <li>Generated specialty sub-domain language models by writing context-free grammar rules and compiling them with Thrax.</li>
+          <li>Acted as liaison with clients; translated language data requirements into pipeline specifications.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">Kaldi</span>
+          <span class="exp-tag">C++</span>
+          <span class="exp-tag">Python</span>
+          <span class="exp-tag">Perl</span>
+          <span class="exp-tag">Bash</span>
+          <span class="exp-tag">Thrax</span>
+          <span class="exp-tag">language modeling</span>
+        </div>
+      </div>
+
+      <!-- Independent Research -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Independent NLP Researcher</div>
+            <div class="exp-company">Independent (dedicated R&amp;D phase)</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">November 2008 — 2015</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Developed omni-directional natural language parser and generator, integrating heterogeneous reasoning techniques including logical constraints and probabilistic inference.</li>
+          <li>Developed novel smoothing technique and a more effective variant of logistic regression for text classification — later applied in production annotation automation work.</li>
+          <li>Developed a framework for interactive ML, directly applicable to managing and improving language data annotation workflows.</li>
+        </ul>
+        <div class="exp-tags">
+          <span class="exp-tag">Mozart/Oz</span>
+          <span class="exp-tag">JuliaLang</span>
+          <span class="exp-tag">interactive ML</span>
+          <span class="exp-tag">annotation automation</span>
+        </div>
+      </div>
+
+      <!-- University of Brighton -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Research Fellow</div>
+            <div class="exp-company">University of Brighton</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">June 2007 — November 2008</div>
+            <div class="exp-location">UK</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Developed a template realizer for the REG (Referring Expression Generation) Challenge.</li>
+          <li>Compared manual and semi-automatic techniques for generating text from structured data (weather forecasts, Wikipedia fact tables).</li>
+        </ul>
+      </div>
+
+      <!-- BYU Professor -->
+      <div class="exp-card">
+        <div class="exp-header">
+          <div>
+            <div class="exp-title">Assistant Professor</div>
+            <div class="exp-company">Brigham Young University</div>
+          </div>
+          <div class="exp-meta">
+            <div class="exp-dates">December 2002 — August 2006</div>
+            <div class="exp-location">UT</div>
+          </div>
+        </div>
+        <ul class="exp-bullets">
+          <li>Taught CS 330 Programming Languages, CS 470 Artificial Intelligence, CS 601R Natural Language Processing.</li>
+          <li>Supervised three Masters theses: Dan Su (2004), Thomas Packer (2006), and Robert Van Dam (2007) — topics spanning machine translation, surface realization, and large-dataset ML.</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PROJECTS — LIGHT (alternating back)
+     ============================================================ -->
+<section id="projects" class="section-light">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 03 — projects</div>
+      <h2>Selected Work</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="projects-grid">
+
+      <!-- Project 1: Probabilistic Word Embeddings (Aktify) -->
+      <div class="proj-card">
+        <div class="proj-visual">
+          <!-- Data pipeline / embedding space SVG -->
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-d)"></rect>
+            <!-- Token nodes flowing through pipeline stages -->
+            <!-- Stage labels -->
+            <text x="48" y="20" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8" opacity="0.7" text-anchor="middle">CRAWL</text>
+            <text x="148" y="20" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8" opacity="0.7" text-anchor="middle">PARSE</text>
+            <text x="252" y="20" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8" opacity="0.7" text-anchor="middle">EMBED</text>
+            <text x="352" y="20" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8" opacity="0.7" text-anchor="middle">INFER</text>
+            <!-- Stage boxes -->
+            <rect x="10" y="25" width="76" height="36" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.7"></rect>
+            <text x="48" y="39" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="9" text-anchor="middle" font-weight="bold">2.4T</text>
+            <text x="48" y="52" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" text-anchor="middle" opacity="0.7">tokens</text>
+            <rect x="110" y="25" width="76" height="36" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.7"></rect>
+            <text x="148" y="39" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="9" text-anchor="middle" font-weight="bold">DEP</text>
+            <text x="148" y="52" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" text-anchor="middle" opacity="0.7">parsed</text>
+            <rect x="214" y="25" width="76" height="36" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.7"></rect>
+            <text x="252" y="39" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="9" text-anchor="middle" font-weight="bold">P(w|ctx)</text>
+            <text x="252" y="52" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" text-anchor="middle" opacity="0.7">prob. emb.</text>
+            <rect x="314" y="25" width="76" height="36" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.7"></rect>
+            <text x="352" y="39" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="9" text-anchor="middle" font-weight="bold">INTENT</text>
+            <text x="352" y="52" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" text-anchor="middle" opacity="0.7">detection</text>
+            <!-- Arrows -->
+            <line x1="88" y1="43" x2="108" y2="43" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.6"></line>
+            <polygon points="106,39 112,43 106,47" style="fill: var(--iw-color-a)" opacity="0.6"></polygon>
+            <line x1="188" y1="43" x2="212" y2="43" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.6"></line>
+            <polygon points="210,39 216,43 210,47" style="fill: var(--iw-color-a)" opacity="0.6"></polygon>
+            <line x1="292" y1="43" x2="312" y2="43" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.6"></line>
+            <polygon points="310,39 316,43 310,47" style="fill: var(--iw-color-a)" opacity="0.6"></polygon>
+            <!-- Embedding scatter plot -->
+            <text x="20" y="88" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8" opacity="0.7">embedding space (2D projection):</text>
+            <!-- Cluster 1 (red) -->
+            <circle cx="60" cy="118" r="3" style="fill: var(--iw-color-b)" opacity="0.8"></circle>
+            <circle cx="74" cy="112" r="3" style="fill: var(--iw-color-b)" opacity="0.8"></circle>
+            <circle cx="68" cy="128" r="3" style="fill: var(--iw-color-b)" opacity="0.8"></circle>
+            <circle cx="82" cy="122" r="3" style="fill: var(--iw-color-b)" opacity="0.8"></circle>
+            <circle cx="55" cy="108" r="3" style="fill: var(--iw-color-b)" opacity="0.8"></circle>
+            <ellipse cx="68" cy="118" rx="20" ry="14" fill="none" style="stroke: var(--iw-color-b)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.5"></ellipse>
+            <text x="68" y="146" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7" text-anchor="middle" opacity="0.9">intent-A</text>
+            <!-- Cluster 2 (blue) -->
+            <circle cx="180" cy="105" r="3" style="fill: var(--iw-color-a)" opacity="0.8"></circle>
+            <circle cx="194" cy="115" r="3" style="fill: var(--iw-color-a)" opacity="0.8"></circle>
+            <circle cx="170" cy="120" r="3" style="fill: var(--iw-color-a)" opacity="0.8"></circle>
+            <circle cx="188" cy="100" r="3" style="fill: var(--iw-color-a)" opacity="0.8"></circle>
+            <circle cx="202" cy="108" r="3" style="fill: var(--iw-color-a)" opacity="0.8"></circle>
+            <ellipse cx="185" cy="110" rx="22" ry="14" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.5"></ellipse>
+            <text x="185" y="134" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" text-anchor="middle" opacity="0.9">intent-B</text>
+            <!-- Cluster 3 (pale) -->
+            <circle cx="310" cy="115" r="3" style="fill: var(--iw-color-c)" opacity="0.7"></circle>
+            <circle cx="326" cy="108" r="3" style="fill: var(--iw-color-c)" opacity="0.7"></circle>
+            <circle cx="318" cy="128" r="3" style="fill: var(--iw-color-c)" opacity="0.7"></circle>
+            <circle cx="300" cy="120" r="3" style="fill: var(--iw-color-c)" opacity="0.7"></circle>
+            <circle cx="335" cy="120" r="3" style="fill: var(--iw-color-c)" opacity="0.7"></circle>
+            <ellipse cx="318" cy="118" rx="24" ry="14" fill="none" style="stroke: var(--iw-color-c)" stroke-width="0.8" stroke-dasharray="3,2" opacity="0.4"></ellipse>
+            <text x="318" y="142" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7" text-anchor="middle" opacity="0.8">intent-C</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-icon-row">
+            <span class="proj-emoji">🧠</span>
+            <span class="proj-dates">June 2021 — March 2022</span>
+          </div>
+          <div class="proj-title">Probabilistic Word Embeddings (Aktify)</div>
+          <div class="proj-desc">Novel probabilistic word embeddings trained on 2.4T tokens of parsed web-crawled data. The data engineering pipeline is as significant as the model — ingestion, parsing, and training at this scale required careful data management throughout.</div>
+          <ul class="proj-bullets">
+            <li>Designed and executed end-to-end pipeline on 2.4T-token web-crawled corpus.</li>
+            <li>Target application: multi-intent detection in conversational AI.</li>
+            <li>Contributed to dialog model and dialog management architecture design.</li>
+          </ul>
+          <div class="proj-tags">
+            <span class="proj-tag">Julia</span>
+            <span class="proj-tag">word embeddings</span>
+            <span class="proj-tag">data pipelines</span>
+            <span class="proj-tag">intent detection</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 2: Omni-Directional NL Parser -->
+      <div class="proj-card">
+        <div class="proj-visual">
+          <!-- Bidirectional parse/generate diagram -->
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-n)"></rect>
+            <!-- Central node -->
+            <circle cx="200" cy="85" r="30" fill="none" style="stroke: var(--iw-color-a)" stroke-width="2"></circle>
+            <text x="200" y="81" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" font-weight="bold">OMNI</text>
+            <text x="200" y="93" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" font-weight="bold">PARSER</text>
+            <!-- Rays / bidirectional connections -->
+            <!-- Top: logical -->
+            <line x1="200" y1="55" x2="200" y2="28" style="stroke: var(--iw-color-b)" stroke-width="1.5" opacity="0.8"></line>
+            <polygon points="196,30 200,22 204,30" style="fill: var(--iw-color-b)" opacity="0.8"></polygon>
+            <text x="200" y="16" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="8">logical constraints</text>
+            <!-- Bottom: probabilistic -->
+            <line x1="200" y1="115" x2="200" y2="142" style="stroke: var(--iw-color-b)" stroke-width="1.5" opacity="0.8"></line>
+            <polygon points="196,140 200,148 204,140" style="fill: var(--iw-color-b)" opacity="0.8"></polygon>
+            <text x="200" y="158" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="8">probabilistic inference</text>
+            <!-- Left: parse -->
+            <line x1="170" y1="85" x2="95" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.7"></line>
+            <polygon points="97,81 89,85 97,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <polygon points="163,81 171,85 163,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <text x="48" y="82" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="8">PARSE</text>
+            <text x="48" y="92" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7">text→struct</text>
+            <!-- Right: generate -->
+            <line x1="230" y1="85" x2="305" y2="85" style="stroke: var(--iw-color-c)" stroke-width="1.5" opacity="0.6"></line>
+            <polygon points="303,81 311,85 303,89" style="fill: var(--iw-color-c)" opacity="0.6"></polygon>
+            <polygon points="237,81 229,85 237,89" style="fill: var(--iw-color-c)" opacity="0.6"></polygon>
+            <text x="350" y="82" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8">GEN</text>
+            <text x="350" y="92" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7">struct→text</text>
+            <!-- Smoothing annotation label -->
+            <rect x="10" y="130" width="150" height="28" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="0.8" opacity="0.5"></rect>
+            <text x="85" y="142" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7" opacity="0.9">novel smoothing technique</text>
+            <text x="85" y="153" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7" opacity="0.9">for POS + dep. parsing</text>
+            <!-- Interactive ML annotation -->
+            <rect x="240" y="130" width="150" height="28" rx="3" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.8" opacity="0.5"></rect>
+            <text x="315" y="142" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" opacity="0.9">interactive ML</text>
+            <text x="315" y="153" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" opacity="0.9">annotation framework</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-icon-row">
+            <span class="proj-emoji">🌐</span>
+            <span class="proj-dates">November 2008 — 2015</span>
+          </div>
+          <div class="proj-title">Omni-Directional Natural Language Parser &amp; Generator</div>
+          <div class="proj-desc">A multi-year independent R&amp;D project producing novel annotation automation techniques directly applicable to managing and improving language data annotation workflows.</div>
+          <ul class="proj-bullets">
+            <li>Integrated logical constraints and probabilistic inference in a single framework.</li>
+            <li>Novel smoothing technique for p-o-s tagging and dependency parsing.</li>
+            <li>Framework for interactive ML and semi-supervised annotation automation.</li>
+          </ul>
+          <div class="proj-tags">
+            <span class="proj-tag">Mozart/Oz</span>
+            <span class="proj-tag">JuliaLang</span>
+            <span class="proj-tag">annotation automation</span>
+            <span class="proj-tag">interactive ML</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 3: AI Portfolio Website Generator -->
+      <div class="proj-card">
+        <div class="proj-visual">
+          <!-- Resume-to-website pipeline diagram -->
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-d)"></rect>
+            <!-- Input doc icon -->
+            <rect x="18" y="45" width="64" height="80" rx="3" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1.2" opacity="0.6"></rect>
+            <line x1="28" y1="65" x2="72" y2="65" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+            <line x1="28" y1="75" x2="72" y2="75" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+            <line x1="28" y1="85" x2="60" y2="85" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+            <line x1="28" y1="95" x2="65" y2="95" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+            <line x1="28" y1="105" x2="55" y2="105" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+            <text x="50" y="40" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" opacity="0.7">RESUME</text>
+            <!-- Arrow 1 -->
+            <line x1="84" y1="85" x2="118" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.7"></line>
+            <polygon points="116,81 124,85 116,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <!-- AI box -->
+            <rect x="120" y="60" width="80" height="50" rx="4" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.5"></rect>
+            <text x="160" y="82" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="10" font-weight="bold">AI</text>
+            <text x="160" y="96" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7">generator</text>
+            <!-- pulsing circle decoration -->
+            <circle cx="160" cy="85" r="24" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.6" stroke-dasharray="4,3" opacity="0.35"></circle>
+            <circle cx="160" cy="85" r="34" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.4" stroke-dasharray="3,4" opacity="0.2"></circle>
+            <!-- Arrow 2 -->
+            <line x1="202" y1="85" x2="236" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.7"></line>
+            <polygon points="234,81 242,85 234,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <!-- Browser window output -->
+            <rect x="240" y="40" width="140" height="96" rx="4" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.8"></rect>
+            <rect x="240" y="40" width="140" height="18" rx="4" style="fill: var(--iw-color-b)" opacity="0.25"></rect>
+            <circle cx="252" cy="49" r="3" style="fill: var(--iw-color-f)" opacity="0.7"></circle>
+            <circle cx="263" cy="49" r="3" style="fill: var(--iw-color-g)" opacity="0.7"></circle>
+            <circle cx="274" cy="49" r="3" style="fill: var(--iw-color-e)" opacity="0.7"></circle>
+            <rect x="248" y="64" width="50" height="8" rx="2" style="fill: var(--iw-color-a)" opacity="0.4"></rect>
+            <rect x="248" y="78" width="120" height="4" rx="1" style="fill: var(--iw-color-c)" opacity="0.2"></rect>
+            <rect x="248" y="86" width="100" height="4" rx="1" style="fill: var(--iw-color-c)" opacity="0.2"></rect>
+            <rect x="248" y="94" width="114" height="4" rx="1" style="fill: var(--iw-color-c)" opacity="0.2"></rect>
+            <rect x="248" y="102" width="88" height="4" rx="1" style="fill: var(--iw-color-c)" opacity="0.2"></rect>
+            <rect x="248" y="118" width="60" height="10" rx="2" style="fill: var(--iw-color-b)" opacity="0.5"></rect>
+            <text x="278" y="127" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7">CONTACT</text>
+            <text x="310" y="40" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="8" opacity="0.7">PORTFOLIO</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-icon-row">
+            <span class="proj-emoji">🤖</span>
+            <span class="proj-dates">August 2025 — present</span>
+          </div>
+          <div class="proj-title">AI-Powered Portfolio Website Generator</div>
+          <div class="proj-desc">End-to-end independent product delivery: a service that ingests a resume and generates a complete portfolio website using AI. A data-in, structured-output-out system built and shipped independently.</div>
+          <ul class="proj-bullets">
+            <li>Independently built and launched; service ingests a resume and outputs a generated portfolio.</li>
+            <li>Demonstrates full product lifecycle from spec to deployed service.</li>
+          </ul>
+          <div class="proj-tags">
+            <span class="proj-tag">AI</span>
+            <span class="proj-tag">GitHub</span>
+          </div>
+          <div class="proj-links">
+            <a class="proj-link" href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">🔗 Live Demo</a>
+            <a class="proj-link" href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">📦 GitHub</a>
+            <a class="proj-link" href="https://example.com/ilene-langley" target="_blank" rel="noopener">🌐 Site</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 4: Custom Dialog Manager (Lifepod) -->
+      <div class="proj-card">
+        <div class="proj-visual">
+          <!-- Dialog flow architecture SVG -->
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-n)"></rect>
+            <!-- Dialog manager boxes -->
+            <!-- User utterance -->
+            <rect x="14" y="68" width="72" height="34" rx="3" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1" opacity="0.6"></rect>
+            <text x="50" y="82" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7.5">User</text>
+            <text x="50" y="92" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7.5">Utterance</text>
+            <!-- Arrow -->
+            <line x1="88" y1="85" x2="106" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.2" opacity="0.6"></line>
+            <polygon points="104,81 110,85 104,89" style="fill: var(--iw-color-a)" opacity="0.6"></polygon>
+            <!-- Syntactic API -->
+            <rect x="108" y="58" width="80" height="54" rx="3" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.2"></rect>
+            <text x="148" y="78" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" font-weight="bold">SYNTACTIC</text>
+            <text x="148" y="88" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7">ANALYSIS</text>
+            <text x="148" y="100" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7">API</text>
+            <!-- Arrow -->
+            <line x1="190" y1="85" x2="208" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.2" opacity="0.6"></line>
+            <polygon points="206,81 212,85 206,89" style="fill: var(--iw-color-a)" opacity="0.6"></polygon>
+            <!-- Intent classifier -->
+            <rect x="210" y="58" width="80" height="54" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.5"></rect>
+            <text x="250" y="76" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7" font-weight="bold">CUSTOM</text>
+            <text x="250" y="86" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7">INTENT</text>
+            <text x="250" y="96" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7">DETECT</text>
+            <!-- Arrow -->
+            <line x1="292" y1="85" x2="310" y2="85" style="stroke: var(--iw-color-b)" stroke-width="1.2" opacity="0.6"></line>
+            <polygon points="308,81 314,85 308,89" style="fill: var(--iw-color-b)" opacity="0.6"></polygon>
+            <!-- Dialog manager -->
+            <rect x="312" y="55" width="74" height="60" rx="3" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1.2" opacity="0.7"></rect>
+            <text x="349" y="78" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7" font-weight="bold">DIALOG</text>
+            <text x="349" y="88" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7">MANAGER</text>
+            <text x="349" y="100" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6" opacity="0.7">(patentable)</text>
+            <!-- Proactive routines labels -->
+            <text x="200" y="135" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7.5" opacity="0.8">proactive routine management · Golang batch tester</text>
+            <!-- Alexa / Dialogflow badges -->
+            <rect x="16" y="118" width="80" height="18" rx="2" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.8" opacity="0.4"></rect>
+            <text x="56" y="130" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" opacity="0.8">Google Dialogflow</text>
+            <rect x="105" y="118" width="80" height="18" rx="2" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.8" opacity="0.4"></rect>
+            <text x="145" y="130" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" opacity="0.8">Amazon Alexa</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-icon-row">
+            <span class="proj-emoji">💬</span>
+            <span class="proj-dates">January 2019 — June 2021</span>
+          </div>
+          <div class="proj-title">Custom Dialog Manager — Lifepod</div>
+          <div class="proj-desc">Production NLP system built end-to-end. Custom intent-detection logic layered on syntactic analysis APIs for more accurate sentiment classification. A batch testing harness in Golang provides systematic evaluation at production scale.</div>
+          <ul class="proj-bullets">
+            <li>Architected proactive routine management with patentable innovations.</li>
+            <li>Custom intent-detection on dep. parse APIs; outperformed ML-only sentiment scoring.</li>
+            <li>Batch testing harness (Golang) for systematic data quality evaluation.</li>
+          </ul>
+          <div class="proj-tags">
+            <span class="proj-tag">Google Dialogflow</span>
+            <span class="proj-tag">Amazon Alexa</span>
+            <span class="proj-tag">Golang</span>
+            <span class="proj-tag">sentiment analysis</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Project 5: REG Challenge -->
+      <div class="proj-card">
+        <div class="proj-visual">
+          <!-- Text-from-data generation diagram -->
+          <svg viewBox="0 0 400 170" xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" aria-hidden="true">
+            <rect width="400" height="170" style="fill: var(--iw-color-d)"></rect>
+            <!-- Data table -->
+            <rect x="14" y="30" width="110" height="110" rx="3" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1" opacity="0.5"></rect>
+            <text x="69" y="22" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7.5" opacity="0.7">structured data</text>
+            <rect x="14" y="30" width="110" height="16" rx="3" style="fill: var(--iw-color-b)" opacity="0.2"></rect>
+            <text x="40" y="42" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7.5" opacity="0.9">field</text>
+            <text x="90" y="42" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7.5" opacity="0.9">value</text>
+            <line x1="14" y1="46" x2="124" y2="46" style="stroke: var(--iw-color-c)" stroke-width="0.6" opacity="0.2"></line>
+            <text x="28" y="59" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">location</text>
+            <text x="78" y="59" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">Brighton</text>
+            <text x="28" y="71" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">temp</text>
+            <text x="78" y="71" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">14°C</text>
+            <text x="28" y="83" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">wind</text>
+            <text x="78" y="83" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">SW 12mph</text>
+            <text x="28" y="95" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">precip</text>
+            <text x="78" y="95" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.6">60%</text>
+            <!-- Arrow -->
+            <line x1="126" y1="85" x2="148" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.7"></line>
+            <polygon points="146,81 152,85 146,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <!-- Methods comparison -->
+            <rect x="150" y="42" width="90" height="26" rx="3" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1.2"></rect>
+            <text x="195" y="56" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7" font-weight="bold">MANUAL</text>
+            <text x="195" y="65" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="6.5">templates</text>
+            <rect x="150" y="76" width="90" height="26" rx="3" fill="none" style="stroke: var(--iw-color-a)" stroke-width="1.2"></rect>
+            <text x="195" y="90" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="7" font-weight="bold">SEMI-AUTO</text>
+            <text x="195" y="99" text-anchor="middle" style="fill: var(--iw-color-a)" font-family="Courier New" font-size="6.5">realizer</text>
+            <rect x="150" y="110" width="90" height="26" rx="3" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1" opacity="0.5"></rect>
+            <text x="195" y="124" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7" opacity="0.8">COMPARISON</text>
+            <text x="195" y="133" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.7">tradeoffs</text>
+            <!-- Arrow 2 -->
+            <line x1="242" y1="85" x2="262" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.7"></line>
+            <polygon points="260,81 266,85 260,89" style="fill: var(--iw-color-a)" opacity="0.7"></polygon>
+            <!-- Output text balloon -->
+            <rect x="265" y="45" width="118" height="80" rx="5" fill="none" style="stroke: var(--iw-color-c)" stroke-width="1" opacity="0.5"></rect>
+            <text x="324" y="38" text-anchor="middle" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="7.5" opacity="0.7">generated text</text>
+            <text x="275" y="63" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.7">"In Brighton, expect</text>
+            <text x="275" y="74" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.7"> cool conditions with</text>
+            <text x="275" y="85" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.7"> SW winds and a 60%</text>
+            <text x="275" y="96" style="fill: var(--iw-color-c)" font-family="Courier New" font-size="6.5" opacity="0.7"> chance of rain..."</text>
+            <text x="324" y="150" text-anchor="middle" style="fill: var(--iw-color-b)" font-family="Courier New" font-size="7.5">REG Challenge · 2007–2008</text>
+          </svg>
+        </div>
+        <div class="proj-body">
+          <div class="proj-icon-row">
+            <span class="proj-emoji">📄</span>
+            <span class="proj-dates">June 2007 — November 2008</span>
+          </div>
+          <div class="proj-title">REG Challenge Template Realizer</div>
+          <div class="proj-desc">A research contribution comparing manual and semi-automatic text-from-data generation methods across real-world domains — directly relevant to evaluating data annotation approaches and automation tradeoffs.</div>
+          <ul class="proj-bullets">
+            <li>Developed template realizer for the Referring Expression Generation Challenge.</li>
+            <li>Compared manual and semi-automatic techniques for generating text from weather forecasts and Wikipedia fact tables.</li>
+          </ul>
+          <div class="proj-tags">
+            <span class="proj-tag">NLG</span>
+            <span class="proj-tag">text generation</span>
+            <span class="proj-tag">annotation evaluation</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS — DARK (alternating)
+     ============================================================ -->
+<section id="skills" class="section-dark">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 04 — skills</div>
+      <h2>Technical Skills</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="skills-grid">
+
+      <div class="skill-group">
+        <div class="skill-group-label">🔬 NLP &amp; AI Domains</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Natural Language Processing</span>
+          <span class="skill-chip">Automatic Speech Recognition</span>
+          <span class="skill-chip">Conversational AI</span>
+          <span class="skill-chip">Natural Language Generation</span>
+          <span class="skill-chip">Language Modeling</span>
+          <span class="skill-chip">Machine Learning</span>
+          <span class="skill-chip">Sentiment Analysis</span>
+          <span class="skill-chip">Information Extraction</span>
+          <span class="skill-chip">Machine Translation</span>
+          <span class="skill-chip">Dialog Management</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">⚙️ Methods &amp; Models</div>
+        <div class="skill-chips">
+          <span class="skill-chip">POS Tagging</span>
+          <span class="skill-chip">Dependency Parsing</span>
+          <span class="skill-chip">Word Embeddings</span>
+          <span class="skill-chip">Logistic / Probabilistic Regression</span>
+          <span class="skill-chip">Semi-supervised Interactive ML</span>
+          <span class="skill-chip">K-means Clustering</span>
+          <span class="skill-chip">Naive Bayes</span>
+          <span class="skill-chip">Decision Trees</span>
+          <span class="skill-chip">Context-free Grammar Rules</span>
+          <span class="skill-chip">Annotation Automation</span>
+          <span class="skill-chip">Text Classification</span>
+          <span class="skill-chip">Data Pipeline Design</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">💻 Programming Languages</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Python</span>
+          <span class="skill-chip">Julia</span>
+          <span class="skill-chip">Golang</span>
+          <span class="skill-chip">C / C++</span>
+          <span class="skill-chip">Perl</span>
+          <span class="skill-chip">Bash</span>
+          <span class="skill-chip">Lisp</span>
+          <span class="skill-chip">JavaScript</span>
+          <span class="skill-chip">HTML</span>
+          <span class="skill-chip">CSS</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-label">🛠️ Tools &amp; Platforms</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Stanford CoreNLP</span>
+          <span class="skill-chip">NLTK</span>
+          <span class="skill-chip">SpaCy</span>
+          <span class="skill-chip">GATE</span>
+          <span class="skill-chip">Kaldi</span>
+          <span class="skill-chip">Thrax</span>
+          <span class="skill-chip">AWS Comprehend</span>
+          <span class="skill-chip">AWS Sagemaker</span>
+          <span class="skill-chip">AWS EC2 / S3 / Athena</span>
+          <span class="skill-chip">Google Dialogflow</span>
+          <span class="skill-chip">Amazon Alexa / Lex</span>
+          <span class="skill-chip">Rasa</span>
+          <span class="skill-chip">TensorFlow</span>
+          <span class="skill-chip">Git</span>
+          <span class="skill-chip">MySQL</span>
+          <span class="skill-chip">Jenkins</span>
+          <span class="skill-chip">Datadog</span>
+          <span class="skill-chip">Mozart/Oz</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     PATENTS & AWARDS — LIGHT (alternating back)
+     ============================================================ -->
+<section id="honors" class="section-light">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 05 — recognition</div>
+      <h2>Patents &amp; Awards</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="honors-grid">
+
+      <div class="honor-card">
+        <div class="honor-emoji">🏆</div>
+        <div class="honor-title">Test of Time Award</div>
+        <div class="honor-issuer">Association for Computational Linguistics (ACL)</div>
+        <div class="honor-date">July 2023</div>
+        <div class="honor-desc">Awarded for a 1998 paper — recognition that research published 25 years prior remains foundational to the field.</div>
+      </div>
+
+      <div class="honor-card">
+        <div class="honor-emoji">📋</div>
+        <div class="honor-title">Patent US&nbsp;6,751,591</div>
+        <div class="honor-issuer">United States Patent and Trademark Office</div>
+        <div class="honor-date">June 15, 2004</div>
+        <div class="honor-desc">Method and System for Predicting Understanding Errors in a Task Classification System.</div>
+      </div>
+
+      <div class="honor-card">
+        <div class="honor-emoji">🎓</div>
+        <div class="honor-title">Dean's Merit Fellowship for Doctoral Studies</div>
+        <div class="honor-issuer">University of Southern California</div>
+        <div class="honor-date">1995</div>
+      </div>
+
+      <div class="honor-card">
+        <div class="honor-emoji">✨</div>
+        <div class="honor-title">National Merit Scholarship</div>
+        <div class="honor-issuer">Brigham Young University</div>
+        <div class="honor-date">1989</div>
+      </div>
+
+      <div class="honor-card">
+        <div class="honor-emoji">🏅</div>
+        <div class="honor-title">Graduated cum laude</div>
+        <div class="honor-issuer">Brigham Young University — B.S. Computer Science</div>
+        <div class="honor-date">1995</div>
+      </div>
+
+      <div class="honor-card">
+        <div class="honor-emoji">📚</div>
+        <div class="honor-title">Publications</div>
+        <div class="honor-issuer">Academic research record in NLP</div>
+        <div class="honor-desc">Full list of publications available upon request. Includes the ACL Test of Time–awarded 1998 paper.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION — DARK (alternating)
+     ============================================================ -->
+<section id="education" class="section-dark">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 06 — education</div>
+      <h2>Academic Background</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="edu-list">
+
+      <div class="edu-card">
+        <div>
+          <div class="edu-degree">Ph.D., Computer Science</div>
+          <div class="edu-institution">University of Southern California</div>
+          <div class="edu-thesis">
+            <span class="edu-thesis-label">Thesis: </span>
+            Automatic Sentence Generation Using a Hybrid Statistical Model of Lexical Collocations and Syntactic Relations
+          </div>
+        </div>
+        <div class="edu-year">2002</div>
+      </div>
+
+      <div class="edu-card">
+        <div>
+          <div class="edu-degree">M.S., Computer Science</div>
+          <div class="edu-institution">University of Southern California</div>
+        </div>
+        <div class="edu-year">1999</div>
+      </div>
+
+      <div class="edu-card">
+        <div>
+          <div class="edu-degree">B.S., Computer Science</div>
+          <div class="edu-institution">Brigham Young University</div>
+          <div class="edu-honors">cum laude</div>
+        </div>
+        <div class="edu-year">1995</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT / RESUME CTA — LIGHT (alternating back)
+     ============================================================ -->
+<section id="contact" class="section-light">
+  <div class="container">
+    <div class="section-header">
+      <div class="section-label">// 07 — contact</div>
+      <h2>Get in Touch</h2>
+      <div class="underline-bar"></div>
+    </div>
+
+    <div class="contact-grid">
+
+      <div class="contact-info">
+
+        <div class="contact-row">
+          <span class="contact-icon">📧</span>
+          <div>
+            <div class="contact-label">Email</div>
+            <div class="contact-value"><a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a></div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <span class="contact-icon">📞</span>
+          <div>
+            <div class="contact-label">Phone</div>
+            <div class="contact-value"><a href="tel:+15550101100">(555) 010-1100</a></div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <span class="contact-icon">🌐</span>
+          <div>
+            <div class="contact-label">Portfolio</div>
+            <div class="contact-value"><a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">example.com/ilene-langley/portfolio</a></div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <span class="contact-icon">📦</span>
+          <div>
+            <div class="contact-label">GitHub</div>
+            <div class="contact-value"><a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener">example.com/ilene-langley</a></div>
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <span class="contact-icon">🏢</span>
+          <div>
+            <div class="contact-label">Company Site</div>
+            <div class="contact-value"><a href="https://example.com/ilene-langley" target="_blank" rel="noopener">example.com</a></div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="contact-cta-panel">
+        <div>
+          <div class="term-bar" style="border-radius:4px 4px 0 0; margin: -36px -32px 20px -32px;">
+            <span class="dot dot-r"></span>
+            <span class="dot dot-y"></span>
+            <span class="dot dot-g"></span>
+            <span class="label">ilene_langley.resume</span>
+          </div>
+        </div>
+        <div class="cta-panel-heading">Ready to manage language data at scale.</div>
+        <div class="cta-panel-sub">
+          Open to Data Manager or NLP Data roles where large-scale language data, annotation automation, or ML-driven text pipelines are central. Remote, contract, or full-time.
+        </div>
+        <div class="cta-panel-sub" style="margin-top: -6px;">
+          Ph.D. Computer Science · ACL Test of Time Award · Patent Holder · 20+ years NLP experience.
+        </div>
+        <div class="cta-btns">
+          <a href="mailto:ilene.langley@example.com" class="btn-primary" style="text-align:center;">📧 Send Email</a>
+          <a href="https://example.com/ilene-langley/portfolio" target="_blank" rel="noopener" class="btn-secondary" style="text-align:center;">🔗 View Full Portfolio</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <p>
+    © 2026 Ilene Langley &nbsp;·&nbsp;
+    NLP Scientist &amp; Engineer &nbsp;·&nbsp;
+    <a href="mailto:ilene.langley@example.com">ilene.langley@example.com</a>
+    &nbsp;·&nbsp;
+    <a href="https://example.com/ilene-langley" target="_blank" rel="noopener">example.com</a>
+  </p>
+</footer>
+
+
+</body></html>

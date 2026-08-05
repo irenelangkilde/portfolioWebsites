@@ -1,0 +1,1709 @@
+<html lang="en" style="--background: #1a1a1d; --quinary: #1a1a1d; --bp-slot5: #1a1a1d; --bp-slot-5: #1a1a1d; --slot5: #1a1a1d; --slot-5: #1a1a1d; --bp-accent1: #1a1a1d; --accent1: #1a1a1d; --foreground: #ffbe0b; --quaternary: #ffbe0b; --bp-slot4: #ffbe0b; --bp-slot-4: #ffbe0b; --slot4: #ffbe0b; --slot-4: #ffbe0b; --bp-accent2: #ffbe0b; --accent2: #ffbe0b; --primary: #023e8a; --dominant: #023e8a; --bp-slot1: #023e8a; --bp-slot-1: #023e8a; --slot1: #023e8a; --slot-1: #023e8a; --bp-primary: #023e8a; --secondary: #8338ec; --bp-slot2: #8338ec; --bp-slot-2: #8338ec; --slot2: #8338ec; --slot-2: #8338ec; --bp-secondary: #8338ec; --accent: #fb5607; --tertiary: #fb5607; --bp-slot3: #fb5607; --bp-slot-3: #fb5607; --slot3: #fb5607; --slot-3: #fb5607; --bp-tertiary: #fb5607"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Keller — Instructional Designer &amp; Training Specialist</title>
+<style>
+/* ============================================================
+   ROOT: SEMANTIC COLOR VARIABLES
+   ============================================================ */
+:root {
+  /* Anchor colors */
+  --c-1: var(--iw-color-d);   /* deep navy */
+  --c-2: var(--iw-color-c);   /* vivid purple */
+  --c-3: var(--iw-color-a);   /* bright orange */
+  --c-4: var(--iw-color-b);   /* warm yellow */
+  --c-5: var(--iw-color-e);   /* near-black */
+
+  /* Derived neutrals */
+  --white: var(--iw-color-f);
+  --off-white: var(--iw-color-g);
+  --light-gray: var(--iw-color-h);
+  --mid-gray: var(--iw-color-i);
+  --text-muted: color-mix(in oklch, var(--c-5) 55%, var(--white));
+  --text-body: color-mix(in oklch, var(--c-5) 90%, var(--white));
+  --border-light: color-mix(in oklch, var(--c-2) 18%, var(--white));
+  --border-card: color-mix(in oklch, var(--c-2) 22%, var(--white));
+
+  /* Surface tokens */
+  --surface-primary: var(--off-white);
+  --surface-card: var(--white);
+  --surface-dark: var(--c-5);
+  --surface-navy: var(--c-1);
+  --surface-purple: color-mix(in oklch, var(--c-2) 85%, var(--c-5));
+  --surface-alt: color-mix(in oklch, var(--c-1) 96%, var(--white));
+
+  /* Chip tokens */
+  --chip-bg: color-mix(in oklch, var(--c-2) 12%, var(--white));
+  --chip-text: color-mix(in oklch, var(--c-2) 90%, var(--c-5));
+  --chip-border: color-mix(in oklch, var(--c-2) 30%, var(--white));
+
+  --chip-orange-bg: color-mix(in oklch, var(--c-3) 12%, var(--white));
+  --chip-orange-text: color-mix(in oklch, var(--c-3) 90%, var(--c-5));
+  --chip-orange-border: color-mix(in oklch, var(--c-3) 35%, var(--white));
+
+  --chip-yellow-bg: color-mix(in oklch, var(--c-4) 22%, var(--white));
+  --chip-yellow-text: color-mix(in oklch, var(--c-4) 60%, var(--c-5));
+  --chip-yellow-border: color-mix(in oklch, var(--c-4) 50%, var(--white));
+
+  /* Shadow tokens */
+  --shadow-sm: 0 2px 8px color-mix(in oklch, var(--c-2) 14%, transparent);
+  --shadow-md: 0 6px 24px color-mix(in oklch, var(--c-2) 18%, transparent);
+  --shadow-lg: 0 12px 48px color-mix(in oklch, var(--c-1) 22%, transparent);
+
+  /* Hero */
+  --hero-bg-image: none;
+
+  /* Typography */
+  --font-display: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+  --font-body: 'Segoe UI', Arial, sans-serif;
+  --font-accent: 'Georgia', serif;
+
+  /* Spacing */
+  --section-pad: 80px 24px;
+  --section-pad-sm: 56px 24px;
+  --max-w: 1100px;
+  --card-radius: 18px;
+  --chip-radius: 30px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--surface-primary);
+  color: var(--text-body);
+  line-height: 1.6;
+  font-size: 16px;
+  overflow-x: hidden;
+}
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+ul { list-style: none; }
+
+.container {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ============================================================
+   SECTION ALTERNATION
+   Even sections = light (--surface-primary)
+   Odd sections = dark (--surface-dark or --surface-navy)
+   Hero = special
+   ============================================================ */
+
+/* SECTION LABELS */
+.section-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: var(--chip-radius);
+  margin-bottom: 12px;
+}
+.section-label--light {
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1px solid var(--chip-border);
+}
+.section-label--dark {
+  background: color-mix(in oklch, var(--c-4) 18%, transparent);
+  color: var(--c-4);
+  border: 1px solid color-mix(in oklch, var(--c-4) 40%, transparent);
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: color-mix(in oklch, var(--white) 92%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1.5px solid var(--border-light);
+  padding: 0 24px;
+}
+.nav-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 60px;
+}
+.nav-logo {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--c-1);
+  letter-spacing: -0.02em;
+}
+.nav-logo span {
+  color: var(--c-3);
+}
+.nav-links {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: color 0.2s;
+  letter-spacing: 0.01em;
+}
+.nav-links a:hover { color: var(--c-2); }
+.nav-cta {
+  background: var(--c-3);
+  color: var(--white) !important;
+  padding: 8px 20px;
+  border-radius: 30px;
+  font-weight: 700 !important;
+  font-size: 13px !important;
+  transition: background 0.2s, transform 0.15s !important;
+}
+.nav-cta:hover {
+  background: color-mix(in oklch, var(--c-3) 80%, var(--c-5)) !important;
+  transform: translateY(-1px);
+}
+
+/* ============================================================
+   HERO — abstract_layered + fun
+   ============================================================ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--c-1) 0%, color-mix(in oklch, var(--c-2) 70%, var(--c-1)) 60%, color-mix(in oklch, var(--c-2) 50%, var(--c-5)) 100%),
+              var(--hero-bg-image) center/cover no-repeat;
+  padding-top: 60px;
+}
+
+/* Abstract layered shapes */
+.hero-shapes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-shapes svg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 80px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 28px;
+}
+
+/* Monogram */
+.monogram-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.monogram-ring {
+  position: absolute;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  border: 3px dashed color-mix(in oklch, var(--c-4) 50%, transparent);
+  animation: spin-slow 18s linear infinite;
+}
+.monogram-ring-2 {
+  position: absolute;
+  width: 172px;
+  height: 172px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in oklch, var(--c-3) 35%, transparent);
+  animation: spin-slow 28s linear infinite reverse;
+}
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.monogram {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-4) 0%, var(--c-3) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 36px;
+  font-weight: 900;
+  color: var(--white);
+  letter-spacing: -2px;
+  box-shadow: 0 8px 32px color-mix(in oklch, var(--c-3) 40%, transparent);
+  position: relative;
+  z-index: 1;
+}
+
+/* Status badges */
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+.hero-badge {
+  background: color-mix(in oklch, var(--white) 15%, transparent);
+  border: 1.5px solid color-mix(in oklch, var(--white) 30%, transparent);
+  color: var(--white);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 5px 14px;
+  border-radius: var(--chip-radius);
+  backdrop-filter: blur(4px);
+}
+
+.hero-headline {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 72px);
+  font-weight: 900;
+  color: var(--white);
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  max-width: 820px;
+}
+.hero-headline .accent {
+  color: var(--c-4);
+  position: relative;
+}
+.hero-headline .accent-2 {
+  color: var(--c-3);
+}
+
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px);
+  color: color-mix(in oklch, var(--white) 80%, transparent);
+  max-width: 620px;
+  line-height: 1.55;
+}
+
+.hero-ctas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 32px;
+  border-radius: 40px;
+  font-size: 15px;
+  font-weight: 700;
+  transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+  cursor: pointer;
+  border: none;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn--primary {
+  background: var(--c-3);
+  color: var(--white);
+  box-shadow: 0 4px 20px color-mix(in oklch, var(--c-3) 45%, transparent);
+}
+.btn--primary:hover {
+  background: color-mix(in oklch, var(--c-3) 85%, var(--c-5));
+  box-shadow: 0 8px 28px color-mix(in oklch, var(--c-3) 50%, transparent);
+}
+.btn--secondary {
+  background: color-mix(in oklch, var(--white) 15%, transparent);
+  color: var(--white);
+  border: 2px solid color-mix(in oklch, var(--white) 40%, transparent);
+  backdrop-filter: blur(4px);
+}
+.btn--secondary:hover {
+  background: color-mix(in oklch, var(--white) 22%, transparent);
+}
+
+/* Scroll indicator */
+.hero-scroll {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: color-mix(in oklch, var(--white) 55%, transparent);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.scroll-dot {
+  width: 22px;
+  height: 36px;
+  border: 2px solid color-mix(in oklch, var(--white) 35%, transparent);
+  border-radius: 12px;
+  position: relative;
+}
+.scroll-dot::after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  background: var(--c-4);
+  border-radius: 50%;
+  animation: scroll-bounce 1.8s ease-in-out infinite;
+}
+@keyframes scroll-bounce {
+  0%, 100% { top: 5px; opacity: 1; }
+  50% { top: 18px; opacity: 0.4; }
+}
+
+/* ============================================================
+   ABOUT (LIGHT — section 1)
+   ============================================================ */
+.section-about {
+  background: var(--surface-primary);
+  color: var(--text-body);
+  padding: var(--section-pad);
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.about-left h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 900;
+  color: var(--c-1);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.about-left h2 span {
+  color: var(--c-3);
+}
+.about-left p {
+  font-size: 16px;
+  color: var(--text-muted);
+  line-height: 1.75;
+  margin-bottom: 14px;
+}
+.about-left p strong {
+  color: var(--text-body);
+}
+.philosophy-card {
+  margin-top: 28px;
+  background: linear-gradient(135deg, var(--c-1) 0%, color-mix(in oklch, var(--c-2) 60%, var(--c-1)) 100%);
+  border-radius: var(--card-radius);
+  padding: 28px;
+  color: var(--white);
+}
+.philosophy-card h3 {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  margin-bottom: 10px;
+}
+.philosophy-card p {
+  font-size: 15px;
+  color: color-mix(in oklch, var(--white) 85%, transparent);
+  line-height: 1.65;
+  font-style: italic;
+}
+
+.about-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.strength-card {
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--card-radius);
+  padding: 22px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.strength-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.strength-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.strength-content h4 {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-1);
+  margin-bottom: 4px;
+}
+.strength-content p {
+  font-size: 13.5px;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   EXPERIENCE (DARK — section 2)
+   ============================================================ */
+.section-experience {
+  background: var(--c-5);
+  color: var(--white);
+  padding: var(--section-pad);
+}
+.section-experience .section-title {
+  color: var(--white);
+}
+.section-experience .section-title span {
+  color: var(--c-4);
+}
+.section-title {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 900;
+  color: var(--c-1);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 10px;
+}
+.section-title span { color: var(--c-3); }
+.section-intro {
+  font-size: 16px;
+  max-width: 600px;
+  margin-bottom: 48px;
+  line-height: 1.65;
+}
+.section-experience .section-intro {
+  color: color-mix(in oklch, var(--white) 65%, transparent);
+}
+
+/* Timeline layout */
+.timeline {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 28px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, var(--c-3), var(--c-2), var(--c-4));
+  border-radius: 3px;
+}
+.timeline-item {
+  position: relative;
+  padding-left: 80px;
+  padding-bottom: 48px;
+}
+.timeline-item:last-child { padding-bottom: 0; }
+.timeline-dot {
+  position: absolute;
+  left: 16px;
+  top: 4px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  z-index: 1;
+  flex-shrink: 0;
+  border: 3px solid var(--c-5);
+}
+.timeline-dot--primary {
+  background: var(--c-3);
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--c-3) 25%, transparent);
+}
+.timeline-dot--secondary {
+  background: var(--c-4);
+}
+.timeline-dot--tertiary {
+  background: var(--c-2);
+}
+
+.exp-card {
+  background: color-mix(in oklch, var(--white) 6%, transparent);
+  border: 1.5px solid color-mix(in oklch, var(--white) 12%, transparent);
+  border-radius: var(--card-radius);
+  padding: 28px 30px;
+  transition: border-color 0.2s, background 0.2s;
+}
+.exp-card:hover {
+  border-color: color-mix(in oklch, var(--c-3) 40%, transparent);
+  background: color-mix(in oklch, var(--white) 8%, transparent);
+}
+.exp-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.exp-title-block h3 {
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--white);
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.exp-company {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-4);
+}
+.exp-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 5px;
+}
+.exp-dates {
+  font-size: 13px;
+  color: color-mix(in oklch, var(--white) 50%, transparent);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+.exp-location {
+  font-size: 12px;
+  color: color-mix(in oklch, var(--white) 40%, transparent);
+}
+.exp-promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: color-mix(in oklch, var(--c-3) 20%, transparent);
+  border: 1.5px solid color-mix(in oklch, var(--c-3) 45%, transparent);
+  color: var(--c-3);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--chip-radius);
+  margin-bottom: 12px;
+}
+.exp-bullets {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.exp-bullets li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14.5px;
+  color: color-mix(in oklch, var(--white) 78%, transparent);
+  line-height: 1.6;
+}
+.exp-bullets li::before {
+  content: '→';
+  color: var(--c-3);
+  font-weight: 700;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Promo timeline visual */
+.promo-visual {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0;
+  padding: 14px 18px;
+  background: color-mix(in oklch, var(--c-4) 10%, transparent);
+  border: 1px solid color-mix(in oklch, var(--c-4) 30%, transparent);
+  border-radius: 12px;
+  flex-wrap: wrap;
+}
+.promo-step {
+  font-size: 12px;
+  font-weight: 700;
+  color: color-mix(in oklch, var(--white) 75%, transparent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.promo-step strong {
+  display: block;
+  font-size: 13px;
+  color: var(--c-4);
+  margin-bottom: 2px;
+}
+.promo-arrow {
+  color: var(--c-3);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+/* ============================================================
+   SKILLS (LIGHT — section 3)
+   ============================================================ */
+.section-skills {
+  background: var(--surface-primary);
+  color: var(--text-body);
+  padding: var(--section-pad);
+}
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+.skills-group {
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-card);
+  border-radius: var(--card-radius);
+  padding: 28px;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.skills-group:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.skills-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.skills-group-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.skills-group-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--c-1);
+  letter-spacing: -0.01em;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.chip {
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 5px 13px;
+  border-radius: var(--chip-radius);
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.chip--purple {
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  border: 1.5px solid var(--chip-border);
+}
+.chip--orange {
+  background: var(--chip-orange-bg);
+  color: var(--chip-orange-text);
+  border: 1.5px solid var(--chip-orange-border);
+}
+.chip--yellow {
+  background: var(--chip-yellow-bg);
+  color: color-mix(in oklch, var(--c-4) 50%, var(--c-5));
+  border: 1.5px solid var(--chip-yellow-border);
+}
+
+/* ============================================================
+   EDUCATION (DARK — section 4)
+   ============================================================ */
+.section-education {
+  background: linear-gradient(135deg, color-mix(in oklch, var(--c-1) 90%, var(--c-5)) 0%, color-mix(in oklch, var(--c-2) 60%, var(--c-5)) 100%);
+  color: var(--white);
+  padding: var(--section-pad);
+}
+.section-education .section-title {
+  color: var(--white);
+}
+.section-education .section-title span {
+  color: var(--c-4);
+}
+.section-education .section-intro {
+  color: color-mix(in oklch, var(--white) 65%, transparent);
+}
+.edu-card {
+  background: color-mix(in oklch, var(--white) 10%, transparent);
+  border: 1.5px solid color-mix(in oklch, var(--white) 20%, transparent);
+  border-radius: var(--card-radius);
+  padding: 40px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 40px;
+  align-items: center;
+  backdrop-filter: blur(4px);
+  max-width: 820px;
+  margin: 0 auto;
+}
+.edu-left h3 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.edu-left .degree {
+  font-size: 15px;
+  color: color-mix(in oklch, var(--white) 70%, transparent);
+  margin-bottom: 4px;
+}
+.edu-left .specialization {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--c-4);
+}
+.edu-badges {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.edu-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: color-mix(in oklch, var(--white) 8%, transparent);
+  border: 1px solid color-mix(in oklch, var(--white) 16%, transparent);
+  border-radius: 12px;
+}
+.edu-badge-icon { font-size: 22px; flex-shrink: 0; }
+.edu-badge-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--white);
+  line-height: 1.3;
+}
+.edu-badge-text span {
+  font-size: 11.5px;
+  font-weight: 500;
+  color: color-mix(in oklch, var(--white) 55%, transparent);
+  display: block;
+}
+
+/* ============================================================
+   CONTACT (LIGHT — section 5)
+   ============================================================ */
+.section-contact {
+  background: var(--surface-primary);
+  color: var(--text-body);
+  padding: var(--section-pad);
+}
+.contact-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+.contact-left h2 {
+  font-family: var(--font-display);
+  font-size: clamp(26px, 3.5vw, 40px);
+  font-weight: 900;
+  color: var(--c-1);
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+.contact-left h2 span { color: var(--c-3); }
+.contact-left p {
+  font-size: 15.5px;
+  color: var(--text-muted);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--surface-card);
+  border: 1.5px solid var(--border-card);
+  border-radius: 14px;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.18s, box-shadow 0.18s, border-color 0.18s;
+}
+.contact-link:hover {
+  transform: translateX(4px);
+  box-shadow: var(--shadow-md);
+  border-color: color-mix(in oklch, var(--c-2) 40%, var(--white));
+}
+.contact-link-icon { font-size: 22px; flex-shrink: 0; }
+.contact-link-info {}
+.contact-link-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.contact-link-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-1);
+}
+.contact-right {}
+.cta-card {
+  background: linear-gradient(135deg, var(--c-1) 0%, color-mix(in oklch, var(--c-2) 55%, var(--c-1)) 100%);
+  border-radius: var(--card-radius);
+  padding: 40px;
+  color: var(--white);
+  text-align: center;
+}
+.cta-card-icon { font-size: 42px; margin-bottom: 16px; line-height: 1; }
+.cta-card h3 {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--white);
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+.cta-card p {
+  font-size: 14.5px;
+  color: color-mix(in oklch, var(--white) 72%, transparent);
+  line-height: 1.65;
+  margin-bottom: 28px;
+}
+.btn--cta {
+  background: var(--c-3);
+  color: var(--white);
+  box-shadow: 0 4px 20px color-mix(in oklch, var(--c-3) 45%, transparent);
+  width: 100%;
+  justify-content: center;
+  font-size: 15px;
+  padding: 15px 24px;
+}
+.btn--cta:hover {
+  background: color-mix(in oklch, var(--c-3) 82%, var(--c-5));
+  box-shadow: 0 8px 28px color-mix(in oklch, var(--c-3) 50%, transparent);
+}
+.open-to-tag {
+  display: inline-block;
+  margin-top: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-4);
+  padding: 5px 16px;
+  border: 1.5px solid color-mix(in oklch, var(--c-4) 40%, transparent);
+  border-radius: var(--chip-radius);
+  background: color-mix(in oklch, var(--c-4) 12%, transparent);
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--c-5);
+  color: color-mix(in oklch, var(--white) 45%, transparent);
+  padding: 36px 24px;
+  text-align: center;
+}
+.footer-inner {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.footer-name {
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--white);
+}
+.footer-meta {
+  font-size: 13px;
+}
+.footer-cta {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--c-4);
+  transition: color 0.2s;
+}
+.footer-cta:hover { color: var(--c-3); }
+
+/* ============================================================
+   DECORATIVE ELEMENTS
+   ============================================================ */
+.section-deco {
+  position: absolute;
+  pointer-events: none;
+  overflow: visible;
+}
+.section-divider {
+  width: 60px;
+  height: 5px;
+  border-radius: 3px;
+  margin-bottom: 24px;
+}
+.divider--orange { background: linear-gradient(90deg, var(--c-3), var(--c-4)); }
+.divider--purple { background: linear-gradient(90deg, var(--c-2), var(--c-1)); }
+.divider--white  { background: linear-gradient(90deg, var(--c-4), var(--c-3)); }
+
+/* ============================================================
+   FUN STYLE — playful accents
+   ============================================================ */
+.fun-blob {
+  position: absolute;
+  border-radius: 60% 40% 70% 30% / 40% 60% 30% 70%;
+  opacity: 0.07;
+  pointer-events: none;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 860px) {
+  .about-grid,
+  .contact-inner,
+  .edu-card { grid-template-columns: 1fr; gap: 32px; }
+  .skills-grid { grid-template-columns: 1fr 1fr; }
+  .exp-header { flex-direction: column; }
+  .exp-meta { align-items: flex-start; }
+  .timeline::before { left: 18px; }
+  .timeline-dot { left: 6px; }
+  .timeline-item { padding-left: 58px; }
+  .nav-links { gap: 18px; }
+  .promo-visual { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .promo-arrow { display: none; }
+}
+@media (max-width: 600px) {
+  .skills-grid { grid-template-columns: 1fr; }
+  .nav-links a:not(.nav-cta) { display: none; }
+  .hero-headline { font-size: 34px; }
+  .footer-inner { flex-direction: column; text-align: center; }
+}
+</style>
+<!-- portfolio-editor-delivery:1785885095207:tqcz93o09af -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #fb5607;
+  --iw-original-a: #fb5607;
+  --iw-color-b: #ffbe0b;
+  --iw-original-b: #ffbe0b;
+  --iw-color-c: #8338ec;
+  --iw-original-c: #8338ec;
+  --iw-color-d: #023e8a;
+  --iw-original-d: #023e8a;
+  --iw-color-e: #1a1a1d;
+  --iw-original-e: #1a1a1d;
+  --iw-color-f: #ffffff;
+  --iw-original-f: #ffffff;
+  --iw-color-g: oklch(from var(--iw-color-f) calc(l - 0.0232) calc(c + 0.0045) calc(h - 11.6));
+  --iw-original-g: #f9f7f4;
+  --iw-color-h: oklch(from var(--iw-color-f) calc(l - 0.0484) calc(c + 0.0150) calc(h - 151.3));
+  --iw-original-h: #f0edf8;
+  --iw-color-i: oklch(from var(--iw-color-f) calc(l - 0.0929) calc(c + 0.0262) calc(h - 152.0));
+  --iw-original-i: #e2ddf0;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#fb5607",
+      "count": 7,
+      "chroma": 0.21249286389532268,
+      "score": 1.4874500472672587,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#ffbe0b",
+      "count": 6,
+      "chroma": 0.17092541372272607,
+      "score": 1.0255524823363564,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#8338ec",
+      "count": 3,
+      "chroma": 0.24783288225252648,
+      "score": 0.7434986467575795,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#023e8a",
+      "count": 1,
+      "chroma": 0.13864518959862657,
+      "score": 0.13864518959862657,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-5",
+      "ordinal": "E",
+      "hex": "#1a1a1d",
+      "count": 1,
+      "chroma": 0.005799548041045721,
+      "score": 0.005799548041045721,
+      "varToken": "e",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-6",
+      "ordinal": "F",
+      "hex": "#ffffff",
+      "count": 14,
+      "chroma": 3.727399553519285e-8,
+      "score": 5.218359374927e-7,
+      "varToken": "f",
+      "sourceVarName": "",
+      "substitute": "",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-6-dep-1",
+          "ordinal": "G",
+          "hex": "#f9f7f4",
+          "count": 1,
+          "chroma": 0.004523206515214185,
+          "score": 0.004523206515214185,
+          "varToken": "g",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-6-dep-2",
+          "ordinal": "H",
+          "hex": "#f0edf8",
+          "count": 1,
+          "chroma": 0.014977873212291437,
+          "score": 0.014977873212291437,
+          "varToken": "h",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        },
+        {
+          "id": "swatch-6-dep-3",
+          "ordinal": "I",
+          "hex": "#e2ddf0",
+          "count": 1,
+          "chroma": 0.02617730573636585,
+          "score": 0.02617730573636585,
+          "varToken": "i",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">Harry<span>.</span></div>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#education">Education</a></li>
+      <li><a href="#contact" class="nav-cta">Let's Talk 👋</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO — abstract_layered + fun
+     ============================================================ -->
+<section class="hero">
+  <!-- Abstract layered SVG background -->
+  <div class="hero-shapes">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <!-- Grid mesh -->
+      <defs>
+        <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+          <path d="M 60 0 L 0 0 0 60" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"></path>
+        </pattern>
+        <radialGradient id="blob1" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color: var(--iw-color-c)" stop-opacity="0.35"></stop>
+          <stop offset="100%" style="stop-color: var(--iw-color-c)" stop-opacity="0"></stop>
+        </radialGradient>
+        <radialGradient id="blob2" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color: var(--iw-color-a)" stop-opacity="0.28"></stop>
+          <stop offset="100%" style="stop-color: var(--iw-color-a)" stop-opacity="0"></stop>
+        </radialGradient>
+        <radialGradient id="blob3" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" style="stop-color: var(--iw-color-b)" stop-opacity="0.22"></stop>
+          <stop offset="100%" style="stop-color: var(--iw-color-b)" stop-opacity="0"></stop>
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#grid)"></rect>
+      <!-- Blobs -->
+      <ellipse cx="200" cy="200" rx="300" ry="260" fill="url(#blob1)"></ellipse>
+      <ellipse cx="1000" cy="500" rx="280" ry="240" fill="url(#blob2)"></ellipse>
+      <ellipse cx="650" cy="650" rx="220" ry="200" fill="url(#blob3)"></ellipse>
+      <!-- Rings -->
+      <circle cx="900" cy="120" r="160" fill="none" stroke="rgba(255,190,11,0.12)" stroke-width="1.5"></circle>
+      <circle cx="900" cy="120" r="120" fill="none" stroke="rgba(255,190,11,0.08)" stroke-width="1"></circle>
+      <circle cx="180" cy="680" r="140" fill="none" stroke="rgba(131,56,236,0.15)" stroke-width="1.5"></circle>
+      <!-- Pathway lines — branching curriculum motif -->
+      <g stroke="rgba(255,255,255,0.07)" stroke-width="1.5" fill="none">
+        <path d="M 100 400 Q 300 300 500 350 T 900 280"></path>
+        <path d="M 500 350 Q 600 430 700 380 T 1100 420"></path>
+        <path d="M 300 500 Q 450 460 600 490 T 1000 460"></path>
+      </g>
+      <!-- Node dots -->
+      <circle cx="500" cy="350" r="5" fill="rgba(251,86,7,0.5)"></circle>
+      <circle cx="700" cy="380" r="4" fill="rgba(255,190,11,0.5)"></circle>
+      <circle cx="900" cy="280" r="5" fill="rgba(131,56,236,0.4)"></circle>
+      <circle cx="300" cy="500" r="4" fill="rgba(255,190,11,0.35)"></circle>
+      <!-- Decorative dots cluster -->
+      <g fill="rgba(255,255,255,0.08)">
+        <circle cx="1080" cy="80" r="3"></circle>
+        <circle cx="1100" cy="100" r="2"></circle>
+        <circle cx="1060" cy="95" r="2.5"></circle>
+        <circle cx="1090" cy="60" r="2"></circle>
+        <circle cx="80" cy="740" r="3"></circle>
+        <circle cx="60" cy="720" r="2"></circle>
+        <circle cx="100" cy="760" r="2.5"></circle>
+      </g>
+    </svg>
+  </div>
+
+  <div class="hero-inner">
+    <!-- Monogram -->
+    <div class="monogram-wrap">
+      <div class="monogram-ring-2"></div>
+      <div class="monogram-ring"></div>
+      <div class="monogram">HSK</div>
+    </div>
+
+    <!-- Status badges -->
+    <div class="hero-badges">
+      <span class="hero-badge">🎓 Class of August 2026</span>
+      <span class="hero-badge">📋 B.S. Applied Communication</span>
+      <span class="hero-badge">✏️ Instructional Design Specialization</span>
+    </div>
+
+    <h1 class="hero-headline">
+      I design learning that<br>
+      <span class="accent">changes</span> how people <span class="accent-2">work.</span>
+    </h1>
+
+    <p class="hero-sub">
+      I've designed and delivered training for a real organization — not just as coursework. From classroom teacher to curriculum designer and supervisor, I've lived both sides of the learning room.
+    </p>
+
+    <div class="hero-ctas">
+      <a href="#experience" class="btn btn--primary">📚 See my training work</a>
+      <a href="#contact" class="btn btn--secondary">📄 Download resume</a>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="scroll-dot"></div>
+    <span>Scroll</span>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT — LIGHT
+     ============================================================ -->
+<section class="section-about" id="about">
+  <!-- Fun blob accents -->
+  <div class="fun-blob" style="width:320px;height:280px;background:var(--c-2);top:-60px;right:-80px;"></div>
+  <div class="container" style="position:relative;z-index:1;">
+    <span class="section-label section-label--light">🧠 About</span>
+    <div class="section-divider divider--orange" style="margin-top:0;"></div>
+    <div class="about-grid">
+      <div class="about-left">
+        <h2>I build training that <span>actually works.</span></h2>
+        <p>
+          I'm an Applied Communication major specializing in instructional design, graduating August 2026. I don't just study learning — I've been designing and delivering it professionally for over two years at a functioning training organization.
+        </p>
+        <p>
+          At MTC Provo, I was hired as a classroom teacher, promoted within a year to design the curriculum other teachers learn from, and given responsibility for the coaching, evaluation, and professional development of instructional staff. <strong>That's the full instructional design cycle — not a practicum project.</strong>
+        </p>
+        <p>
+          Every role I've held — from training supervisor to team lead to residential mentor — has asked me to read a room, communicate clearly, and help people improve their performance. That's the skill I'm building a career on.
+        </p>
+        <div class="philosophy-card">
+          <h3>🎯 Training Philosophy</h3>
+          <p>"What keeps me in this field is the moment when someone's performance visibly improves because the instruction was built right — not because they tried harder, but because the design gave them a clear path forward."</p>
+        </div>
+      </div>
+      <div class="about-right">
+        <div class="strength-card">
+          <div class="strength-icon">📐</div>
+          <div class="strength-content">
+            <h4>Curriculum Design to Delivery</h4>
+            <p>Designed teacher training curriculum at MTC Provo and delivered it directly — the complete instructional design cycle in a real organization.</p>
+          </div>
+        </div>
+        <div class="strength-card">
+          <div class="strength-icon">🎙️</div>
+          <div class="strength-content">
+            <h4>Training Delivery for Any Group Size</h4>
+            <p>Conducted presentations and trainings to both small groups and large audiences; comfortable in every facilitation format.</p>
+          </div>
+        </div>
+        <div class="strength-card">
+          <div class="strength-icon">🔄</div>
+          <div class="strength-content">
+            <h4>Coaching for Performance Improvement</h4>
+            <p>Coached teachers individually, provided structured feedback, and conducted performance evaluations that drove measurable improvement.</p>
+          </div>
+        </div>
+        <div class="strength-card">
+          <div class="strength-icon">🏢</div>
+          <div class="strength-content">
+            <h4>Training Systems for Real Organizations</h4>
+            <p>Managed admin operations — payroll, records, promotions — alongside instructional work, understanding how L&amp;D fits into organizational structure.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE — DARK
+     ============================================================ -->
+<section class="section-experience" id="experience">
+  <div class="container">
+    <span class="section-label section-label--dark">💼 Experience</span>
+    <div class="section-divider divider--white"></div>
+    <h2 class="section-title">Where I've <span>done the work</span></h2>
+    <p class="section-intro">Hands-on curriculum design and training delivery — in real organizations, evaluated by real outcomes.</p>
+
+    <div class="timeline">
+
+      <!-- MTC — PRIMARY -->
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot--primary">📋</div>
+        <div class="exp-card">
+          <div class="exp-promo-badge">⬆️ Promoted within 1 year</div>
+          <div class="exp-header">
+            <div class="exp-title-block">
+              <h3>Supervisor / Trainer / Teacher</h3>
+              <div class="exp-company">MTC, Church of Jesus Christ of Latter-Day Saints</div>
+            </div>
+            <div class="exp-meta">
+              <span class="exp-dates">July 2023 — Present</span>
+              <span class="exp-location">📍 Provo, UT</span>
+            </div>
+          </div>
+
+          <!-- Promotion arc visual -->
+          <div class="promo-visual">
+            <div class="promo-step">
+              <strong>2023–2024</strong>
+              Classroom Teacher
+            </div>
+            <div class="promo-arrow">→</div>
+            <div class="promo-step">
+              <strong>2024–Present</strong>
+              Supervisor / Trainer
+            </div>
+            <div class="promo-arrow">→</div>
+            <div class="promo-step">
+              <strong>Scope</strong>
+              Curriculum design + staff eval
+            </div>
+          </div>
+
+          <!-- SVG diagram: curriculum cycle -->
+          <div style="margin: 18px 0; background: color-mix(in srgb, var(--iw-color-f) 4%, transparent); border-radius: 12px; padding: 20px; border: 1px solid color-mix(in srgb, var(--iw-color-f) 8%, transparent);">
+            <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: color-mix(in srgb, var(--iw-color-f) 35%, transparent); margin-bottom: 14px;">Instructional Design Cycle — Applied at MTC</div>
+            <svg viewBox="0 0 600 80" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:560px;display:block;">
+              <defs>
+                <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" style="fill: var(--iw-color-a)"></path>
+                </marker>
+              </defs>
+              <!-- Steps -->
+              <rect x="0" y="20" width="100" height="40" rx="8" fill="rgba(131,56,236,0.3)" stroke="rgba(131,56,236,0.55)" stroke-width="1.5"></rect>
+              <text x="50" y="45" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="700">Design</text>
+              <line x1="102" y1="40" x2="133" y2="40" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+              <rect x="135" y="20" width="100" height="40" rx="8" fill="rgba(251,86,7,0.25)" stroke="rgba(251,86,7,0.55)" stroke-width="1.5"></rect>
+              <text x="185" y="45" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="700">Deliver</text>
+              <line x1="237" y1="40" x2="268" y2="40" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+              <rect x="270" y="20" width="100" height="40" rx="8" fill="rgba(255,190,11,0.2)" stroke="rgba(255,190,11,0.55)" stroke-width="1.5"></rect>
+              <text x="320" y="45" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="700">Evaluate</text>
+              <line x1="372" y1="40" x2="403" y2="40" style="stroke: var(--iw-color-a)" stroke-width="2" marker-end="url(#arrow)"></line>
+
+              <rect x="405" y="20" width="100" height="40" rx="8" fill="rgba(2,62,138,0.4)" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"></rect>
+              <text x="455" y="45" text-anchor="middle" fill="white" font-size="11" font-family="Arial" font-weight="700">Iterate</text>
+              <!-- Loop back arrow -->
+              <path d="M 505 30 Q 580 10 540 40 Q 510 60 505 50" fill="none" stroke="rgba(131,56,236,0.5)" stroke-width="1.5" stroke-dasharray="4,3"></path>
+            </svg>
+          </div>
+
+          <ul class="exp-bullets">
+            <li>Designed and implemented training curriculum for teachers, focusing on pedagogy, classroom management, and communication skills.</li>
+            <li>Coached and mentored teachers individually, providing structured feedback, professional development, and performance evaluations to improve instructional effectiveness.</li>
+            <li>Managed administrative operations including payroll accuracy, promotions, and employee records to maintain organizational efficiency.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Red Lobster — SECONDARY -->
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot--secondary">🏆</div>
+        <div class="exp-card">
+          <div class="exp-header">
+            <div class="exp-title-block">
+              <h3>Team Lead – Server</h3>
+              <div class="exp-company">Red Lobster</div>
+            </div>
+            <div class="exp-meta">
+              <span class="exp-dates">Oct 2022 — Jul 2023</span>
+              <span class="exp-location">📍 Orem, UT</span>
+            </div>
+          </div>
+          <!-- Small visual: leadership bar chart motif -->
+          <div style="margin: 14px 0; background: color-mix(in srgb, var(--iw-color-f) 3%, transparent); border-radius: 10px; padding: 16px 18px; border: 1px solid color-mix(in srgb, var(--iw-color-f) 7%, transparent);">
+            <div style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; color: color-mix(in srgb, var(--iw-color-b) 60%, transparent); margin-bottom: 10px;">Team Lead Impact</div>
+            <div style="display:flex;gap:8px;align-items:flex-end;height:44px;">
+              <div style="width:26px;background:linear-gradient(180deg,var(--iw-color-b),color-mix(in srgb, var(--iw-color-b) 40%, transparent));border-radius:4px 4px 0 0;height:100%;"></div>
+              <div style="width:26px;background:color-mix(in srgb, var(--iw-color-f) 12%, transparent);border-radius:4px 4px 0 0;height:70%;"></div>
+              <div style="width:26px;background:color-mix(in srgb, var(--iw-color-f) 12%, transparent);border-radius:4px 4px 0 0;height:55%;"></div>
+              <div style="width:26px;background:color-mix(in srgb, var(--iw-color-f) 12%, transparent);border-radius:4px 4px 0 0;height:62%;"></div>
+              <div style="font-size:11px;color:color-mix(in srgb, var(--iw-color-f) 35%, transparent);margin-left:6px;align-self:center;">Consistently ranked #1 performer</div>
+            </div>
+          </div>
+          <ul class="exp-bullets">
+            <li>Coordinated directly with the general manager to improve team performance and employee well-being.</li>
+            <li>Led the team week over week, consistently ranking as the top-performing server through communication and customer focus.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Telos — TERTIARY -->
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot--tertiary">🤝</div>
+        <div class="exp-card">
+          <div class="exp-header">
+            <div class="exp-title-block">
+              <h3>Care Worker – Mentor</h3>
+              <div class="exp-company">Telos</div>
+            </div>
+            <div class="exp-meta">
+              <span class="exp-dates">Mar 2022 — Oct 2022</span>
+              <span class="exp-location">📍 Orem, UT</span>
+            </div>
+          </div>
+          <ul class="exp-bullets">
+            <li>Formed relationships of trust that encouraged healthy living and guided residents through applying therapy skills in daily life.</li>
+            <li>Responsible for the safety, supervision, and well-being of residents — high-stakes interpersonal communication every shift.</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS — LIGHT
+     ============================================================ -->
+<section class="section-skills" id="skills">
+  <div class="container">
+    <span class="section-label section-label--light">🛠️ Skills</span>
+    <div class="section-divider divider--orange"></div>
+    <h2 class="section-title">Areas of <span>Expertise</span></h2>
+    <p style="font-size:16px;color:var(--text-muted);max-width:560px;margin-bottom:48px;line-height:1.65;">
+      Built through real practice — not just coursework. Every skill here has been used in a professional setting.
+    </p>
+    <div class="skills-grid">
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">🎓</span>
+          <span class="skills-group-title">Instructional Design</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--purple">Curriculum development</span>
+          <span class="chip chip--purple">Instructional design</span>
+          <span class="chip chip--purple">Adult learning</span>
+          <span class="chip chip--purple">Pedagogy</span>
+          <span class="chip chip--purple">Classroom management</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">🎙️</span>
+          <span class="skills-group-title">Training Delivery</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--orange">Training delivery</span>
+          <span class="chip chip--orange">Public speaking</span>
+          <span class="chip chip--orange">Facilitation</span>
+          <span class="chip chip--orange">Small group training</span>
+          <span class="chip chip--orange">Large group presentations</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">🔄</span>
+          <span class="skills-group-title">Coaching &amp; Evaluation</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--purple">Coaching &amp; mentoring</span>
+          <span class="chip chip--purple">Performance evaluation</span>
+          <span class="chip chip--purple">Professional development</span>
+          <span class="chip chip--purple">Feedback delivery</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">🏢</span>
+          <span class="skills-group-title">Leadership &amp; Operations</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--orange">Leadership training</span>
+          <span class="chip chip--orange">Employee management</span>
+          <span class="chip chip--orange">Administrative operations</span>
+          <span class="chip chip--orange">Organizational effectiveness</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">💬</span>
+          <span class="skills-group-title">Communication</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--yellow">Strategic communication</span>
+          <span class="chip chip--yellow">Stakeholder communication</span>
+          <span class="chip chip--yellow">Leadership communication</span>
+          <span class="chip chip--yellow">Customer service</span>
+        </div>
+      </div>
+
+      <div class="skills-group">
+        <div class="skills-group-header">
+          <span class="skills-group-icon">🧩</span>
+          <span class="skills-group-title">Problem-Solving</span>
+        </div>
+        <div class="chips">
+          <span class="chip chip--yellow">Problem identification</span>
+          <span class="chip chip--yellow">Decision-making</span>
+          <span class="chip chip--yellow">Team collaboration</span>
+          <span class="chip chip--yellow">Process improvement</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION — DARK (navy-purple gradient)
+     ============================================================ -->
+<section class="section-education" id="education">
+  <div class="container">
+    <span class="section-label section-label--dark">🎓 Education</span>
+    <div class="section-divider divider--white"></div>
+    <h2 class="section-title">Academic <span>Foundation</span></h2>
+    <p class="section-intro" style="margin-bottom:40px;">A degree built for the work — not despite it.</p>
+
+    <div class="edu-card">
+      <div class="edu-left">
+        <h3>Applied Communication</h3>
+        <div class="degree">Bachelor of Science (expected)</div>
+        <div class="specialization">✏️ Specialization: Instructional Design</div>
+        <p style="font-size:13.5px;color:color-mix(in srgb, var(--iw-color-f) 55%, transparent);line-height:1.6;margin-top:14px;">
+          Emphasizing leadership excellence, strategic public relations, and collaborative decision-making within small groups and teams.
+        </p>
+      </div>
+      <div class="edu-badges">
+        <div class="edu-badge">
+          <span class="edu-badge-icon">📅</span>
+          <div class="edu-badge-text">
+            Expected Graduation
+            <span>August 2026</span>
+          </div>
+        </div>
+        <div class="edu-badge">
+          <span class="edu-badge-icon">📋</span>
+          <div class="edu-badge-text">
+            Degree
+            <span>B.S. Applied Communication</span>
+          </div>
+        </div>
+        <div class="edu-badge">
+          <span class="edu-badge-icon">✏️</span>
+          <div class="edu-badge-text">
+            Specialization
+            <span>Instructional Design</span>
+          </div>
+        </div>
+        <div class="edu-badge">
+          <span class="edu-badge-icon">🎯</span>
+          <div class="edu-badge-text">
+            Open To
+            <span>L&amp;D, Instructional Design, Training Coordinator</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT — LIGHT
+     ============================================================ -->
+<section class="section-contact" id="contact">
+  <div class="container">
+    <span class="section-label section-label--light">📬 Contact</span>
+    <div class="section-divider divider--purple"></div>
+    <div class="contact-inner">
+      <div class="contact-left">
+        <h2>Let's talk about your <span>L&amp;D needs.</span></h2>
+        <p>
+          I'm actively seeking entry-level instructional design, training &amp; development, or L&amp;D coordinator roles. Open to corporate, nonprofit, and education sectors. Available August 2026.
+        </p>
+        <div class="contact-links">
+          <a href="mailto:hello@example.com" class="contact-link">
+            <span class="contact-link-icon">📧</span>
+            <div class="contact-link-info">
+              <div class="contact-link-label">Email</div>
+              <div class="contact-link-value">hello@example.com</div>
+            </div>
+          </a>
+          <a href="tel:5551234567" class="contact-link">
+            <span class="contact-link-icon">📱</span>
+            <div class="contact-link-info">
+              <div class="contact-link-label">Phone</div>
+              <div class="contact-link-value">555-123-4567</div>
+            </div>
+          </a>
+          <a href="#" class="contact-link">
+            <span class="contact-link-icon">📍</span>
+            <div class="contact-link-info">
+              <div class="contact-link-label">Location</div>
+              <div class="contact-link-value">Provo / Orem, UT</div>
+            </div>
+          </a>
+        </div>
+      </div>
+      <div class="contact-right">
+        <div class="cta-card">
+          <div class="cta-card-icon">📄</div>
+          <h3>Download My Resume</h3>
+          <p>
+            See the full picture — experience, skills, and education — in a clean, printable format ready for your hiring team.
+          </p>
+          <a href="#" class="btn btn--cta">⬇️ Download Resume PDF</a>
+          <div class="open-to-tag">🟢 Open to opportunities — August 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="footer-name">Harry Keller</div>
+      <div class="footer-meta">Instructional Designer &amp; Training Specialist · Class of 2026</div>
+    </div>
+    <div class="footer-meta">
+      Built with 💛 · hello@example.com
+    </div>
+    <a href="#contact" class="footer-cta">Let's talk about your L&amp;D needs →</a>
+  </div>
+</footer>
+
+
+
+</body></html>

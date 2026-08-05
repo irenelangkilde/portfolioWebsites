@@ -1,0 +1,1656 @@
+<html lang="en" style="--background: #000000; --quinary: #000000; --bp-slot5: #000000; --bp-slot-5: #000000; --slot5: #000000; --slot-5: #000000; --bp-accent1: #000000; --accent1: #000000; --foreground: #000000; --quaternary: #000000; --bp-slot4: #000000; --bp-slot-4: #000000; --slot4: #000000; --slot-4: #000000; --bp-accent2: #000000; --accent2: #000000; --primary: #000000; --dominant: #000000; --bp-slot1: #000000; --bp-slot-1: #000000; --slot1: #000000; --slot-1: #000000; --bp-primary: #000000; --secondary: #000000; --bp-slot2: #000000; --bp-slot-2: #000000; --slot2: #000000; --slot-2: #000000; --bp-secondary: #000000; --accent: #000000; --tertiary: #000000; --bp-slot3: #000000; --bp-slot-3: #000000; --slot3: #000000; --slot-3: #000000; --bp-tertiary: #000000"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Keller — Instructional Designer &amp; Training Specialist</title>
+<style>
+/* ============================================================
+   ROOT — SEMANTIC COLOR VARIABLES
+   ============================================================ */
+:root {
+  /* Brand anchors */
+  --c-1: var(--iw-color-b);   /* Deep blue — primary */
+  --c-2: var(--iw-color-c);   /* Slate — secondary / muted */
+  --c-3: var(--iw-color-a);   /* Amber — accent */
+  --c-4: var(--iw-color-e);   /* Near-black — dark surface */
+  --c-5: var(--iw-color-d);   /* Warm off-white — light surface */
+
+  /* Derived surface tokens */
+  --surface-light:       var(--c-5);
+  --surface-light-alt:   color-mix(in oklch, var(--c-5) 80%, var(--c-2) 20%);
+  --surface-dark:        var(--c-4);
+  --surface-dark-alt:    color-mix(in oklch, var(--c-4) 85%, var(--c-1) 15%);
+  --surface-primary:     var(--c-1);
+  --surface-accent:      var(--c-3);
+
+  /* Text tokens */
+  --text-on-light:       var(--c-4);
+  --text-muted-on-light: color-mix(in oklch, var(--c-2) 90%, var(--c-4) 10%);
+  --text-on-dark:        var(--c-5);
+  --text-muted-on-dark:  color-mix(in oklch, var(--c-5) 70%, var(--c-2) 30%);
+  --text-primary:        var(--c-1);
+  --text-accent:         var(--c-3);
+
+  /* Border tokens */
+  --border-light:        color-mix(in oklch, var(--c-2) 30%, transparent);
+  --border-dark:         color-mix(in oklch, var(--c-5) 15%, transparent);
+  --border-accent:       color-mix(in oklch, var(--c-3) 50%, transparent);
+
+  /* Shadow tokens */
+  --shadow-sm:           0 1px 4px color-mix(in oklch, var(--c-4) 12%, transparent);
+  --shadow-md:           0 4px 16px color-mix(in oklch, var(--c-4) 14%, transparent);
+  --shadow-lg:           0 8px 32px color-mix(in oklch, var(--c-4) 18%, transparent);
+
+  /* Chip tokens — light context */
+  --chip-bg-light:       color-mix(in oklch, var(--c-1) 10%, var(--c-5) 90%);
+  --chip-text-light:     var(--c-1);
+  --chip-border-light:   color-mix(in oklch, var(--c-1) 25%, transparent);
+
+  /* Chip tokens — dark context */
+  --chip-bg-dark:        color-mix(in oklch, var(--c-1) 25%, var(--c-4) 75%);
+  --chip-text-dark:      color-mix(in oklch, var(--c-5) 90%, var(--c-3) 10%);
+  --chip-border-dark:    color-mix(in oklch, var(--c-5) 15%, transparent);
+
+  /* Accent chip */
+  --chip-bg-accent:      color-mix(in oklch, var(--c-3) 15%, var(--c-5) 85%);
+  --chip-text-accent:    color-mix(in oklch, var(--c-3) 90%, var(--c-4) 10%);
+  --chip-border-accent:  color-mix(in oklch, var(--c-3) 35%, transparent);
+
+  /* Hero */
+  --hero-bg-image: none;
+
+  /* Typography */
+  --font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-display: Georgia, 'Times New Roman', serif;
+
+  /* Spacing rhythm */
+  --section-pad: 80px 0;
+  --section-pad-inner: 0 5%;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+
+  /* Overlay for hero abstract layers */
+  --overlay-dark:   color-mix(in oklch, var(--c-4) 65%, transparent);
+  --overlay-blue:   color-mix(in oklch, var(--c-1) 80%, transparent);
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+body {
+  font-family: var(--font-sans);
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  line-height: 1.65;
+}
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+img { display: block; max-width: 100%; }
+
+/* ============================================================
+   TYPOGRAPHY SCALE
+   ============================================================ */
+.display-xl {
+  font-size: clamp(2.6rem, 5vw, 4rem);
+  font-weight: 300;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+.display-lg {
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.15;
+}
+.display-md {
+  font-size: clamp(1.3rem, 2vw, 1.7rem);
+  font-weight: 500;
+  line-height: 1.25;
+}
+.body-lg { font-size: 1.1rem; line-height: 1.7; }
+.body-sm { font-size: 0.875rem; }
+.label-caps {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* ============================================================
+   LAYOUT UTILITIES
+   ============================================================ */
+.container {
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 0 5%;
+}
+.section-pad { padding: var(--section-pad); }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.flex-center { display: flex; align-items: center; justify-content: center; }
+.flex-between { display: flex; align-items: center; justify-content: space-between; }
+
+/* ============================================================
+   SECTION LABELS
+   ============================================================ */
+.section-eyebrow {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+  margin-bottom: 0.65rem;
+}
+.section-title {
+  font-size: clamp(1.6rem, 2.5vw, 2.2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 1rem;
+}
+.section-divider {
+  width: 48px;
+  height: 3px;
+  background: var(--c-3);
+  border-radius: 2px;
+  margin-bottom: 2.5rem;
+}
+
+/* ============================================================
+   CHIP / BADGE SHARED RECIPES
+   ============================================================ */
+.chip {
+  display: inline-block;
+  padding: 0.25em 0.8em;
+  border-radius: 100px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.chip-primary {
+  background: var(--chip-bg-light);
+  color: var(--chip-text-light);
+  border-color: var(--chip-border-light);
+}
+.chip-dark {
+  background: var(--chip-bg-dark);
+  color: var(--chip-text-dark);
+  border-color: var(--chip-border-dark);
+}
+.chip-accent {
+  background: var(--chip-bg-accent);
+  color: var(--chip-text-accent);
+  border-color: var(--chip-border-accent);
+}
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+}
+
+/* ============================================================
+   BUTTON RECIPES
+   ============================================================ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.7em 1.6em;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: background 0.18s, color 0.18s, border-color 0.18s, transform 0.12s;
+}
+.btn:hover { transform: translateY(-1px); }
+.btn-primary {
+  background: var(--c-3);
+  color: var(--iw-color-g);
+  border-color: var(--c-3);
+}
+.btn-primary:hover {
+  background: color-mix(in oklch, var(--c-3) 85%, var(--c-4) 15%);
+  border-color: color-mix(in oklch, var(--c-3) 85%, var(--c-4) 15%);
+}
+.btn-outline {
+  background: transparent;
+  color: var(--c-5);
+  border-color: color-mix(in oklch, var(--c-5) 50%, transparent);
+}
+.btn-outline:hover {
+  background: color-mix(in oklch, var(--c-5) 10%, transparent);
+  border-color: var(--c-5);
+}
+.btn-outline-dark {
+  background: transparent;
+  color: var(--c-1);
+  border-color: color-mix(in oklch, var(--c-1) 40%, transparent);
+}
+.btn-outline-dark:hover {
+  background: color-mix(in oklch, var(--c-1) 8%, transparent);
+  border-color: var(--c-1);
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+#navbar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  background: color-mix(in oklch, var(--c-4) 95%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-dark);
+  padding: 0 5%;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.nav-logo {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--c-5);
+  letter-spacing: 0.04em;
+}
+.nav-logo span { color: var(--c-3); }
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+}
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted-on-dark);
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--c-3); }
+.nav-cta {
+  background: var(--c-3);
+  color: var(--iw-color-g) !important;
+  padding: 0.35em 1em;
+  border-radius: var(--radius-sm);
+  font-size: 0.82rem !important;
+  font-weight: 700 !important;
+}
+.nav-cta:hover { background: color-mix(in oklch, var(--c-3) 85%, var(--iw-color-f) 15%) !important; }
+
+/* ============================================================
+   HERO — abstract_layered composition
+   ============================================================ */
+#hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: linear-gradient(
+    135deg,
+    var(--c-4) 0%,
+    color-mix(in oklch, var(--c-4) 75%, var(--c-1) 25%) 40%,
+    color-mix(in oklch, var(--c-1) 70%, var(--c-4) 30%) 100%
+  ), var(--hero-bg-image) center/cover no-repeat;
+  padding-top: 60px;
+}
+
+/* Abstract layered SVG background */
+.hero-abstract {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 1160px;
+  margin: 0 auto;
+  padding: 80px 5%;
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 4rem;
+  align-items: center;
+}
+.hero-content {}
+.hero-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c-3);
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.hero-label::before {
+  content: '';
+  display: inline-block;
+  width: 24px; height: 2px;
+  background: var(--c-3);
+}
+.hero-headline {
+  font-size: clamp(2.4rem, 4.5vw, 3.6rem);
+  font-weight: 300;
+  line-height: 1.1;
+  color: var(--c-5);
+  margin-bottom: 0.5rem;
+}
+.hero-headline strong {
+  font-weight: 800;
+  color: var(--c-5);
+  display: block;
+}
+.hero-headline em {
+  font-style: normal;
+  color: var(--c-3);
+}
+.hero-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted-on-dark);
+  max-width: 500px;
+  margin: 1.2rem 0 2rem;
+  line-height: 1.7;
+}
+.hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 2.2rem;
+}
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.3em 0.9em;
+  border-radius: 100px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  background: color-mix(in oklch, var(--c-1) 35%, var(--c-4) 65%);
+  color: var(--c-5);
+  border: 1px solid color-mix(in oklch, var(--c-1) 50%, transparent);
+}
+.hero-ctas {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Hero visual — abstract layered card / monogram */
+.hero-visual {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-visual-inner {
+  position: relative;
+  width: 340px;
+  height: 400px;
+}
+/* Floating abstract rings */
+.hero-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  opacity: 0.18;
+}
+.hero-ring-1 {
+  width: 340px; height: 340px;
+  top: 30px; left: 0;
+  border-color: var(--c-3);
+  animation: rotate-slow 20s linear infinite;
+}
+.hero-ring-2 {
+  width: 260px; height: 260px;
+  top: 70px; left: 40px;
+  border-color: var(--c-1);
+  animation: rotate-slow 28s linear infinite reverse;
+}
+.hero-ring-3 {
+  width: 180px; height: 180px;
+  top: 110px; left: 80px;
+  border-color: var(--c-5);
+  opacity: 0.08;
+}
+/* Monogram card */
+.monogram-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklch, var(--c-1) 30%, var(--c-4) 70%);
+  border: 1px solid color-mix(in oklch, var(--c-1) 60%, transparent);
+  box-shadow: var(--shadow-lg),
+              0 0 60px color-mix(in oklch, var(--c-1) 25%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+}
+.monogram-initials {
+  font-size: 2.6rem;
+  font-weight: 800;
+  color: var(--c-5);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.monogram-initials span { color: var(--c-3); }
+.monogram-name {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted-on-dark);
+}
+/* Floating accent node dots */
+.hero-node {
+  position: absolute;
+  border-radius: 50%;
+}
+.node-1 { width: 10px; height: 10px; background: var(--c-3); top: 48px; right: 60px; opacity: 0.9; }
+.node-2 { width: 6px; height: 6px; background: var(--c-5); bottom: 80px; left: 28px; opacity: 0.55; }
+.node-3 { width: 14px; height: 14px; background: var(--c-1); top: 90px; left: 18px; opacity: 0.7; border: 2px solid var(--c-3); }
+/* Connection lines via SVG */
+.hero-connector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* ============================================================
+   SECTION ALTERNATION:
+   Sections 1,3,5 = LIGHT (baseline)
+   Sections 2,4   = DARK
+   ============================================================ */
+.sec-light {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+}
+.sec-light .section-title { color: var(--c-4); }
+.sec-light .section-eyebrow { color: var(--c-3); }
+
+.sec-dark {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+}
+.sec-dark .section-title { color: var(--c-5); }
+.sec-dark .section-eyebrow { color: var(--c-3); }
+.sec-dark .section-divider { background: var(--c-3); }
+
+.sec-mid {
+  background: var(--surface-light-alt);
+  color: var(--text-on-light);
+}
+.sec-mid .section-title { color: var(--c-4); }
+.sec-mid .section-eyebrow { color: var(--c-3); }
+
+/* ============================================================
+   ABOUT / PHILOSOPHY SECTION  (LIGHT — sec 1)
+   ============================================================ */
+#about {
+  padding: var(--section-pad);
+}
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: start;
+}
+.about-text p {
+  color: var(--text-on-light);
+  font-size: 1.05rem;
+  line-height: 1.8;
+  margin-bottom: 1.2rem;
+}
+.about-text p strong { color: var(--c-1); font-weight: 700; }
+.philosophy-block {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  border-left: 3px solid var(--c-3);
+  background: color-mix(in oklch, var(--c-3) 6%, var(--c-5) 94%);
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+}
+.philosophy-block p {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--text-on-light) !important;
+  margin-bottom: 0 !important;
+}
+.about-highlights {}
+.highlight-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  padding: 1.2rem;
+  border-radius: var(--radius-md);
+  background: var(--c-5);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1rem;
+  transition: box-shadow 0.18s, transform 0.18s;
+}
+.highlight-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+.highlight-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--c-1) 10%, var(--c-5) 90%);
+}
+.highlight-card-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--c-1);
+  margin-bottom: 0.2rem;
+}
+.highlight-card-body {
+  font-size: 0.83rem;
+  color: var(--text-muted-on-light);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   EXPERIENCE SECTION  (DARK — sec 2)
+   ============================================================ */
+#experience {
+  padding: var(--section-pad);
+}
+.exp-timeline {
+  position: relative;
+  margin-top: 0.5rem;
+}
+/* Timeline spine */
+.exp-timeline::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 0; bottom: 0;
+  width: 2px;
+  background: color-mix(in oklch, var(--c-1) 40%, transparent);
+}
+.exp-item {
+  position: relative;
+  padding-left: 62px;
+  padding-bottom: 3rem;
+}
+.exp-item:last-child { padding-bottom: 0; }
+/* Timeline dot */
+.exp-dot {
+  position: absolute;
+  left: 14px;
+  top: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--c-1);
+  border: 3px solid var(--c-3);
+  z-index: 1;
+}
+.exp-dot.exp-dot-primary {
+  background: var(--c-3);
+  border-color: var(--c-5);
+  width: 22px;
+  height: 22px;
+  left: 12px;
+  top: 4px;
+}
+/* Exp card */
+.exp-card {
+  background: var(--surface-dark-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  padding: 1.8rem 2rem;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.18s;
+}
+.exp-card:hover { box-shadow: var(--shadow-md); }
+.exp-card-header {
+  margin-bottom: 1.2rem;
+}
+.exp-company {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--c-3);
+  margin-bottom: 0.3rem;
+}
+.exp-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--c-5);
+  margin-bottom: 0.4rem;
+  line-height: 1.25;
+}
+.exp-meta {
+  font-size: 0.78rem;
+  color: var(--text-muted-on-dark);
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.exp-visual {
+  margin: 1.2rem 0;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: color-mix(in oklch, var(--c-1) 15%, var(--c-4) 85%);
+  border: 1px solid var(--border-dark);
+  height: 160px;
+  position: relative;
+}
+.exp-bullets {
+  margin-top: 1rem;
+}
+.exp-bullets li {
+  font-size: 0.92rem;
+  color: var(--text-muted-on-dark);
+  padding: 0.45rem 0;
+  padding-left: 1.2rem;
+  position: relative;
+  line-height: 1.6;
+  border-bottom: 1px solid color-mix(in oklch, var(--c-5) 6%, transparent);
+}
+.exp-bullets li:last-child { border-bottom: none; }
+.exp-bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.85em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--c-3);
+  flex-shrink: 0;
+}
+.exp-bullets li strong { color: var(--c-5); font-weight: 600; }
+/* Promotion banner */
+.promo-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: color-mix(in oklch, var(--c-3) 18%, var(--c-4) 82%);
+  border: 1px solid color-mix(in oklch, var(--c-3) 35%, transparent);
+  border-radius: var(--radius-sm);
+  padding: 0.35em 0.85em;
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--c-3);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  margin-top: 0.3rem;
+}
+
+/* ============================================================
+   SKILLS SECTION  (LIGHT — sec 3)
+   ============================================================ */
+#skills {
+  padding: var(--section-pad);
+}
+.skills-intro {
+  max-width: 640px;
+  margin-bottom: 3rem;
+}
+.skills-intro p {
+  font-size: 1rem;
+  color: var(--text-muted-on-light);
+  line-height: 1.7;
+}
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.skill-group {
+  background: var(--c-5);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 1.6rem;
+  box-shadow: var(--shadow-sm);
+}
+.skill-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
+}
+.skill-group-icon {
+  font-size: 1.3rem;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in oklch, var(--c-1) 10%, var(--c-5) 90%);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+.skill-group-title {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-1);
+}
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+/* ============================================================
+   EDUCATION SECTION  (DARK — sec 4)
+   ============================================================ */
+#education {
+  padding: var(--section-pad);
+}
+.edu-card {
+  max-width: 720px;
+  background: var(--surface-dark-alt);
+  border: 1px solid var(--border-dark);
+  border-radius: var(--radius-lg);
+  padding: 2.4rem;
+  box-shadow: var(--shadow-md);
+  position: relative;
+  overflow: hidden;
+}
+.edu-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 4px;
+  background: linear-gradient(90deg, var(--c-1), var(--c-3));
+}
+.edu-degree {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--c-5);
+  margin-bottom: 0.3rem;
+}
+.edu-major {
+  font-size: 1rem;
+  color: var(--c-3);
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+.edu-details {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+.edu-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.edu-detail-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted-on-dark);
+}
+.edu-detail-value {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--c-5);
+}
+.edu-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35em 1em;
+  border-radius: 100px;
+  background: color-mix(in oklch, var(--c-3) 20%, var(--c-4) 80%);
+  border: 1px solid color-mix(in oklch, var(--c-3) 40%, transparent);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--c-3);
+}
+
+/* ============================================================
+   CONTACT SECTION  (LIGHT — sec 5)
+   ============================================================ */
+#contact {
+  padding: var(--section-pad);
+}
+.contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5rem;
+  align-items: start;
+}
+.contact-intro p {
+  font-size: 1.05rem;
+  color: var(--text-on-light);
+  line-height: 1.8;
+  margin-bottom: 1.2rem;
+}
+.contact-intro strong { color: var(--c-1); }
+.contact-links {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-top: 2rem;
+}
+.contact-link-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.2rem;
+  background: var(--c-5);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s, transform 0.15s;
+}
+.contact-link-row:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.contact-icon-wrap {
+  width: 40px; height: 40px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in oklch, var(--c-1) 10%, var(--c-5) 90%);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.contact-link-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted-on-light);
+}
+.contact-link-value {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--c-1);
+}
+.contact-cta-panel {
+  background: linear-gradient(135deg, var(--c-1) 0%, color-mix(in oklch, var(--c-1) 75%, var(--c-4) 25%) 100%);
+  border-radius: var(--radius-lg);
+  padding: 2.4rem;
+  color: var(--c-5);
+  box-shadow: var(--shadow-lg);
+}
+.cta-panel-eyebrow {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: color-mix(in oklch, var(--c-5) 70%, var(--c-3) 30%);
+  margin-bottom: 0.8rem;
+}
+.cta-panel-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: 1rem;
+  color: var(--c-5);
+}
+.cta-panel-body {
+  font-size: 0.95rem;
+  color: color-mix(in oklch, var(--c-5) 80%, transparent);
+  line-height: 1.7;
+  margin-bottom: 1.8rem;
+}
+.cta-panel-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+#footer {
+  background: var(--surface-dark);
+  border-top: 1px solid var(--border-dark);
+  padding: 2.4rem 5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.footer-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--c-5);
+}
+.footer-name span { color: var(--c-3); }
+.footer-note {
+  font-size: 0.78rem;
+  color: var(--text-muted-on-dark);
+}
+.footer-cta-link {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--c-3);
+  border-bottom: 1px solid color-mix(in oklch, var(--c-3) 40%, transparent);
+  padding-bottom: 1px;
+}
+.footer-cta-link:hover { color: color-mix(in oklch, var(--c-3) 80%, var(--iw-color-g) 20%); }
+
+/* ============================================================
+   INLINE SVG VISUALS — Experience Cards
+   ============================================================ */
+.svg-vis {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-visual { display: none; }
+  .about-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .skills-grid { grid-template-columns: 1fr 1fr; }
+  .contact-grid { grid-template-columns: 1fr; gap: 2.5rem; }
+  .nav-links { gap: 1.2rem; }
+}
+@media (max-width: 600px) {
+  .skills-grid { grid-template-columns: 1fr; }
+  .nav-links a:not(.nav-cta) { display: none; }
+  .hero-inner { padding: 60px 5%; }
+  .exp-card { padding: 1.2rem; }
+}
+</style>
+<!-- portfolio-editor-delivery:1785814884827:ahbgf7rrd7n -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #e07b1a;
+  --iw-original-a: #e07b1a;
+  --iw-color-b: #2a5ba8;
+  --iw-original-b: #1e4b8f;
+  --iw-color-c: #8a93a0;
+  --iw-original-c: #7d8798;
+  --iw-color-d: #232b36;
+  --iw-original-d: #f7f5f0;
+  --iw-color-g: oklch(from var(--iw-color-d) calc(l + 0.0297) calc(c - 0.0070) calc(h + 1.2));
+  --iw-original-g: #ffffff;
+  --iw-color-e: #f7f5f0;
+  --iw-original-e: #232b36;
+  --iw-color-f: #ffffff;
+  --iw-original-f: #000000;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#e07b1a",
+      "count": 24,
+      "chroma": 0.1579979908918104,
+      "score": 3.7919517814034496,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "#e07b1a",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#1e4b8f",
+      "count": 22,
+      "chroma": 0.12304250348792509,
+      "score": 2.706935076734352,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "#2a5ba8",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#7d8798",
+      "count": 19,
+      "chroma": 0.028249173516202132,
+      "score": 0.5367342968078405,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "#8a93a0",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#f7f5f0",
+      "count": 19,
+      "chroma": 0.006967845723795443,
+      "score": 0.13238906875211343,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "#232b36",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-4-dep-1",
+          "ordinal": "G",
+          "hex": "#ffffff",
+          "count": 3,
+          "chroma": 3.727399553519285e-8,
+          "score": 1.1182198660557856e-7,
+          "varToken": "g",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-5",
+      "ordinal": "E",
+      "hex": "#232b36",
+      "count": 4,
+      "chroma": 0.02319977258772243,
+      "score": 0.09279909035088972,
+      "varToken": "e",
+      "sourceVarName": "",
+      "substitute": "#f7f5f0",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    },
+    {
+      "id": "swatch-6",
+      "ordinal": "F",
+      "hex": "#000000",
+      "count": 1,
+      "chroma": 0,
+      "score": 0,
+      "varToken": "f",
+      "sourceVarName": "",
+      "substitute": "#ffffff",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAVIGATION
+     ============================================================ -->
+<nav id="navbar">
+  <div class="nav-logo">H<span>.</span>Keller</div>
+  <ul class="nav-links">
+    <li><a href="#about">About</a></li>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#education">Education</a></li>
+    <li><a href="#contact" class="nav-cta">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ============================================================
+     HERO — abstract_layered composition
+     ============================================================ -->
+<section id="hero">
+  <!-- Abstract SVG background layer -->
+  <div class="hero-abstract">
+    <svg width="100%" height="100%" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <!-- Grid lines — subtle -->
+      <g style="stroke: var(--iw-color-c)" stroke-width="0.5" opacity="0.08">
+        <line x1="240" y1="0" x2="240" y2="900"></line>
+        <line x1="480" y1="0" x2="480" y2="900"></line>
+        <line x1="720" y1="0" x2="720" y2="900"></line>
+        <line x1="960" y1="0" x2="960" y2="900"></line>
+        <line x1="1200" y1="0" x2="1200" y2="900"></line>
+        <line x1="0" y1="200" x2="1440" y2="200"></line>
+        <line x1="0" y1="450" x2="1440" y2="450"></line>
+        <line x1="0" y1="700" x2="1440" y2="700"></line>
+      </g>
+      <!-- Large background circle — far right -->
+      <circle cx="1150" cy="450" r="400" fill="none" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.14"></circle>
+      <circle cx="1150" cy="450" r="280" fill="none" style="stroke: var(--iw-color-a)" stroke-width="0.7" opacity="0.1"></circle>
+      <circle cx="1150" cy="450" r="160" fill="none" style="stroke: var(--iw-color-d)" stroke-width="0.5" opacity="0.06"></circle>
+      <!-- Branching path — curriculum flow motif -->
+      <path d="M 100 700 C 200 600 300 550 420 500" style="stroke: var(--iw-color-b)" stroke-width="1.5" fill="none" opacity="0.2"></path>
+      <path d="M 420 500 C 540 450 600 390 680 340" style="stroke: var(--iw-color-b)" stroke-width="1.5" fill="none" opacity="0.2"></path>
+      <path d="M 420 500 C 480 560 520 600 600 620" style="stroke: var(--iw-color-a)" stroke-width="1" fill="none" opacity="0.15"></path>
+      <circle cx="420" cy="500" r="5" style="fill: var(--iw-color-a)" opacity="0.4"></circle>
+      <circle cx="680" cy="340" r="4" style="fill: var(--iw-color-b)" opacity="0.5"></circle>
+      <circle cx="600" cy="620" r="3.5" style="fill: var(--iw-color-a)" opacity="0.35"></circle>
+      <circle cx="100" cy="700" r="3" style="fill: var(--iw-color-d)" opacity="0.25"></circle>
+      <!-- Small decorative nodes upper right -->
+      <circle cx="980" cy="130" r="3" style="fill: var(--iw-color-a)" opacity="0.55"></circle>
+      <circle cx="1060" cy="80" r="2" style="fill: var(--iw-color-d)" opacity="0.3"></circle>
+      <circle cx="920" cy="180" r="2.5" style="fill: var(--iw-color-b)" opacity="0.4"></circle>
+      <line x1="980" y1="130" x2="1060" y2="80" style="stroke: var(--iw-color-a)" stroke-width="0.8" opacity="0.2"></line>
+      <line x1="920" y1="180" x2="980" y2="130" style="stroke: var(--iw-color-b)" stroke-width="0.8" opacity="0.18"></line>
+      <!-- Accent arc lower left -->
+      <path d="M 0 780 Q 120 700 240 760" style="stroke: var(--iw-color-a)" stroke-width="1.2" fill="none" opacity="0.15"></path>
+    </svg>
+  </div>
+
+  <div class="hero-inner">
+    <!-- Left: content -->
+    <div class="hero-content">
+      <div class="hero-label">Instructional Designer · Training Specialist</div>
+      <h1 class="hero-headline">
+        I design learning<br>
+        <em>that changes</em><br>
+        <strong>how people work.</strong>
+      </h1>
+      <p class="hero-sub">I've designed and delivered training for a real organization — not as coursework, but as my job. Promoted from teacher to supervisor and curriculum designer within one year.</p>
+      <div class="hero-badges">
+        <span class="hero-badge">🎓 B.S. Applied Communication</span>
+        <span class="hero-badge">📐 Instructional Design</span>
+        <span class="hero-badge">📅 Class of August 2026</span>
+      </div>
+      <div class="hero-ctas">
+        <a href="#experience" class="btn btn-primary">See my training work ↓</a>
+        <a href="#contact" class="btn btn-outline">Download Resume</a>
+      </div>
+    </div>
+
+    <!-- Right: abstract visual with monogram -->
+    <div class="hero-visual">
+      <div class="hero-visual-inner">
+        <div class="hero-ring hero-ring-1"></div>
+        <div class="hero-ring hero-ring-2"></div>
+        <div class="hero-ring hero-ring-3"></div>
+        <!-- Connection line SVG -->
+        <svg class="hero-connector" viewBox="0 0 340 400" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M 60 90 Q 90 120 170 200" style="stroke: var(--iw-color-a)" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"></path>
+          <path d="M 280 60 Q 240 130 170 200" style="stroke: var(--iw-color-b)" stroke-width="1" opacity="0.3" stroke-dasharray="4 4"></path>
+          <path d="M 30 310 Q 80 270 170 200" style="stroke: var(--iw-color-d)" stroke-width="0.8" opacity="0.18" stroke-dasharray="3 5"></path>
+        </svg>
+        <!-- Monogram card -->
+        <div class="monogram-card">
+          <div class="monogram-initials">H<span>K</span></div>
+          <div class="monogram-name">Harry Keller</div>
+        </div>
+        <!-- Floating nodes -->
+        <div class="hero-node node-1"></div>
+        <div class="hero-node node-2"></div>
+        <div class="hero-node node-3"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     ABOUT / TRAINING PHILOSOPHY  — LIGHT (section 1)
+     ============================================================ -->
+<section id="about" class="sec-light section-pad">
+  <div class="container">
+    <span class="section-eyebrow">About</span>
+    <h2 class="section-title">Training practitioner, not just a student.</h2>
+    <div class="section-divider"></div>
+
+    <div class="about-grid">
+      <div class="about-text">
+        <p>I'm an <strong>Applied Communication major</strong> with a specialization in instructional design, graduating August 2026 — and I've been doing instructional design work professionally for the last two years, not waiting until graduation to start.</p>
+        <p>At the MTC in Provo, I moved from classroom teacher to designing the curriculum that other teachers learn from. That arc — practitioner to designer to supervisor — is what I bring to the table. I understand the learner's side of the room because I've been there, and I understand the designer's side because it's now my job.</p>
+        <p>Every role I've held has required me to read a room, communicate clearly, and help people improve their performance. That's the skill I'm building a career on.</p>
+        <div class="philosophy-block">
+          <p>"What keeps me in this field is the moment when someone's performance visibly improves because the instruction was built right — not just delivered well, but architected for the learner from the start."</p>
+        </div>
+      </div>
+
+      <div class="about-highlights">
+        <div class="highlight-card">
+          <div class="highlight-icon">📋</div>
+          <div>
+            <div class="highlight-card-title">Curriculum design to delivery</div>
+            <div class="highlight-card-body">Designed and implemented training curriculum used across a functioning training facility — then evaluated its impact through individual teacher coaching.</div>
+          </div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">📈</div>
+          <div>
+            <div class="highlight-card-title">Promoted within one year</div>
+            <div class="highlight-card-body">Elevated from classroom teacher to Supervisor/Trainer role, validating performance and expanding my scope to include administrative operations and staff development.</div>
+          </div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">🗣️</div>
+          <div>
+            <div class="highlight-card-title">Clear communicator across group sizes</div>
+            <div class="highlight-card-body">Comfortable facilitating to small groups and large audiences — from one-on-one coaching sessions to broad training deliveries.</div>
+          </div>
+        </div>
+        <div class="highlight-card">
+          <div class="highlight-icon">🎯</div>
+          <div>
+            <div class="highlight-card-title">Open to L&amp;D, corporate &amp; nonprofit</div>
+            <div class="highlight-card-body">Targeting entry-level instructional design, training &amp; development, or L&amp;D coordinator roles across corporate, nonprofit, and education sectors.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE — DARK (section 2)
+     ============================================================ -->
+<section id="experience" class="sec-dark section-pad">
+  <div class="container">
+    <span class="section-eyebrow">Experience</span>
+    <h2 class="section-title">From the classroom to the curriculum.</h2>
+    <div class="section-divider"></div>
+
+    <div class="exp-timeline">
+
+      <!-- MTC — PRIMARY ROLE -->
+      <div class="exp-item">
+        <div class="exp-dot exp-dot-primary"></div>
+        <div class="exp-card">
+          <div class="exp-card-header">
+            <div class="exp-company">MTC, Church of Jesus Christ of Latter-Day Saints — Provo, UT</div>
+            <div class="promo-banner">⬆️ Promoted from Teacher → Supervisor/Trainer</div>
+            <div class="exp-title">Supervisor / Trainer / Teacher</div>
+            <div class="exp-meta">
+              <span>📅 July 2023 – Present</span>
+              <span>📍 Provo, UT</span>
+            </div>
+          </div>
+
+          <!-- Inline SVG diagram — curriculum flow visualization -->
+          <div class="exp-visual">
+            <svg class="svg-vis" viewBox="0 0 700 160" xmlns="http://www.w3.org/2000/svg" aria-label="Curriculum design and teacher coaching flow diagram">
+              <defs>
+                <linearGradient id="gradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" style="stop-color: var(--iw-color-b)" stop-opacity="0.5"></stop>
+                  <stop offset="100%" style="stop-color: var(--iw-color-b)" stop-opacity="0.15"></stop>
+                </linearGradient>
+              </defs>
+              <!-- Background nodes -->
+              <rect x="0" y="0" width="700" height="160" fill="url(#gradBlue)" rx="8"></rect>
+              <!-- Stage boxes -->
+              <rect x="30" y="50" width="120" height="60" rx="8" style="fill: var(--iw-color-b)" fill-opacity="0.6" stroke-width="0.8"></rect>
+              <text x="90" y="75" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">CURRICULUM</text>
+              <text x="90" y="91" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">DESIGN</text>
+
+              <path d="M 152 80 L 195 80" style="stroke: var(--iw-color-a)" stroke-width="1.5" marker-end="url(#arrow)"></path>
+
+              <rect x="197" y="50" width="120" height="60" rx="8" style="fill: var(--iw-color-b)" fill-opacity="0.6" stroke-width="0.8"></rect>
+              <text x="257" y="75" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">TRAINING</text>
+              <text x="257" y="91" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">DELIVERY</text>
+
+              <path d="M 319 80 L 362 80" style="stroke: var(--iw-color-a)" stroke-width="1.5"></path>
+              <polygon points="362,75 370,80 362,85" style="fill: var(--iw-color-a)"></polygon>
+
+              <rect x="364" y="50" width="120" height="60" rx="8" style="fill: var(--iw-color-b)" fill-opacity="0.6" stroke-width="0.8"></rect>
+              <text x="424" y="75" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">COACHING &amp;</text>
+              <text x="424" y="91" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">EVALUATION</text>
+
+              <path d="M 486 80 L 529 80" style="stroke: var(--iw-color-a)" stroke-width="1.5"></path>
+              <polygon points="529,75 537,80 529,85" style="fill: var(--iw-color-a)"></polygon>
+
+              <rect x="531" y="50" width="140" height="60" rx="8" style="fill: var(--iw-color-a)" fill-opacity="0.25" stroke-width="1"></rect>
+              <text x="601" y="75" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">PERFORMANCE</text>
+              <text x="601" y="91" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="10" font-weight="700" font-family="'Segoe UI', sans-serif">IMPROVEMENT</text>
+
+              <!-- Loop arrow back -->
+              <path d="M 601 112 Q 601 140 320 140 Q 90 140 90 112" style="stroke: var(--iw-color-a)" stroke-width="0.8" fill="none" stroke-dasharray="4 3" opacity="0.45"></path>
+              <polygon points="87,112 90,104 93,112" style="fill: var(--iw-color-a)" opacity="0.45"></polygon>
+
+              <!-- Labels below nodes -->
+              <text x="90" y="130" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8.5" font-family="'Segoe UI', sans-serif">Pedagogy &amp; PM</text>
+              <text x="257" y="130" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8.5" font-family="'Segoe UI', sans-serif">Small &amp; Large Groups</text>
+              <text x="424" y="130" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8.5" font-family="'Segoe UI', sans-serif">Individual Feedback</text>
+              <text x="601" y="130" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8.5" font-family="'Segoe UI', sans-serif">Iterative Cycle</text>
+            </svg>
+          </div>
+
+          <ul class="exp-bullets">
+            <li><strong>Designed and implemented</strong> training curriculum for teachers, focusing on pedagogy, classroom management, and communication skills.</li>
+            <li><strong>Managed administrative operations</strong> — including payroll accuracy, promotions, and employee records — to maintain organizational efficiency.</li>
+            <li><strong>Coached and mentored teachers</strong> individually, providing performance evaluations and professional development to improve instructional effectiveness.</li>
+          </ul>
+          <div class="chip-row">
+            <span class="chip chip-dark">Curriculum Development</span>
+            <span class="chip chip-dark">Instructional Design</span>
+            <span class="chip chip-dark">Teacher Coaching</span>
+            <span class="chip chip-dark">Performance Evaluation</span>
+            <span class="chip chip-dark">Adult Learning</span>
+            <span class="chip chip-dark">Employee Management</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Red Lobster -->
+      <div class="exp-item">
+        <div class="exp-dot"></div>
+        <div class="exp-card">
+          <div class="exp-card-header">
+            <div class="exp-company">Red Lobster — Orem, UT</div>
+            <div class="exp-title">Team Lead – Server</div>
+            <div class="exp-meta">
+              <span>📅 October 2022 – July 2023</span>
+              <span>📍 Orem, UT</span>
+            </div>
+          </div>
+
+          <!-- Inline SVG — leadership/communication visual -->
+          <div class="exp-visual" style="height:120px;">
+            <svg class="svg-vis" viewBox="0 0 700 120" xmlns="http://www.w3.org/2000/svg" aria-label="Team lead performance and communication visual">
+              <rect x="0" y="0" width="700" height="120" style="fill: var(--iw-color-b)" fill-opacity="0.08" rx="8"></rect>
+              <!-- Simple org-chart style: one node above, three below -->
+              <circle cx="350" cy="30" r="18" style="fill: var(--iw-color-b)" fill-opacity="0.5" stroke-width="0.8"></circle>
+              <text x="350" y="34" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">LEAD</text>
+              <line x1="350" y1="48" x2="200" y2="80" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+              <line x1="350" y1="48" x2="350" y2="80" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+              <line x1="350" y1="48" x2="500" y2="80" style="stroke: var(--iw-color-c)" stroke-width="0.8" opacity="0.4"></line>
+              <circle cx="200" cy="88" r="14" style="fill: var(--iw-color-e)" stroke-width="1" fill-opacity="0.8"></circle>
+              <circle cx="350" cy="88" r="14" style="fill: var(--iw-color-e)" stroke-width="1" fill-opacity="0.8"></circle>
+              <circle cx="500" cy="88" r="14" style="fill: var(--iw-color-e)" stroke-width="1" fill-opacity="0.8"></circle>
+              <text x="200" y="92" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8" font-family="'Segoe UI', sans-serif">Team</text>
+              <text x="350" y="92" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8" font-family="'Segoe UI', sans-serif">Ops</text>
+              <text x="500" y="92" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8" font-family="'Segoe UI', sans-serif">Guests</text>
+              <!-- Accent bar top performer badge -->
+              <rect x="540" y="8" width="140" height="28" rx="6" style="fill: var(--iw-color-a)" fill-opacity="0.18" stroke-width="0.8" stroke-opacity="0.5"></rect>
+              <text x="610" y="27" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="9" font-weight="700" font-family="'Segoe UI', sans-serif">Top Performer</text>
+            </svg>
+          </div>
+
+          <ul class="exp-bullets">
+            <li><strong>Coordinated directly with general management</strong> to organize and improve team performance and employee well-being.</li>
+            <li>Consistently <strong>ranked as top-performing server</strong> in add-on sales week over week.</li>
+            <li>Achieved the highest volume of satisfied customers, reflected through repeat business and positive guest feedback.</li>
+          </ul>
+          <div class="chip-row">
+            <span class="chip chip-dark">Leadership</span>
+            <span class="chip chip-dark">Stakeholder Communication</span>
+            <span class="chip chip-dark">Team Coordination</span>
+            <span class="chip chip-dark">Customer Service</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Telos -->
+      <div class="exp-item">
+        <div class="exp-dot"></div>
+        <div class="exp-card">
+          <div class="exp-card-header">
+            <div class="exp-company">Telos — Orem, UT</div>
+            <div class="exp-title">Care Worker – Mentor</div>
+            <div class="exp-meta">
+              <span>📅 March 2022 – October 2022</span>
+              <span>📍 Orem, UT</span>
+            </div>
+          </div>
+
+          <!-- Inline SVG — mentoring / trust relationship motif -->
+          <div class="exp-visual" style="height:100px;">
+            <svg class="svg-vis" viewBox="0 0 700 100" xmlns="http://www.w3.org/2000/svg" aria-label="Mentoring and trust relationship visual">
+              <rect x="0" y="0" width="700" height="100" style="fill: var(--iw-color-b)" fill-opacity="0.06" rx="8"></rect>
+              <!-- Two circles connected — mentor & resident -->
+              <circle cx="280" cy="50" r="28" style="fill: var(--iw-color-b)" fill-opacity="0.35" stroke-width="0.8"></circle>
+              <text x="280" y="46" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="8.5" font-weight="700" font-family="'Segoe UI', sans-serif">MENTOR</text>
+              <text x="280" y="59" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8" font-family="'Segoe UI', sans-serif">Care Worker</text>
+              <path d="M 310 50 Q 350 30 388 50" style="stroke: var(--iw-color-a)" stroke-width="1.2" fill="none" opacity="0.5"></path>
+              <path d="M 388 50 Q 350 70 310 50" style="stroke: var(--iw-color-a)" stroke-width="0.8" fill="none" opacity="0.3" stroke-dasharray="3 3"></path>
+              <circle cx="420" cy="50" r="28" style="fill: var(--iw-color-b)" fill-opacity="0.2" stroke-width="0.8"></circle>
+              <text x="420" y="46" text-anchor="middle" style="fill: var(--iw-color-d)" font-size="8.5" font-weight="700" font-family="'Segoe UI', sans-serif">RESIDENT</text>
+              <text x="420" y="59" text-anchor="middle" style="fill: var(--iw-color-c)" font-size="8" font-family="'Segoe UI', sans-serif">Growth</text>
+              <text x="350" y="22" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="8.5" font-weight="700" font-family="'Segoe UI', sans-serif">Trust · Guidance · Safety</text>
+            </svg>
+          </div>
+
+          <ul class="exp-bullets">
+            <li>Formed inspiring relationships of trust that encourage healthy living and personal growth.</li>
+            <li>Guided residents through the implementation of therapy skills in day-to-day living.</li>
+            <li>Responsible for the safety, supervision, and well-being of residents.</li>
+          </ul>
+          <div class="chip-row">
+            <span class="chip chip-dark">Coaching &amp; Mentoring</span>
+            <span class="chip chip-dark">Interpersonal Communication</span>
+            <span class="chip chip-dark">Facilitation</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS — LIGHT / ALT (section 3)
+     ============================================================ -->
+<section id="skills" class="sec-mid section-pad">
+  <div class="container">
+    <span class="section-eyebrow">Skills &amp; Expertise</span>
+    <h2 class="section-title">Areas of Expertise</h2>
+    <div class="section-divider"></div>
+
+    <div class="skills-intro">
+      <p>These are the capabilities I bring to an L&amp;D or instructional design role — drawn from two-plus years of hands-on curriculum work, staff development, and professional communication across multiple organizations.</p>
+    </div>
+
+    <div class="skills-grid">
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">📐</div>
+          <div class="skill-group-title">Design &amp; Development</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Curriculum Development</span>
+          <span class="chip chip-primary">Instructional Design</span>
+          <span class="chip chip-primary">Pedagogy</span>
+          <span class="chip chip-primary">Adult Learning</span>
+          <span class="chip chip-primary">Classroom Management</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">🎤</div>
+          <div class="skill-group-title">Delivery &amp; Facilitation</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Training Delivery</span>
+          <span class="chip chip-primary">Public Speaking</span>
+          <span class="chip chip-primary">Facilitation</span>
+          <span class="chip chip-primary">Small &amp; Large Group Training</span>
+          <span class="chip chip-primary">Presentations</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">📊</div>
+          <div class="skill-group-title">Coaching &amp; Evaluation</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Coaching &amp; Mentoring</span>
+          <span class="chip chip-primary">Performance Evaluation</span>
+          <span class="chip chip-primary">Professional Development</span>
+          <span class="chip chip-primary">Feedback Delivery</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">🏢</div>
+          <div class="skill-group-title">Leadership &amp; Operations</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Leadership Training</span>
+          <span class="chip chip-primary">Employee Management</span>
+          <span class="chip chip-primary">Administrative Operations</span>
+          <span class="chip chip-primary">Organizational Effectiveness</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">💬</div>
+          <div class="skill-group-title">Communication</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Strategic Communication</span>
+          <span class="chip chip-primary">Public Relations</span>
+          <span class="chip chip-primary">Stakeholder Communication</span>
+          <span class="chip chip-primary">Collaborative Decision-Making</span>
+        </div>
+      </div>
+
+      <div class="skill-group">
+        <div class="skill-group-header">
+          <div class="skill-group-icon">🔍</div>
+          <div class="skill-group-title">Problem-Solving</div>
+        </div>
+        <div class="skill-chips">
+          <span class="chip chip-primary">Identifying &amp; Solving Problems</span>
+          <span class="chip chip-primary">Process Improvement</span>
+          <span class="chip chip-primary">Customer &amp; Employee Relations</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION — DARK (section 4)
+     ============================================================ -->
+<section id="education" class="sec-dark section-pad">
+  <div class="container">
+    <span class="section-eyebrow">Education</span>
+    <h2 class="section-title">Academic foundation.</h2>
+    <div class="section-divider"></div>
+
+    <div class="edu-card">
+      <div class="edu-degree">Bachelor of Science</div>
+      <div class="edu-major">Applied Communication — Instructional Design Specialization</div>
+
+      <div class="edu-details">
+        <div class="edu-detail">
+          <span class="edu-detail-label">Expected Graduation</span>
+          <span class="edu-detail-value">August 2026</span>
+        </div>
+        <div class="edu-detail">
+          <span class="edu-detail-label">Major</span>
+          <span class="edu-detail-value">Applied Communication</span>
+        </div>
+        <div class="edu-detail">
+          <span class="edu-detail-label">Specialization</span>
+          <span class="edu-detail-value">Instructional Design</span>
+        </div>
+        <div class="edu-detail">
+          <span class="edu-detail-label">Emphasis</span>
+          <span class="edu-detail-value">Leadership, PR &amp; Team Dynamics</span>
+        </div>
+      </div>
+
+      <div class="edu-status-badge">🎓 In Progress — Expected August 2026</div>
+
+      <div class="chip-row" style="margin-top:1.4rem;">
+        <span class="chip chip-dark">Instructional Design</span>
+        <span class="chip chip-dark">Strategic Public Relations</span>
+        <span class="chip chip-dark">Leadership Excellence</span>
+        <span class="chip chip-dark">Small Group Communication</span>
+        <span class="chip chip-dark">Collaborative Decision-Making</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT — LIGHT (section 5)
+     ============================================================ -->
+<section id="contact" class="sec-light section-pad">
+  <div class="container">
+    <span class="section-eyebrow">Contact</span>
+    <h2 class="section-title">Let's talk about your L&amp;D needs.</h2>
+    <div class="section-divider"></div>
+
+    <div class="contact-grid">
+      <div class="contact-intro">
+        <p>I'm actively seeking <strong>entry-level instructional design, training &amp; development, or L&amp;D coordinator</strong> roles — in corporate, nonprofit, or education settings.</p>
+        <p>I have hands-on curriculum design experience, a track record of improved performance outcomes, and a genuine investment in the people I train. If you're building a learning function or need someone who can hit the ground running, I'd like to connect.</p>
+
+        <div class="contact-links">
+          <div class="contact-link-row">
+            <div class="contact-icon-wrap">📧</div>
+            <div>
+              <div class="contact-link-label">Email</div>
+              <a href="mailto:hello@example.com" class="contact-link-value">hello@example.com</a>
+            </div>
+          </div>
+          <div class="contact-link-row">
+            <div class="contact-icon-wrap">📞</div>
+            <div>
+              <div class="contact-link-label">Phone</div>
+              <a href="tel:5551234567" class="contact-link-value">(555) 123-4567</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="contact-cta-panel">
+        <div class="cta-panel-eyebrow">Ready to connect</div>
+        <div class="cta-panel-title">I design learning that changes how people work.</div>
+        <div class="cta-panel-body">Download my resume for the full picture, or reach out directly — I'm always glad to talk about instructional design, training philosophy, or what your team needs from an L&amp;D hire.</div>
+        <div class="cta-panel-btns">
+          <a href="mailto:hello@example.com" class="btn btn-primary">✉️ Send me a message</a>
+          <a href="#" class="btn btn-outline">⬇️ Download Resume (PDF)</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer id="footer">
+  <div class="footer-name">Harry <span>Keller</span></div>
+  <div class="footer-note">Applied Communication · Instructional Design · Graduating August 2026</div>
+  <a href="#contact" class="footer-cta-link">Let's talk about your L&amp;D needs →</a>
+</footer>
+
+<!-- ============================================================
+     LIGHTWEIGHT JS — smooth nav highlight only
+     ============================================================ -->
+
+
+
+</body></html>
