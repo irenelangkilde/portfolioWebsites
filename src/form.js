@@ -242,6 +242,22 @@
       if (display) display.textContent = `= $${total.toFixed(2)} total`;
     };
 
+    // A quota stop is not a retryable failure, so it gets its own message rather than the
+    // generic "Generation failed". Written to generatingWebsiteStatus because that bar is
+    // always present on the colours page and is never cleared by the dispatcher —
+    // braidStatus is, so a message left only there can be wiped before it is read.
+    function setQuotaStatus(data) {
+      const used = Number.isFinite(+data?.used) ? +data.used : null;
+      const limit = Number.isFinite(+data?.limit) ? +data.limit : null;
+      const counts = used !== null && limit !== null ? ` (${used}/${limit})` : "";
+      const tier = data?.tier ? ` on the ${data.tier} plan` : "";
+      setHeaderStatus(
+        "generatingWebsiteStatus",
+        `⚠ Credit limit reached${counts}${tier} — generation stopped.`,
+        "rgba(251,171,156,.9)"
+      );
+    }
+
     function showUpgradePrompt(data) {
       clearInterval(typeof renderCountdown !== "undefined" ? renderCountdown : null);
       generationInProgress = false;
@@ -1191,53 +1207,53 @@ ${pseudoSelectors} {
 	        // Full normalized palette vars, including derived variants beyond --c-5
 	        ...fullCVarOverrides,
         // Canonical semantic names
-        ["--background", theme.background],
-        ["--foreground", theme.foreground],
-        ["--primary", theme.primary],
-        ["--secondary", theme.secondary],
-        ["--accent", theme.accent],
+        ["--background", theme.c5],
+        ["--foreground", theme.c4],
+        ["--primary", theme.c1],
+        ["--secondary", theme.c2],
+        ["--accent", theme.c3],
         // Normalized template --color-* vars (current format)
-        ["--color-bg",         theme.background],
-        ["--color-text",       theme.foreground],
-        ["--color-primary",    theme.primary],
-        ["--color-secondary",  theme.secondary],
-        ["--color-tertiary",   theme.accent],
+        ["--color-bg",         theme.c5],
+        ["--color-text",       theme.c4],
+        ["--color-primary",    theme.c1],
+        ["--color-secondary",  theme.c2],
+        ["--color-tertiary",   theme.c3],
         // New normalized template palette vars
-        ["--c-1", theme.primary],
-        ["--c-2", theme.secondary],
-        ["--c-3", theme.accent],
-        ["--c-4", theme.foreground],
-        ["--c-5", theme.background],
+        ["--c-1", theme.c1],
+        ["--c-2", theme.c2],
+        ["--c-3", theme.c3],
+        ["--c-4", theme.c4],
+        ["--c-5", theme.c5],
         // Backward-compatible aliases for older generated HTML
-        ["--dominant", theme.primary],
-        ["--tertiary", theme.accent],
-        ["--quaternary", theme.foreground],
-        ["--quinary", theme.background],
-        ["--bp-slot1", theme.primary],
-        ["--bp-slot2", theme.secondary],
-        ["--bp-slot3", theme.accent],
-        ["--bp-slot4", theme.foreground],
-        ["--bp-slot5", theme.background],
-        ["--bp-slot-1", theme.primary],
-        ["--bp-slot-2", theme.secondary],
-        ["--bp-slot-3", theme.accent],
-        ["--bp-slot-4", theme.foreground],
-        ["--bp-slot-5", theme.background],
-        ["--slot1", theme.primary],
-        ["--slot2", theme.secondary],
-        ["--slot3", theme.accent],
-        ["--slot4", theme.foreground],
-        ["--slot5", theme.background],
-        ["--slot-1", theme.primary],
-        ["--slot-2", theme.secondary],
-        ["--slot-3", theme.accent],
-        ["--slot-4", theme.foreground],
-        ["--slot-5", theme.background],
-        ["--bp-primary", theme.primary],
-        ["--bp-secondary", theme.secondary],
-        ["--bp-tertiary", theme.accent],
-        ["--bp-accent2", theme.foreground],
-        ["--bp-accent1", theme.background],
+        ["--dominant", theme.c1],
+        ["--tertiary", theme.c3],
+        ["--quaternary", theme.c4],
+        ["--quinary", theme.c5],
+        ["--bp-slot1", theme.c1],
+        ["--bp-slot2", theme.c2],
+        ["--bp-slot3", theme.c3],
+        ["--bp-slot4", theme.c4],
+        ["--bp-slot5", theme.c5],
+        ["--bp-slot-1", theme.c1],
+        ["--bp-slot-2", theme.c2],
+        ["--bp-slot-3", theme.c3],
+        ["--bp-slot-4", theme.c4],
+        ["--bp-slot-5", theme.c5],
+        ["--slot1", theme.c1],
+        ["--slot2", theme.c2],
+        ["--slot3", theme.c3],
+        ["--slot4", theme.c4],
+        ["--slot5", theme.c5],
+        ["--slot-1", theme.c1],
+        ["--slot-2", theme.c2],
+        ["--slot-3", theme.c3],
+        ["--slot-4", theme.c4],
+        ["--slot-5", theme.c5],
+        ["--bp-primary", theme.c1],
+        ["--bp-secondary", theme.c2],
+        ["--bp-tertiary", theme.c3],
+        ["--bp-accent2", theme.c4],
+        ["--bp-accent1", theme.c5],
 	        // Template-specific --color-* aliases inferred from numbered slot comments
 	        ...colorVarAliases
 	      ];
@@ -1646,9 +1662,10 @@ ${pseudoSelectors} {
           return scheme.colors.some(color => !!normalizeToHex(color));
         }
         if (scheme?.base_colors) {
-          return THEME_ROLE_KEYS.some(role => !!normalizeToHex(scheme.base_colors?.[role]));
+          // AI colour-scheme payloads are written in role names, not slots.
+          return LEGACY_ROLE_KEYS.some(role => !!normalizeToHex(scheme.base_colors?.[role]));
         }
-        return THEME_ROLE_KEYS.some(role => !!normalizeToHex(scheme?.[role])) ||
+        return LEGACY_ROLE_KEYS.some(role => !!normalizeToHex(scheme?.[role])) ||
           ["primary", "secondary", "tertiary", "accent2", "accent1"].some(slot => !!normalizeToHex(scheme?.[slot]));
       });
     }
@@ -2239,9 +2256,9 @@ ${pseudoSelectors} {
     let extractTemplatePending = null;   // holds the in-flight extraction promise
     let lastExtractedTemplate = "";      // URL or file name to avoid redundant calls
     let extractTicker = null;            // active countdown interval — cleared on each new extraction
-    let normalizeTemplatePending = null; // in-flight color normalization promise (option 2 file upload)
-    let normalizedTemplateResult = null; // { normalizedHtml, colorSlots, mastheadMeta } once normalization completes
-    let _normalizeRunId = 0;             // epoch counter to abort stale normalization poll loops
+    let normalizeTemplatePending = null; // in-flight preprocessing promise (option 2 file upload)
+    let normalizedTemplateResult = null; // { normalizedHtml, annotated, mastheadMeta } once preprocessing completes
+    let _normalizeRunId = 0;             // epoch counter to abort stale preprocessing poll loops
 
     function setTemplateExtractStatus(text, color = "rgba(234,240,255,.6)") {
       const el = document.getElementById("templateExtractStatus");
@@ -2310,29 +2327,19 @@ ${pseudoSelectors} {
       return !!extractedTemplateCache?.templateHtml;
     }
 
-    // Converts parseColorRoles() output [{index, label, hex}] → semantic role object
-    function colorRolesToSlots(colorRoles) {
-      return normalizeThemeColors({
-        background: (colorRoles || []).find(r => r.index === 1)?.hex || null,
-        foreground: (colorRoles || []).find(r => r.index === 2)?.hex || null,
-        primary: (colorRoles || []).find(r => r.index === 3)?.hex || null,
-        secondary: (colorRoles || []).find(r => r.index === 4)?.hex || null,
-        accent: (colorRoles || []).find(r => r.index === 5)?.hex || null
-      });
-    }
-
-    // Submits the sample HTML to the backend for color normalization (option 2, file upload).
-    // Polls until done, then stores result in normalizedTemplateResult.
-    async function doNormalizeTemplate(sampleHtml) {
+    // Submits an uploaded sample HTML to the backend for the same annotate +
+    // color-normalize preprocessing that templates/<name>/annotated.html gets
+    // offline. Polls until done, then stores result in normalizedTemplateResult.
+    async function doPreprocessTemplate(sampleHtml) {
       const myRunId = ++_normalizeRunId;
       normalizedTemplateResult = null;
-      const jobId = "normalize_" + crypto.randomUUID();
+      const jobId = "preprocess_" + crypto.randomUUID();
       try {
         const res = await fetch(buildWebsiteFunctionPath(), {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({
-            mode: "normalizeTemplate",
+            mode: "preprocessTemplate",
             jobId,
             sampleHtml,
             provider: getAnalysisProvider(),
@@ -2342,8 +2349,10 @@ ${pseudoSelectors} {
         if (!res.ok && res.status !== 202) return null;
       } catch { return null; }
 
+      // 5 minutes: preprocessing is now two stages (a 32k-token annotation call
+      // followed by deterministic colorization), not the single call it replaced.
       const startTime = Date.now();
-      while (Date.now() - startTime < 180000) {
+      while (Date.now() - startTime < 300000) {
         await new Promise(r => setTimeout(r, 3000));
         if (myRunId !== _normalizeRunId) return null; // superseded by newer call
         try {
@@ -2351,7 +2360,11 @@ ${pseudoSelectors} {
           const parsed = await readJsonResponseSafely(pollRes);
           const data = pollRes.ok ? parsed.data : null;
           if (data?.status === "done") {
-            normalizedTemplateResult = { normalizedHtml: data.normalizedHtml, colorSlots: data.colorSlots || {}, mastheadMeta: data.mastheadMeta || null };
+            normalizedTemplateResult = {
+              normalizedHtml: data.normalizedHtml,
+              annotated: !!data.annotated,
+              mastheadMeta: data.mastheadMeta || null
+            };
             return normalizedTemplateResult;
           }
           if (data?.status === "error") return null;
@@ -2422,9 +2435,11 @@ ${pseudoSelectors} {
               html = await normRes.text();
               usedKey = normalizedKey;
               mastheadMeta = parseEmbeddedMastheadMeta(html);
-              // Parse the pre-extracted color slots from the normalized HTML
-              const colorRoles = parseColorRoles(html);
-              normalizedTemplateResult = { normalizedHtml: html, colorSlots: colorRolesToSlots(colorRoles), mastheadMeta };
+              // annotated.html is preprocessed offline, so it arrives already
+              // annotated — the same state doPreprocessTemplate produces for uploads.
+              // Its palette is read from the embedded color-palette JSON by
+              // buildTemplatePalette, so nothing needs parsing out here.
+              normalizedTemplateResult = { normalizedHtml: html, annotated: true, mastheadMeta };
             }
           } catch {}
           if (!html) {
@@ -2486,7 +2501,7 @@ ${pseudoSelectors} {
             lastExtractedTemplate = candidateKey + "#" + extractMode;
             const isAnnotated = candidateKey.endsWith("/annotated.html");
             const resolvedMode = isAnnotated ? "annotated" : "analysis";
-            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, colorRoles: parseColorRoles(templateHtml), templateMode: resolvedMode, templateInputKind: "template" };
+            extractedTemplateCache = { templateHtml, rawTemplateHtml: templateHtml, mastheadMeta: analyzeSampleMastheadLocal(templateHtml), embeddedJson, templateMode: resolvedMode, templateInputKind: "template" };
             tracePortfolioPipeline("template-extract:loaded", {
               keyword: val,
               usedKey: candidateKey,
@@ -2533,7 +2548,8 @@ ${pseudoSelectors} {
             const b64 = await readFileAsBase64(file);
             templateInputKind = "html-upload";
             // HTML file — for braid mode, skip AI extraction and cache raw HTML directly,
-            // then kick off color normalization in background.
+            // then preprocess it in the background into the same annotated +
+            // color-normalized shape a gallery template ships with.
             if (isBraidMode()) {
               const rawHtml = atob(b64);
               lastExtractedTemplate = fileKey;
@@ -2546,14 +2562,19 @@ ${pseudoSelectors} {
                 templateMode: "braid",
                 templateInputKind
               };
-              setTemplateExtractStatus("✓ Sample website loaded — normalizing colors…", "rgba(118,176,34,.9)");
+              setTemplateExtractStatus("✓ Sample website loaded — preparing template…", "rgba(118,176,34,.9)");
               renderSuggestedPalettes();
-              normalizeTemplatePending = doNormalizeTemplate(rawHtml).finally(() => {
+              normalizeTemplatePending = doPreprocessTemplate(rawHtml).finally(() => {
                 normalizeTemplatePending = null;
                 if (normalizedTemplateResult) {
-                  // Swap template cache to use normalized HTML
+                  // Swap template cache to use the preprocessed HTML
                   extractedTemplateCache = { ...extractedTemplateCache, templateHtml: normalizedTemplateResult.normalizedHtml, mastheadMeta: normalizedTemplateResult.mastheadMeta || extractedTemplateCache?.mastheadMeta || null };
-                  setTemplateExtractStatus("✓ Sample website loaded (colors normalized)", "rgba(118,176,34,.9)");
+                  setTemplateExtractStatus(
+                    normalizedTemplateResult.annotated
+                      ? "✓ Sample website loaded (annotated, colors normalized)"
+                      : "✓ Sample website loaded (colors normalized)",
+                    "rgba(118,176,34,.9)"
+                  );
                 }
               });
               return;
@@ -2642,7 +2663,7 @@ ${pseudoSelectors} {
           return;
         }
 
-        const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, colorRoles: parseColorRoles(result.templateHtml), templateMode: extractMode, templateInputKind };
+        const data = { templateHtml: result.templateHtml, rawTemplateHtml: result.templateHtml, mastheadMeta: null, embeddedJson: result.embeddedJson, templateMode: extractMode, templateInputKind };
         extractedTemplateCache = data;
         setTemplateExtractStatus("✓ Design ready", "rgba(118,176,34,.9)");
         populateTemplateExtractPanel(data);
@@ -2673,42 +2694,25 @@ ${pseudoSelectors} {
         // New format (ordinal vars from preprocessSamples): --c-1 … --c-5, ranked by
         // frequency. Old format (semantic vars): --color-primary, --color-secondary, …
         // Fall back to the old keys when the new ones aren't present so legacy templates still work.
+        // Take EVERY --c-N the template declares, not the first five. Real templates carry
+        // 9–18 slots, so capping at five silently truncated the palette this function exists
+        // to report. --c-N maps straight onto slot cN.
         const useNew = scheme["--c-1"] || scheme["--c-2"];
         const keys = useNew
-          ? ["--c-1", "--c-2", "--c-3", "--c-4", "--c-5"]
+          ? Object.keys(scheme)
+              .filter(k => /^--c-\d+$/.test(k))
+              .sort((a, b) => Number(a.slice(4)) - Number(b.slice(4)))
           : ["--color-primary", "--color-secondary", "--color-tertiary", "--color-quaternary", "--color-quinary"];
-        const result = {
-          primary:    hex(keys[0]),
-          secondary:  hex(keys[1]),
-          accent:     hex(keys[2]),
-          foreground: hex(keys[3]),
-          background:    hex(keys[4]),
-        };
-        const complements = {
-          primary:    complementHex(keys[0]),
-          secondary:  complementHex(keys[1]),
-          accent:     complementHex(keys[2]),
-          foreground: complementHex(keys[3]),
-          background:    complementHex(keys[4]),
-        };
+        const result = {};
+        const complements = {};
+        keys.forEach((key, i) => {
+          const slot = slotKey(i);
+          result[slot] = hex(key);
+          complements[slot] = complementHex(key);
+        });
         if (Object.values(complements).some(Boolean)) result.__complements = complements;
         return Object.values(result).some(Boolean) ? result : null;
       } catch { return null; }
-    }
-
-    function parseColorRoles(html) {
-      if (!html) return [];
-      const rootMatch = html.match(/:root\s*\{([\s\S]*?)\}/);
-      if (!rootMatch) return [];
-      const roles = [];
-      const re = /--color-[\w-]+\s*:\s*(#[0-9a-fA-F]{3,8})[^;]*;\s*\/\*([^*]+)\*\//g;
-      let m;
-      while ((m = re.exec(rootMatch[1])) !== null) {
-        const label = m[2].replace(/\s+/g, ' ').trim().split(/\s*[—–-]{1,2}\s*/)[0].trim();
-        const numMatch = label.match(/^(\d+)\./);
-        if (numMatch) roles.push({ index: parseInt(numMatch[1]), label, hex: m[1] });
-      }
-      return roles.sort((a, b) => a.index - b.index);
     }
 
     function parseRootHexVars(html) {
@@ -2736,7 +2740,7 @@ ${pseudoSelectors} {
       const raw = colors?.__complements || colors?.complements || null;
       if (!raw || typeof raw !== "object") return null;
       const complements = {};
-      THEME_ROLE_KEYS.forEach(slot => {
+      THEME_SLOT_KEYS.forEach(slot => {
         complements[slot] = normalizeHex(raw[slot]) || "";
       });
       return Object.values(complements).some(Boolean) ? complements : null;
@@ -2762,7 +2766,7 @@ input[type="color"].split-color::-moz-color-swatch {
 
     function updatePageColorInputSplitSwatches() {
       ensureSplitColorInputStyles();
-      Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => {
+      Object.entries(SLOT_TO_INPUT_ID).forEach(([role, id]) => {
         const input = document.getElementById(id);
         if (!input) return;
         const complementColor = selectedPaletteComplements?.[role] || "";
@@ -2903,7 +2907,7 @@ input[type="color"].split-color::-moz-color-swatch {
     }
 
     function paletteAnchorsFromTheme(theme) {
-      return THEME_ROLE_KEYS
+      return THEME_SLOT_KEYS
         .map((role, idx) => {
           const hex = normalizeHex(theme?.[role]);
           const ok = hexToOklchColor(hex);
@@ -3057,40 +3061,64 @@ input[type="color"].split-color::-moz-color-swatch {
       return hexMetrics(hex).chroma < 22;
     }
 
-    const THEME_ROLE_KEYS = ["primary", "secondary", "accent", "foreground", "background"];
+    // Canonical theme shape: five POSITIONAL slots, c1 (most dominant) … c5 — the same
+    // vocabulary the backend and the templates' --c-N variables use. The five key-colour
+    // pickers ARE these slots, left to right, so what the user types into the first picker
+    // is c1. Nothing re-ranks them afterwards.
+    // A palette carries as many slots as its source actually has — a template's embedded
+    // palette runs 9–18. THEME_SLOT_KEYS is only the ANCHOR set: the five key-colour
+    // pickers the user edits, which renderPortfolio places onto the template's --c-1…--c-N
+    // by rank and derives the rest from. Palettes are variable length; anchors are five.
+    const slotKey = i => `c${i + 1}`;
+    const slotIndex = key => (/^c\d+$/.test(key) ? Number(key.slice(1)) - 1 : -1);
+    // The slot keys a given palette actually holds, in order.
+    const paletteSlots = colors => Object.keys(colors || {})
+      .filter(k => slotIndex(k) >= 0 && colors[k])
+      .sort((a, b) => slotIndex(a) - slotIndex(b));
+
+    const THEME_SLOT_KEYS = ["c1", "c2", "c3", "c4", "c5"];
     const THEME_INPUT_IDS = ["primary", "secondary", "tertiary", "accent2", "accent1"];
-    const ROLE_TO_INPUT_ID = {
-      primary:    "primary",
-      secondary:  "secondary",
-      accent:     "tertiary",
-      foreground: "accent2",
-      background: "accent1",
+    // Input ids are historical and carry no meaning; only the ORDER matters.
+    const SLOT_TO_INPUT_ID = {
+      c1: "primary",
+      c2: "secondary",
+      c3: "tertiary",
+      c4: "accent2",
+      c5: "accent1",
     };
-    const INPUT_ID_TO_ROLE = Object.fromEntries(Object.entries(ROLE_TO_INPUT_ID).map(([role, id]) => [id, role]));
-    const THEME_ROLE_LABELS = {
-      primary:    "Primary",
-      secondary:  "Secondary",
-      accent:     "Accent",
-      foreground: "Quaternary",
-      background:    "Quinary",
+    const INPUT_ID_TO_SLOT = Object.fromEntries(Object.entries(SLOT_TO_INPUT_ID).map(([slot, id]) => [id, slot]));
+    const THEME_SLOT_LABELS = {
+      c1: "C1",
+      c2: "C2",
+      c3: "C3",
+      c4: "C4",
+      c5: "C5",
     };
 
-    // Canonical theme shape: five semantic roles, nothing else. Roles (not positional
-    // slots) are the right vocabulary HERE because the form reasons about meaning —
-    // background/foreground drive contrast and light/dark pairing. The backend converts
-    // to positional c1…c5 at its renderer boundary (toPositionalPalette).
-    //
-    // The `||` chains accept the spellings external palette data arrives in (embedded
-    // template schemes, suggestion payloads, uploaded-image palettes). That is input
-    // normalisation, not an alias fan-out: the OUTPUT is always exactly these five keys.
+    // Role names still arrive from OUTSIDE — AI colour-scheme suggestions and embedded
+    // template palettes are written in them. They are accepted as input spellings only;
+    // nothing downstream is keyed by them.
+    const LEGACY_ROLE_KEYS = ["primary", "secondary", "accent", "foreground", "background"];
+
+    // The one conversion point. The `||` chains accept every spelling external palette
+    // data arrives in — role names, ordinals, historical input ids — and the OUTPUT is
+    // always exactly c1…c5. Positions match the legacy role order that the rest of the
+    // pipeline already assumed: primary→c1, secondary→c2, accent→c3, foreground→c4,
+    // background→c5 (see paletteAnchorsFromTheme, which already mapped index → --c-N).
     function normalizeThemeColors(value = {}) {
-      return {
-        primary:    normalizeHex(value.primary    || value.slot1 || null),
-        secondary:  normalizeHex(value.secondary  || value.slot2 || null),
-        accent:     normalizeHex(value.accent     || value.tertiary || value.slot3 || null),
-        foreground: normalizeHex(value.foreground || value.quaternary || value.accent2 || value.slot4 || null),
-        background: normalizeHex(value.background || value.quinary    || value.accent1 || value.slot5 || null),
+      const out = {
+        c1: normalizeHex(value.c1 || value.primary    || value.slot1 || null),
+        c2: normalizeHex(value.c2 || value.secondary  || value.slot2 || null),
+        c3: normalizeHex(value.c3 || value.accent     || value.tertiary || value.slot3 || null),
+        c4: normalizeHex(value.c4 || value.foreground || value.quaternary || value.accent2 || value.slot4 || null),
+        c5: normalizeHex(value.c5 || value.background || value.quinary    || value.accent1 || value.slot5 || null),
       };
+      // Slots past the anchor five have no legacy spelling to reconcile — carry them through
+      // as-is so a template's full c6…cN palette survives normalisation.
+      Object.keys(value || {}).forEach(key => {
+        if (slotIndex(key) >= THEME_SLOT_KEYS.length) out[key] = normalizeHex(value[key]);
+      });
+      return out;
     }
 
 
@@ -3190,22 +3218,25 @@ input[type="color"].split-color::-moz-color-swatch {
       });
     }
 
-    function updateColorRoleLabels() {
-      Object.entries(THEME_ROLE_LABELS).forEach(([role, label]) => {
-        const el = document.getElementById(`${ROLE_TO_INPUT_ID[role]}-label`);
+    // Labels the five key-colour pickers from THEME_SLOT_LABELS, via SLOT_TO_INPUT_ID —
+    // the same map getPage3Colors() reads, so the label on a picker always names the role
+    // that picker actually feeds.
+    //
+    // This used to write textContent into `#<id>-label` elements that do not exist in
+    // overview.html, so it was a silent no-op and the static aria-label/title attributes
+    // stood unchallenged — and those had drifted a full slot out of step with the code
+    // (#primary was labelled "Background" while feeding `primary`). Driving both
+    // attributes from the map here means the markup can no longer disagree with the code.
+    function updateColorSlotLabels() {
+      Object.entries(THEME_SLOT_LABELS).forEach(([role, label]) => {
+        const input = document.getElementById(SLOT_TO_INPUT_ID[role]);
+        if (input) {
+          input.setAttribute("aria-label", `${label} color`);
+          input.title = `${label} color`;
+        }
+        // Optional visible caption, if one is ever added alongside the input.
+        const el = document.getElementById(`${SLOT_TO_INPUT_ID[role]}-label`);
         if (el) el.textContent = label;
-      });
-    }
-
-    function mapRoleColorsToUiSlots(roleColors) {
-      if (!Array.isArray(roleColors) || !roleColors.length) return null;
-      const ordered = roleColors.map(item => normalizeHex(item?.hex) || null);
-      return normalizeThemeColors({
-        background: ordered[0],
-        foreground: ordered[1],
-        primary: ordered[2],
-        secondary: ordered[3],
-        accent: ordered[4]
       });
     }
 
@@ -3221,17 +3252,21 @@ input[type="color"].split-color::-moz-color-swatch {
       });
     }
 
+    // Dedup signature. Spans the palette's own slots, not a fixed five, so two palettes that
+    // agree on c1…c5 but differ at c6+ are no longer collapsed into one.
     function getPaletteKey(palette) {
       if (!palette?.colors) return "";
-      return THEME_ROLE_KEYS.map(slot => normalizeHex(normalizeThemeColors(palette.colors)[slot]) || "").join("|");
+      const norm = normalizeThemeColors(palette.colors);
+      return paletteSlots(norm).map(slot => normalizeHex(norm[slot]) || "").join("|");
     }
 
+    // True once an uploaded HTML file has been preprocessed — i.e. it carries the
+    // embedded color-palette JSON, the same marker a gallery annotated.html has.
+    // Before that the palette shown is only a preliminary guess off the raw upload.
     function hasNormalizedTemplatePalette(cache) {
       if (!cache) return false;
       if (cache.templateInputKind !== "html-upload") return false;
-      if (normalizedTemplateResult?.colorSlots && Object.values(normalizedTemplateResult.colorSlots).some(Boolean)) return true;
-      const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
-      return Array.isArray(roleColors) && roleColors.length > 0;
+      return !!parseEmbeddedColorPalette(cache.templateHtml);
     }
 
     function buildTemplatePalette(cache) {
@@ -3241,25 +3276,11 @@ input[type="color"].split-color::-moz-color-swatch {
       const embeddedPalette = parseEmbeddedColorPalette(cache.templateHtml);
       if (embeddedPalette) return { label: "Template palette", colors: embeddedPalette };
 
-      const roleColors = cache.colorRoles || parseColorRoles(cache.templateHtml);
+      // Fallback heuristics below, for HTML that hasn't been preprocessed yet
+      // (a raw upload still awaiting doPreprocessTemplate) or AI-extracted
+      // template.html, neither of which carries a color-palette block.
       const rootVars = parseRootHexVars(cache.templateHtml);
       const embedded = cache.embeddedJson?.default_color_scheme || {};
-
-      // Numbered --color-* comments define slot order 1–5 directly.
-      if (roleColors.length) {
-        const colors = mapRoleColorsToUiSlots(roleColors);
-        if (Object.values(colors).some(Boolean)) {
-          return { label: "Template palette", colors };
-        }
-      }
-
-      const palette = normalizeThemeColors({
-        primary: embedded.primary || null,
-        secondary: embedded.secondary || null,
-        accent: embedded.accent || embedded.tertiary || null,
-        foreground: embedded.foreground || embedded.accent2 || null,
-        background: embedded.background || embedded.accent1 || null
-      });
 
       const seen = new Set();
       const candidates = [];
@@ -3274,7 +3295,6 @@ input[type="color"].split-color::-moz-color-swatch {
         const bonus = ({ primary: 90, secondary: 80, accent: 85, tertiary: 85, foreground: 60, accent2: 60, background: 65, accent1: 65 })[slot] || 0;
         pushCandidate(hex, bonus, slot);
       });
-      roleColors.forEach((r, i) => pushCandidate(r.hex, 70 - i * 3, r.label));
       rootVars.forEach(v => {
         const name = v.name.toLowerCase();
         let score = 20;
@@ -3285,46 +3305,35 @@ input[type="color"].split-color::-moz-color-swatch {
         pushCandidate(v.hex, score, name);
       });
 
-      const pickUnused = list => list.find(c => !Object.values(palette).some(v => normalizeHex(v) === c.norm));
-      const chromatic = candidates
-        .filter(c => !c.neutral)
-        .sort((a, b) => b.score - a.score || b.chroma - a.chroma);
-      const neutrals = candidates
-        .filter(c => c.neutral)
-        .sort((a, b) => b.score - a.score || a.luminance - b.luminance);
 
-      ["primary", "secondary", "accent"].forEach(slot => {
-        const current = palette[slot];
-        const currentNorm = normalizeHex(current);
-        const duplicate = currentNorm && Object.entries(palette).some(([k, v]) => k !== slot && normalizeHex(v) === currentNorm);
-        if (!current || isNeutralHex(current) || duplicate) {
-          const next = pickUnused(chromatic);
-          if (next) palette[slot] = next.hex;
-        }
-      });
+      // Rank every candidate by the same measure the rest of the pipeline uses — relevance
+      // × chroma, chroma floored so a strongly-named neutral still places rather than
+      // collapsing to zero. This mirrors prominenceScore() in renderPortfolio.mjs; `score`
+      // stands in for usage count, which isn't available when scraping loose CSS vars.
+      //
+      // No role split and no manufactured neutrals. This used to force c1–c3 chromatic
+      // (evicting any neutral found there) and then plant the darkest neutral in c4 and the
+      // lightest in c5 — the retired primary/secondary/accent vs foreground/background
+      // taxonomy, hardcoded twice. Slots now fall out of the ranking: chromatic colours lead
+      // because their score × chroma is higher, neutrals trail because it isn't.
+      const PROMINENCE_CHROMA_FLOOR = 6;   // ≈ the 0.02 OKLab floor on this 0–255 chroma scale
+      const prominence = c => (c.score || 1) * Math.max(c.chroma, PROMINENCE_CHROMA_FLOOR);
 
-      const darkCandidate = !palette.foreground || Object.entries(palette).some(([k, v]) => k !== "foreground" && normalizeHex(v) === normalizeHex(palette.foreground))
-        ? neutrals.slice().sort((a, b) => a.luminance - b.luminance)[0] || pickUnused(candidates)
-        : null;
-      if (darkCandidate) palette.foreground = darkCandidate.hex;
+      const ranked = candidates.slice().sort((a, b) => prominence(b) - prominence(a));
+      const picked = [];
+      for (const c of ranked) {
+        if (picked.length >= THEME_SLOT_KEYS.length) break;
+        if (picked.some(p => p.norm === c.norm)) continue;
+        picked.push(c);
+      }
+      if (!picked.length) return null;
 
-      const lightCandidate = !palette.background || Object.entries(palette).some(([k, v]) => k !== "background" && normalizeHex(v) === normalizeHex(palette.background))
-        ? neutrals.slice().sort((a, b) => b.luminance - a.luminance)[0] || pickUnused(candidates)
-        : null;
-      if (lightCandidate) palette.background = lightCandidate.hex;
-
-      THEME_ROLE_KEYS.forEach(slot => {
-        const current = palette[slot];
-        const currentNorm = normalizeHex(current);
-        const duplicate = currentNorm && THEME_ROLE_KEYS.some(other => other !== slot && normalizeHex(palette[other]) === currentNorm);
-        if (!current || duplicate) {
-          const next = pickUnused(slot === "foreground" || slot === "background" ? neutrals : chromatic) || pickUnused(candidates);
-          if (next) palette[slot] = next.hex;
-        }
-      });
-
-      if (!Object.values(palette).some(Boolean)) return null;
-      return { label: "Template palette", colors: normalizeThemeColors(palette) };
+      // Fewer candidates than slots is a legitimate outcome, not a failure: a template with
+      // three distinct colours yields a three-colour palette. Unfilled slots stay null and
+      // the renderer invents a neutral if it actually needs one.
+      const colors = {};
+      THEME_SLOT_KEYS.forEach((slot, i) => { colors[slot] = picked[i]?.hex || null; });
+      return { label: "Template palette", colors: normalizeThemeColors(colors) };
     }
 
     function buildUploadedImagePalette(cache) {
@@ -3333,7 +3342,7 @@ input[type="color"].split-color::-moz-color-swatch {
       const isImageUpload = uploadedImagePalette || cache?.templateInputKind === "image-upload";
       if (!isImageUpload) return null;
       const palette = normalizeThemeColors(uploadedImagePalette || cache?.embeddedJson?.default_color_scheme || {});
-      if (!THEME_ROLE_KEYS.some(role => palette[role])) return null;
+      if (!THEME_SLOT_KEYS.some(role => palette[role])) return null;
       return { label: "Uploaded image palette", colors: palette };
     }
 
@@ -3389,8 +3398,8 @@ input[type="color"].split-color::-moz-color-swatch {
       selectedPaletteComplements = getPaletteComplements(colors);
       const theme = normalizeThemeColors(colors);
       const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
-      Object.entries(ROLE_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
-      updateColorRoleLabels();
+      Object.entries(SLOT_TO_INPUT_ID).forEach(([role, id]) => set(id, theme[role]));
+      updateColorSlotLabels();
       updatePageColorInputSplitSwatches();
       userHasCustomizedColors = false;
     }
@@ -3778,14 +3787,11 @@ input[type="color"].split-color::-moz-color-swatch {
     }
 
     function getPage3Colors(){
-      const primary    = document.getElementById("primary").value.trim();
-      const secondary  = document.getElementById("secondary").value.trim();
-      const accent     = document.getElementById("tertiary").value.trim();
-      // Input ids are historical and do not match the roles they feed:
-      // #tertiary -> accent, #accent2 -> foreground, #accent1 -> background.
-      const foreground = document.getElementById("accent2").value.trim();
-      const background = document.getElementById("accent1").value.trim();
-      const theme = normalizeThemeColors({ primary, secondary, accent, foreground, background });
+      // The five pickers ARE c1…c5, left to right. Their element ids are historical and
+      // carry no meaning — SLOT_TO_INPUT_ID is the only thing that knows which is which.
+      const theme = normalizeThemeColors(Object.fromEntries(
+        THEME_SLOT_KEYS.map(slot => [slot, document.getElementById(SLOT_TO_INPUT_ID[slot])?.value.trim() || ""])
+      ));
       if (selectedPaletteComplements) theme.__complements = { ...selectedPaletteComplements };
       return {
         themeNumber: document.getElementById("themeNumber")?.value?.trim() || "",
@@ -4227,7 +4233,6 @@ input[type="color"].split-color::-moz-color-swatch {
               mastheadMeta,
 	            colorSpec,
             colorPreferences,
-            templateColorSlots: shouldUseInputPalette() ? (normalizedTemplateResult?.colorSlots || null) : null,
             headshotName: headshotInput?.files?.[0]?.name || "",
             provider:     getAnalysisProvider(),
             userId:       currentUserId()
@@ -4501,7 +4506,7 @@ input[type="color"].split-color::-moz-color-swatch {
             generationError    = errMsg;
             slotFillInProgress = false;
             setHeaderStatus("braidStatus", "⚠ " + errMsg, "rgba(251,171,156,.9)");
-            if (data.quota) showUpgradePrompt(data);
+            if (data.quota) { setQuotaStatus(data); showUpgradePrompt(data); }
             setApplyBtnState(true);
             return;
           }
@@ -4626,6 +4631,7 @@ input[type="color"].split-color::-moz-color-swatch {
               } else {
                 showEditorPendingMasthead(`Masthead image failed: ${mastheadImageError}`);
               }
+              setQuotaStatus(data);
               showUpgradePrompt(data);
               return;
             }
@@ -5084,7 +5090,7 @@ input[type="color"].split-color::-moz-color-swatch {
             throw new Error(data.error || `Poll failed with HTTP ${pollRes.status}${parsed.text ? `: ${parsed.text.slice(0, 160)}` : ""}`);
           }
           if (data.status === "error") {
-            if (data.quota) { showUpgradePrompt(data); return; }
+            if (data.quota) { setQuotaStatus(data); showUpgradePrompt(data); return; }
             throw new Error(data.error || "Generation failed.");
           }
         }
@@ -5820,7 +5826,11 @@ input[type="color"].split-color::-moz-color-swatch {
     document.getElementById("back3")?.addEventListener("click", () => { onEnterPage2(); setStep(3); });
 
     // Page 3 (Colors)
-    const PALETTE_SLOTS = THEME_ROLE_KEYS;
+    // Slots are already in dominance order (c1 most dominant), so suggested palettes and
+    // the key-colour pickers both display c1…c5 left to right and stay in step. This used
+    // to re-sort the suggested swatches by an area-prior × chroma prominence score while
+    // the pickers sat in fixed DOM order, so clicking a palette appeared to shuffle it.
+    const PALETTE_SLOTS = THEME_SLOT_KEYS;
     const MISSING_PALETTE_SWATCH_BACKGROUND = "linear-gradient(135deg, transparent 0%, transparent 46%, #ff2f2f 46%, #ff2f2f 54%, transparent 54%, transparent 100%), #000000";
 
     function isMissingPaletteColor(value) {
@@ -5930,7 +5940,12 @@ input[type="color"].split-color::-moz-color-swatch {
         const swatches = document.createElement("div");
         swatches.style.cssText = "display:flex; gap:3px; flex-wrap:wrap;";
         if (!pending) {
-          PALETTE_SLOTS.forEach(slot => {
+          // A palette carries as many colours as its source actually had — a template's
+          // embedded palette runs 9–18, a sparse one fewer than five. Draw exactly those.
+          // The missing-swatch marker is kept only for placeholder (`empty`) rows, where a
+          // fixed-width skeleton is what we want.
+          const drawnSlots = empty ? PALETTE_SLOTS : paletteSlots(palette.colors);
+          drawnSlots.forEach(slot => {
             const s = document.createElement("span");
             const rawColor = empty ? "" : palette.colors?.[slot];
             const missingColor = !empty && isMissingPaletteColor(rawColor);
@@ -5941,7 +5956,8 @@ input[type="color"].split-color::-moz-color-swatch {
               : complementColor
                 ? `linear-gradient(135deg, ${color} 0%, ${color} 50%, ${complementColor} 50%, ${complementColor} 100%)`
                 : color;
-            const roleLabel = THEME_ROLE_LABELS[slot] || slot;
+            // Works for any slot, including c6+ which has no THEME_SLOT_LABELS entry.
+            const roleLabel = THEME_SLOT_LABELS[slot] || slot.toUpperCase();
             s.title = missingColor
               ? `${roleLabel}: no extracted color`
               : complementColor
@@ -6050,6 +6066,9 @@ input[type="color"].split-color::-moz-color-swatch {
       }
     }
 
+    // Label the key-colour pickers up front. Previously this only ran from applyColors(),
+    // so a fresh load showed whatever the static markup said until a palette was clicked.
+    updateColorSlotLabels();
     renderSuggestedPalettes(); // render blank rows immediately
     document.getElementById("continueTo4")?.addEventListener("click", () => setStep(5));
 
@@ -6216,7 +6235,7 @@ input[type="color"].split-color::-moz-color-swatch {
     }
 
     function hasAnySubmittedThemeColor(theme) {
-      return THEME_ROLE_KEYS.some(role => /^#[0-9a-f]{6}$/i.test(normalizeHex(theme?.[role]) || ""));
+      return THEME_SLOT_KEYS.some(role => /^#[0-9a-f]{6}$/i.test(normalizeHex(theme?.[role]) || ""));
     }
 
     function shouldSubmitPage4ColorSpec() {
@@ -6255,7 +6274,7 @@ input[type="color"].split-color::-moz-color-swatch {
       if (trimmed.length < 3)   return "Please enter at least 3 characters describing your color preferences.";
       if (trimmed.length > 500) return "Please keep your color description under 500 characters.";
       if (!/[a-z]/i.test(trimmed)) return "Please describe your color preferences in words.";
-      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastel|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
+      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastels?|neons?|fluorescent|electric|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
       if (!colorish.test(trimmed)) return "Please mention at least one color or descriptor (e.g. “deep navy”, “warm earth tones”).";
       return null; // valid
     }
@@ -6561,6 +6580,31 @@ input[type="color"].split-color::-moz-color-swatch {
     updateProviderBadge();
     renderStepUI();
     setStep(0);
+    // The Thumbnails gallery (html/actual-html-outputs.html), opened in a new tab from the
+    // Style field, posts back the style whose card tag was clicked.
+    window.addEventListener("message", (event) => {
+      const msg = event.data;
+      if (!msg || msg.type !== "styleSelected") return;
+      if (event.origin !== window.location.origin && event.origin !== "null") return;
+
+      const select = document.getElementById("designStyle");
+      const wanted = String(msg.style || "").trim();
+      if (!select || !wanted) return;
+
+      // The gallery speaks display labels ("Clean minimal"); the dropdown stores tokens
+      // ("clean-minimal"). Match either so both spellings resolve.
+      const option = [...select.options].find(o =>
+        o.value === wanted || o.textContent.trim().toLowerCase() === wanted.toLowerCase());
+      if (!option) return;
+
+      select.value = option.value;
+      // Assigning .value fires nothing, and #designStyle carries four listeners — touched-key
+      // tracking, template re-extraction, the "Other" text-field toggle, and page-3
+      // invalidation. Dispatch both events so a message-driven pick behaves like a real one.
+      select.dispatchEvent(new Event("input",  { bubbles: true }));
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
     window.addEventListener("message", (event) => {
         const msg = event.data;
         if (!msg || msg.type !== "colorThemeSelected") return;
@@ -6575,11 +6619,10 @@ input[type="color"].split-color::-moz-color-swatch {
         const theme = normalizeThemeColors(t.base_colors || t);
 
         set("themeNumber", msg.number ?? "");
-        set("primary",   theme.primary);
-        set("secondary", theme.secondary);
-        set("tertiary",  theme.accent);
-        set("accent2",   theme.foreground);
-        set("accent1",   theme.background);
+        // The gallery sends c1…c5 already in dominance order, so this is a straight
+        // slot-to-picker assignment. normalizeThemeColors is kept only to validate and
+        // lower-case the hexes — it does no renaming on this path.
+        THEME_SLOT_KEYS.forEach(slot => set(SLOT_TO_INPUT_ID[slot], theme[slot]));
         updatePageColorInputSplitSwatches();
         invalidateFromPage4();
       });

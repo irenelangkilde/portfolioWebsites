@@ -35,8 +35,21 @@ export function resolveOpenAIKey() {
   return process.env.OPENAI_API_KEY_LOCAL || process.env.OPENAI_API_KEY;
 }
 
+// authToken pinned off: HYGIENE, NOT A BUG FIX — do not cite this as the cause of a 401.
+// The SDK defaults authToken to readEnv('ANTHROPIC_AUTH_TOKEN') and authHeaders()
+// composes apiKeyAuth() AND bearerAuth(), so when that variable exists the request
+// carries both `X-Api-Key: <our real key>` and `Authorization: Bearer <gateway token>`.
+// Tested against the live API: it accepts the request anyway and ignores the foreign
+// bearer as long as x-api-key is valid — an injected token does NOT produce a 401.
+// Pinned regardless, because sending a credential we did not intend to send is worth
+// preventing on its own. Applied after caller opts, like baseURL.
 export function makeAnthropic(opts = {}) {
-  return new Anthropic({ apiKey: resolveAnthropicKey(), ...opts, baseURL: ANTHROPIC_API_BASE_URL });
+  return new Anthropic({
+    apiKey: resolveAnthropicKey(),
+    ...opts,
+    baseURL: ANTHROPIC_API_BASE_URL,
+    authToken: null,
+  });
 }
 
 export function makeOpenAI(opts = {}) {

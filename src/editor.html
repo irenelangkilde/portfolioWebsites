@@ -625,12 +625,8 @@
     }
     #cwStatus.ok  { display: block; color: rgba(160,230,160,.9); background: rgba(0,180,80,.12); }
     #cwStatus.err { display: block; color: rgba(255,160,160,.9); background: rgba(200,60,60,.15); }
-    input[type="color"].split-color::-webkit-color-swatch {
-      background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
-    }
-    input[type="color"].split-color::-moz-color-swatch {
-      background: linear-gradient(135deg, var(--split-main-color) 0%, var(--split-main-color) 50%, var(--split-complement-color) 50%, var(--split-complement-color) 100%) !important;
-    }
+    /* .split-color swatch styling removed with updateSplitColorInput — nothing adds that
+       class now that the pre-workbench colour panel is gone. */
     .color-workbench-note {
       margin: 0; color: rgba(234,240,255,.5); font-size: 11px; line-height: 1.35;
     }
@@ -1534,13 +1530,13 @@
         <div class="color-workbench-title">Color workbench</div>
         <div id="cwStatus" role="status" aria-live="polite"></div>
       </div>
-      <div id="editorSwatchHead" aria-hidden="true"><span>Primary</span><span>Secondary</span></div>
+      <div id="editorSwatchHead" aria-hidden="true"><span>Pin</span><span>Derivatives</span></div>
       <div id="editorSwatchRows" aria-live="polite"></div>
       <div class="color-workbench-instructions">
         <ul class="color-workbench-footer-note">
           <li><b>Single-click:</b> flash red.<span class="cwb-info" tabindex="0" data-tooltip="Portions of website colored with clicked swatch will flash red." aria-label="Portions of website colored with clicked swatch will flash red.">i</span></li>
           <li><b>Double-click:</b> substitute color.<span class="cwb-info" tabindex="0" data-tooltip="Displays a popup to replace clicked color with a custom color" aria-label="Displays a popup to replace clicked color with a custom color">i</span></li>
-          <li><b>Shift-click:</b> Swap Primary vs Secondary status.<span class="cwb-info" tabindex="0" data-tooltip="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change. Enter a primary swatch id with which to group the clicked swatch." aria-label="Secondary colors are computed as a function of primary colors, and change automatically when primary colors change. Enter a primary swatch id with which to group the clicked swatch.">i</span></li>
+          <li><b>Shift-click:</b> Swap Pin vs Derivative status.<span class="cwb-info" tabindex="0" data-tooltip="Derivative colors are computed from pinned colors, and change automatically when pinned colors change. Enter a Pin swatch id with which to group the clicked swatch." aria-label="Derivative colors are computed from pinned colors, and change automatically when pinned colors change. Enter a Pin swatch id with which to group the clicked swatch.">i</span></li>
         </ul>
       </div>
       <div class="color-workbench-controls">
@@ -2004,6 +2000,17 @@
 
     // ── CSS variable extraction ────────────────────────────────────────────────
     const CSS_VAR_NAMES = ["background", "foreground", "primary", "secondary", "accent"];
+    // Canonical shape as of the positional migration: form.js caches page-4 colours keyed
+    // c1…c5 (getPage3Colors().theme). Tried FIRST — the other alias maps below are older
+    // spellings kept only so previously cached payloads and older generated HTML still
+    // resolve. Same numbering as SLOT_ALIAS_MAP: primary→1 … background→5.
+    const POSITIONAL_ALIAS_MAP = {
+      background: "c5",
+      foreground: "c4",
+      primary: "c1",
+      secondary: "c2",
+      accent: "c3"
+    };
     const SLOT_ALIAS_MAP = {
       background: "slot5",
       foreground: "slot4",
@@ -2018,13 +2025,8 @@
       secondary: "secondary",
       accent: "primary"
     };
-    const ORDINAL_ROLE_ALIAS_MAP = {
-      background: "quinary",
-      foreground: "quaternary",
-      primary: "primary",
-      secondary: "secondary",
-      accent: "accent"
-    };
+    // ORDINAL_ROLE_ALIAS_MAP (quinary/quaternary/…) was read only by
+    // normalizeComplementMap, which is gone. No remaining caller accepts that spelling.
     const SLOT_CSS_VAR_FAMILIES = {
       background: ["--background", "--quinary", "--bp-slot5", "--bp-slot-5", "--slot5", "--slot-5", "--bp-accent1", "--accent1"],
       foreground: ["--foreground", "--quaternary", "--bp-slot4", "--bp-slot-4", "--slot4", "--slot-4", "--bp-accent2", "--accent2"],
@@ -2114,54 +2116,10 @@
       return "#" + m.slice(0,3).map(n => (+n).toString(16).padStart(2,"0")).join("");
     }
 
-    function normalizeComplementMap(map) {
-      if (!map || typeof map !== "object") return {};
-      const out = {};
-      for (const name of CSS_VAR_NAMES) {
-        const value = map[name] || map[ORDINAL_ROLE_ALIAS_MAP[name]] || map[SLOT_ALIAS_MAP[name]] || map[LEGACY_ROLE_ALIAS_MAP[name]];
-        if (value) out[name] = toHexColor(String(value));
-      }
-      return out;
-    }
-
-    function parseEmbeddedPaletteComplements(html) {
-      const match = String(html || "").match(/<script[^>]*id=["']color-palette["'][^>]*>([\s\S]*?)<\/script>/i);
-      if (!match) return {};
-      try {
-        const scheme = JSON.parse(match[1])?.scheme || {};
-        const complement = varName => {
-          const item = scheme[varName]?.complement;
-          return item?.memberCount > 0 && item?.hex ? item.hex : "";
-        };
-        return normalizeComplementMap({
-          // Positional --c-N is the only palette dialect the renderer emits now; the
-          // semantic --color-* mirror was retired in Stage 3. Slot order matches
-          // ROLE_TO_SLOT_ORDER in buildWebsite-background.mjs.
-          primary:    complement("--c-1"),
-          secondary:  complement("--c-2"),
-          accent:     complement("--c-3"),
-          foreground: complement("--c-4"),
-          background: complement("--c-5"),
-        });
-      } catch {
-        return {};
-      }
-    }
-
-    function updateSplitColorInput(input, slotName, complementColor) {
-      if (!input) return;
-      const hasComplement = !!complementColor;
-      input.classList.toggle("split-color", hasComplement);
-      if (!hasComplement) {
-        input.style.removeProperty("--split-main-color");
-        input.style.removeProperty("--split-complement-color");
-        input.removeAttribute("title");
-        return;
-      }
-      input.style.setProperty("--split-main-color", toHexColor(input.value || currentColors[slotName] || "#000000"));
-      input.style.setProperty("--split-complement-color", complementColor);
-      input.title = `${slotName}: ${input.value} / complement ${complementColor}`;
-    }
+    // normalizeComplementMap / parseEmbeddedPaletteComplements / updateSplitColorInput
+    // lived here. They rendered split main/complement swatches on the per-role colour
+    // inputs of the pre-workbench colour panel. That panel's markup is gone, so their only
+    // callers went with it — removed rather than left as unreachable definitions.
 
     // ── State ──────────────────────────────────────────────────────────────────
     const currentColors = {};
@@ -3968,49 +3926,22 @@
     // ── Color panel ────────────────────────────────────────────────────────────
     const byRole = extractCssVarsByRoleComment(cssText);
     const extracted = Object.keys(byRole).length ? byRole : extractCssVarsByName(cssText);
-    const paletteComplements = {
-      ...parseEmbeddedPaletteComplements(fullHtml),
-      ...normalizeComplementMap(page4Colors?.__complements || page4Colors?.complements),
-    };
+    // Seeds currentColors, which applyColorOverrides() writes onto the iframe root as
+    // CSS variable overrides. The page-4 palette wins; otherwise fall back to whatever
+    // was extracted from the document's own CSS.
+    //
+    // There used to be per-role <input type=color> wiring here, plus a btnResetColors
+    // handler, both keyed off `#cp-<role>` elements inside `.color-row`. That markup no
+    // longer exists — the Color workbench replaced it — so the lookups always returned
+    // null and the listeners were never attached. The reset handler was doubly dead: the
+    // workbench assigns `btnResetColors.onclick` later at the same scope depth, which
+    // overwrote this one. Removed rather than repaired; the workbench owns both jobs now.
     for (const name of CSS_VAR_NAMES) {
-      const preferred = page4Colors?.[name] || page4Colors?.[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors?.[SLOT_ALIAS_MAP[name]];
-      const hex = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
-      currentColors[name] = hex;
-      const row = document.getElementById(`cp-${name}`)?.closest(".color-row");
-      if (row) {
-        const input = row.querySelector("input[type=color]");
-        if (input) {
-          input.value = hex;
-          updateSplitColorInput(input, name, paletteComplements[name]);
-          input.addEventListener("input", () => {
-            currentColors[name] = input.value;
-            updateSplitColorInput(input, name, paletteComplements[name]);
-            applyColorOverrides();
-          });
-        }
-      }
+      const preferred = page4Colors?.[POSITIONAL_ALIAS_MAP[name]] || page4Colors?.[name] || page4Colors?.[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors?.[SLOT_ALIAS_MAP[name]];
+      currentColors[name] = preferred ? toHexColor(preferred) : (extracted[name] ? toHexColor(extracted[name]) : "#000000");
     }
     applyColorOverrides();
     document.getElementById("colorPanel").classList.remove("hidden");
-
-    // ── Reset colors ───────────────────────────────────────────────────────────
-    // Reset should prefer the exact page-4 palette the user submitted.
-    const initialColors = page4Colors
-      ? Object.fromEntries(CSS_VAR_NAMES.map(name => [name, toHexColor(page4Colors[name] || page4Colors[LEGACY_ROLE_ALIAS_MAP[name]] || page4Colors[SLOT_ALIAS_MAP[name]] || currentColors[name] || "#000000")]))
-      : { ...currentColors };
-    document.getElementById("btnResetColors").onclick = () => {
-      for (const name of CSS_VAR_NAMES) {
-        const hex = initialColors[name];
-        if (!hex) continue;
-        currentColors[name] = hex;
-        const input = document.getElementById(`cp-${name}`);
-        if (input) {
-          input.value = hex;
-          updateSplitColorInput(input, name, paletteComplements[name]);
-        }
-      }
-      applyColorOverrides();
-    };
 
     // ── Full palette modal ─────────────────────────────────────────────────────
 
@@ -5091,7 +5022,7 @@
 	          renderSwatchButton(dep, "ewb-dependent", "activate-dependent", currentWorkbenchColor(dep))
 	        ).join("");
 	        const input = dependencyInputRowId === row.id
-	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="3" autocomplete="off" placeholder="?" aria-label="Parent Swatch number" />`
+	          ? `<input class="ewb-dep-input" data-action="dependency-input" data-id="${escapeHtml(row.id)}" maxlength="3" autocomplete="off" placeholder="?" aria-label="Pin swatch number" />`
 	          : "";
 	        return `
 	          <div class="ewb-row${(activeWorkbenchItemId === row.id || (row.deps || []).some(dep => dep.id === activeWorkbenchItemId)) ? " active" : ""}" data-row-id="${escapeHtml(row.id)}">
@@ -5143,7 +5074,7 @@
 	    function copyColorToActiveWorkbenchSwatch(color) {
 	      const targetId = paletteTargetWorkbenchItemId();
 	      if (!targetId) {
-	        showTickerMessage("Click a primary Color Workbench swatch first to choose where to apply this color.", "info");
+	        showTickerMessage("Click a Pin Color Workbench swatch first to choose where to apply this color.", "info");
 	        return false;
 	      }
 	      setRowSubstitute(targetId, color);
@@ -5154,7 +5085,7 @@
 	      const hit = findWorkbenchItem(rowId);
 	      if (!hit) return;
 	      if (hit.parent) {
-	        setCwStatus("Secondary swatches are calculated from their primary swatch.", "info");
+	        setCwStatus("Derivative swatches are calculated from their Pin swatch.", "info");
 	        return;
 	      }
 	      const nextColor = color ? toHexColor(color) : "";
@@ -5371,10 +5302,10 @@
 
 	    function editorHeuristicValidateColorText(text) {
 	      const trimmed = String(text || "").trim();
-	      if (trimmed.length < 10) return "Please describe your color preferences in at least 10 characters.";
+	      if (trimmed.length < 3) return "Please describe your color preferences in at least 3 characters.";
 	      if (trimmed.length > 500) return "Please keep your color description under 500 characters.";
 	      if (!/[a-z]{3,}/i.test(trimmed)) return "Please describe your color preferences in words.";
-	      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastel|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
+	      const colorish = /\b(red|orange|yellow|green|blue|teal|cyan|purple|violet|magenta|pink|brown|tan|beige|cream|ivory|white|gray|grey|black|navy|maroon|gold|silver|copper|bronze|olive|mint|coral|peach|lavender|indigo|amber|crimson|scarlet|salmon|charcoal|slate|emerald|jade|sage|rust|burgundy|warm|cool|bright|dark|light|muted|vibrant|pastels?|neons?|fluorescent|electric|neutral|earthy|bold|soft|deep|pale|saturated|hue|tone|tint|shade|palette|gradient|monochrom|color|colour|#[0-9a-f]{3,8})\b/i;
 	      if (!colorish.test(trimmed)) return "Please mention at least one color or descriptor.";
 	      return "";
 	    }
@@ -5802,10 +5733,10 @@
 	        return;
 	      }
 	      if (e.data.type === "colorThemeSelected") {
-	        // A theme name was clicked in the 20-Color-Themes gallery: apply the whole theme
-	        // to the top-N primary Color Workbench swatches in role order.
-	        const roleOrder = ["primary", "secondary", "tertiary", "quaternary", "quinary"];
-	        const themeColors = roleOrder.map(role => e.data.theme?.[role]).filter(Boolean);
+	        // A theme name was clicked in the 20-Color-Themes gallery. It sends c1…c5 already
+	        // ordered by descending chroma, and the workbench rows are ranked the same way,
+	        // so slot i maps onto row i directly.
+	        const themeColors = ["c1", "c2", "c3", "c4", "c5"].map(slot => e.data.theme?.[slot]).filter(Boolean);
 	        if (!themeColors.length || !Array.isArray(colorWorkbenchRows) || !colorWorkbenchRows.length) return;
 	        colorWorkbenchRows.forEach((row, i) => {
 	          if (i >= themeColors.length) return;
@@ -5845,7 +5776,7 @@
 	        String(row.ordinal || "").toUpperCase() === String(sourceOrdinal || "").trim().toUpperCase()
 	      );
 	      if (!destRow || sourceIndex < 0 || colorWorkbenchRows[sourceIndex].id === destinationId) {
-	        setCwStatus("Primary swatch not found or same as target.", "err");
+	        setCwStatus("Pin swatch not found or same as target.", "err");
 	        return;
 	      }
 	      const [source] = colorWorkbenchRows.splice(sourceIndex, 1);
@@ -6699,7 +6630,7 @@
 	      const hit = findWorkbenchItem(id);
 	      if (!hit) return;
 	      if (hit.parent) {
-	        setCwStatus("Secondary swatches are read-only; edit the primary swatch instead.", "info");
+	        setCwStatus("Derivative swatches are read-only; edit the Pin swatch instead.", "info");
 	        return;
 	      }
 	      clearTimeout(_ewbClickTimer);
@@ -8972,7 +8903,7 @@
       "Make links to artifacts or YouTube videos: highlight some text, click Link, enter a URL.",
       "Use + Card / − Card to add or delete a section element. A popup lets you choose the level.",
       "Color Workbench: click a swatch to scroll to its first use (the swatch blinks red). Double-click to substitute a color.",
-      "Color Workbench: shift-click a Primary swatch to absorb another Primary as its Secondary — type the other Primary's number and press Enter.",
+      "Color Workbench: shift-click a Pin swatch to absorb another Pin as its Derivative — type the other Pin's number and press Enter.",
     ];
 
     const ticker  = document.getElementById("sbTicker");

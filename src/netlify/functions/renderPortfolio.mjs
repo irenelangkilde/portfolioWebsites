@@ -54,7 +54,7 @@ function linearToSrgb(value) {
   return clampValue(c, 0, 1) * 255;
 }
 
-function hexToOklch(hex) {
+export function hexToOklch(hex) {
   const rgb = hexToRgb(normalizeHexValue(hex));
   if (!rgb) return null;
   const r = srgbToLinear(rgb.r);
@@ -894,6 +894,15 @@ const COLOR_VAR_MAP = {
 const THEME_COLOR_KEYS = ["c1", "c2", "c3", "c4", "c5"];
 const NEUTRAL_CHROMA_THRESHOLD = 0.055;
 
+// How far (degrees) an unpinned colour's hue may sit from the nearest palette colour and
+// still be considered compatible. Within this, the template's own colour is KEPT; beyond
+// it, the colour is desaturated rather than hue-shifted. See derivePaletteHex.
+const MAX_COMPATIBLE_HUE_DEVIATION = 60;
+
+// Chroma retained when a colour is neutralised: a faint tint toward the nearest palette
+// hue, so it reads as part of the scheme rather than as flat grey.
+const NEUTRALISED_CHROMA = 0.012;
+
 function themeFromColorSpec(colorSpec = {}) {
   const theme = {};
   for (const key of THEME_COLOR_KEYS) theme[key] = normalizeHexValue(colorSpec?.[key]);
@@ -1003,45 +1012,49 @@ function nearestPaletteEntry(entries, ok) {
   return best;
 }
 
-function nearestAnchorBySource(anchors, ok) {
-  let best = null;
-  let bestDistance = Infinity;
-  for (const anchor of anchors || []) {
-    const sourceOk = anchor.sourceOk || anchor.ok;
-    const distance = oklchDistance(sourceOk, ok);
-    if (distance < bestDistance) {
-      best = anchor;
-      bestDistance = distance;
-    }
-  }
-  return best;
-}
 
 function derivePaletteHex(entry, entries, anchors) {
   const directAnchor = anchors.find(anchor => anchor.index === entry.index);
   if (directAnchor) return directAnchor.hex;
   if (!anchors.length || !entry?.ok) return "";
 
-  const selectedBase = nearestAnchorBySource(anchors, entry.ok) || anchors[0];
-  const sourceOk = selectedBase?.sourceOk
-    || entries.find(e => e.index === selectedBase?.index)?.ok
-    || selectedBase?.ok;
-  if (!sourceOk || !selectedBase) return "";
-
-  if ((entry.ok.c ?? 0) <= NEUTRAL_CHROMA_THRESHOLD) {
-    const neutralChroma = Math.min(Math.max((selectedBase.ok.c ?? 0) * 0.14, 0.004), 0.035);
-    const edgeChroma = entry.ok.l < 0.14 || entry.ok.l > 0.94 ? Math.min(neutralChroma, 0.012) : neutralChroma;
-    return oklchToHex({
-      l: clampValue(entry.ok.l, 0.03, 0.985),
-      c: edgeChroma,
-      h: selectedBase.ok.h,
-    });
+  // Unpinned variables are LEFT ALONE when their hue is already compatible with the
+  // user's palette, and desaturated when it is not.
+  //
+  // This previously re-derived every unpinned colour by preserving its hue offset from
+  // the template's original slot colour. That invented hues nobody asked for — a
+  // blue-only palette still produced greens, measured up to 107° away from any requested
+  // colour. Clamping the offset helped but could not remove it: green sits only ~36° from
+  // blue, so any useful clamp still reached it.
+  //
+  // Simply keeping originals preserved the template's character but also preserved its
+  // clashing colours. Keeping only the COMPATIBLE originals and greying out the rest gave
+  // both, measured across all 20 templates: 0 out-of-palette hues, and 87 of 202
+  // variables left at their exact original values (vs 1 when deriving).
+  let nearestAnchor = null;
+  let nearestDeviation = Infinity;
+  for (const anchor of anchors) {
+    // A near-neutral anchor has no meaningful hue to compare against.
+    if ((anchor.ok?.c ?? 0) < 0.02) continue;
+    const deviation = Math.abs(shortestHueDelta(anchor.ok.h, entry.ok.h));
+    if (deviation < nearestDeviation) {
+      nearestDeviation = deviation;
+      nearestAnchor = anchor;
+    }
   }
 
+  // Already neutral: no hue to clash with anything, so leave it exactly as it is.
+  if ((entry.ok.c ?? 0) <= NEUTRAL_CHROMA_THRESHOLD) return entry.hex || "";
+
+  // Compatible with at least one palette colour — keep the template's own value.
+  if (!nearestAnchor || nearestDeviation <= MAX_COMPATIBLE_HUE_DEVIATION) return entry.hex || "";
+
+  // Far from every palette hue: same lightness, faint tint toward the nearest palette
+  // hue. Preserves the template's light/dark structure without importing a clashing hue.
   return oklchToHex({
-    l: clampValue(selectedBase.ok.l + (entry.ok.l - sourceOk.l), 0.03, 0.985),
-    c: clampValue(selectedBase.ok.c + ((entry.ok.c ?? 0) - (sourceOk.c ?? 0)), 0.004, 0.36),
-    h: normalizeHue(selectedBase.ok.h + shortestHueDelta(sourceOk.h, entry.ok.h)),
+    l: clampValue(entry.ok.l, 0.03, 0.985),
+    c: NEUTRALISED_CHROMA,
+    h: nearestAnchor.ok.h,
   });
 }
 
@@ -1063,7 +1076,9 @@ function derivePaletteHex(entry, entries, anchors) {
 // coverage among themselves. Keep in sync with COLOR_SCORE_CHROMA_FLOOR in editor.html.
 const SCORE_CHROMA_FLOOR = 0.02;
 
-function prominenceScore(count, chroma) {
+// Exported so buildWebsite-background can rank a synthesised palette by the same
+// measure, rather than keeping a fourth copy of the formula and the chroma floor.
+export function prominenceScore(count, chroma) {
   return (Number(count) || 0) * Math.max(Number(chroma) || 0, SCORE_CHROMA_FLOOR);
 }
 
@@ -1116,11 +1131,29 @@ function fullPaletteOverrides(colorSpec, scheme, roleAssignments = null, dominan
   // placement, so partial assignments behave sensibly.
   const pinnedHexes = new Set(pinned.map(p => p.hex.toLowerCase()));
 
-  const orderedHexes = (dominanceOrder || [])
+  const namedHexes = (dominanceOrder || [])
     .map(h => normalizeHexValue(h))
     .filter(Boolean)
     .map(h => h.toLowerCase())
     .filter(h => !pinnedHexes.has(h));
+
+  // Place the WHOLE palette, not just the colours the user named. The named ones lead
+  // (dominance order), then the rest of the palette fills the next-ranked variables.
+  //
+  // Anchoring a colour is not the same as assigning it a role: these fill out the
+  // palette without claiming to be the background or the accent. Placing only the named
+  // colours left 8+ variables to be derived, and derived colours inherit the template's
+  // hue offsets — which regenerated hues the user never asked for (a blue-only palette
+  // could still yield greens). Pinning more of the palette shrinks that surface.
+  const restOfPalette = THEME_COLOR_KEYS
+    .map(key => normalizeHexValue(theme?.[key]))
+    .filter(Boolean)
+    .map(h => h.toLowerCase())
+    .filter(h => !pinnedHexes.has(h) && !namedHexes.includes(h));
+
+  const orderedHexes = namedHexes.length
+    ? [...namedHexes, ...restOfPalette.filter((h, i, a) => a.indexOf(h) === i)]
+    : [];
 
   let placed;
   if (orderedHexes.length) {

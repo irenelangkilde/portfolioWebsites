@@ -12,7 +12,10 @@ import { assignProjectIcons } from "./projectIcons.mjs";
 import { checkAndIncrementCredits, logAnonUsage, logUsageEvent } from "./usageQuota.mjs";
 import { parallelCreativeFill } from "./parallelCreativeFill.mjs";
 import { generateCandidateContent } from "./generateCandidateContent.mjs";
-import { renderPortfolio } from "./renderPortfolio.mjs";
+import { renderPortfolio, prominenceScore, hexToOklch } from "./renderPortfolio.mjs";
+// Same function the offline preprocessor uses, so uploaded HTML and committed
+// templates are colorized by identical code rather than parallel implementations.
+import { normalizeColorsInHtml } from "../../../scripts/preprocessSamples.mjs";
 
 // ─── Stage 1: Content Extraction Prompt ──────────────────────────────────────
 // Extracts all resume content into a structured JSON object.
@@ -294,34 +297,50 @@ function parseJsonResponse(raw) {
   throw new Error("Response was not valid JSON");
 }
 
-// Canonical semantic roles. Kept semantic — not positional — because the
-// design-from-scratch render prompt describes what each colour is FOR, and the
-// role-request resolver reasons in these terms. Positional c1…c5 is a rendering
-// concern and is produced at the renderer boundary by toPositionalPalette().
-
-// Semantic role → positional slot, for the template renderer. Order preserves the
-// previous anchor identity (primary→c1 … background→c5) so proximity-fallback
-// placement is unchanged by the rename.
-const ROLE_TO_SLOT_ORDER = ["primary", "secondary", "accent", "foreground", "background"];
-
-// renderPortfolio takes a positional palette: { c1…c5 }. When the user named colours
-// their dominance order leads, so c1 is genuinely their most dominant colour;
-// otherwise ROLE_TO_SLOT_ORDER applies.
-function toPositionalPalette(spec = {}, dominanceOrder = null) {
-  const hexes = [];
+// renderPortfolio takes a positional palette: { c1…c5 }. `hexes` arrive already in
+// dominance order — c1 is the most dominant. Duplicates and malformed values are
+// dropped; supplying fewer than five is normal, and the unfilled slots stay null so
+// the render prompt reports them as "unspecified" and assigns them itself.
+function toPositionalPalette(hexes, { use_sample_colors = false, note = null, role_requests = null } = {}) {
   const seen = new Set();
-  const push = (hex) => {
+  const ordered = [];
+  for (const hex of Array.isArray(hexes) ? hexes : []) {
     const h = typeof hex === "string" ? hex.trim().toLowerCase() : "";
-    if (!/^#[0-9a-f]{6}$/.test(h) || seen.has(h)) return;
+    if (!/^#[0-9a-f]{6}$/.test(h) || seen.has(h)) continue;
     seen.add(h);
-    hexes.push(h);
-  };
-  for (const hex of Array.isArray(dominanceOrder) ? dominanceOrder : []) push(hex);
-  for (const role of ROLE_TO_SLOT_ORDER) push(spec?.[role]);
-  const palette = { use_sample_colors: !!spec?.use_sample_colors };
-  hexes.slice(0, 5).forEach((hex, i) => { palette[`c${i + 1}`] = hex; });
-  if (spec?.note) palette.note = spec.note;
+    ordered.push(h);
+  }
+  const palette = { use_sample_colors: !!use_sample_colors };
+  POSITIONAL_SLOT_KEYS.forEach((slot, i) => { palette[slot] = ordered[i] ?? null; });
+  if (note) palette.note = note;
+  // Carried alongside the slots so the render prompt can honour placements the user
+  // named. Slots are positional; this is the only semantic intent in the spec.
+  if (role_requests?.length) palette.role_requests = role_requests;
   return palette;
+}
+
+// The single place a colour spec becomes positional.
+//
+// Both inputs are already in dominance order, so neither is re-sorted here. Text-derived
+// input carries the order the user named their colours in. Swatch input comes from page
+// 3's five pickers, which ARE c1…c5 left to right — whatever the user puts in the first
+// picker is the site's most dominant colour.
+//
+// The swatch branch used to re-rank by an area-prior × chroma prominence score, which
+// meant the picker a colour was typed into did not determine the slot it landed in: the
+// same picker became c1 or c2 depending on how saturated the other colours were. That
+// made the pickers impossible to label honestly and second-guessed an explicit choice.
+function buildPositionalPalette(derived, base) {
+  if (derived) {
+    return toPositionalPalette(derived.namedColors, {
+      use_sample_colors: false,
+      role_requests: derived.roleRequests,
+    });
+  }
+  return toPositionalPalette(
+    POSITIONAL_SLOT_KEYS.map(slot => base?.[slot]),
+    { use_sample_colors: base?.use_sample_colors, note: base?.note }
+  );
 }
 
 // Positional palette: c1 (most dominant) … c5. Slots carry no inherent role — the
@@ -333,6 +352,7 @@ function normalizeColorSpec(colorSpec = {}) {
   const normalized = { use_sample_colors: !!colorSpec?.use_sample_colors };
   for (const slot of POSITIONAL_SLOT_KEYS) normalized[slot] = colorSpec?.[slot] ?? null;
   if (colorSpec?.note) normalized.note = colorSpec.note;
+  if (colorSpec?.role_requests?.length) normalized.role_requests = colorSpec.role_requests;
   return normalized;
 }
 
@@ -345,94 +365,95 @@ function normalizeColorSpec(colorSpec = {}) {
  * The framing intentionally calls them "key/anchor" colors rather than a complete palette,
  * so the AI knows it may fill remaining slots with neutrals and supporting tones.
  */
-// Converts a free-text color description ("neon tech with yellow and blue") into
-// a concrete 5-role palette. Returns null on empty input or when the LLM output
-// can't be coerced into five valid hexes. Used by pipelines that render with a
-// fixed colorSpec (slot-fill, render-annotated) — without this, text-mode prefs
-// fall through and the template's original palette wins.
+// Reads a free-text colour description ("sky-blue canvas with rose dividers") and
+// returns ONLY what the user actually said:
+//
+//   { namedColors:  ["#87ceeb", "#e05578"],                  // their order = dominance
+//     roleRequests: [{ role: "canvas",   hex: "#87ceeb" },   // their word for the role
+//                    { role: "divider",  hex: "#e05578" }] }
+//
+// Nothing is invented. This used to synthesise a fixed five-role palette
+// (background/foreground/primary/secondary/accent), which was wrong three ways: it
+// capped the user at five colours, forced their words through a lossy 15→5 alias
+// table that silently dropped anything unlisted ("sidebar", "divider", "ink"), and
+// filled the roles they never mentioned with invented hexes that then went on to
+// recolour template slots nobody asked about.
+//
+// Roles are free-form because both consumers can take them that way:
+// resolveColorRoleAssignments matches requests against real per-variable CSS usage
+// ("used as border×3"), which lines up with the user's own wording better than an
+// abstract taxonomy; and the from-scratch render prompt assigns roles itself at
+// design time, which is the only point where a slot's best role is actually known.
+//
+// Returns null when the text names no colour and requests no placement — a pure mood
+// ("warm earthy tones") is left to the render prompt, which receives the description
+// as guidance anyway.
 async function derivePaletteFromColorText(callAIFn, text) {
   const clean = String(text || "").trim();
   if (!clean) return null;
-  const prompt = `Convert this color description to a five-role website palette.
+  const prompt = `Extract the colours a user named for their website, and where they asked for them.
 Description: "${clean.slice(0, 500)}"
 
 Return ONLY compact JSON in this exact shape (no markdown, no prose):
-{"background":"#RRGGBB","foreground":"#RRGGBB","primary":"#RRGGBB","secondary":"#RRGGBB","accent":"#RRGGBB","requested_roles":["background"],"dominance_order":["#RRGGBB"]}
+{"named_colors":["#RRGGBB"],"role_requests":[{"role":"canvas","hex":"#RRGGBB"}]}
 
 Rules:
-- background: page canvas color that matches the described mood.
-- foreground: main text color with strong readable contrast against background (WCAG AA at minimum).
-- primary: the strongest brand/emphasis hue the user named.
-- secondary: a distinct supporting hue that complements primary.
-- accent: a highlight color that pops against background without clashing with primary/secondary.
-- CRITICAL — respect placement words in the description. If the user pairs a color with a location word, that color MUST fill the corresponding role:
-    "background" / "canvas" / "page" → background
-    "text" / "foreground" / "body copy" → foreground
-    "hero" / "brand" / "primary" / "header" → primary
-    "accent" / "highlight" / "pop" → accent
-    "secondary" / "supporting" → secondary
-  Example: for "sky-blue background", background MUST be a sky-blue hex (something like #87CEEB), not a supporting accent buried elsewhere in the palette.
-- Honor explicit colors the user named ("yellow", "blue", "navy") and their overall vibe (neon, warm, muted, editorial, etc.). If they named two hues without location cues, put one in primary and the other in secondary or accent.
-- requested_roles: list ONLY the roles the user explicitly tied to a colour with a
-  placement word in their description. This drives whether we override the template's
-  own colour structure, so be strict:
-    "sky-blue background with rose accents" → ["background","accent"]
-    "warm earthy tones"                     → []              (no placement named)
-    "navy and gold"                         → []              (hues only, no roles)
-  An empty list is the correct and common answer. Never list a role just because you
-  filled it in above — every role is always filled; only some are ever requested.
-- dominance_order: the colours the user ACTUALLY NAMED, as hexes, in the order they
-  appear in the description. Users list colours most-dominant-first, so preserve their
-  order exactly — do not re-rank by your own judgement. Include only named colours, not
-  ones you invented to fill roles. Empty list if they named no specific colour.
+- named_colors: every colour the user ACTUALLY NAMED, as hex, in the order they appear
+  in the description. Users list colours most-dominant-first, so preserve their order
+  exactly — do not re-rank by your own judgement.
     "sky blue background with rose-colored accents" → ["#87CEEB","#E05578"]
     "navy and gold"                                 → ["#1F3A5F","#D4AF37"]
-    "warm earthy tones"                             → []   (a mood, no named colours)
-  CRITICAL — every hex in dominance_order must be COPIED CHARACTER-FOR-CHARACTER from
-  one of the five role values you returned above. Do not emit a second, slightly
-  different shade of the same colour: if you put #F4A0B5 in "accent", then
-  dominance_order must contain #F4A0B5, not #E05578. A mismatch causes the same
-  requested colour to be applied twice in two different shades.
+    "warm earthy tones"                             → []   (a mood, no named colour)
+- Do NOT invent colours. If the user named two colours, return two. Never pad the list
+  to make a complete palette — unnamed slots are chosen later, at design time.
+- A specific colour word counts as named ("navy", "sage", "burnt orange", "cream").
+  A mood or style word does not ("warm", "muted", "editorial", "neon").
+- role_requests: one entry for each colour the user tied to a PLACE or PURPOSE on the
+  page. Use THEIR OWN word for the role, lowercased — there is no fixed list of valid
+  roles. "canvas", "ink", "sidebar", "card surface", "muted divider", "nav bar",
+  "button", "heading" are all valid roles. Keep the phrase short (1–3 words).
+    "sky-blue background with rose accents"  → [{"role":"background","hex":"#87CEEB"},
+                                                {"role":"accent","hex":"#E05578"}]
+    "cream canvas, charcoal ink"             → [{"role":"canvas","hex":"#FAF7F0"},
+                                                {"role":"ink","hex":"#2B2B2B"}]
+    "navy and gold"                          → []   (colours named, no placement)
+    "warm earthy tones"                      → []
+- An empty role_requests list is common and correct. Only include a colour here if the
+  user said where it goes; naming a colour alone is not a placement.
+- Roles need not be distinct or mutually exclusive. The same colour may appear in
+  several requests, and two requests may name overlapping areas. Record what they said
+  rather than forcing the list to be orthogonal.
+- CRITICAL — every hex in role_requests must be COPIED CHARACTER-FOR-CHARACTER from
+  named_colors. Do not emit a second, slightly different shade of the same colour: if
+  named_colors has #F4A0B5, a request for it must say #F4A0B5, not #E05578. A mismatch
+  applies one requested colour twice in two different shades.
 - All six-digit hex (#RRGGBB); no shorthand, no named colors, no rgba.`;
   try {
-    const res = await callAIFn({ userText: prompt, maxTokens: 300 });
+    const res = await callAIFn({ userText: prompt, maxTokens: 400 });
     const json = parseJsonResponse(res?.text || "");
-    const isHex = v => typeof v === "string" && /^#[0-9a-f]{6}$/i.test(v);
-    if (!json || !isHex(json.background) || !isHex(json.foreground) ||
-        !isHex(json.primary) || !isHex(json.secondary) || !isHex(json.accent)) {
-      return null;
-    }
-    // Roles the user actually named. Only these justify overriding the template's
-    // colour structure — the five hexes above are always synthesised, so their
-    // presence says nothing about intent.
-    const ROLE_NAMES = ["background", "foreground", "primary", "secondary", "accent"];
-    const requestedRoles = Array.isArray(json.requested_roles)
-      ? [...new Set(json.requested_roles
-          .map(r => String(r || "").trim().toLowerCase())
-          .filter(r => ROLE_NAMES.includes(r)))]
-      : [];
-    // Colours the user named, in the order they named them. Treated as dominance
-    // order on template paths: most-dominant first.
-    // Enforced, not merely requested: a dominance hex must be one of the five role
-    // hexes. Otherwise a near-duplicate shade of the same named colour gets placed
-    // alongside the role colour, applying one request twice. Dropping a mismatch is
-    // safe — an empty list just falls back to colour-similarity placement.
-    const roleHexes = new Set([json.background, json.foreground, json.primary, json.secondary, json.accent]
-      .map(h => String(h || "").trim().toLowerCase()));
-    const dominanceOrder = Array.isArray(json.dominance_order)
-      ? [...new Set(json.dominance_order
-          .map(h => String(h || "").trim().toLowerCase())
-          .filter(h => /^#[0-9a-f]{6}$/.test(h) && roleHexes.has(h)))]
-      : [];
-    return {
-      background: json.background.toLowerCase(),
-      foreground: json.foreground.toLowerCase(),
-      primary:    json.primary.toLowerCase(),
-      secondary:  json.secondary.toLowerCase(),
-      accent:     json.accent.toLowerCase(),
-      requestedRoles,
-      dominanceOrder,
+    if (!json) return null;
+    const normHex = v => {
+      const h = String(v || "").trim().toLowerCase();
+      return /^#[0-9a-f]{6}$/.test(h) ? h : null;
     };
+
+    const namedColors = Array.isArray(json.named_colors)
+      ? [...new Set(json.named_colors.map(normHex).filter(Boolean))]
+      : [];
+
+    // A request's hex must be one the user named. Otherwise a near-duplicate shade
+    // slips in alongside the named colour and one request gets applied twice.
+    const named = new Set(namedColors);
+    const roleRequests = Array.isArray(json.role_requests)
+      ? json.role_requests
+          .map(r => ({ role: String(r?.role || "").trim().toLowerCase().slice(0, 40), hex: normHex(r?.hex) }))
+          .filter(r => r.role && r.hex && named.has(r.hex))
+      : [];
+
+    // Nothing the user said is actionable — let the render prompt work from the raw
+    // description instead of manufacturing a palette out of a mood.
+    if (!namedColors.length && !roleRequests.length) return null;
+    return { namedColors, roleRequests };
   } catch (err) {
     console.warn("[derivePaletteFromColorText] failed:", err?.message);
     return null;
@@ -486,12 +507,6 @@ function parsePaletteSchemeFromHtml(html = "") {
   }
 }
 
-// Area-weighted prior for how prominent each role is on a finished page. Used only
-// when there is no template palette to borrow real usage counts from — design-options
-// mode renders from scratch, so at this point nothing has been counted yet. Page
-// background covers the most area, body text next, brand/accent colours least.
-const ROLE_AREA_PRIOR = { background: 100, foreground: 40, primary: 18, secondary: 10, accent: 6 };
-
 // Per-role entries for the editor's provisional colour workbench, which otherwise
 // renders in a hardcoded role order with background last — actively misleading when
 // the user asked for a dominant background.
@@ -499,26 +514,33 @@ const ROLE_AREA_PRIOR = { background: 100, foreground: 40, primary: 18, secondar
 // Supplies `count` only, deliberately: the editor already derives chroma from the
 // hex and sorts by count * chroma, so passing counts alone puts the provisional rail
 // on the same ordering basis as the real palette without duplicating OKLCH maths here.
-function buildProvisionalPaletteEntries(derivedTheme, { scheme = null, roleAssignments = null } = {}) {
-  if (!derivedTheme || typeof derivedTheme !== "object") return null;
+function buildProvisionalPaletteEntries(derived, { scheme = null, roleAssignments = null } = {}) {
+  const named = Array.isArray(derived?.namedColors) ? derived.namedColors : [];
+  if (!named.length) return null;
   const varByHex = new Map(
     Object.entries(roleAssignments || {}).map(([varName, hex]) => [String(hex).toLowerCase(), varName])
   );
+  const roleByHex = new Map(
+    (derived?.roleRequests || []).map(r => [String(r?.hex || "").toLowerCase(), r?.role || null])
+  );
   const entries = [];
-  for (const [role, raw] of Object.entries(derivedTheme)) {
-    if (typeof raw !== "string" || !/^#[0-9a-f]{6}$/i.test(raw)) continue;
+  named.forEach((raw, i) => {
+    if (typeof raw !== "string" || !/^#[0-9a-f]{6}$/i.test(raw)) return;
     const hex = raw.toLowerCase();
     const varName = varByHex.get(hex) || null;
     const templateCount = varName ? Number(scheme?.[varName]?.count) : NaN;
     const hasRealCount = Number.isFinite(templateCount) && templateCount > 0;
     entries.push({
-      role,
+      role: roleByHex.get(hex) || null,
       hex,
       varName,
-      count: hasRealCount ? templateCount : (ROLE_AREA_PRIOR[role] ?? 1),
-      countSource: hasRealCount ? "template" : "role-prior",
+      // Roles are free-form now, so there is no per-role area prior to fall back on.
+      // The user's own ordering is the ranking, so a descending rank stands in for a
+      // count and the rail keeps the order they said the colours in.
+      count: hasRealCount ? templateCount : (named.length - i) * 10,
+      countSource: hasRealCount ? "template" : "named-order",
     });
-  }
+  });
   return entries.length ? entries : null;
 }
 
@@ -542,13 +564,9 @@ async function resolveColorRoleAssignments(callAIFn, annotatedHtml, derivedTheme
   // design decisions the user never asked to change. No named role → no override,
   // and no extra model call: the template's own structure stands and colours are
   // placed by proximity as before.
-  const requestedRoles = Array.isArray(derivedTheme?.requestedRoles) ? derivedTheme.requestedRoles : [];
-  if (!requestedRoles.length || !annotatedHtml) return null;
-
-  const requests = requestedRoles
-    .map(role => [role, derivedTheme?.[role]])
-    .filter(([, hex]) => typeof hex === "string" && /^#[0-9a-f]{6}$/i.test(hex));
-  if (!requests.length) return null;
+  const requests = (Array.isArray(derivedTheme?.roleRequests) ? derivedTheme.roleRequests : [])
+    .filter(r => r?.role && typeof r?.hex === "string" && /^#[0-9a-f]{6}$/i.test(r.hex));
+  if (!requests.length || !annotatedHtml) return null;
 
   const scheme = parsePaletteSchemeFromHtml(annotatedHtml);
   if (!scheme) return null;
@@ -560,11 +578,17 @@ TEMPLATE PALETTE (variable: current colour (frequency) — how it is used):
 ${summarizePaletteForRoleResolver(scheme, usage)}
 
 USER REQUESTS (role → colour they want in that role):
-${requests.map(([role, hex]) => `- ${role}: ${hex}`).join("\n")}
+${requests.map(r => `- ${r.role}: ${r.hex}`).join("\n")}
 
 Decide which palette variable each requested colour should replace.
 
 Rules:
+- The role names above are the USER'S OWN WORDS, not terms from a fixed vocabulary.
+  Interpret each against how the variables are actually used above: "ink" means body
+  text, "divider" means a border/rule, "card surface" means a panel background. If a
+  role is ambiguous, prefer the reading the usage data supports.
+- Roles may overlap or repeat; treat each request on its own terms rather than
+  assuming they partition the page.
 - A requested colour must become the DOMINANT colour for its role — the one a viewer
   would name if asked "what colour is the background/text/accent of this page?".
 - DOMINANT DOES NOT MEAN EXCLUSIVE. Templates legitimately use several colours as
@@ -585,7 +609,7 @@ Return ONLY compact JSON mapping variable name to the requested hex, no prose:
     const res = await callAIFn({ userText: prompt, maxTokens: 400 });
     const json = parseJsonResponse(res?.text || "");
     if (!json || typeof json !== "object") return null;
-    const requestedHexes = new Set(requests.map(([, hex]) => hex.toLowerCase()));
+    const requestedHexes = new Set(requests.map(r => r.hex.toLowerCase()));
     const out = {};
     const usedHexes = new Set();
     for (const [varName, hex] of Object.entries(json)) {
@@ -1356,6 +1380,23 @@ export function inferAboutMetaFromTemplateHtml(html) {
 }
 
 // ─── Code-level visual_direction assembly (replaces blendWebsite.md AI call) ─
+// Phrases the extracted style for the renderer. `style_token` is a closed vocabulary
+// (see ExtractExampleWebsiteTemplate.md); when nothing matched, the extractor returns
+// "other" and puts its own wording in `style_note`. Without this the note never left the
+// template analysis and the renderer received a bare "other" — a token its style list
+// defines only as "the user typed their own description", with no description attached.
+function styleInspiration(factors = {}) {
+  const token = String(factors.style_token || "").trim() || "clean-minimal";
+  const note  = String(factors.style_note  || "").trim();
+  if (token.toLowerCase() === "other") {
+    return note
+      ? `Style: ${note} — no standard style token matched this sample, so follow that description literally`
+      : `Style token: other, with no description supplied — infer the style from the sample itself`;
+  }
+  // A note alongside a real token is supplementary character, not a replacement.
+  return note ? `Style token: ${token}. Style notes: ${note}` : `Style token: ${token}`;
+}
+
 function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const normalizedColorSpec = normalizeColorSpec(colorSpec);
   const attrs   = designSpec?.exemplary_attributes || {};
@@ -1375,6 +1416,10 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
     || (Array.isArray(motifs?.rendering_style) ? motifs.rendering_style[0] : motifs?.rendering_style)
     || "clean editorial vector";
 
+  // Which positional slots hold a colour the user named, and which the renderer invents.
+  const namedSlots = POSITIONAL_SLOT_KEYS.filter(slot => normalizedColorSpec?.[slot]);
+  const openSlots  = POSITIONAL_SLOT_KEYS.filter(slot => !normalizedColorSpec?.[slot]);
+
   const isUseSampleColors = normalizedColorSpec?.use_sample_colors;
   const colorApp = isUseSampleColors
     ? {
@@ -1384,15 +1429,41 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
         gradient_notes: "Use template's existing gradient patterns"
       }
     : {
-        // Positional, not role-named. The five slots are ordered by dominance; YOU
-        // decide which becomes canvas, ink, brand and highlight. Naming them after
-        // roles up front produced worse results, because a slot's best role depends
-        // on the layout being designed.
+        // Positional, not role-named. YOU decide which slot becomes canvas, ink, brand
+        // and highlight. Naming them after roles up front produced worse results,
+        // because a slot's best role depends on the layout being designed.
+        //
+        // Empty slots are the normal case, not a failure: the user named the colours
+        // they cared about and left the rest to the renderer. Inventing those is fine —
+        // but they have to stay SUPPORTING. The finished page is colour-extracted
+        // downstream and its palette ranked by count × chroma, so an invented saturated
+        // hue outranks the requested ones and pushes them to high --c-N ordinals. That
+        // is exactly the "I asked for sky blue and crimson and got them as swatches 5
+        // and 6" failure: the request was honoured, then buried under louder inventions.
         palette: POSITIONAL_SLOT_KEYS
-          .map((slot, i) => `${slot}=${normalizedColorSpec?.[slot] || "unspecified"}${i === 0 ? " (most dominant)" : ""}`)
+          .map((slot, i) => {
+            const hex = normalizedColorSpec?.[slot];
+            if (!hex) return `${slot}=<choose a supporting colour>`;
+            return `${slot}=${hex} (requested${i === 0 ? ", most dominant" : ""})`;
+          })
           .join(", "),
-        palette_use: "Assign these colours to roles yourself. c1 is the most dominant and should read as the site's dominant colour; later slots are progressively less prominent. Ensure text/background pairings meet WCAG AA regardless of which slots you choose for them.",
-        role_assignment: "State in your output which slot you used for the page canvas, body text, primary emphasis and highlights.",
+        palette_use: [
+          "Assign these colours to roles yourself — decide which becomes canvas, ink, brand and highlight.",
+          namedSlots.length
+            ? `${namedSlots.join(", ")} ${namedSlots.length === 1 ? "carries the colour" : "carry the colours"} the user actually asked for, and ${namedSlots.length === 1 ? "it must" : "they must"} read as this site's identity: someone asked "what colour is this site?" should answer with ${namedSlots.length === 1 ? "it" : "them"}. Give ${namedSlots.length === 1 ? "it" : "them"} the chromatic, attention-carrying surfaces — hero, primary actions, headings, key panels — with ${namedSlots[0]} the most dominant.`
+            : "",
+          openSlots.length && namedSlots.length
+            ? `${openSlots.join(", ")} are yours to invent, and inventing them is expected — but they are SUPPORTING colours. Keep them near-neutral or low-chroma: canvas, ink, surfaces, borders, muted text. Do NOT introduce another saturated hue that competes for attention. If an invented colour would be the first thing a viewer names, it is wrong.`
+            : "",
+          openSlots.length && !namedSlots.length
+            ? `${openSlots.join(", ")} are unspecified — the user described a mood rather than naming colours, so choose the whole palette yourself to match that description.`
+            : "",
+          "Ensure text/background pairings meet WCAG AA regardless of which slots you choose for them.",
+        ].filter(Boolean).join(" ")
+          + (normalizedColorSpec?.role_requests?.length
+              ? ` The user explicitly asked for ${normalizedColorSpec.role_requests.map(r => `${r.hex} as the ${r.role}`).join(", ")} — honour those placements, and note that they are the user's own words, not slot names.`
+              : ""),
+        role_assignment: "State in your output which slot you used for the page canvas, body text, primary emphasis and highlights in the BASELINE section mode. Alternating sections invert that pairing — report the baseline, not every section.",
         gradient_notes: "Preserve the template's gradient structure; keep one high-contrast pair for readability and use the remaining slots for hierarchy."
       };
 
@@ -1438,7 +1509,7 @@ function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
       visual_motifs:            visualMotifs,
       symbolic_objects:         motifs?.symbolic_objects || [],
       animation_guidance:       animationGuidance,
-      template_inspiration_notes: `Style token: ${factors.style_token || "clean-minimal"}. Pacing: ${attrs.pacing || "moderate"}. Preserve this visual character throughout.`,
+      template_inspiration_notes: `${styleInspiration(factors)}. Pacing: ${attrs.pacing || "moderate"}. Preserve this visual character throughout.`,
       color_application:        colorApp,
       visual_placements:        visualPlacements
     }
@@ -1902,14 +1973,6 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     ...(resumeJson?.extracurricular|| []).map(e => ({ role: e.role, organization: e.organization, dates: e.dates, description: e.description }))
   ].filter(l => (l.role && l.organization) || l.description);
 
-  // Theme color variables for templates that expose CSS custom properties
-  const normalizedTheme = normalizeColorSpec(colorSpec);
-  // Positional slots (ROLE_TO_SLOT_ORDER: primary, secondary, accent, foreground, background).
-  const tp = normalizedTheme.c1 || "#2563eb";
-  const ts = normalizedTheme.c2 || "#22c55e";
-  const ta = normalizedTheme.c3 || "#8de0ff";
-  const td = normalizedTheme.c4 || "#0f172a";
-  const tb = normalizedTheme.c5 || "#f8fafc";
   const rawAbout = trimAboutToLength(
     resumeJson?.summary || creativePack?.about_full || _coreStory || _firstSentence || "",
     heroAboutWordCount
@@ -1950,14 +2013,11 @@ function flattenCandidateData(strategy, resumeJson, colorSpec, resumeStrategy = 
     : rawAbout;
 
   return {
-    // ── Theme colors ──
-    theme_background: tb,
-    theme_foreground: td,
-    theme_primary:   tp,
-    theme_secondary: ts,
-    theme_accent:    ta,
-    theme_dark:      td,
-
+    // No theme_* colour fields here. They mapped c1→theme_primary … c5→theme_background,
+    // a round-trip that only held while toPositionalPalette used a fixed role order — it
+    // was already wrong whenever the user named colours and dominance order led. Nothing
+    // in the codebase or in any template ever read them, so they are gone rather than
+    // repaired: colours reach the render through colorSpec, positionally.
     name:              personal.name     || "",
     first_name:        (personal.name || "").split(" ")[0] || "",
     last_name:         (personal.name || "").split(" ").slice(1).join(" ") || "",
@@ -2108,10 +2168,19 @@ function resolveClaudeModel(override) {
 }
 
 function providerErrorStatus(err) {
-  const direct = err?.status ?? err?.response?.status ?? err?.cause?.status;
-  if (Number.isFinite(Number(direct))) return Number(direct);
+  for (const candidate of [err?.status, err?.response?.status, err?.cause?.status]) {
+    // Explicit null check first: Number(null) is 0, which is finite, so a null status
+    // used to be reported as status 0 and mask the text fallback below.
+    if (candidate === null || candidate === undefined) continue;
+    const n = Number(candidate);
+    if (Number.isFinite(n)) return n;
+  }
+  // Only read a status out of prose when it is written as one. This used to match any
+  // bare three-digit number, which in an AI error message is as likely to be a token
+  // count, a pixel size, or a model number as an HTTP status.
   const msg = err?.message || String(err || "");
-  const match = msg.match(/\b(401|403|429|5\d\d)\b/);
+  const match = msg.match(/\b(401|403|429|5\d\d)\s+status\s+code\b/i)
+    || msg.match(/\b(?:HTTP|status(?:\s+code)?)[\s:=]+(401|403|429|5\d\d)\b/i);
   return match ? Number(match[1]) : null;
 }
 
@@ -2134,8 +2203,23 @@ function explainProviderError(provider, err, stage = "AI generation") {
   const stack = err?.stack || "";
   const looksOpenAI = providerName === "openai" || /openai/i.test(stack);
   const looksClaude = providerName === "claude" || providerName === "anthropic" || /anthropic/i.test(stack);
-  const authLike = status === 401 || /401 status code|unauthorized|invalid api key|incorrect api key|invalid x-api-key|authentication/i.test(raw);
-  const forbiddenLike = status === 403 || /403 status code|forbidden|not allowed|permission/i.test(raw);
+  // Classify by status alone whenever there is one. These predicates used to OR in a
+  // prose match unconditionally, and `authLike` fired on any message merely containing
+  // the word "authentication" — so a dropped stream or a 5xx was reported as "your key
+  // is missing, expired, revoked", sending the user to check credentials that were fine.
+  // Prose matching is now strictly the fallback for errors that carry no status at all.
+  const hasStatus = status !== null;
+  const authLike = hasStatus
+    ? status === 401
+    : /\b401\b|unauthorized|invalid[\s_-]?api[\s_-]?key|incorrect api key|invalid x-api-key|authentication_error/i.test(raw);
+  const forbiddenLike = hasStatus
+    ? status === 403
+    : /\b403\b|forbidden|not allowed|permission denied/i.test(raw);
+  // Worth calling out separately: these are the failures where "resubmit" is the actual
+  // advice, and they are exactly the ones that used to be misreported as credential faults.
+  const transientLike = status === 429
+    || (hasStatus && status >= 500)
+    || (!hasStatus && /connection|socket|timed?[\s_-]?out|timeout|econnreset|epipe|aborted|network|fetch failed/i.test(raw));
 
   if (looksOpenAI && authLike) {
     return `OpenAI authentication failed during ${stage} (401). Check OPENAI_API_KEY_LOCAL/OPENAI_API_KEY; the key is missing, expired, revoked, or from the wrong project. If this is deployed on Netlify, update the site's environment variables and redeploy.`;
@@ -2148,6 +2232,13 @@ function explainProviderError(provider, err, stage = "AI generation") {
   }
   if (looksClaude && forbiddenLike) {
     return `Anthropic rejected ${stage} with a permissions error (403). Check workspace/model access for ANTHROPIC_API_KEY_LOCAL/ANTHROPIC_API_KEY.`;
+  }
+  if (transientLike) {
+    const who = looksOpenAI ? "OpenAI" : looksClaude ? "Anthropic" : "The AI provider";
+    const what = status === 429 ? "rate-limited the request"
+      : hasStatus ? `returned a ${status} error`
+      : "dropped the connection";
+    return `${who} ${what} during ${stage}. This is usually transient — wait a moment and resubmit. Your API keys are not the problem. (${raw.slice(0, 200)})`;
   }
   return raw;
 }
@@ -2293,6 +2384,20 @@ async function callClaudeStream(creds, { system, userText, maxTokens = 32000, mo
       usage,
     };
   } catch (err) {
+    // Log the raw failure before wrapping. explainProviderError's `authLike` test also
+    // fires on any message merely containing "authentication" or "unauthorized", so the
+    // user-facing "(401)" wording is not proof the status was 401 — an overload or a
+    // stream that died mid-flight can be reported as an auth failure. Record what the
+    // provider actually returned so the next occurrence is diagnosable.
+    console.error("[callClaudeStream] raw failure:", {
+      status: err?.status ?? err?.response?.status ?? null,
+      type: err?.error?.type || err?.error?.error?.type || null,
+      name: err?.name || null,
+      message: String(err?.message || err).slice(0, 300),
+      // Confirms whether the gateway injected an auth token this invocation.
+      sawAuthTokenEnv: !!process.env.ANTHROPIC_AUTH_TOKEN,
+      sawGatewayBaseUrl: process.env.ANTHROPIC_BASE_URL || null,
+    });
     throw wrapProviderError("claude", err, "portfolio streaming generation");
   }
 }
@@ -2390,16 +2495,8 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
   }
 
   // Semantic roles in, positional palette out. Dominance order leads so c1 is the
-  // user's most dominant colour; otherwise ROLE_TO_SLOT_ORDER applies.
-  const normalizedColor = toPositionalPalette({
-    background: derivedThemeFromText?.background ?? safeColorSpec.background,
-    foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
-    primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
-    secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
-    accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
-    use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
-  },
-  derivedThemeFromText?.dominanceOrder);
+  // user's most dominant colour; otherwise prominence order applies.
+  const normalizedColor = buildPositionalPalette(derivedThemeFromText, safeColorSpec);
 
   if (headshotName) {
     candidateData.headshot = headshotName;
@@ -2432,7 +2529,7 @@ async function renderAnnotatedPortfolio(provider, creds, store, jobId, body, use
 
   let siteHtml;
   try {
-    siteHtml = renderPortfolio(annotatedHtml, candidateData, normalizedColor, roleAssignments, derivedThemeFromText?.dominanceOrder || null);
+    siteHtml = renderPortfolio(annotatedHtml, candidateData, normalizedColor, roleAssignments, derivedThemeFromText?.namedColors || null);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: "Render failed: " + (err?.message || String(err)) }), { ttl: 3600 });
     return;
@@ -2471,7 +2568,6 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
     colorSpec        = {},
     colorPreferences = null,        // { mode: "swatches"|"text", swatches: string[], text: string }
     headshotName     = "",
-    templateColorSlots = null,
   } = body;
   const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
 
@@ -2548,16 +2644,8 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
   }
 
   // Semantic roles in, positional palette out. Dominance order leads so c1 is the
-  // user's most dominant colour; otherwise ROLE_TO_SLOT_ORDER applies.
-  const theme = toPositionalPalette({
-    background: derivedThemeFromText?.background ?? safeColorSpec.background,
-    foreground: derivedThemeFromText?.foreground ?? safeColorSpec.foreground,
-    primary:    derivedThemeFromText?.primary    ?? safeColorSpec.primary,
-    secondary:  derivedThemeFromText?.secondary  ?? safeColorSpec.secondary,
-    accent:     derivedThemeFromText?.accent     ?? safeColorSpec.accent,
-    use_sample_colors: derivedThemeFromText ? false : safeColorSpec.use_sample_colors,
-  },
-  derivedThemeFromText?.dominanceOrder);
+  // user's most dominant colour; otherwise prominence order applies.
+  const theme = buildPositionalPalette(derivedThemeFromText, safeColorSpec);
 
   const candidateData = flattenCandidateData(
     resolvedStrategy,
@@ -2597,7 +2685,7 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
 
   let siteHtml;
   try {
-    siteHtml = renderPortfolio(sampleHtml, candidateData, theme, roleAssignments, derivedThemeFromText?.dominanceOrder || null);
+    siteHtml = renderPortfolio(sampleHtml, candidateData, theme, roleAssignments, derivedThemeFromText?.namedColors || null);
   } catch (err) {
     await store.set(jobId, JSON.stringify({ status: "error", error: `Render failed: ${err.message}` }), { ttl: 3600 });
     return;
@@ -2637,7 +2725,6 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     colorSpec        = {},
     colorPreferences = null,        // { mode: "swatches"|"text", swatches: string[], text: string }
     headshotName         = "",
-    templateColorSlots   = null,  // pre-extracted from color-normalized sample (optional)
   } = body;
   const safeColorSpec = colorSpec && typeof colorSpec === "object" ? colorSpec : {};
 
@@ -2662,25 +2749,20 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
     ? `<img src="${headshotName}" alt="${name}" class="headshot" />`
     : "";
 
-  const theme = toPositionalPalette({
-    background: safeColorSpec.background,
-    foreground: safeColorSpec.foreground,
-    primary: safeColorSpec.primary,
-    secondary: safeColorSpec.secondary,
-    accent: safeColorSpec.accent,
-    use_sample_colors: safeColorSpec.use_sample_colors
-  });
+  const theme = buildPositionalPalette(null, safeColorSpec);
 
   // Cap sample HTML to avoid exceeding model context.
-  // If the sample was pre-normalized, prepend a comment listing the extracted palette so
-  // the braid AI can read the semantic roles directly instead of doing color archaeology.
-  const samplePaletteRef = templateColorSlots ? normalizeColorSpec(templateColorSlots) : null;
-  const samplePrefix = (samplePaletteRef && [samplePaletteRef.background, samplePaletteRef.foreground, samplePaletteRef.primary, samplePaletteRef.secondary, samplePaletteRef.accent].filter(Boolean).length >= 3)
-    ? `<!--\n  PRE-EXTRACTED SAMPLE PALETTE:\n  background = ${samplePaletteRef.background || ""}\n  foreground = ${samplePaletteRef.foreground || ""}\n  primary = ${samplePaletteRef.primary || ""}\n  secondary = ${samplePaletteRef.secondary || ""}\n  accent = ${samplePaletteRef.accent || ""}\n  The sample HTML is color-normalized. Treat these semantic roles as the authoritative sample-reference palette for Part 2, even if the CSS still contains numbered legacy comments.\n-->\n`
-    : "";
-  const cappedSampleHtml = samplePrefix + (sampleHtml.length > 80000
+  //
+  // No palette prefix is prepended. There used to be one, listing the sample's colors
+  // as background/foreground/primary/secondary/accent — but braidWebsite.md tells the
+  // model the opposite ("Do NOT collapse the palette into a fixed five-slot taxonomy"),
+  // and squashing an N-slot palette (samples run 4–18 clusters) into five roles threw
+  // the rest away. The sample carries its own palette positionally in <style
+  // id="extracted-theme"> and <script id="color-palette">, both in <head> and so always
+  // ahead of this truncation point, and the prompt already points the model at them.
+  const cappedSampleHtml = sampleHtml.length > 80000
     ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->"
-    : sampleHtml);
+    : sampleHtml;
 
   const mastheadMeta = providedMastheadMeta || analyzeSampleMasthead(sampleHtml, domainContext);
   const mastheadImageInstruction = buildMastheadImageInstruction(mastheadMeta, domainContext);
@@ -2984,13 +3066,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       willDerive: directWillDerive,
       colorPreferencesMode: colorPreferences?.mode || null,
       colorPreferencesTextLen: (colorPreferences?.text || "").length,
-      themeSummary: {
-        background: theme?.background || null,
-        foreground: theme?.foreground || null,
-        primary:    theme?.primary    || null,
-        secondary:  theme?.secondary  || null,
-        accent:     theme?.accent     || null,
-      }
+      themeSummary: normalizeColorSpec(theme),
     });
     let directDerivedTheme = null;
     if (directWillDerive) {
@@ -3005,8 +3081,12 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
         console.warn("[directDesign] derivation returned null — text was:", (colorPreferences?.text || "").slice(0, 120));
       }
     }
+    // `theme` is already positional. The derived palette must be converted rather than
+    // spread on top: the two objects share no keys, so spreading left every reader that
+    // goes through normalizeColorSpec seeing `theme`'s c1…c5 and silently discarding the
+    // derivation — the user's text description had no effect on the from-scratch prompt.
     const directColorSpec = directDerivedTheme
-      ? { ...theme, ...directDerivedTheme, use_sample_colors: false }
+      ? buildPositionalPalette(directDerivedTheme, null)
       : { ...theme, use_sample_colors: false };
 
     // Publish the derived palette immediately so the client can populate the
@@ -3220,13 +3300,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     colorPreferencesMode: colorPreferences?.mode || null,
     colorPreferencesTextLen: (colorPreferences?.text || "").length,
     colorPreferencesSwatches: Array.isArray(colorPreferences?.swatches) ? colorPreferences.swatches : null,
-    themeSummary: {
-      background: theme?.background || null,
-      foreground: theme?.foreground || null,
-      primary:    theme?.primary    || null,
-      secondary:  theme?.secondary  || null,
-      accent:     theme?.accent     || null,
-    }
+    themeSummary: normalizeColorSpec(theme),
   });
   let derivedThemeFromText = null;
   if (willDerive) {
@@ -3242,13 +3316,11 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     }
   }
 
-  const effectiveTheme = derivedThemeFromText
-    ? { ...theme, ...derivedThemeFromText, use_sample_colors: false }
-    : theme;
-
   const colorSpec = page2?.use_sample_colors && !derivedThemeFromText
     ? { use_sample_colors: true, note: "Preserve the template's exact color scheme." }
-    : toPositionalPalette({ ...effectiveTheme, use_sample_colors: false });
+    : derivedThemeFromText
+      ? buildPositionalPalette(derivedThemeFromText, null)
+      : { ...theme, use_sample_colors: false };
 
   // Enrich user-supplied artifacts with source and colorized fields.
   const COLORIZABLE_TYPES = new Set(["image", "html", "text"]);
@@ -3425,43 +3497,71 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
   });
 }
 
-// ─── Template color normalization pipeline ───────────────────────────────────
-// Rewrites all color values in a sample HTML as 5 named --color-* CSS variables,
-// preserving visual appearance. Used offline (preprocessing script) and in-flow.
-async function normalizeTemplateColorsJob(provider, creds, store, jobId, body) {
+// ─── Template preprocessing pipeline ─────────────────────────────────────────
+// Runs the same two stages that scripts/preprocessSamples.mjs applies offline to
+// templates/<name>/sample.html, so an uploaded HTML file reaches the rest of the
+// pipeline in exactly the shape a gallery template does:
+//
+//   Stage 1 — AI annotation (AnnotateTemplate.md)  → data-* attributes
+//   Stage 2 — deterministic color normalization    → --c-N vars + color-palette JSON
+//
+// The only difference is timing: gallery templates are preprocessed ahead of
+// time and committed as annotated.html; uploads go through it per request.
+//
+// The offline script's third step — renaming image paths to headshot.png /
+// image1.png — is deliberately skipped. A gallery template's asset files are
+// named to match on disk, but an upload's src values point at the user's own
+// URLs and must survive untouched.
+async function preprocessTemplateJob(provider, creds, store, jobId, body) {
   const sampleHtml = body.sampleHtml || "";
-  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Normalizing template colors…" }), { ttl: 3600 });
   const mastheadMeta = analyzeSampleMasthead(sampleHtml, "");
-  let prompt;
+  const tokenReport = [];
+
+  // Stage 1 — annotation.
+  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Annotating template…" }), { ttl: 3600 });
+  let annotatedHtml = sampleHtml;
+  let annotated = false;
   try {
-    const rawHtml = sampleHtml.length > 80000 ? sampleHtml.slice(0, 80000) + "\n<!-- truncated -->" : sampleHtml;
-    prompt = loadPromptFile("ExtractVisuals.md").replace("{{EXAMPLE_HTML}}", rawHtml);
-  } catch (err) {
-    await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
-    return;
-  }
-  let r;
-  try {
-    r = await callAI(provider, creds, {
-      system: "You are an HTML engineer. Rewrite the HTML to replace all color values with exactly 5 named CSS custom properties in :root, following the instructions in the prompt. Output only raw HTML starting with <!DOCTYPE html>. No markdown. No explanation.",
+    const capped = sampleHtml.length > 120000
+      ? sampleHtml.slice(0, 120000) + "\n<!-- truncated -->"
+      : sampleHtml;
+    const prompt = loadPromptFile("AnnotateTemplate.md").replace("{{NORMALIZED_HTML}}", capped);
+    const r = await callAI(provider, creds, {
+      system: "You are a web template engineer. Add data-* attributes to the HTML per the instructions. Output only the annotated HTML. No markdown fences. No explanation.",
       userText: prompt,
-      maxTokens: 40000
+      maxTokens: 32000
     });
+    tokenReport.push({ stage: "annotate", model: r.model, ...r.usage });
+    const candidate = cleanHtml(r.text || "");
+    if (/^\s*<(?:!doctype|html)\b/i.test(candidate)) {
+      annotatedHtml = candidate;
+      annotated = true;
+    }
   } catch (err) {
-    await store.set(jobId, JSON.stringify({ status: "error", error: err.message }), { ttl: 3600 });
+    // Annotation is purely additive: braid mode never reads data-* attributes, so
+    // a failure here degrades to the raw upload instead of failing the whole job.
+    // Only slot-fill, which requires annotations, is lost — and `annotated: false`
+    // tells the client that.
+    tokenReport.push({ stage: "annotate", error: err.message });
+  }
+
+  // Stage 2 — color normalization (deterministic, no AI).
+  await store.set(jobId, JSON.stringify({ status: "pending", stage: "Normalizing template colors…" }), { ttl: 3600 });
+  let normalizedHtml, paletteSize;
+  try {
+    ({ html: normalizedHtml, k: paletteSize } = normalizeColorsInHtml(annotatedHtml));
+  } catch (err) {
+    await store.set(jobId, JSON.stringify({ status: "error", error: `Color normalization failed: ${err.message}` }), { ttl: 3600 });
     return;
   }
-  const normalizedHtml = embedMastheadMetaComment(cleanHtml(r.text || ""), mastheadMeta);
-  // Was parseNormalizedColorSlots(normalizedHtml): it read --color-* vars with numbered
-  // role comments, a dialect no current template emits, so it always returned {}.
-  // Retired with the rest of --color-*; kept as an explicit empty so the shape holds.
-  const colorSlots = {};
+
   await store.set(jobId, JSON.stringify({
     status: "done",
-    normalizedHtml,
-    colorSlots,
+    normalizedHtml: embedMastheadMetaComment(normalizedHtml, mastheadMeta),
+    annotated,
+    paletteSize,
     mastheadMeta,
-    token_report: [{ stage: "normalizeTemplate", model: r.model, ...r.usage }]
+    token_report: tokenReport
   }), { ttl: 3600 });
 }
 
@@ -3600,7 +3700,7 @@ async function handleBuildWebsiteBackground(event) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "Resume PDF or pre-computed analysis required." }), { ttl: 3600 });
         return { statusCode: 202 };
       }
-    } else if (mode === "braid" || mode === "slot-fill" || mode === "normalizeTemplate") {
+    } else if (mode === "braid" || mode === "slot-fill" || mode === "preprocessTemplate") {
       if (!body.sampleHtml) {
         await store.set(jobId, JSON.stringify({ status: "error", error: "sampleHtml is required for this mode." }), { ttl: 3600 });
         return { statusCode: 202 };
@@ -3690,9 +3790,10 @@ async function handleBuildWebsiteBackground(event) {
       return { statusCode: 202 };
     }
 
-    // normalizeTemplate mode: rewrite sample HTML with 5 named --color-* CSS variables
-    if (mode === "normalizeTemplate") {
-      await normalizeTemplateColorsJob(provider, creds, store, jobId, body);
+    // preprocessTemplate mode: annotate + color-normalize an uploaded sample HTML,
+    // producing the same artifact shape as a committed templates/<name>/annotated.html
+    if (mode === "preprocessTemplate") {
+      await preprocessTemplateJob(provider, creds, store, jobId, body);
       return { statusCode: 202 };
     }
 
@@ -3760,13 +3861,7 @@ async function handleBuildWebsiteBackground(event) {
       return { statusCode: 202 };
     }
 
-    const theme = toPositionalPalette({
-      background: page2?.theme?.background,
-      foreground: page2?.theme?.foreground,
-      primary: page2?.theme?.primary,
-      secondary: page2?.theme?.secondary,
-      accent: page2?.theme?.accent
-    });
+    const theme = buildPositionalPalette(null, page2?.theme);
 
     const sampleHtml = await fetchSampleHtml(page1.model_template);
     const pdfBuffer  = Buffer.from(resumePdfBase64, "base64");

@@ -18,8 +18,11 @@ const SYSTEM_PROMPT =
   '{"valid": true|false, "reason": "one short sentence"}. ' +
   'A description is "valid" when it conveys at least one color, mood, or palette ' +
   'intent (e.g. "deep navy with warm copper accents", "muted earth tones", ' +
+  '"pastels", "neon colors", ' +
   '"#2a3a5c with bright accents"). It is "invalid" when it is gibberish, off-topic, ' +
   "empty, or describes something other than colors.";
+
+const DIRECT_COLOR_DESCRIPTOR = /\b(?:pastels?|neons?|neon(?:\s+colors?)?|fluorescent(?:\s+colors?)?|electric(?:\s+colors?)?)\b/i;
 
 function jsonResponse(statusCode, body) {
   return {
@@ -57,6 +60,7 @@ export async function handler(event) {
   const text = String(body.text || "").trim();
   if (!text) return jsonResponse(200, { valid: false, reason: "Empty description." });
   if (text.length > 500) return jsonResponse(200, { valid: false, reason: "Description too long (max 500 chars)." });
+  if (DIRECT_COLOR_DESCRIPTOR.test(text)) return jsonResponse(200, { valid: true, reason: "Accepted color descriptor." });
 
   const apiKey = process.env.ANTHROPIC_API_KEY_LOCAL || process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return jsonResponse(200, { valid: true, reason: "Validator unavailable; accepted." });

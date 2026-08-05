@@ -192,21 +192,13 @@
             }
         ];
 
-        const ROLE_ORDER = ["primary", "secondary", "tertiary", "quaternary", "quinary"];
-        let swatchCount = 5;
-        window.addEventListener('message', (e) => {
-            if (e.data?.type === 'setSwatchCount') swatchCount = Math.max(1, Math.min(5, e.data.n || 1));
-        });
-        const themes = rawThemes.map(theme => ({
-            name: theme.name,
-            palette: {
-                primary:    theme.colors[0],
-                secondary:  theme.colors[1],
-                tertiary:   theme.colors[2],
-                quaternary: theme.colors[3],
-                quinary:    theme.colors[4]
-            }
-        }));
+        // Every theme's `colors` array is already ordered by descending chroma, so index 0
+        // is the most dominant colour. That IS the positional palette: colors[i] -> c(i+1).
+        // There is deliberately no role mapping here — this used to translate the array
+        // into primary/secondary/tertiary/quaternary/quinary, which every receiver then had
+        // to translate back.
+        const slotKey = i => `c${i + 1}`;
+        const themes = rawThemes;
 
         function copyToClipboard(text) {
             if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -238,7 +230,7 @@
                 window.parent.postMessage({
                     type: 'colorThemeSelected',
                     number: index + 1,
-                    theme: { ...theme.palette }
+                    theme: Object.fromEntries(theme.colors.map((hex, i) => [slotKey(i), hex]))
                 }, '*');
                 themeName.classList.add('copied');
                 setTimeout(() => themeName.classList.remove('copied'), 900);
@@ -247,8 +239,7 @@
             const colorBoxes = document.createElement('div');
             colorBoxes.className = 'color-boxes';
 
-            ROLE_ORDER.forEach(role => {
-                const color = theme.palette[role];
+            theme.colors.forEach(color => {
                 const box = document.createElement('div');
                 box.className = 'color-box';
                 box.style.backgroundColor = color;

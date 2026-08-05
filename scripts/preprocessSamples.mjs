@@ -31,8 +31,15 @@ import {
   extractRegex, dedupColors, toOk, fmtOklch, oklchToHex,
 } from "../src/extractHtmlColors/extractColors.mjs";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const ROOT      = join(__dirname, "..");
+// esbuild's CJS output leaves `import.meta` empty, so import.meta.url is undefined once
+// this module is bundled into a Netlify function — and fileURLToPath(undefined) throws
+// "The path argument must be of type string or an instance of URL. Received undefined"
+// at module load, taking the whole function down before its handler ever runs. Every
+// path below is CLI-only (the batch runner's inputs and outputs), so resolve defensively
+// instead. Same guard as src/extractHtmlColors/extractColors.mjs.
+const MODULE_URL = typeof import.meta.url === "string" ? import.meta.url : null;
+const __dirname  = MODULE_URL ? dirname(fileURLToPath(MODULE_URL)) : "";
+const ROOT       = __dirname ? join(__dirname, "..") : "";
 
 // ─── Annotation config ────────────────────────────────────────────────────────
 const ANNOTATE_PROMPT_PATH = join(ROOT, "src/netlify/functions/AnnotateTemplate.md");
@@ -50,7 +57,8 @@ const TEMPLATES = join(ROOT, "templates");
 // When imported (e.g. from a Netlify function), we skip all top-level CLI side effects
 // so just the exported helpers are available.
 const __isCli = (() => {
-  try { return process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]; }
+  if (!MODULE_URL) return false;   // bundled into a function — never the CLI entrypoint
+  try { return !!process.argv[1] && fileURLToPath(MODULE_URL) === process.argv[1]; }
   catch { return false; }
 })();
 

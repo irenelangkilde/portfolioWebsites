@@ -291,7 +291,23 @@ function normalizeHtmlString(rawHtml) {
     .map(([hex, count]) => ({ hex, count, ok: toOk(hex) }))
     .filter(e => e.ok);
 
-  const reps = dedupColors(candidates, { dupThreshold: DUP_THRESHOLD, variantThreshold: VARIANT_THRESHOLD });
+  // Number --c-N by DOMINANCE, not by dedup discovery order. dedupColors returns reps
+  // in the order it found them, which made --c-1 an arbitrary mid-pack colour while the
+  // template's most-used colour sat at, say, --c-8. Consumers then had to bridge two
+  // different number lines (a palette's "slot 1" vs a template's "--c-1"), and matching
+  // index-to-index looked correct while being wrong.
+  //
+  // Sorting here reorders the CSS declarations, the rewrite map and the #color-palette
+  // scheme together, because all three iterate this same array.
+  //
+  // Score is count × chroma with a chroma floor, matching SCORE_CHROMA_FLOOR in
+  // renderPortfolio.mjs and COLOR_SCORE_CHROMA_FLOOR in editor.html. The floor keeps
+  // pure neutrals from collapsing to zero so they still order by coverage.
+  const PROMINENCE_CHROMA_FLOOR = 0.02;
+  const prominence = (rep) => (rep.count || 0) * Math.max(rep.ok?.c ?? 0, PROMINENCE_CHROMA_FLOOR);
+  const reps = dedupColors(candidates, { dupThreshold: DUP_THRESHOLD, variantThreshold: VARIANT_THRESHOLD })
+    .slice()
+    .sort((a, b) => prominence(b) - prominence(a));
   const meta = { k: reps.length, dupThreshold: DUP_THRESHOLD, variantThreshold: VARIANT_THRESHOLD };
 
   const injection = [
