@@ -232,15 +232,33 @@
       line-height: 1.2;
     }
 
-    /* Two-line tag row: a pill for the design-style token from the
-       overview.html Style dropdown, and a short prose descriptor next to it. */
-    .card-tags {
+    /* Title row: the subject's name, the design-style pill from the overview.html Style
+       dropdown, and Learn More all on one line. Name and pill read together as the card's
+       identity; the button is pushed to the far right. Wraps on narrow cards rather than
+       squeezing the name. The prose descriptor stays on its own line underneath. */
+    .card-title-row {
       display: flex;
+      align-items: center;
       flex-wrap: wrap;
-      align-items: baseline;
-      gap: 6px 10px;
-      margin: -4px 0 -2px;
+      gap: 8px 10px;
     }
+
+    .card-title-row h2 {
+      min-width: 0;          /* let a long name shrink instead of forcing the row wider */
+    }
+
+    .card-title-row .style-tag {
+      flex: 0 0 auto;
+    }
+
+    /* margin-left:auto rather than justify-content:space-between, so the pill stays next
+       to the name instead of being spread across the row when it is the only sibling. */
+    .card-title-row .cta {
+      margin-left: auto;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
     .style-tag {
       display: inline-block;
       padding: 2px 8px;
@@ -614,12 +632,12 @@
           </div>
         </a>
         <div class="card-body">
-          <h2>${templateTitle(entry)}</h2>
-          <div class="card-tags">
+          <div class="card-title-row">
+            <h2>${templateTitle(entry)}</h2>
             ${entry.style ? `<span class="style-tag">${escapeHtml(entry.style)}</span>` : ""}
-            ${entry.style && STYLE_TAGLINES[entry.style] ? `<span class="style-descriptor">${escapeHtml(STYLE_TAGLINES[entry.style])}</span>` : ""}
+            <button class="cta" type="button" aria-label="Learn more about ${templateTitle(entry)}">Learn More</button>
           </div>
-          <button class="cta" type="button" aria-label="Learn more about ${templateTitle(entry)}">Learn More</button>
+          ${entry.style && STYLE_TAGLINES[entry.style] ? `<p class="style-descriptor">${escapeHtml(STYLE_TAGLINES[entry.style])}</p>` : ""}
         </div>
       `;
 
