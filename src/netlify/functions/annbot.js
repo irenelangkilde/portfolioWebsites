@@ -26,11 +26,11 @@ HOW IT WORKS (6 stages):
 1. Resume — Upload resume (PDF/DOCX) + enter major and specialization
 2. Job — Enter desired job position and optionally paste a job posting
 3. Design — Choose a template (by keyword from gallery, upload screenshot/HTML, or manual design options)
-4. Colors — Pick a 5-color palette (Background, Foreground, Primary, Secondary, Accent)
+4. Colors — Pick a palette of up to 5 colors and optionally color roles (such as background, foreground, primary, secondary, accents)
 5. Edit — Refine the generated portfolio in the built-in editor
 6. Publish — Download as HTML or deploy to a hosted URL
 
-Design styles available: clean minimal, elegant, modern, corporate, fun, bold, glassmorphism, brutalist, terminal, editorial, Swiss grid, neon-tech (light vs. dark backgrounds are a separate choice, independent of style).
+Design styles available: Bold, Brutalist, Classic, Clean minimal, Editorial, Elegant, Fun, Glassmorphism, Modern, Neon tech, Swiss grid, Terminal (light vs. dark backgrounds are a separate choice, independent of style).
 
 WHAT GETS DELIVERED:
 - Fully responsive HTML portfolio website, customized from resume + job target

@@ -1158,11 +1158,15 @@
         </label>
         <div class="colorChoiceControl">
           <div class="colorSwatchRow">
-            <input id="primary"   type="color" value="#000000" aria-label="Background color" title="Background color" />
-            <input id="secondary" type="color" value="#000000" aria-label="Foreground color" title="Foreground color" />
-            <input id="tertiary"  type="color" value="#000000" aria-label="Primary color" title="Primary color" />
-            <input id="accent2"   type="color" value="#000000" aria-label="Secondary color" title="Secondary color" />
-            <input id="accent1"   type="color" value="#000000" aria-label="Accent color" title="Accent color" />
+            <!-- These five pickers ARE the positional palette slots c1…c5, left to right;
+                 c1 is the site's most dominant colour. The element ids are historical and
+                 carry no meaning — SLOT_TO_INPUT_ID in form.js maps slot → id, and
+                 updateColorSlotLabels() re-applies these labels at runtime. -->
+            <input id="primary"   type="color" value="#000000" aria-label="C1 color" title="C1 color" />
+            <input id="secondary" type="color" value="#000000" aria-label="C2 color" title="C2 color" />
+            <input id="tertiary"  type="color" value="#000000" aria-label="C3 color" title="C3 color" />
+            <input id="accent2"   type="color" value="#000000" aria-label="C4 color" title="C4 color" />
+            <input id="accent1"   type="color" value="#000000" aria-label="C5 color" title="C5 color" />
           </div>
         </div>
       </div>
@@ -1280,21 +1284,36 @@
 
             <!-- Style -->
             <div>
-              <label for="designStyle">Style</label>
+              <label for="designStyle" style="display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;">
+                <span>Style:</span>
+                <span class="hint" style="font-weight:400;">
+                  <!-- rel="opener" is required, not just optional: target="_blank" implies
+                       rel="noopener" by default in current browsers, which nulls window.opener
+                       in the gallery tab. Without an opener the galleries fall back to
+                       read-only mode and clicking a tile does nothing. Both targets are
+                       first-party same-origin pages, so re-enabling the handle is safe. -->
+                  <a href="../html/style-gallery.html" target="_blank" rel="opener">Miniatures</a>
+                  &nbsp;·&nbsp;
+                  <a href="../html/actual-html-outputs.html" target="_blank" rel="opener">Thumbnails</a>
+                </span>
+              </label>
               <select id="designStyle" name="designStyle">
+                <!-- Styles alphabetised by visible label. The placeholder stays first and
+                     "Other…" stays last, since neither is a style. Values are the tokens the
+                     render prompts define — do not change them to match the sort. -->
                 <option value="">— choose —</option>
-                <option value="clean-minimal">Clean minimal</option>
-                <option value="elegant">Elegant</option>
-                <option value="modern">Modern</option>
-                <option value="professional">Professional</option>
-                <option value="fun">Fun</option>
                 <option value="bold">Bold</option>
-                <option value="glassmorphism">Glassmorphism</option>
                 <option value="brutalist">Brutalist</option>
-                <option value="terminal">Terminal</option>
+                <option value="classic">Classic</option>
+                <option value="clean-minimal">Clean minimal</option>
                 <option value="editorial">Editorial</option>
-                <option value="Swiss grid">Swiss grid</option>
+                <option value="elegant">Elegant</option>
+                <option value="fun">Fun</option>
+                <option value="glassmorphism">Glassmorphism</option>
+                <option value="modern">Modern</option>
                 <option value="neon-tech">Neon tech</option>
+                <option value="swiss-grid">Swiss grid</option>
+                <option value="terminal">Terminal</option>
                 <option value="other">Other…</option>
               </select>
               <input type="text" id="designStyleOther" placeholder="Describe your style…" style="display:none; margin-top:6px;" />
