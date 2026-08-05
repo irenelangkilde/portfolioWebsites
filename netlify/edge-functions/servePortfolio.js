@@ -11,6 +11,13 @@
 
 import { getStore } from "@netlify/blobs";
 
+// The domains we own, version-controlled rather than typed into an env var. Any host NOT
+// recognised here is treated as a visitor's own custom portfolio domain and looked up in
+// the blob store — so a marketing domain missing from this list does not fall through
+// harmlessly, it renders "No portfolio is registered for <domain>" on every page.
+// Deno-safe: the module is plain ESM with no imports and no Node built-ins.
+import { KNOWN_DOMAINS } from "../../src/netlify/shared/knownDomains.mjs";
+
 const PUBLISHED_SITES_STORE = "published-sites";
 
 // Hosts that should never be treated as custom portfolio domains
@@ -42,7 +49,19 @@ function isSystemHost(host, primaryDomain) {
   };
 
   addDomainList(primaryDomain);
-  // Additional hostnames to treat as aliases of the main site (comma-separated).
+
+  // The checked-in list. Adding a domain here is a code change that ships with a deploy,
+  // which is the intended path — it is reviewable and cannot be silently truncated the
+  // way a long comma-separated env var can.
+  for (const d of KNOWN_DOMAINS) {
+    candidates.add(d);
+    for (const v of apexAndWww(d)) candidates.add(v);
+  }
+
+  // Kept as an escape hatch: lets a domain be recognised immediately via the Netlify UI
+  // without waiting for a deploy. Note this is the ALIAS_DOMAINS environment variable,
+  // which is NOT the same thing as adding a domain alias under Netlify's Domain
+  // management — only this variable and the list above are read here.
   addDomainList(Netlify.env.get("ALIAS_DOMAINS"));
 
   // Netlify always sets URL = primary site URL. Use it as a reliable fallback.
