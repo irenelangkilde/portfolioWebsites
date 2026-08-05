@@ -47,7 +47,7 @@ VISUAL REQUIREMENTS
 - If a color palette is provided, use these theme colors throughout the site; if not choose a palette well-suited to the major and specialization
 - Apply the full palette to gradients, accents, cards, decorative visuals, buttons, and backgrounds, etc.
 - From the following list of "style_tokens", 
-Design in the style of: "clean-minimal", "elegant", "modern", "corporate", "fun", "bold", "glassmorphism", "brutalist", "terminal", "editorial", "Swiss grid", or "neon-tech". (Light vs. dark background is a separate axis, conveyed via the mainSectionMode field, not the style token.)
+Design in the style of: "clean-minimal", "elegant", "modern", "classic", "fun", "bold", "glassmorphism", "brutalist", "terminal", "editorial", "swiss-grid", or "neon-tech". (Light vs. dark background is a separate axis, conveyed via the mainSectionMode field, not the style token.)
 - If provided, use the "render_mode" (cinematic technical minimalism, soft scientific elegance, bold futuristic)
     (animated laser beam hero, glowing RF waveform effects, interactive project cards, animated circuit-style background)
 - Use strong hierarchy and elegant spacing

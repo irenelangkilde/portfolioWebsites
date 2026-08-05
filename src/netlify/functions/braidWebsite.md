@@ -231,8 +231,8 @@ Masthead illustration:
 Headshot placeholder monogram:
   When {{HEADSHOT_HTML}} is empty, render a circular monogram element that:
   - Displays the candidate's initials ({{CANDIDATE_INITIALS}}) in large, bold text.
-  - Uses a radial-gradient background blending --primary and --accent.
-  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--primary) 50%, var(--background)).
+  - Uses a radial-gradient background blending two of the sample's chromatic slots (low-N `--c-*`).
+  - Has a subtle dashed border: 2px dashed color-mix(in oklch, var(--c-1) 50%, var(--c-2)).
   - Carries a title attribute: title="Double-click to add your headshot"
   - Has a CSS class "headshot-placeholder" and an id="headshotPlaceholder".
   - Is sized to match where a real headshot photo would sit (min 96px, typically 120–160px diameter).
@@ -252,7 +252,7 @@ Maximum visual garnishment:
   - If the sample has any CSS animation (@keyframes), reproduce it.
   - Section dividers, clip-path cuts, and ::before/::after pseudo-element accents must
     all be preserved and adapted to the new palette.
-  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of --primary and --background.
+  - Add subtle box-shadow depth to cards: box-shadow using color-mix() of two `--c-*` slots.
   - The goal: a viewer should say "wow" within 3 seconds of loading the page.
 
 ═══════════════════════════════════════════════════
