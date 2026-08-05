@@ -4,12 +4,14 @@
 .netlify/functions-serve/*
 !.netlify/functions-serve/package.json
 
-# Same thing under src/. A pattern containing a slash is anchored to the directory
-# holding this .gitignore, so the rules above only ever matched a top-level .netlify/
-# and never src/.netlify/ — which is how 144 generated files (~80 MB) ended up tracked.
-# Everything here is Netlify CLI state: netlify.toml points at src/netlify/functions
-# (no dot) for real source.
-src/.netlify/
+# Same thing anywhere under src/, at any depth. A pattern containing a slash is anchored
+# to the directory holding this .gitignore, so the rules above only ever matched a
+# top-level .netlify/ — which is how two nested CLI trees ended up tracked:
+# src/.netlify/ (144 files, ~80 MB) and src/netlify/functions/.netlify/ (443 files,
+# ~24 MB). The `**` matches zero or more directories, so this covers both and any future
+# one. Everything in them is Netlify CLI state; netlify.toml points at
+# src/netlify/functions (no dot) for real source.
+src/**/.netlify/
 node_modules
 blog/_site/
 blog-built/

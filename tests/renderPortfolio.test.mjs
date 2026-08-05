@@ -137,7 +137,7 @@ describe("renderPortfolio", () => {
     expect(rendered).not.toContain("data-hero-body");
   });
 
-  it("emits color overrides for new --c palette variables and legacy --color variables", () => {
+  it("emits color overrides for the positional --c palette variables", () => {
     const html = `
       <html>
         <head>
@@ -169,23 +169,42 @@ describe("renderPortfolio", () => {
       </html>
     `;
 
+    // Slot N of the colorSpec drives --c-N, one to one. The colorSpec used to take
+    // semantic keys (primary/secondary/accent/…) that were mapped onto slots here, and
+    // each slot was mirrored to a legacy --color-<role> variable. Both were removed with
+    // the positional migration: a template's --c-4 may be body text, an SVG fill or a
+    // section background, so a role name on a slot only invited the wrong colour to land
+    // in it. Semantic intent now travels separately as a role request resolved against
+    // each template's actual variable usage.
     const rendered = renderPortfolio(html, { headline: "New headline" }, {
-      primary: "#0b3dff",
-      secondary: "#f23420",
-      accent: "#10c850",
-      quaternary: "#101010",
-      quinary: "#f3d62b",
+      c1: "#f23420",
+      c2: "#10c850",
+      c3: "#0b3dff",
+      c4: "#f3d62b",
+      c5: "#101010",
     });
 
-    expect(rendered).toContain("--c-1: #f23420;");
-    expect(rendered).toContain("--c-2: #10c850;");
-    expect(rendered).toContain("--c-3: #0b3dff;");
-    expect(rendered).toContain("--c-4: #f3d62b;");
-    expect(rendered).toContain("--c-5: #101010;");
-    expect(rendered).toMatch(/--c-6:\s*#[0-9a-f]{6};/i);
-    expect(rendered).not.toContain("--c-6: #777777;");
-    expect(rendered).toContain("--color-primary: #0b3dff;");
-    expect(rendered).toContain("--color-quinary: #f3d62b;");
+    // Assert against the emitted override block, not the whole document: the fixture's own
+    // <style id="extracted-theme"> passes through and still carries the template's original
+    // --c-* and --color-primary declarations, which would satisfy a document-wide match.
+    const overrideBlock = rendered.match(/<style id="color-override">([\s\S]*?)<\/style>/)?.[1] ?? "";
+    expect(overrideBlock).not.toBe("");
+
+    expect(overrideBlock).toContain("--c-1: #f23420;");
+    expect(overrideBlock).toContain("--c-2: #10c850;");
+    expect(overrideBlock).toContain("--c-3: #0b3dff;");
+    expect(overrideBlock).toContain("--c-4: #f3d62b;");
+    expect(overrideBlock).toContain("--c-5: #101010;");
+
+    // Slot 6 is in the template's scheme but not in the colorSpec, so derivePaletteHex
+    // decides it. #777777 is a pure neutral, and neutrals are kept EXACTLY — they have no
+    // hue to clash with the palette. Tinting them was tried and rejected: it invented hues
+    // nobody asked for. Unpinned slots that are chromatic AND more than 60° from every
+    // palette hue are the ones that get desaturated instead.
+    expect(overrideBlock).toContain("--c-6: #777777;");
+
+    // The retired legacy mirror must not come back.
+    expect(overrideBlock).not.toMatch(/--color-/);
   });
 
   it("renders about_full as multiple paragraphs when a template marks one paragraph node", () => {
