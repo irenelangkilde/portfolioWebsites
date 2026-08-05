@@ -33,6 +33,7 @@ For each of the substantial visual elements (such as images and animations) with
   design_factors": {
     "composition_option": "central",
     "style_token": "glassmorphism",
+    "style_note": "",
     "rendering_style": "gradient 3D illustration"
   }
   "page_concept": {
@@ -80,7 +81,21 @@ This is a concept intended to lie between intent-level abstraction and template-
 
 
 STYLE TOKEN
-One of "clean-minimal", "elegant", "modern", "corporate", "fun", "bold", "glassmorphism", "brutalist", "terminal", "editorial", "Swiss grid", "neon-tech", or other. (Light-vs-dark background is a separate axis conveyed via the mainSectionMode field, not the style token.)
+`style_token` is a CLOSED vocabulary. Copy one of these strings EXACTLY, character for character:
+
+  "clean-minimal"  "elegant"     "modern"     "classic"    "fun"         "bold"
+  "glassmorphism"  "brutalist"   "terminal"   "editorial"  "swiss-grid"  "neon-tech"
+  "other"
+
+Do NOT invent a token, hyphenate a phrase, or combine two of them. If nothing above fits,
+use exactly "other" and put your own wording in `style_note` instead — never in `style_token`.
+`style_note` is free text and may be empty when the token is an exact match.
+
+The token names the style ONLY. Do not fold any other axis into it:
+- Light vs dark is separate — it belongs in the mainSectionMode field, so a dark
+  glassmorphism sample is "glassmorphism", NOT "glass-dark".
+- Mood, palette warmth and texture belong in `visual_treatment` and `mood`, so a soft,
+  pastel, serif-forward sample is "editorial", NOT "soft pastel editorial".
 
 RENDERING STYLE
 - stylized scientific illustration

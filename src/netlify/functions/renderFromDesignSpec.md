@@ -27,7 +27,14 @@ Requirements:
   borders, muted text, shadows, chips, and overlays. Use only `color-mix()`-based derived variables and
   mixin-like reusable classes/component recipes rather than ad hoc hardcoded colors throughout the stylesheet.
 - Build a polished, editable portfolio website with real sections, not a wireframe.
-- Make sections alternate between constrasting light and dark themes.
+- Respect the design spec's `main_section_mode`. It sets the BASELINE for the hero and the primary
+  content sections: "light" → they must use a light canvas with dark text; "dark" → a dark canvas
+  with light text. Pick whichever palette slots give you that pairing. This is a deliberate user
+  choice — do not start dark because the palette looks better dark, or because the style token
+  suggests it.
+- Respect the design spec's `alternate_sections`, which is a separate axis from the baseline above.
+  When true, sections alternate between contrasting light and dark treatments, STARTING from the
+  `main_section_mode` baseline. When false, every section keeps the baseline treatment throughout.
 - Include a clear hero, about/profile, projects/work section, skills, and contact/resume CTA.
 - Include a headshot area that follows the headshot guidance.
 - Prefer concise, strong copy. Do not invent employers, degrees, awards, metrics, links, or dates.
@@ -41,6 +48,74 @@ Requirements:
   section and keep section/card titles on a distinct, stable text role.
 - Do not let one card in a repeated set use `primary` while a sibling card uses `accent`
   for the same kind of heading or chip. Repeated components should be visually systematic.
+
+Design vocabulary:
+The design spec's `composition` and `style` values are TOKENS, and these are their definitions.
+They come from a dropdown the user picked from, so they are deliberate choices, not hints —
+match the definition even when another arrangement would look good to you.
+
+COMPOSITION — governs the hero layout:
+- "central" — symmetric centered hero. Headline, subheadline and CTAs sit on the page's
+  vertical axis; any visual (monogram, motif, scene) is centered above, below or behind them.
+  This is NOT a two-column split: do not place the visual in a column beside the copy.
+- "split-left" — two-column hero: content on the LEFT, visual on the RIGHT.
+- "split-right" — two-column hero: visual on the LEFT, content on the RIGHT.
+- "scene-based" — hero built around a photographic or illustrated scene (lab, desk, workshop,
+  field) sitting behind or beside the copy.
+- "abstract_layered" — layered abstract composition built from motifs, rings, grids and
+  overlapping shapes rather than a single figure or a two-column split.
+
+STYLE — governs typography, texture and visual treatment:
+- "clean-minimal" — whitespace-first, restrained hierarchy, single focus per section
+- "elegant"       — refined typography, generous pacing, subtle textures
+- "modern"        — contemporary sans-serif hierarchy, 3D or gradient hero visuals
+- "classic"       — conventional, brand-led business layout: structured sections, a small
+                    disciplined palette, nothing experimental
+- "fun"           — playful cartoon accents and illustrative flourishes
+- "bold"          — oversized display type, high-impact composition
+- "glassmorphism" — frosted-glass cards, blurred backdrop layering
+- "brutalist"     — industrial capitals, raw grids, coarse textures
+- "terminal"      — monospace typography and terminal-chrome layout
+- "editorial"     — serif-forward with magazine-style hierarchy
+- "swiss-grid"    — visible grid system, systematic sans-serif composition (see note below)
+- "neon-tech"     — saturated accents, futuristic technical vibe
+- "other"         — no fixed meaning. The style arrives as free text instead: either the
+                    token is "other" and the description sits beside it, or the style value is
+                    itself a phrase not in this list. Either way, follow that wording literally
+                    rather than substituting the nearest token above.
+
+Style and colour are SEPARATE axes. A vivid or dark palette does not make the style "neon-tech",
+and a muted palette does not make it "clean-minimal" — the style token alone decides typography
+and treatment. Render the requested style using whatever colours the colour spec supplies.
+
+`render_mode` — governs how illustrations, hero art and project visuals are drawn. It is an art
+direction for imagery only; it does not override `style` or `composition`. Values are descriptive
+phrases the user picked, e.g. "cinematic technical minimalism", "3D scientific elegance",
+"bold futuristic", "technical schematic aesthetic", "stylized scientific illustration",
+"cinematic concept art", "clean editorial vector", "gradient 3D illustration". Render every inline
+SVG, diagram and hero visual in the named manner. Empty means you choose.
+
+`density` — "compact" → tighter section padding and 3-column grids; "medium" → balanced;
+"spacious" → generous padding and 1–2-column grids.
+
+`use_emoji_icons` — when true, emoji or icon glyphs may be used for section icons and skill badges.
+When FALSE, use no emoji and no icon glyphs anywhere, including in headings, chips, list bullets,
+badges and contact rows. Substitute typographic or CSS-drawn marks instead.
+
+Style-specific notes:
+Apply only the note matching the design spec's style token; ignore the others.
+- "swiss-grid" — the visible grid IS the style, so it must read as a deliberate design element
+  rather than a subliminal texture. Draw real 1px solid rules on the column boundaries and
+  section divisions of the layout you actually use, and align content to them so the system
+  reads as intentional. Strength: roughly 28–35% of the body-text colour against the page
+  background, e.g. `color-mix(in oklch, <your body text colour> 30%, transparent)`; never go
+  below 22%. The grid should be plainly legible at a glance on a normal display without leaning
+  in — err on the side of too strong rather than too subtle, since anything under ~20% reads as
+  screen dirt rather than as a design system. It should still sit behind the content in the
+  hierarchy: visible structure, not a foreground element competing with text. On dark sections
+  invert: a light rule at the same strength. Keep rules crisp and orthogonal — no diagonals, no
+  blur, no gradients applied to the rules themselves. Use a heavier rule (2px, or a step up in
+  strength) for major section divisions so the grid reads as hierarchical rather than uniform.
 
 Implementation guidance:
 - Let the design spec drive the overall composition.

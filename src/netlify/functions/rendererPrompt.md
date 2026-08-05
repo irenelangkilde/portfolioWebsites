@@ -48,13 +48,71 @@ The most common failure mode is a site that looks sparse and under-designed. Avo
 - Pack content tightly. If a section looks like it has too much whitespace, reduce padding and add more items.
 - Respect visual_direction.section_density: "compact" → 40–60px section padding, 3-col grids; "medium" → 60–90px, 2–3-col; "spacious" → 90–120px, 1–2-col.
 
+DESIGN VOCABULARY
+
+`visual_direction.composition_choice` and the style token in
+`visual_direction.template_inspiration_notes` are TOKENS, and these are their definitions. They
+come from a dropdown the user picked from, so they are deliberate choices, not hints — match the
+definition even when another arrangement would look good to you.
+
+COMPOSITION — governs the hero layout:
+- "central" — symmetric centered hero. Headline, subheadline and CTAs sit on the page's vertical
+  axis; any visual is centered above, below or behind them. This is NOT a two-column split: do not
+  place the visual in a column beside the copy.
+- "split-left" — two-column hero: content on the LEFT, visual on the RIGHT.
+- "split-right" — two-column hero: visual on the LEFT, content on the RIGHT.
+- "scene-based" — hero built around a photographic or illustrated scene (lab, desk, workshop,
+  field) sitting behind or beside the copy.
+- "abstract_layered" — layered abstract composition built from motifs, rings, grids and
+  overlapping shapes rather than a single figure or a two-column split.
+
+STYLE — governs typography, texture and visual treatment:
+- "clean-minimal" — whitespace-first, restrained hierarchy, single focus per section
+- "elegant"       — refined typography, generous pacing, subtle textures
+- "modern"        — contemporary sans-serif hierarchy, 3D or gradient hero visuals
+- "classic"       — conventional, brand-led business layout: structured sections, a small
+                    disciplined palette, nothing experimental
+- "fun"           — playful cartoon accents and illustrative flourishes
+- "bold"          — oversized display type, high-impact composition
+- "glassmorphism" — frosted-glass cards, blurred backdrop layering
+- "brutalist"     — industrial capitals, raw grids, coarse textures
+- "terminal"      — monospace typography and terminal-chrome layout
+- "editorial"     — serif-forward with magazine-style hierarchy
+- "swiss-grid"    — visible grid system, systematic sans-serif composition (see note below)
+- "neon-tech"     — saturated accents, futuristic technical vibe
+- "other"         — no fixed meaning. The style arrives as free text instead: either the
+                    token is "other" and the description sits beside it, or the style value is
+                    itself a phrase not in this list. Either way, follow that wording literally
+                    rather than substituting the nearest token above.
+
+Style and colour are SEPARATE axes. A vivid or dark palette does not make the style "neon-tech",
+and a muted palette does not make it "clean-minimal" — the style token alone decides typography
+and treatment. Render the requested style using whatever colours the colour spec supplies.
+
+STYLE-SPECIFIC NOTES
+
+Apply only the note matching the chosen style token (see visual_direction.template_inspiration_notes); ignore the others.
+
+- "swiss-grid" — the visible grid IS the style, so it must read as a deliberate design element
+  rather than a subliminal texture. Draw real 1px solid rules on the column boundaries and section
+  divisions of the layout you actually use, and align content to them so the system reads as
+  intentional. Strength: roughly 28–35% of the body-text colour against the page background, e.g.
+  `color-mix(in oklch, <your body text colour> 30%, transparent)`; never go below 22%. The grid
+  should be plainly legible at a glance on a normal display without leaning in — err on the side of
+  too strong rather than too subtle, since anything under ~20% reads as screen dirt rather than as a
+  design system. It should still sit behind the content in the hierarchy: visible structure, not a
+  foreground element competing with text. On dark sections invert: a light rule at the same
+  strength. Keep rules crisp and orthogonal — no diagonals, no blur, no gradients applied to the
+  rules themselves. Use a heavier rule (2px, or a step up in strength) for major section divisions
+  so the grid reads as hierarchical rather than uniform.
+
 VISUAL COMPLEXITY (CRITICAL)
 
 The second common failure mode is a site that looks like a plain HTML template. Avoid it:
 
 - Hero: layered background using gradients + SVG shapes or clip-path, NOT a flat single color.
-- Use CSS custom properties throughout, with these five semantic base variables available:
-  --background, --foreground, --primary, --secondary, --accent.
+- Use CSS custom properties throughout. The palette arrives as positional slots
+  `--c-1` … `--c-5`, not as named roles — see STYLE REQUIREMENTS below.
 - Cards: box-shadow, subtle border, hover lift effect (transform: translateY(-3px)).
 - Navbar: sticky, with backdrop-filter: blur() frosted-glass effect.
 - Use ::before / ::after pseudo-elements for decorative accents on section headings.
@@ -79,16 +137,28 @@ Avoid generic stock visuals.
 STYLE REQUIREMENTS
 
 - Apply the provided color theme throughout using CSS custom properties
-- Declare these five semantic base variables in `:root` and use them as the only palette foundation:
-  `--background`, `--foreground`, `--primary`, `--secondary`, `--accent`.
+- Declare the supplied palette in `:root` as positional variables and use them as the only palette
+  foundation: `--c-1`, `--c-2`, `--c-3`, `--c-4`, `--c-5`.
+- These slots carry NO fixed roles. `--c-1` is the most dominant colour and later slots are
+  progressively less prominent, but which slot becomes the page canvas, the body text, the primary
+  action colour or a highlight is YOUR decision, made to suit the layout you are designing.
+  `visual_direction.color_application` states which slots the user actually requested and which are
+  yours to choose; follow it, and never repurpose a slot the user asked for.
 - Build reusable derived tokens from those base variables for surfaces, borders, muted text, overlays,
   shadows, chips, and hover states. Use `color-mix()` to derive those tokens rather than scattering
   unrelated hardcoded colors across the stylesheet.
 - Organize repeated section styling with mixin-like reusable CSS recipes: shared card classes, utility
   classes, or component tokens that keep section surfaces, titles, chips, and borders systematic.
-- Use gradients combining at least 2 of the 5 palette colors
-- Treat --background as the canvas / surface base and --foreground as the main readable text color.
-- Treat --primary as the strongest action / emphasis color, --secondary as a distinct supporting brand color, and --accent as an orthogonal highlight.
+- Use gradients combining at least 2 of the palette slots
+- Roles are per-section, NOT global. A slot serving as the canvas in a light section is expected to
+  become the text colour in the dark section that follows, and the canvas again after that — that
+  inversion is how alternating sections work, so do not try to pin one slot to one role for the
+  whole page.
+- What must stay stable is the recipe, not the slot: the consistency rules below are scoped to a
+  section. The failure to avoid is arbitrary drift — two cards in the SAME section using different
+  slots for the same element — never the deliberate inversion between a light section and a dark one.
+- Ensure every text/background pairing you create meets WCAG AA, in every section, whichever slots
+  that section paired.
 - Use subtle visual enhancements: glow effects, card depth, section dividers
 - Maintain readability and professionalism
 - Keep color semantics consistent within each repeated section pattern.
@@ -96,22 +166,22 @@ STYLE REQUIREMENTS
   border treatment, card-title color role, and chip/tag styling unless the content has a real
   semantic distinction.
 - Keep title text and chip/tag text intentionally differentiated.
-  Do not randomly assign one card title to `--primary` and another sibling title to `--accent`
+  Do not randomly assign one card title to `--c-2` and another sibling title to `--c-4`
   if both titles play the same role. Likewise, chips in the same section should use one
-  consistent styling family instead of mixing unrelated palette roles.
+  consistent styling family instead of mixing unrelated palette slots.
 - Use one stable recipe for repeated components in a section:
   section heading role, card heading role, body text role, chip role, and border role.
   Repeat that recipe across sibling cards.
 - ALWAYS declare `--hero-bg-image: none` in `:root` and apply it on the hero section as `background-image: var(--hero-bg-image)` (layered over the gradient). This property will be overridden client-side if the user supplies a background image.
 - If visual_direction.use_emoji_icons is true: use emoji (e.g. 🎓 📊 🔬) or Font Awesome for section icons and skill badges. If false: do not use any icons.
-- Respect visual_direction.main_section_mode: "light" → the hero and primary content sections must use a light background (light --background, dark --foreground text). "dark" → the hero and primary content sections must use a dark background (dark --background, light --foreground text). This is independent of visual_direction.alternate_sections — main_section_mode dictates the baseline; alternate_sections dictates whether subsequent sections flip between light and dark.
+- Respect visual_direction.main_section_mode: "light" → the hero and primary content sections must use a light canvas with dark text. "dark" → the hero and primary content sections must use a dark canvas with light text. Pick whichever palette slots give you that pairing. This is independent of visual_direction.alternate_sections — main_section_mode dictates the baseline; alternate_sections dictates whether subsequent sections flip between light and dark.
 - If visual_direction.alternate_sections is true: alternate background between light and dark for consecutive sections (starting from the main_section_mode baseline), making sure that the text color is complementary and contrasting. If false: use a consistent background treatment throughout matching main_section_mode.
 
 USER COLOR PREFERENCES
 
 {{COLOR_PREFERENCES_GUIDANCE}}
 
-When the block above contains guidance, treat it as the authoritative color direction from the user. Interpret their mood or hue words into the five palette variables (`--background`, `--foreground`, `--primary`, `--secondary`, `--accent`) and any derived tokens. If it is empty, follow the visual_direction defaults instead.
+When the block above contains guidance, treat it as the authoritative color direction from the user. Interpret their mood or hue words into the positional palette slots (`--c-1` … `--c-5`) and any derived tokens. If it is empty, follow the visual_direction defaults instead.
 
 CONTENT REQUIREMENTS
 
