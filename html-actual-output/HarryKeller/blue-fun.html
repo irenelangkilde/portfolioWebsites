@@ -1,0 +1,1669 @@
+<html lang="en" style="--background: #ecf0f1; --quinary: #ecf0f1; --bp-slot5: #ecf0f1; --bp-slot-5: #ecf0f1; --slot5: #ecf0f1; --slot-5: #ecf0f1; --bp-accent1: #ecf0f1; --accent1: #ecf0f1; --foreground: #2c3e50; --quaternary: #2c3e50; --bp-slot4: #2c3e50; --bp-slot-4: #2c3e50; --slot4: #2c3e50; --slot-4: #2c3e50; --bp-accent2: #2c3e50; --accent2: #2c3e50; --primary: #1abc9c; --dominant: #1abc9c; --bp-slot1: #1abc9c; --bp-slot-1: #1abc9c; --slot1: #1abc9c; --slot-1: #1abc9c; --bp-primary: #1abc9c; --secondary: #16a085; --bp-slot2: #16a085; --bp-slot-2: #16a085; --slot2: #16a085; --slot-2: #16a085; --bp-secondary: #16a085; --accent: #34495e; --tertiary: #34495e; --bp-slot3: #34495e; --bp-slot-3: #34495e; --slot3: #34495e; --slot-3: #34495e; --bp-tertiary: #34495e"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harry Keller — Instructional Designer &amp; Training Specialist</title>
+<style>
+/* ============================================================
+   COLOR TOKENS
+   ============================================================ */
+:root {
+  --c-1: var(--iw-color-a);
+  --c-2: var(--iw-color-e);
+  --c-3: var(--iw-color-b);
+  --c-4: var(--iw-color-f);
+  --c-5: var(--iw-color-g);
+
+  /* Derived surfaces */
+  --surface-light:      var(--iw-color-c);
+  --surface-canvas:     var(--c-5);
+  --surface-dark:       var(--c-4);
+  --surface-dark-alt:   var(--c-3);
+  --surface-accent:     var(--c-1);
+  --surface-accent-dk:  var(--c-2);
+
+  /* Text roles */
+  --text-on-light:      var(--c-4);
+  --text-on-light-mute: color-mix(in oklch, var(--c-3) 70%, white);
+  --text-on-dark:       var(--c-5);
+  --text-on-dark-mute:  color-mix(in oklch, var(--c-5) 70%, var(--c-3));
+  --text-accent:        var(--c-1);
+  --text-accent-dk:     var(--c-2);
+
+  /* Borders */
+  --border-light:       color-mix(in oklch, var(--c-3) 18%, transparent);
+  --border-dark:        color-mix(in oklch, var(--c-5) 15%, transparent);
+  --border-accent:      color-mix(in oklch, var(--c-1) 40%, transparent);
+
+  /* Chips */
+  --chip-bg:            color-mix(in oklch, var(--c-1) 14%, white);
+  --chip-text:          var(--c-2);
+  --chip-bg-dark:       color-mix(in oklch, var(--c-1) 20%, var(--c-4));
+  --chip-text-dark:     var(--c-1);
+
+  /* Shadows */
+  --shadow-sm:          0 2px 8px color-mix(in oklch, var(--c-4) 12%, transparent);
+  --shadow-md:          0 4px 20px color-mix(in oklch, var(--c-4) 16%, transparent);
+  --shadow-lg:          0 8px 36px color-mix(in oklch, var(--c-4) 22%, transparent);
+
+  /* Hero */
+  --hero-bg-image: none;
+
+  /* Typography */
+  --font-heading: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-body:    'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Spacing */
+  --section-py: 80px;
+  --section-px: clamp(20px, 6vw, 120px);
+  --card-radius: 16px;
+  --chip-radius:  40px;
+}
+
+/* ============================================================
+   RESET & BASE
+   ============================================================ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  background: var(--surface-canvas);
+  color: var(--text-on-light);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+h1,h2,h3,h4,h5 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+a { color: inherit; text-decoration: none; }
+
+img { display: block; max-width: 100%; }
+
+ul { list-style: none; }
+
+/* ============================================================
+   UTILITY / SHARED RECIPES
+   ============================================================ */
+.section-label {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: var(--chip-radius);
+  background: var(--chip-bg);
+  color: var(--chip-text);
+  margin-bottom: 12px;
+}
+.section-label--dark {
+  background: var(--chip-bg-dark);
+  color: var(--chip-text-dark);
+}
+
+.section-title {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  color: var(--text-on-light);
+  margin-bottom: 8px;
+}
+.section-title--dark { color: var(--text-on-dark); }
+
+.section-sub {
+  font-size: 1rem;
+  color: var(--text-on-light-mute);
+  max-width: 560px;
+  margin-bottom: 48px;
+}
+.section-sub--dark { color: var(--text-on-dark-mute); }
+
+/* Chip recipe */
+.chip {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  padding: 4px 12px;
+  border-radius: var(--chip-radius);
+  background: var(--chip-bg);
+  color: var(--chip-text);
+}
+.chip--dark {
+  background: var(--chip-bg-dark);
+  color: var(--chip-text-dark);
+}
+
+/* Button recipes */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 28px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  border: none;
+}
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+
+.btn-primary {
+  background: var(--c-1);
+  color: var(--iw-color-c);
+}
+.btn-primary:hover { background: var(--c-2); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--c-5);
+  border: 2px solid var(--c-5);
+}
+.btn-outline:hover { background: var(--c-5); color: var(--c-4); }
+
+.btn-outline-dark {
+  background: transparent;
+  color: var(--c-4);
+  border: 2px solid var(--c-4);
+}
+.btn-outline-dark:hover { background: var(--c-4); color: var(--c-5); }
+
+/* Card recipe */
+.card {
+  background: var(--surface-light);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+
+.card--dark {
+  background: color-mix(in oklch, var(--c-4) 85%, var(--c-3));
+  border-color: var(--border-dark);
+}
+
+/* Section wrappers */
+.section--light {
+  background: var(--surface-canvas);
+  color: var(--text-on-light);
+  padding: var(--section-py) var(--section-px);
+}
+.section--white {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: var(--section-py) var(--section-px);
+}
+.section--dark {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-py) var(--section-px);
+}
+.section--dark-alt {
+  background: var(--surface-dark-alt);
+  color: var(--text-on-dark);
+  padding: var(--section-py) var(--section-px);
+}
+
+.section-inner {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+/* ============================================================
+   NAV
+   ============================================================ */
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: color-mix(in oklch, var(--c-4) 96%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-dark);
+  padding: 0 var(--section-px);
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-logo {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--c-1);
+  letter-spacing: 0.04em;
+}
+
+.nav-links {
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+
+.nav-links a {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-on-dark-mute);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: color 0.15s;
+}
+.nav-links a:hover { color: var(--c-1); }
+
+.nav-links .nav-cta {
+  background: var(--c-1);
+  color: var(--iw-color-c);
+  padding: 7px 18px;
+  border-radius: 50px;
+  font-size: 0.8rem;
+}
+.nav-links .nav-cta:hover { background: var(--c-2); color: var(--iw-color-c); }
+
+/* ============================================================
+   HERO — CENTRAL COMPOSITION, LIGHT CANVAS
+   ============================================================ */
+.hero {
+  min-height: 100vh;
+  padding-top: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: linear-gradient(
+    160deg,
+    var(--c-5) 0%,
+    color-mix(in oklch, var(--c-1) 8%, var(--c-5)) 60%,
+    color-mix(in oklch, var(--c-2) 12%, var(--c-5)) 100%
+  ), var(--hero-bg-image) center/cover no-repeat;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Fun decorative blobs */
+.hero-blob {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.13;
+  pointer-events: none;
+}
+.hero-blob--1 {
+  width: 480px; height: 480px;
+  background: var(--c-1);
+  top: -100px; right: -120px;
+}
+.hero-blob--2 {
+  width: 320px; height: 320px;
+  background: var(--c-2);
+  bottom: -60px; left: -80px;
+}
+.hero-blob--3 {
+  width: 160px; height: 160px;
+  background: var(--c-1);
+  bottom: 120px; right: 10%;
+  opacity: 0.08;
+}
+
+/* Floating dots — fun accent */
+.hero-dots {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.hero-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--c-1);
+  opacity: 0.12;
+}
+
+.hero-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 720px;
+  padding: 60px 24px 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+/* CSS Monogram */
+.monogram-wrap {
+  position: relative;
+  width: 130px;
+  height: 130px;
+  margin-bottom: 8px;
+}
+.monogram-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--c-1), var(--c-2));
+  box-shadow: 0 0 0 6px color-mix(in oklch, var(--c-1) 22%, transparent),
+              var(--shadow-lg);
+}
+.monogram-ring::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border-radius: 50%;
+  border: 3px dashed color-mix(in oklch, white 35%, transparent);
+}
+.monogram-initials {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.1rem;
+  font-weight: 900;
+  color: var(--iw-color-c);
+  letter-spacing: -0.02em;
+  font-family: var(--font-heading);
+  text-shadow: 0 2px 8px color-mix(in srgb, var(--iw-color-d) 18%, transparent);
+}
+
+/* Fun star/sparkle decorations on monogram */
+.monogram-spark {
+  position: absolute;
+  font-size: 1.1rem;
+  pointer-events: none;
+}
+.monogram-spark--1 { top: -6px; right: 8px; }
+.monogram-spark--2 { bottom: 2px; left: 0px; }
+.monogram-spark--3 { top: 30px; left: -10px; font-size: 0.8rem; }
+
+.hero-badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.hero-badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: var(--chip-radius);
+  background: color-mix(in oklch, var(--c-2) 14%, transparent);
+  color: var(--c-2);
+  border: 1.5px solid color-mix(in oklch, var(--c-2) 30%, transparent);
+}
+
+.hero-headline {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 900;
+  color: var(--c-4);
+  line-height: 1.1;
+}
+.hero-headline em {
+  font-style: normal;
+  color: var(--c-2);
+  position: relative;
+}
+.hero-headline em::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 2px;
+  height: 4px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, var(--c-1), var(--c-2));
+  opacity: 0.35;
+}
+
+.hero-subheadline {
+  font-size: 1.05rem;
+  color: var(--text-on-light-mute);
+  max-width: 540px;
+  line-height: 1.6;
+}
+
+.hero-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+/* Scroll indicator */
+.hero-scroll {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-on-light-mute);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  z-index: 2;
+  animation: bounce 2s infinite;
+}
+.hero-scroll svg { width: 22px; height: 22px; }
+@keyframes bounce {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50%       { transform: translateX(-50%) translateY(6px); }
+}
+
+/* ============================================================
+   ABOUT / PHILOSOPHY — DARK SECTION (alternating)
+   ============================================================ */
+.about-section {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-py) var(--section-px);
+  position: relative;
+  overflow: hidden;
+}
+.about-section::before {
+  content: '📐';
+  position: absolute;
+  font-size: 11rem;
+  top: -20px;
+  right: -20px;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  align-items: start;
+}
+
+.about-story p {
+  font-size: 1.05rem;
+  color: var(--text-on-dark-mute);
+  margin-bottom: 18px;
+  line-height: 1.75;
+}
+.about-story p strong {
+  color: var(--c-1);
+  font-weight: 700;
+}
+
+.philosophy-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.philosophy-card {
+  background: color-mix(in oklch, var(--c-3) 60%, var(--c-4));
+  border: 1px solid var(--border-dark);
+  border-left: 4px solid var(--c-1);
+  border-radius: 12px;
+  padding: 20px 22px;
+}
+.philosophy-card-icon { font-size: 1.4rem; margin-bottom: 6px; }
+.philosophy-card h4 {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--c-1);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.philosophy-card p {
+  font-size: 0.88rem;
+  color: var(--text-on-dark-mute);
+  line-height: 1.55;
+}
+
+/* ============================================================
+   EXPERIENCE — LIGHT SECTION (alternating)
+   ============================================================ */
+.experience-section {
+  background: var(--surface-light);
+  color: var(--text-on-light);
+  padding: var(--section-py) var(--section-px);
+}
+
+/* Timeline */
+.timeline {
+  position: relative;
+  max-width: 860px;
+  margin: 0 auto;
+}
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 32px;
+  top: 0; bottom: 0;
+  width: 3px;
+  background: linear-gradient(to bottom, var(--c-1), var(--c-2) 60%, var(--border-light));
+  border-radius: 3px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 32px;
+  margin-bottom: 44px;
+  position: relative;
+}
+.timeline-item:last-child { margin-bottom: 0; }
+
+.timeline-node {
+  flex-shrink: 0;
+  width: 64px;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.timeline-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--c-1);
+  border: 3px solid var(--surface-light);
+  box-shadow: 0 0 0 3px var(--c-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  margin-top: 18px;
+  flex-shrink: 0;
+}
+.timeline-dot--secondary {
+  background: var(--c-3);
+  box-shadow: 0 0 0 3px var(--c-3);
+}
+.timeline-dot--tertiary {
+  background: color-mix(in oklch, var(--c-3) 60%, white);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--c-3) 60%, white);
+}
+
+.timeline-card {
+  flex: 1;
+  background: var(--surface-canvas);
+  border: 1px solid var(--border-light);
+  border-radius: var(--card-radius);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.timeline-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+/* Visual panel at top of card */
+.timeline-visual {
+  height: 120px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.timeline-visual--primary {
+  background: linear-gradient(135deg, var(--c-4) 0%, var(--c-3) 100%);
+}
+.timeline-visual--secondary {
+  background: linear-gradient(135deg, var(--c-3) 0%, color-mix(in oklch, var(--c-3) 70%, var(--c-1)) 100%);
+}
+.timeline-visual--tertiary {
+  background: linear-gradient(135deg, color-mix(in oklch, var(--c-3) 80%, white) 0%, color-mix(in oklch, var(--c-3) 50%, white) 100%);
+}
+
+.timeline-visual svg {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0; left: 0;
+}
+
+.timeline-visual-label {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.timeline-visual-label .org-name {
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--iw-color-c) 70%, transparent);
+  margin-bottom: 4px;
+}
+.timeline-visual-label .promo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--c-1);
+  color: var(--iw-color-c);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: var(--chip-radius);
+}
+
+.timeline-body {
+  padding: 22px 26px 24px;
+}
+
+.timeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.timeline-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-on-light);
+  margin-bottom: 2px;
+}
+.timeline-company {
+  font-size: 0.88rem;
+  color: var(--c-2);
+  font-weight: 600;
+}
+.timeline-date {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-on-light-mute);
+  margin-left: auto;
+}
+
+.timeline-bullets {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.timeline-bullet {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.88rem;
+  color: var(--text-on-light-mute);
+  line-height: 1.55;
+}
+.timeline-bullet::before {
+  content: '→';
+  color: var(--c-1);
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.timeline-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 16px;
+}
+
+/* ============================================================
+   SKILLS — DARK SECTION (alternating)
+   ============================================================ */
+.skills-section {
+  background: var(--surface-dark-alt);
+  color: var(--text-on-dark);
+  padding: var(--section-py) var(--section-px);
+  position: relative;
+  overflow: hidden;
+}
+
+.skills-section::after {
+  content: '🎓';
+  position: absolute;
+  font-size: 12rem;
+  bottom: -30px;
+  left: -20px;
+  opacity: 0.04;
+  pointer-events: none;
+}
+
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.skill-card {
+  background: color-mix(in oklch, var(--c-4) 80%, var(--c-3));
+  border: 1px solid var(--border-dark);
+  border-radius: 14px;
+  padding: 22px 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+.skill-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--c-1), var(--c-2));
+  border-radius: 3px 3px 0 0;
+}
+.skill-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+
+.skill-icon { font-size: 1.6rem; margin-bottom: 10px; }
+.skill-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text-on-dark);
+  line-height: 1.3;
+}
+
+/* ============================================================
+   EDUCATION — LIGHT SECTION (alternating)
+   ============================================================ */
+.education-section {
+  background: var(--surface-canvas);
+  color: var(--text-on-light);
+  padding: var(--section-py) var(--section-px);
+}
+
+.edu-card-wrap {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.edu-card {
+  background: var(--surface-light);
+  border: 1px solid var(--border-light);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+.edu-visual {
+  height: 160px;
+  background: linear-gradient(135deg, var(--c-4), var(--c-3));
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.edu-visual svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.edu-visual-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+}
+.edu-degree-icon { font-size: 3rem; }
+.edu-degree-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--iw-color-c) 70%, transparent);
+  margin-top: 8px;
+}
+
+.edu-body {
+  padding: 28px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.edu-degree {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-on-light);
+}
+.edu-major {
+  font-size: 1rem;
+  color: var(--c-2);
+  font-weight: 600;
+}
+.edu-spec {
+  font-size: 0.88rem;
+  color: var(--text-on-light-mute);
+}
+.edu-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* ============================================================
+   CONTACT — DARK SECTION (alternating)
+   ============================================================ */
+.contact-section {
+  background: var(--surface-dark);
+  color: var(--text-on-dark);
+  padding: var(--section-py) var(--section-px);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.contact-section::before {
+  content: '✉️';
+  position: absolute;
+  font-size: 14rem;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+.contact-inner {
+  position: relative;
+  z-index: 2;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contact-tagline {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--text-on-dark);
+  margin-bottom: 14px;
+}
+.contact-tagline span { color: var(--c-1); }
+
+.contact-sub {
+  font-size: 0.98rem;
+  color: var(--text-on-dark-mute);
+  margin-bottom: 40px;
+}
+
+.contact-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 48px;
+}
+.contact-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: color-mix(in oklch, var(--c-3) 60%, var(--c-4));
+  border: 1px solid var(--border-dark);
+  border-radius: 50px;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-on-dark);
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.contact-link:hover {
+  background: var(--c-1);
+  color: var(--iw-color-c);
+  transform: translateY(-2px);
+}
+.contact-link-icon { font-size: 1.1rem; }
+
+.contact-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  justify-content: center;
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+footer {
+  background: var(--c-4);
+  color: var(--text-on-dark-mute);
+  text-align: center;
+  padding: 22px var(--section-px);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  border-top: 1px solid var(--border-dark);
+}
+footer a { color: var(--c-1); }
+
+/* ============================================================
+   FUN DECORATIVE ELEMENTS
+   ============================================================ */
+.squiggle {
+  display: inline-block;
+  margin: 0 4px;
+  color: var(--c-1);
+  font-weight: 900;
+}
+
+/* Fun floating emoji accents in sections */
+.fun-accent {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.08;
+  font-size: 4rem;
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  :root { --section-py: 56px; --section-px: 20px; }
+
+  .about-grid { grid-template-columns: 1fr; gap: 36px; }
+
+  .timeline::before { left: 16px; }
+  .timeline-node { width: 40px; }
+  .timeline-dot { width: 22px; height: 22px; font-size: 0.7rem; }
+
+  .nav-links { gap: 12px; }
+  .nav-links a:not(.nav-cta) { display: none; }
+
+  .skills-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .hero-headline { font-size: 1.8rem; }
+  .skills-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .contact-links { flex-direction: column; align-items: center; }
+}
+</style>
+<!-- portfolio-editor-delivery:1786031798357:lr3qeggckl -->
+<style id="iw-editor-color-theme">
+:root {
+  --iw-color-a: #00bcd4;
+  --iw-original-a: #1abc9c;
+  --iw-color-e: oklch(from var(--iw-color-a) calc(l - 0.0797) calc(c - 0.0154) calc(h + 0.3));
+  --iw-original-e: #16a085;
+  --iw-color-b: #1a2a3a;
+  --iw-original-b: #34495e;
+  --iw-color-f: oklch(from var(--iw-color-b) calc(l - 0.0406) calc(c - 0.0053) h);
+  --iw-original-f: #2c3e50;
+  --iw-color-c: #f0f4f8;
+  --iw-original-c: #ffffff;
+  --iw-color-g: oklch(from var(--iw-color-c) calc(l - 0.0476) calc(c + 0.0045) calc(h + 124.5));
+  --iw-original-g: #ecf0f1;
+  --iw-color-d: #050d14;
+  --iw-original-d: #000000;
+}
+</style>
+<script type="application/json" id="iw-editor-color-state">
+{
+  "version": 1,
+  "rows": [
+    {
+      "id": "swatch-1",
+      "ordinal": "A",
+      "hex": "#1abc9c",
+      "count": 16,
+      "chroma": 0.13102727159651423,
+      "score": 2.0964363455442276,
+      "varToken": "a",
+      "sourceVarName": "",
+      "substitute": "#00bcd4",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-1-dep-1",
+          "ordinal": "E",
+          "hex": "#16a085",
+          "count": 2,
+          "chroma": 0.11561761336217212,
+          "score": 0.23123522672434424,
+          "varToken": "e",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-2",
+      "ordinal": "B",
+      "hex": "#34495e",
+      "count": 2,
+      "chroma": 0.04437639700241666,
+      "score": 0.08875279400483332,
+      "varToken": "b",
+      "sourceVarName": "",
+      "substitute": "#1a2a3a",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-2-dep-1",
+          "ordinal": "F",
+          "hex": "#2c3e50",
+          "count": 1,
+          "chroma": 0.03909744864363595,
+          "score": 0.03909744864363595,
+          "varToken": "f",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-3",
+      "ordinal": "C",
+      "hex": "#ffffff",
+      "count": 10,
+      "chroma": 3.727399553519285e-8,
+      "score": 3.727399553519285e-7,
+      "varToken": "c",
+      "sourceVarName": "",
+      "substitute": "#f0f4f8",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": [
+        {
+          "id": "swatch-3-dep-1",
+          "ordinal": "G",
+          "hex": "#ecf0f1",
+          "count": 1,
+          "chroma": 0.004493693833525665,
+          "score": 0.004493693833525665,
+          "varToken": "g",
+          "sourceVarName": "",
+          "substitute": "",
+          "substituteFromPalette": false,
+          "preserveHex": false
+        }
+      ]
+    },
+    {
+      "id": "swatch-4",
+      "ordinal": "D",
+      "hex": "#000000",
+      "count": 1,
+      "chroma": 0,
+      "score": 0,
+      "varToken": "d",
+      "sourceVarName": "",
+      "substitute": "#050d14",
+      "substituteFromPalette": false,
+      "preserveHex": false,
+      "deps": []
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<!-- ============================================================
+     NAV
+     ============================================================ -->
+<nav>
+  <div class="nav-logo">HSK</div>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#experience">Experience</a>
+    <a href="#skills">Skills</a>
+    <a href="#education">Education</a>
+    <a href="#contact" class="nav-cta">Let's Talk</a>
+  </div>
+</nav>
+
+<!-- ============================================================
+     HERO — CENTRAL COMPOSITION
+     ============================================================ -->
+<section class="hero" id="top">
+
+  <!-- Decorative blobs -->
+  <div class="hero-blob hero-blob--1"></div>
+  <div class="hero-blob hero-blob--2"></div>
+  <div class="hero-blob hero-blob--3"></div>
+
+  <!-- Floating dots -->
+  <div class="hero-dots">
+    <div class="hero-dot" style="width:14px;height:14px;top:18%;left:12%;"></div>
+    <div class="hero-dot" style="width:8px;height:8px;top:35%;left:8%;"></div>
+    <div class="hero-dot" style="width:20px;height:20px;top:12%;right:18%;"></div>
+    <div class="hero-dot" style="width:10px;height:10px;top:55%;right:10%;"></div>
+    <div class="hero-dot" style="width:16px;height:16px;bottom:22%;left:20%;"></div>
+    <div class="hero-dot" style="width:6px;height:6px;bottom:30%;right:25%;"></div>
+    <div class="hero-dot" style="width:24px;height:24px;top:70%;left:5%;opacity:0.07;"></div>
+  </div>
+
+  <div class="hero-inner">
+
+    <!-- CSS Monogram -->
+    <div class="monogram-wrap">
+      <div class="monogram-ring">
+        <div class="monogram-initials">HSK</div>
+      </div>
+      <span class="monogram-spark monogram-spark--1">✨</span>
+      <span class="monogram-spark monogram-spark--2">⭐</span>
+      <span class="monogram-spark monogram-spark--3">🌟</span>
+    </div>
+
+    <!-- Status badges -->
+    <div class="hero-badge-row">
+      <span class="hero-badge">Class of Aug 2026</span>
+      <span class="hero-badge">B.S. Applied Communication</span>
+      <span class="hero-badge">Instructional Design Specialization</span>
+    </div>
+
+    <h1 class="hero-headline">I design learning that<br><em>changes how people work.</em></h1>
+
+    <p class="hero-subheadline">
+      I've designed and delivered training for real organizations — not just as coursework. From classroom teacher to curriculum designer to supervisor, I've lived the full arc of instructional design.
+    </p>
+
+    <div class="hero-cta-row">
+      <a href="#experience" class="btn btn-primary">📚 See My Training Work</a>
+      <a href="#contact" class="btn btn-outline-dark">Download Resume</a>
+    </div>
+
+  </div>
+
+  <div class="hero-scroll">
+    Scroll
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </div>
+
+</section>
+
+<!-- ============================================================
+     ABOUT / TRAINING PHILOSOPHY — DARK (alternating)
+     ============================================================ -->
+<section class="about-section" id="about">
+  <div class="section-inner">
+
+    <div style="margin-bottom:44px;">
+      <span class="section-label section-label--dark">About Me</span>
+      <h2 class="section-title section-title--dark" style="margin-bottom:0;">The full cycle — from learner to designer to supervisor.</h2>
+    </div>
+
+    <div class="about-grid">
+
+      <div class="about-story">
+        <p>
+          I've spent the last two years <strong>designing and delivering training for a real organization</strong> — not as a practicum, but as my job. What keeps me in this field is the moment when someone's performance visibly improves because the instruction was built right.
+        </p>
+        <p>
+          I started as a classroom teacher at MTC and within a year was <strong>promoted to design the curriculum</strong> other teachers learn from. That arc — practitioner to designer to supervisor — is what I bring: I understand the learner's side of the room because I've been there, and I understand the designer's side because it's now my job.
+        </p>
+        <p>
+          Every role I've held has required me to read a room, communicate clearly, and help people improve. That's the skill I'm building a career on.
+        </p>
+        <div style="margin-top:24px;">
+          <span class="chip chip--dark">Open to: Entry-level Instructional Design</span>&nbsp;
+          <span class="chip chip--dark" style="margin-top:8px;">L&amp;D Coordinator</span>&nbsp;
+          <span class="chip chip--dark" style="margin-top:8px;">Training &amp; Development</span>
+        </div>
+      </div>
+
+      <div class="philosophy-cards">
+        <div class="philosophy-card">
+          <div class="philosophy-card-icon">🎯</div>
+          <h4>Design for performance, not completion</h4>
+          <p>The goal of any training isn't a checked box — it's a measurable change in how someone does their job. I design backwards from the behavior I want to see.</p>
+        </div>
+        <div class="philosophy-card">
+          <div class="philosophy-card-icon">🔄</div>
+          <h4>Iterate with feedback</h4>
+          <p>I've coached teachers individually, gathered performance data, and revised curriculum accordingly. Instructional design is a loop, not a deliverable.</p>
+        </div>
+        <div class="philosophy-card">
+          <div class="philosophy-card-icon">🤝</div>
+          <h4>Meet learners where they are</h4>
+          <p>From small mentoring sessions to large group trainings, I adapt my approach — because adult learners don't respond to one-size-fits-all delivery.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================
+     EXPERIENCE — LIGHT (alternating)
+     ============================================================ -->
+<section class="experience-section" id="experience">
+  <div class="section-inner">
+
+    <div style="margin-bottom:48px; text-align:center;">
+      <span class="section-label">Experience</span>
+      <h2 class="section-title" style="margin-bottom:8px;">Where the work happened.</h2>
+      <p class="section-sub" style="margin:0 auto;">Real curriculum design. Real organizations. Real promotions.</p>
+    </div>
+
+    <div class="timeline">
+
+      <!-- ─── MTC ─── -->
+      <div class="timeline-item">
+        <div class="timeline-node">
+          <div class="timeline-dot">🏫</div>
+        </div>
+        <div class="timeline-card">
+
+          <!-- Visual Panel: curriculum / branching diagram SVG -->
+          <div class="timeline-visual timeline-visual--primary">
+            <svg viewBox="0 0 800 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <!-- Grid lines -->
+              <line x1="0" y1="60" x2="800" y2="60" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+              <line x1="0" y1="30" x2="800" y2="30" stroke="rgba(255,255,255,0.03)" stroke-width="1"></line>
+              <line x1="0" y1="90" x2="800" y2="90" stroke="rgba(255,255,255,0.03)" stroke-width="1"></line>
+              <!-- Curriculum flow diagram -->
+              <!-- Root node -->
+              <rect x="60" y="44" width="90" height="32" rx="6" fill="rgba(26,188,156,0.25)" style="stroke: var(--iw-color-a)" stroke-width="1.5"></rect>
+              <text x="105" y="65" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="9" font-weight="700" font-family="Arial">CURRICULUM</text>
+              <!-- Branch lines -->
+              <line x1="150" y1="60" x2="200" y2="35" style="stroke: var(--iw-color-a)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"></line>
+              <line x1="150" y1="60" x2="200" y2="60" style="stroke: var(--iw-color-a)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"></line>
+              <line x1="150" y1="60" x2="200" y2="85" style="stroke: var(--iw-color-a)" stroke-width="1.5" stroke-dasharray="4,3" opacity="0.6"></line>
+              <!-- Branch nodes -->
+              <rect x="200" y="22" width="80" height="26" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1"></rect>
+              <text x="240" y="39" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8" font-family="Arial">Pedagogy</text>
+              <rect x="200" y="47" width="80" height="26" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1"></rect>
+              <text x="240" y="64" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8" font-family="Arial">Communication</text>
+              <rect x="200" y="72" width="80" height="26" rx="5" fill="rgba(255,255,255,0.07)" stroke="rgba(255,255,255,0.2)" stroke-width="1"></rect>
+              <text x="240" y="89" text-anchor="middle" fill="rgba(255,255,255,0.7)" font-size="8" font-family="Arial">Classroom Mgmt</text>
+              <!-- Second level connections -->
+              <line x1="280" y1="35" x2="330" y2="50" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+              <line x1="280" y1="60" x2="330" y2="60" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+              <line x1="280" y1="85" x2="330" y2="70" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+              <rect x="330" y="43" width="70" height="26" rx="5" fill="rgba(22,160,133,0.2)" style="stroke: var(--iw-color-e)" stroke-width="1"></rect>
+              <text x="365" y="60" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="8" font-weight="700" font-family="Arial">EVALUATE</text>
+              <line x1="400" y1="56" x2="450" y2="56" style="stroke: var(--iw-color-a)" stroke-width="1.5" opacity="0.5"></line>
+              <rect x="450" y="43" width="70" height="26" rx="5" fill="rgba(26,188,156,0.18)" style="stroke: var(--iw-color-a)" stroke-width="1"></rect>
+              <text x="485" y="60" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="8" font-weight="700" font-family="Arial">ITERATE</text>
+              <!-- Performance arrow loop -->
+              <path d="M520 56 C560 30, 600 30, 620 56 C640 80, 620 100, 580 95" style="stroke: var(--iw-color-a)" stroke-width="1.5" fill="none" stroke-dasharray="3,3" opacity="0.4"></path>
+              <polygon points="578,88 584,99 572,99" style="fill: var(--iw-color-a)" opacity="0.4"></polygon>
+              <!-- Dots -->
+              <circle cx="650" cy="40" r="4" fill="rgba(26,188,156,0.3)"></circle>
+              <circle cx="680" cy="65" r="3" fill="rgba(26,188,156,0.2)"></circle>
+              <circle cx="720" cy="45" r="5" fill="rgba(26,188,156,0.15)"></circle>
+            </svg>
+            <div class="timeline-visual-label">
+              <div class="org-name">MTC — Church of Jesus Christ of Latter-Day Saints</div>
+              <div class="promo-badge">⬆️ Promoted within 1 Year</div>
+            </div>
+          </div>
+
+          <div class="timeline-body">
+            <div class="timeline-meta">
+              <div>
+                <div class="timeline-title">Supervisor / Trainer / Teacher</div>
+                <div class="timeline-company">MTC, Church of Jesus Christ of Latter-Day Saints · Provo, UT</div>
+              </div>
+              <div class="timeline-date">July 2023 — Present</div>
+            </div>
+            <div class="timeline-bullets">
+              <div class="timeline-bullet">Designed and implemented training curriculum for teachers, focusing on pedagogy, classroom management, and communication skills.</div>
+              <div class="timeline-bullet">Managed administrative operations, including payroll accuracy, promotions, and employee records, to maintain organizational efficiency.</div>
+              <div class="timeline-bullet">Coached and mentored teachers individually, providing feedback, professional development, and performance evaluations to improve instructional effectiveness.</div>
+            </div>
+            <div class="timeline-tags">
+              <span class="chip">Curriculum Design</span>
+              <span class="chip">Coaching &amp; Mentoring</span>
+              <span class="chip">Performance Evaluation</span>
+              <span class="chip">Pedagogy</span>
+              <span class="chip">Employee Management</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Red Lobster ─── -->
+      <div class="timeline-item">
+        <div class="timeline-node">
+          <div class="timeline-dot timeline-dot--secondary">🍽️</div>
+        </div>
+        <div class="timeline-card">
+
+          <!-- Visual Panel: team performance / bar chart motif -->
+          <div class="timeline-visual timeline-visual--secondary">
+            <svg viewBox="0 0 800 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <!-- Background grid -->
+              <line x1="0" y1="25" x2="800" y2="25" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <line x1="0" y1="50" x2="800" y2="50" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <line x1="0" y1="75" x2="800" y2="75" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <line x1="0" y1="100" x2="800" y2="100" stroke="rgba(255,255,255,0.04)" stroke-width="1"></line>
+              <!-- Bar chart — team performance bars -->
+              <rect x="80" y="70" width="30" height="35" rx="4" fill="rgba(255,255,255,0.12)"></rect>
+              <rect x="120" y="55" width="30" height="50" rx="4" fill="rgba(255,255,255,0.14)"></rect>
+              <rect x="160" y="45" width="30" height="60" rx="4" fill="rgba(255,255,255,0.16)"></rect>
+              <rect x="200" y="60" width="30" height="45" rx="4" fill="rgba(255,255,255,0.12)"></rect>
+              <!-- Star performer bar (Harry) highlighted -->
+              <rect x="240" y="20" width="30" height="85" rx="4" fill="rgba(26,188,156,0.55)" style="stroke: var(--iw-color-a)" stroke-width="1.5"></rect>
+              <text x="255" y="15" text-anchor="middle" style="fill: var(--iw-color-a)" font-size="9" font-weight="800" font-family="Arial">★ #1</text>
+              <rect x="280" y="75" width="30" height="30" rx="4" fill="rgba(255,255,255,0.10)"></rect>
+              <rect x="320" y="65" width="30" height="40" rx="4" fill="rgba(255,255,255,0.12)"></rect>
+              <!-- X axis -->
+              <line x1="60" y1="105" x2="500" y2="105" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"></line>
+              <!-- Team coordination diagram -->
+              <circle cx="600" cy="60" r="28" fill="rgba(255,255,255,0.06)" stroke="rgba(255,255,255,0.2)" stroke-width="1"></circle>
+              <text x="600" y="55" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="8" font-family="Arial">Team</text>
+              <text x="600" y="66" text-anchor="middle" fill="rgba(255,255,255,0.8)" font-size="8" font-family="Arial">Lead</text>
+              <circle cx="660" cy="35" r="16" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="1"></circle>
+              <text x="660" y="39" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="7" font-family="Arial">GM</text>
+              <circle cx="670" cy="80" r="14" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="1"></circle>
+              <text x="670" y="84" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="7" font-family="Arial">Staff</text>
+              <circle cx="540" cy="45" r="14" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.15)" stroke-width="1"></circle>
+              <text x="540" y="49" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="7" font-family="Arial">Guests</text>
+              <line x1="572" y1="55" x2="556" y2="50" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+              <line x1="628" y1="47" x2="644" y2="39" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+              <line x1="622" y1="75" x2="656" y2="76" stroke="rgba(255,255,255,0.15)" stroke-width="1"></line>
+            </svg>
+            <div class="timeline-visual-label">
+              <div class="org-name">Red Lobster · Orem, UT</div>
+            </div>
+          </div>
+
+          <div class="timeline-body">
+            <div class="timeline-meta">
+              <div>
+                <div class="timeline-title">Team Lead — Server</div>
+                <div class="timeline-company">Red Lobster · Orem, UT</div>
+              </div>
+              <div class="timeline-date">Oct 2022 — Jul 2023</div>
+            </div>
+            <div class="timeline-bullets">
+              <div class="timeline-bullet">Coordinated directly with the general manager to organize and improve team performance and employee well-being.</div>
+              <div class="timeline-bullet">Led the team in add-on sales week over week, consistently ranking as the top-performing server.</div>
+              <div class="timeline-bullet">Achieved the highest volume of satisfied customers, reflected through repeat business and positive guest feedback.</div>
+            </div>
+            <div class="timeline-tags">
+              <span class="chip">Team Leadership</span>
+              <span class="chip">Communication</span>
+              <span class="chip">Stakeholder Coordination</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─── Telos ─── -->
+      <div class="timeline-item">
+        <div class="timeline-node">
+          <div class="timeline-dot timeline-dot--tertiary">💛</div>
+        </div>
+        <div class="timeline-card">
+
+          <!-- Visual Panel: trust / connection motif -->
+          <div class="timeline-visual timeline-visual--tertiary">
+            <svg viewBox="0 0 800 120" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <!-- Connection network motif -->
+              <circle cx="200" cy="60" r="32" fill="rgba(52,73,94,0.25)" stroke="rgba(52,73,94,0.4)" stroke-width="1.5"></circle>
+              <text x="200" y="55" text-anchor="middle" fill="rgba(52,73,94,0.9)" font-size="9" font-family="Arial" font-weight="700">Mentor</text>
+              <text x="200" y="68" text-anchor="middle" fill="rgba(52,73,94,0.7)" font-size="8" font-family="Arial">Trust</text>
+              <!-- Resident nodes -->
+              <circle cx="120" cy="30" r="18" fill="rgba(52,73,94,0.15)" stroke="rgba(52,73,94,0.3)" stroke-width="1"></circle>
+              <text x="120" y="34" text-anchor="middle" fill="rgba(52,73,94,0.8)" font-size="7" font-family="Arial">Resident</text>
+              <circle cx="120" cy="90" r="18" fill="rgba(52,73,94,0.15)" stroke="rgba(52,73,94,0.3)" stroke-width="1"></circle>
+              <text x="120" y="94" text-anchor="middle" fill="rgba(52,73,94,0.8)" font-size="7" font-family="Arial">Resident</text>
+              <circle cx="300" cy="30" r="18" fill="rgba(52,73,94,0.15)" stroke="rgba(52,73,94,0.3)" stroke-width="1"></circle>
+              <text x="300" y="34" text-anchor="middle" fill="rgba(52,73,94,0.8)" font-size="7" font-family="Arial">Skills</text>
+              <circle cx="300" cy="90" r="18" fill="rgba(52,73,94,0.15)" stroke="rgba(52,73,94,0.3)" stroke-width="1"></circle>
+              <text x="300" y="94" text-anchor="middle" fill="rgba(52,73,94,0.8)" font-size="7" font-family="Arial">Safety</text>
+              <!-- Connection lines -->
+              <line x1="168" y1="45" x2="138" y2="38" stroke="rgba(52,73,94,0.3)" stroke-width="1.5"></line>
+              <line x1="168" y1="75" x2="138" y2="82" stroke="rgba(52,73,94,0.3)" stroke-width="1.5"></line>
+              <line x1="232" y1="45" x2="282" y2="38" stroke="rgba(52,73,94,0.3)" stroke-width="1.5"></line>
+              <line x1="232" y1="75" x2="282" y2="82" stroke="rgba(52,73,94,0.3)" stroke-width="1.5"></line>
+              <!-- Heart motif -->
+              <text x="400" y="70" text-anchor="middle" font-size="48" fill="rgba(52,73,94,0.1)">💛</text>
+              <!-- Therapy skill labels -->
+              <text x="500" y="35" fill="rgba(52,73,94,0.4)" font-size="10" font-family="Arial">Healthy Living ···</text>
+              <text x="500" y="55" fill="rgba(52,73,94,0.4)" font-size="10" font-family="Arial">Therapy Skills ···</text>
+              <text x="500" y="75" fill="rgba(52,73,94,0.4)" font-size="10" font-family="Arial">Supervision ···</text>
+              <text x="500" y="95" fill="rgba(52,73,94,0.4)" font-size="10" font-family="Arial">Mentorship ···</text>
+            </svg>
+            <div class="timeline-visual-label">
+              <div class="org-name">Telos · Orem, UT</div>
+            </div>
+          </div>
+
+          <div class="timeline-body">
+            <div class="timeline-meta">
+              <div>
+                <div class="timeline-title">Care Worker — Mentor</div>
+                <div class="timeline-company">Telos · Orem, UT</div>
+              </div>
+              <div class="timeline-date">Mar 2022 — Oct 2022</div>
+            </div>
+            <div class="timeline-bullets">
+              <div class="timeline-bullet">Formed inspiring relationships of trust that encourage healthy living.</div>
+              <div class="timeline-bullet">Guided residents through the implementation of therapy skills in day-to-day living.</div>
+              <div class="timeline-bullet">Responsible for the safety and supervision of residents.</div>
+            </div>
+            <div class="timeline-tags">
+              <span class="chip">Mentoring</span>
+              <span class="chip">Coaching</span>
+              <span class="chip">Interpersonal Communication</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.timeline -->
+  </div>
+</section>
+
+<!-- ============================================================
+     SKILLS — DARK (alternating)
+     ============================================================ -->
+<section class="skills-section" id="skills">
+  <div class="section-inner">
+
+    <div style="text-align:center; margin-bottom:48px;">
+      <span class="section-label section-label--dark">Areas of Expertise</span>
+      <h2 class="section-title section-title--dark" style="margin-bottom:8px;">Skills I bring to your team.</h2>
+      <p class="section-sub section-sub--dark" style="margin:0 auto;">Built through real curriculum design, facilitation, and organizational leadership.</p>
+    </div>
+
+    <div class="skills-grid">
+
+      <div class="skill-card">
+        <div class="skill-icon">📐</div>
+        <div class="skill-name">Curriculum Development</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🎙️</div>
+        <div class="skill-name">Training Delivery — Small &amp; Large Groups</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🤝</div>
+        <div class="skill-name">Coaching &amp; Mentoring</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">📊</div>
+        <div class="skill-name">Performance Evaluation</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🎤</div>
+        <div class="skill-name">Public Speaking &amp; Facilitation</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🏆</div>
+        <div class="skill-name">Leadership Training &amp; Development</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">📋</div>
+        <div class="skill-name">Employee Management</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🔍</div>
+        <div class="skill-name">Problem Identification &amp; Solving</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">💬</div>
+        <div class="skill-name">Stakeholder Communication</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">⚙️</div>
+        <div class="skill-name">Administrative Operations</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">🏫</div>
+        <div class="skill-name">Classroom &amp; Session Management</div>
+      </div>
+
+      <div class="skill-card">
+        <div class="skill-icon">📈</div>
+        <div class="skill-name">Organizational Effectiveness</div>
+      </div>
+
+    </div>
+
+    <!-- Strengths snapshot row -->
+    <div style="margin-top:48px; text-align:center;">
+      <p style="font-size:0.78rem; font-weight:700; letter-spacing:0.14em; text-transform:uppercase; color:var(--text-on-dark-mute); margin-bottom:16px;">Core Strengths Snapshot</p>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <span class="chip chip--dark">Curriculum design → delivery</span>
+        <span class="chip chip--dark">Coaching for performance improvement</span>
+        <span class="chip chip--dark">Training systems for real organizations</span>
+        <span class="chip chip--dark">Clear communicator across group sizes</span>
+        <span class="chip chip--dark">Adult learning principles</span>
+        <span class="chip chip--dark">Instructional design</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     EDUCATION — LIGHT (alternating)
+     ============================================================ -->
+<section class="education-section" id="education">
+  <div class="section-inner">
+
+    <div style="text-align:center; margin-bottom:48px;">
+      <span class="section-label">Education</span>
+      <h2 class="section-title" style="margin-bottom:8px;">Credentials &amp; Specialization</h2>
+      <p class="section-sub" style="margin:0 auto;">Competence argued first — credentials to follow in August 2026.</p>
+    </div>
+
+    <div class="edu-card-wrap">
+      <div class="edu-card">
+
+        <div class="edu-visual">
+          <svg viewBox="0 0 680 160" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <!-- Background nodes / learning path -->
+            <circle cx="80" cy="80" r="50" fill="rgba(26,188,156,0.06)"></circle>
+            <circle cx="80" cy="80" r="35" fill="rgba(26,188,156,0.08)"></circle>
+            <!-- Branching path lines -->
+            <line x1="130" y1="80" x2="220" y2="50" stroke="rgba(26,188,156,0.25)" stroke-width="1.5" stroke-dasharray="5,4"></line>
+            <line x1="130" y1="80" x2="220" y2="80" stroke="rgba(26,188,156,0.25)" stroke-width="1.5" stroke-dasharray="5,4"></line>
+            <line x1="130" y1="80" x2="220" y2="110" stroke="rgba(26,188,156,0.25)" stroke-width="1.5" stroke-dasharray="5,4"></line>
+            <circle cx="230" cy="50" r="8" fill="rgba(26,188,156,0.3)"></circle>
+            <text x="244" y="54" fill="rgba(255,255,255,0.5)" font-size="8" font-family="Arial">Leadership</text>
+            <circle cx="230" cy="80" r="8" fill="rgba(26,188,156,0.3)"></circle>
+            <text x="244" y="84" fill="rgba(255,255,255,0.5)" font-size="8" font-family="Arial">Instructional Design</text>
+            <circle cx="230" cy="110" r="8" fill="rgba(26,188,156,0.3)"></circle>
+            <text x="244" y="114" fill="rgba(255,255,255,0.5)" font-size="8" font-family="Arial">Public Relations</text>
+            <!-- Continuation -->
+            <line x1="340" y1="80" x2="420" y2="60" stroke="rgba(26,188,156,0.15)" stroke-width="1"></line>
+            <line x1="340" y1="80" x2="420" y2="100" stroke="rgba(26,188,156,0.15)" stroke-width="1"></line>
+            <circle cx="430" cy="60" r="6" fill="rgba(26,188,156,0.2)"></circle>
+            <circle cx="430" cy="100" r="6" fill="rgba(26,188,156,0.2)"></circle>
+            <!-- Right side circles -->
+            <circle cx="560" cy="80" r="55" fill="rgba(44,62,80,0.3)"></circle>
+            <circle cx="560" cy="80" r="38" fill="rgba(44,62,80,0.4)"></circle>
+            <text x="560" y="74" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Arial">Aug</text>
+            <text x="560" y="88" text-anchor="middle" fill="rgba(255,255,255,0.6)" font-size="10" font-family="Arial">2026</text>
+          </svg>
+          <div class="edu-visual-content">
+            <div class="edu-degree-icon">🎓</div>
+            <div class="edu-degree-label">Expected August 2026</div>
+          </div>
+        </div>
+
+        <div class="edu-body">
+          <div>
+            <div class="edu-degree">Bachelor of Science (Expected)</div>
+            <div class="edu-major">Applied Communication</div>
+            <div class="edu-spec">Specialization: Instructional Design</div>
+          </div>
+
+          <div class="edu-meta-row">
+            <span class="chip">B.S. Applied Communication</span>
+            <span class="chip">Instructional Design Specialization</span>
+            <span class="chip">Class of August 2026</span>
+          </div>
+
+          <p style="font-size:0.88rem;color:var(--text-on-light-mute);line-height:1.6;margin-top:4px;">
+            Emphasis in leadership excellence, strategic public relations, and collaborative decision-making within small groups and teams. The specialization in instructional design directly complements two years of hands-on curriculum design and teacher coaching in a live training environment.
+          </p>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     CONTACT — DARK (alternating)
+     ============================================================ -->
+<section class="contact-section" id="contact">
+  <div class="contact-inner">
+
+    <span class="section-label section-label--dark" style="margin-bottom:20px;">Get In Touch</span>
+    <h2 class="contact-tagline">Let's talk about your <span>L&amp;D needs.</span></h2>
+    <p class="contact-sub">
+      I'm actively seeking entry-level instructional design, training &amp; development, or L&amp;D coordinator roles. Open to corporate, nonprofit, and education sectors. Let's connect.
+    </p>
+
+    <div class="contact-links">
+      <a href="mailto:hello@example.com" class="contact-link">
+        <span class="contact-link-icon">✉️</span>
+        hello@example.com
+      </a>
+      <a href="tel:5551234567" class="contact-link">
+        <span class="contact-link-icon">📞</span>
+        (555) 123-4567
+      </a>
+    </div>
+
+    <div class="contact-cta-row">
+      <a href="mailto:hello@example.com" class="btn btn-primary">✉️ Send Me an Email</a>
+      <a href="#" class="btn btn-outline">📄 Download Resume</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer>
+  <p>© 2026 Harry Keller &nbsp;·&nbsp; Instructional Designer &amp; Training Specialist &nbsp;·&nbsp; Built to show the work, not just describe it.</p>
+</footer>
+
+<!-- ============================================================
+     LIGHTWEIGHT JS — smooth nav active state
+     ============================================================ -->
+
+
+
+</body></html>
