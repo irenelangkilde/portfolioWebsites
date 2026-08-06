@@ -3110,11 +3110,27 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
     // when the user chose "scene-based" composition. The renderer prompt gets
     // the URI so the AI can bake it into the hero background directly.
     const wantsSceneHero = String(directDesignSpec?.composition || "").toLowerCase() === "scene-based";
-    console.log("[directDesign] scene-hero gate:", {
+
+    // The hero scrim sits on top of the scene image, so it — not the palette — decides
+    // whether the masthead reads light or dark. It used to be a hardcoded black gradient,
+    // which silently overrode main_section_mode: picking "light" with a scene-based
+    // composition still produced a dark masthead, because the scrim the renderer was told
+    // to apply was black either way.
+    const heroIsDark = String(directDesignSpec?.main_section_mode || "light").toLowerCase() === "dark";
+    const heroScrim = heroIsDark
+      ? "rgba(0,0,0,0.55), rgba(0,0,0,0.20)"
+      : "rgba(255,255,255,0.72), rgba(255,255,255,0.38)";
+
+    console.log("[directDesign] design spec:", {
+      composition:        directDesignSpec?.composition || "",
+      style:              directDesignSpec?.style || "",
+      main_section_mode:  directDesignSpec?.main_section_mode || "",
+      alternate_sections: directDesignSpec?.alternate_sections,
+      density:            directDesignSpec?.density || "",
+      // Present only when the browser actually sent the field — distinguishes "user chose
+      // light" from "field never arrived and the || 'light' default filled in".
+      page1_had_mode:     page1?.main_section_mode !== undefined,
       wantsSceneHero,
-      composition: directDesignSpec?.composition || "",
-      major: page1?.major || "",
-      specialization: page1?.specialization || ""
     });
     // Kick off the scene image call and capture both the data URI AND the
     // model name so we can surface the model to the client via the done blob
@@ -3155,7 +3171,12 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
 
 1. In :root declare BOTH of these:
      --hero-bg-image: none;
-     --hero-overlay-gradient: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.15));
+     --hero-overlay-gradient: linear-gradient(to bottom, ${heroScrim});
+
+   That scrim was chosen to match main_section_mode = "${heroIsDark ? "dark" : "light"}". Use it
+   exactly as given. ${heroIsDark
+     ? "It darkens the scene, so hero text must be LIGHT against it."
+     : "It lightens the scene, so hero text must be DARK against it — do not switch the hero to a dark treatment just because a photographic background would look good dark."}
 
 2. On the hero section, use this composed background (the gradient stacks on top of the image so headline text stays readable). Example — adapt the selector to whatever class/element you use for the hero:
      .hero {
