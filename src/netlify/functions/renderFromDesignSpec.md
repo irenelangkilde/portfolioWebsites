@@ -32,6 +32,11 @@ Requirements:
   with light text. Pick whichever palette slots give you that pairing. This is a deliberate user
   choice — do not start dark because the palette looks better dark, or because the style token
   suggests it.
+- CANVAS: {{CANVAS_GUIDANCE}}
+  This is computed from the actual palette hexes, so it already accounts for whether the supplied
+  colours can carry the requested mode. Follow it literally. A palette is a set of key colours, not
+  a restriction to only those colours — neutrals and surfaces may always be added to satisfy
+  `main_section_mode`.
 - Respect the design spec's `alternate_sections`, which is a separate axis from the baseline above.
   When true, sections alternate between contrasting light and dark treatments, STARTING from the
   `main_section_mode` baseline. When false, every section keeps the baseline treatment throughout.

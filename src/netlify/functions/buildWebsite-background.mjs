@@ -1397,6 +1397,66 @@ function styleInspiration(factors = {}) {
   return note ? `Style token: ${token}. Style notes: ${note}` : `Style token: ${token}`;
 }
 
+// A light or dark main section is only achievable if the palette actually contains a
+// surface colour for it. The render prompt says "pick whichever palette slots give you
+// that pairing", which is unanswerable when every slot is saturated or dark — and the
+// model then does the reasonable thing and uses the palette as-is, producing a dark hero
+// from a "light" request. So decide here, where the hexes are, and hand the renderer an
+// instruction rather than a puzzle.
+//
+// Thresholds are about usability as a large background, not about the colour being pretty:
+// a page-sized wash needs to be near-neutral, since even a mid-chroma teal at L=0.78 reads
+// as a coloured panel rather than a light canvas.
+const CANVAS_LIGHT_MIN_L = 0.88;
+const CANVAS_DARK_MAX_L  = 0.34;
+const CANVAS_MAX_CHROMA  = 0.055;
+
+function canvasGuidance(colorSpec = {}, mode = "light") {
+  const wantLight = String(mode || "light").toLowerCase() !== "dark";
+  const want      = wantLight ? "light" : "dark";
+  const opposite  = wantLight ? "dark"  : "light";
+
+  const slots = POSITIONAL_SLOT_KEYS
+    .map(key => {
+      const hex = typeof colorSpec?.[key] === "string" ? colorSpec[key].trim() : "";
+      if (!/^#[0-9a-f]{6}$/i.test(hex)) return null;
+      const ok = hexToOklch(hex);
+      return ok ? { varName: `--c-${key.slice(1)}`, hex, ...ok } : null;
+    })
+    .filter(Boolean);
+
+  if (!slots.length) {
+    return `No palette was supplied, so choose your own colours — but the ${want} main-section `
+      + `treatment is still required.`;
+  }
+
+  const usable = slots.filter(s => wantLight
+    ? (s.l >= CANVAS_LIGHT_MIN_L && s.c <= CANVAS_MAX_CHROMA)
+    : (s.l <= CANVAS_DARK_MAX_L));
+
+  if (usable.length) {
+    return `The palette contains a usable ${want} surface: `
+      + `${usable.map(s => `${s.varName} (${s.hex})`).join(", ")}. `
+      + `Use it as the hero and main-section canvas.`;
+  }
+
+  // Nothing in the palette can carry the requested mode. Name a concrete neutral, tinted
+  // toward the dominant hue so it reads as part of the scheme rather than as flat grey.
+  const hue     = Math.round(slots[0].h || 0);
+  const surface = wantLight ? `oklch(0.975 0.008 ${hue})` : `oklch(0.185 0.02 ${hue})`;
+  const bodyInk = wantLight ? `oklch(0.28 0.02 ${hue})`   : `oklch(0.96 0.01 ${hue})`;
+  const edge    = slots.reduce((a, b) => (wantLight ? (b.l > a.l) : (b.l < a.l)) ? b : a);
+
+  return `NONE of the supplied colours can serve as a ${want} canvas — the `
+    + `${wantLight ? "lightest" : "darkest"} is ${edge.varName} (${edge.hex}) at L=${edge.l.toFixed(2)}`
+    + `${wantLight && edge.c > CANVAS_MAX_CHROMA ? `, and at chroma ${edge.c.toFixed(2)} it is a saturated colour, not a neutral surface` : ""}. `
+    + `main_section_mode is "${want}" and that is a deliberate user choice, so do NOT fall back to a `
+    + `${opposite} hero because the palette leans that way. Introduce a neutral surface — `
+    + `${surface} — as the hero and main-section background, with ${bodyInk} for body text, and use `
+    + `the supplied colours for accents, headings, chips, borders, icons and the CTA. The palette is `
+    + `the identity of the page; it does not have to be the canvas.`;
+}
+
 function buildVisualDirection(motifs, designSpec, colorSpec, visualsJson) {
   const normalizedColorSpec = normalizeColorSpec(colorSpec);
   const attrs   = designSpec?.exemplary_attributes || {};
@@ -3164,6 +3224,7 @@ async function runPortfolioWebsitePipeline(provider, creds, store, jobId, opts) 
       .replace(/\{\{RESOLVED_STRATEGY_JSON\}\}/g, JSON.stringify(aiStrategy, null, 2))
       .replace(/\{\{DESIGN_SPEC_JSON\}\}/g, JSON.stringify(directDesignSpec, null, 2))
       .replace(/\{\{COLOR_SPEC_JSON\}\}/g, JSON.stringify(directColorSpec, null, 2))
+      .replace(/\{\{CANVAS_GUIDANCE\}\}/g, canvasGuidance(directColorSpec, directDesignSpec?.main_section_mode))
       .replace(/\{\{COLOR_PREFERENCES_GUIDANCE\}\}/g, formatColorPreferencesGuidance(colorPreferences))
       .replace(/\{\{HEADSHOT\}\}/g, headshotHint)
       .replace(/\{\{SCENE_HERO_IMAGE_INSTRUCTION\}\}/g, wantsSceneHero
