@@ -763,14 +763,38 @@ function embedDesignMetaComment(html = "", page1 = null, model = "") {
       generated_at:    new Date().toISOString(),
     },
   };
-  const comment = `<!-- IW_DESIGN_META: ${JSON.stringify(meta)} -->\n`;
-  if (/<!--\s*IW_DESIGN_META:/i.test(html)) {
-    return html.replace(/<!--\s*IW_DESIGN_META:\s*[\s\S]*?-->\s*/i, comment);
+  const comment = `<!-- IW_DESIGN_META: ${JSON.stringify(meta)} -->`;
+
+  // The comment goes INSIDE <head>, not between <!DOCTYPE html> and <html>.
+  //
+  // Anything before <html> is not part of the document element, and the editor serializes
+  // with frame.contentDocument.documentElement.outerHTML (editor.html getVisualContent /
+  // getEditorTemplateHtml). That serialization begins at <html>, so a comment placed after
+  // the doctype was silently dropped the first time a page round-tripped through the visual
+  // iframe — which is every save. Every file in html-actual-output/ lost its metadata that
+  // way, and the loss was invisible because nothing reads the comment back.
+  //
+  // Drop any existing copy wherever it sits (including the old pre-<html> position) before
+  // reinserting, so re-running this migrates a page instead of leaving two.
+  const stripped = html.replace(/[ \t]*<!--\s*IW_DESIGN_META:[\s\S]*?-->[ \t]*\r?\n?/i, "");
+
+  const headOpen = stripped.match(/<head\b[^>]*>/i);
+  if (headOpen) {
+    const at = headOpen.index + headOpen[0].length;
+    return `${stripped.slice(0, at)}\n${comment}${stripped.slice(at)}`;
   }
-  if (/<!DOCTYPE[^>]*>\s*/i.test(html)) {
-    return html.replace(/(<!DOCTYPE[^>]*>\s*)/i, `$1${comment}`);
+
+  // No <head>: put it just inside <html> instead. A browser will hoist it into the head it
+  // synthesises, and it still lands inside the document element either way.
+  const htmlOpen = stripped.match(/<html\b[^>]*>/i);
+  if (htmlOpen) {
+    const at = htmlOpen.index + htmlOpen[0].length;
+    return `${stripped.slice(0, at)}\n${comment}${stripped.slice(at)}`;
   }
-  return comment + html;
+
+  // Fragment with no <html> at all — nothing can be "inside" the document element, so fall
+  // back to prepending and accept that a round-trip may drop it.
+  return `${comment}\n${stripped}`;
 }
 
 function embedMastheadMetaComment(html = "", mastheadMeta = null) {
