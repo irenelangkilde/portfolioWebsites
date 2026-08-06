@@ -252,13 +252,35 @@
       min-width: 0;
     }
 
+    /* The row is space-between with "Details" at the far end, so the pills are grouped —
+       otherwise a second pill would be flung to the middle rather than sitting beside the
+       first. The group wraps so a long "Style (Template)" plus a composition pill drops to
+       a second line instead of squeezing either. */
+    .card-tag-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+      flex: 0 1 auto;
+    }
+
     .card-meta-row .card-tag {
       flex: 0 1 auto;
       min-width: 0;
-      max-width: calc(100% - 78px);
+      max-width: 100%;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
+    }
+
+    /* Quieter than the style pill: this is provenance, not the card's identity. */
+    .card-tag--composition {
+      border-color: rgba(126, 215, 193, 0.3);
+      background: rgba(126, 215, 193, 0.12);
+      color: var(--accent-2);
+      font-size: 0.82rem;
+      font-weight: 700;
     }
 
     .card h2 {
@@ -582,6 +604,14 @@
       // tag becomes a button that sends its style back; standalone it is plain text.
       const tagText = currentTemplate ? `${currentStyle} (${currentTemplate})` : currentStyle;
 
+      // Second pill, only when composition says something layout does not. On 18 of 21
+      // entries the two agree and repeating it would be noise; the exception is the
+      // scene-based pages, whose origin is otherwise unrecoverable from the card.
+      const composition = String(entry.composition || "").trim();
+      const compositionPill = composition && composition !== String(entry.layout || "").trim()
+        ? `<span class="card-tag card-tag--composition" title="Composition: ${escapeHtml(composition)} (hero arrangement: ${escapeHtml(entry.layout || "")})">${escapeHtml(composition)}</span>`
+        : "";
+
       const previewInner = `
           <div class="preview-shell" aria-hidden="true">
             <div class="preview-stage">
@@ -606,9 +636,12 @@
         ${previewBlock}
         <div class="card-body">
           <div class="card-meta-row">
-            ${pickerOpener
-              ? `<button type="button" class="card-tag card-tag--pick" data-style="${escapeHtml(currentStyle)}" title="Use ${escapeHtml(currentStyle)} on the form">${escapeHtml(tagText)}</button>`
-              : `<div class="card-tag">${escapeHtml(tagText)}</div>`}
+            <div class="card-tag-group">
+              ${pickerOpener
+                ? `<button type="button" class="card-tag card-tag--pick" data-style="${escapeHtml(currentStyle)}" title="Use ${escapeHtml(currentStyle)} on the form">${escapeHtml(tagText)}</button>`
+                : `<div class="card-tag">${escapeHtml(tagText)}</div>`}
+              ${compositionPill}
+            </div>
             <a class="cta cta-link" href="${entry.href}" target="_blank" rel="noopener noreferrer" aria-label="Open ${escapeHtml(label)} website">Details</a>
           </div>
           <!-- ${commentSafe(copyPath(entry))} -->
