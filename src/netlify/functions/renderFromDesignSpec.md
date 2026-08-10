@@ -77,7 +77,7 @@ STYLE — governs typography, texture and visual treatment:
 - "classic"       — conventional, brand-led business layout: structured sections, a small
                     disciplined palette, nothing experimental
 - "fun"           — playful cartoon accents and illustrative flourishes
-- "bold"          — oversized display type, high-impact composition
+- "bold"          — scale contrast: one huge headline against otherwise quiet content
 - "glassmorphism" — frosted-glass cards, blurred backdrop layering
 - "brutalist"     — industrial capitals, raw grids, coarse textures
 - "terminal"      — monospace typography and terminal-chrome layout
@@ -109,6 +109,28 @@ badges and contact rows. Substitute typographic or CSS-drawn marks instead.
 
 Style-specific notes:
 Apply only the note matching the design spec's style token; ignore the others.
+- "bold" — the style is SCALE CONTRAST, not decoration, colour or density. One element per
+  section — usually the headline — is dramatically larger than everything around it, and the
+  page earns its impact from that jump alone.
+  - Hero headline: display weight 800–900, size topping out around 5–8rem on desktop via
+    clamp(), line-height 0.85–0.95, tracking -0.02em to -0.04em. Let it wrap to 2–4 lines on
+    purpose; do not shrink it to fit one line. Condensed or wide grotesques suit it; all-caps
+    is optional, not required.
+  - Keep everything else QUIET. Body text stays ordinary (~1rem), ornament is minimal, there
+    is no texture, and secondary elements do not compete. The contrast is what reads as bold,
+    so enlarging the body copy or decorating the surroundings destroys the effect — restraint
+    elsewhere is load-bearing, not incidental.
+  - Palette: stark rather than rich. A single dominant ground plus ONE saturated accent
+    carrying the emphasis, in large flat areas, with elements running to the page edge,
+    decisive asymmetry, and few objects each of them large. Whether that ground is light or
+    dark is decided by main_section_mode, NOT by this note.
+  Boundaries — bold is defined by scale, so do not substitute a neighbouring style:
+  - NOT brutalist: no exposed grids, coarse textures or deliberately unstyled defaults. Bold
+    is highly refined; it simply shouts.
+  - NOT neon-tech: no glow effects, and impact must not come from saturated-on-dark colour. A
+    black-and-white page can be fully bold.
+  - NOT modern: flatter and blunter. Do not reach for gradient washes or 3D hero visuals as
+    the means of making it feel strong.
 - "swiss-grid" — the visible grid IS the style, so it must read as a deliberate design element
   rather than a subliminal texture. Draw real 1px solid rules on the column boundaries and
   section divisions of the layout you actually use, and align content to them so the system
