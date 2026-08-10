@@ -153,21 +153,72 @@ export async function handler(event) {
   if (fetchErr || !gift) {
     return { statusCode: 404, body: JSON.stringify({ error: "Gift code not found." }) };
   }
-  if (gift.redeemed_at) {
-    return { statusCode: 409, body: JSON.stringify({ error: "This gift code has already been redeemed." }) };
-  }
   if (new Date(gift.expires_at) < new Date()) {
     return { statusCode: 410, body: JSON.stringify({ error: "This gift code has expired." }) };
   }
 
-  const { error: redeemErr } = await supabase
-    .from("gift_codes")
-    .update({ redeemed_by: userId, redeemed_at: new Date().toISOString() })
-    .eq("id", gift.id);
+  // A code may now be redeemed max_uses times (default 1, so single-use codes issued
+  // before the multi-use migration behave exactly as they did). Codes redeemed under the
+  // old scheme were backfilled to use_count = 1, which reads as exhausted.
+  const maxUses  = Number.isFinite(gift.max_uses)  ? gift.max_uses  : 1;
+  const useCount = Number.isFinite(gift.use_count) ? gift.use_count : (gift.redeemed_at ? 1 : 0);
 
-  if (redeemErr) {
-    console.error("Failed to mark gift code redeemed:", redeemErr.message);
+  if (useCount >= maxUses) {
+    return {
+      statusCode: 409,
+      body: JSON.stringify({
+        error: maxUses > 1
+          ? "This gift code has been fully redeemed."
+          : "This gift code has already been redeemed."
+      })
+    };
+  }
+
+  // One redemption per user per code. Inserted BEFORE the counter is claimed so a repeat
+  // attempt by the same person cannot consume someone else's use: the composite primary
+  // key rejects it here, and no use is spent. 23505 is unique_violation.
+  const { error: claimErr } = await supabase
+    .from("gift_code_redemptions")
+    .insert({ gift_code_id: gift.id, user_id: userId });
+
+  if (claimErr) {
+    if (claimErr.code === "23505") {
+      return { statusCode: 409, body: JSON.stringify({ error: "You have already redeemed this gift code." }) };
+    }
+    console.error("Failed to record gift code redemption:", claimErr.message);
     return { statusCode: 500, body: JSON.stringify({ error: "Failed to redeem gift code." }) };
+  }
+
+  // Claim a use atomically. A read-then-write here would let two people redeeming the
+  // last remaining use both pass the check above; the function's `use_count < max_uses`
+  // predicate makes the increment conditional inside a single statement instead. It
+  // returns null when there was nothing left to claim.
+  const { data: remaining, error: redeemErr } = await supabase
+    .rpc("claim_gift_code_use", { p_gift_code_id: gift.id });
+
+  if (redeemErr || remaining === null || remaining === undefined) {
+    // Lost the race, or the counter could not move. Release this user's claim so they
+    // are not left permanently blocked from a code they never actually redeemed.
+    await supabase
+      .from("gift_code_redemptions")
+      .delete()
+      .eq("gift_code_id", gift.id)
+      .eq("user_id", userId);
+
+    if (redeemErr) {
+      console.error("Failed to claim gift code use:", redeemErr.message);
+      return { statusCode: 500, body: JSON.stringify({ error: "Failed to redeem gift code." }) };
+    }
+    return { statusCode: 409, body: JSON.stringify({ error: "This gift code has been fully redeemed." }) };
+  }
+
+  // Kept in step for single-use codes so anything still reading these columns — and the
+  // Supabase table view — continues to show who redeemed and when.
+  if (maxUses === 1) {
+    await supabase
+      .from("gift_codes")
+      .update({ redeemed_by: userId, redeemed_at: new Date().toISOString() })
+      .eq("id", gift.id);
   }
 
   const { data: existingMembership } = await supabase
