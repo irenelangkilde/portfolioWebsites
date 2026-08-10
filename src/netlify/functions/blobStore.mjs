@@ -103,41 +103,64 @@ export function explainBlobStoreError(err) {
 export function getNamedBlobStore(name) {
   const siteID = process.env.NETLIFY_SITE_ID;
   const token = process.env.NETLIFY_AUTH_TOKEN;
-  const useExplicitCredentials = !!(siteID && token && !isNetlifyManagedRuntime());
+  const hasExplicitCredentials = !!(siteID && token);
+  const managed = isNetlifyManagedRuntime();
 
-  try {
-    if (useExplicitCredentials) {
-      return {
-        store: withLocalFallback(getStore({ name, siteID, token }), name),
-        configError: null
-      };
+  // Ordered attempts rather than one branch.
+  //
+  // The previous logic used explicit credentials ONLY when not in a managed runtime
+  // (`siteID && token && !isNetlifyManagedRuntime()`), which meant a deployed function
+  // could never fall back to them. That is fine while Netlify injects its blobs context,
+  // and fatal when it does not: the function fails with "The environment has not been
+  // configured to use Netlify Blobs" while perfectly good credentials sit unread in the
+  // environment, and the local fallback is (correctly) refused on Lambda.
+  //
+  // Order differs by runtime because the likely-correct source differs. In a managed
+  // runtime the injected context is preferred and scoped to the deploy; locally there is
+  // no injected context at all, so explicit credentials come first.
+  const attempts = managed
+    ? [
+        { label: "injected context", make: () => getStore({ name }) },
+        ...(hasExplicitCredentials
+          ? [{ label: "explicit credentials", make: () => getStore({ name, siteID, token }) }]
+          : []),
+      ]
+    : [
+        ...(hasExplicitCredentials
+          ? [{ label: "explicit credentials", make: () => getStore({ name, siteID, token }) }]
+          : []),
+        { label: "injected context", make: () => getStore({ name }) },
+      ];
+
+  let lastError = null;
+  for (const attempt of attempts) {
+    try {
+      return { store: withLocalFallback(attempt.make(), name), configError: null };
+    } catch (err) {
+      lastError = err;
     }
-
-    return {
-      store: withLocalFallback(getStore({ name }), name),
-      configError: null
-    };
-  } catch (err) {
-    if (canUseLocalBlobFallback() && isLocalBlobFailure(err)) {
-      return {
-        store: createLocalBlobStore(name),
-        configError: null
-      };
-    }
-
-    const missing = [];
-    if (!siteID) missing.push("NETLIFY_SITE_ID");
-    if (!token) missing.push("NETLIFY_AUTH_TOKEN");
-
-    const missingText = missing.length
-      ? ` Missing: ${missing.join(", ")}.`
-      : "";
-
-    return {
-      store: null,
-      configError: `Netlify Blobs is not configured for local/background function access.${missingText} Run via Netlify Dev with a linked site, or set valid Netlify credentials.${err?.message ? ` Underlying error: ${err.message}` : ""}`
-    };
   }
+
+  // Local dev only. Never on Lambda: a tmpdir store there would appear to work and
+  // silently lose every write between invocations.
+  if (canUseLocalBlobFallback() && isLocalBlobFailure(lastError)) {
+    return { store: createLocalBlobStore(name), configError: null };
+  }
+
+  const missing = [];
+  if (!siteID) missing.push("NETLIFY_SITE_ID");
+  if (!token) missing.push("NETLIFY_AUTH_TOKEN");
+
+  const missingText = missing.length ? ` Missing: ${missing.join(", ")}.` : "";
+
+  // Which runtime was detected, and what was actually tried. Without this the message is
+  // the same whether credentials were absent, present-but-rejected, or never attempted.
+  const diag = ` [runtime: ${managed ? "netlify-managed" : "local"}; tried: ${attempts.map(a => a.label).join(" → ")}]`;
+
+  return {
+    store: null,
+    configError: `Netlify Blobs is not configured for local/background function access.${missingText} Run via Netlify Dev with a linked site, or set valid Netlify credentials.${diag}${lastError?.message ? ` Underlying error: ${lastError.message}` : ""}`
+  };
 }
 
 export function getPreviewResultsStore() {
