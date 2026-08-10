@@ -1362,9 +1362,35 @@
       if (session?.user) onSignIn(session.user);
       else renderAuthState();
     });
+    // A PASSWORD_RECOVERY session is a limited, temporary session whose only purpose is
+    // letting the holder set a new password. This listener treated it as a normal sign-in,
+    // because it looked only at `session?.user` and ignored the event — so a recovery link
+    // surfaced the account as fully logged in, with credits, membership and checkout, on
+    // the strength of a link sitting in an inbox. overview.html and editor.html both
+    // discriminate on the event already; this page was the one that did not.
+    //
+    // It also made a wrong identity easy to miss: the session belongs to whichever account
+    // the recovery link was issued for, which need not be the address typed into the
+    // sign-in box a moment earlier.
+    let _isResettingPassword = false;
+
     _supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === "PASSWORD_RECOVERY") {
+        _isResettingPassword = true;
+        // This page has no reset UI; overview.html owns that flow.
+        window.location.href = `${window.location.origin}/overview.html?reset=1`;
+        return;
+      }
+      if (_isResettingPassword && _event === "SIGNED_IN") {
+        return;   // the recovery session, not a real sign-in
+      }
+      if (_event === "USER_UPDATED") _isResettingPassword = false;
+
       if (session?.user) onSignIn(session.user);
-      else onSignOut();
+      else {
+        _isResettingPassword = false;
+        onSignOut();
+      }
     });
 
     const params  = new URLSearchParams(window.location.search);
