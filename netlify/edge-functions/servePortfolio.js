@@ -59,7 +59,7 @@ function apexAndWww(hostname) {
   return [apex, `www.${apex}`];
 }
 
-function isSystemHost(host, primaryDomain) {
+function isSystemHost(host) {
   if (SYSTEM_HOST_PATTERN.test(host)) return true;
   const bare = host.replace(/:\d+$/, "").toLowerCase();
 
@@ -76,7 +76,10 @@ function isSystemHost(host, primaryDomain) {
     }
   };
 
-  addDomainList(primaryDomain);
+  // NETLIFY_PRIMARY_DOMAIN used to be read here and passed in. It is not one of Netlify's
+  // automatic environment variables, so the lookup always returned "" and contributed
+  // nothing — the parameter is gone rather than left looking meaningful. The primary
+  // domain still reaches this function via the URL variable below, which Netlify does set.
 
   // The checked-in list. Adding a domain here is a code change that ships with a deploy,
   // which is the intended path — it is reviewable and cannot be silently truncated the
@@ -175,8 +178,7 @@ export default async function handler(request, context) {
 
   // Pass through requests on the main site domain(s) — let normal routing handle them,
   // EXCEPT for /u/:slug paths which we handle here to avoid redirect/edge-function chain issues.
-  //const primaryDomain = Netlify.env.get("NETLIFY_PRIMARY_DOMAIN") || "";
-  if (isSystemHost(host, primaryDomain)) {
+  if (isSystemHost(host)) {
     // Handle /u/:slug on the primary domain directly
     const slugMatch = url.pathname.match(/^\/u\/([^/]+)$/);
     if (slugMatch) {
