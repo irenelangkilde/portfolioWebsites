@@ -418,6 +418,21 @@
         </div>
         <div id="pricingGiftMsg" style="font-size:12px;margin-top:4px;display:none;" aria-live="polite"></div>
       </div>
+      <!-- Promo / referral code. Distinct from the gift code above: a gift code GRANTS a
+           tier after the fact, this DISCOUNTS a purchase at checkout via a Stripe
+           promotion code. Applied here rather than through Stripe's own promo field so the
+           wording is ours and a self-referral can be named before payment. -->
+      <div class="acctGroup" id="promoGroup">
+        <div class="statusLabel">Promo / Referral Code</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          <input type="text" id="promoInput" placeholder="Enter a code" autocomplete="off"
+            style="font-family:ui-monospace,monospace;text-transform:uppercase;letter-spacing:.05em;font-size:13px;padding:6px 10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:inherit;width:200px;"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')applyPromoCode()" />
+          <button class="btn ghost mini" type="button" id="promoBtn" onclick="applyPromoCode()" style="width:200px;text-align:left;">Apply →</button>
+        </div>
+        <div id="promoMsg" style="font-size:12px;margin-top:4px;display:none;" aria-live="polite"></div>
+      </div>
       <div class="acctActions">
         <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
         <button class="btn ghost" id="signOutBtn" type="button" style="display:none;">Sign Out</button>
@@ -841,6 +856,11 @@
             userId: _currentUser.id,
             userEmail: _currentUser.email,
             returnUrl: `${window.location.origin}/src/purchased.html`,
+            // Sent whether or not it was validated in the UI. createCheckoutSession
+            // re-resolves it server-side, so the check below is a courtesy to the buyer,
+            // not an authorisation step — a tampered client cannot grant itself a discount.
+            referralCode: (document.getElementById("promoInput")?.value || "").trim(),
+            attribution:  (window.iwAttribution && window.iwAttribution()) || null,
           })
         });
         clearTimeout(timer);
@@ -993,6 +1013,64 @@
     }
 
     let _pendingGiftCode = null;
+
+    // ── Promo / referral code ────────────────────────────────────────────────
+    // Checks a code before the buyer commits, so the page can say "15% off applied" — or
+    // name a self-referral — rather than leaving them to find out at Stripe. The discount
+    // itself is applied server-side by createCheckoutSession, which re-resolves the code;
+    // this never receives the Stripe promotion-code id.
+    async function applyPromoCode() {
+      const input = document.getElementById("promoInput");
+      const btn   = document.getElementById("promoBtn");
+      const msg   = document.getElementById("promoMsg");
+      const code  = (input?.value || "").trim();
+
+      msg.style.display = "block";
+      if (!code) {
+        msg.style.color = "rgba(251,171,156,.9)";
+        msg.textContent = "Enter a code first.";
+        return;
+      }
+
+      btn.disabled = true;
+      const orig = btn.textContent;
+      btn.textContent = "Checking…";
+      try {
+        const res = await fetch("/.netlify/functions/validateReferralCode", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ code, userId: currentUserId() || null }),
+        });
+        const data = await res.json();
+        msg.style.color = data.valid ? "rgba(118,176,34,.95)" : "rgba(251,171,156,.9)";
+        msg.textContent = data.message || (data.valid ? "Code applied." : "That code was not recognised.");
+      } catch {
+        // A failed check must not block a purchase — the code is re-resolved at checkout
+        // regardless, so the discount still applies if it is genuine.
+        msg.style.color = "rgba(234,240,255,.6)";
+        msg.textContent = "Could not check that code — you can still continue.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = orig;
+      }
+    }
+
+    // Prefill from a ?ref= link captured on arrival (first touch, 90-day window), so
+    // someone who followed an affiliate link does not have to remember the code.
+    (function prefillPromoFromLink() {
+      const stored = window.iwStoredReferralCode && window.iwStoredReferralCode();
+      if (!stored) return;
+      const input = document.getElementById("promoInput");
+      if (input && !input.value) {
+        input.value = stored.toUpperCase();
+        const msg = document.getElementById("promoMsg");
+        if (msg) {
+          msg.style.display = "block";
+          msg.style.color = "rgba(234,240,255,.6)";
+          msg.textContent = "Code from your referral link — press Apply to check it.";
+        }
+      }
+    })();
 
     async function redeemGiftCodePricing() {
       const input = document.getElementById("pricingGiftInput");
