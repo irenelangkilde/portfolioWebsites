@@ -2231,8 +2231,27 @@
     if (wasResetting) restoreAuthModalToSignIn();
 
     // Adopt the session the other tab wrote, rather than sitting logged out until reload.
-    _supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) onSignIn(session.user);
+    //
+    // Retried, because the storage event can arrive before this tab's Supabase client has
+    // picked the new session out of localStorage — the ping and the session are separate
+    // writes, and this tab was logged out so the client has nothing cached to return.
+    (async () => {
+      let session = null;
+      for (let attempt = 0; attempt < 6 && !session?.user; attempt++) {
+        if (attempt) await new Promise(r => setTimeout(r, 400));
+        try { ({ data: { session } } = await _supabase.auth.getSession()); }
+        catch { /* keep retrying */ }
+      }
+
+      if (session?.user) {
+        // updateAuthUI() is the LAST line of onSignIn, after a membership fetch, a
+        // gift-code redemption and a credits migration. If any of those rejects,
+        // _currentUser is set but the header never repaints — which reads as a signed-out
+        // "Sign in" button on a page that is actually signed in. Repaint regardless.
+        try { await onSignIn(session.user); }
+        catch (err) { console.warn("[auth] onSignIn failed after cross-tab reset:", err); }
+        finally { updateAuthUI(); }
+      }
 
       const modal = document.getElementById("authModal");
       const modalOpen = modal && modal.style.display !== "none";
@@ -2246,7 +2265,7 @@
           : "Password updated in another tab. You can sign in with your new password.";
       }
       setTimeout(closeAuthModal, 2500);
-    });
+    })();
   });
 
   function getEmailRedirectUrl() {
