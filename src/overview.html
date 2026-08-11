@@ -1618,6 +1618,60 @@
   let _isResettingPassword = false;
 
   // ── Session bootstrap ────────────────────────────────────────────────────
+
+  // The reset dialog cannot rely on the PASSWORD_RECOVERY event alone. That event is
+  // only emitted for the implicit flow, where the link returns #type=recovery. Under
+  // PKCE the link comes back as ?code=… , supabase-js exchanges it and emits SIGNED_IN
+  // instead — so the user was silently signed in and never shown a password form. Which
+  // flow is in use depends on project configuration, not on this code.
+  //
+  // ?reset=1 is appended to the redirectTo in requestPasswordReset(), so its presence
+  // means "this page load came from a reset link" no matter which flow delivered it.
+  // Until now nothing read it.
+  const _arrivedFromResetLink =
+    new URLSearchParams(window.location.search).get("reset") === "1";
+
+  if (_arrivedFromResetLink) {
+    _isResettingPassword = true;
+    // The session may not exist yet — the code exchange is async — but the modal can be
+    // shown immediately; saving is what needs the session.
+    openAuthModal("reset");
+    // Drop the parameter so a later reload does not reopen the dialog against a session
+    // that has already had its password changed.
+    const url = new URL(window.location.href);
+    url.searchParams.delete("reset");
+    window.history.replaceState({}, "", url);
+
+    // Arriving from a reset link should produce a session — either from the #access_token
+    // fragment (implicit flow) or by exchanging ?code= (PKCE). If neither happens the
+    // form would sit there and fail on save with a generic error, so say what went wrong.
+    //
+    // The usual causes, in the order they actually occur:
+    //  1. The link was already consumed. Recovery tokens are single-use, and mail
+    //     scanners (Gmail, Outlook, corporate security) prefetch links — the scanner's
+    //     visit spends the token before the human clicks it.
+    //  2. PKCE verifier missing. resetPasswordForEmail stores a code_verifier in
+    //     localStorage, which is PER-ORIGIN. Request the reset on one of the alias
+    //     domains and the link lands on the canonical origin, where that verifier does
+    //     not exist, so the exchange fails and no session is created.
+    //  3. The link expired.
+    window.setTimeout(async () => {
+      if (!_isResettingPassword) return;              // a session arrived, all good
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (session?.user) return;
+
+      const msgEl = document.getElementById("authMsg");
+      if (msgEl) {
+        msgEl.className = "authMsg err";
+        msgEl.textContent = "This reset link is no longer valid — it may have expired, "
+          + "already been used, or been opened on a different site address than the one "
+          + "you requested it from. Request a new one below.";
+      }
+      _isResettingPassword = false;
+      restoreAuthModalToSignIn();
+    }, 3000);
+  }
+
   _supabase.auth.getSession().then(({ data: { session } }) => {
     if (_isResettingPassword) return; // recovery flow takes priority
     if (session?.user) onSignIn(session.user);
@@ -1628,7 +1682,9 @@
       _isResettingPassword = true;
       openAuthModal("reset");
     } else if (_isResettingPassword && _event === "SIGNED_IN") {
-      // suppress — this is the temporary recovery session, not a real sign-in
+      // suppress — this is the temporary recovery session, not a real sign-in.
+      // Under PKCE this is the ONLY event a reset produces, which is why the flag is
+      // set from the URL above rather than from PASSWORD_RECOVERY.
     } else if (_event === "USER_UPDATED") {
       _isResettingPassword = false;
       if (session?.user) onSignIn(session.user);
