@@ -25,15 +25,22 @@ const PUBLISHED_SITES_STORE = "published-sites";
 // so a mismatch would bounce users between two origins.
 const CANONICAL_ORIGIN = "https://resumeto.website";
 
-// The company page, not the app. These hosts are ours — so they must NOT fall through to
-// the custom-portfolio blob lookup, which would 404 with "No portfolio is registered" —
-// but they are also NOT redirected to the canonical origin like the other aliases, because
-// their whole purpose is to serve different content.
-const APEX_HOSTS = new Set([
-  "irenes-ventures.com",
-  "www.irenes-ventures.com",
+// The directory of ventures, not the app. This host is ours — so it must NOT fall through
+// to the custom-portfolio blob lookup, which would 404 with "No portfolio is registered"
+// the way an unlisted subdomain does — but it is also NOT redirected to the canonical
+// origin like the other aliases, because its whole purpose is to serve different content.
+//
+// It is deliberately NOT in KNOWN_DOMAINS: that list now means "redirect these to the
+// app", which is the opposite of what this host is for.
+//
+// irenes-ventures.com itself is not here. It stays in KNOWN_DOMAINS and 301s to the app,
+// so the .com still lands people on the product — it just does not SERVE it, because two
+// origins serving the same app is what made a password reset sign a user in somewhere
+// they were not looking.
+const ABOUT_HOSTS = new Set([
+  "about.irenes-ventures.com",
 ]);
-const APEX_PAGE = "/html/apex.html";
+const ABOUT_PAGE = "/html/about.html";
 
 // Hosts that should never be treated as custom portfolio domains
 const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
@@ -143,17 +150,15 @@ export default async function handler(request, context) {
   const canonicalHost = (CANONICAL_ORIGIN.replace(/^https?:\/\//, "") || "").toLowerCase();
   const bareHost = host.replace(/:\d+$/, "").toLowerCase();
 
-  // The apex host serves the company page rather than the app, and is checked BEFORE
-  // the alias redirect below — it is in KNOWN_DOMAINS (so it is recognised as ours rather
-  // than treated as a visitor's portfolio domain) but must not be sent to the canonical
-  // origin, or the company page would bounce to the product it is supposed to link to.
-  if (APEX_HOSTS.has(bareHost)) {
+  // The ventures directory is checked BEFORE the alias redirect below, so it is never
+  // swept up by it.
+  if (ABOUT_HOSTS.has(bareHost)) {
     // Only the root is swapped. Everything else — /blog, /assets, /html/... — serves as
     // usual, so the apex page can link to shared assets and the blog without a special
     // case. A rewrite rather than a redirect: the address bar keeps saying
-    // irenes-ventures.com, which is the point of having a separate company page.
+    // about.irenes-ventures.com, which is the point of having a separate page.
     if (url.pathname === "/" || url.pathname === "/index.html") {
-      return context.rewrite(new URL(APEX_PAGE, url.origin));
+      return context.rewrite(new URL(ABOUT_PAGE, url.origin));
     }
     return context.next();
   }
@@ -170,7 +175,7 @@ export default async function handler(request, context) {
 
   // Pass through requests on the main site domain(s) — let normal routing handle them,
   // EXCEPT for /u/:slug paths which we handle here to avoid redirect/edge-function chain issues.
-  const primaryDomain = Netlify.env.get("NETLIFY_PRIMARY_DOMAIN") || "";
+  //const primaryDomain = Netlify.env.get("NETLIFY_PRIMARY_DOMAIN") || "";
   if (isSystemHost(host, primaryDomain)) {
     // Handle /u/:slug on the primary domain directly
     const slugMatch = url.pathname.match(/^\/u\/([^/]+)$/);
