@@ -40,7 +40,7 @@ const CANONICAL_ORIGIN = "https://resumeto.website";
 const ABOUT_HOSTS = new Set([
   "about.irenes-ventures.com",
 ]);
-const ABOUT_PAGE = "/html/about.html";
+const ABOUT_PAGE = "/html/about-irenes-ventures.html";
 
 // Hosts that should never be treated as custom portfolio domains
 const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
