@@ -1631,7 +1631,33 @@
   const _arrivedFromResetLink =
     new URLSearchParams(window.location.search).get("reset") === "1";
 
-  if (_arrivedFromResetLink) {
+  // Supabase reports a failed verification in the URL FRAGMENT, e.g.
+  //   #error=access_denied&error_code=otp_expired&error_description=Email+link+is+invalid...
+  // Read it before opening anything: offering a "set new password" form for a link that
+  // already failed asks the user to type a password that cannot possibly be saved.
+  const _resetHash    = new URLSearchParams((window.location.hash || "").replace(/^#/, ""));
+  const _resetErrCode = _resetHash.get("error_code") || _resetHash.get("error") || "";
+  const _resetErrText = _resetHash.get("error_description") || "";
+
+  if (_arrivedFromResetLink && _resetErrCode) {
+    // otp_expired covers both "expired" and "already used" — Supabase does not
+    // distinguish them, and single-use tokens are commonly spent by mail scanners
+    // prefetching the link before the recipient clicks it.
+    const friendly = /expired|invalid/i.test(_resetErrCode + " " + _resetErrText)
+      ? "That reset link is no longer valid — links expire, and can only be used once. Request a new one below."
+      : (_resetErrText.replace(/\+/g, " ") || "That reset link could not be used. Request a new one below.");
+
+    openAuthModal("login");
+    const msgEl = document.getElementById("authMsg");
+    if (msgEl) { msgEl.className = "authMsg err"; msgEl.textContent = friendly; }
+
+    // Clear both the parameter and the error fragment so a reload does not replay it.
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete("reset");
+    cleanUrl.hash = "";
+    window.history.replaceState({}, "", cleanUrl);
+    console.warn("[auth] reset link rejected:", _resetErrCode, _resetErrText);
+  } else if (_arrivedFromResetLink) {
     _isResettingPassword = true;
     // The session may not exist yet — the code exchange is async — but the modal can be
     // shown immediately; saving is what needs the session.
