@@ -20,8 +20,19 @@ import { KNOWN_DOMAINS } from "../../src/netlify/shared/knownDomains.mjs";
 
 const PUBLISHED_SITES_STORE = "published-sites";
 
+// The one origin the app is served from. Must match CANONICAL in src/siteConfig.js —
+// the client builds auth redirects from that, and this redirects everything else here,
+// so a mismatch would bounce users between two origins.
+const CANONICAL_ORIGIN = "https://resumeto.website";
+
 // Hosts that should never be treated as custom portfolio domains
 const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
+
+/** True when the host is one of ours — apex or www — and therefore safe to redirect. */
+function isKnownAliasHost(bareHost) {
+  const bare = String(bareHost || "").toLowerCase().replace(/^www\./, "");
+  return KNOWN_DOMAINS.some(d => d.toLowerCase() === bare);
+}
 
 function apexAndWww(hostname) {
   // Given any hostname, return its apex domain and www variant.
@@ -101,6 +112,35 @@ function isStaticPassThroughPath(pathname) {
 export default async function handler(request, context) {
   const host = request.headers.get("host") || "";
   const url  = new URL(request.url);
+
+  // ── Send every alias to the canonical origin ────────────────────────────────
+  // Netlify serves domain aliases directly rather than redirecting, so a visitor could
+  // use the whole app on any of the 33 domains. That is not merely untidy: a Supabase
+  // session lives in localStorage, which is PER-ORIGIN. Fill in the form on
+  // resumeto.website, complete a password reset that lands on irenes-ventures.com, and
+  // the session is written to an origin the user is not looking at — a hard refresh of
+  // the original tab still shows signed out, and no code can bridge it, because
+  // cross-origin localStorage is isolated by design and there is no window handle to
+  // postMessage between an email-opened tab and the original one.
+  //
+  // Redirecting here rather than in netlify.toml keeps one list of domains (the
+  // checked-in KNOWN_DOMAINS) instead of 32 hand-written redirect rules, and runs before
+  // any of the routing below.
+  //
+  // Only hosts we recognise are redirected. A visitor's own custom portfolio domain is
+  // not in KNOWN_DOMAINS and must keep serving their site, and netlify.app/localhost are
+  // excluded so previews and local development still work on their own origin.
+  const canonicalHost = (CANONICAL_ORIGIN.replace(/^https?:\/\//, "") || "").toLowerCase();
+  const bareHost = host.replace(/:\d+$/, "").toLowerCase();
+  if (
+    canonicalHost &&
+    bareHost !== canonicalHost &&
+    !SYSTEM_HOST_PATTERN.test(host) &&
+    isKnownAliasHost(bareHost)
+  ) {
+    const target = new URL(url.pathname + url.search + url.hash, CANONICAL_ORIGIN);
+    return Response.redirect(target.toString(), 301);
+  }
 
   // Pass through requests on the main site domain(s) — let normal routing handle them,
   // EXCEPT for /u/:slug paths which we handle here to avoid redirect/edge-function chain issues.

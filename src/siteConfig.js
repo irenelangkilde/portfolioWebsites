@@ -21,7 +21,12 @@
  * client needs touching.
  */
 (function () {
-  var CANONICAL = "https://irenes-ventures.com";
+  // The single origin the app is served from. This is not only a branding choice: a
+  // Supabase session lives in localStorage, which is PER-ORIGIN, so a user who fills in
+  // the form on one origin and completes a password reset on another ends up signed in
+  // somewhere they are not looking, with no way for code to bridge the two. The edge
+  // function redirects every other alias here so that cannot happen.
+  var CANONICAL = "https://resumeto.website";
 
   // Local development keeps its own origin, otherwise every reset during `netlify dev`
   // would bounce to production.
