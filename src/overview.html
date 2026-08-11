@@ -2075,19 +2075,14 @@
           msgEl.textContent = error.message;
         } else {
           msgEl.className = "authMsg ok";
-          msgEl.textContent = "Password updated — you are now signed in.";
+          // A reset link always opens a NEW tab — the mail client decides that and no
+          // page can override it. So say plainly that the other tab is still there,
+          // rather than leaving the user wondering which one is live.
+          msgEl.textContent = "Password updated — you are now signed in. You can close this tab.";
           _isResettingPassword = false;
-          // Restore modal to normal state before closing
-          document.getElementById("authEmail").style.display = "";
-          document.querySelector(".authTabs").style.display = "";
-          document.getElementById("forgotPasswordLink").style.display = "";
-          document.getElementById("authPassword").placeholder = "Password";
-          document.getElementById("authPassword").autocomplete = "current-password";
-          document.getElementById("authPasswordConfirmWrap").classList.add("hidden");
-          document.getElementById("authModalTitle").textContent = "Account";
-          btn.textContent = "Sign in";
-          btn.onclick = handleAuthSubmit;
-          setTimeout(closeAuthModal, 1500);
+          restoreAuthModalToSignIn();
+          announcePasswordResetToOtherTabs();
+          setTimeout(closeAuthModal, 2500);
         }
       };
     }
@@ -2099,6 +2094,66 @@
     document.getElementById("authModal").style.display = "none";
     document.getElementById("authMsg").textContent = "";
   }
+
+  // Put the auth modal back into its ordinary sign-in shape. Extracted from the reset
+  // handler because the tab that did NOT perform the reset has to undo the same DOM
+  // changes: it opened the reset form when PASSWORD_RECOVERY arrived, and would
+  // otherwise sit there asking for a new password that has already been set.
+  function restoreAuthModalToSignIn() {
+    const btn = document.getElementById("authSubmitBtn");
+    document.getElementById("authEmail").style.display = "";
+    document.querySelector(".authTabs").style.display = "";
+    document.getElementById("forgotPasswordLink").style.display = "";
+    document.getElementById("authPassword").placeholder = "Password";
+    document.getElementById("authPassword").autocomplete = "current-password";
+    document.getElementById("authPasswordConfirmWrap").classList.add("hidden");
+    document.getElementById("authModalTitle").textContent = "Account";
+    if (btn) {
+      btn.textContent = "Sign in";
+      btn.onclick = handleAuthSubmit;
+    }
+  }
+
+  // ── Cross-tab password-reset sync ──────────────────────────────────────────
+  // A reset link always opens a NEW tab — the mail client decides that, and no page can
+  // override it. Focus cannot be moved back either: browsers ignore window.focus() from
+  // a background tab, and window.close() only works on tabs opened by script, which an
+  // email link is not. So the achievable goal is to leave the ORIGINAL tab correct, so
+  // that switching to it manually finds nothing stale.
+  //
+  // A localStorage write is used rather than BroadcastChannel because the `storage`
+  // event fires only in OTHER tabs of the origin and never in the one that wrote it —
+  // exactly the audience needed here. editor.html already uses this pattern.
+  const PASSWORD_RESET_PING_KEY = "iw-password-reset-complete";
+
+  function announcePasswordResetToOtherTabs() {
+    try { localStorage.setItem(PASSWORD_RESET_PING_KEY, String(Date.now())); }
+    catch { /* private mode or quota — the other tab just stays as it was */ }
+  }
+
+  window.addEventListener("storage", event => {
+    if (event.key !== PASSWORD_RESET_PING_KEY || !event.newValue) return;
+
+    // Only a tab that was mid-reset has anything stale to clear. Any other tab already
+    // reflects whatever its own session implies.
+    if (!_isResettingPassword) return;
+
+    _isResettingPassword = false;
+    restoreAuthModalToSignIn();
+
+    const msgEl = document.getElementById("authMsg");
+    if (msgEl) {
+      msgEl.className = "authMsg ok";
+      msgEl.textContent = "Password updated in another tab — you are signed in.";
+    }
+    setTimeout(closeAuthModal, 2500);
+
+    // The new session was written to localStorage by the other tab; adopt it now rather
+    // than leaving this tab logged out until a reload.
+    _supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) onSignIn(session.user);
+    });
+  });
 
   function getEmailRedirectUrl() {
     return `${window.location.origin}${window.location.pathname}`;
