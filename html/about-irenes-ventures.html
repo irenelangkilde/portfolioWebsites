@@ -84,15 +84,16 @@
      width:100% with a max-width so it shrinks with the card on narrow screens rather
      than overflowing; aspect-ratio matches the source exactly, so object-fit:cover has
      nothing to crop. */
-  /* object-fit:contain, not cover. cover fills the box and clips whatever does not fit,
-     which is right for a photograph used as a background but wrong for an illustration —
-     any mismatch between the box and the artwork ate the edges, including the outer
-     figures' arms. contain guarantees the whole image is visible; if the box and artwork
-     ever disagree it letterboxes instead of cropping. */
+  /* No aspect-ratio and no object-fit: the image defines its own box.
+     Those two properties are what made cropping and letterboxing possible at all —
+     aspect-ratio imposes a shape on the box, and object-fit then decides whether the
+     mismatch is resolved by clipping (cover) or by padding (contain). With height:auto
+     the box simply IS the image's proportions, so neither can happen.
+     288px = 3in at 96px/inch; the 600x400 file then renders 192px (2in) tall. */
   .venture-image{
-    display:block; width:100%; max-width:288px; aspect-ratio:3/2;
-    object-fit:contain; border-radius:11px; margin-bottom:14px;
-    border:1px solid var(--border); background:rgba(0,0,0,.25);
+    display:block; width:100%; max-width:288px; height:auto;
+    border-radius:11px; margin-bottom:14px;
+    border:1px solid var(--border);
   }
 
   /* Ventures with no live address yet — visibly unfinished rather than a dead link. */
