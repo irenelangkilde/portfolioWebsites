@@ -59,9 +59,31 @@
     background:var(--panel-hover); transform:translateY(-3px);
     border-color:color-mix(in oklab, var(--accent) 40%, var(--border));
   }
-  .venture h2{ font-size:18px; font-weight:800; margin-bottom:8px; }
+  .venture h2{ font-size:18px; font-weight:800; margin-bottom:8px; line-height:1.25; }
   .venture p{ color:var(--muted); font-size:14.5px; }
   .venture .go{ display:inline-block; margin-top:14px; color:var(--accent); font-weight:700; font-size:14px; }
+
+  /* Rainbow headlines, assigned by position rather than by a class per card, so adding or
+     reordering a venture needs no CSS change — the sequence just continues. Six hues
+     cycling means a seventh card starts again at red.
+
+     These are lightened rainbow hues, not the pure ones: pure red and blue on this dark
+     panel fall below readable contrast. Each of these sits at 7:1 or better against the
+     card background, so they read as colour rather than as a legibility problem. */
+  .venture:nth-child(6n+1) h2{ color:#FF8A8A; }  /* red    */
+  .venture:nth-child(6n+2) h2{ color:#FFB365; }  /* orange */
+  .venture:nth-child(6n+3) h2{ color:#FFE066; }  /* yellow */
+  .venture:nth-child(6n+4) h2{ color:#7BE495; }  /* green  */
+  .venture:nth-child(6n+5) h2{ color:#8DD6FF; }  /* blue   */
+  .venture:nth-child(6n+6) h2{ color:#C8A8FF; }  /* violet */
+
+  /* Card artwork. A fixed aspect keeps every card the same height whether or not it has
+     an image, so the grid does not go ragged. */
+  .venture-image{
+    display:block; width:100%; aspect-ratio:16/9; object-fit:cover;
+    border-radius:11px; margin-bottom:14px; border:1px solid var(--border);
+    background:rgba(0,0,0,.25);
+  }
 
   /* Ventures with no live address yet — visibly unfinished rather than a dead link. */
   .venture.placeholder{ opacity:.62; border-style:dashed; }
@@ -101,15 +123,20 @@
         <span class="go">Read the blog →</span>
       </a>
 
-      <!-- placeholder: photography/prana-photoart in this repo. Replace href + copy. -->
-      <a class="venture placeholder" href="#">
-        <h2>Photography</h2>
-        <p>Coming soon.</p>
-        <span class="go">Link not set yet</span>
+      <a class="venture" href="https://wit.irenes-ventures.com">
+        <img class="venture-image"
+             src="/assets/images/threeBeingsWithArmsAroundEachOther.png"
+             alt="Three figures standing together with their arms around each other"
+             loading="lazy" width="1536" height="1024" />
+        <!-- Explicit <br> rather than relying on the wrap point, which moves with the
+             card width — at some widths "Women" would end up alone on line two. -->
+        <h2>Irene's Networking Supreme<br />Women in Tech</h2>
+        <p></p>
+        <span class="go">wit.irenes-ventures.com →</span>
       </a>
 
       <!-- placeholder: add or delete. -->
-      <a class="venture placeholder" href="#">
+      <a class="venture" href="#">
         <h2>Another project</h2>
         <p>Coming soon.</p>
         <span class="go">Link not set yet</span>
