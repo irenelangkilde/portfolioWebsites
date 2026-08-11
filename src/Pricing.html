@@ -22,6 +22,7 @@
 
   gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
 </script>
+<script src="/src/siteConfig.js"></script>
 <script defer src="/src/analytics-consent.js"></script>
   <title>Plans & Billing</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -1295,7 +1296,7 @@
       }
       msgEl.textContent = "Sending reset email…";
       const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/overview.html?reset=1`
+        redirectTo: iwAuthUrl("/src/overview.html?reset=1")
       });
       if (error) {
         msgEl.className = "authMsg err";
@@ -1338,7 +1339,7 @@
 
       if (_authMode === "signup") {
         const { error } = await _supabase.auth.signUp({ email, password,
-          options: { emailRedirectTo: window.location.href } });
+          options: { emailRedirectTo: iwAuthUrl("/src/Pricing.html") } });
         if (error) {
           msgEl.className = "authMsg err";
           msgEl.textContent = error.message;

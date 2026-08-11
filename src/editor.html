@@ -23,6 +23,7 @@
 
   gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
 </script>
+<script src="/src/siteConfig.js"></script>
 <script defer src="/src/analytics-consent.js"></script>
   <title>Edit Portfolio — Irene's Webworks</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -9385,7 +9386,7 @@
         try {
           const { error } = await supabaseClient.auth.signUp({
             email, password,
-            options: { emailRedirectTo: window.location.href }
+            options: { emailRedirectTo: iwAuthUrl("/src/editor.html") }
           });
           if (error) {
             msgEl.className = "authModalMsg err";
@@ -9443,7 +9444,7 @@
       this.textContent = "Sending…";
       try {
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin + "/src/editor.html"
+          redirectTo: iwAuthUrl("/src/editor.html")
         });
         if (error) {
           msgEl.className = "authModalMsg err";

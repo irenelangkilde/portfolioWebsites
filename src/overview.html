@@ -23,6 +23,7 @@
 
   gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
 </script>
+<script src="/src/siteConfig.js"></script>
 <script defer src="/src/analytics-consent.js"></script>
   <title>My Personal Portfolio Website Intake Form</title>
   <style>
@@ -2156,7 +2157,7 @@
   });
 
   function getEmailRedirectUrl() {
-    return `${window.location.origin}${window.location.pathname}`;
+    return iwAuthUrl("/src/overview.html");
   }
 
   function formatAuthError(error) {
@@ -2249,7 +2250,7 @@
     }
     msgEl.textContent = "Sending reset email…";
     const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}${window.location.pathname}?reset=1`
+      redirectTo: iwAuthUrl("/src/overview.html?reset=1")
     });
     if (error) {
       msgEl.className = "authMsg err";
