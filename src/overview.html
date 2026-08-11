@@ -549,12 +549,27 @@
     }
     input[type="file"]::file-selector-button:hover { background: rgba(78,112,241,.32); }
     input::placeholder, textarea::placeholder{ color: rgba(234,240,255,.55); }
+    /* Chrome and Safari paint their own background on an autofilled field and ignore
+       `background-color`, so the field went white on this dark form and the email was
+       unreadable until focus moved away.
+
+       The inset box-shadow covers the settled :-webkit-autofill state, which is why this
+       rule already existed. It does NOT cover the moment between choosing a suggestion
+       and the field settling — Chrome uses internal pseudo-classes there
+       (:-internal-autofill-selected) that a page cannot target. The absurd transition
+       duration is the standard workaround: the background animation never reaches a
+       visible frame, so that paint never lands either. */
     input:-webkit-autofill,
     input:-webkit-autofill:hover,
-    input:-webkit-autofill:focus {
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active,
+    textarea:-webkit-autofill,
+    select:-webkit-autofill {
       -webkit-box-shadow: 0 0 0px 1000px #0f1a2e inset;
+      box-shadow: 0 0 0px 1000px #0f1a2e inset;
       -webkit-text-fill-color: #eaf0ff;
       caret-color: #eaf0ff;
+      transition: background-color 600000s 0s, color 600000s 0s;
     }
     input:focus, textarea:focus, select:focus{
       border-color: color-mix(in oklab, var(--accent) 55%, rgba(255,255,255,.14));
