@@ -84,9 +84,14 @@
      width:100% with a max-width so it shrinks with the card on narrow screens rather
      than overflowing; aspect-ratio matches the source exactly, so object-fit:cover has
      nothing to crop. */
+  /* object-fit:contain, not cover. cover fills the box and clips whatever does not fit,
+     which is right for a photograph used as a background but wrong for an illustration —
+     any mismatch between the box and the artwork ate the edges, including the outer
+     figures' arms. contain guarantees the whole image is visible; if the box and artwork
+     ever disagree it letterboxes instead of cropping. */
   .venture-image{
     display:block; width:100%; max-width:288px; aspect-ratio:3/2;
-    object-fit:cover; border-radius:11px; margin-bottom:14px;
+    object-fit:contain; border-radius:11px; margin-bottom:14px;
     border:1px solid var(--border); background:rgba(0,0,0,.25);
   }
 
@@ -130,7 +135,7 @@
 
       <a class="venture" href="https://wit.irenes-ventures.com">
         <img class="venture-image"
-             src="/assets/images/threeBeings.jpg"
+             src="/assets/images/threeBeings.png"
              alt="Three figures standing together with their arms around each other"
              loading="lazy" width="600" height="400" />
         <!-- Explicit <br> rather than relying on the wrap point, which moves with the
