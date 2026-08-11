@@ -2217,24 +2217,35 @@
   window.addEventListener("storage", event => {
     if (event.key !== PASSWORD_RESET_PING_KEY || !event.newValue) return;
 
-    // Only a tab that was mid-reset has anything stale to clear. Any other tab already
-    // reflects whatever its own session implies.
-    if (!_isResettingPassword) return;
-
+    // No _isResettingPassword guard here. The tab that STARTED the reset never sets that
+    // flag: it only clicked "Forgot password", which sends an email — it receives no
+    // PASSWORD_RECOVERY event and never loads ?reset=1. It is sitting on the ordinary
+    // sign-in dialog showing "Password reset email sent", which is exactly the stale
+    // state this is meant to clear. Guarding on the flag made this listener a no-op in
+    // the one tab it exists for.
+    const wasResetting = _isResettingPassword;
     _isResettingPassword = false;
-    restoreAuthModalToSignIn();
 
-    const msgEl = document.getElementById("authMsg");
-    if (msgEl) {
-      msgEl.className = "authMsg ok";
-      msgEl.textContent = "Password updated in another tab — you are signed in.";
-    }
-    setTimeout(closeAuthModal, 2500);
+    // Only needed when this tab had actually been switched into reset shape; otherwise
+    // the modal is already an ordinary sign-in form.
+    if (wasResetting) restoreAuthModalToSignIn();
 
-    // The new session was written to localStorage by the other tab; adopt it now rather
-    // than leaving this tab logged out until a reload.
+    // Adopt the session the other tab wrote, rather than sitting logged out until reload.
     _supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) onSignIn(session.user);
+
+      const modal = document.getElementById("authModal");
+      const modalOpen = modal && modal.style.display !== "none";
+      if (!modalOpen) return;   // nothing on screen to correct
+
+      const msgEl = document.getElementById("authMsg");
+      if (msgEl) {
+        msgEl.className = "authMsg ok";
+        msgEl.textContent = session?.user
+          ? "Password updated in another tab — you are signed in."
+          : "Password updated in another tab. You can sign in with your new password.";
+      }
+      setTimeout(closeAuthModal, 2500);
     });
   });
 
