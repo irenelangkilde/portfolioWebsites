@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<link rel="icon" type="image/png" href="/assets/images/favicon.png" />
+<title>Irene's Ventures</title>
+<meta name="description" content="Projects and services by Irene Langkilde-Geary." />
+
+<!--
+  Served at the apex of irenes-ventures.com, which the servePortfolio edge function
+  rewrites here instead of to the app's index.html. Every other domain we own 301s to
+  resumeto.website; this host deliberately does not, so the company page and the product
+  live on separate origins.
+
+  TO ADD A VENTURE: copy a <a class="venture"> block. The two marked "placeholder" have
+  no live URL yet — they are the sibling projects in this repo (photography/,
+  my-awesome-site/, collegeGrads/) whose deployed addresses I could not verify, so they
+  are left visibly unfinished rather than pointed at a guess.
+-->
+
+<style>
+  :root{
+    --bg:#0b1220; --panel:rgba(255,255,255,.06); --panel-hover:rgba(255,255,255,.10);
+    --border:rgba(255,255,255,.14); --text:#eaf0ff; --muted:rgba(234,240,255,.66);
+    --accent:#8DE0FF; --primary:#4E70F1; --danger:#FBAB9C; --radius:16px;
+    --font: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  body{
+    font-family:var(--font); color:var(--text); line-height:1.65; min-height:100vh;
+    background:
+      radial-gradient(900px 520px at 12% 0%, color-mix(in oklab, var(--primary) 20%, transparent), transparent 60%),
+      radial-gradient(900px 520px at 88% 0%, color-mix(in oklab, var(--danger) 16%, transparent), transparent 60%),
+      var(--bg);
+  }
+  .wrap{ max-width:940px; margin:0 auto; padding:72px 20px 80px; }
+
+  header{ margin-bottom:44px; }
+  .eyebrow{
+    color:var(--accent); font-size:12.5px; font-weight:800;
+    letter-spacing:.14em; text-transform:uppercase; margin-bottom:12px;
+  }
+  h1{ font-size:clamp(30px,5vw,46px); font-weight:900; letter-spacing:-.02em; line-height:1.1; }
+  .lede{ color:var(--muted); font-size:17px; margin-top:14px; max-width:60ch; }
+
+  .ventures{ display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); }
+
+  .venture{
+    display:block; padding:22px; border-radius:var(--radius);
+    border:1px solid var(--border); background:var(--panel);
+    text-decoration:none; color:inherit;
+    transition:background .16s, border-color .16s, transform .16s;
+  }
+  a.venture:hover{
+    background:var(--panel-hover); transform:translateY(-3px);
+    border-color:color-mix(in oklab, var(--accent) 40%, var(--border));
+  }
+  .venture h2{ font-size:18px; font-weight:800; margin-bottom:8px; }
+  .venture p{ color:var(--muted); font-size:14.5px; }
+  .venture .go{ display:inline-block; margin-top:14px; color:var(--accent); font-weight:700; font-size:14px; }
+
+  /* Ventures with no live address yet — visibly unfinished rather than a dead link. */
+  .venture.placeholder{ opacity:.62; border-style:dashed; }
+  .venture.placeholder .go{ color:var(--muted); }
+
+  footer{
+    margin-top:56px; padding-top:22px; border-top:1px solid var(--border);
+    color:var(--muted); font-size:14px;
+  }
+  footer a{ color:var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <p class="eyebrow">Irene's Ventures</p>
+      <h1>Things I build on the web.</h1>
+      <p class="lede">
+        A few separate projects, each with its own home. Start wherever looks useful.
+      </p>
+    </header>
+
+    <main class="ventures">
+
+      <a class="venture" href="https://resumeto.website">
+        <h2>Résumé&nbsp;→&nbsp;Website</h2>
+        <p>
+          Turn a résumé into a personal portfolio website. Pick a design, choose your
+          colours, and publish — no coding.
+        </p>
+        <span class="go">resumeto.website →</span>
+      </a>
+
+      <a class="venture" href="https://resumeto.website/blog/">
+        <h2>Blog</h2>
+        <p>Notes on building the site, design decisions, and what I learn along the way.</p>
+        <span class="go">Read the blog →</span>
+      </a>
+
+      <!-- placeholder: photography/prana-photoart in this repo. Replace href + copy. -->
+      <a class="venture placeholder" href="#">
+        <h2>Photography</h2>
+        <p>Coming soon.</p>
+        <span class="go">Link not set yet</span>
+      </a>
+
+      <!-- placeholder: add or delete. -->
+      <a class="venture placeholder" href="#">
+        <h2>Another project</h2>
+        <p>Coming soon.</p>
+        <span class="go">Link not set yet</span>
+      </a>
+
+    </main>
+
+    <footer>
+      Get in touch: <a href="mailto:irene@irenes-ventures.com">irene@irenes-ventures.com</a>
+    </footer>
+  </div>
+</body>
+</html>

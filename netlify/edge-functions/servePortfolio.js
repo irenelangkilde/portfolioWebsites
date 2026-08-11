@@ -25,6 +25,16 @@ const PUBLISHED_SITES_STORE = "published-sites";
 // so a mismatch would bounce users between two origins.
 const CANONICAL_ORIGIN = "https://resumeto.website";
 
+// The company page, not the app. These hosts are ours — so they must NOT fall through to
+// the custom-portfolio blob lookup, which would 404 with "No portfolio is registered" —
+// but they are also NOT redirected to the canonical origin like the other aliases, because
+// their whole purpose is to serve different content.
+const APEX_HOSTS = new Set([
+  "irenes-ventures.com",
+  "www.irenes-ventures.com",
+]);
+const APEX_PAGE = "/html/apex.html";
+
 // Hosts that should never be treated as custom portfolio domains
 const SYSTEM_HOST_PATTERN = /\.(netlify\.app|netlify\.live)(:\d+)?$|^localhost(:\d+)?$/i;
 
@@ -132,6 +142,22 @@ export default async function handler(request, context) {
   // excluded so previews and local development still work on their own origin.
   const canonicalHost = (CANONICAL_ORIGIN.replace(/^https?:\/\//, "") || "").toLowerCase();
   const bareHost = host.replace(/:\d+$/, "").toLowerCase();
+
+  // The apex host serves the company page rather than the app, and is checked BEFORE
+  // the alias redirect below — it is in KNOWN_DOMAINS (so it is recognised as ours rather
+  // than treated as a visitor's portfolio domain) but must not be sent to the canonical
+  // origin, or the company page would bounce to the product it is supposed to link to.
+  if (APEX_HOSTS.has(bareHost)) {
+    // Only the root is swapped. Everything else — /blog, /assets, /html/... — serves as
+    // usual, so the apex page can link to shared assets and the blog without a special
+    // case. A rewrite rather than a redirect: the address bar keeps saying
+    // irenes-ventures.com, which is the point of having a separate company page.
+    if (url.pathname === "/" || url.pathname === "/index.html") {
+      return context.rewrite(new URL(APEX_PAGE, url.origin));
+    }
+    return context.next();
+  }
+
   if (
     canonicalHost &&
     bareHost !== canonicalHost &&
