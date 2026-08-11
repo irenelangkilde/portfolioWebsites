@@ -59,6 +59,65 @@ function generateGiftCode() {
   return "GIFT-" + Array.from(bytes).map(b => chars[b % chars.length]).join("");
 }
 
+/**
+ * Record where a completed purchase came from.
+ *
+ * Never throws: attribution is analytics, and a failure here must not stop a customer's
+ * membership from being granted. Errors are logged and swallowed.
+ *
+ * Idempotent by design — Stripe retries webhook deliveries, and purchase_sources has a
+ * unique constraint on stripe_session_id, so a retry hits the conflict path instead of
+ * duplicating the row.
+ */
+async function recordPurchaseSource(stripe, obj) {
+  try {
+    const meta = obj.metadata || {};
+    const supabase = getSupabaseAdmin();
+
+    // Stripe reports the promotion code as an id (promo_…), which is meaningless in a
+    // report, so resolve it to the human string the buyer actually typed.
+    let promotionCode = null;
+    try {
+      const promoId = obj.discounts?.[0]?.promotion_code;
+      if (typeof promoId === "string" && promoId) {
+        const promo = await stripe.promotionCodes.retrieve(promoId);
+        promotionCode = promo?.code || null;
+      } else if (promoId?.code) {
+        promotionCode = promoId.code;
+      }
+    } catch (err) {
+      console.warn("[attribution] could not resolve promotion code:", err?.message);
+    }
+
+    const rawUserId = meta.user_id && meta.user_id !== "guest" ? meta.user_id : null;
+
+    const { error } = await supabase
+      .from("purchase_sources")
+      .upsert({
+        stripe_session_id: obj.id,
+        user_id:           rawUserId,
+        ref_code:          meta.ref_code || null,
+        affiliate_code_id: meta.affiliate_code_id || null,
+        self_referred:     meta.self_referred === "true",
+        utm_source:        meta.utm_source    || null,
+        utm_medium:        meta.utm_medium    || null,
+        utm_campaign:      meta.utm_campaign  || null,
+        landing_path:      meta.landing_path  || null,
+        referrer_host:     meta.referrer_host || null,
+        promotion_code:    promotionCode,
+        tier:              meta.tier_key      || null,
+        amount_total:      obj.amount_total   ?? null,
+        currency:          obj.currency       || null,
+      }, { onConflict: "stripe_session_id", ignoreDuplicates: true });
+
+    if (error) console.error("[attribution] insert failed:", error.message);
+    else console.log(`[attribution] recorded session ${obj.id}` +
+      (meta.ref_code ? ` ref=${meta.ref_code}${meta.self_referred === "true" ? " (self)" : ""}` : ""));
+  } catch (err) {
+    console.error("[attribution] unexpected failure:", err?.message);
+  }
+}
+
 async function handleGiftPurchase(obj) {
   const tierKey   = obj.metadata?.tier_key;
   const buyerEmail = obj.customer_details?.email;
@@ -514,6 +573,13 @@ export async function handler(event) {
         const userId  = obj.metadata?.user_id;
         const tierKey = obj.metadata?.tier_key;
         const qty     = parseInt(obj.metadata?.quantity || "1", 10);
+
+        // Recorded BEFORE the guard below, so a sale is still attributed even when it
+        // takes a path that grants no membership (gift purchases, guest tiers). This is
+        // the one fact that cannot be reconstructed later: Stripe knows the payment, not
+        // where the buyer came from.
+        await recordPurchaseSource(stripe, obj);
+
         if (!userId || !tierKey) break;
 
         const extra = {};

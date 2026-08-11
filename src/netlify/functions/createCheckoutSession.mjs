@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { resolveReferralCode } from "./referralCodes.mjs";
 
 // Plan tiers drive the subscription interval and go in line_items as recurring prices.
 // Add-ons are always rendered as one-time price_data charges so they never conflict
@@ -56,7 +57,8 @@ export async function handler(event) {
   try { body = JSON.parse(event.body || "{}"); }
   catch { return { statusCode: 400, body: JSON.stringify({ error: "Invalid JSON" }) }; }
 
-  const { items, tier, userId, userEmail, returnUrl, quantity = 1, autoRenew = false, isGift = false, giftDetails = null } = body;
+  const { items, tier, userId, userEmail, returnUrl, quantity = 1, autoRenew = false, isGift = false, giftDetails = null,
+          referralCode = "", attribution = null } = body;
 
   // Normalise to items array — backwards-compatible with single-tier callers (form.js, gift pages)
   const cartItems = Array.isArray(items)
@@ -143,6 +145,39 @@ export async function handler(event) {
     if (giftDetails.message)        sessionMeta.gift_message         = String(giftDetails.message).slice(0, 500);
   }
 
+  // Attribution travels as metadata so the webhook can record where the sale came from.
+  // Values are capped because Stripe allows 500 chars per metadata value and 50 keys,
+  // and `cart` already consumes one of them with JSON.
+  if (attribution && typeof attribution === "object") {
+    const put = (key, value) => {
+      const v = String(value ?? "").trim();
+      if (v) sessionMeta[key] = v.slice(0, 200);
+    };
+    put("utm_source",    attribution.utm_source);
+    put("utm_medium",    attribution.utm_medium);
+    put("utm_campaign",  attribution.utm_campaign);
+    put("landing_path",  attribution.landing_path);
+    put("referrer_host", attribution.referrer_host);
+  }
+
+  // The referral code is re-resolved HERE rather than trusting anything the client sent.
+  // validateReferralCode is a convenience for the buyer, not an authorisation step — a
+  // tampered request must not be able to apply a discount it was not granted.
+  let referral = null;
+  if (referralCode) {
+    referral = await resolveReferralCode(referralCode, userId || null);
+    if (referral.ok) {
+      sessionMeta.ref_code          = referral.code;
+      sessionMeta.affiliate_code_id = referral.affiliateCodeId;
+      sessionMeta.self_referred     = referral.selfReferred ? "true" : "false";
+    } else {
+      // Record the attempt so a code that never works shows up in the data rather than
+      // vanishing. The purchase proceeds at full price.
+      sessionMeta.ref_code_rejected = `${referral.code}:${referral.reason}`.slice(0, 200);
+      console.log(`[checkout] referral code not applied: ${referral.code} (${referral.reason})`);
+    }
+  }
+
   const sessionParams = {
     mode,
     ...(userEmail ? { customer_email: userEmail } : {}),
@@ -151,6 +186,14 @@ export async function handler(event) {
     cancel_url:  `${origin}?checkout=cancelled`,
     metadata:    sessionMeta,
   };
+
+  // Pre-apply the discount rather than showing Stripe's "Add promotion code" field.
+  // Stripe REJECTS a session that sets both `discounts` and `allow_promotion_codes`, so
+  // this is an either/or: owning the input is what lets the page explain the code and
+  // name a self-referral before payment.
+  if (referral?.ok && referral.promotionCodeId) {
+    sessionParams.discounts = [{ promotion_code: referral.promotionCodeId }];
+  }
 
   if (hasSubscription) {
     sessionParams.subscription_data = { metadata: sessionMeta };
