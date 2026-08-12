@@ -238,7 +238,12 @@ export async function handler(event) {
     sessionParams.discounts = [{ promotion_code: referral.promotionCodeId }];
   }
 
-  if (hasSubscription) {
+  // Keyed off `mode` rather than a separate flag. It was `hasSubscription`, which this
+  // still referenced after that variable became `hasPlan` — and the two are no longer
+  // the same question: a cart CAN contain a plan and still be a one-time payment when
+  // auto-renew is unchecked. Stripe rejects subscription_data on a payment-mode session,
+  // so this must follow the mode exactly.
+  if (mode === "subscription") {
     sessionParams.subscription_data = { metadata: sessionMeta };
   } else {
     sessionParams.payment_intent_data = { metadata: sessionMeta };
