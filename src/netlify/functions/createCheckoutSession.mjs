@@ -11,7 +11,7 @@ const GUEST_TIERS = new Set(["starter_care", "premium_care"]);
 
 const ADDON_PRICE_DATA = {
   extra_credits: { name: "Extra Credits",         unit_amount: 100  },
-  care:          { name: "Support (per month)",   unit_amount: 4900 },
+  care:          { name: "Human Support (per month)",   unit_amount: 4900 },
 };
 
 let localEnvCache = null;
@@ -246,7 +246,17 @@ export async function handler(event) {
   if (mode === "subscription") {
     sessionParams.subscription_data = { metadata: sessionMeta };
   } else {
-    sessionParams.payment_intent_data = { metadata: sessionMeta };
+    // receipt_email makes Stripe send the payment receipt for this charge regardless of
+    // the dashboard's "Successful payments" setting — Stripe documents that this parameter
+    // overrides it. Setting it here means receipts do not hinge on a dashboard toggle that
+    // is easy to miss and is stored separately for test and live mode.
+    //
+    // Payment mode only: subscription charges are invoice-driven and take their receipts
+    // from Billing settings, where this field has no effect.
+    sessionParams.payment_intent_data = {
+      metadata: sessionMeta,
+      ...(userEmail ? { receipt_email: userEmail } : {}),
+    };
   }
 
   try {

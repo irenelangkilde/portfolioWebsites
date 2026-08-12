@@ -120,6 +120,99 @@ async function recordPurchaseSource(stripe, obj) {
   }
 }
 
+/**
+ * Confirmation for an ordinary (non-gift) purchase.
+ *
+ * Stripe's own receipt, when enabled, proves payment — it cannot say what the purchase
+ * granted, because Stripe does not know about credits, months or where to start. That is
+ * what this covers, so the two complement rather than duplicate each other.
+ *
+ * Never throws: a mail failure must not stop a membership being granted. The webhook has
+ * already written the upgrade by the time this runs.
+ */
+async function sendPurchaseConfirmation(obj, { tierKey, qty, hAddon, sAddon, cAddon }) {
+  try {
+    const to = obj.customer_details?.email || obj.customer_email || null;
+    if (!to) { console.warn("[receipt] no buyer email on session", obj.id); return; }
+
+    const resendKey = process.env.RESEND_API_KEY;
+    if (!resendKey) { console.warn("[receipt] RESEND_API_KEY not set"); return; }
+
+    const planName = GIFT_TIER_NAMES[tierKey] || tierKey;
+    const isPlan   = tierKey === "graduate" || tierKey === "prime";
+
+    // What they actually got, in the same terms the pricing page uses.
+    const granted = [];
+    if (isPlan) {
+      granted.push(`${qty} month${qty !== 1 ? "s" : ""} of ${planName}`);
+      granted.push(tierKey === "graduate"
+        ? `${GRADUATE_CREDITS} credits and ${GRADUATE_DOWNLOADS} site`
+        : `${TIER_LIMITS.prime.credits_limit} credits and ${TIER_LIMITS.prime.downloads_limit} sites`);
+    }
+    if (cAddon > 0) granted.push(`${cAddon} extra credit${cAddon !== 1 ? "s" : ""}`);
+    if (sAddon > 0) granted.push(`${sAddon} month${sAddon !== 1 ? "s" : ""} of Human Support`);
+    if (hAddon > 0) granted.push(`${hAddon} month${hAddon !== 1 ? "s" : ""} of hosting`);
+    if (!granted.length) return;   // nothing meaningful to describe
+
+    // Credits do not scale with months, so say so — it is the single most likely thing to
+    // be misread about a multi-month purchase.
+    const creditNote = isPlan && qty > 1
+      ? `<p style="margin:14px 0 0;font-size:14px;color:rgba(234,240,255,.62);line-height:1.7;">
+           Credits come with the plan as a one-off, not per month. You can add more any time
+           from Plans &amp; Billing.
+         </p>`
+      : "";
+
+    const amount = typeof obj.amount_total === "number"
+      ? `${(obj.amount_total / 100).toFixed(2)} ${String(obj.currency || "usd").toUpperCase()}`
+      : null;
+
+    const resend = new Resend(resendKey);
+    const { error } = await resend.emails.send({
+      from:    "Irene's Webworks <gifts@email.irenes-ventures.com>",
+      to,
+      subject: `Your ${planName} purchase is active — Irene's Webworks`,
+      html: `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#0b1220;font-family:ui-sans-serif,system-ui,-apple-system,sans-serif;color:#eaf0ff;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0b1220;padding:32px 16px;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+        <tr><td style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:14px 14px 0 0;padding:24px 28px;">
+          <p style="margin:0;font-size:20px;font-weight:900;">Irene's Webworks</p>
+          <p style="margin:4px 0 0;color:rgba(234,240,255,.65);font-size:13px;">Professional portfolio websites</p>
+        </td></tr>
+        <tr><td style="background:rgba(78,112,241,.14);border-left:1px solid rgba(255,255,255,.14);border-right:1px solid rgba(255,255,255,.14);padding:32px 28px;">
+          <h1 style="margin:0;font-size:24px;font-weight:900;line-height:1.15;">You're all set.</h1>
+          <p style="margin:14px 0 0;font-size:15px;color:rgba(234,240,255,.82);line-height:1.75;">Your purchase is active on your account. Here's what it includes:</p>
+          <ul style="margin:14px 0 0;padding-left:20px;font-size:15px;color:rgba(234,240,255,.9);line-height:1.9;">
+            ${granted.map(g => `<li>${g}</li>`).join("")}
+          </ul>
+          ${creditNote}
+        </td></tr>
+        <tr><td style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-top:0;border-radius:0 0 14px 14px;padding:24px 28px;">
+          <a href="https://resumeto.website/src/overview.html"
+             style="display:inline-block;padding:12px 22px;border-radius:11px;background:#4E70F1;color:#fff;font-weight:800;font-size:14px;text-decoration:none;">
+            Start building →
+          </a>
+          ${amount ? `<p style="margin:16px 0 0;font-size:12px;color:rgba(234,240,255,.42);">Charged: ${amount}. Stripe emails the payment receipt separately.</p>` : ""}
+          <p style="margin:10px 0 0;font-size:12px;color:rgba(234,240,255,.42);">
+            Questions? Reply to this email or contact
+            <a href="mailto:irene@irenes-ventures.com" style="color:#8DE0FF;">irene@irenes-ventures.com</a>.
+          </p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+    });
+
+    if (error) console.error("[receipt] send failed:", error.message);
+    else console.log(`[receipt] purchase confirmation sent to ${to} (${tierKey} x${qty})`);
+  } catch (err) {
+    console.error("[receipt] unexpected failure:", err?.message);
+  }
+}
+
 async function handleGiftPurchase(obj) {
   const tierKey   = obj.metadata?.tier_key;
   const buyerEmail = obj.customer_details?.email;
@@ -632,6 +725,10 @@ export async function handler(event) {
             }
             await applyMembershipAddons(userId, extra);
           }
+
+          // Sent last, and deliberately outside the grant logic above: the membership is
+          // already written by this point, so a mail outage costs a receipt, not a purchase.
+          await sendPurchaseConfirmation(obj, { tierKey, qty, hAddon, sAddon, cAddon });
         }
         break;
       }
@@ -640,12 +737,36 @@ export async function handler(event) {
       case "invoice.payment_succeeded": {
         const subId = obj.subscription;
         if (!subId) break;
+
+        // ONLY genuine renewals reach the grant logic below.
+        //
+        // Stripe fires this for the FIRST invoice of a subscription too, with
+        // billing_reason "subscription_create". That invoice is the checkout the buyer
+        // just completed, and checkout.session.completed has already granted it — so
+        // running both handlers stacked the plan's months onto the account twice.
+        //
+        // "subscription_update" (a proration mid-cycle) is likewise not a new period.
+        // A renewal, and only a renewal, is "subscription_cycle".
+        if (obj.billing_reason !== "subscription_cycle") {
+          console.log(`[renewal] skipping invoice ${obj.id} (billing_reason=${obj.billing_reason})`);
+          break;
+        }
+
         try {
           const sub     = await stripe.subscriptions.retrieve(subId);
           const userId  = sub.metadata?.user_id;
           const tierKey = sub.metadata?.tier_key;
-          const qty     = parseInt(sub.metadata?.quantity || "1", 10);
           if (!userId) break;
+
+          // One renewal buys exactly one billing interval, and the plans bill monthly.
+          //
+          // This previously extended hosting by sub.metadata.quantity — the number of
+          // months chosen at checkout — and by a hardcoded 4 for Prime. Both are the
+          // wrong question at renewal time: a recurring plan charges for a single month
+          // (line_items quantity is 1 for a recurring plan), so granting `quantity`
+          // months every month handed out three months of hosting for one month's money,
+          // compounding for as long as the subscription stayed alive.
+          const RENEWAL_MONTHS = 1;
 
           const supabase = getSupabaseAdmin();
           const { data: existing } = await supabase
@@ -663,7 +784,7 @@ export async function handler(event) {
                 downloads_used:     0,
                 credits_limit:      GRADUATE_CREDITS,
                 downloads_limit:    GRADUATE_DOWNLOADS,
-                hosting_until:      stackMonths(existing?.hosting_until, qty),
+                hosting_until:      stackMonths(existing?.hosting_until, RENEWAL_MONTHS),
                 current_period_end: new Date(sub.current_period_end * 1000).toISOString()
               })
               .eq("user_id", userId);
@@ -674,7 +795,7 @@ export async function handler(event) {
                 status:             "active",
                 credits_used:       0,
                 downloads_used:     0,
-                hosting_until:      stackMonths(existing?.hosting_until, 4),
+                hosting_until:      stackMonths(existing?.hosting_until, RENEWAL_MONTHS),
                 current_period_end: new Date(sub.current_period_end * 1000).toISOString()
               })
               .eq("user_id", userId);
