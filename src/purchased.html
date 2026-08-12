@@ -499,6 +499,18 @@
       const sessionId = params.get("session_id");
       if (!sessionId) return;
 
+      // Stripe test sessions are cs_test_…, live ones cs_live_…. Test purchases must
+      // never reach the ad platforms: Meta would train its optimiser on conversions that
+      // did not happen, and GA4 would report revenue that was never earned. Both are
+      // hard to undo — Meta has no way to retract an event, and a bidding algorithm
+      // acting on invented conversions is worse than one with no data at all.
+      //
+      // This is what makes it safe to run end-to-end checkout tests against a live pixel.
+      if (sessionId.startsWith("cs_test_")) {
+        console.log("[analytics] test-mode session — purchase not reported:", sessionId);
+        return;
+      }
+
       const seenKey = "iw-purchase-reported:" + sessionId;
       if (sessionStorage.getItem(seenKey)) return;
       sessionStorage.setItem(seenKey, "1");
