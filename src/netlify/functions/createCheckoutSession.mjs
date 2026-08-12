@@ -106,25 +106,13 @@ export async function handler(event) {
       ? PRICE_IDS_ONCE[tier]
       : PRICE_IDS[tier];
 
-  // Minimum months for a plan bought outright. Only applies to the one-time path: a
-  // recurring subscription bills a month at a time and its quantity is not months at all,
-  // so a minimum there would have to be a commitment period, which Stripe Checkout does
-  // not express. Add a tier here to give it a minimum.
-  const PLAN_MIN_MONTHS = { graduate: 3 };
+  // There is deliberately no minimum purchase length. A three-month floor on the
+  // one-time Graduate path was tried and removed: it only ever applied to one of the two
+  // checkout modes, which meant the same plan had different rules depending on a checkbox,
+  // and it had to be enforced in two places that could disagree. Any month count is valid.
+  // To reintroduce one, it belongs here — the server is the only authoritative check.
 
   for (const item of cartItems) {
-    if (PLAN_TIERS.has(item.tier) && !wantsRecurring) {
-      const min = PLAN_MIN_MONTHS[item.tier] || 1;
-      if (item.qty < min) {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({
-            error: `${item.tier === "graduate" ? "Graduate" : item.tier} requires at least ${min} months when not auto-renewing.`
-          })
-        };
-      }
-    }
-
     // Add-on tiers are billed via inline price_data — no dashboard price ID required.
     if (ADDON_PRICE_DATA[item.tier]) continue;
     if (!priceIdFor(item.tier)) {

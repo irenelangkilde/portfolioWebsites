@@ -773,17 +773,6 @@
 
     // Graduate is tiered, so its total comes from calcGraduatedTotal() instead.
 
-    // Minimum months when a plan is bought outright (auto-renew unchecked). Mirrors
-
-    // PLAN_MIN_MONTHS in createCheckoutSession.mjs, which is the authoritative check —
-
-    // this exists so the buyer is told before clicking rather than getting a 400 back
-
-    // from Stripe. Keep the two in step.
-
-    const PLAN_MIN_MONTHS = { graduate: 3 };
-
-
     const PRICES = {
       extra_credits:  1,
       care:          49,
@@ -1065,21 +1054,6 @@
       }
       const isGift    = document.getElementById("confirmGift").checked;
       const autoRenew = document.getElementById("confirmAutoRenew").checked;
-
-      // Checked here rather than only on the quantity input, because the minimum applies
-      // only when auto-renewing is OFF — and that checkbox lives in this dialog, so the
-      // requirement cannot be known while the quantity is being typed.
-      if (!autoRenew) {
-        const short = items.find(i => PLAN_MIN_MONTHS[i.tier] && i.qty < PLAN_MIN_MONTHS[i.tier]);
-        if (short) {
-          const min = PLAN_MIN_MONTHS[short.tier];
-          const name = short.tier.charAt(0).toUpperCase() + short.tier.slice(1);
-          msgEl.className = "planMsg err";
-          msgEl.textContent = `${name} needs at least ${min} months unless you auto-renew. `
-            + `Either raise the quantity to ${min} or tick auto-renew.`;
-          return;
-        }
-      }
 
       let giftDetails = null;
       if (isGift && document.getElementById("giftDetailsForm").classList.contains("visible")) {
