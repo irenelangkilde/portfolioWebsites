@@ -24,6 +24,7 @@
 </script>
 <script src="/src/siteConfig.js"></script>
 <script defer src="/src/analytics-consent.js"></script>
+<script defer src="/src/metaPixel.js"></script>
   <title>Plans & Billing</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
@@ -896,6 +897,16 @@
               item_name: i.tier,
               quantity:  Math.max(1, Number(i.qty) || 1),
             })),
+          });
+        }
+        // Same moment, reported to Meta. InitiateCheckout is the upper-funnel signal a
+        // Sales campaign learns from long before it has enough purchases to optimise on.
+        if (typeof window.iwMetaTrack === "function") {
+          window.iwMetaTrack("InitiateCheckout", {
+            currency:      "USD",
+            content_type:  "product",
+            content_ids:   (items || []).map(i => i.tier),
+            num_items:     (items || []).reduce((n, i) => n + Math.max(1, Number(i.qty) || 1), 0),
           });
         }
       } catch {}

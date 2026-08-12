@@ -29,6 +29,7 @@
     gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
   </script>
   <script defer src="/src/analytics-consent.js"></script>
+  <script defer src="/src/metaPixel.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
@@ -515,6 +516,18 @@
           quantity:  Math.max(1, Number(i.qty) || 1),
         })),
       });
+
+      // The same sale, reported to Meta. eventID is the Stripe session id so that when
+      // the Conversions API starts sending this event from stripeWebhook.mjs, Meta
+      // collapses the browser and server copies instead of counting the sale twice.
+      if (typeof window.iwMetaTrack === "function") {
+        window.iwMetaTrack("Purchase", {
+          value,
+          currency:     (data.currency || "usd").toUpperCase(),
+          content_type: "product",
+          content_ids:  (cartItems.length ? cartItems : [{ tier }]).map(i => i.tier),
+        }, sessionId);
+      }
     } catch (err) {
       // Measurement must never break the page a paying customer is looking at.
       console.warn("purchase event failed:", err?.message);

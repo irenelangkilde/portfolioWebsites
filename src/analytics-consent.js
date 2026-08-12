@@ -74,16 +74,31 @@
   }
 
   function applyConsent(granted) {
-    if (typeof window.gtag !== "function") return;
+    if (typeof window.gtag === "function") {
+      try {
+        window.gtag("consent", "update", {
+          ad_storage:          granted ? "granted" : "denied",
+          ad_user_data:        granted ? "granted" : "denied",
+          ad_personalization:  granted ? "granted" : "denied",
+          analytics_storage:   granted ? "granted" : "denied",
+        });
+      } catch (err) {
+        console.warn("[analytics-consent] gtag consent update failed:", err);
+      }
+    }
+
+    // Announce the decision so non-Google trackers can gate on the same choice.
+    // metaPixel.js listens for this: without it the pixel would have to poll
+    // localStorage, and the gtag call above is not a signal it can observe.
+    //
+    // Dispatched even when gtag is missing — consent is a property of the visitor's
+    // choice, not of whether one particular vendor happens to be loaded.
     try {
-      window.gtag("consent", "update", {
-        ad_storage:          granted ? "granted" : "denied",
-        ad_user_data:        granted ? "granted" : "denied",
-        ad_personalization:  granted ? "granted" : "denied",
-        analytics_storage:   granted ? "granted" : "denied",
-      });
+      window.dispatchEvent(new CustomEvent("iw-consent-change", {
+        detail: { state: granted ? "granted" : "denied" },
+      }));
     } catch (err) {
-      console.warn("[analytics-consent] gtag consent update failed:", err);
+      console.warn("[analytics-consent] consent event dispatch failed:", err);
     }
   }
 
@@ -162,9 +177,9 @@
     banner.innerHTML = `
       <p>
         <strong>Cookies &amp; analytics.</strong>
-        We use Google Analytics (cookies) and Umami (cookieless) to understand
-        how visitors use the site. You can accept everything or limit us to
-        essential and cookieless tracking.
+        We use Google Analytics (cookies), the Meta pixel (advertising), and
+        Umami (cookieless) to understand how visitors use the site. You can
+        accept everything or limit us to essential and cookieless tracking.
       </p>
       <div class="cb-actions">
         <button type="button" data-cb-choice="denied">Reject non-essential</button>
