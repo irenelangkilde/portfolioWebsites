@@ -5,8 +5,10 @@ import { randomBytes } from "crypto";
 
 // ── Credits / downloads / deploys per unit purchased ─────────────────────────
 // 1 unit = 3 credits + 1 download + 1 deploy  (Graduate plan)
-const CREDITS_PER_UNIT   = 3;
-const DOWNLOADS_PER_UNIT = 1;
+// Credits and downloads are a ONE-TIME grant with the plan — they do not scale with
+// the number of months purchased. More credits are bought as the extra_credits add-on.
+const GRADUATE_CREDITS   = 3;
+const GRADUATE_DOWNLOADS = 1;
 const DEPLOYS_PER_UNIT   = 1;
 
 function monthsFromNow(n) {
@@ -276,8 +278,8 @@ async function handlePlanGiftPurchase(obj, tierKey, qty) {
 }
 
 function buildPlanGiftEmail(code, tierName, qty, tierKey, recipientName, giftMessage) {
-  const creditsTotal   = tierKey === "graduate" ? qty * CREDITS_PER_UNIT   : 10;
-  const downloadsTotal = tierKey === "graduate" ? qty * DOWNLOADS_PER_UNIT : 5;
+  const creditsTotal   = tierKey === "graduate" ? GRADUATE_CREDITS   : 10;
+  const downloadsTotal = tierKey === "graduate" ? GRADUATE_DOWNLOADS : 5;
   const hostingMonths  = tierKey === "graduate" ? qty : 4;
 
   const greeting     = recipientName ? `Hi ${recipientName},` : "You've received a gift!";
@@ -460,8 +462,8 @@ async function upgradeGraduate(userId, quantity, extraFields = {}) {
       status:         "active",
       credits_used:   0,
       downloads_used: 0,
-      credits_limit:  quantity * CREDITS_PER_UNIT,
-      downloads_limit: quantity * DOWNLOADS_PER_UNIT,
+      credits_limit:  GRADUATE_CREDITS,
+      downloads_limit: GRADUATE_DOWNLOADS,
       ...extraFields
     }, { onConflict: "user_id" });
 
@@ -614,12 +616,14 @@ export async function handler(event) {
           if (sAddon > 0) extra.support_until = stackMonths(existing?.support_until, sAddon);
 
           if (tierKey === "free" || tierKey === "prime") {
-            if (tierKey === "prime") extra.hosting_until = stackMonths(existing?.hosting_until, 4 + hAddon);
+            // qty is MONTHS. This was hardcoded to 4 from when Prime was a four-month
+            // plan; with monthly pricing that charged for N months and granted 4.
+            if (tierKey === "prime") extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
             if (tierKey === "prime" && cAddon > 0) extra.credits_limit = TIER_LIMITS.prime.credits_limit + cAddon;
             await upgradeMembership(userId, tierKey, extra);
           } else if (tierKey === "graduate") {
             extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
-            if (cAddon > 0) extra.credits_limit = (qty * CREDITS_PER_UNIT) + cAddon;
+            if (cAddon > 0) extra.credits_limit = GRADUATE_CREDITS + cAddon;
             await upgradeGraduate(userId, qty, extra);
           } else if (hAddon > 0 || sAddon > 0 || cAddon > 0) {
             if (hAddon > 0) extra.hosting_until = stackMonths(existing?.hosting_until, hAddon);
@@ -657,8 +661,8 @@ export async function handler(event) {
                 status:             "active",
                 credits_used:       0,
                 downloads_used:     0,
-                credits_limit:      qty * CREDITS_PER_UNIT,
-                downloads_limit:    qty * DOWNLOADS_PER_UNIT,
+                credits_limit:      GRADUATE_CREDITS,
+                downloads_limit:    GRADUATE_DOWNLOADS,
                 hosting_until:      stackMonths(existing?.hosting_until, qty),
                 current_period_end: new Date(sub.current_period_end * 1000).toISOString()
               })

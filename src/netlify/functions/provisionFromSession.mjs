@@ -3,8 +3,10 @@ import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "crypto";
 import { Resend } from "resend";
 
-const CREDITS_PER_UNIT  = 3;
-const DOWNLOADS_PER_UNIT = 1;
+// Credits and downloads are a ONE-TIME grant with the plan — they do not scale with
+// the number of months purchased. More credits are bought as the extra_credits add-on.
+const GRADUATE_CREDITS   = 3;
+const GRADUATE_DOWNLOADS = 1;
 
 function getEnv(n) { return process.env[n] || ""; }
 
@@ -48,8 +50,8 @@ function supportAddonMonths(cartJson) {
 const GIFT_TIER_NAMES = { graduate: "Graduate", prime: "Prime" };
 
 function buildPlanGiftEmail(code, tierName, qty, tierKey, recipientName, giftMessage) {
-  const creditsTotal   = tierKey === "graduate" ? qty * CREDITS_PER_UNIT   : 10;
-  const downloadsTotal = tierKey === "graduate" ? qty * DOWNLOADS_PER_UNIT : 5;
+  const creditsTotal   = tierKey === "graduate" ? GRADUATE_CREDITS   : 10;
+  const downloadsTotal = tierKey === "graduate" ? GRADUATE_DOWNLOADS : 5;
   const hostingMonths  = tierKey === "graduate" ? qty : 4;
   const greeting       = recipientName ? `Hi ${recipientName},` : "You've received a gift!";
   const messageBlock   = giftMessage
@@ -236,8 +238,8 @@ export async function handler(event) {
       status:          "active",
       credits_used:    0,
       downloads_used:  0,
-      credits_limit:   qty * CREDITS_PER_UNIT,
-      downloads_limit: qty * DOWNLOADS_PER_UNIT,
+      credits_limit:   GRADUATE_CREDITS,
+      downloads_limit: GRADUATE_DOWNLOADS,
       hosting_until:   stackMonths(existing?.hosting_until, qty + hAddon),
       ...extra,
     };

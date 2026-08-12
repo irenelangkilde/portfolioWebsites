@@ -519,9 +519,9 @@
           <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg,#c9a227,#f0c94a); color:#0a1220; padding:4px 10px; border-radius:999px; white-space:nowrap;"><span aria-hidden="true">⚡</span> Limited Time</div>
         </div>
         <h2 class="planName">Graduate</h2>
-        <div class="price" aria-label="$19, on sale from $29">
+        <div class="price" aria-label="$12 per month">
           <span aria-hidden="true" style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;"></span>
-          <strong aria-hidden="true">$7</strong><span aria-hidden="true">per month</span>
+          <strong aria-hidden="true">$12</strong><span aria-hidden="true">per month</span>
         </div>
         <!--div style="font-size:11.5px; font-weight:700; margin-top:-8px;"><span style="color:#f0c94a;">Special offer</span><span style="color:rgba(236,243,255,.35);"> — renewal price $29/unit</span></div-->
         <div class="planBlurb">Complete editable website which can be downloaded or deployed.</div>
@@ -537,7 +537,7 @@
         </ul>
         <div class="actions" style="flex-direction:column;align-items:stretch;gap:8px;">
           <div class="gradQtyWrap" id="gradQtyWrap">
-            <label for="graduateQty" class="muted" style="font-size:13px;font-weight:700;">Units</label>
+            <label for="graduateQty" class="muted" style="font-size:13px;font-weight:700;">Months</label>
             <input id="graduateQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('graduate')" />
             <div class="qtyTotal" id="graduateTotal">= $0.00</div>
           </div>
@@ -561,7 +561,7 @@
         </ul>
         <div class="actions">
           <div class="gradQtyWrap">
-            <label for="primeQty" class="muted" style="font-size:13px;font-weight:700;">Units</label>
+            <label for="primeQty" class="muted" style="font-size:13px;font-weight:700;">Months</label>
             <input id="primeQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('prime')" />
             <div class="qtyTotal" id="primeTotal">= $0.00</div>
           </div>
@@ -749,8 +749,8 @@
     let _currentUser = null;
     let _membership  = null;
 
-    const GRADUATE_UNIT_PRICES     = [19];
-    const GRADUATE_UNIT_PRICE_EXTRA = 19;
+    const GRADUATE_UNIT_PRICES     = [12];   // $/month, flat
+    const GRADUATE_UNIT_PRICE_EXTRA = 12;
     let _pendingItems = null;
 
     // Every amount shown on this page comes from here, so the figure beside a quantity
@@ -845,8 +845,8 @@
       if (primeTotalEl) primeTotalEl.textContent = `= ${formatMoney(primeTotal)}`;
 
       const lines = [];
-      if (gradQty  > 0) lines.push(`${gradQty} Graduate unit${gradQty   !== 1 ? "s" : ""}`);
-      if (primeQty > 0) lines.push(`${primeQty} Prime unit${primeQty !== 1 ? "s" : ""}`);
+      if (gradQty  > 0) lines.push(`${gradQty} Graduate month${gradQty !== 1 ? "s" : ""}`);
+      if (primeQty > 0) lines.push(`${primeQty} Prime month${primeQty !== 1 ? "s" : ""}`);
       if (hQty > 0)    lines.push(`${hQty} mo hosting × ${formatMoney(PRICES.hosting)}`);
       if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × ${formatMoney(PRICES.extra_credits)}`);
       if (careQty > 0) lines.push(`${careQty} mo care × ${formatMoney(PRICES.care)}`);
