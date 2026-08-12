@@ -1031,6 +1031,13 @@
               </div>
               <div id="giftRedeemMsg" style="font-size:12px; margin-top:5px; display:none;"></div>
             </div>
+            <!-- Cancelling used to be reachable only from Plans & Billing, which reads
+                 like somewhere to buy rather than to stop paying. Shown only when there
+                 is an active subscription to cancel: a plan bought without auto-renew
+                 creates none, so there is nothing to cancel and the button stays hidden. -->
+            <button class="btn ghost mini" id="ovCancelSubBtn" style="width:100%; display:none;"
+                    onclick="handleCancelSubscription()">Cancel subscription</button>
+            <div id="ovCancelSubMsg" style="font-size:12px; min-height:14px;"></div>
             <button class="btn ghost mini" style="width:100%;" onclick="handleSignOut()">Sign out</button>
             <button class="btn danger mini" style="width:100%;" onclick="handleDeleteAccount()">Delete account</button>
             <div id="deleteAccountMsg" style="font-size:12px; min-height:14px;"></div>
@@ -1310,7 +1317,7 @@
                        first-party same-origin pages, so re-enabling the handle is safe. -->
                   <a href="../html/style-gallery.html" target="_blank" rel="opener">Miniature examples</a>
                   &nbsp;·&nbsp;
-                  <a href="../html/actual-html-outputs.html" target="_blank" rel="opener">SiteThumbnails</a>
+                  <a href="../html/actual-html-outputs.html" target="_blank" rel="opener">Site Thumbnails</a>
                 </span>
               </label>
               <select id="designStyle" name="designStyle">
@@ -2007,6 +2014,17 @@
 
     document.getElementById("authLoggedOut").classList.toggle("hidden", loggedIn);
     document.getElementById("authLoggedIn").classList.toggle("hidden", !loggedIn);
+
+    // Same condition Plans & Billing uses: only an active subscription can be cancelled.
+    // A plan bought without auto-renew has no stripe_subscription_id, so the button stays
+    // hidden — there is genuinely nothing to cancel, it just expires.
+    const ovCancel = document.getElementById("ovCancelSubBtn");
+    if (ovCancel) {
+      const canCancel = loggedIn
+        && !!_membership?.stripe_subscription_id
+        && _membership?.status === "active";
+      ovCancel.style.display = canCancel ? "" : "none";
+    }
     const pillEl = document.getElementById("membershipPill");
     if (pillEl) pillEl.style.display = "";   // always visible
 
@@ -2333,6 +2351,49 @@
       const { error } = await _supabase.auth.signInWithPassword({ email, password });
       if (error) { msgEl.className = "authMsg err"; msgEl.textContent = error.message; }
       else        { closeAuthModal(); }
+    }
+  }
+
+  // Mirrors the handler on Plans & Billing. cancelSubscription sets
+  // cancel_at_period_end, so access continues to the end of the paid period rather than
+  // stopping immediately — the confirm text says so, because "cancel" otherwise reads as
+  // "lose it now" and makes people hesitate or contact support instead.
+  async function handleCancelSubscription() {
+    const btn   = document.getElementById("ovCancelSubBtn");
+    const msgEl = document.getElementById("ovCancelSubMsg");
+    if (!confirm("Cancel your subscription? You'll keep access until the end of the current billing period.")) return;
+
+    btn.disabled = true;
+    const orig = btn.textContent;
+    btn.textContent = "Cancelling…";
+    msgEl.style.color = "var(--muted)";
+    msgEl.textContent = "";
+
+    try {
+      const { data: { session } } = await _supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("Please sign in again.");
+      const res  = await fetch("/.netlify/functions/cancelSubscription", {
+        method: "POST",
+        headers: { authorization: `Bearer ${session.access_token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Cancellation failed.");
+
+      const endsAt = data.ends_at
+        ? new Date(data.ends_at).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+        : null;
+      msgEl.style.color = "var(--ok)";
+      msgEl.textContent = endsAt
+        ? `Cancelled. Access continues until ${endsAt}.`
+        : "Cancelled. Access continues until the end of the current period.";
+
+      await refreshMembershipDisplay();
+      updateAuthUI();
+    } catch (err) {
+      msgEl.style.color = "var(--danger)";
+      msgEl.textContent = err.message || "Cancellation failed.";
+      btn.disabled = false;
+      btn.textContent = orig;
     }
   }
 
