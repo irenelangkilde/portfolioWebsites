@@ -10,8 +10,7 @@ const PLAN_TIERS  = new Set(["graduate", "prime"]);
 const GUEST_TIERS = new Set(["starter_care", "premium_care"]);
 
 const ADDON_PRICE_DATA = {
-  hosting:       { name: "Hosting (per month)",  unit_amount: 900  },
-  extra_credits: { name: "Extra Credits",         unit_amount: 500  },
+  extra_credits: { name: "Extra Credits",         unit_amount: 100  },
   care:          { name: "Support (per month)",   unit_amount: 4900 },
 };
 
@@ -75,28 +74,49 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "userId and userEmail are required" }) };
   }
 
+  // RECURRING price IDs — used when the buyer opts into auto-renew.
   const PRICE_IDS = {
-    free:          getEnv("STRIPE_PRICE_BASIC"),
     graduate:      getEnv("STRIPE_PRICE_GRADUATE"),
     prime:         getEnv("STRIPE_PRICE_PRIME"),
-    care:          getEnv("STRIPE_PRICE_CARE_PKG"),
+    care:          getEnv("STRIPE_PRICE_SUPPORT"),
     hosting:       getEnv("STRIPE_PRICE_HOSTING_ADDON"),
     extra_credits: getEnv("STRIPE_PRICE_EXTRA_CREDITS"),
     starter_care:  getEnv("STRIPE_PRICE_STARTER"),
-    premium_care:      getEnv("STRIPE_PRICE_PREMIUM"),
+    premium_care:  getEnv("STRIPE_PRICE_PREMIUM"),
   };
 
-  // Plan tiers → subscription mode, recurring price IDs in line_items.
-  // Add-ons → inline price_data (one-time) so they never conflict with the plan interval.
-  // No plan → payment mode; standalone add-ons still use one-time inline price_data.
-  const hasSubscription = cartItems.some(i => PLAN_TIERS.has(i.tier));
-  const mode = hasSubscription ? "subscription" : "payment";
+  // ONE-TIME price IDs for the plan tiers — used when auto-renew is left unchecked.
+  // A plan bought this way is a single month with no subscription created, so nothing
+  // renews and there is nothing to cancel later.
+  const PRICE_IDS_ONCE = {
+    graduate: getEnv("STRIPE_PRICE_GRADUATE_ONCE"),
+    prime:    getEnv("STRIPE_PRICE_PRIME_ONCE"),
+  };
+
+  // The buyer's choice decides the Stripe mode, which is why autoRenew has to be read
+  // here — it was previously accepted from the client and then ignored, so the checkbox
+  // on the pricing page had no effect and every plan purchase became a subscription.
+  const wantsRecurring = !!autoRenew;
+  const hasPlan = cartItems.some(i => PLAN_TIERS.has(i.tier));
+  const mode = (hasPlan && wantsRecurring) ? "subscription" : "payment";
+
+  /** The price a given cart item should be charged at, honouring the renew choice. */
+  const priceIdFor = (tier) =>
+    (PLAN_TIERS.has(tier) && !wantsRecurring)
+      ? PRICE_IDS_ONCE[tier]
+      : PRICE_IDS[tier];
 
   for (const item of cartItems) {
     // Add-on tiers are billed via inline price_data — no dashboard price ID required.
     if (ADDON_PRICE_DATA[item.tier]) continue;
-    if (!PRICE_IDS[item.tier]) {
-      return { statusCode: 400, body: JSON.stringify({ error: `Unknown or unconfigured tier: ${item.tier}` }) };
+    if (!priceIdFor(item.tier)) {
+      // Named precisely, because "unconfigured tier" gave no clue which of the two
+      // prices was missing once each plan gained a recurring and a one-time variant.
+      const which = (PLAN_TIERS.has(item.tier) && !wantsRecurring) ? "one-time" : "recurring";
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: `No ${which} price configured for tier: ${item.tier}` })
+      };
     }
   }
 
@@ -127,7 +147,7 @@ export async function handler(event) {
         quantity: i.qty,
       };
     }
-    return { price: PRICE_IDS[i.tier], quantity: i.qty };
+    return { price: priceIdFor(i.tier), quantity: i.qty };
   });
 
   const origin = returnUrl || "https://yoursite.netlify.app";

@@ -753,6 +753,37 @@
     const GRADUATE_UNIT_PRICE_EXTRA = 19;
     let _pendingItems = null;
 
+    // Every amount shown on this page comes from here, so the figure beside a quantity
+
+    // box, the order-summary line and the grand total cannot drift apart — which they
+
+    // had: credits were charged at $1 while the summary still said $5.
+
+    //
+
+    // These are DISPLAY values. They must match what checkout actually charges, and
+
+    // nothing enforces that, so change both together:
+
+    //   extra_credits, care  -> ADDON_PRICE_DATA in createCheckoutSession.mjs (in cents)
+
+    //   hosting, prime       -> the Stripe prices behind the STRIPE_PRICE_* env vars
+
+    // Graduate is tiered, so its total comes from calcGraduatedTotal() instead.
+
+    const PRICES = {
+
+      hosting:        9,
+
+      extra_credits:  1,
+
+      care:          49,
+
+      prime:         99,
+
+    };
+
+
     function calcGraduatedTotal(qty, multiplier = 1) {
       let total = 0;
       for (let i = 0; i < qty; i++) {
@@ -798,11 +829,11 @@
       const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value  || "0", 10));
       const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value     || "0", 10));
 
-      const hTotal    = hQty * 9;
-      const cTotal    = cQty * 5;
-      const careTotal = careQty * 49;
-      const gradTotal = gradQty  > 0 ? calcGraduatedTotal(gradQty) : 0;
-      const primeTotal = primeQty * 99;
+      const hTotal    = hQty    * PRICES.hosting;
+      const cTotal    = cQty    * PRICES.extra_credits;
+      const careTotal = careQty * PRICES.care;
+      const gradTotal = gradQty > 0 ? calcGraduatedTotal(gradQty) : 0;
+      const primeTotal = primeQty * PRICES.prime;
       const grand      = hTotal + cTotal + careTotal + gradTotal + primeTotal;
 
       document.getElementById("hostingTotal").textContent = `= ${formatMoney(hTotal)}`;
@@ -816,9 +847,9 @@
       const lines = [];
       if (gradQty  > 0) lines.push(`${gradQty} Graduate unit${gradQty   !== 1 ? "s" : ""}`);
       if (primeQty > 0) lines.push(`${primeQty} Prime unit${primeQty !== 1 ? "s" : ""}`);
-      if (hQty > 0)    lines.push(`${hQty} mo hosting × $9`);
-      if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × $5`);
-      if (careQty > 0) lines.push(`${careQty} mo care × $49`);
+      if (hQty > 0)    lines.push(`${hQty} mo hosting × ${formatMoney(PRICES.hosting)}`);
+      if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × ${formatMoney(PRICES.extra_credits)}`);
+      if (careQty > 0) lines.push(`${careQty} mo care × ${formatMoney(PRICES.care)}`);
 
       const linesEl = document.getElementById("addonsTotalLines");
       linesEl.innerHTML = lines.length
@@ -891,8 +922,10 @@
       const mo = totalHostingMonths > 0
         ? ` — after ${totalHostingMonths} month${totalHostingMonths !== 1 ? "s" : ""} of hosting`
         : "";
-      if (tier === "graduate") return `Auto-renew monthly${mo}`;
-      if (tier === "prime")    return `Auto-renew every four months${mo}`;
+      // Both plans bill monthly now. Left unchecked, the plan is bought as a single month
+      // via a one-time Stripe price — no subscription is created, so there is nothing to
+      // cancel later. Checked, it creates a renewing monthly subscription.
+      if (tier === "graduate" || tier === "prime") return `Auto-renew monthly${mo}`;
       return "Auto-renew";
     }
 
