@@ -577,24 +577,6 @@
     </div>
     <section class="addons" aria-label="Add-ons">
 
-      <!--article class="planCard small">
-        <div class="planTag">Add-on</div>
-        <h2 class="planName" style="font-size:18px;">Hosting</h2>
-        <div class="price"><strong>$9</strong><span>per month</span></div>
-        <div class="planBlurb">Keep your site live after the included hosting period expires.</div>
-        <ul class="featureList">
-          <li>Global content delivery</li>
-          <li>HTTPS security</li>
-          <li>Strong uptime (99.9%)</li>
-          <li>SSL certificate</li>
-          <li>Irene's Ventures subdomain option</li>
-        </ul>
-        <div class="qtyWrap">
-          <label for="hostingMonths" class="muted" style="font-size:13px;font-weight:700;">Months</label>
-          <input id="hostingMonths" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="updateAddonsTotal()" />
-          <div class="qtyTotal" id="hostingTotal">= $0.00</div>
-        </div>
-      </article-->
 
       <article class="planCard small">
         <div class="planTag">Add-on</div>
@@ -767,7 +749,7 @@
 
     //   extra_credits, care  -> ADDON_PRICE_DATA in createCheckoutSession.mjs (in cents)
 
-    //   hosting, prime       -> the Stripe prices behind the STRIPE_PRICE_* env vars
+    //   prime                -> the Stripe price behind STRIPE_PRICE_PRIME
 
     // Graduate is tiered, so its total comes from calcGraduatedTotal() instead.
 
@@ -783,7 +765,6 @@
 
 
     const PRICES = {
-      hosting:        9,
       extra_credits:  1,
       care:          49,
       prime:         12,
@@ -835,24 +816,22 @@
     }
 
     function updateAddonsTotal() {
-      const hQty     = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
       const cQty     = Math.max(0, parseInt(document.getElementById("creditsQty")?.value    || "0", 10));
       const careQty  = Math.max(0, parseInt(document.getElementById("careMonths")?.value    || "0", 10));
       const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value  || "0", 10));
       const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value     || "0", 10));
 
-      const hTotal    = hQty    * PRICES.hosting;
       const cTotal    = cQty    * PRICES.extra_credits;
       const careTotal = careQty * PRICES.care;
       const gradTotal = gradQty > 0 ? calcGraduatedTotal(gradQty) : 0;
       const primeTotal = primeQty * PRICES.prime;
-      const grand      = hTotal + cTotal + careTotal + gradTotal + primeTotal;
+      const grand      = cTotal + careTotal + gradTotal + primeTotal;
 
-      // A card can be commented out while the pricing model changes — Hosting currently
-      // is — so every total is written through a guard. Graduate and Prime already did
-      // this; the other three did not, and one missing element threw here and left the
-      // Purchase button stuck at its initial disabled state.
-      setTotalText("hostingTotal",  hTotal);
+      // Written through a guard so a card that is hidden or removed while the pricing
+      // model changes cannot break the calculation. Unguarded access is what left the
+      // Purchase button permanently disabled when the Hosting card was commented out:
+      // getElementById returned null, the read threw, and the line that enables the
+      // button was never reached.
       setTotalText("creditsTotal",  cTotal);
       setTotalText("careTotal",     careTotal);
       setTotalText("graduateTotal", gradTotal);
@@ -861,7 +840,6 @@
       const lines = [];
       if (gradQty  > 0) lines.push(`${gradQty} Graduate month${gradQty !== 1 ? "s" : ""}`);
       if (primeQty > 0) lines.push(`${primeQty} Prime month${primeQty !== 1 ? "s" : ""}`);
-      if (hQty > 0)    lines.push(`${hQty} mo hosting × ${formatMoney(PRICES.hosting)}`);
       if (cQty > 0)    lines.push(`${cQty} credit${cQty !== 1 ? "s" : ""} × ${formatMoney(PRICES.extra_credits)}`);
       if (careQty > 0) lines.push(`${careQty} mo care × ${formatMoney(PRICES.care)}`);
 
@@ -943,7 +921,7 @@
       return "Auto-renew";
     }
 
-    const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "hosting", "extra_credits"]);
+    const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "extra_credits"]);
 
     function syncAutoRenewVisibility() {
       const wrap = document.getElementById("confirmAutoRenewWrap");
@@ -975,10 +953,9 @@
       _pendingItems = null;
       document.getElementById("confirmPlanName").textContent  = def.name;
       document.getElementById("confirmPlanPrice").textContent = def.price;
-      const _cpHQty = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
-      const _cpPlanMo = tier === "prime" ? 4 : 1;
+      const _cpPlanMo = 1;   // both plans bill monthly
       document.getElementById("confirmAutoRenew").checked = false;
-      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(tier, _cpPlanMo + _cpHQty);
+      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(tier, _cpPlanMo);
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = tier === "free" ? "none" : "";
       syncAutoRenewVisibility();
@@ -1217,7 +1194,6 @@
     }
 
     function openPurchaseConfirm() {
-      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
       const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty")?.value    || "0", 10));
       const careQty = Math.max(0, parseInt(document.getElementById("careMonths")?.value    || "0", 10));
       const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value || "0", 10));
@@ -1235,7 +1211,7 @@
 
       // Add-ons without a plan require an existing active plan
       const hasPlan   = gradQty > 0 || primeQty > 0;
-      const hasAddons = hQty > 0 || cQty > 0 || careQty > 0;
+      const hasAddons = cQty > 0 || careQty > 0;
       if (!hasPlan && hasAddons) {
         if (!_currentUser) {
           msgEl.className = "authMsg err";
@@ -1261,7 +1237,6 @@
       const items = [];
       if (gradQty  > 0) items.push({ tier: "graduate",      qty: gradQty  });
       if (primeQty > 0) items.push({ tier: "prime",         qty: primeQty });
-      if (hQty     > 0) items.push({ tier: "hosting",       qty: hQty     });
       if (cQty     > 0) items.push({ tier: "extra_credits", qty: cQty     });
       if (careQty  > 0) items.push({ tier: "care",          qty: careQty  });
 
@@ -1274,20 +1249,19 @@
       const summaryParts = [];
       if (gradQty  > 0) summaryParts.push(`Graduate × ${gradQty} unit${gradQty   !== 1 ? "s" : ""}`);
       if (primeQty > 0) summaryParts.push(`Prime × ${primeQty} unit${primeQty !== 1 ? "s" : ""}`);
-      if (hQty     > 0) summaryParts.push(`Hosting × ${hQty} mo`);
       if (cQty     > 0) summaryParts.push(`${cQty} Extra Credit${cQty !== 1 ? "s" : ""}`);
       if (careQty  > 0) summaryParts.push(`Support × ${careQty} mo`);
 
       const gradTotal  = gradQty  > 0 ? calcGraduatedTotal(gradQty) : 0;
-      const primeTotal = primeQty * 99;
-      const grand      = gradTotal + primeTotal + hQty * 9 + cQty * 5 + careQty * 49;
+      const primeTotal = primeQty * PRICES.prime;
+      const grand      = gradTotal + primeTotal + cQty * PRICES.extra_credits + careQty * PRICES.care;
 
       document.getElementById("confirmPlanName").textContent  = summaryParts.join(" + ");
       document.getElementById("confirmPlanPrice").textContent = `Total: ${formatMoney(grand)}`;
       const _arTier   = gradQty > 0 ? "graduate" : primeQty > 0 ? "prime" : null;
-      const _arPlanMo = gradQty * 1 + primeQty * 4;
+      const _arPlanMo = gradQty + primeQty;   // both plans bill monthly
       document.getElementById("confirmAutoRenew").checked     = false;
-      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(_arTier, _arPlanMo + hQty);
+      document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(_arTier, _arPlanMo);
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = "";
       syncAutoRenewVisibility();
