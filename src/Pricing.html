@@ -828,10 +828,16 @@
       updateAddonsTotal();
     }
 
+    /** Write a formatted total, tolerating a card that is not currently on the page. */
+    function setTotalText(id, amount) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = `= ${formatMoney(amount)}`;
+    }
+
     function updateAddonsTotal() {
-      const hQty     = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
-      const cQty     = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
-      const careQty  = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
+      const hQty     = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
+      const cQty     = Math.max(0, parseInt(document.getElementById("creditsQty")?.value    || "0", 10));
+      const careQty  = Math.max(0, parseInt(document.getElementById("careMonths")?.value    || "0", 10));
       const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value  || "0", 10));
       const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value     || "0", 10));
 
@@ -842,13 +848,15 @@
       const primeTotal = primeQty * PRICES.prime;
       const grand      = hTotal + cTotal + careTotal + gradTotal + primeTotal;
 
-      document.getElementById("hostingTotal").textContent = `= ${formatMoney(hTotal)}`;
-      document.getElementById("creditsTotal").textContent  = `= ${formatMoney(cTotal)}`;
-      document.getElementById("careTotal").textContent     = `= ${formatMoney(careTotal)}`;
-      const gradTotalEl = document.getElementById("graduateTotal");
-      if (gradTotalEl) gradTotalEl.textContent = `= ${formatMoney(gradTotal)}`;
-      const primeTotalEl = document.getElementById("primeTotal");
-      if (primeTotalEl) primeTotalEl.textContent = `= ${formatMoney(primeTotal)}`;
+      // A card can be commented out while the pricing model changes — Hosting currently
+      // is — so every total is written through a guard. Graduate and Prime already did
+      // this; the other three did not, and one missing element threw here and left the
+      // Purchase button stuck at its initial disabled state.
+      setTotalText("hostingTotal",  hTotal);
+      setTotalText("creditsTotal",  cTotal);
+      setTotalText("careTotal",     careTotal);
+      setTotalText("graduateTotal", gradTotal);
+      setTotalText("primeTotal",    primeTotal);
 
       const lines = [];
       if (gradQty  > 0) lines.push(`${gradQty} Graduate month${gradQty !== 1 ? "s" : ""}`);
@@ -1209,9 +1217,9 @@
     }
 
     function openPurchaseConfirm() {
-      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths").value || "0", 10));
-      const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty").value    || "0", 10));
-      const careQty = Math.max(0, parseInt(document.getElementById("careMonths").value    || "0", 10));
+      const hQty    = Math.max(0, parseInt(document.getElementById("hostingMonths")?.value || "0", 10));
+      const cQty    = Math.max(0, parseInt(document.getElementById("creditsQty")?.value    || "0", 10));
+      const careQty = Math.max(0, parseInt(document.getElementById("careMonths")?.value    || "0", 10));
       const gradQty  = Math.max(0, parseInt(document.getElementById("graduateQty")?.value || "0", 10));
       const primeQty = Math.max(0, parseInt(document.getElementById("primeQty")?.value    || "0", 10));
       const msgEl    = document.getElementById("addonsMsg");
