@@ -883,6 +883,23 @@
       btnEl.textContent = "Redirecting…";
       msgEl.className = "planMsg";
       msgEl.textContent = "Starting checkout…";
+      // The other half of the funnel. `purchase` alone says how many bought; paired with
+      // begin_checkout it says how many TRIED — and the gap between the two is the only
+      // thing that distinguishes "nobody wants this" from "the checkout is broken".
+      // Fires before the redirect, since the customer leaves for Stripe immediately after.
+      try {
+        if (typeof gtag === "function") {
+          gtag("event", "begin_checkout", {
+            currency: "USD",
+            items: (items || []).map(i => ({
+              item_id:   i.tier,
+              item_name: i.tier,
+              quantity:  Math.max(1, Number(i.qty) || 1),
+            })),
+          });
+        }
+      } catch {}
+
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 15000);

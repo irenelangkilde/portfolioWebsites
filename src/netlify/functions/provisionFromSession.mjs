@@ -144,7 +144,7 @@ export async function handler(event) {
     const giftQty     = Math.max(1, parseInt(session.metadata?.quantity || "1", 10));
 
     if (giftTierKey !== "graduate" && giftTierKey !== "prime") {
-      return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, skipped: "non-plan gift" }) };
+      return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, skipped: "non-plan gift" , amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
     }
 
     // Return the code if the webhook already stored it
@@ -156,7 +156,7 @@ export async function handler(event) {
 
     if (existing?.code) {
       console.log(`provisionFromSession: gift code already exists for session ${sessionId}`);
-      return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, giftCode: existing.code }) };
+      return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, giftCode: existing.code , amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
     }
 
     // Webhook hasn't fired yet — generate the code here as a fallback
@@ -205,7 +205,7 @@ export async function handler(event) {
       console.warn("provisionFromSession: RESEND_API_KEY not set — gift code stored but email not sent");
     }
 
-    return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, giftCode: code }) };
+    return { statusCode: 200, body: JSON.stringify({ ok: true, isGift: true, giftCode: code , amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
   }
 
   // Check whether the webhook already handled this session (idempotency)
@@ -217,7 +217,7 @@ export async function handler(event) {
 
   const alreadyPaid = existing?.tier && existing.tier !== "free" && existing.status === "active";
   if (alreadyPaid) {
-    return { statusCode: 200, body: JSON.stringify({ ok: true, alreadyProvisioned: true, tier: existing.tier }) };
+    return { statusCode: 200, body: JSON.stringify({ ok: true, alreadyProvisioned: true, tier: existing.tier , amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
   }
 
   // Provision based on tier
@@ -269,5 +269,5 @@ export async function handler(event) {
   }
 
   console.log(`provisionFromSession: provisioned ${tierKey} for user ${user.id}`);
-  return { statusCode: 200, body: JSON.stringify({ ok: true, tier: tierKey }) };
+  return { statusCode: 200, body: JSON.stringify({ ok: true, tier: tierKey , amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
 }

@@ -4,6 +4,32 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Purchase Confirmed — Irene's Webworks</title>
+
+  <!-- This page had no analytics at all, which meant the single moment that matters —
+       someone paid — was invisible to every measurement system. Ad platforms optimise
+       toward reported conversions; with nothing reported, a Sales campaign has nothing
+       to learn from and spends the budget on guesses.
+
+       Consent Mode v2 defaults match index.html: everything denied until
+       analytics-consent.js hears otherwise. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QHDQP5JY0X"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('consent', 'default', {
+      ad_storage:          'denied',
+      ad_user_data:        'denied',
+      ad_personalization:  'denied',
+      analytics_storage:   'denied',
+      functionality_storage: 'granted',
+      security_storage:      'granted',
+      wait_for_update: 500
+    });
+    gtag('config', 'G-QHDQP5JY0X', { anonymize_ip: true });
+  </script>
+  <script defer src="/src/analytics-consent.js"></script>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <style>
     :root{
@@ -450,6 +476,51 @@
     if (raw) cartItems = JSON.parse(decodeURIComponent(raw));
   } catch {}
 
+  /**
+   * Report the purchase to GA4.
+   *
+   * `value` comes from Stripe via provisionFromSession, never from a local price table.
+   * Prices already live in three places and drifted three separate times; a fourth copy
+   * here would silently misreport revenue, which is worse than reporting none, because a
+   * bidding algorithm would act on it.
+   *
+   * transaction_id is the Stripe session id, which is what makes this safe to call more
+   * than once: GA4 de-duplicates purchases by that id, so a refresh or a back-button
+   * return cannot inflate the count. The sessionStorage guard just avoids the round trip.
+   *
+   * Gift purchases are still purchases — money changed hands — so they are reported, but
+   * tagged so they can be separated from self-serve conversions in reporting.
+   */
+  function reportPurchase(data) {
+    try {
+      if (typeof gtag !== "function") return;
+
+      const sessionId = params.get("session_id");
+      if (!sessionId) return;
+
+      const seenKey = "iw-purchase-reported:" + sessionId;
+      if (sessionStorage.getItem(seenKey)) return;
+      sessionStorage.setItem(seenKey, "1");
+
+      const value = typeof data.amountTotal === "number" ? data.amountTotal / 100 : undefined;
+
+      gtag("event", "purchase", {
+        transaction_id: sessionId,
+        value,
+        currency: (data.currency || "usd").toUpperCase(),
+        is_gift: isGift,
+        items: (cartItems.length ? cartItems : [{ tier, qty: 1 }]).map(i => ({
+          item_id:   i.tier,
+          item_name: i.tier,
+          quantity:  Math.max(1, Number(i.qty) || 1),
+        })),
+      });
+    } catch (err) {
+      // Measurement must never break the page a paying customer is looking at.
+      console.warn("purchase event failed:", err?.message);
+    }
+  }
+
   if (info) {
     document.getElementById("successIcon").textContent = info.icon;
     document.getElementById("tierBadge").textContent   = info.badge;
@@ -576,6 +647,8 @@
       const data = await res.json().catch(() => ({}));
       if (data.ok) console.log("provisionFromSession:", data.alreadyProvisioned ? "already active" : `activated ${data.tier}`);
       else console.warn("provisionFromSession error:", data.error);
+
+      if (data.ok) reportPurchase(data);
     } catch (err) {
       console.warn("provisionFromSession fetch failed:", err.message);
     }
