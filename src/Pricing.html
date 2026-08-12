@@ -91,11 +91,16 @@
     }
     /* ── Account bar ── */
     .accountBar{
-      display:flex; align-items:center; gap:28px; padding:16px 22px;
+      /* flex-start, not center: the Account / Plan & Quota column is now roughly twice
+         the height of the Gift and Promo boxes, and centring left those floating in the
+         middle of the bar. */
+      display:flex; align-items:flex-start; gap:28px; padding:16px 22px;
       background:var(--panel); border:1px solid var(--border); border-radius:var(--radius);
       box-shadow:var(--shadow); backdrop-filter:blur(14px); flex-wrap:wrap; margin-bottom:28px;
     }
     .acctGroup{ display:flex; flex-direction:column; gap:2px; min-width:0; }
+    /* Account above Plan & Quota, as one column in the bar. */
+    .acctIdentity{ display:flex; flex-direction:column; gap:12px; min-width:0; }
     .acctPlanRow{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
     .acctActions{ margin-left:auto; display:flex; gap:8px; align-items:center; }
     .statusLabel{ font-size:11px; font-weight:800; letter-spacing:.12em; text-transform:uppercase; color:rgba(236,243,255,.7); }
@@ -393,19 +398,25 @@
 
     <!-- Account bar -->
     <div class="accountBar">
-      <div class="acctGroup">
-        <div class="statusLabel">Account</div>
-        <div class="statusValue" id="accountStatus" aria-live="polite">Signed out</div>
-        <div class="statusMeta" id="accountMeta">Sign in below to purchase.</div>
-      </div>
-      <div class="acctGroup">
-        <div class="statusLabel">Plan &amp; Quota</div>
-        <div class="acctPlanRow">
-          <div class="statusValue" id="tierStatus">free</div>
-          <div class="statusMeta" id="quotaStatus"></div>
+      <!-- Account and Plan & Quota are stacked rather than sitting side by side. As
+           siblings in the flex row they consumed enough width that Refresh / Sign Out
+           wrapped onto a line of their own and read as orphaned. Stacking them roughly
+           halves the width this takes, leaving room for the buttons on the same row. -->
+      <div class="acctIdentity">
+        <div class="acctGroup">
+          <div class="statusLabel">Account</div>
+          <div class="statusValue" id="accountStatus" aria-live="polite">Signed out</div>
+          <div class="statusMeta" id="accountMeta">Sign in below to purchase.</div>
         </div>
-        <div class="statusMeta" id="hostingUntil"></div>
-        <div class="statusMeta" id="supportUntil"></div>
+        <div class="acctGroup">
+          <div class="statusLabel">Plan &amp; Quota</div>
+          <div class="acctPlanRow">
+            <div class="statusValue" id="tierStatus">free</div>
+            <div class="statusMeta" id="quotaStatus"></div>
+          </div>
+          <div class="statusMeta" id="hostingUntil"></div>
+          <div class="statusMeta" id="supportUntil"></div>
+        </div>
       </div>
       <div class="acctGroup" id="giftRedeemGroup">
         <div class="statusLabel">Gift Code</div>
