@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { stackMonths } from "./membershipDates.mjs";
 import { claimSession } from "./claimSession.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
@@ -12,20 +13,7 @@ const GRADUATE_CREDITS   = 3;
 const GRADUATE_DOWNLOADS = 1;
 const DEPLOYS_PER_UNIT   = 1;
 
-function monthsFromNow(n) {
-  const d = new Date();
-  d.setMonth(d.getMonth() + n);
-  return d.toISOString();
-}
 
-function stackMonths(existingIso, n) {
-  if (!n || n <= 0) return undefined;
-  const base = existingIso
-    ? new Date(Math.max(new Date(existingIso).getTime(), Date.now()))
-    : new Date();
-  base.setMonth(base.getMonth() + n);
-  return base.toISOString();
-}
 
 function hostingAddonMonths(cartJson) {
   try {

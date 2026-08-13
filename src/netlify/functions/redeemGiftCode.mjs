@@ -1,14 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
+import { stackMonths } from "./membershipDates.mjs";
 import { Resend } from "resend";
 
-function stackMonths(existingIso, n) {
-  if (!n || n <= 0) return undefined;
-  const base = existingIso
-    ? new Date(Math.max(new Date(existingIso).getTime(), Date.now()))
-    : new Date();
-  base.setMonth(base.getMonth() + n);
-  return base.toISOString();
-}
 
 // Hosting months included per tier (for gift grants)
 const GIFT_HOSTING_MONTHS = {
