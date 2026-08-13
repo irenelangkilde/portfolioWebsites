@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { claimSession } from "./claimSession.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "crypto";
 import { Resend } from "resend";
@@ -214,6 +215,14 @@ export async function handler(event) {
     .select("tier, status, stripe_payment_intent, stripe_subscription_id, hosting_until, support_until")
     .eq("user_id", user.id)
     .maybeSingle();
+
+  // Claim the session before granting anything. The old guard below asks whether this
+  // USER has an active paid membership, which is a different question — it cannot tell a
+  // second purchase from a duplicate provisioning, and it loses the race against the
+  // webhook outright, since both run before either has written a membership.
+  if (!(await claimSession(supabase, sessionId, user.id, "client"))) {
+    return { statusCode: 200, body: JSON.stringify({ ok: true, alreadyProvisioned: true, tier: existing?.tier ?? null, amountTotal: session.amount_total ?? null, currency: session.currency || null }) };
+  }
 
   const alreadyPaid = existing?.tier && existing.tier !== "free" && existing.status === "active";
   if (alreadyPaid) {

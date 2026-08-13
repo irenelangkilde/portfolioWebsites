@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { claimSession } from "./claimSession.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { randomBytes } from "crypto";
@@ -700,6 +701,11 @@ export async function handler(event) {
         } else {
           // Read existing membership so hosting/support stack rather than reset
           const supabase = getSupabaseAdmin();
+
+          // provisionFromSession grants the same session from the browser, moments
+          // earlier or later. Only one of us may do it — hosting_until stacks, so two
+          // grants meant one month paid and two months given.
+          if (!(await claimSession(supabase, obj.id, userId, "webhook"))) break;
           const { data: existing } = await supabase
             .from("memberships")
             .select("tier, status, credits_limit, hosting_until, support_until")
