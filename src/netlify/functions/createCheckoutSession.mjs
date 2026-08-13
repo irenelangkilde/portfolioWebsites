@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { PLAN_PRICING, planTotalCents, ADDON_PRICING } from "../../planPricing.mjs";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { resolveReferralCode } from "./referralCodes.mjs";
@@ -9,10 +10,11 @@ import { resolveReferralCode } from "./referralCodes.mjs";
 const PLAN_TIERS  = new Set(["graduate", "prime"]);
 const GUEST_TIERS = new Set(["starter_care", "premium_care"]);
 
-const ADDON_PRICE_DATA = {
-  extra_credits: { name: "Extra Credits",         unit_amount: 100  },
-  care:          { name: "Human Support (per month)",   unit_amount: 4900 },
-};
+// Add-on prices come from the shared table; this alias keeps the call sites below
+// readable. unit_amount mirrors ADDON_PRICING[...].cents — one number, one place.
+const ADDON_PRICE_DATA = Object.fromEntries(
+  Object.entries(ADDON_PRICING).map(([tier, a]) => [tier, { name: a.name, unit_amount: a.cents }])
+);
 
 let localEnvCache = null;
 
@@ -74,7 +76,9 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "userId and userEmail are required" }) };
   }
 
-  // RECURRING price IDs — used when the buyer opts into auto-renew.
+  // Dashboard price IDs. Plans and add-ons no longer appear here — both are priced from
+  // planPricing.mjs — so in practice only starter_care and premium_care are read. The
+  // rest are kept because gift and legacy callers still pass those tiers.
   const PRICE_IDS = {
     graduate:      getEnv("STRIPE_PRICE_GRADUATE"),
     prime:         getEnv("STRIPE_PRICE_PRIME"),
@@ -85,13 +89,6 @@ export async function handler(event) {
     premium_care:  getEnv("STRIPE_PRICE_PREMIUM"),
   };
 
-  // ONE-TIME price IDs for the plan tiers — used when auto-renew is left unchecked.
-  // A plan bought this way is a single month with no subscription created, so nothing
-  // renews and there is nothing to cancel later.
-  const PRICE_IDS_ONCE = {
-    graduate: getEnv("STRIPE_PRICE_GRADUATE_ONCE"),
-    prime:    getEnv("STRIPE_PRICE_PRIME_ONCE"),
-  };
 
   // The buyer's choice decides the Stripe mode, which is why autoRenew has to be read
   // here — it was previously accepted from the client and then ignored, so the checkbox
@@ -100,11 +97,6 @@ export async function handler(event) {
   const hasPlan = cartItems.some(i => PLAN_TIERS.has(i.tier));
   const mode = (hasPlan && wantsRecurring) ? "subscription" : "payment";
 
-  /** The price a given cart item should be charged at, honouring the renew choice. */
-  const priceIdFor = (tier) =>
-    (PLAN_TIERS.has(tier) && !wantsRecurring)
-      ? PRICE_IDS_ONCE[tier]
-      : PRICE_IDS[tier];
 
   // There is deliberately no minimum purchase length. A three-month floor on the
   // one-time Graduate path was tried and removed: it only ever applied to one of the two
@@ -113,15 +105,19 @@ export async function handler(event) {
   // To reintroduce one, it belongs here — the server is the only authoritative check.
 
   for (const item of cartItems) {
-    // Add-on tiers are billed via inline price_data — no dashboard price ID required.
+    // Add-ons and plans are both billed from inline price_data now, so neither needs a
+    // dashboard price ID. Only the guest gift tiers still resolve to one.
+    //
+    // This check used to demand a price ID for plans too. Left as it was, it would have
+    // rejected every plan purchase the moment STRIPE_PRICE_GRADUATE_ONCE was unset —
+    // a guard outliving the thing it guarded, which is how three ReferenceErrors got
+    // into this file.
     if (ADDON_PRICE_DATA[item.tier]) continue;
-    if (!priceIdFor(item.tier)) {
-      // Named precisely, because "unconfigured tier" gave no clue which of the two
-      // prices was missing once each plan gained a recurring and a one-time variant.
-      const which = (PLAN_TIERS.has(item.tier) && !wantsRecurring) ? "one-time" : "recurring";
+    if (PLAN_PRICING[item.tier])     continue;
+    if (!PRICE_IDS[item.tier]) {
       return {
         statusCode: 400,
-        body: JSON.stringify({ error: `No ${which} price configured for tier: ${item.tier}` })
+        body: JSON.stringify({ error: `No price configured for tier: ${item.tier}` })
       };
     }
   }
@@ -153,12 +149,40 @@ export async function handler(event) {
         quantity: i.qty,
       };
     }
-    // Quantity means MONTHS on a one-time plan price — Stripe multiplies the price by it.
-    // On a RECURRING price it means seats, and the subscription renews by itself, so
-    // passing months there would charge months × the monthly rate every single month
-    // (3 months of Graduate becoming $21/mo forever rather than $21 once).
-    const isRecurringPlan = PLAN_TIERS.has(i.tier) && wantsRecurring;
-    return { price: priceIdFor(i.tier), quantity: isRecurringPlan ? 1 : i.qty };
+    // Plans are priced HERE, from planPricing.mjs, rather than by a Stripe price ID
+    // multiplied by quantity.
+    //
+    // A dashboard price is a single per-unit number, so Stripe can only ever compute
+    // months × rate. That makes a volume discount impossible to charge: the page could
+    // show a tiered total while the card was charged the flat one, which is exactly the
+    // drift that has already produced three separate wrong-price bugs here. Computing the
+    // total from the same table the page reads is what makes the discount real.
+    //
+    // quantity stays 1 because the amount already covers every month bought — passing
+    // months as quantity as well would multiply twice.
+    const plan = PLAN_PRICING[i.tier];
+    if (plan) {
+      const isRecurringPlan = wantsRecurring;
+      const months          = isRecurringPlan ? 1 : i.qty;
+      const amount          = planTotalCents(i.tier, months);
+
+      return {
+        price_data: {
+          currency:     "usd",
+          product_data: { name: months > 1 ? `${plan.name} — ${months} months` : plan.name },
+          unit_amount:  amount,
+          // Auto-renew currently repeats a single month. Renewing the whole prepaid block
+          // instead is step 3 of this work and lands here as interval_count: months.
+          ...(isRecurringPlan ? { recurring: { interval: "month", interval_count: 1 } } : {}),
+        },
+        quantity: 1,
+      };
+    }
+
+    // Guest gift tiers (starter_care, premium_care) are still dashboard prices. They are
+    // not months of anything, so the tier ladder does not apply and there is nothing to
+    // gain from pricing them here.
+    return { price: PRICE_IDS[i.tier], quantity: i.qty };
   });
 
   const origin = returnUrl || "https://yoursite.netlify.app";

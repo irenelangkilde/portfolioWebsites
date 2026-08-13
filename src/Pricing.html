@@ -24,6 +24,15 @@
 </script>
 <script src="/src/siteConfig.js"></script>
 <script defer src="/src/analytics-consent.js"></script>
+  <!-- The price of everything, loaded from the same module createCheckoutSession bills
+       from. A module script is deferred, so it runs before DOMContentLoaded but AFTER the
+       inline scripts below are parsed — which is why the code below reads window.IW_PRICING
+       lazily, inside functions, rather than capturing it in a top-level const. -->
+  <script type="module">
+    import * as pricing from "/src/planPricing.mjs";
+    window.IW_PRICING = pricing;
+    window.dispatchEvent(new CustomEvent("iw-pricing-ready"));
+  </script>
 <script defer src="/src/metaPixel.js"></script>
   <title>Plans & Billing</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -708,7 +717,7 @@
         <div class="confirmPlanPrice" id="confirmPlanPrice"></div>
       </div>
       <label class="giftCheck" id="confirmAutoRenewWrap">
-        <input type="checkbox" id="confirmAutoRenew"> <span id="confirmAutoRenewLabel">Auto-renew</span>
+        <input type="checkbox" id="confirmAutoRenew" onchange="refreshRenewalDisclosure()"> <span id="confirmAutoRenewLabel">Auto-renew</span>
       </label>
       <!-- Worth stating plainly: leaving this unchecked is not merely "no renewal", it
            creates no subscription at all, so there is nothing to cancel later. That is a
@@ -718,6 +727,12 @@
         Leave this unchecked to pay once for the months you chose — no subscription is
         created, so there is nothing to cancel. It simply ends when the time runs out.
       </div>
+      <!-- Says the amount, the cadence and how to stop it, before payment rather than
+           after. An auto-renewing charge that a customer did not knowingly agree to is
+           the classic chargeback, and several jurisdictions (US ROSCA, California's
+           auto-renewal law, EU consumer rules) require this disclosure up front.
+           Rewritten by updateRenewalDisclosure() whenever the checkbox or cart changes. -->
+      <div id="confirmRenewDisclosure" role="status" style="font-size:12.5px; line-height:1.6; margin-top:8px; padding:10px 12px; border-radius:9px; background:rgba(78,112,241,.12); border:1px solid rgba(78,112,241,.28); color:rgba(236,243,255,.86);"></div>
       <label class="giftCheck" id="confirmGiftWrap">
         <input type="checkbox" id="confirmGift"> Is this a gift?
       </label>
@@ -751,43 +766,92 @@
     let _currentUser = null;
     let _membership  = null;
 
-    const GRADUATE_UNIT_PRICES     = [7];    // $/month, flat
-    const GRADUATE_UNIT_PRICE_EXTRA = 7;
     let _pendingItems = null;
 
-    // Every amount shown on this page comes from here, so the figure beside a quantity
-
-    // box, the order-summary line and the grand total cannot drift apart — which they
-
-    // had: credits were charged at $1 while the summary still said $5.
-
+    // Every amount shown on this page comes from /src/planPricing.mjs — the same module
+    // createCheckoutSession bills from. They are no longer DISPLAY values that have to be
+    // kept in step with the charge by hand, which is what let credits show $5 while
+    // charging $1, and Prime show $12 against a $99 constant.
     //
-
-    // These are DISPLAY values. They must match what checkout actually charges, and
-
-    // nothing enforces that, so change both together:
-
-    //   extra_credits, care  -> ADDON_PRICE_DATA in createCheckoutSession.mjs (in cents)
-
-    //   prime                -> the Stripe price behind STRIPE_PRICE_PRIME
-
-    // Graduate is tiered, so its total comes from calcGraduatedTotal() instead.
-
+    // Read lazily, inside functions: planPricing loads as a module script, which is
+    // deferred, so window.IW_PRICING does not exist while this inline script is being
+    // parsed. Capturing it in a top-level const here would capture undefined.
+    // A live view over the shared table, so the seven existing PRICES.x call sites keep
+    // working while the numbers come from planPricing.mjs. Dollars, because that is what
+    // this page has always displayed; the module speaks cents.
     const PRICES = {
-      extra_credits:  1,
-      care:          49,
-      prime:         12,
+      get extra_credits() { return (pricing()?.addonUnitCents("extra_credits") ?? 0) / 100; },
+      get care()          { return (pricing()?.addonUnitCents("care")          ?? 0) / 100; },
+      get prime()         { return (pricing()?.planUnitCents("prime", 0)       ?? 0) / 100; },
     };
 
-
-    function calcGraduatedTotal(qty, multiplier = 1) {
-      let total = 0;
-      for (let i = 0; i < qty; i++) {
-        const unit = i < GRADUATE_UNIT_PRICES.length ? GRADUATE_UNIT_PRICES[i] : GRADUATE_UNIT_PRICE_EXTRA;
-        total += unit * multiplier;
-      }
-      return total;
+    function pricing() {
+      const p = window.IW_PRICING;
+      if (!p) console.warn("[pricing] planPricing.mjs has not loaded yet");
+      return p;
     }
+
+    /** Dollars for a cart line, plan or add-on, straight from the shared table. */
+    function lineTotal(tier, qty) {
+      return (pricing()?.lineTotalCents(tier, qty) ?? 0) / 100;
+    }
+
+    /** Dollars for `qty` months of a plan, honouring the tier ladder. */
+    function calcGraduatedTotal(qty, multiplier = 1) {
+      return ((pricing()?.planTotalCents("graduate", qty) ?? 0) / 100) * multiplier;
+    }
+
+    /**
+     * Spell out what the card will actually be charged, and when it will be charged again.
+     *
+     * The auto-renew checkbox previously said only "Auto-renew". A buyer typing 3 months
+     * and ticking it was charged for one and enrolled in an open-ended monthly
+     * subscription — three different stories between the form, the charge and the
+     * reality. An unexpected recurring charge is the classic chargeback, and disclosing
+     * amount, cadence and how to cancel before payment is required in several
+     * jurisdictions rather than merely polite.
+     *
+     * Deliberately reads the same shared table as the charge, so it cannot promise a
+     * number the checkout will not honour.
+     */
+    let _lastDisclosureArgs = null;
+
+    /** Re-render with the last known cart — used by the checkbox handler. */
+    function refreshRenewalDisclosure() {
+      if (_lastDisclosureArgs) updateRenewalDisclosure(..._lastDisclosureArgs);
+    }
+
+    function updateRenewalDisclosure(tier, gradQty, primeQty, grandTotal) {
+      _lastDisclosureArgs = [tier, gradQty, primeQty, grandTotal];
+      const el = document.getElementById("confirmRenewDisclosure");
+      if (!el) return;
+
+      const planMonths = (gradQty || 0) + (primeQty || 0);
+      if (!planMonths || !tier) { el.style.display = "none"; return; }
+      el.style.display = "";
+
+      const autoRenew = document.getElementById("confirmAutoRenew")?.checked;
+      const p         = pricing();
+      const monthly   = (p?.planUnitCents(tier, 0) ?? 0) / 100;
+
+      if (autoRenew) {
+        // The months box has no effect in this mode — say so rather than let the number
+        // sitting above imply a fixed term.
+        el.innerHTML =
+          `You'll be charged <strong>${formatMoney(monthly)} today</strong>, then ` +
+          `<strong>${formatMoney(monthly)} every month</strong> until you cancel. ` +
+          `The month count above doesn't apply to auto-renewing plans. ` +
+          `Cancel any time from Plans &amp; Billing.`;
+      } else {
+        const savings = (p?.planSavingsCents(tier, planMonths) ?? 0) / 100;
+        el.innerHTML =
+          `One payment of <strong>${formatMoney(grandTotal)}</strong> for ` +
+          `<strong>${planMonths} month${planMonths !== 1 ? "s" : ""}</strong>. ` +
+          (savings > 0 ? `You save ${formatMoney(savings)} buying up front. ` : "") +
+          `Nothing recurring — it ends when the months run out.`;
+      }
+    }
+
 
     function currentUserId() { return _currentUser?.id || null; }
 
@@ -1286,6 +1350,7 @@
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = "";
       syncAutoRenewVisibility();
+      updateRenewalDisclosure(_arTier, gradQty, primeQty, grand);
       syncGiftDetails();
       document.getElementById("confirmMsg").textContent = "";
       document.getElementById("confirmMsg").className   = "authMsg";
