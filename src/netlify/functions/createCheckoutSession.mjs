@@ -162,12 +162,31 @@ export async function handler(event) {
   });
 
   const origin = returnUrl || "https://yoursite.netlify.app";
+
+  // `quantity` must be the number of months PAID FOR, not the number the buyer typed.
+  //
+  // Those differ on the recurring path. A subscription line item is quantity 1 — one
+  // interval per invoice — so ticking auto-renew with 3 months in the box charges for one
+  // month. The raw 3 used to travel in metadata anyway, and both consumers of this field
+  // (the webhook and provisionFromSession) read it as months to grant, so the buyer paid
+  // for one month and received three, then renewed monthly. That is the mirror of the
+  // overcharge bug on the same field: `quantity` meant two different things depending on
+  // which side of the checkout you stood on.
+  //
+  // Normalising here rather than in each consumer is deliberate — there are two of them
+  // and they would have to agree forever.
+  const firstItem  = cartItems[0];
+  const paidMonths = (firstItem && PLAN_TIERS.has(firstItem.tier) && wantsRecurring)
+    ? 1
+    : (firstItem?.qty || 1);
+
   const sessionMeta = {
-    user_id:  userId || "guest",
-    cart:     JSON.stringify(cartItems),
-    tier_key: firstTier,               // legacy field for webhook
-    quantity: String(cartItems[0]?.qty || 1),
-    is_gift:  isGift ? "true" : "false",
+    user_id:    userId || "guest",
+    cart:       JSON.stringify(cartItems),
+    tier_key:   firstTier,               // legacy field for webhook
+    quantity:   String(paidMonths),
+    auto_renew: wantsRecurring ? "true" : "false",
+    is_gift:    isGift ? "true" : "false",
   };
 
   if (isGift && giftDetails) {
