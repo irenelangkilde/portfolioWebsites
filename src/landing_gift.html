@@ -794,7 +794,7 @@
           <div>
             <div class="price-label">Gift tier</div>
             <div class="price-name">Starter</div>
-            <div class="price-amount" style="margin-top:8px;"><sup>$</sup>149<small> one-time</small></div>
+            <div class="price-amount" style="margin-top:8px;"><sup>$</sup><span data-price-for="starter_care">149</span><small> one-time</small></div>
             <p class="price-desc" style="margin-top:10px;">
               A complete, polished portfolio that makes a strong first impression — ideal for undergrads and early-career job-seekers.
               Includes six months of hosting and one month of support.
@@ -823,7 +823,7 @@
           <div>
             <div class="price-label" style="color:color-mix(in oklab, var(--danger) 80%, white);">Most meaningful gift · Premium tier</div>
             <div class="price-name">Premium</div>
-            <div class="price-amount" style="margin-top:8px;"><sup>$</sup>299<small> one-time</small></div>
+            <div class="price-amount" style="margin-top:8px;"><sup>$</sup><span data-price-for="premium_care">299</span><small> one-time</small></div>
             <p class="price-desc" style="margin-top:10px;">
               The ultimate package — for the person in your life who deserves every possible advantage. Unlimited sections, editorial direction, a full year of hosting, and two months of priority support.
             </p>
@@ -917,5 +917,15 @@
   });
 </script>
   <script src="/src/annbot-widget.js" defer></script>
+  <!-- Prices come from the same module createCheckoutSession bills from. The figures in
+       the markup above are a fallback for the moment before this runs, and are the numbers
+       that used to be the only source. -->
+  <script type="module">
+    import { unitCents } from "/src/planPricing.mjs";
+    for (const el of document.querySelectorAll("[data-price-for]")) {
+      const cents = unitCents(el.getAttribute("data-price-for"));
+      if (cents) el.textContent = String(Math.round(cents / 100));
+    }
+  </script>
 </body>
 </html>

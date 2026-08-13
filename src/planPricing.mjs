@@ -44,6 +44,30 @@ export const ADDON_PRICING = {
   care:          { name: "Human Support (per month)", cents: 4900 },
 };
 
+/**
+ * Guest gift packages. Bought without an account, so they are not months of anything and
+ * the tier ladder does not apply.
+ *
+ * These figures were previously split: landing_gift.html displayed $149 and $299 while the
+ * charge came from STRIPE_PRICE_STARTER and STRIPE_PRICE_PREMIUM, with nothing keeping the
+ * two in step. VERIFY THESE MATCH STRIPE before trusting them — if the dashboard prices
+ * had already drifted from the page, whichever was wrong is now baked in here.
+ */
+export const GIFT_PRICING = {
+  starter_care: { name: "Starter Gift", cents: 14900 },
+  premium_care: { name: "Premium Gift", cents: 29900 },
+};
+
+/** Flat per-unit price for anything that is not a month-laddered plan. */
+export function unitCents(tier) {
+  return ADDON_PRICING[tier]?.cents ?? GIFT_PRICING[tier]?.cents ?? 0;
+}
+
+/** Display name for any tier, plan or otherwise. */
+export function tierName(tier) {
+  return PLAN_PRICING[tier]?.name ?? ADDON_PRICING[tier]?.name ?? GIFT_PRICING[tier]?.name ?? tier;
+}
+
 /** Price of a single month, by zero-based month index. */
 export function planUnitCents(tier, monthIndex) {
   const plan = PLAN_PRICING[tier];
@@ -75,10 +99,15 @@ export function addonUnitCents(tier) {
   return ADDON_PRICING[tier]?.cents ?? 0;
 }
 
-/** Total for any cart line, plan or add-on. */
+/** Total for any cart line — plan, add-on or gift package. */
 export function lineTotalCents(tier, qty) {
   if (PLAN_PRICING[tier]) return planTotalCents(tier, qty);
-  return addonUnitCents(tier) * Math.max(0, Math.floor(Number(qty) || 0));
+  return unitCents(tier) * Math.max(0, Math.floor(Number(qty) || 0));
+}
+
+/** True if this tier is priced here at all. Anything false is unsellable. */
+export function isPriced(tier) {
+  return !!(PLAN_PRICING[tier] || ADDON_PRICING[tier] || GIFT_PRICING[tier]);
 }
 
 /** "$21.00" — one formatter so rounding is identical everywhere. */

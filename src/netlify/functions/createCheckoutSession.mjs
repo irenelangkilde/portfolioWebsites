@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { PLAN_PRICING, planTotalCents, ADDON_PRICING } from "../../planPricing.mjs";
+import { PLAN_PRICING, planTotalCents, ADDON_PRICING, GIFT_PRICING, unitCents, tierName, isPriced } from "../../planPricing.mjs";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { resolveReferralCode } from "./referralCodes.mjs";
@@ -76,18 +76,10 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: "userId and userEmail are required" }) };
   }
 
-  // Dashboard price IDs. Plans and add-ons no longer appear here — both are priced from
-  // planPricing.mjs — so in practice only starter_care and premium_care are read. The
-  // rest are kept because gift and legacy callers still pass those tiers.
-  const PRICE_IDS = {
-    graduate:      getEnv("STRIPE_PRICE_GRADUATE"),
-    prime:         getEnv("STRIPE_PRICE_PRIME"),
-    care:          getEnv("STRIPE_PRICE_SUPPORT"),
-    hosting:       getEnv("STRIPE_PRICE_HOSTING_ADDON"),
-    extra_credits: getEnv("STRIPE_PRICE_EXTRA_CREDITS"),
-    starter_care:  getEnv("STRIPE_PRICE_STARTER"),
-    premium_care:  getEnv("STRIPE_PRICE_PREMIUM"),
-  };
+  // No dashboard price IDs remain. Every sellable tier is priced in planPricing.mjs and
+  // billed with inline price_data, so there are no STRIPE_PRICE_* variables to keep in
+  // step with the pages that display those figures — which is what let the gift page show
+  // $149 while Stripe charged whatever STRIPE_PRICE_STARTER happened to be.
 
 
   // The buyer's choice decides the Stripe mode, which is why autoRenew has to be read
@@ -105,16 +97,7 @@ export async function handler(event) {
   // To reintroduce one, it belongs here — the server is the only authoritative check.
 
   for (const item of cartItems) {
-    // Add-ons and plans are both billed from inline price_data now, so neither needs a
-    // dashboard price ID. Only the guest gift tiers still resolve to one.
-    //
-    // This check used to demand a price ID for plans too. Left as it was, it would have
-    // rejected every plan purchase the moment STRIPE_PRICE_GRADUATE_ONCE was unset —
-    // a guard outliving the thing it guarded, which is how three ReferenceErrors got
-    // into this file.
-    if (ADDON_PRICE_DATA[item.tier]) continue;
-    if (PLAN_PRICING[item.tier])     continue;
-    if (!PRICE_IDS[item.tier]) {
+    if (!isPriced(item.tier)) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: `No price configured for tier: ${item.tier}` })
@@ -179,10 +162,15 @@ export async function handler(event) {
       };
     }
 
-    // Guest gift tiers (starter_care, premium_care) are still dashboard prices. They are
-    // not months of anything, so the tier ladder does not apply and there is nothing to
-    // gain from pricing them here.
-    return { price: PRICE_IDS[i.tier], quantity: i.qty };
+    // Guest gift packages. Flat one-time products, so no tier ladder applies.
+    return {
+      price_data: {
+        currency:     "usd",
+        product_data: { name: tierName(i.tier) },
+        unit_amount:  unitCents(i.tier),
+      },
+      quantity: i.qty,
+    };
   });
 
   const origin = returnUrl || "https://yoursite.netlify.app";
