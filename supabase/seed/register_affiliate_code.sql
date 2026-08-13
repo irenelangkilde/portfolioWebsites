@@ -3,12 +3,14 @@
 -- Run this once per code you mint in Stripe. It links the string a buyer types on the
 -- Pricing page to the Stripe promotion code that actually applies the discount.
 --
--- ── FILL IN THESE TWO VALUES BEFORE RUNNING ──────────────────────────────────
+-- Registered so far: LAUNCHME → promo_1U3nGmBgBMKG03Ip8DEI7fzm (15% off).
 --
---   :code        The string buyers type, e.g. 'LAUNCH15'. Case-insensitive on lookup
+-- ── THE TWO VALUES EACH CODE NEEDS ───────────────────────────────────────────
+--
+--   code         The string buyers type, e.g. 'LAUNCHME'. Case-insensitive on lookup
 --                (there is a unique index on upper(code)), so pick one and stay with it.
 --
---   :promo_id    The Stripe PROMOTION CODE id — starts with "promo_".
+--   promo_id     The Stripe PROMOTION CODE id — starts with "promo_".
 --
 --                NOT the coupon id, which looks like a short random string or whatever
 --                you named it. A coupon defines the discount; a promotion code is the
@@ -28,8 +30,8 @@
 
 insert into public.affiliate_codes (code, stripe_promotion_code_id, discount_label, active)
 values (
-  'REPLACE_ME_CODE',        -- e.g. 'LAUNCH15'
-  'promo_REPLACE_ME',       -- e.g. 'promo_1QabcdEfGhIjKlMn'
+  'LAUNCHME',
+  'promo_1U3nGmBgBMKG03Ip8DEI7fzm',
   '15% off',                -- shown to the buyer when the code validates
   true
 )
