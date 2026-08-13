@@ -3,7 +3,9 @@
 -- Run this once per code you mint in Stripe. It links the string a buyer types on the
 -- Pricing page to the Stripe promotion code that actually applies the discount.
 --
--- Registered so far: LAUNCHME → promo_1U3nGmBgBMKG03Ip8DEI7fzm (15% off).
+-- Registered so far:
+--   LAUNCHME → promo_1U3nGmBgBMKG03Ip8DEI7fzm  (15% off, public, 15 redemptions)
+--   TESTING  → promo_1U3na3BgBMKG03IpMxpQ3zwr  (15% off, internal — deactivate when done)
 --
 -- ── THE TWO VALUES EACH CODE NEEDS ───────────────────────────────────────────
 --
@@ -29,12 +31,17 @@
 -- explain what it gives, and detect a self-referral before payment.
 
 insert into public.affiliate_codes (code, stripe_promotion_code_id, discount_label, active)
-values (
-  'LAUNCHME',
-  'promo_1U3nGmBgBMKG03Ip8DEI7fzm',
-  '15% off',                -- shown to the buyer when the code validates
-  true
-)
+values
+  -- Public launch discount. Capped at 15 redemptions in Stripe; the app additionally
+  -- allows one discounted purchase per account, so that is 15 distinct customers.
+  ('LAUNCHME', 'promo_1U3nGmBgBMKG03Ip8DEI7fzm', '15% off', true),
+
+  -- Internal, for exercising the referral path end to end. Named the most guessable
+  -- thing possible, so it should not outlive the testing: set active = false when done,
+  -- or give the Stripe promotion code an expires_at. Flipping active here is enough —
+  -- resolveReferralCode refuses an inactive code before Stripe is ever consulted.
+  ('TESTING',  'promo_1U3na3BgBMKG03IpMxpQ3zwr', '15% off (test)', true)
+
 on conflict (code) do update
   set stripe_promotion_code_id = excluded.stripe_promotion_code_id,
       discount_label           = excluded.discount_label,
