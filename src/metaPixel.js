@@ -33,6 +33,16 @@
   var loaded  = false;   // fbevents.js requested
   var pending = [];      // events raised before consent arrived
 
+  // Developer opt-out wins over consent. Meta has no IP exclusion and GA4's is IP-based,
+  // so this is the only way to accept the banner, watch the tags fire, and still stay out
+  // of the reports. See src/devOptOut.js.
+  if (window.IW_OPTED_OUT) {
+    window.iwMetaTrack = function () {};
+    window.iwMetaTrackCustom = function () {};
+    console.log("[metaPixel] developer opt-out active — pixel not loaded.");
+    return;
+  }
+
   function consentGranted() {
     try {
       return typeof window.getAnalyticsConsent === "function" &&

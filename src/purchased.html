@@ -12,7 +12,10 @@
 
        Consent Mode v2 defaults match index.html: everything denied until
        analytics-consent.js hears otherwise. -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-QHDQP5JY0X"></script>
+  <!-- Loads synchronously and BEFORE the gtag block: ga-disable-* is only honoured
+     if set before gtag(config, ...) runs. See src/devOptOut.js. -->
+<script src="/src/devOptOut.js"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-QHDQP5JY0X"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
