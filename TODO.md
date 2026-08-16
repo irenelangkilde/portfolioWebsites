@@ -30,6 +30,17 @@ Needs three things:
    plus 18 months). This is the only irreversible code in the system — it wants a dry-run
    mode and a log of what it would remove before it removes anything.
 
+## Subscription modification is untested against Stripe
+
+modifySubscription.mjs swaps the subscription item onto a new price with a different
+interval_count and proration_behavior "none". The intent is: nothing charged today, the
+new block length applies at the next renewal.
+
+Stripe can be particular about changing a recurring interval on a live subscription — it
+may reset the billing cycle rather than leaving it alone. Verify against a real
+subscription that current_period_end does NOT jump forward, and that no invoice is
+generated at the moment of the change.
+
 ## No renewal reminder
 
 Nothing warns a customer before a prepaid plan runs out. Intended: an email roughly a week
