@@ -1130,12 +1130,39 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const SUBSCRIPTION_TIERS_SET = new Set(["graduate", "prime", "care", "extra_credits"]);
 
+    // Stripe will not bill a recurring price at more than a yearly interval, so an
+    // auto-renewing block cannot exceed 12 months. Mirrors MAX_RECURRING_MONTHS in
+    // createCheckoutSession, which remains the authoritative check.
+    const MAX_RECURRING_MONTHS = 12;
+
     function syncAutoRenewVisibility() {
       const wrap = document.getElementById("confirmAutoRenewWrap");
       const hasSubTier = _pendingItems
         ? _pendingItems.some(i => SUBSCRIPTION_TIERS_SET.has(i.tier))
         : (_pendingTier === "graduate" || _pendingTier === "prime");
       wrap.style.display = hasSubTier ? "" : "none";
+
+      // Beyond 12 months the checkbox is disabled rather than left tickable to fail at
+      // the server after the buyer has committed to a total. The limit belongs to
+      // auto-renew alone — buying 24 months outright is perfectly fine — which is why it
+      // is expressed here and not as a cap on the months input.
+      const planMonths = _pendingItems
+        ? _pendingItems.filter(i => SUBSCRIPTION_TIERS_SET.has(i.tier))
+                       .reduce((n, i) => n + (Number(i.qty) || 0), 0)
+        : 1;
+      const tooLong = hasSubTier && planMonths > MAX_RECURRING_MONTHS;
+
+      const box  = document.getElementById("confirmAutoRenew");
+      const note = document.getElementById("confirmAutoRenewNote");
+      if (box) {
+        box.disabled = tooLong;
+        if (tooLong) box.checked = false;
+      }
+      if (note) {
+        note.textContent = tooLong
+          ? `Auto-renewal covers at most ${MAX_RECURRING_MONTHS} months at a time, so it isn't available for ${planMonths} months. This will be a one-time purchase — nothing recurring, and nothing to cancel.`
+          : "Leave this unchecked to pay once for the months you chose — no subscription is created, so there is nothing to cancel. It simply ends when the time runs out.";
+      }
     }
 
     const PLAN_GIFT_TIERS_SET = new Set(["graduate", "prime"]);
