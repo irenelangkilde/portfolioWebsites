@@ -64,6 +64,10 @@ create index if not exists purchase_sources_created_idx   on public.purchase_sou
 -- ── 3. Commission-eligible sales ─────────────────────────────────────────────
 -- A view rather than a column so the rule lives in one place: attributed to a code,
 -- with an owner, and not self-referred. Payout runs read this.
+-- security_invoker is set by a later migration (2026-08-15_fix_affiliate_view_security).
+-- A view runs as its OWNER by default, which meant this one bypassed the RLS on the tables
+-- it reads and exposed buyer ids and amounts to the anon key via PostgREST. If this view is
+-- ever recreated, set security_invoker again — create or replace silently drops it.
 create or replace view public.affiliate_conversions as
 select ps.id,
        ps.created_at,
