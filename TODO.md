@@ -43,13 +43,6 @@ Enforcing would need a bytes-per-user tally maintained on upload and delete, a b
 for existing sites, and checks in the upload and deploy paths. None of that exists — do
 not start treating the number as a limit without building it.
 
-## No renewal reminder
-
-Nothing warns a customer before a prepaid plan runs out. Intended: an email roughly a week
-before expiry offering the upfront-block discount again, or month-to-month, or nothing.
-
-Needs a scheduled function, a marker so it cannot send twice, and a renewal link. This is
-the piece that turns a lapse back into a purchase, so it is worth more than it looks.
 
 ## Volume discount is plumbed but not set
 

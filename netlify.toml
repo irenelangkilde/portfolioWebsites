@@ -47,3 +47,9 @@
 # It is the only destructive operation in the system, so it stays opt-in.
 [functions."reconcileHosting"]
   schedule = "0 4 * * *"
+
+# Pre-expiry renewal reminders, an hour after the reconcile job so the two never
+# contend for the same rows. Sends at most one email per expiry date, and skips
+# auto-renewing subscribers because Stripe already warns them.
+[functions."sendRenewalReminders"]
+  schedule = "0 5 * * *"
