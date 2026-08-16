@@ -145,6 +145,55 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       letter-spacing:.2px;
     }
     .nav-phone:hover{ color:var(--accent); text-decoration:underline; }
+
+    /* ── Signup discount banner ──────────────── */
+    .promo-banner{
+      background:linear-gradient(90deg,
+        color-mix(in oklab, var(--primary) 34%, transparent),
+        color-mix(in oklab, var(--accent) 26%, transparent));
+      border-bottom:1px solid var(--border);
+    }
+    .promo-banner-inner{
+      max-width:1080px; margin:0 auto;
+      padding:10px 14px;
+      display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    }
+    .promo-banner-text{ flex:1; min-width:220px; font-size:14px; color:var(--text); }
+    .promo-banner-cta{ flex-shrink:0; }
+    .promo-banner-close{
+      background:none; border:0; color:var(--muted);
+      font-size:22px; line-height:1; cursor:pointer; padding:2px 6px; border-radius:8px;
+    }
+    .promo-banner-close:hover{ color:var(--text); background:rgba(255,255,255,.10); }
+
+    /* ── Claim dialog ────────────────────────── */
+    .promo-dialog{
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      background:#101a2e;
+      color:var(--text);
+      padding:24px;
+      max-width:420px; width:calc(100% - 32px);
+      box-shadow:var(--shadow);
+    }
+    .promo-dialog::backdrop{ background:rgba(4,8,18,.66); }
+    .promo-dialog-title{ margin:0; font-size:20px; font-weight:900; }
+    .promo-dialog-sub{ margin:6px 0 18px; font-size:13.5px; color:var(--muted); }
+    .promo-label{ display:block; font-size:12px; font-weight:800; letter-spacing:.06em;
+                  text-transform:uppercase; color:rgba(234,240,255,.55); margin-bottom:5px; }
+    .promo-input{
+      width:100%; margin-bottom:14px; padding:10px 12px;
+      border-radius:10px; border:1px solid var(--border);
+      background:rgba(0,0,0,.28); color:var(--text); font:inherit; font-size:14px;
+    }
+    .promo-input:focus{ outline:2px solid color-mix(in oklab, var(--primary) 60%, transparent); outline-offset:1px; }
+    .promo-check{ display:flex; gap:9px; align-items:flex-start; font-size:12.5px;
+                  color:var(--muted); line-height:1.5; margin-bottom:14px; }
+    .promo-check input{ margin-top:2px; flex-shrink:0; }
+    .promo-msg{ font-size:13px; line-height:1.5; min-height:18px; margin-bottom:12px; }
+    .promo-msg.err{ color:var(--danger); }
+    .promo-msg.ok{ color:var(--ok); }
+    .promo-actions{ display:flex; gap:8px; justify-content:flex-end; }
     .nav-links{
       display:flex;
       align-items:center;
@@ -669,7 +718,140 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-W9JFR6BD"
 height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <!-- End Google Tag Manager (noscript) -->
+<!-- ── Signup discount banner ────────────────────────────────────────────────
+     Dismissal is remembered in localStorage. A banner that returns on every page
+     load stops being an offer and becomes an obstacle, and the people most likely
+     to buy are the ones who visit repeatedly. -->
+<div id="promoBanner" class="promo-banner" role="region" aria-label="Discount offer" hidden>
+  <div class="promo-banner-inner">
+    <span class="promo-banner-text">
+      <strong>Save 10%</strong> — leave your email and phone and we'll send your discount code.
+    </span>
+    <button type="button" class="btn primary promo-banner-cta" id="promoBannerCta"
+            data-umami-event="promo-banner-open">Get my code</button>
+    <button type="button" class="promo-banner-close" id="promoBannerClose"
+            aria-label="Dismiss offer">&times;</button>
+  </div>
+</div>
+
+<!-- Claim dialog. <dialog> gives focus trapping, Escape-to-close and the backdrop
+     without hand-rolling any of it. -->
+<dialog id="promoDialog" class="promo-dialog" aria-labelledby="promoDialogTitle">
+  <form method="dialog" id="promoForm" novalidate>
+    <h2 id="promoDialogTitle" class="promo-dialog-title">Get 10% off</h2>
+    <p class="promo-dialog-sub">We'll email your code straight away.</p>
+
+    <label class="promo-label" for="promoEmail">Email</label>
+    <input class="promo-input" type="email" id="promoEmail" name="email"
+           autocomplete="email" required placeholder="you@example.com">
+
+    <label class="promo-label" for="promoPhone">Phone</label>
+    <input class="promo-input" type="tel" id="promoPhone" name="phone"
+           autocomplete="tel" required placeholder="801-555-0123">
+
+    <!-- Consent to be TEXTED is asked separately and starts unchecked. Emailing a code
+         someone requested is not marketing; texting them later is, and US TCPA rules
+         want that opt-in to be express rather than inferred from a phone field. -->
+    <label class="promo-check">
+      <input type="checkbox" id="promoSms" name="smsConsent">
+      <span>Text me occasional updates. Message and data rates may apply.</span>
+    </label>
+
+    <div class="promo-msg" id="promoMsg" role="status"></div>
+
+    <div class="promo-actions">
+      <button type="button" class="btn" id="promoCancel">Not now</button>
+      <button type="submit" class="btn primary" id="promoSubmit"
+              data-umami-event="promo-banner-submit">Send my code</button>
+    </div>
+  </form>
+</dialog>
+
 <div class="wrap">
+
+  <script>
+  /* Signup discount banner.
+     Shown unless dismissed or already claimed on this browser. Both facts live in
+     localStorage: a returning visitor being asked again for details they already gave
+     reads as the site not remembering them. */
+  (function () {
+    var DISMISSED = "iw-promo-dismissed";
+    var CLAIMED   = "iw-promo-claimed";
+
+    function stored(k) { try { return localStorage.getItem(k) === "1"; } catch (e) { return false; } }
+    function store(k)  { try { localStorage.setItem(k, "1"); } catch (e) {} }
+
+    var banner = document.getElementById("promoBanner");
+    var dialog = document.getElementById("promoDialog");
+    if (!banner || !dialog) return;
+
+    if (!stored(DISMISSED) && !stored(CLAIMED)) banner.hidden = false;
+
+    document.getElementById("promoBannerClose").addEventListener("click", function () {
+      banner.hidden = true;
+      store(DISMISSED);
+    });
+
+    document.getElementById("promoBannerCta").addEventListener("click", function () {
+      document.getElementById("promoMsg").textContent = "";
+      // showModal is unsupported on some older browsers; falling back to the pricing page
+      // is better than a button that silently does nothing.
+      if (typeof dialog.showModal === "function") dialog.showModal();
+      else window.location.href = "/src/pricing.html";
+    });
+
+    document.getElementById("promoCancel").addEventListener("click", function () { dialog.close(); });
+
+    document.getElementById("promoForm").addEventListener("submit", function (ev) {
+      ev.preventDefault();   // method="dialog" would close before we could submit
+
+      var msg    = document.getElementById("promoMsg");
+      var btn    = document.getElementById("promoSubmit");
+      var email  = document.getElementById("promoEmail").value.trim();
+      var phone  = document.getElementById("promoPhone").value.trim();
+      var sms    = document.getElementById("promoSms").checked;
+
+      msg.className = "promo-msg";
+      if (!email || email.indexOf("@") === -1) { msg.className = "promo-msg err"; msg.textContent = "Please enter a valid email address."; return; }
+      if (phone.replace(/\D/g, "").length < 7)  { msg.className = "promo-msg err"; msg.textContent = "Please enter a valid phone number."; return; }
+
+      var original = btn.textContent;
+      btn.disabled = true; btn.textContent = "Sending…";
+      msg.textContent = "";
+
+      fetch("/.netlify/functions/claimSignupDiscount", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: email,
+          phone: phone,
+          smsConsent: sms,
+          // Same first-touch record the checkout sends, so a lead that converts can be
+          // traced to the visit that produced it.
+          attribution: (typeof window.iwAttribution === "function" ? window.iwAttribution() : null) || {}
+        })
+      })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        if (!res.ok || !res.d.ok) {
+          msg.className = "promo-msg err";
+          msg.textContent = res.d.error || "Something went wrong. Please try again.";
+          return;
+        }
+        store(CLAIMED);
+        banner.hidden = true;
+        msg.className = "promo-msg ok";
+        msg.textContent = "Sent. Check your inbox for code " + (res.d.code || "") + ".";
+        setTimeout(function () { dialog.close(); }, 2600);
+      })
+      .catch(function () {
+        msg.className = "promo-msg err";
+        msg.textContent = "Could not reach the server. Please try again.";
+      })
+      .finally(function () { btn.disabled = false; btn.textContent = original; });
+    });
+  })();
+  </script>
 
   <!-- ── Nav ──────────────────────────────────── -->
   <nav>
