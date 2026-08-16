@@ -3,32 +3,22 @@
 Things known to be missing or wrong, with enough context to pick up cold.
 Delete an entry when it is done — this file is only useful if it is true.
 
-## Nothing expires a membership
+## Membership expiry: partly done
 
-**A plan bought for N months lasts forever.** Both halves of the expiry are recorded
-faithfully and neither is acted on:
+DONE: published sites are delisted when hosting lapses. reconcileHosting runs nightly,
+writes listed:false onto the domain record, and the edge function serves 410 Gone.
+Reversible — data is kept and renewing relists on the next run.
 
-- `hosting_until` is set correctly on every purchase, but the edge function that serves
-  published sites never reads it. A site stays online indefinitely.
-- `current_period_end` is only written when a Stripe subscription exists, so a **one-time**
-  purchase has no plan end date at all. `tier` stays `graduate`/`prime` and `status` stays
-  `active` with nothing to lapse.
+STILL MISSING:
 
-So "3 months of Graduate" is, in practice, permanent. Credits stop refilling — that is the
-only thing that degrades — but the tier, the editor and the hosting never end.
+1. A plan end date on one-time purchases. current_period_end is only written when a
+   Stripe subscription exists, so a one-time buyer has no plan expiry at all — tier stays
+   graduate/prime and status stays active forever. Only their SITE goes dark; the account
+   keeps its entitlements. hosting_until is the only date being enforced.
 
-Harmless at zero paying customers. It has to be settled before there are real ones,
-because switching enforcement on later applies retroactively to people who have been
-treating their purchase as permanent.
+2. Archiving is written but disabled. Set HOSTING_ARCHIVE_ENABLED="true" only after
+   watching the dry-run logs across several nights and agreeing with what they name.
 
-Needs three things:
-
-1. A plan end date written on one-time purchases too, not only subscriptions.
-2. An expiry check in the serving path, using `isHostingActive()` from
-   `src/netlify/functions/membershipDates.mjs` rather than a new definition.
-3. A scheduled job for deletion past the derived archive date (`archiveDate()`, hosting
-   plus 18 months). This is the only irreversible code in the system — it wants a dry-run
-   mode and a log of what it would remove before it removes anything.
 
 ## Subscription modification is untested against Stripe
 

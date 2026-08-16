@@ -118,6 +118,44 @@ function html404(domain, message) {
   );
 }
 
+/**
+ * A site whose hosting has lapsed.
+ *
+ * 410 Gone rather than 404: the site existed and was deliberately withdrawn, which is
+ * exactly what 410 means. Search engines drop a 410 faster than a 404, which is the right
+ * outcome — a lapsed portfolio should stop appearing in results rather than lingering as a
+ * dead link against its owner's name.
+ *
+ * Worded for the visitor, who is most likely a recruiter following a link, while telling
+ * the owner what to do. Nothing has been deleted at this point; the data is intact and
+ * renewing brings it straight back.
+ */
+function htmlExpired(domain) {
+  return new Response(
+    `<!doctype html><html><head><meta charset="utf-8"><title>Portfolio unavailable</title></head>
+     <body style="font-family:system-ui,sans-serif;max-width:34rem;margin:12vh auto;padding:0 1.5rem;line-height:1.6;color:#1a2233">
+       <h2 style="margin:0 0 .6rem">This portfolio isn't published right now</h2>
+       <p style="margin:0 0 1rem;color:#55627a">
+         The hosting for <strong>${domain}</strong> has lapsed, so the site has been taken offline.
+         Nothing has been deleted.
+       </p>
+       <p style="margin:0;color:#55627a">
+         If this is your portfolio, renewing at
+         <a href="https://resumeto.website/src/pricing.html" style="color:#2f4bd4">resumeto.website</a>
+         puts it back within a day.
+       </p>
+     </body></html>`,
+    {
+      status: 410,
+      headers: {
+        "content-type": "text/html; charset=utf-8",
+        // Short, because renewing should take effect quickly rather than being cached out.
+        "cache-control": "public, max-age=300",
+      },
+    }
+  );
+}
+
 function sanitizeSlug(value) {
   return String(value || "").toLowerCase().trim()
     .replace(/[^a-z0-9-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 80);
@@ -242,6 +280,16 @@ export default async function handler(request, context) {
     mapping = JSON.parse(raw);
   } catch (err) {
     return new Response(`Error looking up domain mapping: ${err?.message}`, { status: 500 });
+  }
+
+  // Delisted by the nightly reconcile job when hosting lapsed.
+  //
+  // Checked for an explicit `false` so every record written before this existed — none of
+  // which carries the field — keeps serving. A missing flag must never mean "take it
+  // down": the failure mode of guessing wrong here is a paying customer's portfolio going
+  // dark, on the page a recruiter is looking at.
+  if (mapping?.listed === false) {
+    return htmlExpired(domain);
   }
 
   const baseSlug = mapping?.slug;
