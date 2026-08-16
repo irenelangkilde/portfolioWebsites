@@ -854,12 +854,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const monthly   = (p?.planUnitCents(tier, 0) ?? 0) / 100;
 
       if (autoRenew) {
-        // The months box has no effect in this mode — say so rather than let the number
-        // sitting above imply a fixed term.
+        // Auto-renew repeats the whole block, so the months chosen govern both the amount
+        // and the cadence. Naming the cadence explicitly is the point: "renews every 3
+        // months" is a materially different commitment from "renews monthly", and it is
+        // the sentence a chargeback turns on.
+        const every = planMonths === 1
+          ? "every month"
+          : `every ${planMonths} months`;
         el.innerHTML =
-          `You'll be charged <strong>${formatMoney(monthly)} today</strong>, then ` +
-          `<strong>${formatMoney(monthly)} every month</strong> until you cancel. ` +
-          `The month count above doesn't apply to auto-renewing plans. ` +
+          `You'll be charged <strong>${formatMoney(grandTotal)} today</strong>, then ` +
+          `<strong>${formatMoney(grandTotal)} ${every}</strong> until you cancel. ` +
           `Cancel any time from Plans &amp; Billing.`;
       } else {
         const savings = (p?.planSavingsCents(tier, planMonths) ?? 0) / 100;

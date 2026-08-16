@@ -30,17 +30,6 @@ Needs three things:
    plus 18 months). This is the only irreversible code in the system — it wants a dry-run
    mode and a log of what it would remove before it removes anything.
 
-## Auto-renew does not repeat the prepaid block
-
-Ticking auto-renew bills one month at a time regardless of the month count chosen, so a
-buyer who selects 3 months and ticks the box is charged for 1 and renews monthly. The
-confirm dialog now says so plainly, which makes it honest rather than correct.
-
-Intended behaviour: N months prepaid renews as another N-month block at the same tiered
-rate, so the volume discount survives renewal. In Stripe that is
-`recurring: { interval: "month", interval_count: N }`, and the place it goes is marked with
-a comment in `createCheckoutSession.mjs`.
-
 ## No renewal reminder
 
 Nothing warns a customer before a prepaid plan runs out. Intended: an email roughly a week

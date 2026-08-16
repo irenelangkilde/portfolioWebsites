@@ -63,11 +63,25 @@ export async function handler(event) {
   // and it had to be enforced in two places that could disagree. Any month count is valid.
   // To reintroduce one, it belongs here — the server is the only authoritative check.
 
+  // Stripe will not bill a recurring price at an interval longer than a year, so a
+  // 13-month auto-renewing block is rejected by the API. Caught here so the buyer gets a
+  // sentence they can act on rather than a 500 after they have committed to a total.
+  const MAX_RECURRING_MONTHS = 12;
+
   for (const item of cartItems) {
     if (!isPriced(item.tier)) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: `No price configured for tier: ${item.tier}` })
+      };
+    }
+    if (wantsRecurring && PLAN_PRICING[item.tier] && item.qty > MAX_RECURRING_MONTHS) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: `Auto-renewing plans can cover at most ${MAX_RECURRING_MONTHS} months at a time. ` +
+                 `Either lower the months or untick auto-renew to buy ${item.qty} months outright.`
+        })
       };
     }
   }
@@ -112,18 +126,24 @@ export async function handler(event) {
     // months as quantity as well would multiply twice.
     const plan = PLAN_PRICING[i.tier];
     if (plan) {
-      const isRecurringPlan = wantsRecurring;
-      const months          = isRecurringPlan ? 1 : i.qty;
-      const amount          = planTotalCents(i.tier, months);
+      const months = i.qty;
+      const amount = planTotalCents(i.tier, months);
 
       return {
         price_data: {
           currency:     "usd",
           product_data: { name: months > 1 ? `${plan.name} — ${months} months` : plan.name },
           unit_amount:  amount,
-          // Auto-renew currently repeats a single month. Renewing the whole prepaid block
-          // instead is step 3 of this work and lands here as interval_count: months.
-          ...(isRecurringPlan ? { recurring: { interval: "month", interval_count: 1 } } : {}),
+          // Auto-renew repeats the WHOLE prepaid block: buy three months and the
+          // subscription bills three months' worth every three months.
+          //
+          // interval_count is what makes that true. Billing monthly instead would drop the
+          // customer onto the first-month rate at renewal, quietly taking away the volume
+          // discount they bought — the renewal would cost more per month than the original
+          // purchase, which is the opposite of what buying in bulk is for.
+          ...(wantsRecurring
+            ? { recurring: { interval: "month", interval_count: months } }
+            : {}),
         },
         quantity: 1,
       };
@@ -154,10 +174,12 @@ export async function handler(event) {
   //
   // Normalising here rather than in each consumer is deliberate — there are two of them
   // and they would have to agree forever.
+  // Both paths now pay for every month chosen up front, so this is simply the month count.
+  // It was briefly a special case: auto-renew used to bill one month at a time regardless
+  // of what was selected, so the months PAID differed from the months TYPED. Billing the
+  // whole block removes the distinction rather than papering over it.
   const firstItem  = cartItems[0];
-  const paidMonths = (firstItem && PLAN_TIERS.has(firstItem.tier) && wantsRecurring)
-    ? 1
-    : (firstItem?.qty || 1);
+  const paidMonths = firstItem?.qty || 1;
 
   const sessionMeta = {
     user_id:    userId || "guest",

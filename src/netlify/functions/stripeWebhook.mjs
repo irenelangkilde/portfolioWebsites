@@ -752,15 +752,19 @@ export async function handler(event) {
           const tierKey = sub.metadata?.tier_key;
           if (!userId) break;
 
-          // One renewal buys exactly one billing interval, and the plans bill monthly.
+          // One renewal buys exactly one billing interval — and an interval is now the
+          // whole prepaid block, so a three-month subscription renews three months.
           //
-          // This previously extended hosting by sub.metadata.quantity — the number of
-          // months chosen at checkout — and by a hardcoded 4 for Prime. Both are the
-          // wrong question at renewal time: a recurring plan charges for a single month
-          // (line_items quantity is 1 for a recurring plan), so granting `quantity`
-          // months every month handed out three months of hosting for one month's money,
-          // compounding for as long as the subscription stayed alive.
-          const RENEWAL_MONTHS = 1;
+          // Read from the PRICE rather than from metadata. interval_count is what Stripe
+          // actually billed; metadata is what we said at checkout, and if the two ever
+          // disagree the customer's money followed the price. An earlier version of this
+          // handler trusted metadata.quantity while the charge covered one month, and
+          // handed out three months for one month's money every month.
+          const price = sub.items?.data?.[0]?.price;
+          const RENEWAL_MONTHS =
+            (price?.recurring?.interval === "month" && price.recurring.interval_count) ||
+            parseInt(sub.metadata?.quantity || "1", 10) ||
+            1;
 
           const supabase = getSupabaseAdmin();
           const { data: existing } = await supabase
