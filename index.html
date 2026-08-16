@@ -134,6 +134,17 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       flex-shrink:0;
     }
     .nav-title{ font-size:17px; font-weight:900; letter-spacing:.2px; }
+    /* Stacks the number beneath the name. .nav-brand is a row, so the two need their
+       own column wrapper or the phone would sit beside the logo instead. */
+    .nav-brand-text{ display:flex; flex-direction:column; line-height:1.2; }
+    .nav-phone{
+      font-size:12.5px;
+      font-weight:700;
+      color:var(--muted);
+      text-decoration:none;
+      letter-spacing:.2px;
+    }
+    .nav-phone:hover{ color:var(--accent); text-decoration:underline; }
     .nav-links{
       display:flex;
       align-items:center;
@@ -664,7 +675,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <nav>
     <div class="nav-brand">
       <div class="nav-logo">IW</div>
-      <span class="nav-title">Irene's Webworks</span>
+      <div class="nav-brand-text">
+        <span class="nav-title">Irene's Webworks</span>
+        <!-- tel: so it dials on a phone, where a good share of this traffic will be.
+             The visible text keeps the dashes people expect; the href uses E.164. -->
+        <a class="nav-phone" href="tel:+18014774185">801-477-4185</a>
+      </div>
     </div>
     <div class="nav-links">
       <a href="#how" class="btn" data-umami-event="home-nav-how">How it works</a>
