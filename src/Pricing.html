@@ -201,19 +201,26 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       color:var(--text); font:inherit;
     }
     .qtyTotal{ font-weight:800; color:rgba(236,243,255,.9); }
-    /* Warm, not the card's blue: this is a reward, and it should not read as another
-       line of specification. Hidden entirely at one month, where there is no bonus —
-       showing "0 bonus credits" would advertise the absence of an offer. */
+    /* Warm, not the card's blue: this is a reward, and it should not read as another line
+       of specification. Two intensities — the muted default advertises the offer before
+       anything is typed, and .earned brightens once it has actually been earned, so the
+       card visibly responds to a bigger number rather than merely restating it. */
     .bonusNote{
       margin-top:6px;
       padding:7px 10px;
       border-radius:9px;
-      background:rgba(255,176,32,.12);
-      border:1px solid rgba(255,176,32,.30);
-      color:#FFD79A;
+      background:rgba(255,176,32,.07);
+      border:1px dashed rgba(255,176,32,.28);
+      color:rgba(255,215,154,.80);
       font-size:12.5px;
       font-weight:700;
       line-height:1.45;
+      transition:background .18s ease, border-color .18s ease, color .18s ease;
+    }
+    .bonusNote.earned{
+      background:rgba(255,176,32,.14);
+      border:1px solid rgba(255,176,32,.42);
+      color:#FFD79A;
     }
     .bonusNote[hidden]{ display:none; }
     .muted{ color:var(--muted); }
@@ -615,7 +622,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <!-- Sits directly under the months box, where the number is being chosen. On the
                card it would be static copy nobody reads; here it responds to what they type,
                which is what makes an incentive visible at the moment it applies. -->
-          <div class="bonusNote" id="graduateBonus" hidden></div>
+          <div class="bonusNote" id="graduateBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, all available right away.</div>
         </div>
       </article>
 
@@ -640,7 +647,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input id="primeQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('prime')" />
             <div class="qtyTotal" id="primeTotal">= $0.00</div>
           </div>
-          <div class="bonusNote" id="primeBonus" hidden></div>
+          <div class="bonusNote" id="primeBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, all available right away.</div>
         </div>
       </article>
 
@@ -859,27 +866,58 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     /**
      * Show what the extra months earn, right where the months are being chosen.
      *
-     * Deliberately states the TOTAL as well as the bonus. "2 bonus credits" alone invites
-     * the question "on top of what?", and the answer — 5 rather than 3 — is the number
-     * that makes the offer legible.
+     * ALWAYS VISIBLE, in three states. It was previously hidden below two months, which
+     * meant the only people who saw the offer were the ones who had already decided to buy
+     * several — precisely the people who least needed persuading. An incentive nobody
+     * knows about cannot influence the number they type.
      *
-     * Hidden entirely when there is no bonus. Rendering "0 bonus credits" at one month
-     * would advertise the absence of an offer at exactly the wrong moment.
+     *   nothing entered  advertise the offer
+     *   exactly 1 month  name the next step, with the specific reward for taking it
+     *   2 or more        what they have earned, and the resulting total
+     *
+     * The 2+ state states the TOTAL as well as the bonus, because "2 bonus credits" alone
+     * invites "on top of what?" — and 5-rather-than-3 is the number that makes it legible.
      */
+    // The teaser has to be on screen BEFORE anything is typed, and nothing called
+    // updateAddonsTotal at startup — every path into it was a user action. planPricing
+    // loads as a deferred module and announces itself; this listener is registered while
+    // the page is still parsing, so it is always in place before the event fires.
+    //
+    // The IW_PRICING check covers the case where the module somehow ran first: an offer
+    // that fails to appear is the one failure mode that defeats the whole point.
+    window.addEventListener("iw-pricing-ready", function () {
+      try { updateAddonsTotal(); } catch (e) { console.warn("[pricing] initial render failed:", e); }
+    }, { once: true });
+    if (window.IW_PRICING) {
+      try { updateAddonsTotal(); } catch (e) {}
+    }
+
     function updateBonusNote(tier, months) {
       const el = document.getElementById(tier === "graduate" ? "graduateBonus" : "primeBonus");
       if (!el) return;
 
-      const p     = pricing();
-      const bonus = p?.planBonusCredits(tier, months) ?? 0;
+      const p = pricing();
+      if (!p) { el.hidden = true; return; }
 
-      if (!months || months < 2 || bonus <= 0) { el.hidden = true; return; }
-
-      const total = p.planCredits(tier, months);
       el.hidden = false;
-      el.innerHTML =
-        `+${bonus} bonus credit${bonus !== 1 ? "s" : ""} for ${months} months ` +
-        `— <strong>${total} credits</strong> in total, available right away.`;
+      const n = Number(months) || 0;
+
+      if (n >= 2) {
+        const bonus = p.planBonusCredits(tier, n);
+        const total = p.planCredits(tier, n);
+        el.className = "bonusNote earned";
+        el.innerHTML =
+          `+${bonus} bonus credit${bonus !== 1 ? "s" : ""} for ${n} months ` +
+          `— <strong>${total} credits</strong> in total, available right away.`;
+        return;
+      }
+
+      el.className = "bonusNote";
+      el.innerHTML = n === 1
+        ? `Add one more month to earn <strong>+1 bonus credit</strong> ` +
+          `(${p.planCredits(tier, 2)} in total, available right away).`
+        : `Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, ` +
+          `all available right away.`;
     }
 
     /**
