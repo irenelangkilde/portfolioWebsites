@@ -1,0 +1,73 @@
+# Open work
+
+Things known to be missing or wrong, with enough context to pick up cold.
+Delete an entry when it is done — this file is only useful if it is true.
+
+## Nothing expires a membership
+
+**A plan bought for N months lasts forever.** Both halves of the expiry are recorded
+faithfully and neither is acted on:
+
+- `hosting_until` is set correctly on every purchase, but the edge function that serves
+  published sites never reads it. A site stays online indefinitely.
+- `current_period_end` is only written when a Stripe subscription exists, so a **one-time**
+  purchase has no plan end date at all. `tier` stays `graduate`/`prime` and `status` stays
+  `active` with nothing to lapse.
+
+So "3 months of Graduate" is, in practice, permanent. Credits stop refilling — that is the
+only thing that degrades — but the tier, the editor and the hosting never end.
+
+Harmless at zero paying customers. It has to be settled before there are real ones,
+because switching enforcement on later applies retroactively to people who have been
+treating their purchase as permanent.
+
+Needs three things:
+
+1. A plan end date written on one-time purchases too, not only subscriptions.
+2. An expiry check in the serving path, using `isHostingActive()` from
+   `src/netlify/functions/membershipDates.mjs` rather than a new definition.
+3. A scheduled job for deletion past the derived archive date (`archiveDate()`, hosting
+   plus 18 months). This is the only irreversible code in the system — it wants a dry-run
+   mode and a log of what it would remove before it removes anything.
+
+## Auto-renew does not repeat the prepaid block
+
+Ticking auto-renew bills one month at a time regardless of the month count chosen, so a
+buyer who selects 3 months and ticks the box is charged for 1 and renews monthly. The
+confirm dialog now says so plainly, which makes it honest rather than correct.
+
+Intended behaviour: N months prepaid renews as another N-month block at the same tiered
+rate, so the volume discount survives renewal. In Stripe that is
+`recurring: { interval: "month", interval_count: N }`, and the place it goes is marked with
+a comment in `createCheckoutSession.mjs`.
+
+## No renewal reminder
+
+Nothing warns a customer before a prepaid plan runs out. Intended: an email roughly a week
+before expiry offering the upfront-block discount again, or month-to-month, or nothing.
+
+Needs a scheduled function, a marker so it cannot send twice, and a renewal link. This is
+the piece that turns a lapse back into a purchase, so it is worth more than it looks.
+
+## Volume discount is plumbed but not set
+
+`src/planPricing.mjs` supports a per-month tier ladder and both the page and the charge
+compute from it. The numbers are still flat at $7 and $12. Lowering `extra` beneath the
+early tiers is all that is required — the displayed total, the savings line and the amount
+charged all follow.
+
+## Conversions API not wired
+
+Only the browser pixel reports to Meta, so ad blockers and iOS eat a share of conversions.
+`stripeWebhook.mjs` already knows every payment server-side, which is a better signal.
+
+`Purchase` already carries the Stripe session id as `eventID`, so the server copy can be
+deduplicated against the browser one. **Sending it without that shared id would double every
+conversion**, which looks like success while poisoning the optimiser.
+
+## Verify the guest gift prices
+
+`GIFT_PRICING` in `src/planPricing.mjs` says Starter $149 and Premium $299, taken from what
+`landing_gift.html` displayed. The charge previously came from `STRIPE_PRICE_STARTER` and
+`STRIPE_PRICE_PREMIUM`, with nothing keeping the two in step. If those had drifted, the
+page's version is now authoritative and may be the wrong one.
