@@ -46,6 +46,22 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
   <script type="module">
     import * as pricing from "/src/planPricing.mjs";
     window.IW_PRICING = pricing;
+
+    // Card prices come from the same table the checkout bills from. They were hardcoded
+    // in the markup and agreed with it today, which is precisely how the previous three
+    // price drifts began. The markup values remain as a fallback for the instant before
+    // this runs.
+    for (const el of document.querySelectorAll("[data-price-for]")) {
+      const tier  = el.getAttribute("data-price-for");
+      const cents = pricing.PLAN_PRICING[tier]
+        ? pricing.planUnitCents(tier, 0)
+        : pricing.unitCents(tier);
+      if (!cents) continue;
+      const dollars = cents % 100 === 0 ? "$" + (cents / 100) : "$" + (cents / 100).toFixed(2);
+      el.textContent = dollars;
+      const holder = el.closest("[aria-label]");
+      if (holder) holder.setAttribute("aria-label", dollars + " " + (holder.getAttribute("aria-label") || "").replace(/^\$[\d.]+\s*/, ""));
+    }
     window.dispatchEvent(new CustomEvent("iw-pricing-ready"));
   </script>
 <script defer src="/src/metaPixel.js"></script>
@@ -561,7 +577,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <h2 class="planName">Graduate</h2>
         <div class="price" aria-label="$7 per month">
           <span aria-hidden="true" style="font-size:36px; line-height:1; letter-spacing:-.04em; color:rgba(236,243,255,.45); text-decoration:line-through; margin-right:2px;"></span>
-          <strong aria-hidden="true">$7</strong><span aria-hidden="true">per month</span>
+          <strong aria-hidden="true" data-price-for="graduate">$7</strong><span aria-hidden="true">per month</span>
         </div>
         <!--div style="font-size:11.5px; font-weight:700; margin-top:-8px;"><span style="color:#f0c94a;">Special offer</span><span style="color:rgba(236,243,255,.35);"> — renewal price $29/unit</span></div-->
         <div class="planBlurb">Complete editable website which can be downloaded or deployed.</div>
@@ -590,7 +606,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div style="font-size:10px; font-weight:900; letter-spacing:.06em; text-transform:uppercase; background:linear-gradient(135deg, color-mix(in oklab, var(--primary) 75%, #fff 4%), color-mix(in oklab, var(--accent) 42%, var(--primary))); color:white; padding:4px 10px; border-radius:999px; white-space:nowrap;"><span aria-hidden="true">★</span> Recommended</div>
         </div>
         <h2 class="planName">Prime</h2>
-        <div class="price"><strong>$12</strong><span>per month</span></div>
+        <div class="price"><strong data-price-for="prime">$12</strong><span>per month</span></div>
         <div class="planBlurb">5× the sites of the Graduate Plan. Ideal for active career development.</div>
         <ul class="featureList">
           <li>Multiple versions — new targets, A/B, updates</li>
@@ -621,7 +637,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <article class="planCard small">
         <div class="planTag">Add-on</div>
         <h2 class="planName" style="font-size:18px;">Extra Credits</h2>
-        <div class="price"><strong>$1</strong><span>per credit</span></div>
+        <div class="price"><strong data-price-for="extra_credits">$1</strong><span>per credit</span></div>
         <div class="planBlurb">Top up your credits for building, revising, and deploying your website.</div>
         <ul class="featureList">
           <li>Resume analysis</li>
@@ -642,7 +658,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <article class="planCard small care">
         <div class="planTag">Add-on</div>
         <h2 class="planName" style="font-size:18px;">Human Support</h2>
-        <div class="price"><strong>$49</strong><span>per month</span></div>
+        <div class="price"><strong data-price-for="care">$49</strong><span>per month</span></div>
         <div class="planBlurb">Hands-on help from a real person, before and after launch.</div>
         <ul class="featureList">
           <li>Done-for-you editing &amp; polishing</li>
