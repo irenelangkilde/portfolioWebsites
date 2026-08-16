@@ -39,6 +39,50 @@ export const PLAN_PRICING = {
   prime:    { name: "Prime",    tiers: [1200], extra: 1200 },
 };
 
+/**
+ * What a plan grants, before any add-on.
+ *
+ * Lives here rather than in the webhook because it is the same kind of fact as the price —
+ * part of the definition of the plan — and it was previously duplicated as GRADUATE_CREDITS
+ * in two functions plus TIER_LIMITS in a third.
+ */
+export const PLAN_ENTITLEMENTS = {
+  graduate: { credits: 3,  sites: 1 },
+  prime:    { credits: 10, sites: 5 },
+};
+
+/**
+ * Extra credits granted for each month bought beyond the first, all available immediately.
+ *
+ * This is the volume incentive, and it is deliberately credits rather than a discount. At
+ * $7 a month there is not enough absolute money in a two or three month purchase for a
+ * percentage off to feel like anything — three months at a 25c-per-month ladder saves 75
+ * cents. A credit costs about a dollar to grant and is the scarce resource in the product,
+ * so it reads as worth more than the same money off.
+ *
+ * Granted UP FRONT rather than accruing monthly: the point is to reward committing now,
+ * and a benefit you have to wait for does not influence the decision being made today.
+ */
+export const BONUS_CREDITS_PER_EXTRA_MONTH = 1;
+
+/** Credits a purchase of `months` grants, before extra_credits add-ons. */
+export function planCredits(tier, months) {
+  const base = PLAN_ENTITLEMENTS[tier]?.credits;
+  if (base === undefined) return 0;
+  const n = Math.max(1, Math.floor(Number(months) || 1));
+  return base + BONUS_CREDITS_PER_EXTRA_MONTH * (n - 1);
+}
+
+/** Sites a plan grants. Does not scale with months — one plan, one allowance. */
+export function planSites(tier) {
+  return PLAN_ENTITLEMENTS[tier]?.sites ?? 0;
+}
+
+/** Bonus credits alone, for saying "plus 2 extra credits" without recomputing. */
+export function planBonusCredits(tier, months) {
+  return planCredits(tier, months) - (PLAN_ENTITLEMENTS[tier]?.credits ?? 0);
+}
+
 export const ADDON_PRICING = {
   extra_credits: { name: "Extra Credits",             cents: 100  },
   care:          { name: "Human Support (per month)", cents: 4900 },

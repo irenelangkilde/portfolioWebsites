@@ -1,14 +1,14 @@
 import Stripe from "stripe";
 import { stackMonths } from "./membershipDates.mjs";
 import { claimSession } from "./claimSession.mjs";
+import { planCredits, planSites, planBonusCredits } from "../../planPricing.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { randomBytes } from "crypto";
 
-// ── Credits / downloads / deploys per unit purchased ─────────────────────────
-// 1 unit = 3 credits + 1 download + 1 deploy  (Graduate plan)
-// Credits and downloads are a ONE-TIME grant with the plan — they do not scale with
-// the number of months purchased. More credits are bought as the extra_credits add-on.
+// Plan entitlements live in planPricing.mjs. Credits DO scale with months now — base
+// plus one per additional month, granted up front — so these constants survive only for
+// the gift paths, which grant a fixed package rather than a month count.
 const GRADUATE_CREDITS   = 3;
 const GRADUATE_DOWNLOADS = 1;
 const DEPLOYS_PER_UNIT   = 1;
@@ -132,23 +132,28 @@ async function sendPurchaseConfirmation(obj, { tierKey, qty, hAddon, sAddon, cAd
 
     // What they actually got, in the same terms the pricing page uses.
     const granted = [];
+    const planCreditTotal = isPlan ? planCredits(tierKey, qty) : 0;
+    const planBonus       = isPlan ? planBonusCredits(tierKey, qty) : 0;
     if (isPlan) {
       granted.push(`${qty} month${qty !== 1 ? "s" : ""} of ${planName}`);
-      granted.push(tierKey === "graduate"
-        ? `${GRADUATE_CREDITS} credits and ${GRADUATE_DOWNLOADS} site`
-        : `${TIER_LIMITS.prime.credits_limit} credits and ${TIER_LIMITS.prime.downloads_limit} sites`);
+      const sites = planSites(tierKey);
+      granted.push(`${planCreditTotal} credits and ${sites} site${sites !== 1 ? "s" : ""}` +
+                   (planBonus > 0 ? ` (includes ${planBonus} bonus credit${planBonus !== 1 ? "s" : ""} for buying ahead)` : ""));
     }
     if (cAddon > 0) granted.push(`${cAddon} extra credit${cAddon !== 1 ? "s" : ""}`);
     if (sAddon > 0) granted.push(`${sAddon} month${sAddon !== 1 ? "s" : ""} of Human Support`);
     if (hAddon > 0) granted.push(`${hAddon} month${hAddon !== 1 ? "s" : ""} of hosting`);
     if (!granted.length) return;   // nothing meaningful to describe
 
-    // Credits do not scale with months, so say so — it is the single most likely thing to
-    // be misread about a multi-month purchase.
-    const creditNote = isPlan && qty > 1
+    // Bonus credits are the whole reason to buy ahead, so name them rather than letting a
+    // larger number appear without explanation. They are available now, not monthly —
+    // that is the point, and it is the part most likely to be misread.
+    const creditNote = planBonus > 0
       ? `<p style="margin:14px 0 0;font-size:14px;color:rgba(234,240,255,.62);line-height:1.7;">
-           Credits come with the plan as a one-off, not per month. You can add more any time
-           from Plans &amp; Billing.
+           Your ${planBonus} bonus credit${planBonus !== 1 ? "s are" : " is"} for buying
+           ${qty} months up front, and ${planBonus !== 1 ? "they are" : "it is"} available
+           immediately — not drip-fed month by month. You can add more any time from
+           Plans &amp; Billing.
          </p>`
       : "";
 
@@ -702,15 +707,21 @@ export async function handler(event) {
 
           if (sAddon > 0) extra.support_until = stackMonths(existing?.support_until, sAddon);
 
+          // Credits now scale with months bought: base plus one per additional month, all
+          // granted immediately. That is the volume incentive — see planPricing.mjs for
+          // why it is credits rather than a discount. Set unconditionally rather than only
+          // when an add-on is present, because the month count alone now changes the total.
           if (tierKey === "free" || tierKey === "prime") {
             // qty is MONTHS. This was hardcoded to 4 from when Prime was a four-month
             // plan; with monthly pricing that charged for N months and granted 4.
-            if (tierKey === "prime") extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
-            if (tierKey === "prime" && cAddon > 0) extra.credits_limit = TIER_LIMITS.prime.credits_limit + cAddon;
+            if (tierKey === "prime") {
+              extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
+              extra.credits_limit = planCredits("prime", qty) + cAddon;
+            }
             await upgradeMembership(userId, tierKey, extra);
           } else if (tierKey === "graduate") {
             extra.hosting_until = stackMonths(existing?.hosting_until, qty + hAddon);
-            if (cAddon > 0) extra.credits_limit = GRADUATE_CREDITS + cAddon;
+            extra.credits_limit = planCredits("graduate", qty) + cAddon;
             await upgradeGraduate(userId, qty, extra);
           } else if (hAddon > 0 || sAddon > 0 || cAddon > 0) {
             if (hAddon > 0) extra.hosting_until = stackMonths(existing?.hosting_until, hAddon);
@@ -780,8 +791,10 @@ export async function handler(event) {
                 status:             "active",
                 credits_used:       0,
                 downloads_used:     0,
-                credits_limit:      GRADUATE_CREDITS,
-                downloads_limit:    GRADUATE_DOWNLOADS,
+                // Same month-scaled grant as the original purchase: a three-month block
+                // renewing gives the three-month credit allowance again.
+                credits_limit:      planCredits("graduate", RENEWAL_MONTHS),
+                downloads_limit:    planSites("graduate"),
                 hosting_until:      stackMonths(existing?.hosting_until, RENEWAL_MONTHS),
                 current_period_end: new Date(sub.current_period_end * 1000).toISOString()
               })

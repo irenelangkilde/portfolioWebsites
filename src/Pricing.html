@@ -877,16 +877,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const every = planMonths === 1
           ? "every month"
           : `every ${planMonths} months`;
+        const bonus = p?.planBonusCredits(tier, planMonths) ?? 0;
         el.innerHTML =
           `You'll be charged <strong>${formatMoney(grandTotal)} today</strong>, then ` +
           `<strong>${formatMoney(grandTotal)} ${every}</strong> until you modify or cancel your subscription. ` +
+          (bonus > 0
+            ? `Includes <strong>${bonus} bonus credit${bonus !== 1 ? "s" : ""}</strong> each cycle for buying ahead. `
+            : "") +
           `Cancel any time from Plans &amp; Billing.`;
       } else {
         const savings = (p?.planSavingsCents(tier, planMonths) ?? 0) / 100;
+        const bonus   = p?.planBonusCredits(tier, planMonths) ?? 0;
         el.innerHTML =
           `One payment of <strong>${formatMoney(grandTotal)}</strong> for ` +
           `<strong>${planMonths} month${planMonths !== 1 ? "s" : ""}</strong>. ` +
           (savings > 0 ? `You save ${formatMoney(savings)} buying up front. ` : "") +
+          (bonus > 0
+            ? `Includes <strong>${bonus} bonus credit${bonus !== 1 ? "s" : ""}</strong> for buying ahead, available immediately. `
+            : "") +
           `Nothing recurring — it ends when the months run out.`;
       }
     }

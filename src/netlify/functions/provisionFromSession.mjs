@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { stackMonths } from "./membershipDates.mjs";
 import { claimSession } from "./claimSession.mjs";
+import { planCredits, planSites } from "../../planPricing.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { randomBytes } from "crypto";
 import { Resend } from "resend";
@@ -235,7 +236,7 @@ export async function handler(event) {
       status:          "active",
       credits_used:    0,
       downloads_used:  0,
-      credits_limit:   GRADUATE_CREDITS,
+      credits_limit:   planCredits("graduate", qty) + cAddon,
       downloads_limit: GRADUATE_DOWNLOADS,
       hosting_until:   stackMonths(existing?.hosting_until, qty + hAddon),
       ...extra,
@@ -247,7 +248,7 @@ export async function handler(event) {
       status:          "active",
       credits_used:    0,
       downloads_used:  0,
-      credits_limit:   10,
+      credits_limit:   planCredits("prime", qty) + cAddon,
       downloads_limit: 5,
       hosting_until:   stackMonths(existing?.hosting_until, 4 + hAddon),
       ...extra,
