@@ -3,21 +3,20 @@
 Things known to be missing or wrong, with enough context to pick up cold.
 Delete an entry when it is done — this file is only useful if it is true.
 
-## Membership expiry: partly done
+## Membership expiry: done, archiving still disabled
 
-DONE: published sites are delisted when hosting lapses. reconcileHosting runs nightly,
-writes listed:false onto the domain record, and the edge function serves 410 Gone.
-Reversible — data is kept and renewing relists on the next run.
+Sites are delisted when hosting lapses (reconcileHosting nightly, edge serves 410).
+Credits expire 18 months after that, the same moment the data becomes archivable, so
+hosting_until is the single date the system reasons about. Editor access is deliberately
+permanent — opening old work costs nothing; generating new sites is what costs money.
 
-STILL MISSING:
+REMAINING: archiving is written but OFF. Set HOSTING_ARCHIVE_ENABLED="true" only after
+watching the dry-run logs across several nights and agreeing with every line they name.
+It is the only irreversible operation in the system.
 
-1. A plan end date on one-time purchases. current_period_end is only written when a
-   Stripe subscription exists, so a one-time buyer has no plan expiry at all — tier stays
-   graduate/prime and status stays active forever. Only their SITE goes dark; the account
-   keeps its entitlements. hosting_until is the only date being enforced.
-
-2. Archiving is written but disabled. Set HOSTING_ARCHIVE_ENABLED="true" only after
-   watching the dry-run logs across several nights and agreeing with what they name.
+Note that a one-time buyer keeps tier and status indefinitely. That is now deliberate
+rather than an oversight: their site goes dark and their credits expire, which is what
+the money actually pays for.
 
 
 ## Subscription modification is untested against Stripe

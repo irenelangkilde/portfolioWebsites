@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { isArchivable, archiveDate, ARCHIVE_GRACE_MONTHS } from "./membershipDates.mjs";
 
 function getSupabaseAdmin() {
   const url = process.env.SUPABASE_URL;
@@ -18,11 +19,32 @@ export async function checkAndIncrementCredits(userId) {
 
   const { data: m, error } = await supabase
     .from("memberships")
-    .select("tier, status, credits_used, credits_limit")
+    .select("tier, status, credits_used, credits_limit, hosting_until")
     .eq("user_id", userId)
     .single();
 
   if (error || !m) return { allowed: true };
+
+  // Credits expire 18 months after hosting lapsed — the same moment the published site
+  // becomes archivable, so hosting_until remains the single date the whole system reasons
+  // about. Editor access is deliberately NOT gated: someone may want to open old work long
+  // after they have stopped paying, and refusing that costs a goodwill visit to gain
+  // nothing. It is generating new sites that consumes real money.
+  //
+  // An absent hosting_until does not expire anything. Free-tier accounts and anything
+  // predating hosting_until have none, and treating absent as expired would lock out every
+  // one of them — the same trap that would have delisted their sites.
+  if (m.hosting_until && isArchivable(m.hosting_until)) {
+    return {
+      allowed: false,
+      reason: `Credits expired on ${new Date(archiveDate(m.hosting_until)).toISOString().slice(0, 10)}, `
+            + `${ARCHIVE_GRACE_MONTHS} months after hosting ended. Buying any plan restores them.`,
+      tier: m.tier,
+      used: m.credits_used,
+      limit: m.credits_limit,
+      expired: true,
+    };
+  }
 
   const unlimited = m.credits_limit === -1;
   if (!unlimited && m.credits_used >= m.credits_limit) {
