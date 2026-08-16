@@ -51,6 +51,19 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
     // in the markup and agreed with it today, which is precisely how the previous three
     // price drifts began. The markup values remain as a fallback for the instant before
     // this runs.
+    // Entitlements come from the same table as the prices, so a card cannot advertise a
+    // credit count or storage figure the plan does not actually grant.
+    for (const el of document.querySelectorAll("[data-storage-for]")) {
+      const gb = pricing.planStorageGb(el.getAttribute("data-storage-for"));
+      if (gb) el.textContent = gb + " GB";
+    }
+    for (const el of document.querySelectorAll("[data-entitlement-for]")) {
+      const tier  = el.getAttribute("data-entitlement-for");
+      const ent   = pricing.PLAN_ENTITLEMENTS[tier];
+      if (!ent) continue;
+      el.textContent = ent.credits + " credits \u00B7 " + ent.sites + " site" + (ent.sites !== 1 ? "s" : "");
+    }
+
     for (const el of document.querySelectorAll("[data-price-for]")) {
       const tier  = el.getAttribute("data-price-for");
       const cents = pricing.PLAN_PRICING[tier]
@@ -605,10 +618,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="planBlurb">Complete editable website which can be downloaded or deployed.</div>
         <ul class="featureList">
           <li>Publications, demos, research, projects</li>
-          <li>3 credits · 1 site</li>
+          <li><span data-entitlement-for="graduate">3 credits · 1 site</span>, plus 1 bonus credit per extra month</li>
           <li>1 download or deploy</li>
-          <li>1 month of hosting</li>
-          <li>10GB hosting and free SSL</li>
+          <li>Hosting for the months you buy</li>
+          <li><span data-storage-for="graduate">10 GB</span> hosting and free SSL</li>
           <li>Published on Irene's Ventures domain</li>
           <li>Guide to DIY (free) external hosting</li>
           <li>(Optional) Auto-renewal</li>
@@ -636,8 +649,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="planBlurb">5× the sites of the Graduate Plan. Ideal for active career development.</div>
         <ul class="featureList">
           <li>Multiple versions — new targets, A/B, updates</li>
-          <li>10 credits · 5 sites</li>
-          <li>100 GB fast hosting & free SSL</li>
+          <li><span data-entitlement-for="prime">10 credits · 5 sites</span>, plus 1 bonus credit per extra month</li>
+          <li><span data-storage-for="prime">100 GB</span> fast hosting &amp; free SSL</li>
           <li>Custom domain setup support</li>
           <li>(Optional) Auto-renewal</li>
         </ul>

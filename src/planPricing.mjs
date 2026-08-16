@@ -47,9 +47,26 @@ export const PLAN_PRICING = {
  * in two functions plus TIER_LIMITS in a third.
  */
 export const PLAN_ENTITLEMENTS = {
-  graduate: { credits: 3,  sites: 1 },
-  prime:    { credits: 10, sites: 5 },
+  graduate: { credits: 3,  sites: 1, storageGb: 10  },
+  prime:    { credits: 10, sites: 5, storageGb: 100 },
 };
+
+/**
+ * Storage allowance, in GB.
+ *
+ * ADVERTISED, NOT ENFORCED. Nothing counts bytes per user, and nothing refuses an upload
+ * for exceeding this. It is honest only because it cannot realistically be reached:
+ * individual assets are capped at 5 MB, so 10 GB is about two thousand uploads against a
+ * plan that permits one site.
+ *
+ * If a customer ever does approach it, this becomes a promise with no mechanism behind it.
+ * Enforcing it would mean a bytes-per-user tally maintained on upload and delete, a
+ * backfill for existing sites, and checks in the upload and deploy paths — none of which
+ * exists. Do not quietly start relying on this number as a limit.
+ */
+export function planStorageGb(tier) {
+  return PLAN_ENTITLEMENTS[tier]?.storageGb ?? 0;
+}
 
 /**
  * Extra credits granted for each month bought beyond the first, all available immediately.

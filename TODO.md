@@ -41,6 +41,19 @@ may reset the billing cycle rather than leaving it alone. Verify against a real
 subscription that current_period_end does NOT jump forward, and that no invoice is
 generated at the moment of the change.
 
+## Storage allowances are advertised, not enforced
+
+The plan cards promise 10 GB (Graduate) and 100 GB (Prime). Nothing counts bytes per
+user and nothing refuses an upload for exceeding them.
+
+Currently honest because it cannot realistically be reached: assets cap at 5 MB each, so
+10 GB is roughly two thousand uploads against a plan allowing one site. It stops being
+honest the moment anyone approaches it.
+
+Enforcing would need a bytes-per-user tally maintained on upload and delete, a backfill
+for existing sites, and checks in the upload and deploy paths. None of that exists — do
+not start treating the number as a limit without building it.
+
 ## No renewal reminder
 
 Nothing warns a customer before a prepaid plan runs out. Intended: an email roughly a week
