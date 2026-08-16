@@ -17,8 +17,7 @@
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-
-function getEnv(n) { return process.env[n] || ""; }
+import { getEnv } from "./localEnv.mjs";
 
 function getSupabaseAdmin() {
   return createClient(getEnv("SUPABASE_URL"), getEnv("SUPABASE_SERVICE_ROLE_KEY"), {

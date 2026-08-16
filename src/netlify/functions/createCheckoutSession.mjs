@@ -1,8 +1,7 @@
 import Stripe from "stripe";
 import { PLAN_PRICING, planTotalCents, ADDON_PRICING, GIFT_PRICING, unitCents, tierName, isPriced } from "../../planPricing.mjs";
-import { readFileSync } from "fs";
-import { resolve } from "path";
 import { resolveReferralCode } from "./referralCodes.mjs";
+import { getEnv } from "./localEnv.mjs";
 
 // Plan tiers drive the subscription interval and go in line_items as recurring prices.
 // Add-ons are always rendered as one-time price_data charges so they never conflict
@@ -16,38 +15,6 @@ const ADDON_PRICE_DATA = Object.fromEntries(
   Object.entries(ADDON_PRICING).map(([tier, a]) => [tier, { name: a.name, unit_amount: a.cents }])
 );
 
-let localEnvCache = null;
-
-function loadLocalEnv() {
-  if (localEnvCache) return localEnvCache;
-  localEnvCache = {};
-  const candidates = [
-    resolve(process.cwd(), ".env"),
-    resolve(process.cwd(), "../.env")
-  ];
-  for (const candidate of candidates) {
-    try {
-      const raw = readFileSync(candidate, "utf-8");
-      for (const line of raw.split(/\r?\n/)) {
-        const trimmed = line.trim();
-        if (!trimmed || trimmed.startsWith("#")) continue;
-        const match = trimmed.match(/^([A-Za-z_][A-Za-z0-9_]*)=(.*)$/);
-        if (!match) continue;
-        let value = match[2].trim();
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-          value = value.slice(1, -1);
-        }
-        if (!(match[1] in localEnvCache)) localEnvCache[match[1]] = value;
-      }
-      break;
-    } catch {}
-  }
-  return localEnvCache;
-}
-
-function getEnv(name) {
-  return process.env[name] || loadLocalEnv()[name] || "";
-}
 
 export async function handler(event) {
   if (event.httpMethod !== "POST") {
