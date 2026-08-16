@@ -1026,11 +1026,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
     }
 
+    // Names only. The prices used to live here too and had gone stale in both entries —
+    // "$19 per unit" and "$99 for four months" were shown in the confirm dialog long after
+    // Graduate became $7 a month and Prime $12. Deriving them from planPricing.mjs means
+    // this dialog cannot disagree with the amount the card is charged.
     const PLAN_LABELS = {
-      free:     { name: "FREE Trial", price: "$0 one-time" },
-      graduate: { name: "Graduate",   price: "$19 per unit" },
-      prime:    { name: "Prime",       price: "$99 for four months" },
+      free:     { name: "FREE Trial" },
+      graduate: { name: "Graduate"   },
+      prime:    { name: "Prime"      },
     };
+
+    /** The per-month price line shown for a single-plan checkout. */
+    function planPriceLabel(tier) {
+      if (tier === "free") return "$0 one-time";
+      const cents = pricing()?.planUnitCents(tier, 0) ?? 0;
+      return `${formatMoney(cents / 100)} per month`;
+    }
     let _pendingTier = null;
 
     function autoRenewLabel(tier, totalHostingMonths) {
@@ -1075,13 +1086,21 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       _pendingTier = tier;
       _pendingItems = null;
       document.getElementById("confirmPlanName").textContent  = def.name;
-      document.getElementById("confirmPlanPrice").textContent = def.price;
-      const _cpPlanMo = 1;   // both plans bill monthly
+      document.getElementById("confirmPlanPrice").textContent = planPriceLabel(tier);
+      const _cpPlanMo = 1;   // this path buys a single month
       document.getElementById("confirmAutoRenew").checked = false;
       document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(tier, _cpPlanMo);
       document.getElementById("confirmGift").checked = false;
       document.getElementById("confirmGiftWrap").style.display = tier === "free" ? "none" : "";
       syncAutoRenewVisibility();
+      // Without this the disclosure box keeps whatever the last cart-based checkout left
+      // in it, so a single-plan purchase could show another purchase's terms.
+      updateRenewalDisclosure(
+        tier === "free" ? null : tier,
+        tier === "graduate" ? 1 : 0,
+        tier === "prime"    ? 1 : 0,
+        (pricing()?.planTotalCents(tier, 1) ?? 0) / 100
+      );
       syncGiftDetails();
       document.getElementById("confirmMsg").textContent = "";
       document.getElementById("confirmMsg").className  = "authMsg";
