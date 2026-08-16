@@ -57,11 +57,13 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       const gb = pricing.planStorageGb(el.getAttribute("data-storage-for"));
       if (gb) el.textContent = gb + " GB";
     }
-    for (const el of document.querySelectorAll("[data-entitlement-for]")) {
-      const tier  = el.getAttribute("data-entitlement-for");
-      const ent   = pricing.PLAN_ENTITLEMENTS[tier];
-      if (!ent) continue;
-      el.textContent = ent.credits + " credits \u00B7 " + ent.sites + " site" + (ent.sites !== 1 ? "s" : "");
+    for (const el of document.querySelectorAll("[data-credits-for]")) {
+      const ent = pricing.PLAN_ENTITLEMENTS[el.getAttribute("data-credits-for")];
+      if (ent) el.textContent = String(ent.credits);
+    }
+    for (const el of document.querySelectorAll("[data-sites-for]")) {
+      const ent = pricing.PLAN_ENTITLEMENTS[el.getAttribute("data-sites-for")];
+      if (ent) el.textContent = String(ent.sites);
     }
 
     for (const el of document.querySelectorAll("[data-price-for]")) {
@@ -618,11 +620,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="planBlurb">Complete editable website which can be downloaded or deployed.</div>
         <ul class="featureList">
           <li>Publications, demos, research, projects</li>
-          <li><span data-entitlement-for="graduate">3 credits · 1 site</span>, plus 1 bonus credit per extra month</li>
+          <li><span data-credits-for="graduate">3</span> credits included with 1 month</li>
+           <li><span data-sites-for="graduate">1</span> portfolio site</li>
           <li>1 download or deploy</li>
           <li>Hosting for the months you buy</li>
           <li><span data-storage-for="graduate">10 GB</span> hosting and free SSL</li>
-          <li>Published on Irene's Ventures domain</li>
+          <li>Published on a resumeto.website address</li>
           <li>Guide to DIY (free) external hosting</li>
           <li>(Optional) Auto-renewal</li>
         </ul>
@@ -635,7 +638,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <!-- Sits directly under the months box, where the number is being chosen. On the
                card it would be static copy nobody reads; here it responds to what they type,
                which is what makes an incentive visible at the moment it applies. -->
-          <div class="bonusNote" id="graduateBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, all available right away.</div>
+          <div class="bonusNote" id="graduateBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, on top of the 3 included.</div>
         </div>
       </article>
 
@@ -649,7 +652,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="planBlurb">5× the sites of the Graduate Plan. Ideal for active career development.</div>
         <ul class="featureList">
           <li>Multiple versions — new targets, A/B, updates</li>
-          <li><span data-entitlement-for="prime">10 credits · 5 sites</span>, plus 1 bonus credit per extra month</li>
+          <li><span data-credits-for="prime">10</span> credits included with 1 month</li>
+           <li><span data-sites-for="prime">5</span> portfolio sites</li>
           <li><span data-storage-for="prime">100 GB</span> fast hosting &amp; free SSL</li>
           <li>Custom domain setup support</li>
           <li>(Optional) Auto-renewal</li>
@@ -660,7 +664,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input id="primeQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('prime')" />
             <div class="qtyTotal" id="primeTotal">= $0.00</div>
           </div>
-          <div class="bonusNote" id="primeBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, all available right away.</div>
+          <div class="bonusNote" id="primeBonus">Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, on top of the 10 included.</div>
         </div>
       </article>
 
@@ -915,22 +919,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       el.hidden = false;
       const n = Number(months) || 0;
 
+      // Show the ARITHMETIC, not just the bonus and the total.
+      //
+      // The card lists "3 credits included with 1 month" in blue while this box says
+      // "5 credits in total" in amber. Given two numbers and no stated relationship, a
+      // reader can reasonably conclude they add up to eight. Writing "3 included + 2
+      // bonus = 5" leaves nowhere for that misreading to live, and it is the same reason
+      // the card line now says "with 1 month" rather than just "3 credits".
+      const base = p.PLAN_ENTITLEMENTS?.[tier]?.credits ?? 0;
+
       if (n >= 2) {
         const bonus = p.planBonusCredits(tier, n);
         const total = p.planCredits(tier, n);
         el.className = "bonusNote earned";
         el.innerHTML =
-          `+${bonus} bonus credit${bonus !== 1 ? "s" : ""} for ${n} months ` +
-          `— <strong>${total} credits</strong> in total, available right away.`;
+          `${base} included + ${bonus} bonus for ${n} months = ` +
+          `<strong>${total} credits</strong>, all available right away.`;
         return;
       }
 
       el.className = "bonusNote";
       el.innerHTML = n === 1
-        ? `Add one more month to earn <strong>+1 bonus credit</strong> ` +
-          `(${p.planCredits(tier, 2)} in total, available right away).`
+        ? `Add one more month: ${base} included + 1 bonus = ` +
+          `<strong>${p.planCredits(tier, 2)} credits</strong>, all available right away.`
         : `Buy more than one month and earn <strong>+1 bonus credit per extra month</strong>, ` +
-          `all available right away.`;
+          `on top of the ${base} included.`;
     }
 
     /**
