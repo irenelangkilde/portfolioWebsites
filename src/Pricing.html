@@ -201,6 +201,21 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       color:var(--text); font:inherit;
     }
     .qtyTotal{ font-weight:800; color:rgba(236,243,255,.9); }
+    /* Warm, not the card's blue: this is a reward, and it should not read as another
+       line of specification. Hidden entirely at one month, where there is no bonus —
+       showing "0 bonus credits" would advertise the absence of an offer. */
+    .bonusNote{
+      margin-top:6px;
+      padding:7px 10px;
+      border-radius:9px;
+      background:rgba(255,176,32,.12);
+      border:1px solid rgba(255,176,32,.30);
+      color:#FFD79A;
+      font-size:12.5px;
+      font-weight:700;
+      line-height:1.45;
+    }
+    .bonusNote[hidden]{ display:none; }
     .muted{ color:var(--muted); }
     .actions{ display:flex; gap:10px; flex-wrap:wrap; margin-top:auto; align-items:center; }
     /* ── Pipeline strip ── */
@@ -597,6 +612,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input id="graduateQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('graduate')" />
             <div class="qtyTotal" id="graduateTotal">= $0.00</div>
           </div>
+          <!-- Sits directly under the months box, where the number is being chosen. On the
+               card it would be static copy nobody reads; here it responds to what they type,
+               which is what makes an incentive visible at the moment it applies. -->
+          <div class="bonusNote" id="graduateBonus" hidden></div>
         </div>
       </article>
 
@@ -621,6 +640,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <input id="primeQty" type="text" inputmode="numeric" pattern="[0-9]*" value="0" autocomplete="off" onfocus="requestAnimationFrame(()=>this.select())" oninput="onPlanQtyChange('prime')" />
             <div class="qtyTotal" id="primeTotal">= $0.00</div>
           </div>
+          <div class="bonusNote" id="primeBonus" hidden></div>
         </div>
       </article>
 
@@ -837,6 +857,32 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     }
 
     /**
+     * Show what the extra months earn, right where the months are being chosen.
+     *
+     * Deliberately states the TOTAL as well as the bonus. "2 bonus credits" alone invites
+     * the question "on top of what?", and the answer — 5 rather than 3 — is the number
+     * that makes the offer legible.
+     *
+     * Hidden entirely when there is no bonus. Rendering "0 bonus credits" at one month
+     * would advertise the absence of an offer at exactly the wrong moment.
+     */
+    function updateBonusNote(tier, months) {
+      const el = document.getElementById(tier === "graduate" ? "graduateBonus" : "primeBonus");
+      if (!el) return;
+
+      const p     = pricing();
+      const bonus = p?.planBonusCredits(tier, months) ?? 0;
+
+      if (!months || months < 2 || bonus <= 0) { el.hidden = true; return; }
+
+      const total = p.planCredits(tier, months);
+      el.hidden = false;
+      el.innerHTML =
+        `+${bonus} bonus credit${bonus !== 1 ? "s" : ""} for ${months} months ` +
+        `— <strong>${total} credits</strong> in total, available right away.`;
+    }
+
+    /**
      * Spell out what the card will actually be charged, and when it will be charged again.
      *
      * The auto-renew checkbox previously said only "Auto-renew". A buyer typing 3 months
@@ -956,6 +1002,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       setTotalText("careTotal",     careTotal);
       setTotalText("graduateTotal", gradTotal);
       setTotalText("primeTotal",    primeTotal);
+
+      updateBonusNote("graduate", gradQty);
+      updateBonusNote("prime",    primeQty);
 
       const lines = [];
       if (gradQty  > 0) lines.push(`${gradQty} Graduate month${gradQty !== 1 ? "s" : ""}`);
