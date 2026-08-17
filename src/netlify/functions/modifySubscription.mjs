@@ -99,16 +99,36 @@ export async function handler(event) {
     // shorthand exists only on Checkout Sessions, which is why the identical shape works
     // at purchase and fails here with "Did you mean product?".
     //
-    // The product is taken from the price the subscription already carries rather than
-    // from configuration. That keeps the customer on the product they originally bought,
-    // needs no new environment variable, and avoids creating a fresh product every time
-    // somebody adjusts their renewal length.
-    const productId = typeof item.price?.product === "string"
+    // Reusing the subscription's existing product is the first choice: it keeps the
+    // customer on what they originally bought and needs no configuration. But Stripe
+    // refuses new prices on an ARCHIVED product, and checkout creates a throwaway product
+    // per purchase — those get archived over time, at which point reuse fails with
+    // "product … is marked as inactive". So the product is verified before use and a
+    // replacement is created only when the original cannot serve.
+    const plan = PLAN_PRICING[membership.tier];
+    let productId = typeof item.price?.product === "string"
       ? item.price.product
       : item.price?.product?.id;
 
+    if (productId) {
+      try {
+        const product = await stripe.products.retrieve(productId);
+        if (!product?.active) {
+          console.log(`[modify] product ${productId} is archived — creating a replacement`);
+          productId = null;
+        }
+      } catch (err) {
+        console.warn(`[modify] could not read product ${productId}:`, err?.message);
+        productId = null;
+      }
+    }
+
     if (!productId) {
-      return json(500, { error: "Could not determine the Stripe product for this subscription." });
+      const created = await stripe.products.create({
+        name: plan.name,
+        metadata: { tier: membership.tier, created_by: "modifySubscription" },
+      });
+      productId = created.id;
     }
 
     const updated = await stripe.subscriptions.update(membership.stripe_subscription_id, {
