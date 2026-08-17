@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { checkStorage, addStorage } from "./storageQuota.mjs";
+import { alertStorageLimitReached } from "./opsAlert.mjs";
 import { createHash } from "crypto";
 import { explainBlobStoreError, getPortfolioAssetsStore } from "./blobStore.mjs";
 
@@ -125,6 +127,23 @@ export async function handler(event) {
   const { store, configError } = getPortfolioAssetsStore();
   if (!store) return json(500, { error: configError });
 
+  // Content-hashed keys mean re-uploading an identical file overwrites rather than adds.
+  // Checking for the key first is what keeps the running total honest: without it, saving
+  // the same photo twice would consume the allowance twice.
+  let alreadyStored = false;
+  try { alreadyStored = !!(await store.get(key)); }
+  catch { /* treat an unreadable probe as "new" — the counter errs high, never low */ }
+
+  if (!alreadyStored) {
+    const quota = await checkStorage(supabase, user.id, buffer.length);
+    if (!quota.allowed) {
+      // First refusal anywhere is worth knowing about: it means an advertised number has
+      // started biting real behaviour, which until now it never had.
+      await alertStorageLimitReached({ userId: user.id, ...quota, incoming: buffer.length });
+      return json(413, { error: quota.reason, storage: { used: quota.used, limit: quota.limit } });
+    }
+  }
+
   try {
     // Store as base64 (matches how getPreviewImage/getPublishedImage do it —
     // Netlify Function response bodies with isBase64Encoded work off strings).
@@ -140,6 +159,8 @@ export async function handler(event) {
   } catch (err) {
     return json(500, { error: explainBlobStoreError(err) });
   }
+
+  if (!alreadyStored) await addStorage(supabase, user.id, buffer.length);
 
   const url = `/.netlify/functions/getPortfolioAsset?owner=${encodeURIComponent(user.id)}&asset=${encodeURIComponent(assetName)}`;
   return json(200, { ok: true, url, hash, size: buffer.length, mimeType });
