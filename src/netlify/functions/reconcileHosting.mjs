@@ -170,6 +170,10 @@ export async function handler() {
     // have when a count surprises you.
     note({
       domain,
+      // The slug is what /u/:slug serves, and it is the only way to construct a testable
+      // URL for a domain whose DNS points somewhere else entirely — which is how the
+      // GoDaddy-parked domains hid a hole in delisting.
+      slug: record.slug || null,
       user_id: userId,
       hosting_until: hostingUntil,
       state: active ? "served" : "delisted",
@@ -227,6 +231,9 @@ export async function handler() {
   report.slugsScanned = 0;
   report.slugsDelisted = 0;
   report.slugsRelisted = 0;
+  // Every published slug with its state, so a testable URL can be built without going
+  // near the blob store by hand. Capped for the same reason as `sites`.
+  report.slugs = [];
 
   for (const key of metaKeys) {
     report.slugsScanned++;
@@ -247,6 +254,10 @@ export async function handler() {
 
     const active    = isHostingActive(hostingUntil);
     const wasListed = meta.listed !== false;
+
+    if (report.slugs.length < DETAIL_LIMIT) {
+      report.slugs.push({ slug, user_id: userId, hosting_until: hostingUntil, serving: active });
+    }
 
     if (active && !wasListed) {
       meta.listed = true;
