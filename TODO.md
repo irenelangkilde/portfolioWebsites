@@ -30,6 +30,26 @@ may reset the billing cycle rather than leaving it alone. Verify against a real
 subscription that current_period_end does NOT jump forward, and that no invoice is
 generated at the moment of the change.
 
+## reconcileHosting is linear in published objects
+
+Ten seconds for 4 domains and 29 slugs, because every blob is read and written individually.
+Fine nightly at this scale, and roughly linear — a few thousand published slugs would push
+it past a typical function timeout, at which point it fails silently every night.
+
+When that becomes plausible: batch the reads, or narrow the work by querying Supabase for
+users whose hosting_until changed since the last run rather than walking every blob.
+
+## knownDomains declares the wrong canonical host
+
+CANONICAL_HOST in src/netlify/shared/knownDomains.mjs is "irenes-ventures.com", while
+siteConfig.js and the edge function both use "resumeto.website".
+
+Dormant only because PUBLISHED_SITES_HOST is set to webresu.me, so buildPublishUrl never
+reaches the fallback. Clear that env var and it would start stamping irenes-ventures.com
+onto permanent portfolio links — the exact breakage the surrounding comment warns about.
+
+Decide which host is canonical for published sites and make the three agree.
+
 ## Storage allowances are advertised, not enforced
 
 The plan cards promise 10 GB (Graduate) and 100 GB (Prime). Nothing counts bytes per
