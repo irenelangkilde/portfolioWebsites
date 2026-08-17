@@ -49,18 +49,18 @@ When that becomes plausible: batch the reads, or narrow the work by querying Sup
 users whose hosting_until changed since the last run rather than walking every blob.
 
 
-## Storage allowances are advertised, not enforced
+## Storage: enforced, but nothing can be deleted
 
-The plan cards promise 10 GB (Graduate) and 100 GB (Prime). Nothing counts bytes per
-user and nothing refuses an upload for exceeding them.
+Allowances are now enforced on upload (1 GB free / 10 GB Graduate / 100 GB Prime), with a
+one-shot email the first time anyone is refused.
 
-Currently honest because it cannot realistically be reached: assets cap at 5 MB each, so
-10 GB is roughly two thousand uploads against a plan allowing one site. It stops being
-honest the moment anyone approaches it.
+THE GAP: there is no way for a customer to delete an asset, so the only route back under
+the limit is upgrading. The refusal message says so honestly rather than suggesting a
+delete that does not exist, but a delete path is the obvious next thing — and when it is
+built it MUST decrement memberships.storage_bytes, or the counter becomes a high-water
+mark that locks people out of storage they are not using.
 
-Enforcing would need a bytes-per-user tally maintained on upload and delete, a backfill
-for existing sites, and checks in the upload and deploy paths. None of that exists — do
-not start treating the number as a limit without building it.
+Published HTML is not counted: different store, kilobytes against a gigabyte allowance.
 
 
 ## Volume discount is plumbed but not set

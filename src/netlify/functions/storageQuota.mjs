@@ -70,8 +70,13 @@ export async function checkStorage(supabase, userId, incomingBytes) {
     used,
     limit,
     tier,
+    // Does NOT say "delete something": there is no way for a customer to delete an asset,
+    // and telling someone to take an action the product does not offer turns a clear limit
+    // into a confusing one. Upgrading is the only route back under the line, so that is
+    // the only route named.
     reason: `That upload would put you over your ${formatBytes(limit)} storage allowance `
-          + `(${formatBytes(used)} used). Delete something, or move to a larger plan.`,
+          + `(${formatBytes(used)} already used). A larger plan raises the limit — `
+          + `or email irene@irenes-ventures.com and we'll sort it out.`,
   };
 }
 
