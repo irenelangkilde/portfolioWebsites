@@ -80,9 +80,3 @@ Only the browser pixel reports to Meta, so ad blockers and iOS eat a share of co
 deduplicated against the browser one. **Sending it without that shared id would double every
 conversion**, which looks like success while poisoning the optimiser.
 
-## Verify the guest gift prices
-
-`GIFT_PRICING` in `src/planPricing.mjs` says Starter $149 and Premium $299, taken from what
-`landing_gift.html` displayed. The charge previously came from `STRIPE_PRICE_STARTER` and
-`STRIPE_PRICE_PREMIUM`, with nothing keeping the two in step. If those had drifted, the
-page's version is now authoritative and may be the wrong one.
