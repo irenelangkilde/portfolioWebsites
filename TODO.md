@@ -18,16 +18,22 @@ Two bugs this testing found, both now fixed: /u/:slug bypassed delisting entirel
 deletion deleted only the domain mapping while leaving the html, images and meta.
 
 
-## Subscription modification is untested against Stripe
+## Note: the Stripe subscription API is not the Checkout API
 
-modifySubscription.mjs swaps the subscription item onto a new price with a different
-interval_count and proration_behavior "none". The intent is: nothing charged today, the
-new block length applies at the next renewal.
+modifySubscription now works, but took three attempts, each from assuming the two APIs
+behave alike. They diverge on product handling in ways that never appear when creating a
+session:
 
-Stripe can be particular about changing a recurring interval on a live subscription — it
-may reset the billing cycle rather than leaving it alone. Verify against a real
-subscription that current_period_end does NOT jump forward, and that no invoice is
-generated at the moment of the change.
+  price_data.product_data   accepted by Checkout, REJECTED by subscriptions.update, which
+                            wants price_data.product (an existing id).
+  archived products         Checkout happily invents a product per purchase; those get
+                            archived over time, and subscriptions.update then refuses them
+                            with "marked as inactive".
+
+The function now verifies the product is active and creates a replacement when it is not.
+Worth remembering before writing anything else against subscriptions by analogy with
+checkout.
+
 
 ## reconcileHosting is linear in published objects
 
