@@ -37,6 +37,10 @@ checkout.
 
 ## reconcileHosting is linear in published objects
 
+An alert now fires by email at 1000 slugs or a 20s run, whichever comes first — once,
+then never again until ops/scale-warning-sent.json is deleted from the published-sites
+store. So this item does not depend on anyone remembering to check.
+
 Ten seconds for 4 domains and 29 slugs, because every blob is read and written individually.
 Fine nightly at this scale, and roughly linear — a few thousand published slugs would push
 it past a typical function timeout, at which point it fails silently every night.

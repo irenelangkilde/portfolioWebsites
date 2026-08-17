@@ -332,6 +332,84 @@ export async function handler() {
   }
 
   report.ms = Date.now() - started;
+
+  await maybeWarnAboutScale(store, report);
+
   console.log("[reconcile] done:", JSON.stringify(report));
   return { statusCode: 200, body: JSON.stringify(report) };
+}
+
+// This job reads and writes every blob individually, so its cost is linear in published
+// objects. At 33 objects it took ten seconds; the failure mode at scale is not slowness but
+// silence — it exceeds the function timeout, is killed mid-run, and stops reconciling
+// anything without ever reporting a failure.
+//
+// Nobody reads a nightly report that has been fine for a year, so the warning is pushed
+// rather than pulled.
+const SCALE_SLUG_THRESHOLD = 1000;
+const SCALE_MS_THRESHOLD   = 20000;   // whichever arrives first
+const SCALE_MARKER_KEY     = "ops/scale-warning-sent.json";
+
+async function maybeWarnAboutScale(store, report) {
+  try {
+    const bySlugs = report.slugsScanned >= SCALE_SLUG_THRESHOLD;
+    const byTime  = report.ms >= SCALE_MS_THRESHOLD;
+    if (!bySlugs && !byTime) return;
+
+    // Sent once, ever. A nightly warning about a slow job becomes noise within a week, and
+    // noise is indistinguishable from no warning at all. Delete this blob to re-arm it.
+    const existing = await store.get(SCALE_MARKER_KEY).catch(() => null);
+    if (existing) return;
+
+    const reason = bySlugs
+      ? `${report.slugsScanned} published slugs (threshold ${SCALE_SLUG_THRESHOLD})`
+      : `a ${(report.ms / 1000).toFixed(1)}s run (threshold ${SCALE_MS_THRESHOLD / 1000}s)`;
+
+    const to  = getEnv("OPS_ALERT_EMAIL") || "irene@irenes-ventures.com";
+    const key = getEnv("RESEND_API_KEY");
+
+    if (key) {
+      const { Resend } = await import("resend");
+      await new Resend(key).emails.send({
+        from: "Irene's Webworks <gifts@email.irenes-ventures.com>",
+        to,
+        subject: "reconcileHosting is approaching its scaling limit",
+        html: `<div style="font-family:ui-sans-serif,system-ui,sans-serif;max-width:34rem;line-height:1.65;color:#1a2233">
+  <h2 style="margin:0 0 .5rem">Time to revisit the nightly reconcile job</h2>
+  <p style="margin:0 0 1rem;color:#55627a">Triggered by ${reason}.</p>
+  <p style="margin:0 0 1rem;color:#55627a">
+    It reads and writes every blob individually, so its cost grows with the number of
+    published sites. The failure mode is not slowness but <strong>silence</strong>: once it
+    exceeds the function timeout it is killed mid-run and stops reconciling anything,
+    without reporting a failure. Sites would keep serving after hosting lapsed, and nothing
+    would say so.
+  </p>
+  <p style="margin:0 0 1rem;color:#55627a">
+    Two fixes were noted when this was built: batch the blob reads, or narrow the work by
+    asking Supabase which accounts changed since the last run instead of walking every blob.
+  </p>
+  <p style="margin:0;color:#8792a8;font-size:13px">
+    Last run: ${report.slugsScanned} slugs, ${report.scanned} domains, ${(report.ms / 1000).toFixed(1)}s.<br>
+    This is sent once. Delete <code>${SCALE_MARKER_KEY}</code> from the published-sites blob
+    store to re-arm it.
+  </p>
+</div>`,
+      });
+      console.log(`[reconcile] scale warning sent to ${to} — ${reason}`);
+    } else {
+      console.warn("[reconcile] scale threshold reached but RESEND_API_KEY is not set:", reason);
+    }
+
+    // Written after the send, so a mail failure retries tomorrow rather than swallowing
+    // the only warning.
+    await store.set(SCALE_MARKER_KEY, JSON.stringify({
+      sent_at: new Date().toISOString(),
+      reason,
+      slugsScanned: report.slugsScanned,
+      ms: report.ms,
+    }));
+  } catch (err) {
+    // A warning that fails must never take the job down with it.
+    console.error("[reconcile] scale warning failed:", err?.message);
+  }
 }
