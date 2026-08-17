@@ -526,20 +526,28 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
         <div id="promoMsg" style="font-size:12px;margin-top:4px;display:none;" aria-live="polite"></div>
       </div>
-      <div class="acctActions">
-        <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
-        <button class="btn ghost" id="signOutBtn" type="button" style="display:none;">Sign Out</button>
-        <span id="modifySubWrap" style="display:none; align-items:center; gap:6px;">
-          <label for="modifyMonths" style="font-size:12.5px; white-space:nowrap; color:rgba(236,243,255,.72);">Renew every</label>
-          <select id="modifyMonths" class="btn ghost" style="padding:8px 10px;">
+      <!-- Renewal length. Sits beside Gift and Promo rather than in the button row: it is a
+           setting you adjust, not an action you fire, and the button row reads as
+           Refresh / Sign Out / Cancel — a select wedged among them looked like an accident. -->
+      <div class="acctGroup" id="modifySubWrap" style="display:none;">
+        <div class="statusLabel">Renew Every</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
+          <select id="modifyMonths"
+            style="font-size:13px;padding:6px 10px;background:rgba(0,0,0,.28);color:var(--text);border:1px solid var(--border);border-radius:8px;width:200px;">
             <option value="1">1 month</option>
             <option value="2">2 months</option>
             <option value="3">3 months</option>
+            <option value="4">4 months</option>
             <option value="6">6 months</option>
             <option value="12">12 months</option>
           </select>
-          <button class="btn ghost" id="modifySubBtn" type="button">Change</button>
-        </span>
+          <button class="btn ghost mini" type="button" id="modifySubBtn" style="width:200px;text-align:left;">Change &rarr;</button>
+        </div>
+        <div id="modifySubMsg" style="font-size:12px;margin-top:4px;display:none;" aria-live="polite"></div>
+      </div>
+      <div class="acctActions">
+        <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
+        <button class="btn ghost" id="signOutBtn" type="button" style="display:none;">Sign Out</button>
         <button class="btn danger" id="cancelSubBtn" type="button" style="display:none;">Cancel Subscription</button>
       </div>
     </div>
@@ -1648,7 +1656,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       const showCancel = !!_membership?.stripe_subscription_id && _membership?.status === "active";
       document.getElementById("cancelSubBtn").style.display = showCancel ? "" : "none";
       const modWrap = document.getElementById("modifySubWrap");
-      if (modWrap) modWrap.style.display = showCancel ? "inline-flex" : "none";
+      if (modWrap) modWrap.style.display = showCancel ? "flex" : "none";
       if (authCardSection) authCardSection.style.display = "none";
       if (bottomGrid) bottomGrid.style.gridTemplateColumns = "1fr";
     }
@@ -1705,9 +1713,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     document.getElementById("modifySubBtn").addEventListener("click", async () => {
       const btn    = document.getElementById("modifySubBtn");
       const select = document.getElementById("modifyMonths");
+      const msg    = document.getElementById("modifySubMsg");
       const months = parseInt(select.value, 10);
       const label  = months === 1 ? "1 month" : months + " months";
 
+      const show = (text, ok) => {
+        msg.style.display = text ? "" : "none";
+        msg.style.color   = ok ? "var(--ok)" : "var(--danger)";
+        msg.textContent   = text || "";
+      };
+
+      // Confirmed rather than applied on click: this changes what a card is charged, and
+      // the sentence is where the "nothing today" promise is made.
       if (!confirm(
         `Change your plan to renew every ${label}?\n\n` +
         `Nothing is charged today. Your current period is unaffected, and the new length ` +
@@ -1716,9 +1733,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       const orig = btn.textContent;
       btn.disabled = true; btn.textContent = "Saving…";
+      show("", true);
       try {
         const { data: { session } } = await _supabase.auth.getSession();
-        if (!session?.access_token) { alert("Please sign in again."); return; }
+        if (!session?.access_token) { show("Please sign in again.", false); return; }
 
         const res  = await fetch("/.netlify/functions/modifySubscription", {
           method: "POST",
@@ -1726,11 +1744,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           body: JSON.stringify({ authToken: session.access_token, months }),
         });
         const data = await res.json().catch(() => ({}));
-        alert(res.ok && data.ok ? (data.message || "Updated.")
-                                : (data.error || "Could not change your plan."));
-        if (res.ok && data.ok) { await refreshMembership(_currentUser); renderAuthState(); }
+
+        if (res.ok && data.ok) {
+          show(data.message || "Updated.", true);
+          await refreshMembership(_currentUser);
+          renderAuthState();
+        } else {
+          show(data.error || "Could not change your plan.", false);
+        }
       } catch {
-        alert("Could not reach the server. Please try again.");
+        show("Could not reach the server. Please try again.", false);
       } finally {
         btn.disabled = false; btn.textContent = orig;
       }
