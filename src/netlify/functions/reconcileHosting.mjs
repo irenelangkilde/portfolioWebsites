@@ -48,9 +48,18 @@ export async function handler() {
     archiveEnabled,
   };
 
+  // getNamedBlobStore returns { store, configError } rather than the store itself — it
+  // reports a misconfiguration as a value instead of throwing, so the caller can say
+  // something useful about credentials. Assigning the wrapper and calling .list on it is
+  // exactly the mistake that produced "store.list is not a function".
   let store, supabase;
   try {
-    store    = getNamedBlobStore(PUBLISHED_STORE);
+    const opened = getNamedBlobStore(PUBLISHED_STORE);
+    if (opened.configError) {
+      console.error("[reconcile] blob store unavailable:", opened.configError);
+      return { statusCode: 500, body: JSON.stringify({ error: opened.configError }) };
+    }
+    store    = opened.store;
     supabase = getSupabaseAdmin();
   } catch (err) {
     console.error("[reconcile] could not start:", err?.message);
