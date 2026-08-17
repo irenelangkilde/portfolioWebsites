@@ -14,21 +14,21 @@
  *   DELIST   reversible. The site stops being served; everything is still stored. Buying
  *            more months relists it on the next run, and nothing was lost meanwhile.
  *
- *   ARCHIVE  irreversible. Eighteen months after hosting lapsed, the data may be deleted.
+ *   DELETE   irreversible. Eighteen months after hosting lapsed, the data may be deleted.
  *            This is the only destructive operation in the system, so it is OFF unless
- *            HOSTING_ARCHIVE_ENABLED is explicitly "true". By default the job reports what
+ *            HOSTING_DELETE_ENABLED is explicitly "true". By default the job reports what
  *            it would remove and removes nothing.
  *
  * FAILING OPEN IS THE RULE THROUGHOUT. A membership that cannot be read, a date that will
  * not parse, a lookup that errors — all leave the site exactly as it is. Wrongly taking
  * down a paying customer's portfolio is far worse than serving one for an extra day, and
- * on the archive side the asymmetry is absolute: nothing deleted can be brought back.
+ * on the deletion side the asymmetry is absolute: nothing deleted can be brought back.
  */
 
 import { createClient } from "@supabase/supabase-js";
 import { getEnv } from "./localEnv.mjs";
 import { getNamedBlobStore, getPublishedImagesStore } from "./blobStore.mjs";
-import { isHostingActive, isArchivable, archiveDate } from "./membershipDates.mjs";
+import { isHostingActive, isDeletable, deletionDate } from "./membershipDates.mjs";
 
 const PUBLISHED_STORE = "published-sites";
 
@@ -39,13 +39,13 @@ function getSupabaseAdmin() {
 }
 
 export async function handler() {
-  const archiveEnabled = getEnv("HOSTING_ARCHIVE_ENABLED") === "true";
+  const deleteEnabled = getEnv("HOSTING_DELETE_ENABLED") === "true";
   const started = Date.now();
 
   const report = {
     scanned: 0, delisted: 0, relisted: 0, unchanged: 0,
-    archivable: 0, archived: 0, skipped: 0, errors: 0,
-    archiveEnabled,
+    deletable: 0, deleted: 0, skipped: 0, errors: 0,
+    deleteEnabled,
     // Per-site detail, not just counts.
     //
     // The first production run reported "delisted: 3" when one site was expected, and the
@@ -128,7 +128,7 @@ export async function handler() {
       // Pre-dates user_id being recorded. There is no owner to check, so leave it alone
       // rather than guessing.
       report.skipped++;
-      note({ domain, user_id: null, hosting_until: null, state: "served", action: "skipped - no owner recorded", archivable: false });
+      note({ domain, user_id: null, hosting_until: null, state: "served", action: "skipped - no owner recorded", deletable: false });
       continue;
     }
 
@@ -141,7 +141,7 @@ export async function handler() {
     // means "no opinion": leave it exactly as it is.
     if (!hostingUntil) {
       report.skipped++;
-      note({ domain, user_id: userId, hosting_until: null, state: "served", action: "skipped - no hosting date", archivable: false });
+      note({ domain, user_id: userId, hosting_until: null, state: "served", action: "skipped - no hosting date", deletable: false });
       continue;
     }
 
@@ -178,25 +178,25 @@ export async function handler() {
       hosting_until: hostingUntil,
       state: active ? "served" : "delisted",
       action: changed ? (active ? "relisted" : "delisted") : "unchanged",
-      archivable: isArchivable(hostingUntil),
+      deletable: isDeletable(hostingUntil),
     });
 
-    // Archival is considered only for sites already delisted and past the retention
-    // window. archiveDate() derives that from hosting_until, so the two cannot drift.
-    if (!active && hostingUntil && isArchivable(hostingUntil)) {
-      report.archivable++;
-      if (archiveEnabled) {
+    // Deletion is considered only for sites already delisted and past the retention
+    // window. deletionDate() derives that from hosting_until, so the two cannot drift.
+    if (!active && hostingUntil && isDeletable(hostingUntil)) {
+      report.deletable++;
+      if (deleteEnabled) {
         try {
           await store.delete(key);
-          report.archived++;
-          console.log(`[reconcile] ARCHIVED domain mapping ${domain} — eligible since ${archiveDate(hostingUntil)}`);
+          report.deleted++;
+          console.log(`[reconcile] DELETED domain mapping ${domain} — eligible since ${deletionDate(hostingUntil)}`);
           continue;   // record is gone; nothing to write back
         } catch (err) {
-          console.error(`[reconcile] archive failed for ${domain}:`, err?.message);
+          console.error(`[reconcile] deletion failed for ${domain}:`, err?.message);
           report.errors++;
         }
       } else {
-        console.log(`[reconcile] would archive domain mapping ${domain} — eligible since ${archiveDate(hostingUntil)} (dry run)`);
+        console.log(`[reconcile] would delete domain mapping ${domain} — eligible since ${deletionDate(hostingUntil)} (dry run)`);
       }
     }
 
@@ -238,8 +238,8 @@ export async function handler() {
   } catch (err) { console.warn("[reconcile] images store failed to open:", err?.message); }
 
   report.slugsScanned = 0;
-  report.slugsArchivable = 0;
-  report.slugsArchived = 0;
+  report.slugsDeletable = 0;
+  report.slugsDeleted = 0;
   report.slugsDelisted = 0;
   report.slugsRelisted = 0;
   // Every published slug with its state, so a testable URL can be built without going
@@ -266,15 +266,15 @@ export async function handler() {
     const active    = isHostingActive(hostingUntil);
     const wasListed = meta.listed !== false;
 
-    const slugArchivable = isArchivable(hostingUntil);
+    const slugDeletable = isDeletable(hostingUntil);
 
     if (report.slugs.length < DETAIL_LIMIT) {
-      report.slugs.push({ slug, user_id: userId, hosting_until: hostingUntil, serving: active, archivable: slugArchivable });
+      report.slugs.push({ slug, user_id: userId, hosting_until: hostingUntil, serving: active, deletable: slugDeletable });
     }
 
     // The site itself, which is what actually occupies storage.
     //
-    // The first version of archiving deleted only the domain mapping — the smallest and
+    // The first version of this deleted only the domain mapping — the smallest and
     // least valuable object — while html/, meta/ and the promoted images stayed forever.
     // That is the wrong half: it makes a site unreachable by its custom domain while still
     // paying to store every byte of it.
@@ -282,9 +282,9 @@ export async function handler() {
     // Deleted in the order least-recoverable-last, so a failure part way through leaves
     // the site broken rather than half-deleted-and-still-served: html first (nothing to
     // serve), then images, then meta (the record that says it existed).
-    if (!active && slugArchivable) {
-      report.slugsArchivable++;
-      if (archiveEnabled) {
+    if (!active && slugDeletable) {
+      report.slugsDeletable++;
+      if (deleteEnabled) {
         const targets = [
           { store, key: `html/${slug}.html`, label: "html" },
           { store: imagesStore, key: slug,   label: "hero image" },
@@ -302,12 +302,12 @@ export async function handler() {
         }
         if (failed) report.errors++;
         else {
-          report.slugsArchived++;
-          console.log(`[reconcile] ARCHIVED slug ${slug} — eligible since ${archiveDate(hostingUntil)}`);
+          report.slugsDeleted++;
+          console.log(`[reconcile] DELETED slug ${slug} — eligible since ${deletionDate(hostingUntil)}`);
         }
         continue;   // meta is gone; nothing to write back
       } else {
-        console.log(`[reconcile] would archive slug ${slug} (html, images, meta) — eligible since ${archiveDate(hostingUntil)} (dry run)`);
+        console.log(`[reconcile] would delete slug ${slug} (html, images, meta) — eligible since ${deletionDate(hostingUntil)} (dry run)`);
       }
     }
 

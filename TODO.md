@@ -8,14 +8,14 @@ Delete an entry when it is done — this file is only useful if it is true.
 Reminder, delist, credit expiry and archive all exercised against real data on 2026-08-17:
 a reminder email sent and confirmed idempotent, 3 domains and 13 slugs delisted with the
 410 page confirmed on both resumeto.website and webresu.me, then 3 mappings and 13 slugs
-archived with zero errors.
+deleted with zero errors.
 
-HOSTING_ARCHIVE_ENABLED should be left "false" between deliberate uses. Nothing else is
+HOSTING_DELETE_ENABLED should be left "false" between deliberate uses. Nothing else is
 near the 18-month threshold, so leaving the destructive path armed buys nothing and means
 the next deletion happens unattended.
 
 Two bugs this testing found, both now fixed: /u/:slug bypassed delisting entirely, and
-archiving deleted only the domain mapping while leaving the html, images and meta.
+deletion deleted only the domain mapping while leaving the html, images and meta.
 
 
 ## Subscription modification is untested against Stripe

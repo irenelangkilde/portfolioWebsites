@@ -15,7 +15,7 @@
  *
  *   hosting_until       Ours. The site is publicly visible until this moment.
  *
- *   archive date        Derived, deliberately not stored — see archiveDate() below.
+ *   deletion date       Derived, deliberately not stored — see deletionDate() below.
  */
 
 /**
@@ -25,7 +25,7 @@
  * back when they next job-hunt still finds their site recoverable. That return visit is
  * worth more than the storage.
  */
-export const ARCHIVE_GRACE_MONTHS = 18;
+export const DELETION_GRACE_MONTHS = 18;
 
 /** Absolute date n months from now. */
 export function monthsFromNow(n) {
@@ -61,13 +61,13 @@ export function stackMonths(existingIso, n) {
  * value in two places is how the plan and hosting dates came to disagree. Anything that
  * needs this can compute it, and it stays correct automatically when hosting is extended.
  *
- * Returns null when hosting was never set, meaning there is nothing to archive.
+ * Returns null when hosting was never set, meaning there is nothing to delete.
  */
-export function archiveDate(hostingUntilIso) {
+export function deletionDate(hostingUntilIso) {
   if (!hostingUntilIso) return null;
   const d = new Date(hostingUntilIso);
   if (Number.isNaN(d.getTime())) return null;
-  d.setMonth(d.getMonth() + ARCHIVE_GRACE_MONTHS);
+  d.setMonth(d.getMonth() + DELETION_GRACE_MONTHS);
   return d.toISOString();
 }
 
@@ -79,8 +79,8 @@ export function isHostingActive(hostingUntilIso, now = Date.now()) {
 }
 
 /** True if the retention window has also passed and the data may be deleted. */
-export function isArchivable(hostingUntilIso, now = Date.now()) {
-  const a = archiveDate(hostingUntilIso);
+export function isDeletable(hostingUntilIso, now = Date.now()) {
+  const a = deletionDate(hostingUntilIso);
   if (!a) return false;
   return new Date(a).getTime() <= now;
 }

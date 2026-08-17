@@ -21,7 +21,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { getEnv } from "./localEnv.mjs";
-import { archiveDate, ARCHIVE_GRACE_MONTHS } from "./membershipDates.mjs";
+import { deletionDate, DELETION_GRACE_MONTHS } from "./membershipDates.mjs";
 import { PLAN_PRICING, planTotalCents, planCredits, planBonusCredits, formatCents } from "../../planPricing.mjs";
 
 // A week: long enough to act on, close enough to still feel real. Sent earlier it gets
@@ -107,7 +107,7 @@ async function sendReminder(to, m) {
   const tier      = PLAN_PRICING[m.tier] ? m.tier : "graduate";
   const planName  = PLAN_PRICING[tier].name;
   const endsOn    = fmtDate(m.hosting_until);
-  const creditsGo = fmtDate(archiveDate(m.hosting_until));
+  const creditsGo = fmtDate(deletionDate(m.hosting_until));
 
   // Three concrete options rather than one button. Someone who does not want to renew at
   // the same size will not click "renew" — but they might click "one month".
@@ -157,7 +157,7 @@ async function sendReminder(to, m) {
         <p style="margin:0 0 6px;font-size:15px;color:#fff;font-weight:800;">Do nothing</p>
         <p style="margin:0;font-size:14px;color:rgba(234,240,255,.72);line-height:1.7;">
           Your site goes offline on ${endsOn} and your credits remain usable until
-          ${creditsGo}, ${ARCHIVE_GRACE_MONTHS} months later. You can come back any time before
+          ${creditsGo}, ${DELETION_GRACE_MONTHS} months later. You can come back any time before
           then and pick up where you left off.
         </p>
       </td></tr>
