@@ -231,6 +231,27 @@ export default async function handler(request, context) {
       try { store = getStore({ name: PUBLISHED_SITES_STORE, siteID, token }); }
       catch (err) { return new Response(`Blob store init failed: ${err?.message}`, { status: 503 }); }
 
+      // Delisting has to apply here too.
+      //
+      // This path serves a portfolio by slug, without consulting the domain record — so
+      // for its first version it happily served sites the nightly job had just taken
+      // down. That is the URL most people share before they ever buy a custom domain, so
+      // "delisted" meant almost nothing.
+      //
+      // The flag is read from the per-slug meta record rather than the domain record,
+      // because a slug need not have a domain at all. Costs one extra blob read on a path
+      // that already does one; the domain path has always done two.
+      try {
+        const metaRaw = await store.get(`meta/${slug}.json`);
+        if (metaRaw) {
+          const meta = JSON.parse(metaRaw);
+          if (meta?.listed === false) return htmlExpired(slug);
+        }
+      } catch {
+        // An unreadable or absent meta record must not block serving: failing closed here
+        // would take down every site published before this field existed.
+      }
+
       let html;
       try { html = await store.get(`html/${slug}.html`); }
       catch (err) { return new Response(`Error fetching portfolio: ${err?.message}`, { status: 500 }); }

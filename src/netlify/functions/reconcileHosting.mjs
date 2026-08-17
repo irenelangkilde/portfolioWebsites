@@ -206,6 +206,68 @@ export async function handler() {
     }
   }
 
+  // ── Second pass: the per-slug records ──────────────────────────────────────
+  //
+  // Marking only domain records left delisting almost meaningless. /u/:slug serves a
+  // portfolio straight from html/<slug>.html without ever reading a domain record, and
+  // that is the URL people share before they buy a custom domain — so a "delisted" site
+  // remained fully public at the address it was most likely to be linked from.
+  //
+  // meta/<slug>.json carries user_id and exists for every published slug, with or without
+  // a domain, which makes it the complete set.
+  let metaKeys = [];
+  try {
+    const listed = await store.list({ prefix: "meta/" });
+    metaKeys = (listed?.blobs || []).map(b => b.key);
+  } catch (err) {
+    console.error("[reconcile] could not list slugs:", err?.message);
+    report.errors++;
+  }
+
+  report.slugsScanned = 0;
+  report.slugsDelisted = 0;
+  report.slugsRelisted = 0;
+
+  for (const key of metaKeys) {
+    report.slugsScanned++;
+    const slug = key.replace(/^meta\//, "").replace(/\.json$/, "");
+
+    let meta;
+    try {
+      const raw = await store.get(key);
+      if (!raw) continue;
+      meta = JSON.parse(raw);
+    } catch { report.errors++; continue; }
+
+    const userId = meta?.user_id;
+    if (!userId) continue;
+
+    const hostingUntil = await hostingUntilFor(userId);
+    if (hostingUntil === undefined || !hostingUntil) continue;   // unknown or absent: leave alone
+
+    const active    = isHostingActive(hostingUntil);
+    const wasListed = meta.listed !== false;
+
+    if (active && !wasListed) {
+      meta.listed = true;
+      delete meta.delisted_at;
+      report.slugsRelisted++;
+    } else if (!active && wasListed) {
+      meta.listed = false;
+      meta.delisted_at = new Date().toISOString();
+      report.slugsDelisted++;
+      console.log(`[reconcile] delisting slug ${slug} — hosting ended ${hostingUntil}`);
+    } else {
+      continue;
+    }
+
+    try { await store.set(key, JSON.stringify(meta)); }
+    catch (err) {
+      console.error(`[reconcile] could not save slug ${slug}:`, err?.message);
+      report.errors++;
+    }
+  }
+
   report.ms = Date.now() - started;
   console.log("[reconcile] done:", JSON.stringify(report));
   return { statusCode: 200, body: JSON.stringify(report) };
