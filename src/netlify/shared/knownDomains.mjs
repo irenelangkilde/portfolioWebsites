@@ -5,18 +5,38 @@
  * is the single place they are written down; nothing should hardcode one of these hosts
  * inline. Adding or dropping a domain is a one-line data edit here.
  *
- * CANONICAL_HOST is the durable one. The rest are marketing/parking domains on cheap TLDs
- * that may not be renewed, so nothing long-lived — a published portfolio URL, an emailed
- * link — should ever be pinned to one of them. isKnownDomain() exists so callers can tell
- * "arrived on a domain we own" from "arrived on something unexpected" without matching a
- * literal.
+ * The rest are marketing/parking domains on cheap TLDs that may not be renewed, so nothing
+ * long-lived — a published portfolio URL, an emailed link — should ever be pinned to one of
+ * them. isKnownDomain() exists so callers can tell "arrived on a domain we own" from
+ * "arrived on something unexpected" without matching a literal.
  *
  * Note this list is NOT a security boundary. It says which hosts we recognise, not which
  * hosts are trusted: any of these may lapse and be re-registered by someone else. Do not
  * use it for CORS origins, cookie domains, or redirect allow-lists.
  */
 
-export const CANONICAL_HOST = "irenes-ventures.com";
+/**
+ * The durable host for PUBLISHED PORTFOLIO URLS. Not the app.
+ *
+ * Three hosts are easy to confuse here, and they are genuinely three different things:
+ *
+ *   resumeto.website   where the app lives. siteConfig.js and the edge function pin auth
+ *                      and navigation to it, because a Supabase session is per-origin.
+ *   webresu.me         where a customer's published site is served, and what
+ *                      PUBLISHED_SITES_HOST is set to.
+ *   irenes-ventures.com  the business domain, one alias among many.
+ *
+ * This constant is read by exactly one caller: buildPublishUrl, as the fallback when
+ * PUBLISHED_SITES_HOST is unset. It said irenes-ventures.com, so clearing that variable
+ * would have quietly started stamping the business domain onto permanent portfolio links
+ * while every existing one said webresu.me. Those URLs go into resumes and are handed to
+ * employers — they are the last thing that should change silently.
+ *
+ * DELIBERATELY ABSENT FROM KNOWN_DOMAINS below. The edge function 301s any known alias to
+ * the canonical app origin, so listing webresu.me there would redirect every published
+ * portfolio to resumeto.website and strip the branding from the address bar.
+ */
+export const CANONICAL_HOST = "webresu.me";
 
 export const KNOWN_DOMAINS = [
   "irenes-ventures.com",
