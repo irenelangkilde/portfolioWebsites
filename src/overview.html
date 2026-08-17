@@ -1665,7 +1665,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     if (!_currentUser) { updateAuthUI(); return; }
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end, stripe_subscription_id")
       .eq("user_id", _currentUser.id)
       .single();
     if (data) _membership = data;
@@ -1804,7 +1804,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     const { data } = await _supabase
       .from("memberships")
-      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
+      .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end, stripe_subscription_id")
       .eq("user_id", user.id)
       .single();
     _membership = data;
@@ -1859,7 +1859,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         showGiftMsg("🎁 Gift code redeemed! Your account has been upgraded.", "ok");
         const { data: m } = await _supabase
           .from("memberships")
-          .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end")
+          .select("tier, credits_used, credits_limit, downloads_used, downloads_limit, status, hosting_until, support_until, current_period_end, stripe_subscription_id")
           .eq("user_id", _currentUser.id)
           .single();
         _membership = m;
