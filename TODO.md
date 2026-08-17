@@ -3,20 +3,19 @@
 Things known to be missing or wrong, with enough context to pick up cold.
 Delete an entry when it is done — this file is only useful if it is true.
 
-## Membership expiry: done, archiving still disabled
+## Membership lifecycle: complete and verified in production
 
-Sites are delisted when hosting lapses (reconcileHosting nightly, edge serves 410).
-Credits expire 18 months after that, the same moment the data becomes archivable, so
-hosting_until is the single date the system reasons about. Editor access is deliberately
-permanent — opening old work costs nothing; generating new sites is what costs money.
+Reminder, delist, credit expiry and archive all exercised against real data on 2026-08-17:
+a reminder email sent and confirmed idempotent, 3 domains and 13 slugs delisted with the
+410 page confirmed on both resumeto.website and webresu.me, then 3 mappings and 13 slugs
+archived with zero errors.
 
-REMAINING: archiving is written but OFF. Set HOSTING_ARCHIVE_ENABLED="true" only after
-watching the dry-run logs across several nights and agreeing with every line they name.
-It is the only irreversible operation in the system.
+HOSTING_ARCHIVE_ENABLED should be left "false" between deliberate uses. Nothing else is
+near the 18-month threshold, so leaving the destructive path armed buys nothing and means
+the next deletion happens unattended.
 
-Note that a one-time buyer keeps tier and status indefinitely. That is now deliberate
-rather than an oversight: their site goes dark and their credits expire, which is what
-the money actually pays for.
+Two bugs this testing found, both now fixed: /u/:slug bypassed delisting entirely, and
+archiving deleted only the domain mapping while leaving the html, images and meta.
 
 
 ## Subscription modification is untested against Stripe
