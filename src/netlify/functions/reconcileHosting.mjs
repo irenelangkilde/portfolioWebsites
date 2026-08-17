@@ -27,7 +27,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { getEnv } from "./localEnv.mjs";
-import { getNamedBlobStore } from "./blobStore.mjs";
+import { getNamedBlobStore, getPublishedImagesStore } from "./blobStore.mjs";
 import { isHostingActive, isArchivable, archiveDate } from "./membershipDates.mjs";
 
 const PUBLISHED_STORE = "published-sites";
@@ -189,14 +189,14 @@ export async function handler() {
         try {
           await store.delete(key);
           report.archived++;
-          console.log(`[reconcile] ARCHIVED ${domain} — eligible since ${archiveDate(hostingUntil)}`);
+          console.log(`[reconcile] ARCHIVED domain mapping ${domain} — eligible since ${archiveDate(hostingUntil)}`);
           continue;   // record is gone; nothing to write back
         } catch (err) {
           console.error(`[reconcile] archive failed for ${domain}:`, err?.message);
           report.errors++;
         }
       } else {
-        console.log(`[reconcile] would archive ${domain} — eligible since ${archiveDate(hostingUntil)} (dry run)`);
+        console.log(`[reconcile] would archive domain mapping ${domain} — eligible since ${archiveDate(hostingUntil)} (dry run)`);
       }
     }
 
@@ -228,7 +228,18 @@ export async function handler() {
     report.errors++;
   }
 
+  // Images live in their own store. Opened once, and treated as optional: if it is
+  // unavailable the html and meta are still removed rather than nothing being removed.
+  let imagesStore = null;
+  try {
+    const opened = getPublishedImagesStore();
+    if (opened.configError) console.warn("[reconcile] images store unavailable:", opened.configError);
+    else imagesStore = opened.store;
+  } catch (err) { console.warn("[reconcile] images store failed to open:", err?.message); }
+
   report.slugsScanned = 0;
+  report.slugsArchivable = 0;
+  report.slugsArchived = 0;
   report.slugsDelisted = 0;
   report.slugsRelisted = 0;
   // Every published slug with its state, so a testable URL can be built without going
@@ -255,8 +266,49 @@ export async function handler() {
     const active    = isHostingActive(hostingUntil);
     const wasListed = meta.listed !== false;
 
+    const slugArchivable = isArchivable(hostingUntil);
+
     if (report.slugs.length < DETAIL_LIMIT) {
-      report.slugs.push({ slug, user_id: userId, hosting_until: hostingUntil, serving: active });
+      report.slugs.push({ slug, user_id: userId, hosting_until: hostingUntil, serving: active, archivable: slugArchivable });
+    }
+
+    // The site itself, which is what actually occupies storage.
+    //
+    // The first version of archiving deleted only the domain mapping — the smallest and
+    // least valuable object — while html/, meta/ and the promoted images stayed forever.
+    // That is the wrong half: it makes a site unreachable by its custom domain while still
+    // paying to store every byte of it.
+    //
+    // Deleted in the order least-recoverable-last, so a failure part way through leaves
+    // the site broken rather than half-deleted-and-still-served: html first (nothing to
+    // serve), then images, then meta (the record that says it existed).
+    if (!active && slugArchivable) {
+      report.slugsArchivable++;
+      if (archiveEnabled) {
+        const targets = [
+          { store, key: `html/${slug}.html`, label: "html" },
+          { store: imagesStore, key: slug,   label: "hero image" },
+          { store: imagesStore, key: `${slug}:scene`, label: "scene image" },
+          { store, key, label: "meta" },
+        ];
+        let failed = false;
+        for (const t of targets) {
+          if (!t.store) continue;   // images store unavailable: skip, do not abort the rest
+          try { await t.store.delete(t.key); }
+          catch (err) {
+            failed = true;
+            console.error(`[reconcile] could not delete ${t.label} for ${slug}:`, err?.message);
+          }
+        }
+        if (failed) report.errors++;
+        else {
+          report.slugsArchived++;
+          console.log(`[reconcile] ARCHIVED slug ${slug} — eligible since ${archiveDate(hostingUntil)}`);
+        }
+        continue;   // meta is gone; nothing to write back
+      } else {
+        console.log(`[reconcile] would archive slug ${slug} (html, images, meta) — eligible since ${archiveDate(hostingUntil)} (dry run)`);
+      }
     }
 
     if (active && !wasListed) {
