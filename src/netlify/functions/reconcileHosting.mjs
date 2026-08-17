@@ -46,7 +46,18 @@ export async function handler() {
     scanned: 0, delisted: 0, relisted: 0, unchanged: 0,
     archivable: 0, archived: 0, skipped: 0, errors: 0,
     archiveEnabled,
+    // Per-site detail, not just counts.
+    //
+    // The first production run reported "delisted: 3" when one site was expected, and the
+    // counts could not say which three — the answer was only in the function log, which is
+    // awkward to reach and easy to lose. A job that changes what the public can see should
+    // report WHAT it changed in the same place it reports how many.
+    //
+    // Capped so a site with thousands of domains cannot turn a report into a payload.
+    sites: [],
   };
+  const DETAIL_LIMIT = 50;
+  const note = (entry) => { if (report.sites.length < DETAIL_LIMIT) report.sites.push(entry); };
 
   // getNamedBlobStore returns { store, configError } rather than the store itself — it
   // reports a misconfiguration as a value instead of throwing, so the caller can say
@@ -117,6 +128,7 @@ export async function handler() {
       // Pre-dates user_id being recorded. There is no owner to check, so leave it alone
       // rather than guessing.
       report.skipped++;
+      note({ domain, user_id: null, hosting_until: null, state: "served", action: "skipped - no owner recorded", archivable: false });
       continue;
     }
 
@@ -127,7 +139,11 @@ export async function handler() {
     // before hosting_until was recorded have none, and isHostingActive(null) is false —
     // so treating absent as lapsed would take those sites down on the first run. Absent
     // means "no opinion": leave it exactly as it is.
-    if (!hostingUntil) { report.skipped++; continue; }
+    if (!hostingUntil) {
+      report.skipped++;
+      note({ domain, user_id: userId, hosting_until: null, state: "served", action: "skipped - no hosting date", archivable: false });
+      continue;
+    }
 
     const active      = isHostingActive(hostingUntil);
     const wasListed   = record.listed !== false;   // absent means listed
@@ -148,6 +164,18 @@ export async function handler() {
     } else {
       report.unchanged++;
     }
+
+    // Recorded for every site, whatever happened, so a run that changes nothing still
+    // answers "what does this job think about each site?" — which is the question you
+    // have when a count surprises you.
+    note({
+      domain,
+      user_id: userId,
+      hosting_until: hostingUntil,
+      state: active ? "served" : "delisted",
+      action: changed ? (active ? "relisted" : "delisted") : "unchanged",
+      archivable: isArchivable(hostingUntil),
+    });
 
     // Archival is considered only for sites already delisted and past the retention
     // window. archiveDate() derives that from hosting_until, so the two cannot drift.
