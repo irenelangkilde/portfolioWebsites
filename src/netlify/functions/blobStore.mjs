@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { mkdir, readFile, rm, writeFile } from "fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -47,6 +47,39 @@ function createLocalBlobStore(name) {
         value,
         expiresAt: ttlMs ? Date.now() + ttlMs : 0
       }), "utf8");
+    },
+
+    /**
+     * Enumerate keys, mirroring the real store's { blobs: [{ key }] } shape.
+     *
+     * The shim implemented only get and set, so anything that enumerates — the domain
+     * list in managePortfolio, the whole purpose of reconcileHosting — failed locally
+     * with "store.list is not a function" while working once deployed. That is the worst
+     * shape of gap: it makes a working feature look broken, and only on the machine where
+     * you are trying to debug it.
+     *
+     * Keys are stored URI-encoded as filenames, so they are decoded on the way out.
+     * Without that, a caller filtering on prefix "domain/" matches nothing, because the
+     * slash is on disk as %2F.
+     */
+    async list(options = {}) {
+      const dir = join(tmpdir(), "portfolio-webworks-blobs", encodeURIComponent(name));
+      let files;
+      try {
+        files = await readdir(dir);
+      } catch {
+        return { blobs: [], directories: [] };   // no directory yet simply means no blobs
+      }
+      const prefix = options.prefix || "";
+      const blobs = files
+        .map(f => { try { return decodeURIComponent(f); } catch { return null; } })
+        .filter(k => k !== null && k.startsWith(prefix))
+        .map(key => ({ key }));
+      return { blobs, directories: [] };
+    },
+
+    async delete(key) {
+      await rm(localBlobPath(name, key), { force: true });
     }
   };
 }
