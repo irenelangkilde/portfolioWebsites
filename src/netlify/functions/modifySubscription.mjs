@@ -75,7 +75,6 @@ export async function handler(event) {
     return json(400, { error: `Plan ${membership.tier} cannot be changed this way.` });
   }
 
-  const plan   = PLAN_PRICING[membership.tier];
   const amount = planTotalCents(membership.tier, months);
 
   try {
@@ -96,14 +95,30 @@ export async function handler(event) {
       });
     }
 
+    // subscriptions.update accepts price_data.product (an id) but NOT product_data — that
+    // shorthand exists only on Checkout Sessions, which is why the identical shape works
+    // at purchase and fails here with "Did you mean product?".
+    //
+    // The product is taken from the price the subscription already carries rather than
+    // from configuration. That keeps the customer on the product they originally bought,
+    // needs no new environment variable, and avoids creating a fresh product every time
+    // somebody adjusts their renewal length.
+    const productId = typeof item.price?.product === "string"
+      ? item.price.product
+      : item.price?.product?.id;
+
+    if (!productId) {
+      return json(500, { error: "Could not determine the Stripe product for this subscription." });
+    }
+
     const updated = await stripe.subscriptions.update(membership.stripe_subscription_id, {
       items: [{
         id: item.id,
         price_data: {
-          currency:     "usd",
-          product_data: { name: months > 1 ? `${plan.name} — ${months} months` : plan.name },
-          unit_amount:  amount,
-          recurring:    { interval: "month", interval_count: months },
+          currency:    "usd",
+          product:     productId,
+          unit_amount: amount,
+          recurring:   { interval: "month", interval_count: months },
         },
       }],
       // No charge or credit today. See the note at the top.
