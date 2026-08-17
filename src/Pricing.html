@@ -529,6 +529,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="acctActions">
         <button class="btn primary" id="authActionBtn" type="button">Sign In</button>
         <button class="btn ghost" id="signOutBtn" type="button" style="display:none;">Sign Out</button>
+        <span id="modifySubWrap" style="display:none; align-items:center; gap:6px;">
+          <label for="modifyMonths" style="font-size:12.5px; white-space:nowrap; color:rgba(236,243,255,.72);">Renew every</label>
+          <select id="modifyMonths" class="btn ghost" style="padding:8px 10px;">
+            <option value="1">1 month</option>
+            <option value="2">2 months</option>
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">12 months</option>
+          </select>
+          <button class="btn ghost" id="modifySubBtn" type="button">Change</button>
+        </span>
         <button class="btn danger" id="cancelSubBtn" type="button" style="display:none;">Cancel Subscription</button>
       </div>
     </div>
@@ -1602,6 +1613,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         authActionBtn.textContent = "Sign In";
         signOutBtn.style.display  = "none";
         document.getElementById("cancelSubBtn").style.display = "none";
+        const modWrapOut = document.getElementById("modifySubWrap");
+        if (modWrapOut) modWrapOut.style.display = "none";
         authCardTitle.textContent = "Sign in to purchase";
         authCardMeta.textContent  = "Your current plan and quota appear here after login.";
         authForm.style.display    = "";
@@ -1634,6 +1647,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       signOutBtn.style.display  = "";
       const showCancel = !!_membership?.stripe_subscription_id && _membership?.status === "active";
       document.getElementById("cancelSubBtn").style.display = showCancel ? "" : "none";
+      const modWrap = document.getElementById("modifySubWrap");
+      if (modWrap) modWrap.style.display = showCancel ? "inline-flex" : "none";
       if (authCardSection) authCardSection.style.display = "none";
       if (bottomGrid) bottomGrid.style.gridTemplateColumns = "1fr";
     }
@@ -1677,6 +1692,48 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     document.getElementById("signOutBtn").addEventListener("click", async () => {
       await _supabase.auth.signOut();
+    });
+
+    /**
+     * Change how many months each renewal buys.
+     *
+     * Nothing is charged today — the server sets proration_behavior "none", so the current
+     * period is untouched and the new block length applies from the next renewal. The
+     * confirm text says so, because a billing screen that silently charges is how a support
+     * email becomes a chargeback.
+     */
+    document.getElementById("modifySubBtn").addEventListener("click", async () => {
+      const btn    = document.getElementById("modifySubBtn");
+      const select = document.getElementById("modifyMonths");
+      const months = parseInt(select.value, 10);
+      const label  = months === 1 ? "1 month" : months + " months";
+
+      if (!confirm(
+        `Change your plan to renew every ${label}?\n\n` +
+        `Nothing is charged today. Your current period is unaffected, and the new length ` +
+        `takes effect at your next renewal.`
+      )) return;
+
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = "Saving…";
+      try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session?.access_token) { alert("Please sign in again."); return; }
+
+        const res  = await fetch("/.netlify/functions/modifySubscription", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ authToken: session.access_token, months }),
+        });
+        const data = await res.json().catch(() => ({}));
+        alert(res.ok && data.ok ? (data.message || "Updated.")
+                                : (data.error || "Could not change your plan."));
+        if (res.ok && data.ok) { await refreshMembership(_currentUser); renderAuthState(); }
+      } catch {
+        alert("Could not reach the server. Please try again.");
+      } finally {
+        btn.disabled = false; btn.textContent = orig;
+      }
     });
 
     document.getElementById("cancelSubBtn").addEventListener("click", async () => {
