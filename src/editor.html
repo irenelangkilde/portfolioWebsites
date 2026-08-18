@@ -3251,6 +3251,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     };
     const IMG_MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 
+    /**
+     * Ceiling on images embedded directly in the document.
+     *
+     * Signed out there is no account to charge storage to, so uploads fall back to inline
+     * data URIs — which are unbounded, and would let someone build a portfolio of 200 MB of
+     * base64 before anything objected.
+     *
+     * Checking at PUBLISH time would be too late: the work is already done, and refusing it
+     * then is a wall rather than a limit. This is checked before each inline, so the answer
+     * arrives while there is still an easy alternative — sign in, and the same image goes to
+     * the account instead with a gigabyte-scale allowance behind it.
+     *
+     * A generous 12 MB: enough to try several images, not enough to build a site inline.
+     * Client-side and therefore bypassable, which is fine — the purpose is to stop an
+     * accident, not an attacker. A signed-in upload is enforced on the server.
+     */
+    const INLINE_TOTAL_MAX_BYTES = 12 * 1024 * 1024;
+
+    /** Length of the base64 payload in a data URI, ignoring the header. */
+    function base64Length(dataUrl) {
+      const i = String(dataUrl || "").indexOf(",");
+      return i >= 0 ? dataUrl.length - i - 1 : 0;
+    }
+
+    /** Bytes currently embedded as data URIs in the working document. */
+    function inlinedBytesInDocument() {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc) return 0;
+        const html = doc.documentElement?.outerHTML || "";
+        let total = 0;
+        // Counts the base64 payloads themselves, decoded: 4 base64 chars carry 3 bytes.
+        for (const m of html.matchAll(/data:[^;,"')s]+;base64,([A-Za-z0-9+/=]+)/g)) {
+          total += Math.floor((m[1].length * 3) / 4);
+        }
+        return total;
+      } catch { return 0; }
+    }
+
     // Upload a file (Blob or File) to the portfolio-assets store. Returns the
     // stable public URL or null if the caller should fall back to inlining.
     // Anonymous users (no session) always fall back — the endpoint is auth-gated.
@@ -3377,6 +3416,23 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           imgReplacePending = url;
           if (errBox) { errBox.className = ""; errBox.textContent = ""; }
         } else {
+          // Refused here rather than at publish: the answer arrives while signing in is
+          // still an easy alternative, instead of after the work is done.
+          const already  = inlinedBytesInDocument();
+          const incoming = Math.floor((base64Length(dataUrl) * 3) / 4);
+          if (already + incoming > INLINE_TOTAL_MAX_BYTES) {
+            imgReplacePending = null;
+            setImageDialogPreviewSrc(imgReplaceTarget?.src || "");
+            if (errBox) {
+              errBox.className = "warn";
+              errBox.textContent =
+                `This page already holds ${(already / 1024 / 1024).toFixed(1)} MB of embedded images, ` +
+                `the most that can be stored without an account. Sign in and this image is saved to ` +
+                `your account instead, with a far larger allowance.`;
+            }
+            e.target.value = "";
+            return;
+          }
           if (errBox) {
             errBox.className = "warn";
             errBox.textContent = "Not signed in — this image is embedded in the page instead of saved to your account.";
