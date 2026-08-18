@@ -49,18 +49,22 @@ When that becomes plausible: batch the reads, or narrow the work by querying Sup
 users whose hosting_until changed since the last run rather than walking every blob.
 
 
-## Storage: enforced, but nothing can be deleted
+## Storage: enforced, with a delete path
 
-Allowances are now enforced on upload (1 GB free / 10 GB Graduate / 100 GB Prime), with a
-one-shot email the first time anyone is refused.
+Allowances enforced on upload (1 GB free / 10 GB Graduate / 100 GB Prime), one-shot email
+on the first refusal, and the Add/replace media dialog can now delete an uploaded file and
+return the space.
 
-THE GAP: there is no way for a customer to delete an asset, so the only route back under
-the limit is upgrading. The refusal message says so honestly rather than suggesting a
-delete that does not exist, but a delete path is the obvious next thing — and when it is
-built it MUST decrement memberships.storage_bytes, or the counter becomes a high-water
-mark that locks people out of storage they are not using.
+Remaining rough edge: deleting a file does not remove the image from the page, which will
+show broken until replaced. That is deliberate — silently editing the document from a
+dialog is worse — but a "delete and clear" variant would be kinder.
 
-Published HTML is not counted: different store, kilobytes against a gigabyte allowance.
+Also: assets are content-hashed and therefore shared. One upload can back several
+published versions, and deleting it takes them all. The confirm says so; nothing enforces
+it.
+
+Published HTML is still not counted toward the allowance: different store, kilobytes
+against a gigabyte.
 
 
 ## Volume discount is plumbed but not set

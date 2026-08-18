@@ -1710,6 +1710,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <h3>Add/replace media</h3>
       <div class="img-preview-wrap hidden" id="imgPreviewWrap">
         <img id="imgReplacePreview" src="" alt="current image" />
+        <!-- Shown only when the previewed image is a file THIS user uploaded. Deleting is
+             about reclaiming storage, so offering it for a pasted URL or a generated image
+             would be a button that cannot work. -->
+        <button type="button" id="imgAssetDeleteBtn" style="display:none;margin-top:6px;font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid rgba(251,171,156,.4);background:rgba(251,171,156,.12);color:#FBAB9C;cursor:pointer;">
+          Delete this uploaded file
+        </button>
       </div>
       <div class="img-source-add-row">
         <button id="imgSourceAddBtn" type="button" title="Choose source">+</button>
@@ -2622,9 +2628,29 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       return layer;
     }
 
+    // The asset name currently previewed, or null when the image is not one of ours.
+    let _previewAssetName = null;
+
+    /**
+     * Recognise our own uploads by their serving URL:
+     *   /.netlify/functions/getPortfolioAsset?owner=<uuid>&asset=<hash>.<ext>
+     * Anything else — a pasted URL, an AI-generated image, a data URI — has no stored file
+     * behind it, so there is nothing to delete and the button stays hidden.
+     */
+    function uploadedAssetNameFrom(src) {
+      try {
+        if (!src || !src.includes("getPortfolioAsset")) return null;
+        const qs = src.slice(src.indexOf("?") + 1);
+        return new URLSearchParams(qs).get("asset");
+      } catch { return null; }
+    }
+
     function setImageDialogPreviewSrc(src) {
       const preview = document.getElementById("imgReplacePreview");
       const wrap = document.getElementById("imgPreviewWrap");
+      const delBtn = document.getElementById("imgAssetDeleteBtn");
+      _previewAssetName = uploadedAssetNameFrom(src);
+      if (delBtn) delBtn.style.display = _previewAssetName ? "" : "none";
       if (!preview) return;
       if (src) {
         preview.src = src;
@@ -3215,6 +3241,58 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     // Upload a file (Blob or File) to the portfolio-assets store. Returns the
     // stable public URL or null if the caller should fall back to inlining.
     // Anonymous users (no session) always fall back — the endpoint is auth-gated.
+    /**
+     * Delete the uploaded file behind the previewed image.
+     *
+     * Deliberately does NOT touch the page. The image stays where it is, and will show as
+     * broken until it is replaced — which is honest, because the file really is gone.
+     * Silently blanking the element would hide a destructive act inside a settings dialog,
+     * and the user may well be deleting precisely so they can put something else there.
+     *
+     * Warns that other pages may use the same file: assets are content-hashed and shared,
+     * so one upload can appear on several published versions.
+     */
+    async function deletePreviewedAsset() {
+      const btn = document.getElementById("imgAssetDeleteBtn");
+      if (!btn || !_previewAssetName) return;
+
+      if (!confirm(
+        "Delete this uploaded file and free the storage it uses?\n\n" +
+        "It cannot be recovered, and any other page using the same file will lose it too. " +
+        "The image on this page will stay until you replace it."
+      )) return;
+
+      const orig = btn.textContent;
+      btn.disabled = true; btn.textContent = "Deleting…";
+      try {
+        let session = null;
+        try { session = (await supabaseClient.auth.getSession()).data?.session; } catch {}
+        if (!session?.access_token) { setImageDialogError("Please sign in again."); return; }
+
+        const res  = await fetch("/.netlify/functions/deletePortfolioAsset", {
+          method: "POST",
+          headers: { "content-type": "application/json", authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ asset: _previewAssetName }),
+        });
+        const data = await res.json().catch(() => ({}));
+
+        if (!res.ok || !data.ok) {
+          setImageDialogError(data.error || "Could not delete that file.");
+          return;
+        }
+        const mb = ((data.freedBytes || 0) / 1024 / 1024).toFixed(1);
+        setImageDialogError(`Deleted. ${mb} MB freed.`);
+        _previewAssetName = null;
+        btn.style.display = "none";
+      } catch {
+        setImageDialogError("Could not reach the server. Please try again.");
+      } finally {
+        btn.disabled = false; btn.textContent = orig;
+      }
+    }
+
+    document.getElementById("imgAssetDeleteBtn")?.addEventListener("click", deletePreviewedAsset);
+
     async function uploadPortfolioAsset(file) {
       let session;
       try {
