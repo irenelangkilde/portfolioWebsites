@@ -1227,6 +1227,15 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
     /* source panels */
     .img-source-panel { display: none; }
     .img-source-panel.active { display: block; }
+    #imgReplaceStatus { font-size:12px; line-height:1.5; margin-top:6px; }
+    #imgReplaceStatus.warn {
+      padding:7px 10px;
+      border-radius:8px;
+      background:rgba(255,176,32,.14);
+      border:1px solid rgba(255,176,32,.42);
+      color:#FFD79A;
+      font-weight:700;
+    }
     #imgReplaceError {
       min-height: 16px;
       font-size: 11.5px;
@@ -2671,6 +2680,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function setImageDialogStatus(message = "", kind = "") {
       const el = document.getElementById("imgReplaceStatus");
       if (!el) return;
+      // Clear the warning state. This function and the upload handler both write to this
+      // element, and without this an amber "embedded in the page" warning would keep its
+      // background under the next ordinary status line — saying nothing, but looking urgent.
+      el.className = "";
       el.textContent = message;
       el.style.minHeight = "16px";
       el.style.fontSize = "11.5px";
@@ -3357,18 +3370,24 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       // failure (network, not signed in, oversize, unsupported MIME) — the
       // portfolio still works, it's just less efficient.
       const errBox = document.getElementById("imgReplaceStatus");
-      if (errBox) errBox.textContent = "Uploading…";
+      if (errBox) { errBox.className = ""; errBox.textContent = "Uploading…"; }
       try {
         const url = await uploadPortfolioAsset(file);
         if (url) {
           imgReplacePending = url;
-          if (errBox) errBox.textContent = "";
+          if (errBox) { errBox.className = ""; errBox.textContent = ""; }
         } else {
-          if (errBox) errBox.textContent = "Sign in to save uploads to your account (using inline copy for now).";
+          if (errBox) {
+            errBox.className = "warn";
+            errBox.textContent = "Not signed in — this image is embedded in the page instead of saved to your account.";
+          }
         }
       } catch (err) {
         console.warn("[imgReplace] asset upload failed, using inline data URI:", err?.message || err);
-        if (errBox) errBox.textContent = `Upload failed — using inline copy. (${err?.message || "unknown"})`;
+        if (errBox) {
+          errBox.className = "warn";
+          errBox.textContent = `Upload failed — this image is embedded in the page instead. (${err?.message || "unknown"})`;
+        }
       }
     };
 
