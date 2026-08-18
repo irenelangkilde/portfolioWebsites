@@ -41,6 +41,15 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
 <!-- End Google Tag Manager -->
 <script defer src="/src/analytics-consent.js"></script>
 <script defer src="/src/metaPixel.js"></script>
+  <!-- Add-on prices from the same table checkout bills from. They were typed into the
+       button labels and had drifted: extra credits read $5 while the charge is $1. -->
+  <script type="module">
+    import { ADDON_PRICING } from "/src/planPricing.mjs";
+    for (const el of document.querySelectorAll("[data-addon-price]")) {
+      const cents = ADDON_PRICING[el.getAttribute("data-addon-price")]?.cents;
+      if (cents) el.textContent = cents % 100 === 0 ? String(cents / 100) : (cents / 100).toFixed(2);
+    }
+  </script>
   <title>My Personal Portfolio Website Intake Form</title>
   <style>
     :root{
@@ -975,17 +984,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
           <div class="accountMenuKicker">Add-ons</div>
           <div class="addonMenuList">
+            <!-- Hosting was withdrawn as a purchasable add-on: isPriced("hosting") is false,
+                 so this row could only ever produce "No price configured for tier: hosting"
+                 after the customer had clicked Buy. An offer that cannot be accepted is
+                 worse than no offer. Hosting now comes with the months of a plan.
             <div class="addonMenuItem">
               <div><strong>Hosting</strong><span>Keep a published portfolio online for 1 more month.</span></div>
               <button class="addonBuyBtn" type="button" data-addon-tier="hosting" onclick="purchaseQuickAddon(event, 'hosting', 1, this)">Buy $9</button>
             </div>
+            -->
             <div class="addonMenuItem">
               <div><strong>Extra credit</strong><span>Add 1 more AI generation credit to your account.</span></div>
-              <button class="addonBuyBtn" type="button" data-addon-tier="extra_credits" onclick="purchaseQuickAddon(event, 'extra_credits', 1, this)">Buy $5</button>
+              <button class="addonBuyBtn" type="button" data-addon-tier="extra_credits" onclick="purchaseQuickAddon(event, 'extra_credits', 1, this)">Buy $<span data-addon-price="extra_credits">1</span></button>
             </div>
             <div class="addonMenuItem">
               <div><strong>Human Support</strong><span>Add 1 month of hands-on portfolio support.</span></div>
-              <button class="addonBuyBtn" type="button" data-addon-tier="care" onclick="purchaseQuickAddon(event, 'care', 1, this)">Buy $49</button>
+              <button class="addonBuyBtn" type="button" data-addon-tier="care" onclick="purchaseQuickAddon(event, 'care', 1, this)">Buy $<span data-addon-price="care">49</span></button>
             </div>
           </div>
           <div class="accountMenuActions">
