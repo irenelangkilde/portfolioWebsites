@@ -49,22 +49,23 @@ When that becomes plausible: batch the reads, or narrow the work by querying Sup
 users whose hosting_until changed since the last run rather than walking every blob.
 
 
-## Storage: enforced, with a delete path
+## Storage: enforced end to end
 
-Allowances enforced on upload (1 GB free / 10 GB Graduate / 100 GB Prime), one-shot email
-on the first refusal, and the Add/replace media dialog can now delete an uploaded file and
-return the space.
+Uploads are checked against the allowance (1 GB free / 10 GB Graduate / 100 GB Prime) with
+a one-shot email on the first refusal; the media dialog can delete an uploaded file and
+return the space; signed-out inlining is capped at 12 MB per document, checked at upload
+time rather than at publish; and publishing converts any remaining data URIs into stored
+files.
 
-Remaining rough edge: deleting a file does not remove the image from the page, which will
-show broken until replaced. That is deliberate — silently editing the document from a
-dialog is worse — but a "delete and clear" variant would be kinder.
+Remaining rough edges:
 
-Also: assets are content-hashed and therefore shared. One upload can back several
-published versions, and deleting it takes them all. The confirm says so; nothing enforces
-it.
-
-Published HTML is still not counted toward the allowance: different store, kilobytes
-against a gigabyte.
+  - Deleting a file does not remove the image from the page, which shows broken until
+    replaced. Deliberate — silently editing the document from a dialog is worse — but a
+    "delete and clear" variant would be kinder.
+  - Assets are content-hashed and therefore shared. One upload can back several published
+    versions, and deleting it takes them all. The confirm says so; nothing enforces it.
+  - Published HTML itself is still not counted toward the allowance: different store,
+    kilobytes against a gigabyte.
 
 
 ## Volume discount is plumbed but not set

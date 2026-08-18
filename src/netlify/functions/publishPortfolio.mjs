@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { convertInlineImages } from "./inlineToAssets.mjs";
 import { explainBlobStoreError, getNamedBlobStore, getPreviewImagesStore, getPublishedImagesStore } from "./blobStore.mjs";
 import { buildPublishUrl } from "./publishUrl.mjs";
 
@@ -174,6 +175,20 @@ export async function handler(event) {
     } catch (imgErr) {
       console.warn(`[publishPortfolio] ${cfg.kind} image promotion failed (non-fatal):`, imgErr?.message || imgErr);
     }
+  }
+
+  // Images embedded as base64 during signed-out editing become real stored files here.
+  // Publishing is the first moment an account certainly exists, and base64 in a published
+  // page is a third larger than the bytes it carries, cannot be cached separately from the
+  // HTML, and is re-downloaded by every visitor on every load.
+  //
+  // Never fatal: convertInlineImages leaves anything it cannot store inline and returns the
+  // document unchanged. A fat page that publishes beats a tidy one that does not.
+  try {
+    const conv = await convertInlineImages(html, user.id, supabase);
+    if (conv.converted) html = conv.html;
+  } catch (err) {
+    console.warn("[publishPortfolio] inline conversion failed, publishing as-is:", err?.message);
   }
 
   const metaKey = `meta/${slug}.json`;
