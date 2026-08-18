@@ -60,6 +60,25 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', sans-serif; background: #1a1a2e; padding-top: 84px; }
+
+    /* ── Small screens: pan, do not reflow ──────────────────────────────────────
+       This is a desktop-shaped tool — a canvas, a colour workbench, drag handles and
+       contenteditable regions — and reflowing it into a phone-width column would produce
+       something that fits but cannot be used. A 40%-height iframe is not an editing
+       surface.
+       Untouched, it fails badly rather than awkwardly: neither toolbar wraps, so their
+       buttons are clipped and unreachable; #editorLayout is exactly calc(100vh - 84px)
+       so nothing scrolls; and the panes squeeze toward zero.
+       Giving the page a desktop minimum keeps every control reachable by panning. That is
+       a poor way to edit a website and an honest one — the layout is the same tool, just
+       larger than the window, which is a thing people already know how to deal with.
+       The bars become absolute so they pan with the content: left/right pinned to the
+       viewport would leave them misaligned with everything beneath the moment you scroll
+       sideways. */
+    @media (max-width: 1023px){
+      html, body { min-width: 1024px; }
+      #toolbar, #editToolbar { position: absolute; }
+    }
     body.code-mode { padding-top: 48px; }
 
     /* ── Main toolbar ─────────────────────────────────────────────── */
