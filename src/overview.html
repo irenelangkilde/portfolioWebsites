@@ -1503,8 +1503,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           </div>
         </label>
         <div id="tplUrlWrap" style="padding:0 4px 4px; margin-left:33px;">
-          <div style="display:flex; gap:6px; align-items:center;">
-            <input id="modelTemplate" type="text" placeholder="e.g., Marcus, Owen, Maya..." list="templateKeywords" autocomplete="off" style="flex:1;" />
+          <!-- flex-wrap and min-width:0 together. A flex item defaults to min-width:auto,
+               which for a text input is its intrinsic ~20-character width — so flex:1 alone
+               cannot shrink it, and with two buttons beside it the row overflows a phone.
+               Neither addition changes anything on a wide screen. -->
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <input id="modelTemplate" type="text" placeholder="e.g., Marcus, Owen, Maya..." list="templateKeywords" autocomplete="off" style="flex:1; min-width:0;" />
             <button type="button" id="refreshTemplateList" class="btn ghost mini" title="Reload the available template names. This updates the list only and does not clear your current selection." style="padding:4px 8px; font-size:13px; flex-shrink:0;">↻</button>
             <button type="button" id="resetTemplateKeyword" class="btn ghost mini" title="Clear the current template selection and remove its extracted colors/template state." style="padding:4px 8px; font-size:13px; flex-shrink:0;">✕</button>
           </div>
