@@ -95,7 +95,13 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       row-gap: 8px;
       align-items:start;
     }
-    header h1{ margin:0; font-size: 22px; font-weight: 900; letter-spacing: .2px; }
+    /* Clamped rather than fixed at 22px: "Personal Portfolio Website Intake" is 32
+       characters, which at 22px runs to three lines on a narrow phone and pushes the form
+       below the fold before anything has been read. */
+    header h1{ margin:0; font-size: clamp(18px, 4.5vw, 22px); font-weight: 900; letter-spacing: .2px; }
+    /* Was inline on the element. Right on a wide header, where it sits under the account
+       button at the far right; overridden below once the header becomes one column. */
+    #membershipPill{ font-size:11px; color:var(--muted); text-align:right; line-height:1.6; }
     header .sub{ color:var(--muted); font-size: 13.5px; margin:0; }
     .headerIntro{
       min-width:0;
@@ -341,6 +347,12 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       .headerAccountBar{
         align-items:flex-start;
       }
+      /* The header is one column here, so the status lines sit under a left-aligned
+         account button. Right-aligning them against the full width leaves a ragged gap
+         between the two and reads as a layout mistake. */
+      #membershipPill{ text-align:left; }
+      header{ padding:10px 12px; }
+      header .sub{ font-size:13px; }
       .statusNavRow{
         display:grid !important;
         grid-template-columns: 1fr;
@@ -948,7 +960,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span class="avatar" id="authAvatar">?</span>
             <span id="authBtnLabel">Sign in</span>
           </button>
-          <div id="membershipPill" style="display:none; font-size:11px; color:var(--muted); text-align:right; line-height:1.6;">
+          <!-- Alignment moved out of the style attribute so a media query can reach it.
+               An inline text-align beats any stylesheet rule regardless of specificity, and
+               right-aligned status text under a left-aligned account button is exactly what
+               this becomes once the header stacks on a phone. -->
+          <div id="membershipPill" style="display:none;">
             <span id="planStatusDisplay" style="display:none;"></span>
             <span id="creditsDisplay"></span>
             <span id="savesDisplay"></span>
