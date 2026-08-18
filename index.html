@@ -285,6 +285,28 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
       .nav-dropdown{ width:100%; }
       .nav-dropdown > .btn{ width:100%; justify-content:space-between; }
       .nav-menu{ position:static; min-width:0; margin-top:6px; }
+
+      /* The nav carries seven buttons and a two-line brand. On a phone they wrapped into
+         a ragged right-aligned stack, because .nav-links keeps flex:1 and
+         justify-content:flex-end — sensible on a wide bar, and the worst possible choice
+         once the row wraps, since each line ends flush right and starts wherever it
+         happens to. Given a full row of their own and left alignment they read as a list. */
+      nav{ padding:10px 12px; gap:10px; }
+      .nav-brand{ width:100%; }
+      .nav-title{ font-size:16px; }
+      .nav-links{ width:100%; flex:none; justify-content:flex-start; gap:6px; }
+      /* Deliberately NOT shrunk. Making these smaller would fit one more per row and take
+         the tap target below the ~44px a thumb needs — a worse trade than one extra line
+         of wrapping on a page nobody is short of vertical space on. */
+      .nav-links .btn{ padding:9px 12px; }
+      /* The one action worth a full row. It was competing on equal terms with "About". */
+      .nav-links .btn.primary{ width:100%; justify-content:center; margin-top:2px; }
+
+      /* min-width:220px on the text plus a button and a close control does not fit 320px
+         of viewport minus padding, so the banner overflowed rather than wrapped. */
+      .promo-banner-inner{ gap:10px; padding:10px 12px; }
+      .promo-banner-text{ min-width:0; font-size:13px; }
+      .promo-banner-cta{ flex:1; justify-content:center; }
     }
 
     /* ── Hero ────────────────────────────────── */
