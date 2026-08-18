@@ -442,6 +442,19 @@ j=d.createElement(s),dl=l!="dataLayer"?"&l="+l:"";j.async=true;j.src=
     .themeLeft{ flex: 0 0 auto; display:flex; flex-direction:column; gap: 10px; }
     .themeRight{ flex: 1; min-width: 0; }
     .colorChoiceCard{ width: fit-content; }
+
+    /* The pickers and the suggested palettes sit side by side, and the row neither wraps
+       nor breaks. .themeLeft is flex:0 0 auto so it never gives ground, while .themeRight
+       is flex:1 with min-width:0 — meaning on a phone the palettes are squeezed to
+       whatever is left over, which is almost nothing. The swatches inside already wrap;
+       it was never their width that failed.
+       Stacking gives the palettes the full width, below the pickers that they describe. */
+    @media (max-width: 760px){
+      .themeLayout{ flex-direction: column; }
+      .themeLeft,
+      .themeRight,
+      .colorChoiceCard{ width: 100%; }
+    }
     .themeLeft input[type="color"]{ border-radius: 4px; overflow: hidden; cursor: pointer; padding: 2px; }
     .themeLeft input[type="color"]::-webkit-color-swatch-wrapper{ padding: 0; border-radius: 4px; }
     .themeLeft input[type="color"]::-webkit-color-swatch{ border: none; border-radius: 3px; }
