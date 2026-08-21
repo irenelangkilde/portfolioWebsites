@@ -30,8 +30,12 @@
 # account has disabled this action".
 #
 # Usage:
-#   COUPON=<coupon_id> ./scripts/create-share-codes.sh              # live account, live mode
-#   COUPON=<coupon_id> MODE=--test ./scripts/create-share-codes.sh  # live account, test mode
+#   COUPON=<coupon_id> ./scripts/create-share-codes.sh          # live mode
+#   COUPON=<coupon_id> MODE= ./scripts/create-share-codes.sh    # test mode
+#
+# This CLI has --live but no --test: test is the DEFAULT and --live opts in. So test mode is
+# an EMPTY MODE, not a flag. Worth stating because it inverts the usual expectation that the
+# safe mode is the one you ask for.
 #
 # The coupon id is the SHORT one (e.g. 7G8YYLdI), not a promo_… — that is what this
 # creates. Find it under Product catalogue → Coupons.
@@ -71,13 +75,18 @@ echo
 rows=()
 for s in "${SUFFIXES[@]}"; do
   code="SHAREME${s}"
-  # -r gives raw JSON; the id is what affiliate_codes needs, the code is what a buyer types.
-  # -d for the nested restriction: the CLI maps -d key=value straight onto API params,
-  # which is the reliable way to reach restrictions[...]. max_redemptions is only sent when
-  # set, because Stripe treats an absent value as unlimited and rejects an empty one.
-  args=( promotion_codes create ${MODE} --project-name="${PROJECT}"
-         --coupon="${COUPON}" --code="${code}"
-         -d "restrictions[first_time_transaction]=true" )
+  # Parameter names come from `stripe help promotion_codes create`, not from the API docs:
+  # the CLI exposes --promotion.coupon (with a required --promotion.type) rather than the
+  # --coupon the REST body uses, and dashed --restrictions.first-time-transaction rather
+  # than the restrictions[first_time_transaction] bracket form.
+  # -c skips the per-command confirmation prompt, which would otherwise ask ten times.
+  # max_redemptions is only sent when set: Stripe reads an absent value as unlimited and
+  # rejects an empty one.
+  args=( promotion_codes create ${MODE} -c --project-name="${PROJECT}"
+         --promotion.type=coupon
+         --promotion.coupon="${COUPON}"
+         --code="${code}"
+         --restrictions.first-time-transaction=true )
   [ -n "${MAX_REDEMPTIONS}" ] && args+=( --max-redemptions="${MAX_REDEMPTIONS}" )
 
   out=$(stripe "${args[@]}" 2>&1) || { echo "FAILED ${code}: ${out}" >&2; continue; }
@@ -90,6 +99,12 @@ for s in "${SUFFIXES[@]}"; do
   echo "  ${code}  ->  ${id}"
   rows+=("  ('${code}', '${id}', 'discount', true)")
 done
+
+if [ ${#rows[@]} -eq 0 ]; then
+  echo
+  echo "No codes were created — nothing to register." >&2
+  exit 1
+fi
 
 echo
 echo "── Paste into Supabase ──────────────────────────────────────────────────────"
