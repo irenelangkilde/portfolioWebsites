@@ -43,6 +43,22 @@
   .eyebrow{
     color:var(--accent); font-size:12.5px; font-weight:800;
     letter-spacing:.14em; text-transform:uppercase; margin-bottom:12px;
+    /* inline-flex rather than flex: the eyebrow is a short label, and a block-level flex
+       container would stretch its background the full width of the header. */
+    display:inline-flex; align-items:center; gap:9px;
+  }
+  /* White plate behind the swan. The favicon is transparent artwork drawn for a light
+     background, so on this near-black page it would otherwise be a dark shape on a dark
+     field. `contain` plus padding keeps the swan clear of the rounded corners rather than
+     letting them clip a wingtip. */
+  .eyebrow-mark{
+    width:26px; height:26px;
+    flex-shrink:0;
+    background:#fff;
+    border-radius:7px;
+    padding:3px;
+    object-fit:contain;
+    box-shadow:0 1px 4px rgba(0,0,0,.35);
   }
   h1{ font-size:clamp(30px,5vw,46px); font-weight:900; letter-spacing:-.02em; line-height:1.1; }
   .lede{ color:var(--muted); font-size:17px; margin-top:14px; max-width:60ch; }
@@ -112,7 +128,13 @@
 <body>
   <div class="wrap">
     <header>
-      <p class="eyebrow">Irene's Ventures</p>
+      <!-- alt="" on purpose: the mark is decorative and the words beside it already say
+           the name. Giving it alt text would make a screen reader announce "Irene's
+           Ventures" twice. -->
+      <p class="eyebrow">
+        <img class="eyebrow-mark" src="/assets/images/favicon.png" alt="" width="26" height="26" />
+        Irene's Ventures
+      </p>
       <h1>Things I build on the web.</h1>
       <p class="lede">
         A few separate projects, each with its own home. Start wherever looks useful.
@@ -143,9 +165,9 @@
              loading="lazy" width="600" height="400" />
         <!-- Explicit <br> rather than relying on the wrap point, which moves with the
              card width — at some widths "Women" would end up alone on line two. -->
-        <h2>Irene's Networking Supreme:<br />Women in Tech</h2>
+        <h2>Irene's Women in Tech Throughline</h2>
         <p></p>
-        <span class="go">wit.irenes-ventures.com →</span>
+        <span class="go">witt.irenes-ventures.com →</span>
       </a>
 
       <!-- placeholder: add or delete. -->
