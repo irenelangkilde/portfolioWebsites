@@ -7,9 +7,21 @@
 # coupon means one discount with ten separate handles — which is what lets each be capped,
 # expired or traced independently.
 #
-# MAX_REDEMPTIONS=1 by default. That is the point of having ten rather than one: a code
-# that works once is genuinely personal, and a leaked one costs a single discount instead
-# of the whole campaign. Raise it if you want them shareable.
+# UNLIMITED REDEMPTIONS, FIRST PURCHASE ONLY.
+#
+# Ten codes that anyone may redeem are ten trackable sharing links rather than ten personal
+# ones: purchase_sources records which code a sale came through, so you can tell whose
+# sharing worked. Set MAX_REDEMPTIONS to cap one.
+#
+# first_time_transaction restricts each to customers with no prior successful payment, so
+# the discount buys new customers rather than discounting people who would have paid
+# anyway. Note what it actually checks: a Stripe CUSTOMER with no prior payment. A returning
+# buyer who checks out under a different email is a new customer to Stripe and passes.
+# Combined with the app-level one-discount-per-account limit that is enough friction for an
+# acquisition offer, and it is not a fraud control.
+#
+# The exposure of unlimited codes is that a leak to a coupon site means unlimited discounted
+# new customers. Bounded by expires_at, or by max_redemptions if you would rather cap.
 #
 # ACCOUNT IS EXPLICIT, NOT INHERITED. The CLI's [default] profile on this machine is the
 # SANDBOX (acct_1SNmvwB1BQB7HGHe), not the live account (acct_1SNmvrBgBMKG03Ip). Codes
@@ -27,7 +39,7 @@
 set -euo pipefail
 
 : "${COUPON:?Set COUPON to the Stripe coupon id, e.g. COUPON=7G8YYLdI $0}"
-MAX_REDEMPTIONS="${MAX_REDEMPTIONS:-1}"
+MAX_REDEMPTIONS="${MAX_REDEMPTIONS:-}"   # empty = unlimited
 # Assigned in two steps on purpose. Written inline as "${PROJECT:-irene's ventures}" the
 # apostrophe opens a single-quoted string — the word part of ${VAR:-word} is quote-processed
 # even inside double quotes — which swallows the rest of the file and reports a syntax error
@@ -52,18 +64,23 @@ echo "Account: ${actual} (profile \"${PROJECT}\", ${MODE})"
 # handwriting or a photo of a printed card.
 SUFFIXES=(TFHTJ CAP3Y CRQKQ J2PR3 M6Q9A 2AFGK DQAD2 K4KQM JP96W GJ6X6)
 
-echo "Creating ${#SUFFIXES[@]} promotion codes on coupon ${COUPON} (max_redemptions=${MAX_REDEMPTIONS})"
+echo "Creating ${#SUFFIXES[@]} promotion codes on coupon ${COUPON}"
+echo "  redemptions: ${MAX_REDEMPTIONS:-unlimited}    first purchase only: yes"
 echo
 
 rows=()
 for s in "${SUFFIXES[@]}"; do
   code="SHAREME${s}"
   # -r gives raw JSON; the id is what affiliate_codes needs, the code is what a buyer types.
-  out=$(stripe promotion_codes create ${MODE} --project-name="${PROJECT}" \
-          --coupon="${COUPON}" \
-          --code="${code}" \
-          --max-redemptions="${MAX_REDEMPTIONS}" \
-          2>&1) || { echo "FAILED ${code}: ${out}" >&2; continue; }
+  # -d for the nested restriction: the CLI maps -d key=value straight onto API params,
+  # which is the reliable way to reach restrictions[...]. max_redemptions is only sent when
+  # set, because Stripe treats an absent value as unlimited and rejects an empty one.
+  args=( promotion_codes create ${MODE} --project-name="${PROJECT}"
+         --coupon="${COUPON}" --code="${code}"
+         -d "restrictions[first_time_transaction]=true" )
+  [ -n "${MAX_REDEMPTIONS}" ] && args+=( --max-redemptions="${MAX_REDEMPTIONS}" )
+
+  out=$(stripe "${args[@]}" 2>&1) || { echo "FAILED ${code}: ${out}" >&2; continue; }
 
   id=$(printf '%s' "${out}" | sed -n 's/.*"id": *"\(promo_[^"]*\)".*/\1/p' | head -1)
   if [ -z "${id}" ]; then
