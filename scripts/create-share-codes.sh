@@ -50,24 +50,32 @@ MAX_REDEMPTIONS="${MAX_REDEMPTIONS:-50}"
 # absolute instant, so the timezone has to be decided here rather than left to whoever reads
 # the date — set as UTC it would cut off at 6pm local on the 30th.
 EXPIRES_AT="${EXPIRES_AT:-1790834399}"
-# Assigned in two steps on purpose. Written inline as "${PROJECT:-irene's ventures}" the
-# apostrophe opens a single-quoted string — the word part of ${VAR:-word} is quote-processed
-# even inside double quotes — which swallows the rest of the file and reports a syntax error
-# a dozen lines further down, nowhere near the cause.
-DEFAULT_PROJECT="irene's ventures"
-PROJECT="${PROJECT:-$DEFAULT_PROJECT}"
+# No --project-name by default. The profile is stored in config.toml as ["irene's ventures"]
+# — quoted because of the apostrophe and space — and the CLI cannot match that name back when
+# it is passed as a flag, failing with "no config for that project was found". The [default]
+# profile now points at the live account anyway, so naming one buys nothing and costs that.
+# Set PROJECT to force a specific profile if the default ever changes.
+PROJECT="${PROJECT:-}"
 MODE="${MODE:---live}"
 
-# Say out loud which account is about to be written to, and stop if it is not the one
-# expected. Ten codes in the wrong account is silent until a customer cannot redeem one.
+# Read the account from config.toml rather than `stripe config --list`, whose output format
+# changed shape mid-session — the file is what the CLI itself reads. Checked before writing
+# anything, because ten codes in the wrong account stay silent until a customer cannot
+# redeem one.
 EXPECTED_ACCOUNT="acct_1SNmvrBgBMKG03Ip"
-actual=$(stripe config --list 2>/dev/null | awk -v p="[\"${PROJECT}\"]" '$0==p{f=1;next} f&&/account_id/{gsub(/.*= .|.$/,"");print;exit}')
+CONFIG="${HOME}/.config/stripe/config.toml"
+SECTION="${PROJECT:-default}"
+actual=$(awk -v want="${SECTION}" '
+  /^\[/ { name=$0; gsub(/^\[\"?|\"?\]$/,"",name); inwant=(name==want); next }
+  inwant && /account_id/ { gsub(/.*= *.|.$/,""); print; exit }
+' "${CONFIG}" 2>/dev/null)
+
 if [ "${actual}" != "${EXPECTED_ACCOUNT}" ]; then
-  echo "Refusing to run: profile \"${PROJECT}\" resolves to \"${actual:-nothing}\", expected ${EXPECTED_ACCOUNT}." >&2
-  echo "Check: stripe config --list" >&2
+  echo "Refusing to run: profile \"${SECTION}\" resolves to \"${actual:-nothing}\", expected ${EXPECTED_ACCOUNT}." >&2
+  echo "Check: grep -A1 '^\[' ${CONFIG}" >&2
   exit 1
 fi
-echo "Account: ${actual} (profile \"${PROJECT}\", ${MODE})"
+echo "Account: ${actual} (profile \"${SECTION}\", ${MODE:-test mode})"
 
 # Five-character suffixes from an alphabet with the confusable characters removed:
 # no I/1/L/O/0, and no U, S/5 or B/8 — the pairs that survive a screen font but not
@@ -90,7 +98,9 @@ for s in "${SUFFIXES[@]}"; do
   # -c skips the per-command confirmation prompt, which would otherwise ask ten times.
   # max_redemptions is only sent when set: Stripe reads an absent value as unlimited and
   # rejects an empty one.
-  args=( promotion_codes create ${MODE} -c --project-name="${PROJECT}"
+  args=( promotion_codes create ${MODE} -c )
+  [ -n "${PROJECT}" ] && args+=( --project-name="${PROJECT}" )
+  args+=(
          --promotion.type=coupon
          --promotion.coupon="${COUPON}"
          --code="${code}"
