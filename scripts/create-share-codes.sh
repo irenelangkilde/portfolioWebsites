@@ -43,7 +43,13 @@
 set -euo pipefail
 
 : "${COUPON:?Set COUPON to the Stripe coupon id, e.g. COUPON=7G8YYLdI $0}"
-MAX_REDEMPTIONS="${MAX_REDEMPTIONS:-}"   # empty = unlimited
+# 50 redemptions each and an end date. Both bound the exposure of a code that anyone may
+# share: without them a leak to a coupon site is an open-ended 15% offer.
+MAX_REDEMPTIONS="${MAX_REDEMPTIONS:-50}"
+# 23:59:59 on 30 Sep 2026, Mountain Time. Stripe wants a Unix timestamp and treats it as an
+# absolute instant, so the timezone has to be decided here rather than left to whoever reads
+# the date — set as UTC it would cut off at 6pm local on the 30th.
+EXPIRES_AT="${EXPIRES_AT:-1790834399}"
 # Assigned in two steps on purpose. Written inline as "${PROJECT:-irene's ventures}" the
 # apostrophe opens a single-quoted string — the word part of ${VAR:-word} is quote-processed
 # even inside double quotes — which swallows the rest of the file and reports a syntax error
@@ -69,7 +75,9 @@ echo "Account: ${actual} (profile \"${PROJECT}\", ${MODE})"
 SUFFIXES=(TFHTJ CAP3Y CRQKQ J2PR3 M6Q9A 2AFGK DQAD2 K4KQM JP96W GJ6X6)
 
 echo "Creating ${#SUFFIXES[@]} promotion codes on coupon ${COUPON}"
-echo "  redemptions: ${MAX_REDEMPTIONS:-unlimited}    first purchase only: yes"
+echo "  redemptions: ${MAX_REDEMPTIONS:-unlimited} each"
+echo "  expires:     $(date -r "${EXPIRES_AT}" 2>/dev/null || echo "${EXPIRES_AT}")"
+echo "  first purchase only: yes"
 echo
 
 rows=()
@@ -88,6 +96,7 @@ for s in "${SUFFIXES[@]}"; do
          --code="${code}"
          --restrictions.first-time-transaction=true )
   [ -n "${MAX_REDEMPTIONS}" ] && args+=( --max-redemptions="${MAX_REDEMPTIONS}" )
+  [ -n "${EXPIRES_AT}" ]      && args+=( --expires-at="${EXPIRES_AT}" )
 
   out=$(stripe "${args[@]}" 2>&1) || { echo "FAILED ${code}: ${out}" >&2; continue; }
 
