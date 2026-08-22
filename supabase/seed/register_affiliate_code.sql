@@ -6,6 +6,12 @@
 -- Registered so far:
 --   LAUNCHME → promo_1U3nGmBgBMKG03Ip8DEI7fzm  (15% off, public, 15 redemptions)
 --   TESTING  → promo_1U3na3BgBMKG03IpMxpQ3zwr  (15% off, internal — deactivate when done)
+--   SHAREME* → ten sharing codes, in register_share_codes.sql (15% off, 50 each, to 30 Sep)
+--
+-- Note on LAUNCHME: two live Stripe promotion codes carry that string. The id above is the
+-- ACTIVE one; the other (promo_1U3n99BgBMKG03Ip22al8n1n, coupon RWCdpFd1) is inactive and
+-- cannot be redeemed, which is why Stripe permitted the duplicate. Do not "fix" it by
+-- swapping in the other id.
 --
 -- ── THE TWO VALUES EACH CODE NEEDS ───────────────────────────────────────────
 --

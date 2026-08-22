@@ -7,11 +7,17 @@
 # coupon means one discount with ten separate handles — which is what lets each be capped,
 # expired or traced independently.
 #
-# UNLIMITED REDEMPTIONS, FIRST PURCHASE ONLY.
+# 50 REDEMPTIONS EACH, FIRST PURCHASE ONLY, EXPIRING 30 SEP 2026.
 #
 # Ten codes that anyone may redeem are ten trackable sharing links rather than ten personal
 # ones: purchase_sources records which code a sale came through, so you can tell whose
-# sharing worked. Set MAX_REDEMPTIONS to cap one.
+# sharing worked. Set MAX_REDEMPTIONS= (empty) for unlimited.
+#
+# A PROMOTION CODE MAY NOT OUTLIVE ITS COUPON. Stripe rejects an expires_at later than the
+# coupon's redeem_by, and a coupon's redeem_by cannot be changed after creation — only name,
+# metadata and currency_options are updatable. So a coupon that expires sooner than you want
+# the codes to must be replaced, not extended. Check before a run:
+#   stripe coupons retrieve "${COUPON}" --live | grep redeem_by
 #
 # first_time_transaction restricts each to customers with no prior successful payment, so
 # the discount buys new customers rather than discounting people who would have paid
