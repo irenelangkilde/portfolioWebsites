@@ -108,11 +108,27 @@ for s in "${SUFFIXES[@]}"; do
   [ -n "${MAX_REDEMPTIONS}" ] && args+=( --max-redemptions="${MAX_REDEMPTIONS}" )
   [ -n "${EXPIRES_AT}" ]      && args+=( --expires-at="${EXPIRES_AT}" )
 
-  out=$(stripe "${args[@]}" 2>&1) || { echo "FAILED ${code}: ${out}" >&2; continue; }
+  out=$(stripe "${args[@]}" 2>&1)
+
+  # The CLI EXITS 0 EVEN WHEN THE API RETURNS AN ERROR, so `|| continue` catches nothing
+  # and the only signal is the response body. Ten codes once reported "could not read an id"
+  # when the real answer — a key missing promotion_code_write — was sitting in the output
+  # nobody printed. Surface the message rather than the symptom.
+  if printf '%s' "${out}" | grep -q '"error"'; then
+    msg=$(printf '%s' "${out}" | sed -n 's/.*"message": *"\([^"]*\)".*/\1/p' | head -1)
+    echo "FAILED ${code}: ${msg:-${out}}" >&2
+    # A permission or auth failure will hit every remaining code identically. Stopping beats
+    # printing the same paragraph ten times.
+    case "${msg}" in
+      *"permission"*|*"Permission"*|*"API key"*) echo "Stopping — this affects every code." >&2; exit 1 ;;
+    esac
+    continue
+  fi
 
   id=$(printf '%s' "${out}" | sed -n 's/.*"id": *"\(promo_[^"]*\)".*/\1/p' | head -1)
   if [ -z "${id}" ]; then
-    echo "FAILED ${code}: could not read an id from the response" >&2
+    echo "FAILED ${code}: no id in an apparently successful response:" >&2
+    printf '%s\n' "${out}" | head -5 >&2
     continue
   fi
   echo "  ${code}  ->  ${id}"
