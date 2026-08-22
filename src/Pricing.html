@@ -813,6 +813,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div>
         <div class="confirmPlanName" id="confirmPlanName"></div>
         <div class="confirmPlanPrice" id="confirmPlanPrice"></div>
+        <!-- Populated by refreshConfirmDiscount() when a code has been applied. A separate
+             line rather than a rewrite of confirmPlanPrice above, because two different
+             paths set that text (single plan vs cart) and both would have to agree. -->
+        <div id="confirmDiscount" style="display:none; margin-top:8px; font-size:13px; line-height:1.6;
+             padding:9px 11px; border-radius:9px; background:rgba(118,176,34,.13);
+             border:1px solid rgba(118,176,34,.32); color:rgba(236,243,255,.9);"></div>
       </div>
       <label class="giftCheck" id="confirmAutoRenewWrap">
         <input type="checkbox" id="confirmAutoRenew" onchange="refreshRenewalDisclosure()"> <span id="confirmAutoRenewLabel">Auto-renew</span>
@@ -1280,6 +1286,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       _pendingItems = null;
       document.getElementById("confirmPlanName").textContent  = def.name;
       document.getElementById("confirmPlanPrice").textContent = planPriceLabel(tier);
+      _confirmGrand = lineTotal(tier, 1);
+      refreshConfirmDiscount();
       const _cpPlanMo = 1;   // this path buys a single month
       document.getElementById("confirmAutoRenew").checked = false;
       document.getElementById("confirmAutoRenewLabel").textContent = autoRenewLabel(tier, _cpPlanMo);
@@ -1373,6 +1381,45 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     let _pendingGiftCode = null;
 
+    // ── Discount disclosure in the Confirm Order panel ───────────────────────
+    //
+    // A validated code used to change nothing except a line of green text under the input,
+    // so the buyer read "15% off applied", opened Confirm Order, and saw the full price —
+    // then had to reach Stripe to find out whether the discount was real. That is the wrong
+    // place to learn it.
+    //
+    // _appliedPromo.percentOff comes from the Stripe coupon via validateReferralCode, not
+    // from the label, so the figure shown here is the one that will be charged.
+    let _appliedPromo = null;   // { code, percentOff } | { code, amountOffCents } | null
+    let _confirmGrand = 0;      // dollars, set by whichever path opened the panel
+
+    function refreshConfirmDiscount() {
+      const el = document.getElementById("confirmDiscount");
+      if (!el) return;
+
+      // No code, or a code whose discount Stripe would not tell us: show nothing. Naming a
+      // discount without being able to state it accurately is worse than staying quiet —
+      // the buyer still gets it, and Stripe's own summary will spell it out.
+      const p = _appliedPromo;
+      if (!p || !_confirmGrand || (!p.percentOff && !p.amountOffCents)) {
+        el.style.display = "none";
+        el.textContent = "";
+        return;
+      }
+
+      const off = p.percentOff
+        ? _confirmGrand * (p.percentOff / 100)
+        : Math.min(_confirmGrand, p.amountOffCents / 100);
+      const now = Math.max(0, _confirmGrand - off);
+
+      el.style.display = "block";
+      el.innerHTML =
+        `<strong>${p.code}</strong> — ${p.percentOff ? p.percentOff + "% off" : formatMoney(p.amountOffCents / 100) + " off"}` +
+        `<br>You pay <strong>${formatMoney(now)}</strong> ` +
+        `<span style="text-decoration:line-through; opacity:.6;">${formatMoney(_confirmGrand)}</span>` +
+        (p.selfReferred ? `<br><span style="opacity:.75;">This is your own code, so it earns no referral credit.</span>` : "");
+    }
+
     // ── Promo / referral code ────────────────────────────────────────────────
     // Checks a code before the buyer commits, so the page can say "15% off applied" — or
     // name a self-referral — rather than leaving them to find out at Stripe. The discount
@@ -1403,16 +1450,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const data = await res.json();
         msg.style.color = data.valid ? "rgba(118,176,34,.95)" : "rgba(251,171,156,.9)";
         msg.textContent = data.message || (data.valid ? "Code applied." : "That code was not recognised.");
+
+        _appliedPromo = data.valid
+          ? { code: data.code, selfReferred: !!data.selfReferred, ...(data.discount || {}) }
+          : null;
+        refreshConfirmDiscount();
       } catch {
         // A failed check must not block a purchase — the code is re-resolved at checkout
         // regardless, so the discount still applies if it is genuine.
         msg.style.color = "rgba(234,240,255,.6)";
         msg.textContent = "Could not check that code — you can still continue.";
+        _appliedPromo = null;
+        refreshConfirmDiscount();
       } finally {
         btn.disabled = false;
         btn.textContent = orig;
       }
     }
+
+    document.getElementById("promoInput")?.addEventListener("input", () => {
+      if (!_appliedPromo) return;
+      _appliedPromo = null;
+      refreshConfirmDiscount();
+      const msg = document.getElementById("promoMsg");
+      if (msg) { msg.style.color = "rgba(234,240,255,.6)"; msg.textContent = "Press Apply to check this code."; }
+    });
 
     // Prefill from a ?ref= link captured on arrival (first touch, 90-day window), so
     // someone who followed an affiliate link does not have to remember the code.
@@ -1578,6 +1640,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       document.getElementById("confirmPlanName").textContent  = summaryParts.join(" + ");
       document.getElementById("confirmPlanPrice").textContent = `Total: ${formatMoney(grand)}`;
+      _confirmGrand = grand;
+      refreshConfirmDiscount();
       const _arTier   = gradQty > 0 ? "graduate" : primeQty > 0 ? "prime" : null;
       const _arPlanMo = gradQty + primeQty;   // both plans bill monthly
       document.getElementById("confirmAutoRenew").checked     = false;

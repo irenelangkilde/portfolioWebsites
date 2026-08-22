@@ -8,6 +8,8 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import Stripe from "stripe";
+import { getEnv } from "./localEnv.mjs";
 
 // Self-referral policy. A buyer using their own code gets the discount but earns no
 // commission: `self_referred` is recorded on the purchase and the affiliate_conversions
@@ -169,6 +171,42 @@ export async function resolveReferralCode(rawCode, buyerUserId = null) {
     affiliateCodeId: data.id,
     selfReferred,
   };
+}
+
+/**
+ * The actual discount behind a promotion code, read from Stripe.
+ *
+ * Returns { percentOff } or { amountOffCents, currency }, or null if it cannot be
+ * established. Callers show nothing rather than guessing.
+ *
+ * FROM STRIPE, NOT FROM discount_label. The label is free text typed into a seed file, so
+ * it can drift from the coupon — and a label reading "15% off" against a coupon that gives
+ * 10% would let the pricing page show a total LOWER than the card is charged. That is the
+ * exact class of bug this codebase has already produced three times by keeping a displayed
+ * figure separate from the billed one. The label stays as wording; the arithmetic comes
+ * from the same place the money does.
+ */
+export async function fetchStripeDiscount(promotionCodeId) {
+  const key = getEnv("STRIPE_SECRET_KEY");
+  if (!key || !promotionCodeId) return null;
+
+  try {
+    const stripe = new Stripe(key, { apiVersion: "2024-12-18.acacia" });
+    // expand the coupon: a promotion code carries only a reference to it, and the coupon is
+    // where percent_off/amount_off actually live.
+    const promo = await stripe.promotionCodes.retrieve(promotionCodeId, { expand: ["coupon"] });
+    const c = promo?.coupon;
+    if (!c) return null;
+
+    if (c.percent_off) return { percentOff: Number(c.percent_off) };
+    if (c.amount_off)  return { amountOffCents: Number(c.amount_off), currency: c.currency || "usd" };
+    return null;
+  } catch (err) {
+    // Not fatal. The buyer still gets the discount — createCheckoutSession applies it
+    // through Stripe regardless — they just do not see the arithmetic beforehand.
+    console.error("[referral] could not read discount from Stripe:", err.message);
+    return null;
+  }
 }
 
 /** Buyer-facing wording. Deliberately vague about why a code failed. */
