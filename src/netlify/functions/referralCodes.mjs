@@ -47,6 +47,36 @@ export function normalizeReferralCode(value) {
 }
 
 /**
+ * The buyer's id, proven from a Supabase access token. Returns null for a missing,
+ * malformed or expired token — callers decide whether that is fatal.
+ *
+ * Exists because `self_referred` decides who gets paid. resolveReferralCode compares the
+ * buyer against affiliate_codes.owner_user_id, and if that buyer id is simply whatever the
+ * request body claimed, an affiliate can buy with their own code under any other id and
+ * collect a commission on their own purchase. The comparison is only worth making against
+ * an identity the server established itself.
+ *
+ * Takes the raw Authorization header rather than a token so every caller strips the Bearer
+ * prefix the same way.
+ */
+export async function verifyBuyerFromAuthHeader(authHeader) {
+  const token = String(authHeader || "").replace(/^Bearer\s+/i, "").trim();
+  if (!token) return null;
+
+  try {
+    const { data, error } = await getSupabaseAdmin().auth.getUser(token);
+    if (error || !data?.user) return null;
+    return data.user.id;
+  } catch {
+    // A network or configuration failure is indistinguishable here from a bad token, and
+    // guessing "valid" would hand out the very commission this check protects. Null means
+    // the caller refuses the discount, which costs a sale its 15% rather than costing a
+    // payout that was never earned.
+    return null;
+  }
+}
+
+/**
  * How many completed purchases this account has already made with a referral code.
  *
  * Counts purchase_sources, which the webhook writes on checkout.session.completed — so

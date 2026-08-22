@@ -1146,9 +1146,19 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       try {
         const controller = new AbortController();
         const timer = setTimeout(() => controller.abort(), 15000);
+
+        // The access token, not just the user id in the body below. A referral code decides
+        // who collects a commission, so the server verifies who is buying rather than
+        // believing the id the request carries — without this header, a purchase that uses a
+        // discount code is refused with "session expired".
+        const { data: { session: _sess } } = await _supabase.auth.getSession();
+
         const res = await fetch("/.netlify/functions/createCheckoutSession", {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: {
+            "content-type": "application/json",
+            ...(_sess?.access_token ? { authorization: `Bearer ${_sess.access_token}` } : {}),
+          },
           signal: controller.signal,
           body: JSON.stringify({
             items,

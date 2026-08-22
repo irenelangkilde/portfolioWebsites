@@ -1,6 +1,6 @@
 import Stripe from "stripe";
 import { PLAN_PRICING, planTotalCents, ADDON_PRICING, GIFT_PRICING, unitCents, tierName, isPriced } from "../../planPricing.mjs";
-import { resolveReferralCode } from "./referralCodes.mjs";
+import { resolveReferralCode, verifyBuyerFromAuthHeader } from "./referralCodes.mjs";
 import { getEnv } from "./localEnv.mjs";
 
 // Plan tiers drive the subscription interval and go in line_items as recurring prices.
@@ -214,9 +214,39 @@ export async function handler(event) {
   // The referral code is re-resolved HERE rather than trusting anything the client sent.
   // validateReferralCode is a convenience for the buyer, not an authorisation step — a
   // tampered request must not be able to apply a discount it was not granted.
+  //
+  // WHICH buyer it is resolved for has to be proven, not asserted. `userId` arrives in the
+  // request body and nothing verifies it, which was harmless while the flag only suppressed
+  // a commission nobody was paying. Now that affiliate_conversions pays out per
+  // owner_user_id, an affiliate could buy with their own code, send any other id, and be
+  // recorded as self_referred = false — paying themselves a commission on their own
+  // purchase. That is the exact case the flag exists to catch, so the id behind it comes
+  // from a verified token or the discount does not apply at all.
+  //
+  // Gift tiers are exempt: they are bought by signed-out guests, so there is no account to
+  // verify and no owner to impersonate.
   let referral = null;
   if (referralCode) {
-    referral = await resolveReferralCode(referralCode, userId || null);
+    let buyerUserId = null;
+
+    if (!isGuest) {
+      buyerUserId = await verifyBuyerFromAuthHeader(
+        event.headers?.authorization || event.headers?.Authorization
+      );
+
+      if (!buyerUserId) {
+        // Refused rather than quietly charged at full price. This module's stated job is
+        // that the buyer is never charged more than the page just promised — so when the
+        // session cannot be verified, say so and let them sign in again, rather than
+        // dropping a discount they were told they had.
+        return {
+          statusCode: 401,
+          body: JSON.stringify({ error: "Your session expired. Please sign in again to use a discount code." }),
+        };
+      }
+    }
+
+    referral = await resolveReferralCode(referralCode, buyerUserId);
     if (referral.ok) {
       sessionMeta.ref_code          = referral.code;
       sessionMeta.affiliate_code_id = referral.affiliateCodeId;
