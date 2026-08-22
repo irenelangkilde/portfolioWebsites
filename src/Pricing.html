@@ -1013,9 +1013,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           ? "every month"
           : `every ${planMonths} months`;
         const bonus = p?.planBonusCredits(tier, planMonths) ?? 0;
+        // Today's figure is discounted; the recurring one is not. The coupon behind these
+        // codes has duration "once", so it comes off the first payment only — stating one
+        // number for both would understate every renewal, which is precisely the sentence a
+        // chargeback turns on. When the two differ, say so.
+        const todayTotal = grandTotal - promoAmountOff(grandTotal);
         el.innerHTML =
-          `You'll be charged <strong>${formatMoney(grandTotal)} today</strong>, then ` +
+          `You'll be charged <strong>${formatMoney(todayTotal)} today</strong>, then ` +
           `<strong>${formatMoney(grandTotal)} ${every}</strong> until you modify or cancel your subscription. ` +
+          (todayTotal !== grandTotal ? `The discount applies to your first payment only. ` : "") +
           (bonus > 0
             ? `Includes <strong>${bonus} bonus credit${bonus !== 1 ? "s" : ""}</strong> each cycle for buying ahead. `
             : "") +
@@ -1023,9 +1029,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       } else {
         const savings = (p?.planSavingsCents(tier, planMonths) ?? 0) / 100;
         const bonus   = p?.planBonusCredits(tier, planMonths) ?? 0;
+        // No amount restated here. The heading above already gives the plan, the months and
+        // the total, and the discount box gives what will actually be charged — so a third
+        // figure was redundant, and once a code was applied it was also WRONG: grandTotal is
+        // the undiscounted total, so this line claimed $21.00 beside a box promising $17.85.
+        // What this sentence uniquely carries is the bonus credits and the fact that nothing
+        // recurs, so that is all it says now.
         el.innerHTML =
-          `One payment of <strong>${formatMoney(grandTotal)}</strong> for ` +
-          `<strong>${planMonths} month${planMonths !== 1 ? "s" : ""}</strong>. ` +
           (savings > 0 ? `You save ${formatMoney(savings)} buying up front. ` : "") +
           (bonus > 0
             ? `Includes <strong>${bonus} bonus credit${bonus !== 1 ? "s" : ""}</strong> for buying ahead, available immediately. `
@@ -1393,6 +1403,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     let _appliedPromo = null;   // { code, percentOff } | { code, amountOffCents } | null
     let _confirmGrand = 0;      // dollars, set by whichever path opened the panel
 
+    function promoAmountOff(totalDollars) {
+      const p = _appliedPromo;
+      if (!p || !totalDollars || (!p.percentOff && !p.amountOffCents)) return 0;
+      return p.percentOff
+        ? totalDollars * (p.percentOff / 100)
+        : Math.min(totalDollars, p.amountOffCents / 100);
+    }
+
     function refreshConfirmDiscount() {
       const el = document.getElementById("confirmDiscount");
       if (!el) return;
@@ -1407,9 +1425,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         return;
       }
 
-      const off = p.percentOff
-        ? _confirmGrand * (p.percentOff / 100)
-        : Math.min(_confirmGrand, p.amountOffCents / 100);
+      const off = promoAmountOff(_confirmGrand);
       const now = Math.max(0, _confirmGrand - off);
 
       el.style.display = "block";
@@ -1455,6 +1471,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           ? { code: data.code, selfReferred: !!data.selfReferred, ...(data.discount || {}) }
           : null;
         refreshConfirmDiscount();
+        refreshRenewalDisclosure();
       } catch {
         // A failed check must not block a purchase — the code is re-resolved at checkout
         // regardless, so the discount still applies if it is genuine.
@@ -1462,6 +1479,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         msg.textContent = "Could not check that code — you can still continue.";
         _appliedPromo = null;
         refreshConfirmDiscount();
+        refreshRenewalDisclosure();
       } finally {
         btn.disabled = false;
         btn.textContent = orig;
@@ -1472,6 +1490,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (!_appliedPromo) return;
       _appliedPromo = null;
       refreshConfirmDiscount();
+      refreshRenewalDisclosure();
       const msg = document.getElementById("promoMsg");
       if (msg) { msg.style.color = "rgba(234,240,255,.6)"; msg.textContent = "Press Apply to check this code."; }
     });
