@@ -89,6 +89,11 @@ echo "  first purchase only: yes"
 echo
 
 rows=()
+# Remembers the previous failure so a fault that is systemic rather than per-code — a missing
+# permission, a coupon whose redeem_by precedes EXPIRES_AT — is reported once instead of ten
+# identical times. The repeat is what identifies it: the codes differ, so an error that does
+# not is about the coupon or the key, and no later code will fare better.
+last_err=""
 for s in "${SUFFIXES[@]}"; do
   code="SHAREME${s}"
   # Parameter names come from `stripe help promotion_codes create`, not from the API docs:
@@ -117,11 +122,11 @@ for s in "${SUFFIXES[@]}"; do
   if printf '%s' "${out}" | grep -q '"error"'; then
     msg=$(printf '%s' "${out}" | sed -n 's/.*"message": *"\([^"]*\)".*/\1/p' | head -1)
     echo "FAILED ${code}: ${msg:-${out}}" >&2
-    # A permission or auth failure will hit every remaining code identically. Stopping beats
-    # printing the same paragraph ten times.
-    case "${msg}" in
-      *"permission"*|*"Permission"*|*"API key"*) echo "Stopping — this affects every code." >&2; exit 1 ;;
-    esac
+    if [ -n "${msg}" ] && [ "${msg}" = "${last_err}" ]; then
+      echo "Stopping — the same error twice means it is the coupon or the key, not the code." >&2
+      exit 1
+    fi
+    last_err="${msg}"
     continue
   fi
 
