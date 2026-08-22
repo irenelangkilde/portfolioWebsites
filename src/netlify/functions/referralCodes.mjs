@@ -36,6 +36,32 @@ export const REJECT_SELF_REFERRAL = false;
  */
 export const MAX_DISCOUNTED_PURCHASES_PER_USER = 1;
 
+/**
+ * Require the code's owner to have joined BEFORE the buyer.
+ *
+ * A referral means someone who was already here brought you, and stating that as a rule
+ * makes the relation antisymmetric — which is what closes the two cheapest abuses at once:
+ *
+ *   Self-referral: your own account cannot predate itself.
+ *   Mutual swaps:  Alice and Bob cannot both be older than each other, so a pair can never
+ *                  collect both sides. Previously each could use the other's code, since
+ *                  every per-account limit was satisfied — one discount each, on each of
+ *                  their first transactions.
+ *
+ * It does NOT stop a chain (A → B → C, each referring the next) or someone who registers an
+ * older throwaway account to refer their real one. Neither is worth more machinery: the
+ * reward only mints on a completed purchase, so both cost real money to run and yield a
+ * credit worth about a dollar.
+ *
+ * COMPARES ACCOUNT CREATION, NOT CODE CREATION. Codes are minted on sign-in, so a member who
+ * joined in April but first signed in after this shipped has a code stamped with the later
+ * date. Against mint time they could refer nobody who joined before the deploy — the rule
+ * would quietly disable referrals for the entire existing user base.
+ *
+ * Set to false to drop the requirement; nothing else needs changing.
+ */
+export const REQUIRE_REFERRER_PREDATES_BUYER = true;
+
 function getSupabaseAdmin() {
   return createClient(
     process.env.SUPABASE_URL,
@@ -125,6 +151,25 @@ async function countDiscountedPurchases(supabase, buyerUserId) {
 }
 
 /**
+ * When an account was created, as epoch ms, or null if it cannot be established.
+ *
+ * Reads auth.users through the admin API rather than a profile table, so it reflects the
+ * real signup instant and cannot be edited by the account holder — the age comparison
+ * decides who gets a discount, so the timestamp has to be one the buyer does not control.
+ */
+async function accountCreatedAt(supabase, userId) {
+  try {
+    const { data, error } = await supabase.auth.admin.getUserById(userId);
+    if (error || !data?.user?.created_at) return null;
+    const t = new Date(data.user.created_at).getTime();
+    return Number.isFinite(t) ? t : null;
+  } catch (err) {
+    console.error("[referral] could not read account age:", err?.message);
+    return null;
+  }
+}
+
+/**
  * Resolve a referral code for a given buyer.
  *
  * Returns a plain object rather than throwing, because every caller wants to degrade
@@ -164,6 +209,23 @@ export async function resolveReferralCode(rawCode, buyerUserId = null) {
 
   if (selfReferred && REJECT_SELF_REFERRAL) {
     return { ok: false, reason: "self_referral", code, selfReferred: true };
+  }
+
+  // House codes are exempt — LAUNCHME and the SHAREME sharing codes have no owner, so there
+  // is nobody for the buyer to be older than, and they are meant to work for anyone.
+  if (REQUIRE_REFERRER_PREDATES_BUYER && buyerUserId && data.owner_user_id) {
+    const [ownerAt, buyerAt] = await Promise.all([
+      accountCreatedAt(supabase, data.owner_user_id),
+      accountCreatedAt(supabase, buyerUserId),
+    ]);
+
+    // Unknown on either side means allow. A lookup failure must not charge a buyer more than
+    // the page just promised them, and letting one through costs a discount — while the
+    // reward is separately guarded by self_referred, so a failure here cannot mint a credit
+    // for a self-referral.
+    if (ownerAt !== null && buyerAt !== null && ownerAt >= buyerAt) {
+      return { ok: false, reason: "referrer_too_new", code, selfReferred };
+    }
   }
 
   if (buyerUserId && MAX_DISCOUNTED_PURCHASES_PER_USER > 0) {
@@ -234,6 +296,14 @@ export function referralMessage(result) {
     case "expired":       return "That code has expired.";
     case "inactive":      return "That code is no longer active.";
     case "self_referral": return "That is your own referral code — share it with a friend instead.";
+    case "referrer_too_new":
+      // Self-referral reaches here too, since an account cannot predate itself. Saying "that
+      // member joined after you" about your OWN code reads as nonsense, so name what actually
+      // happened. Neither branch says whose account is older than whose — that only invites
+      // working out the boundary.
+      return result.selfReferred
+        ? "That is your own referral code — share it with a friend instead."
+        : "That code belongs to a member who joined after you, so it cannot be applied.";
     case "already_redeemed":
       return "You've already used a discount code on a previous order, so this one won't apply.";
     case "unavailable":   return "Could not check that code right now — you can still complete your purchase.";
