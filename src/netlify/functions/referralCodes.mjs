@@ -45,7 +45,20 @@ function getSupabaseAdmin() {
 }
 
 export function normalizeReferralCode(value) {
-  return String(value || "").trim().toUpperCase();
+  let raw = String(value || "").trim();
+
+  // Accept a pasted share LINK, not just a bare code. The panel offers a "Copy link" button
+  // that yields https://…/src/pricing?ref=SHAREMEXXXXX, so pasting that into the code box is
+  // the obvious thing to do — and without this it matched nothing and reported "That code
+  // was not recognised", which reads as a broken code rather than a wrong paste.
+  //
+  // Matched by regex rather than by parsing a URL, because the paste is often partial: a
+  // fragment like "pricing?ref=ABC" or a link with tracking parameters appended. Anything
+  // containing ref=<code> yields the code.
+  const fromLink = raw.match(/[?&]ref=([^&\s#]+)/i);
+  if (fromLink) raw = decodeURIComponent(fromLink[1]);
+
+  return raw.trim().toUpperCase();
 }
 
 /**
