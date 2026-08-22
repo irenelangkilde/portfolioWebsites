@@ -499,6 +499,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="statusMeta" id="hostingUntil"></div>
           <div class="statusMeta" id="supportUntil"></div>
         </div>
+        <!-- The member's own referral code. Hidden until ensureReferralCode returns one, so
+             a signed-out visitor and a member whose code could not be minted both see the
+             panel exactly as it was, rather than an empty labelled box. -->
+        <div class="acctGroup" id="myRefGroup" style="display:none;">
+          <div class="statusLabel">Your Referral Code</div>
+          <div style="display:flex; align-items:center; gap:8px; margin-top:4px; flex-wrap:wrap;">
+            <code id="myRefCode" style="font-family:ui-monospace,monospace; font-size:13px; letter-spacing:.05em;
+                  padding:5px 9px; border-radius:7px; background:rgba(255,255,255,.07);
+                  border:1px solid rgba(255,255,255,.15);"></code>
+            <button class="btn ghost mini" type="button" onclick="copyMyReferral()">Copy link</button>
+          </div>
+          <div class="statusMeta" style="margin-top:5px;">
+            Friends get 15% off their first purchase. You earn a credit each time one buys.
+          </div>
+          <div id="myRefMsg" class="statusMeta" style="display:none;" aria-live="polite"></div>
+        </div>
       </div>
       <div class="acctGroup" id="giftRedeemGroup">
         <div class="statusLabel">Gift Code</div>
@@ -1754,10 +1770,58 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       if (bottomGrid) bottomGrid.style.gridTemplateColumns = "1fr";
     }
 
+    let _myReferral = null;   // { code, shareUrl }
+
+    /**
+     * Fetch (minting on first call) this member's referral code.
+     *
+     * Not awaited by onSignIn: the code is a nice-to-have beside the plan details, and the
+     * first call for a new member creates a Stripe promotion code — blocking the whole
+     * account panel on a third-party API for that would make signing in feel slow for a
+     * feature nobody is waiting on.
+     */
+    async function loadMyReferralCode() {
+      const group = document.getElementById("myRefGroup");
+      if (!group) return;
+      if (!_currentUser) { group.style.display = "none"; return; }
+
+      try {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session?.access_token) return;
+
+        const res  = await fetch("/.netlify/functions/ensureReferralCode", {
+          method: "POST",
+          headers: { authorization: `Bearer ${session.access_token}` },
+        });
+        const data = await res.json();
+        if (!data?.code) return;   // stays hidden — see the markup comment
+
+        _myReferral = data;
+        document.getElementById("myRefCode").textContent = data.code;
+        group.style.display = "";
+      } catch {
+        // Silent on purpose. A member who cannot see their code has lost nothing they had.
+      }
+    }
+
+    async function copyMyReferral() {
+      const msg = document.getElementById("myRefMsg");
+      if (!_myReferral) return;
+      try {
+        await navigator.clipboard.writeText(_myReferral.shareUrl || _myReferral.code);
+        msg.textContent = "Link copied — anyone who buys through it earns you a credit.";
+      } catch {
+        // Clipboard access is refused without a user-gesture chain in some browsers, and
+        // over plain http. Showing the link beats failing silently.
+        msg.textContent = _myReferral.shareUrl || _myReferral.code;
+      }
+      msg.style.display = "block";
+    }
     async function onSignIn(user) {
       _currentUser = user;
       await refreshMembership(user);
       renderAuthState();
+      loadMyReferralCode();
       if (_pendingGiftCode) {
         document.getElementById("pricingGiftInput").value = _pendingGiftCode;
         _pendingGiftCode = null;
@@ -1768,6 +1832,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     function onSignOut() {
       _currentUser = null;
       _membership  = null;
+      _myReferral  = null;
+      document.getElementById("myRefGroup").style.display = "none";
       renderAuthState();
     }
 

@@ -1,7 +1,7 @@
 import Stripe from "stripe";
 import { stackMonths } from "./membershipDates.mjs";
 import { claimSession } from "./claimSession.mjs";
-import { planCredits, planSites, planBonusCredits } from "../../planPricing.mjs";
+import { planCredits, planSites, planBonusCredits, REFERRAL_REWARD_CREDITS } from "../../planPricing.mjs";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
 import { randomBytes } from "crypto";
@@ -104,8 +104,61 @@ async function recordPurchaseSource(stripe, obj) {
     if (error) console.error("[attribution] insert failed:", error.message);
     else console.log(`[attribution] recorded session ${obj.id}` +
       (meta.ref_code ? ` ref=${meta.ref_code}${meta.self_referred === "true" ? " (self)" : ""}` : ""));
+
+    await grantReferralReward(supabase, obj, meta, rawUserId);
   } catch (err) {
     console.error("[attribution] unexpected failure:", err?.message);
+  }
+}
+
+/**
+ * Pay the member whose code brought this sale, in bonus credits.
+ *
+ * Deliberately after the purchase_sources write and in its own try: a reward that fails must
+ * not cost us the attribution record, which is the thing we can never reconstruct. Credits
+ * can be granted by hand from referral_rewards; a lost sale source cannot be recovered at all.
+ *
+ * The idempotency lives in the database, not here. grant_referral_reward inserts a ledger row
+ * keyed by session id in the same transaction as the credit bump, so a Stripe webhook retry —
+ * which is routine, not exceptional — cannot mint a second credit.
+ */
+async function grantReferralReward(supabase, obj, meta, buyerUserId) {
+  try {
+    if (!meta.affiliate_code_id) return;
+
+    // A member using their own code still gets the discount, but earns nothing — otherwise
+    // every member would simply refer themselves and the programme would pay for purchases
+    // it did not cause.
+    if (meta.self_referred === "true") {
+      console.log(`[reward] skipped, self-referred: ${meta.ref_code}`);
+      return;
+    }
+
+    const { data: code } = await supabase
+      .from("affiliate_codes")
+      .select("id, code, owner_user_id")
+      .eq("id", meta.affiliate_code_id)
+      .maybeSingle();
+
+    // House codes have no owner. They discount the buyer and earn nobody anything, which is
+    // what a launch code like LAUNCHME is for.
+    if (!code?.owner_user_id) return;
+
+    const { data: granted, error } = await supabase.rpc("grant_referral_reward", {
+      p_session_id:        obj.id,
+      p_owner_user_id:     code.owner_user_id,
+      p_buyer_user_id:     buyerUserId,
+      p_affiliate_code_id: code.id,
+      p_code:              code.code,
+      p_credits:           REFERRAL_REWARD_CREDITS,
+      p_amount_total:      obj.amount_total ?? null,
+    });
+
+    if (error) console.error("[reward] grant failed:", error.message);
+    else if (granted) console.log(`[reward] +${REFERRAL_REWARD_CREDITS} credit to ${code.owner_user_id} for ${code.code}`);
+    else console.log(`[reward] already granted for session ${obj.id} — retry ignored`);
+  } catch (err) {
+    console.error("[reward] unexpected failure:", err?.message);
   }
 }
 

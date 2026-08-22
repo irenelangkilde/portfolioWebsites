@@ -59,7 +59,7 @@ export async function handler(event) {
   // Only provision if the user doesn't already have a paid tier
   const { data: existing } = await supabase
     .from("memberships")
-    .select("tier")
+    .select("tier, credits_limit, downloads_limit")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -70,7 +70,15 @@ export async function handler(event) {
   const { error } = await supabase.from("memberships").upsert({
     user_id:       userId,
     tier:          "free",
-    credits_limit: 3,
+    // Never LOWER an existing limit. Referral rewards raise credits_limit, and this upsert
+    // runs whenever a free-tier member clicks Activate — so a flat 3 would silently delete
+    // credits they had earned by referring someone. credits_used was already preserved for
+    // exactly this reason; the ceiling needs the same care.
+    //
+    // -1 means unlimited, and Math.max would read it as smaller than 3 and demote it.
+    credits_limit: existing?.credits_limit === -1
+      ? -1
+      : Math.max(3, existing?.credits_limit ?? 3),
     credits_used:  existing?.credits_used ?? 0,
     downloads_limit:   0,
     downloads_used:    existing?.downloads_used ?? 0,

@@ -82,6 +82,19 @@ export function planStorageGb(tier) {
  */
 export const BONUS_CREDITS_PER_EXTRA_MONTH = 1;
 
+/**
+ * Credits a member earns when someone buys through their referral code.
+ *
+ * One credit, because Extra Credits sell for $1 (ADDON_PRICING.extra_credits) and 15% of a
+ * $7 Graduate month is $1.05 — so a credit is worth about the 15% this replaces, while
+ * costing nothing to move and stacking across any number of referrals. A percentage cannot
+ * stack: two referrals do not make 30% off.
+ *
+ * Only granted on a completed, non-self-referred purchase. That is what makes the programme
+ * unfarmable — credits cannot be minted without someone actually paying.
+ */
+export const REFERRAL_REWARD_CREDITS = 1;
+
 /** Credits a purchase of `months` grants, before extra_credits add-ons. */
 export function planCredits(tier, months) {
   const base = PLAN_ENTITLEMENTS[tier]?.credits;
