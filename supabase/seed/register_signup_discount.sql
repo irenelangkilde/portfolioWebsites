@@ -1,10 +1,19 @@
--- Register BOOSTPAY10, the signup-banner discount.
+-- Register BOOSTPAY10, the postcard-mailer discount.
 --
--- Replaces BOOSTSALARY, which sat on a coupon with duration FOREVER — 10% off every renewal
--- for the life of the subscription, rather than a one-time welcome discount. Nobody had
--- redeemed it, so the swap cost nothing. A coupon's duration cannot be edited after creation
--- (Stripe allows only name, metadata and currency_options), which is why this is a new
--- coupon and a new code rather than an amendment.
+-- Runs ALONGSIDE BOOSTSALARY, which stays live for the signup banner. Two codes on two
+-- coupons, distributed through different channels: purchase_sources records which code a
+-- sale came through, so a postcard run can be measured against the banner rather than the
+-- two being indistinguishable in the takings.
+--
+-- THE TWO ARE NOT EQUIVALENT, despite both reading "10% off":
+--
+--   BOOSTSALARY (coupon IOtu9Pkk) — duration FOREVER. 10% off EVERY renewal, for the life of
+--                                   the subscription.
+--   BOOSTPAY10  (coupon m9I3l6hX) — duration ONCE. 10% off the first payment only.
+--
+-- A coupon's duration cannot be edited after creation — Stripe allows only name, metadata and
+-- currency_options — so making them match would mean deactivating one code and reissuing it
+-- against the other's coupon. Left as-is deliberately; see the note further down.
 --
 --   coupon m9I3l6hX — 10% off, duration ONCE, no redeem_by
 --   promo  promo_1U7xJbBgBMKG03IpsZE1IMJL — uncapped, no expiry, first purchase only
@@ -26,10 +35,12 @@ on conflict (code) do update
       active                   = excluded.active,
       kind                     = excluded.kind;
 
--- Retire the old one HERE, but only after STRIPE_PROMO_SIGNUP10 points at the new promo id
--- and that deploy is live. Until then the banner still hands out BOOSTSALARY, and refusing it
--- in this table would tell those people their code is invalid.
-update public.affiliate_codes set active = false where code = 'BOOSTSALARY';
+-- BOOSTSALARY is deliberately left ACTIVE and untouched: it is still the banner code, and
+-- STRIPE_PROMO_SIGNUP10 still points at it. Nothing about the banner changes.
+--
+-- NOTE ON ITS DURATION. BOOSTSALARY discounts EVERY renewal, permanently, while BOOSTPAY10
+-- discounts only the first payment. Two codes advertised as "10% off" that mean different
+-- things is a difference worth making on purpose rather than by accident — see the header.
 
 -- ── VERIFY ───────────────────────────────────────────────────────────────────
 
