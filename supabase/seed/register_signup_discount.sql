@@ -5,15 +5,17 @@
 -- sale came through, so a postcard run can be measured against the banner rather than the
 -- two being indistinguishable in the takings.
 --
--- THE TWO ARE NOT EQUIVALENT, despite both reading "10% off":
+-- Both are 10% off, duration ONCE, uncapped, no expiry, first purchase only:
 --
---   BOOSTSALARY (coupon IOtu9Pkk) — duration FOREVER. 10% off EVERY renewal, for the life of
---                                   the subscription.
---   BOOSTPAY10  (coupon m9I3l6hX) — duration ONCE. 10% off the first payment only.
+--   BOOSTSALARY (coupon dJwd0ado, promo_1U7xJQBgBMKG03Ipks8nsV0q) — signup banner
+--   BOOSTPAY10  (coupon m9I3l6hX, promo_1U7xJbBgBMKG03IpsZE1IMJL) — postcard mailer
+--
+-- Identical terms on purpose. They differ only by where they were handed out, which is the
+-- only way a postcard run can be compared against the banner rather than the two blurring
+-- together in the takings.
 --
 -- A coupon's duration cannot be edited after creation — Stripe allows only name, metadata and
--- currency_options — so making them match would mean deactivating one code and reissuing it
--- against the other's coupon. Left as-is deliberately; see the note further down.
+-- currency_options — which is why the FOREVER original had to be replaced rather than amended.
 --
 --   coupon m9I3l6hX — 10% off, duration ONCE, no redeem_by
 --   promo  promo_1U7xJbBgBMKG03IpsZE1IMJL — uncapped, no expiry, first purchase only
@@ -35,12 +37,24 @@ on conflict (code) do update
       active                   = excluded.active,
       kind                     = excluded.kind;
 
--- BOOSTSALARY is deliberately left ACTIVE and untouched: it is still the banner code, and
--- STRIPE_PROMO_SIGNUP10 still points at it. Nothing about the banner changes.
+-- ── BOOSTSALARY, REPOINTED ───────────────────────────────────────────────────
 --
--- NOTE ON ITS DURATION. BOOSTSALARY discounts EVERY renewal, permanently, while BOOSTPAY10
--- discounts only the first payment. Two codes advertised as "10% off" that mean different
--- things is a difference worth making on purpose rather than by accident — see the header.
+-- The original BOOSTSALARY (promo_1U4sYx…, coupon IOtu9Pkk) was duration FOREVER and is now
+-- deactivated in Stripe. It was replaced by a new promotion code of the same name on coupon
+-- dJwd0ado — 10% off, duration ONCE, uncapped, no expiry, first purchase only, matching
+-- BOOSTPAY10 exactly. The two codes now mean the same thing and differ only by channel,
+-- which is what makes comparing a postcard run against the banner meaningful.
+--
+-- THIS UPDATE IS NOT OPTIONAL. The row still carries the OLD promo id, which Stripe now
+-- refuses. Without it a buyer types BOOSTSALARY, this table validates it and promises 10%
+-- off, and Stripe then rejects the session — after they have committed to a total. Pointing
+-- the row at the live id is what closes that gap.
+update public.affiliate_codes
+   set stripe_promotion_code_id = 'promo_1U7xJQBgBMKG03Ipks8nsV0q',
+       discount_label           = '10% off',
+       active                   = true,
+       kind                     = 'house'
+ where code = 'BOOSTSALARY';
 
 -- ── VERIFY ───────────────────────────────────────────────────────────────────
 
