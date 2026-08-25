@@ -53,3 +53,25 @@
 # auto-renewing subscribers because Stripe already warns them.
 [functions."sendRenewalReminders"]
   schedule = "0 5 * * *"
+
+# ── Impact.com site verification ─────────────────────────────────────────────
+#
+# Impact accepts either a <meta> tag or this response header. The header is used
+# because it applies to every route without editing markup, and cannot be lost the
+# next time a page's <head> is rewritten.
+#
+# NOT A SECRET. It proves control of the domain to Impact and is visible to anyone
+# who runs `curl -I` against the site, by design — which is also how to check it:
+#
+#   curl -sI https://resumeto.website/ | grep -i impact
+#
+# If that comes back empty after a deploy, the servePortfolio edge function is
+# constructing its own Response on this route and dropping configured headers. The
+# fallback is the meta form in index.html's <head>:
+#
+#   <meta name="impact-site-verification" value="ef724265-0611-4b1e-b6fa-0077e7910375">
+[[headers]]
+  for = "/*"
+
+  [headers.values]
+    Impact-Site-Verification = "ef724265-0611-4b1e-b6fa-0077e7910375"
