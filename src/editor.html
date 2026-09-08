@@ -8205,7 +8205,18 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const dRem = dLimit === -1 ? -1 : (dLimit ?? 0) - (membership.downloads_used ?? 0);
         const credits = formatQuotaValue(cRem, cLimit);
         const sites   = formatQuotaValue(dRem, dLimit);
-        userEl.textContent = `${name} · ${tier} · ${status}`;
+        // A LINK, not plain text. Signing in replaced the "Signed out" anchor with a bare
+        // string, so the only route to the account modal existed while signed OUT — click your
+        // own email and nothing happens, with no other way in from the editor. That is also the
+        // only path to billing at the moment credits run out, which is when it is wanted most.
+        userEl.innerHTML = "";
+        const acct = document.createElement("a");
+        acct.href = "#";
+        acct.style.cssText = "color:inherit;text-decoration:underline;text-underline-offset:3px;";
+        acct.textContent = `${name} · ${tier} · ${status}`;
+        acct.title = "Account and billing";
+        acct.onclick = e => { e.preventDefault(); openAuthModal(); };
+        userEl.appendChild(acct);
         quotaEl.textContent = `Remaining: ${credits} credits · ${sites} sites`;
       } catch {
         userEl.textContent = "Account unavailable";

@@ -269,9 +269,41 @@
       const limit = data.limit ?? "?";
 
       const nextTier = tier === "free" ? "graduate" : "prime";
-      const tierLabels = { graduate: "Graduate (from $19/unit)", prime: "Prime ($99)" };
+      // No prices here. These read "Graduate (from $19/unit)" and "Prime ($99)" while the
+      // real figures were $7 and $12 — a copy of the price list that nothing kept in step,
+      // which is the same drift that has produced three wrong-price bugs in this codebase.
+      // The upgrade page states the price; this sentence only needs to name the plan.
+      const tierLabels = { graduate: "Graduate", prime: "Prime" };
 
       const prompt      = document.getElementById("upgradePrompt");
+
+      // #upgradePrompt exists in NO page in this repo — every lookup below is null-guarded,
+      // so this function ran start to finish and showed the user nothing. They hit the credit
+      // limit, saw one line of red text, and had no way forward: a dead end at the exact
+      // moment they wanted to pay. Indistinguishable, in the data, from losing interest.
+      //
+      // Rather than reintroduce the markup on every page, use the upgrade path each page
+      // already has. Ordered most specific first.
+      if (!prompt) {
+        if (typeof window.openAccountAddonsMenu === "function") {
+          window.openAccountAddonsMenu();          // overview.html — offers "Buy extra credit"
+          return;
+        }
+        if (typeof window.openUpgradeModal === "function") {
+          window.openUpgradeModal(                 // editor.html — its own upgrade modal
+            data.anon
+              ? "You have used your free previews. Sign in to keep going."
+              : "You are out of credits. Upgrade to keep generating."
+          );
+          return;
+        }
+        if (data.anon && typeof openAuthModal === "function") { openAuthModal(); return; }
+        // Nothing to open: send them somewhere that can actually sell them a plan.
+        setHeaderStatus("generatingWebsiteStatus",
+          "Out of credits — opening Plans & Billing…", "rgba(251,171,156,.9)");
+        setTimeout(() => { window.location.href = "pricing.html"; }, 1200);
+        return;
+      }
       const msgEl       = document.getElementById("upgradePromptMsg");
       const linkEl      = document.getElementById("upgradeLink");
       const pickerWrap  = document.getElementById("unitPickerWrap");
