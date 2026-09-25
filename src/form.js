@@ -17,6 +17,18 @@
     let _resumeAnalysisRunId    = 0;    // incremented on each new call; polling loop checks for staleness
     let _analysisCountdownTimer = null; // single shared timer — cleared synchronously on each new run
 
+    // The countdown that currently owns a status line, held as a DEADLINE rather than a
+    // tick count. Both halves of that matter. A hidden tab's setInterval is throttled —
+    // Chrome drops to one callback per minute once a page has been hidden five minutes —
+    // so a counter decremented once per tick falls ~60x behind the wall clock, which is
+    // what made a running generation look stalled. And the form tab IS hidden for the
+    // whole wait: page-4 submit opens the editor in a new tab, so the countdown the user
+    // actually reads is the copy the editor renders from this deadline.
+    // Keyed by status-line id, not a single global: two lines can be counting down at
+    // once (a re-uploaded resume re-analyzing while a braid run is in flight), and each
+    // interval must only ever repaint its own line.
+    const activeCountdowns = new Map();  // statusId -> { statusId, label, deadlineAt, color }
+
     // ----------------------------
     // Generation state
     // ----------------------------
@@ -36,6 +48,10 @@
 
     // Braid (single-pass layout clone + content substitution — replaces bridge+render for options 1 & 2)
     let braidInProgress = false;
+    // How long the client waits for a braid job, and the countdown it shows — one
+    // constant so the two cannot drift apart again. 15 min is the Netlify
+    // background-function ceiling and what doGenerateWebsite() already allows itself.
+    const BRAID_MAX_WAIT_MS = 900000;
     let mastheadImageInProgress = false;
     let mastheadImageResult = null;
     let mastheadImageError = null;
@@ -699,7 +715,14 @@
         // tab while waiting, and an actionable error (e.g. "Braid AI error:
         // ReferenceError: module is not defined …") needs to surface there. Without this,
         // the user stares at the trivia overlay until they think to check the form tab.
-        return { text, color: el?.style?.color || "rgba(234,240,255,.6)" };
+        // Hand the deadline over with the text when this line is a live countdown, so the
+        // editor tab can count down locally instead of mirroring a number this tab is too
+        // throttled to keep current.
+        const live = activeCountdowns.get(id);
+        const countdown = live && text.startsWith(live.label)
+          ? { label: live.label, deadlineAt: live.deadlineAt }
+          : null;
+        return { text, color: el?.style?.color || "rgba(234,240,255,.6)", countdown };
       }
       return null;
     }
@@ -712,6 +735,7 @@
           localStorage.setItem(EDITOR_PROCESS_STATUS_STORAGE_KEY, JSON.stringify({
             text: status.text,
             color: status.color,
+            countdown: status.countdown || null,
             at: Date.now()
           }));
         } else {
@@ -728,7 +752,7 @@
       try {
         editorWin.postMessage(
           status
-            ? { type: "editor_process_status", text: status.text, color: status.color }
+            ? { type: "editor_process_status", text: status.text, color: status.color, countdown: status.countdown || null }
             : { type: "editor_process_status_clear" },
           location.origin
         );
@@ -1472,19 +1496,63 @@ ${pseudoSelectors} {
       applyColorDefaults(json);
     }
 
-    function startCountdown(statusId, label, timeoutSec, color = "rgba(141,224,255,.75)") {
-      let remaining = timeoutSec;
-      const setter = statusId === "resumeAnalysisStatus"
+    function countdownStatusSetter(statusId, color) {
+      return statusId === "resumeAnalysisStatus"
         ? t => setResumeAnalysisStatus(t, color)
         : t => setHeaderStatus(statusId, t, color);
-      setter(`${label} ${remaining}s`);
+    }
+
+    function countdownRemainingSec(countdown) {
+      return Math.max(0, Math.ceil((countdown.deadlineAt - Date.now()) / 1000));
+    }
+
+    function countdownText(countdown) {
+      const remaining = countdownRemainingSec(countdown);
+      return remaining > 0 ? `${countdown.label} ${remaining}s` : countdown.label;
+    }
+
+    // Repaint one countdown from its deadline. Called on each of its ticks and again when
+    // the tab is shown, since a throttled tick can be up to a minute away.
+    //
+    // Retires the countdown — and paints nothing — once the line stops being its own.
+    // That covers both ways a countdown ends: a caller finishes with a bare
+    // clearInterval() and writes its own result ("✓ Portfolio generated", "⚠ Braid timed
+    // out"), and a newer countdown can claim the same line. Without the check, a stale
+    // tick or a visibilitychange would paint over either.
+    function renderCountdownFor(countdown) {
+      if (!countdown || activeCountdowns.get(countdown.statusId) !== countdown) return 0;
+      const shown = document.getElementById(countdown.statusId)?.textContent?.trim() || "";
+      if (shown && !shown.startsWith(countdown.label)) {
+        activeCountdowns.delete(countdown.statusId);
+        return 0;
+      }
+      countdownStatusSetter(countdown.statusId, countdown.color)(countdownText(countdown));
+      const remaining = countdownRemainingSec(countdown);
+      // Expired: the line now reads as the bare label and there is nothing left to count,
+      // so stop claiming it — later forwards carry the plain text instead of a dead deadline.
+      if (remaining <= 0) activeCountdowns.delete(countdown.statusId);
+      return remaining;
+    }
+
+    function startCountdown(statusId, label, timeoutSec, color = "rgba(141,224,255,.75)") {
+      const countdown = { statusId, label, deadlineAt: Date.now() + timeoutSec * 1000, color };
+      activeCountdowns.set(statusId, countdown);
+      // First paint goes through the setter directly: the line still holds whatever the
+      // previous stage wrote, which renderCountdownFor would read as "not mine".
+      countdownStatusSetter(statusId, color)(countdownText(countdown));
       const timer = setInterval(() => {
-        remaining--;
-        if (remaining <= 0) { clearInterval(timer); setter(label); }
-        else { setter(`${label} ${remaining}s`); }
+        if (renderCountdownFor(countdown) <= 0) clearInterval(timer);
       }, 1000);
       return timer;
     }
+
+    // One listener for all of them: a tab that has just been shown may be holding ticks
+    // scheduled up to a minute out, and the numbers must be right the moment the user
+    // looks at them rather than whenever those ticks land.
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) return;
+      for (const countdown of [...activeCountdowns.values()]) renderCountdownFor(countdown);
+    });
 
     function setMastheadImageProgressStatus(timeoutSec = MASTHEAD_IMAGE_TIMEOUT_SEC) {
       const message = mastheadImageProgressMessage(timeoutSec);
@@ -2596,7 +2664,15 @@ ${pseudoSelectors} {
               };
               setTemplateExtractStatus("✓ Sample website loaded — preparing template…", "rgba(118,176,34,.9)");
               renderSuggestedPalettes();
-              normalizeTemplatePending = doPreprocessTemplate(rawHtml).finally(() => {
+              // doPreprocessTemplate bumps _normalizeRunId synchronously, so reading it right
+              // after the call yields this run's id. Needed twice below: a superseded run
+              // must not report failure (the run that replaced it owns the status now), and
+              // must not null out the normalizeTemplatePending that newer run just set —
+              // which would tell braid nothing is in flight while preprocessing still is.
+              const preprocessPromise = doPreprocessTemplate(rawHtml);
+              const myNormalizeRunId  = _normalizeRunId;
+              normalizeTemplatePending = preprocessPromise.finally(() => {
+                if (myNormalizeRunId !== _normalizeRunId) return;
                 normalizeTemplatePending = null;
                 if (normalizedTemplateResult) {
                   // Swap template cache to use the preprocessed HTML
@@ -2606,6 +2682,21 @@ ${pseudoSelectors} {
                       ? "✓ Sample website loaded (annotated, colors normalized)"
                       : "✓ Sample website loaded (colors normalized)",
                     "rgba(118,176,34,.9)"
+                  );
+                  // The swap above is not visible on its own: the pickers still hold the
+                  // preliminary guess auto-applied from the raw HTML, and they are what gets
+                  // submitted. Runs before braid resumes from `await normalizeTemplatePending`,
+                  // because braid awaits this composed promise, not the inner one.
+                  adoptNormalizedTemplatePalette();
+                } else {
+                  // Preprocessing produced nothing — an error, or five minutes of polling
+                  // without a result (a superseded run returned above). Say so: the status
+                  // still reads "✓ Sample website loaded — preparing template…" from before
+                  // the call, a ✓ that looks like success while the cache holds raw HTML and
+                  // the colours on offer are still the guess.
+                  setTemplateExtractStatus(
+                    "⚠ Sample website loaded, but colour normalization failed — using the template's original colours.",
+                    "rgba(251,171,156,.9)"
                   );
                 }
               });
@@ -4225,7 +4316,10 @@ input[type="color"].split-color::-moz-color-swatch {
 
       // Wait for template color normalization if in flight (option 2 — file upload)
       if (normalizeTemplatePending) {
-        setHeaderStatus("braidStatus", "Analyzing template colors…", "rgba(141,224,255,.6)");
+        // Named after what it is waiting for, matching the resume/job waits above. "Analyzing
+        // template colors…" read as a contradiction of the "Original template colors" card
+        // already on screen, which is a different thing: that card is the preliminary guess.
+        setHeaderStatus("braidStatus", "Waiting for uploaded sample's color normalization…", "rgba(141,224,255,.6)");
         await normalizeTemplatePending;
       }
 
@@ -4238,7 +4332,10 @@ input[type="color"].split-color::-moz-color-swatch {
         return;
       }
 
-      const braidCountdown = startCountdown("braidStatus", "Generating portfolio…", 420);
+      // The old 420s was shorter than the render it was timing: braid asks for 40000
+      // output tokens against Stage 5's 32000, and Stage 5 is documented at ~7-10 min, so
+      // a normal run could outlast the clock.
+      const braidCountdown = startCountdown("braidStatus", "Generating portfolio…", BRAID_MAX_WAIT_MS / 1000);
       const jobId = crypto.randomUUID();
 
       const resumeFacts      = lastAnalysisData?.resume_facts      ?? lastAnalysisData ?? null;
@@ -4274,7 +4371,12 @@ input[type="color"].split-color::-moz-color-swatch {
           throw new Error(await responseErrorMessage(res, "Braid request failed"));
         }
 
-        const maxWaitMs = 420000;
+        // Giving up earlier than the backend can finish did not just lose the run:
+        // doPreview() treats a missing generationResult as "generation never started" and
+        // falls back to the full design-options pipeline, so an early timeout silently
+        // swapped pipelines and spent a second generation while the braid job it
+        // abandoned was still running.
+        const maxWaitMs = BRAID_MAX_WAIT_MS;
         const startTime = Date.now();
         while (Date.now() - startTime < maxWaitMs) {
           await new Promise(r => setTimeout(r, 4000));
@@ -6096,6 +6198,34 @@ input[type="color"].split-color::-moz-color-swatch {
         selectedSuggestedPaletteKey = getPaletteKey(visible[0]);
         if (inputPalette && getPaletteKey(visible[0]) === getPaletteKey(inputPalette)) templatePaletteRendered = true;
       }
+    }
+
+    // Adopt the authoritative template palette once an uploaded file finishes preprocessing.
+    //
+    // Until then the palette on offer is a guess off the raw HTML — buildTemplatePalette's
+    // heuristic fallback, labelled "(preliminary)" — and renderSuggestedPalettes has already
+    // auto-applied it into the five pickers, because at that moment it is the only palette
+    // there is. A plain rerender is not enough to replace it, for three reasons:
+    //
+    //   * It has to apply even when generation is locked. page4Submitted is already true for
+    //     anyone who pressed Next and is now waiting on this, which makes renderSuggestedPalettes
+    //     skip both of its apply branches. Braid reads the pickers immediately after awaiting
+    //     the very promise this runs on, so this is the last moment the real colours can still
+    //     reach the request.
+    //   * selectedSuggestedPaletteKey has to move onto the new colours. The key IS the colour
+    //     values, so leaving it pointing at the preliminary ones also makes
+    //     shouldUseInputPalette() false and drops samplePalette from the braid payload — the
+    //     normalized palette would be computed and then ignored twice over.
+    //   * An explicit choice stays untouched. userHasSelectedPalette means the user picked a
+    //     palette themselves, and a late-arriving default must never overwrite that.
+    function adoptNormalizedTemplatePalette() {
+      renderSuggestedPalettes();
+      if (userHasSelectedPalette) return;
+      const inputPalette = getInputPaletteSuggestion();
+      if (!inputPalette?.colors) return;
+      applyColors(inputPalette.colors);
+      selectedSuggestedPaletteKey = getPaletteKey(inputPalette);
+      templatePaletteRendered = true;
     }
 
     // Label the key-colour pickers up front. Previously this only ran from applyColors(),

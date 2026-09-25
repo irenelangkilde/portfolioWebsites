@@ -2798,6 +2798,108 @@ async function slotFillPortfolioWebsite(provider, creds, store, jobId, body, use
   }
 }
 
+// ─── Scroll-reveal safety net ────────────────────────────────────────────────
+// braidWebsite.md asks for the sample's scroll-reveal treatment in both its halves: the
+// CSS that hides an element and the IntersectionObserver that un-hides it. The CSS half
+// is copied reliably; the script half is sometimes dropped, and the result is a complete,
+// well-formed document in which every section below the hero sits at opacity 0 forever.
+//
+// Nothing catches that today. The HTML parses, </html> is present, `truncated` is false,
+// and the page looks generated — it just renders blank below the fold. So the pairing is
+// re-established here rather than left to the prompt, which can only ever make it likely.
+//
+// Detects `.x { opacity: 0 }` paired with `.x.y { opacity: 1 }` — the class-based reveal
+// idiom — and adds the observer that puts `y` on `x`. Attribute-based variants
+// (`[data-reveal]`) are not covered; they have not shown up in generated output.
+function findScrollRevealPairs(html = "") {
+  // A rule body cannot contain braces, so [^{}]* is a safe stand-in for "this rule only".
+  // Keyframe stops can also carry opacity: 0, but their selectors are percentages or
+  // from/to, never a class, so a class-anchored pattern cannot reach into them.
+  const hidden = new Set();
+  const hiddenRe = /([^{}]+)\{([^{}]*)\}/g;
+  let m;
+  while ((m = hiddenRe.exec(html))) {
+    if (!/opacity\s*:\s*0(?:\.0+)?\s*(?:!important)?\s*[;}]/.test(m[2] + "}")) continue;
+    // Selector lists share a body: `.reveal, .fade { opacity: 0 }` hides both.
+    //
+    // The captured selector runs back to the previous rule's closing brace, so the FIRST
+    // rule in a <style> block arrives with the markup ahead of it still attached
+    // ("<style>\n.reveal"). Anchoring only the end of the token, and requiring a boundary
+    // before the dot, reads that correctly while still refusing `.reveal:hover` and `#id`.
+    for (const part of m[1].split(",")) {
+      const solo = part.trim().match(/(?:^|[\s>;}])\.([A-Za-z_][\w-]*)$/);
+      if (solo) hidden.add(solo[1]);
+    }
+  }
+  if (!hidden.size) return [];
+
+  const pairs = [];
+  const seen = new Set();
+  const pairRe = /\.([A-Za-z_][\w-]*)\.([A-Za-z_][\w-]*)\s*\{([^{}]*)\}/g;
+  while ((m = pairRe.exec(html))) {
+    const [, base, visible, body] = m;
+    if (!hidden.has(base) || hidden.has(visible)) continue;
+    if (!/opacity\s*:\s*1(?:\.0+)?\s*(?:!important)?\s*[;}]/.test(body + "}")) continue;
+    const key = `${base}.${visible}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ base, visible });
+  }
+  return pairs;
+}
+
+// True when something in the document already turns the reveal on. Scripts holding data
+// rather than code (the editor's colour state is type="application/json") are skipped —
+// they mention class names without ever running.
+function hasScrollRevealActivator(html = "", pairs = []) {
+  const scriptRe = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  let m;
+  while ((m = scriptRe.exec(html))) {
+    const attrs = m[1] || "";
+    const typeMatch = attrs.match(/type\s*=\s*["']([^"']+)["']/i);
+    const type = (typeMatch?.[1] || "text/javascript").toLowerCase();
+    if (type !== "text/javascript" && type !== "module" && type !== "application/javascript") continue;
+    const code = m[2] || "";
+    if (/IntersectionObserver/.test(code)) return true;
+    if (pairs.some(p => code.includes(p.visible))) return true;
+  }
+  return false;
+}
+
+function ensureScrollRevealActivator(html = "") {
+  if (!html || !/<\/body\s*>/i.test(html)) return html;   // truncated or bodyless: nothing to append to
+  const pairs = findScrollRevealPairs(html);
+  if (!pairs.length) return html;
+  if (hasScrollRevealActivator(html, pairs)) return html;
+
+  console.log(`[buildWebsite-background] Scroll-reveal CSS with no activator; injecting for ${JSON.stringify(pairs)}`);
+
+  // Written as ES5 in an IIFE: this runs in whatever browser opens the finished portfolio,
+  // and in the editor's preview iframe, neither of which is ours to assume about.
+  const script = `<script>
+(function () {
+  var groups = ${JSON.stringify(pairs)};
+  function show(group) {
+    document.querySelectorAll("." + group.base).forEach(function (el) { el.classList.add(group.visible); });
+  }
+  // No observer (or a stale engine) must still leave a readable page, never a blank one.
+  if (!("IntersectionObserver" in window)) { groups.forEach(show); return; }
+  groups.forEach(function (group) {
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add(group.visible);
+        io.unobserve(entry.target);
+      });
+    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.05 });
+    document.querySelectorAll("." + group.base).forEach(function (el) { io.observe(el); });
+  });
+})();
+<\/script>`;
+
+  return html.replace(/<\/body\s*>/i, `${script}\n</body>`);
+}
+
 // ─── Braid pipeline ──────────────────────────────────────────────────────────
 async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId) {
   const {
@@ -2887,6 +2989,9 @@ async function braidPortfolioWebsite(provider, creds, store, jobId, body, userId
 
   let siteHtml = cleanHtml(r.text || "");
   const truncated = !siteHtml.includes("</html>");
+  // Read truncation off the model's own output first, then repair. The activator appends
+  // to </body>, which would otherwise make a cut-off document look complete.
+  siteHtml = ensureScrollRevealActivator(siteHtml);
   const tokenReport = [{ stage: "braid · Renderer", model: r.model, ...r.usage }];
   const hasHeroPlaceholder = siteHtml.includes('id="braid-img"');
   const hasSampleRasterCssUrl = !!(mastheadMeta.sampleRasterCssUrl && siteHtml.includes(mastheadMeta.sampleRasterCssUrl));

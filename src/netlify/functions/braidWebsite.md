@@ -17,7 +17,8 @@ Reproduce the sample website's visual structure as closely as possible:
   SVG shapes, clip-path, pseudo-element blobs), typography scale and weight hierarchy.
 - Copy card/grid layouts, column counts, gap spacing, and border-radius proportions exactly.
 - Copy decorative details: diagonal section dividers, frosted-glass nav bar, animated rings
-  or particles, scroll-reveal triggers (IntersectionObserver), sticky nav behavior.
+  or particles, scroll-reveal triggers (IntersectionObserver — the CSS *and* the script
+  that drives it; see Part 5), sticky nav behavior.
 - Copy hover interactions: card lift, link underline animations, button glow effects.
 - CARD COUNTS: the number of cards or subsection items in every section MUST match the
   resume data counts exactly. If the resume has 3 experience entries, render 3 experience
@@ -259,7 +260,15 @@ Maximum visual garnishment:
 PART 5 — TECHNICAL REQUIREMENTS
 ═══════════════════════════════════════════════════
 
-- Single self-contained HTML file. No external JS. No external CSS frameworks.
+- Single self-contained HTML file: no external JS files, no CSS frameworks. "No external
+  JS" restricts where JavaScript comes FROM, not whether the page has any — inline
+  `<script>` in the document is REQUIRED wherever the sample relies on JavaScript.
+- Any CSS rule that hides an element until a second class is added — the scroll-reveal
+  idiom, e.g. `.reveal { opacity: 0 }` paired with `.reveal.visible { opacity: 1 }` — MUST
+  ship with the inline `<script>` that adds that class (an IntersectionObserver, as the
+  sample does). Copying the hiding rule and omitting the script leaves every element
+  carrying that class permanently invisible: the page renders blank below the hero while
+  looking complete in the HTML. Emit both halves, or neither.
 - Google Fonts: maximum 2 font families (import in <head>).
 - Font Awesome 6 CDN is allowed for supplemental icons.
 - Fully responsive: mobile (≤640px), tablet (641–1024px), desktop (>1024px).

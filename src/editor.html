@@ -9055,7 +9055,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
     window.addEventListener("message", e => {
       if (e.data?.type === "editor_process_status") {
-        window.__editorTickerShowProcess?.(e.data.text || "", e.data.color || "rgba(141,224,255,.75)");
+        // A message carrying a countdown is skipped on purpose: the form tab only gets to
+        // send one of these per throttled tick, so its text is a stale number. The
+        // once-a-second local renderer owns that line and reads the same deadline from
+        // storage. Everything else paints straight away.
+        if (!e.data.countdown) {
+          window.__editorTickerShowProcess?.(e.data.text || "", e.data.color || "rgba(141,224,255,.75)");
+        }
         return;
       }
       if (e.data?.type === "editor_process_status_clear") {
@@ -9261,23 +9267,38 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         const text = String(parsed?.text || "").trim();
         const at = Number(parsed?.at || 0);
         if (!text || !at || Date.now() - at > EDITOR_PROCESS_STATUS_MAX_AGE_MS) return null;
+        const label = String(parsed?.countdown?.label || "").trim();
+        const deadlineAt = Number(parsed?.countdown?.deadlineAt || 0);
         return {
           text,
-          color: parsed?.color || defaultStatusColor
+          color: parsed?.color || defaultStatusColor,
+          countdown: label && deadlineAt ? { label, deadlineAt } : null
         };
       } catch {
         return null;
       }
     }
 
+    // A countdown arrives as a deadline, not as a number to echo. The form tab that owns
+    // it is hidden the whole time a site is generating — this tab was opened on top of it
+    // — so its once-a-second timer is throttled to roughly once a minute and the text it
+    // last wrote is that far behind. This tab is the visible one, so counting down here
+    // from the deadline is both smooth and correct.
+    function processStatusText(status) {
+      if (!status.countdown) return status.text;
+      const remaining = Math.max(0, Math.ceil((status.countdown.deadlineAt - Date.now()) / 1000));
+      return remaining > 0 ? `${status.countdown.label} ${remaining}s` : status.countdown.label;
+    }
+
     function syncStoredProcessStatus() {
       const status = readStoredProcessStatus();
       if (status) {
-        const signature = `${status.text}\n${status.color}`;
+        const text = processStatusText(status);
+        const signature = `${text}\n${status.color}`;
         storedProcessStatusActive = true;
         if (signature !== lastStoredProcessStatus) {
           lastStoredProcessStatus = signature;
-          showProcessStatus(status.text, status.color);
+          showProcessStatus(text, status.color);
         }
         return;
       }
