@@ -19,7 +19,7 @@ PERSONALITY:
 ABOUT IRENE'S WEBWORKS:
 Irene's Webworks generates professional AI-powered portfolio websites for job seekers — recent graduates, seasoned professionals, researchers, engineers, and creatives. The service takes a user's resume, target job, and design preferences and produces a polished, publish-ready personal website in minutes.
 
-Tagline: "Invest in a website, boost your salary by 10-20K"
+Tagline: "Invest in a website, boost your salary!"
 Contact: irene@irenes-ventures.com
 
 HOW IT WORKS (6 stages):
